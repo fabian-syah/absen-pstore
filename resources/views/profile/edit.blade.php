@@ -10,6 +10,7 @@
 
 @section('content')
 
+    {{-- ALERT MESSAGES --}}
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
@@ -35,88 +36,150 @@
     @endif
 
     <div class="row">
-        {{-- KOLOM KIRI (Profil, KTP, QR) --}}
+        {{-- ================================================= --}}
+        {{-- KOLOM KIRI (FOTO, QR, KTP) --}}
+        {{-- ================================================= --}}
         <div class="col-lg-4 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body text-center">
-                    <h4 class="card-title">Foto Profil</h4>
+                    
+                    {{-- 1. BAGIAN FOTO PROFIL --}}
+                    <h4 class="card-title d-flex justify-content-center align-items-center gap-2">
+                        Foto Profil
+                        @if ($user->is_verified)
+                            <i class="mdi mdi-check-decagram text-primary" title="Akun Terverifikasi" style="font-size: 1.2rem;"></i>
+                        @endif
+                    </h4>
 
-                    {{-- Tampilkan Foto Profil --}}
-                    @if ($user->profile_photo_path)
-                        @php
-                            $photoUrl = Storage::url($user->profile_photo_path);
-                        @endphp
-                        <img src="{{ $photoUrl }}" alt="foto profil" class="img-lg rounded-circle mb-3"
-                            style="width: 150px; height: 150px; object-fit: cover;">
-                    @else
-                        {{-- Tampilkan Inisial jika tidak ada foto --}}
-                        <div class="profile-initial-dropdown mb-3"
-                            style="margin: 0 auto; background-color: #007bff; width: 150px; height: 150px; line-height: 150px; font-size: 40px; border-radius: 50%; color: white; font-weight: bold;">
-                            {{ getInitials($user->name) }}
+                    <div class="position-relative d-inline-block mb-3">
+                        @if ($user->profile_photo_path)
+                            <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="foto profil"
+                                class="img-lg rounded-circle"
+                                style="width: 150px; height: 150px; object-fit: cover; border: {{ $user->is_verified ? '4px solid #0d6efd' : 'none' }}">
+                        @else
+                            <div class="profile-initial-dropdown mx-auto"
+                                style="background-color: #007bff; width: 150px; height: 150px; line-height: 150px; font-size: 40px; border-radius: 50%; color: white; font-weight: bold;">
+                                {{ getInitials($user->name) }}
+                            </div>
+                        @endif
+
+                        {{-- Overlay Centang Biru di Foto --}}
+                        @if ($user->is_verified)
+                            <div class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="bottom: 5px; right: 5px; width: 35px; height: 35px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                <i class="mdi mdi-check-decagram text-primary" style="font-size: 20px;"></i>
+                            </div>
+                        @endif
+                    </div>
+
+                    <p class="card-description fw-bold">
+                        {{ $user->name }}
+                        @if ($user->is_verified)
+                            <br><span class="badge badge-primary badge-pill mt-1">
+                                <i class="mdi mdi-check-decagram"></i> Akun Terverifikasi
+                            </span>
+                        @else
+                            <br><span class="text-muted small">User Biasa</span>
+                        @endif
+                    </p>
+
+                    {{-- LOGIKA TOMBOL GANTI FOTO --}}
+                    
+                    {{-- KONDISI A: User Verified & Request Disetujui (Buka Kunci) --}}
+                    @if ($user->is_verified && $user->photo_request_status == 'approved')
+                        <div class="alert alert-success py-2 mt-3 text-small">
+                            <i class="mdi mdi-lock-open-check"></i> Akses dibuka sementara. Silakan upload.
                         </div>
-                    @endif
-
-                    <p class="card-description">{{ $user->name }}</p>
-
-                    {{-- Form Ganti Foto Profil --}}
-                    <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data"
-                        class="mb-2">
-                        @csrf
-                        @method('PUT')
-                        <label for="profile_photo" class="btn btn-primary btn-sm">Upload Foto Baru</label>
-                        <input type="file" name="profile_photo" id="profile_photo" class="d-none"
-                            accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
-                    </form>
-
-                    {{-- Tombol Hapus Foto --}}
-                    @if ($user->profile_photo_path)
-                        <form action="{{ route('profile.photo.delete') }}" method="POST"
-                            onsubmit="return confirm('Yakin ingin menghapus foto profil?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Hapus Foto</button>
-                        </form>
-                    @endif
-                </div>
-
-                <hr>
-
-                <div class="card-body text-center">
-                    <h4 class="card-title">QR Code Absensi</h4>
-                    <div id="qrcode-display" class="d-flex justify-content-center mb-3"></div>
-                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#qrModal">
-                        Tampilkan Penuh
-                    </button>
-                </div>
-
-                <hr>
-
-                <div class="card-body text-center">
-                    <h4 class="card-title">Data KTP</h4>
-                    @if ($user->ktp_photo_path)
-                        <p>KTP sudah ter-upload.</p>
-                        <a href="{{ asset('storage/' . $user->ktp_photo_path) }}" target="_blank"
-                            class="btn btn-secondary btn-sm">
-                            Lihat KTP
-                        </a>
-                        <small class="d-block text-muted mt-2">Hubungi Admin jika ada kesalahan data.</small>
-                    @else
-                        <p class="text-danger">KTP Anda belum di-upload!</p>
-                        <form action="{{ route('profile.ktp.update') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data" class="mb-2">
                             @csrf
                             @method('PUT')
-                            <label for="ktp_photo" class="btn btn-warning btn-sm">Upload KTP</label>
-                            <input type="file" name="ktp_photo" id="ktp_photo" class="d-none"
+                            <label for="profile_photo" class="btn btn-success btn-sm w-100">Upload Foto Baru</label>
+                            <input type="file" name="profile_photo" id="profile_photo" class="d-none"
                                 accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
-                            <small class="d-block text-muted mt-2">PENTING: KTP tidak bisa diubah atau dihapus setelah
-                                di-upload.</small>
                         </form>
+
+                    {{-- KONDISI B: User Verified & Request Pending --}}
+                    @elseif ($user->is_verified && $user->photo_request_status == 'pending')
+                        <div class="alert alert-warning py-2 mt-3 text-small">
+                            <i class="mdi mdi-clock"></i> Menunggu persetujuan Admin.
+                        </div>
+                        <button class="btn btn-secondary btn-sm w-100" disabled>Request Terkirim</button>
+
+                    {{-- KONDISI C: User Verified (Terkunci) --}}
+                    @elseif ($user->is_verified)
+                        <div class="alert alert-light border py-2 text-muted text-small mt-3">
+                            <i class="mdi mdi-lock"></i> Foto terkunci (Verified).
+                        </div>
+                        <form action="{{ route('profile.photo.request') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-warning btn-sm w-100" 
+                                onclick="return confirm('Ajukan izin ke Admin untuk mengganti foto profil?')">
+                                <i class="mdi mdi-key-variant"></i> Ajukan Ganti Foto
+                            </button>
+                        </form>
+
+                    {{-- KONDISI D: User Belum Verified (Bebas) --}}
+                    @else
+                        <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data" class="mb-2">
+                            @csrf
+                            @method('PUT')
+                            <label for="profile_photo" class="btn btn-primary btn-sm w-100 mb-2">Ganti Foto</label>
+                            <input type="file" name="profile_photo" id="profile_photo" class="d-none"
+                                accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
+                        </form>
+
+                        @if ($user->profile_photo_path)
+                            <form action="{{ route('profile.photo.delete') }}" method="POST"
+                                onsubmit="return confirm('Yakin ingin menghapus foto profil?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-outline-danger btn-sm w-100">Hapus Foto</button>
+                            </form>
+                        @endif
                     @endif
+
+                    <hr>
+
+                    {{-- 2. BAGIAN QR CODE --}}
+                    <div class="text-center">
+                        <h4 class="card-title">QR Code Absensi</h4>
+                        <div id="qrcode-display" class="d-flex justify-content-center mb-3"></div>
+                        <button type="button" class="btn btn-info btn-sm w-100" data-bs-toggle="modal" data-bs-target="#qrModal">
+                            <i class="mdi mdi-qrcode-scan"></i> Tampilkan Penuh
+                        </button>
+                    </div>
+
+                    <hr>
+
+                    {{-- 3. BAGIAN DATA KTP --}}
+                    <div class="text-center">
+                        <h4 class="card-title">Data KTP</h4>
+                        @if ($user->ktp_photo_path)
+                            <p class="text-success small"><i class="mdi mdi-check-circle"></i> KTP Ter-upload</p>
+                            <a href="{{ asset('storage/' . $user->ktp_photo_path) }}" target="_blank"
+                                class="btn btn-secondary btn-sm w-100">
+                                <i class="mdi mdi-card-account-details"></i> Lihat KTP
+                            </a>
+                            <small class="d-block text-muted mt-2 text-small">Hubungi Admin jika ada kesalahan.</small>
+                        @else
+                            <div class="alert alert-danger py-2 text-small">KTP Belum di-upload!</div>
+                            <form action="{{ route('profile.ktp.update') }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                                @method('PUT')
+                                <label for="ktp_photo" class="btn btn-warning btn-sm w-100">Upload KTP</label>
+                                <input type="file" name="ktp_photo" id="ktp_photo" class="d-none"
+                                    accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
+                                <small class="d-block text-muted mt-2 text-small">PENTING: KTP tidak bisa diubah setelah di-upload.</small>
+                            </form>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- KOLOM KANAN (Edit Info) --}}
+        {{-- ================================================= --}}
+        {{-- KOLOM KANAN (FORM EDIT INFO) --}}
+        {{-- ================================================= --}}
         <div class="col-lg-8 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
@@ -141,14 +204,14 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Role</label>
-                                    <input type="text" class="form-control" value="{{ $user->role }}" readonly>
+                                    <input type="text" class="form-control" value="{{ strtoupper(str_replace('_', ' ', $user->role)) }}" readonly>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Cabang</label>
                                     <input type="text" class="form-control"
-                                        value="{{ $user->branch->name ?? 'N/A' }}" readonly>
+                                        value="{{ $user->branch->name ?? 'Pusat / Semua' }}" readonly>
                                 </div>
                             </div>
                         </div>
@@ -157,57 +220,87 @@
                                 <div class="form-group">
                                     <label>Divisi / Tim</label>
                                     <input type="text" class="form-control"
-                                        value="{{ $user->division->name ?? 'N/A' }}" readonly>
+                                        value="{{ $user->division->name ?? '-' }}" readonly>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Tanggal Masuk</label>
                                     <input type="text" class="form-control"
-                                        value="{{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->format('d M Y') : 'N/A' }}"
+                                        value="{{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->format('d M Y') : '-' }}"
                                         readonly>
                                 </div>
                             </div>
                         </div>
 
-                        <h4 class="card-title mt-4">Info Kontak & Sosial Media (Opsional)</h4>
-                        <div class="form-group">
-                            <label for="whatsapp">WhatsApp</label>
-                            <input type="text" class="form-control" id="whatsapp" name="whatsapp"
-                                placeholder="62812..." value="{{ old('whatsapp', $user->whatsapp) }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="instagram">Instagram</label>
-                            <input type="text" class="form-control" id="instagram" name="instagram"
-                                placeholder="username" value="{{ old('instagram', $user->instagram) }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="tiktok">TikTok</label>
-                            <input type="text" class="form-control" id="tiktok" name="tiktok"
-                                placeholder="username" value="{{ old('tiktok', $user->tiktok) }}">
+                        <h4 class="card-title mt-4">Info Kontak & Sosial Media</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="whatsapp">WhatsApp</label>
+                                    <input type="text" class="form-control" id="whatsapp" name="whatsapp"
+                                        placeholder="62812..." value="{{ old('whatsapp', $user->whatsapp) }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="instagram">Instagram</label>
+                                    <input type="text" class="form-control" id="instagram" name="instagram"
+                                        placeholder="username" value="{{ old('instagram', $user->instagram) }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="tiktok">TikTok</label>
+                                    <input type="text" class="form-control" id="tiktok" name="tiktok"
+                                        placeholder="username" value="{{ old('tiktok', $user->tiktok) }}">
+                                </div>
+                            </div>
+                             <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="facebook">Facebook</label>
+                                    <input type="text" class="form-control" id="facebook" name="facebook"
+                                        placeholder="username" value="{{ old('facebook', $user->facebook) }}">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="linkedin">LinkedIn</label>
+                                    <input type="text" class="form-control" id="linkedin" name="linkedin"
+                                        placeholder="username" value="{{ old('linkedin', $user->linkedin) }}">
+                                </div>
+                            </div>
                         </div>
 
-                        <h4 class="card-title mt-4">Ubah Password</h4>
-                        <div class="form-group">
-                            <label for="password">Password Baru</label>
-                            <input type="password" class="form-control" id="password" name="password">
-                            <small class="text-muted">Kosongkan jika tidak ingin mengganti password.</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="password_confirmation">Konfirmasi Password Baru</label>
-                            <input type="password" class="form-control" id="password_confirmation"
-                                name="password_confirmation">
+                        <h4 class="card-title mt-4">Keamanan</h4>
+                        <div class="row">
+                             <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="password">Password Baru</label>
+                                    <input type="password" class="form-control" id="password" name="password">
+                                    <small class="text-muted">Kosongkan jika tidak ingin mengganti.</small>
+                                </div>
+                             </div>
+                             <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="password_confirmation">Konfirmasi Password</label>
+                                    <input type="password" class="form-control" id="password_confirmation"
+                                        name="password_confirmation">
+                                </div>
+                             </div>
                         </div>
 
                         <button type="submit" class="btn btn-primary me-2">Simpan Perubahan</button>
-                        <a href="/" class="btn btn-light">Batal</a>
+                        <a href="{{ route('dashboard') }}" class="btn btn-light">Batal</a>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
+    {{-- ================================================= --}}
     {{-- SECTION RIWAYAT PEKERJAAN --}}
+    {{-- ================================================= --}}
     <div class="row mt-4">
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
@@ -286,7 +379,9 @@
         </div>
     </div>
 
+    {{-- ================================================= --}}
     {{-- SECTION INVENTARIS --}}
+    {{-- ================================================= --}}
     <div class="row mt-4">
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
@@ -374,26 +469,23 @@
                                                     </div>
                                                     <div class="modal-body">
                                                         <div class="row">
-                                                            <div class="col-md-6">
+                                                            <div class="col-md-6 text-center">
                                                                 @if ($item->item_photo_path)
                                                                     <img src="{{ asset('storage/' . $item->item_photo_path) }}"
-                                                                        alt="item" class="img-fluid mb-3">
+                                                                        alt="item" class="img-fluid mb-3 rounded" style="max-height: 300px;">
+                                                                @else
+                                                                    <div class="alert alert-secondary">Tidak ada foto</div>
                                                                 @endif
-                                                                <p><strong>Nama Barang:</strong> {{ $item->item_name }}</p>
-                                                                <p><strong>Kategori:</strong>
-                                                                    {{ ucfirst($item->category) }}</p>
-                                                                <p><strong>Serial Number:</strong>
-                                                                    {{ $item->serial_number ?? '-' }}</p>
-                                                                <p><strong>Tanggal Terima:</strong>
-                                                                    {{ \Carbon\Carbon::parse($item->received_date)->format('d M Y') }}
-                                                                </p>
                                                             </div>
                                                             <div class="col-md-6">
-                                                                <p><strong>Kondisi:</strong>
-                                                                    {{ ucfirst(str_replace('_', ' ', $item->condition)) }}
-                                                                </p>
+                                                                <p><strong>Nama Barang:</strong> {{ $item->item_name }}</p>
+                                                                <p><strong>Kategori:</strong> {{ ucfirst($item->category) }}</p>
+                                                                <p><strong>Serial Number:</strong> {{ $item->serial_number ?? '-' }}</p>
+                                                                <p><strong>Tanggal Terima:</strong> {{ \Carbon\Carbon::parse($item->received_date)->format('d M Y') }}</p>
+                                                                <p><strong>Kondisi:</strong> {{ ucfirst(str_replace('_', ' ', $item->condition)) }}</p>
                                                                 <p><strong>Deskripsi:</strong></p>
                                                                 <p>{{ $item->description ?? 'Tidak ada deskripsi' }}</p>
+                                                                
                                                                 @if ($item->document_path)
                                                                     <a href="{{ asset('storage/' . $item->document_path) }}"
                                                                         target="_blank"
@@ -419,7 +511,11 @@
         </div>
     </div>
 
-    {{-- Modal Tambah Riwayat Pekerjaan --}}
+    {{-- ================================================= --}}
+    {{-- MODAL TAMBAHAN --}}
+    {{-- ================================================= --}}
+
+    {{-- 1. Modal Tambah Riwayat Pekerjaan --}}
     <div class="modal fade" id="addWorkHistoryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -431,22 +527,18 @@
                     @csrf
                     <div class="modal-body">
                         <div class="alert alert-info alert-sm">
-                            <i class="mdi mdi-information"></i> <small>Catat perpindahan divisi atau promosi jabatan Anda
-                                di perusahaan ini.</small>
+                            <i class="mdi mdi-information"></i> <small>Catat perpindahan divisi atau promosi jabatan Anda.</small>
                         </div>
-
                         <div class="form-group">
                             <label for="position">Jabatan *</label>
                             <input type="text" class="form-control" id="position" name="position"
                                 placeholder="Contoh: Staff Marketing" required>
                         </div>
-
                         <div class="form-group">
                             <label for="department">Divisi/Departemen *</label>
                             <input type="text" class="form-control" id="department" name="department"
                                 placeholder="Contoh: Marketing & Sales" required>
                         </div>
-
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -459,7 +551,7 @@
                                 <div class="form-group">
                                     <label for="end_date">Tanggal Selesai</label>
                                     <input type="date" class="form-control" id="end_date" name="end_date">
-                                    <small class="text-muted">Kosongkan jika masih di posisi ini</small>
+                                    <small class="text-muted">Kosongkan jika saat ini.</small>
                                 </div>
                             </div>
                         </div>
@@ -473,7 +565,7 @@
         </div>
     </div>
 
-    {{-- Modal Tambah Inventaris --}}
+    {{-- 2. Modal Tambah Inventaris --}}
     <div class="modal fade" id="addInventoryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -481,39 +573,29 @@
                     <h5 class="modal-title">Tambah Inventaris Pribadi</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-
-                {{-- Pastikan action mengarah ke route yang benar --}}
                 <form action="{{ route('profile.inventory.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-
-                    {{-- ================================================= --}}
-                    {{-- PENTING: LINE INI YANG MEMBEDAKAN DENGAN ADMIN --}}
-                    {{-- ================================================= --}}
+                    
+                    {{-- IMPORTANT: Flag is_profile_action --}}
                     <input type="hidden" name="is_profile_action" value="1">
-                    {{-- ================================================= --}}
 
                     <div class="modal-body">
-                        <div class="alert alert-info py-2">
-                            <i class="mdi mdi-information-outline"></i> Barang ini akan otomatis tercatat atas nama Anda.
-                        </div>
-
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="item_name">Nama Barang <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="item_name" name="item_name" required
-                                        placeholder="Contoh: Laptop Pribadi / Inventaris Kantor">
+                                    <label>Nama Barang *</label>
+                                    <input type="text" class="form-control" name="item_name" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="category">Kategori <span class="text-danger">*</span></label>
-                                    <select class="form-control" id="category" name="category" required>
+                                    <label>Kategori *</label>
+                                    <select class="form-control" name="category" required>
                                         <option value="">Pilih Kategori</option>
-                                        <option value="Elektronik">Elektronik</option>
-                                        <option value="Perkantoran">Perkantoran</option>
-                                        <option value="Kendaraan">Kendaraan</option>
-                                        <option value="Lainnya">Lainnya</option>
+                                        <option value="elektronik">Elektronik</option>
+                                        <option value="perkantoran">Perkantoran</option>
+                                        <option value="kendaraan">Kendaraan</option>
+                                        <option value="lainnya">Lainnya</option>
                                     </select>
                                 </div>
                             </div>
@@ -521,55 +603,49 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="serial_number">Serial Number (SN)</label>
-                                    <input type="text" class="form-control" id="serial_number" name="serial_number"
-                                        placeholder="Opsional">
+                                    <label>Serial Number</label>
+                                    <input type="text" class="form-control" name="serial_number">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="received_date">Tanggal Terima <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="received_date" name="received_date"
-                                        required value="{{ date('Y-m-d') }}">
+                                    <label>Tanggal Terima *</label>
+                                    <input type="date" class="form-control" name="received_date" required value="{{ date('Y-m-d') }}">
                                 </div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="condition">Kondisi Saat Ini <span class="text-danger">*</span></label>
-                            <select class="form-control" id="condition" name="condition" required>
-                                <option value="Baru">Baru</option>
-                                <option value="Baik">Baik</option>
-                                <option value="Rusak Ringan">Rusak Ringan</option>
-                                <option value="Rusak Berat">Rusak Berat</option>
-                                <option value="Perbaikan">Dalam Perbaikan</option>
+                            <label>Kondisi *</label>
+                            <select class="form-control" name="condition" required>
+                                <option value="baik">Baik</option>
+                                <option value="rusak_ringan">Rusak Ringan</option>
+                                <option value="rusak_berat">Rusak Berat</option>
+                                <option value="perbaikan">Dalam Perbaikan</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="description">Deskripsi / Keterangan</label>
-                            <textarea class="form-control" id="description" name="description" rows="3"
-                                placeholder="Keterangan tambahan barang..."></textarea>
+                            <label>Deskripsi</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="item_photo">Foto Barang (Max 5MB)</label>
-                            <input type="file" class="form-control" id="item_photo" name="item_photo"
-                                accept="image/*">
+                            <label>Foto Barang</label>
+                            <input type="file" class="form-control" name="item_photo" accept="image/*">
                         </div>
                         <div class="form-group">
-                            <label for="document">Dokumen Pendukung (PDF, DOCX - Max 10MB)</label>
-                            <input type="file" class="form-control" id="document" name="document"
-                                accept=".pdf,.doc,.docx">
+                            <label>Dokumen</label>
+                            <input type="file" class="form-control" name="document" accept=".pdf,.doc,.docx">
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan Data</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    {{-- Modal QR Code (Sama seperti sebelumnya) --}}
+    {{-- 3. Modal QR Code --}}
     <div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -591,8 +667,6 @@
     <script>
         @if ($user->qr_code_value)
             const qrValue = "{{ $user->qr_code_value }}";
-
-            // TEST
 
             // Gambar QR Code kecil di halaman
             new QRCode(document.getElementById("qrcode-display"), {
