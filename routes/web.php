@@ -18,7 +18,7 @@ use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\WorkScheduleController;
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\GlobalSearchController;
-use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\InventoryController; // Pastikan ini ada
 use App\Http\Controllers\AttendanceHistoryController;
 
 /*
@@ -47,10 +47,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
-    // --- Rute Export PDF untuk semua role ---
+    // --- Rute Export PDF ---
     Route::get('/dashboard/export-pdf', [DashboardController::class, 'exportAttendancePDF'])->name('dashboard.export-pdf');
 
-    // --- Rute Search Global (Hanya untuk Admin) ---
+    // --- Rute Search Global ---
     Route::get('/search', [GlobalSearchController::class, 'search'])->name('search');
 
     // === RUTE RIWAYAT ABSENSI ===
@@ -86,25 +86,39 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE PROFILE (UNTUK SEMUA ROLE) ===
     Route::prefix('profile')->name('profile.')->group(function () {
+        // Edit Profile Utama
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
+        
+        // Foto & KTP
         Route::delete('/photo', [ProfileController::class, 'deleteProfilePhoto'])->name('photo.delete');
         Route::put('/photo', [ProfileController::class, 'updatePhoto'])->name('photo.update');
         Route::get('/photo/{user}', [ProfileController::class, 'getProfilePhoto'])->name('photo.get');
         Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update');
         Route::get('/ktp/{user}', [ProfileController::class, 'getKtpPhoto'])->name('ktp.get');
+        
+        // Riwayat Pekerjaan
         Route::post('/work-history', [WorkHistoryController::class, 'store'])->name('work-history.store');
         Route::delete('/work-history/{history}', [WorkHistoryController::class, 'destroy'])->name('work-history.destroy');
-        Route::post('/inventory', [ProfileController::class, 'storeInventory'])->name('inventory.store');
-        Route::delete('/inventory/{inventory}', [ProfileController::class, 'destroyInventory'])->name('inventory.destroy');
-        Route::get('/inventory', [ProfileController::class, 'showInventory'])->name('inventory.index');
+
+        // --- INVENTORY KHUSUS PROFILE (Menggunakan InventoryController) ---
+        // Perhatikan ini menggunakan InventoryController, bukan ProfileController lagi
+        Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store'); 
+        Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
+        Route::get('/inventory', [InventoryController::class, 'showInventory'])->name('inventory.index'); // Opsional jika ingin list terpisah
     });
 
-    // === RUTE INVENTORY ===
+    // === RUTE INVENTORY (SIDEBAR MENU) ===
+    // 1. Semua Role BISA MELIHAT (Read)
+    Route::prefix('inventory')->name('inventory.')->group(function () {
+        Route::get('/', [InventoryController::class, 'index'])->name('index'); 
+        Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
+    });
+
+    // 2. Hanya ADMIN & AUDIT BISA MENGELOLA (Create, Edit, Update, Delete Global)
     Route::prefix('inventory')->name('inventory.')->middleware(['role:admin,audit'])->group(function () {
-        Route::get('/', [InventoryController::class, 'index'])->name('index');
         Route::get('/create', [InventoryController::class, 'create'])->name('create');
-        Route::post('/', [InventoryController::class, 'store'])->name('store');
+        Route::post('/', [InventoryController::class, 'store'])->name('store'); // Nama route sama dgn profile tapi URL beda
         Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
         Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
         Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
@@ -113,10 +127,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // === RUTE ADMIN & AUDIT MANAGEMENT ===
     Route::middleware(['role:admin,audit'])->group(function () {
         Route::get('/all-attendance', [AdminAttendanceController::class, 'index'])->name('admin.attendance.all');
-        // Rute verifikasi attendance dengan detail
         Route::put('/audit/verify-attendance/{attendance}', [AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
-        Route::put('/attendance/{id}/audit-update', [AttendanceHistoryController::class, 'updateByAudit'])
-            ->name('audit.update.attendance');
+        Route::put('/attendance/{id}/audit-update', [AttendanceHistoryController::class, 'updateByAudit'])->name('audit.update.attendance');
 
         Route::resource('branches', BranchController::class);
         Route::post('/branches/{branch}/toggle-status', [BranchController::class, 'toggleStatus'])->name('branches.toggle-status');
@@ -124,7 +136,6 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::resource('divisions', DivisionController::class);
         Route::post('/divisions/{division}/toggle-status', [DivisionController::class, 'toggleStatus'])->name('divisions.toggle-status');
 
-        // --- MANAJEMEN USER ---
         Route::resource('users', UserController::class);
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
@@ -160,7 +171,6 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/tim-saya/{user}', [TeamController::class, 'show'])->name('my.team.show');
         Route::get('/tim-saya/attendance/{user}', [TeamController::class, 'attendance'])->name('my.team.attendance');
         Route::get('/team/branch/{id}', [TeamController::class, 'showBranch'])->name('team.branch.detail');
-        // Rute baru untuk riwayat absensi karyawan
         Route::get('/team/branch/{branchId}/employee/{employeeId}/history', [TeamController::class, 'showEmployeeHistory'])->name('team.branch.employee.history');
     });
 
@@ -181,17 +191,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
         Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
 
-        // Create & Store & Finish Early (User Actions)
         Route::middleware(['role:user_biasa,leader,audit,security'])->group(function () {
             Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
             Route::post('/store', [LeaveRequestController::class, 'store'])->name('store');
             Route::patch('/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
-            
-            // --- Rute Baru: Selesaikan Izin Lebih Awal ---
             Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finishEarly'])->name('finish-early');
         });
 
-        // Approval
         Route::middleware(['role:admin,audit'])->group(function () {
             Route::patch('/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])->name('approve');
             Route::patch('/{leaveRequest}/reject', [LeaveRequestController::class, 'reject'])->name('reject');
@@ -206,21 +212,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/export/attendance', [AuditController::class, 'exportAttendance'])->name('export.attendance');
     });
 
-    // === RUTE API DASHBOARD ===
+    // === RUTE API ===
     Route::prefix('api')->name('api.')->group(function () {
         Route::get('/dashboard-stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
         Route::get('/recent-activities', [DashboardController::class, 'getRecentActivities'])->name('recent.activities');
         Route::get('/attendance-chart', [DashboardController::class, 'getAttendanceChart'])->name('attendance.chart');
     });
 
-    // === RUTE UTILITY ===
     Route::get('/test-role-middleware', function () {
-        $user = auth()->user();
-        return response()->json([
-            'user_id' => $user->id,
-            'user_role' => $user->role,
-            'message' => 'Middleware test berhasil!'
-        ]);
+        return response()->json(['message' => 'Middleware test berhasil!']);
     })->middleware(['role:admin,audit,security,leader,user_biasa']);
 
     Route::fallback(function () {
@@ -228,11 +228,6 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 });
 
-/*
-|--------------------------------------------------------------------------
-| Rute Health Check & Debug
-|--------------------------------------------------------------------------
-*/
 Route::get('/health', function () {
     return response()->json(['status' => 'OK', 'timestamp' => now()]);
 });

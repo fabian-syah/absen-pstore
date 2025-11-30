@@ -19,7 +19,7 @@
         {{-- =================================== --}}
         <li class="nav-item nav-category">Menu Umum</li>
         <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="{{ route('inventory.index') }}">
                 <i class="menu-icon mdi mdi-package-variant"></i>
                 <span class="menu-title">Inventaris</span>
             </a>
