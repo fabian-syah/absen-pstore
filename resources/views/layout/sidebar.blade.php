@@ -63,12 +63,12 @@
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Manajemen Tim</li>
-            <li class="nav-item">
+            {{-- <li class="nav-item">
                 <a class="nav-link" href="{{ route('divisions.index') }}">
                     <i class="menu-icon mdi mdi-sitemap"></i>
                     <span class="menu-title">Data Divisi</span>
                 </a>
-            </li>
+            </li> --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('users.index') }}">
                     <i class="menu-icon mdi mdi-account-group"></i>
