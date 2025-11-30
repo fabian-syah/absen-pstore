@@ -26,19 +26,28 @@ class SelfAttendanceController extends Controller
         $user = Auth::user();
         $today = today();
 
-        // [MODIFIKASI] Cari sesi yang BELUM CHECKOUT (Active Session)
-        // Tidak dibatasi 'whereDate', agar sesi kemarin (lintas hari) tertangkap di sini.
+        // [MODIFIKASI LOGIKA]
+        // Kita batasi pencarian sesi aktif.
+        // Hanya cari sesi yang check_in-nya dilakukan HARI INI atau KEMARIN.
+        // Sesi yang lebih tua dari kemarin (misal 2 hari lalu) akan diabaikan di sini,
+        // sehingga user akan diarahkan ke mode 'Masuk' (dan sesi lama itu akan di-auto close di proses store).
+        
+        $yesterday = Carbon::yesterday()->startOfDay(); // Batas waktu: Kemarin jam 00:00
+
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->orderBy('check_in_time', 'desc') // Ambil yang paling baru
+            ->where('check_in_time', '>=', $yesterday) // <--- TAMBAHAN PENTING INI
+            ->orderBy('check_in_time', 'desc')
             ->first();
 
         if ($activeSession) {
-            // Jika ada sesi gantung (baik hari ini atau kemarin) -> Mode PULANG
+            // Jika ada sesi aktif (Hari ini atau Kemarin), paksa Absen Pulang
             $mode = 'pulang';
             $attendance = $activeSession;
         } else {
-            // Jika tidak ada sesi aktif, cek apakah HARI INI sudah selesai absen (Masuk & Pulang)?
+            // Jika tidak ada sesi aktif (atau sesi gantungnya sudah terlalu lama/tua)
+            
+            // Cek apakah HARI INI sudah selesai absen (Masuk & Pulang)?
             $finishedToday = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', $today)
                 ->whereNotNull('check_out_time')
@@ -52,7 +61,7 @@ class SelfAttendanceController extends Controller
             $mode = 'masuk';
             $attendance = null;
 
-            // Cek Status Laporan Telat (Hanya validasi saat mau Absen Masuk)
+            // Cek Status Laporan Telat
             $activeLateStatus = LateNotification::where('user_id', $user->id)
                 ->where('is_active', true)
                 ->whereDate('created_at', $today)
