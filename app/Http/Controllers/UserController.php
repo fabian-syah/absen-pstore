@@ -271,6 +271,28 @@ class UserController extends Controller
         return back()->with('success', $msg);
     }
 
+    // App\Http\Controllers\UserController.php
+
+    public function photoRequests()
+    {
+        $user = Auth::user();
+
+        // Query user yang request statusnya 'pending'
+        $query = User::where('photo_request_status', 'pending')->with(['branch', 'division']);
+
+        // Filter berdasarkan hak akses (Audit hanya cabang tertentu, Admin Cabang hanya cabangnya)
+        if ($user->role == 'admin' && $user->branch_id != null) {
+            $query->where('branch_id', $user->branch_id);
+        } elseif ($user->role == 'audit') {
+            $auditBranchIds = $user->branches->pluck('id')->toArray();
+            $query->whereIn('branch_id', $auditBranchIds);
+        }
+
+        $requests = $query->latest('updated_at')->paginate(10);
+
+        return view('users.photo_requests', compact('requests'));
+    }
+
     /**
      * FITUR BARU: APPROVE REQUEST GANTI FOTO
      */

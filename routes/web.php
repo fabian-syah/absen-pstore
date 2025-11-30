@@ -89,24 +89,24 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Edit Profile Utama
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
-        
+
         // Foto & KTP
         Route::delete('/photo', [ProfileController::class, 'deleteProfilePhoto'])->name('photo.delete');
         Route::put('/photo', [ProfileController::class, 'updatePhoto'])->name('photo.update');
-        
+
         // [BARU] Request Ganti Foto (Jika User Verified)
         Route::post('/photo/request', [ProfileController::class, 'requestPhotoChange'])->name('photo.request');
 
         Route::get('/photo/{user}', [ProfileController::class, 'getProfilePhoto'])->name('photo.get');
         Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update');
         Route::get('/ktp/{user}', [ProfileController::class, 'getKtpPhoto'])->name('ktp.get');
-        
+
         // Riwayat Pekerjaan
         Route::post('/work-history', [WorkHistoryController::class, 'store'])->name('work-history.store');
         Route::delete('/work-history/{history}', [WorkHistoryController::class, 'destroy'])->name('work-history.destroy');
 
         // --- INVENTORY KHUSUS PROFILE ---
-        Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store'); 
+        Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store');
         Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
         Route::get('/inventory', [InventoryController::class, 'showInventory'])->name('inventory.index');
     });
@@ -114,7 +114,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // === RUTE INVENTORY (SIDEBAR MENU) ===
     // 1. Semua Role BISA MELIHAT (Read)
     Route::prefix('inventory')->name('inventory.')->group(function () {
-        Route::get('/', [InventoryController::class, 'index'])->name('index'); 
+        Route::get('/', [InventoryController::class, 'index'])->name('index');
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
     });
 
@@ -138,12 +138,17 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         Route::resource('divisions', DivisionController::class);
         Route::post('/divisions/{division}/toggle-status', [DivisionController::class, 'toggleStatus'])->name('divisions.toggle-status');
+        // [BARU] Route List Permintaan Ganti Foto
+        Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
+
+        // Route Approve Foto (Sudah ada sebelumnya, pastikan tetap ada)
+        Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
 
         // USER MANAGEMENT
         Route::resource('users', UserController::class);
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
-        
+
         // [BARU] Verifikasi User & Approval Foto
         Route::patch('/users/{user}/verify', [UserController::class, 'verifyUser'])->name('users.verify');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');

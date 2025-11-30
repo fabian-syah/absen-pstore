@@ -41,9 +41,8 @@
         {{--     MENU UNTUK SUPER ADMIN        --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
-
-        <li class="nav-item nav-category">Menu Cabang</li>
-        {{-- MENU BARU: MASTER DATA ABSENSI --}}
+            <li class="nav-item nav-category">Menu Cabang</li>
+            {{-- MENU BARU: MASTER DATA ABSENSI --}}
             {{-- <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin.attendance.all') }}">
                     <i class="menu-icon mdi mdi-database-search"></i>
@@ -105,6 +104,15 @@
                 <a class="nav-link" href="{{ route('leave-requests.index') }}">
                     <i class="menu-icon mdi mdi-clock-alert-outline"></i>
                     <span class="menu-title">Daftar Izin / Telat</span>
+                </a>
+            </li>
+            {{-- [BARU] Menu Approval Ganti Foto --}}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('users.photo-requests') }}">
+                    <i class="menu-icon mdi mdi-camera-retake-outline"></i>
+                    <span class="menu-title">Permintaan Ganti Foto</span>
+                    {{-- Badge Notifikasi Jumlah Request (Opsional - Perlu Logic di View Composer) --}}
+                    {{-- <span class="badge badge-warning ms-2">New</span> --}}
                 </a>
             </li>
         @endif
