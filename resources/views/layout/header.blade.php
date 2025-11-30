@@ -86,29 +86,60 @@
 
             {{-- User Profile --}}
             <li class="nav-item dropdown user-dropdown">
-                <a class="nav-link" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                    @if (Auth::user()->profile_photo_path)
-                        <img class="img-xs rounded-circle" src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
-                            alt="Profile image">
-                    @else
-                        <div class="profile-initial-nav">
-                            {{ getInitials(Auth::user()->name) }}
-                        </div>
-                    @endif
-                </a>
-                <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown">
-                    <div class="dropdown-header text-center">
+                <a class="nav-link p-0" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="position-relative d-inline-block">
                         @if (Auth::user()->profile_photo_path)
-                            <img class="img-md rounded-circle"
-                                src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="Profile image"
-                                style="width: 60px; height: 60px; object-fit: cover;">
+                            <img class="img-xs rounded-circle" 
+                                 src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                 alt="Profile image"
+                                 style="object-fit: cover; border: {{ Auth::user()->is_verified ? '2px solid #0d6efd' : 'none' }}; padding: 1px;">
                         @else
-                            <div class="profile-initial-dropdown mb-2">
+                            <div class="profile-initial-nav" 
+                                 style="border: {{ Auth::user()->is_verified ? '2px solid #0d6efd' : 'none' }};">
                                 {{ getInitials(Auth::user()->name) }}
                             </div>
                         @endif
 
-                        <p class="mb-1 mt-3 fw-semibold">{{ Auth::user()->name }}</p>
+                        {{-- Ikon Centang Biru Kecil di Pojok --}}
+                        @if(Auth::user()->is_verified)
+                            <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
+                                  style="bottom: -2px; right: -2px; width: 14px; height: 14px; border: 1px solid white;">
+                                <i class="mdi mdi-check-decagram text-primary" style="font-size: 10px;"></i>
+                            </span>
+                        @endif
+                    </div>
+                </a>
+
+                <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown">
+                    <div class="dropdown-header text-center">
+                        {{-- Foto Profil Besar di Dropdown --}}
+                        <div class="position-relative d-inline-block mb-2">
+                            @if (Auth::user()->profile_photo_path)
+                                <img class="img-md rounded-circle"
+                                    src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="Profile image"
+                                    style="width: 60px; height: 60px; object-fit: cover; border: {{ Auth::user()->is_verified ? '3px solid #0d6efd' : '3px solid white' }};">
+                            @else
+                                <div class="profile-initial-dropdown"
+                                     style="border: {{ Auth::user()->is_verified ? '3px solid #0d6efd' : '3px solid white' }};">
+                                    {{ getInitials(Auth::user()->name) }}
+                                </div>
+                            @endif
+
+                            {{-- Ikon Centang Biru Besar --}}
+                            @if(Auth::user()->is_verified)
+                                <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
+                                      style="bottom: 0; right: 0; width: 20px; height: 20px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <i class="mdi mdi-check-decagram text-primary" style="font-size: 14px;"></i>
+                                </span>
+                            @endif
+                        </div>
+
+                        <p class="mb-1 mt-1 fw-semibold d-flex align-items-center justify-content-center gap-1">
+                            {{ Auth::user()->name }}
+                            @if(Auth::user()->is_verified)
+                                <i class="mdi mdi-check-decagram text-primary" title="Verified" style="font-size: 14px;"></i>
+                            @endif
+                        </p>
                         <p class="fw-light text-muted mb-0">{{ Auth::user()->email }}</p>
                         <small class="text-muted">{{ Auth::user()->role }} -
                             {{ Auth::user()->division->name ?? 'N/A' }}</small>
@@ -604,6 +635,7 @@
         font-size: 14px;
         cursor: pointer;
         transition: all 0.3s ease;
+        box-sizing: border-box;
     }
 
     .profile-initial-nav:hover {
@@ -643,132 +675,3 @@
         }
     }
 </style>
-
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('globalSearch');
-            const searchResults = document.getElementById('searchResults');
-
-            if (!searchInput) return;
-
-            let searchTimeout;
-
-            searchInput.addEventListener('input', function(e) {
-                clearTimeout(searchTimeout);
-                const query = e.target.value.trim();
-
-                if (query.length < 2) {
-                    hideResults();
-                    return;
-                }
-
-                searchTimeout = setTimeout(() => {
-                    performSearch(query);
-                }, 300);
-            });
-
-            document.addEventListener('click', function(e) {
-                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                    hideResults();
-                }
-            });
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    hideResults();
-                }
-            });
-
-            function performSearch(query) {
-                searchResults.innerHTML = `
-                    <div class="dropdown-item text-muted">
-                        <i class="mdi mdi-loading mdi-spin me-2"></i>Searching...
-                    </div>
-                `;
-                showResults();
-
-                const url = searchInput.getAttribute('data-url');
-
-                fetch(`${url}?q=${encodeURIComponent(query)}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.error) {
-                            console.error("Backend Error:", data.error);
-                            throw new Error(data.error);
-                        }
-                        displayResults(data.results);
-                    })
-                    .catch(error => {
-                        console.error('Search error:', error);
-                        searchResults.innerHTML = `
-                            <div class="dropdown-item text-danger">
-                                <i class="mdi mdi-alert-circle-outline me-2"></i>Error: Failed to load data.
-                            </div>
-                        `;
-                        showResults();
-                    });
-            }
-
-            function displayResults(results) {
-                if (results.length === 0) {
-                    searchResults.innerHTML = `
-                        <div class="dropdown-item text-muted">
-                            <i class="mdi mdi-magnify me-2"></i>No results found
-                        </div>
-                    `;
-                    showResults();
-                    return;
-                }
-
-                const resultsHtml = results.map(result => `
-                    <a class="dropdown-item d-flex align-items-center" href="${escapeHtml(result.url)}" tabindex="0">
-                        <div class="me-3 ${getTypeClass(result.type)}">
-                            <i class="mdi ${escapeHtml(result.icon)}"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="fw-medium">${escapeHtml(result.title)}</div>
-                            <small class="text-muted">${escapeHtml(result.description)}</small>
-                        </div>
-                        <span class="badge bg-light text-dark small text-uppercase">${escapeHtml(result.type)}</span>
-                    </a>
-                `).join('');
-
-                searchResults.innerHTML = resultsHtml;
-                showResults();
-            }
-
-            function getTypeClass(type) {
-                const typeClasses = {
-                    'user': 'text-primary',
-                    'broadcast': 'text-warning',
-                    'division': 'text-info'
-                };
-                return typeClasses[type] || 'text-success';
-            }
-
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
-            function showResults() {
-                searchResults.classList.add('show');
-                searchResults.style.width = searchInput.offsetWidth + 'px';
-            }
-
-            function hideResults() {
-                searchResults.classList.remove('show');
-            }
-        });
-    </script>
-@endpush
