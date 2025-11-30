@@ -109,7 +109,7 @@
                                     <ul class="text-danger small ps-3 mb-0">
                                         @if(!$user->profile_photo_path) <li>Foto Profil kosong</li> @endif
                                         @if(!$user->ktp_photo_path) <li>Foto KTP kosong</li> @endif
-                                        @if(!$user->whatsapp) <li>No WhatsApp kosong</li> @endif
+                                        {{-- @if(!$user->whatsapp) <li>No WhatsApp kosong</li> @endif --}}
                                     </ul>
                                 </div>
                             @endif
