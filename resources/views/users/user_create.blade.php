@@ -92,7 +92,6 @@
     <form class="forms-sample" action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="row">
-            <!-- KARTU 1: DATA LOGIN & ROLE -->
             <div class="col-md-6 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
@@ -110,6 +109,13 @@
                             <label>Nama Lengkap ( Sesuai KTP )</label>
                             <input type="text" class="form-control" name="name" value="{{ old('name') }}" required>
                         </div>
+
+                        {{-- [BARU] TANGGAL LAHIR --}}
+                        <div class="form-group mb-3">
+                            <label>Tanggal Lahir (Opsional)</label>
+                            <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date') }}">
+                        </div>
+
                         <div class="form-group mb-3">
                             <label>ID Login *</label>
                             <input type="text" class="form-control" name="login_id" value="{{ old('login_id') }}"
@@ -158,7 +164,6 @@
                 </div>
             </div>
 
-            <!-- KARTU 2: PENEMPATAN -->
             <div class="col-md-6 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
@@ -233,7 +238,6 @@
                                 @foreach ($divisions as $division)
                                     <option value="{{ $division->id }}"
                                         {{ in_array($division->id, old('multi_divisions', [])) ? 'selected' : '' }}>
-                                        {{-- Cukup tampilkan nama divisi saja --}}
                                         {{ $division->name }}
                                     </option>
                                 @endforeach
@@ -245,6 +249,12 @@
                                     class="text-danger">Hapus Semua</a>
                             </div>
                             <small class="text-muted">Pilih divisi dari cabang yang tersedia</small>
+                        </div>
+
+                        {{-- [BARU] TANGGAL MASUK (HIRE DATE) --}}
+                        <div class="form-group mb-3">
+                            <label>Tanggal Masuk (Hire Date - Opsional)</label>
+                            <input type="date" class="form-control" name="hire_date" value="{{ old('hire_date') }}">
                         </div>
 
                         <hr>

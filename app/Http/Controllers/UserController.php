@@ -85,6 +85,8 @@ class UserController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'birth_date' => 'nullable|date', // Tambahan
+            'hire_date' => 'nullable|date',  // Tambahan
             'email' => 'required|string|email|max:255|unique:users',
             'login_id' => 'required|string|unique:users',
             'password' => 'required|string|min:8|confirmed',
@@ -142,13 +144,13 @@ class UserController extends Controller
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
 
-        $branches = Branch::all(); 
+        $branches = Branch::all();
         $divisions = Division::all();
         $allowedRoles = ['admin', 'audit', 'leader', 'security', 'user_biasa'];
-        
+
         // Logika filter role/branch disederhanakan agar tidak terlalu panjang, tapi tetap aman
-        if($auth_user->role != 'admin' || $auth_user->branch_id != null) {
-             // Logic khusus audit/admin cabang jika diperlukan
+        if ($auth_user->role != 'admin' || $auth_user->branch_id != null) {
+            // Logic khusus audit/admin cabang jika diperlukan
         }
 
         return view('users.user_edit', compact('user', 'divisions', 'branches', 'allowedRoles'));
@@ -157,9 +159,11 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $auth_user = Auth::user();
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
+            'birth_date' => 'nullable|date', // Tambahan
+            'hire_date' => 'nullable|date',  // Tambahan
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'login_id' => ['required', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
@@ -169,12 +173,12 @@ class UserController extends Controller
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
-        
+
         // Update logic password & photo
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
-        
+
         // Logic Update Foto (Jika admin yang upload, bisa bypass)
         if ($request->hasFile('profile_photo_path')) {
             if ($user->profile_photo_path) Storage::disk('public')->delete($user->profile_photo_path);
@@ -182,12 +186,12 @@ class UserController extends Controller
         }
 
         $user->update($data);
-        
+
         // Sync relations
         if ($request->role == 'audit') {
             $user->branches()->sync($request->multi_branches ?? []);
         } else {
-             $user->divisions()->sync($request->multi_divisions ?? []);
+            $user->divisions()->sync($request->multi_divisions ?? []);
         }
 
         return redirect()->route('users.index')->with('success', 'Data user berhasil diperbarui.');
@@ -205,7 +209,7 @@ class UserController extends Controller
         try {
             if ($user->profile_photo_path) Storage::disk('public')->delete($user->profile_photo_path);
             if ($user->ktp_photo_path) Storage::disk('public')->delete($user->ktp_photo_path);
-            
+
             $user->branches()->detach();
             $user->divisions()->detach();
             $user->delete();
@@ -232,10 +236,10 @@ class UserController extends Controller
         }
 
         $user->load(['branch', 'division', 'branches', 'divisions']);
-        
+
         // Ambil statistik absensi user tersebut
         $stats = $this->getSpecificUserStats($user->id);
-        
+
         $recentAttendance = Attendance::where('user_id', $user->id)
             ->latest('check_in_time')
             ->take(5)
@@ -298,7 +302,7 @@ class UserController extends Controller
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereIn('status', ['verified', 'present', 'late'])
             ->count();
-        
+
         // Simple return structure
         return [
             'total' => $presentCount,

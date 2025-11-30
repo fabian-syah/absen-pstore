@@ -30,6 +30,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'birth_date',
         'login_id',        // ID Login khusus (wajib)
         'password',
         'role',
