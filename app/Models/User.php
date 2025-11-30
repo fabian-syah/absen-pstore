@@ -46,6 +46,8 @@ class User extends Authenticatable
         'tiktok',          // Opsional, hanya untuk sosmed
         'facebook',
         'linkedin',
+        'is_verified',
+        'photo_request_status',
     ];
 
     /**
@@ -90,7 +92,7 @@ class User extends Authenticatable
     public function branches(): BelongsToMany
     {
         return $this->belongsToMany(Branch::class, 'branch_user', 'user_id', 'branch_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     /**
@@ -100,7 +102,7 @@ class User extends Authenticatable
     public function divisions(): BelongsToMany
     {
         return $this->belongsToMany(Division::class, 'division_user', 'user_id', 'division_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     // =================================================================
@@ -146,9 +148,17 @@ class User extends Authenticatable
     public function findForLogin($loginId)
     {
         return $this->where('whatsapp', $loginId)
-                    ->orWhere('instagram', $loginId)
-                    ->orWhere('tiktok', $loginId)
-                    ->orWhere('email', $loginId)
-                    ->first();
+            ->orWhere('instagram', $loginId)
+            ->orWhere('tiktok', $loginId)
+            ->orWhere('email', $loginId)
+            ->first();
+    }
+
+    public function isDataComplete()
+    {
+        return !empty($this->profile_photo_path) &&
+            !empty($this->ktp_photo_path) &&
+            !empty($this->whatsapp) &&
+            !empty($this->email);
     }
 }

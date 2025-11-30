@@ -65,35 +65,73 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update HANYA foto profil.
+     * Update HANYA foto profil (DENGAN LOGIKA CENTANG BIRU).
      */
     public function updatePhoto(Request $request)
-{
-    $request->validate([
-        'profile_photo' => 'required|image|mimes:jpeg,png,jpg|max:51200', // 2MB
-    ]);
+    {
+        $request->validate([
+            'profile_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120', // 5MB
+        ]);
 
-    /** @var \App\Models\User $user */
-    $user = Auth::user();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-    try {
-        // Hapus foto lama jika ada
-        if ($user->profile_photo_path) {
-            Storage::disk('public')->delete($user->profile_photo_path);
+        // --- LOGIKA PENGUNCIAN ---
+        // Jika User Verified DAN status request bukan 'approved', tolak upload.
+        if ($user->is_verified && $user->photo_request_status !== 'approved') {
+            return redirect()->route('profile.edit')
+                ->with('error', 'Akun Terverifikasi. Silakan ajukan izin ganti foto terlebih dahulu.');
         }
 
-        // Simpan foto baru
-        $path = $request->file('profile_photo')->store('profile_photos', 'public');
-        $user->update(['profile_photo_path' => $path]);
+        try {
+            // Hapus foto lama jika ada
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
 
-        return redirect()->route('profile.edit')
-            ->with('success', 'Foto profil berhasil di-upload.');
+            // Simpan foto baru
+            $path = $request->file('profile_photo')->store('profile_photos', 'public');
+            
+            // Siapkan data update
+            $updateData = ['profile_photo_path' => $path];
 
-    } catch (\Exception $e) {
-        return redirect()->route('profile.edit')
-            ->with('error', 'Gagal mengupload foto: ' . $e->getMessage());
+            // PENTING: Jika user verified, setelah upload berhasil, KUNCI KEMBALI
+            // Reset status request kembali ke 'none' agar user harus request lagi jika mau ganti
+            if ($user->is_verified) {
+                $updateData['photo_request_status'] = 'none';
+            }
+
+            $user->update($updateData);
+
+            return redirect()->route('profile.edit')
+                ->with('success', 'Foto profil berhasil di-upload.');
+
+        } catch (\Exception $e) {
+            return redirect()->route('profile.edit')
+                ->with('error', 'Gagal mengupload foto: ' . $e->getMessage());
+        }
     }
-}
+
+    /**
+     * FITUR BARU: Request Ganti Foto (Untuk user verified)
+     */
+    public function requestPhotoChange()
+    {
+        $user = Auth::user();
+
+        if (!$user->is_verified) {
+            return back()->with('error', 'Anda belum terverifikasi, silakan langsung ganti foto tanpa pengajuan.');
+        }
+
+        if ($user->photo_request_status === 'pending') {
+            return back()->with('error', 'Pengajuan Anda sedang diproses oleh Admin/Audit.');
+        }
+
+        // Set status jadi pending
+        $user->update(['photo_request_status' => 'pending']);
+
+        return back()->with('success', 'Pengajuan ganti foto telah dikirim. Tunggu persetujuan Admin/Audit.');
+    }
 
     /**
      * Update HANYA KTP (sekali upload).
@@ -101,7 +139,7 @@ class ProfileController extends Controller
     public function updateKtp(Request $request)
     {
         $request->validate([
-            'ktp_photo' => 'required|image|mimes:jpeg,png,jpg|max:51200', // 2MB
+            'ktp_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120', // 5MB
         ]);
 
         /** @var \App\Models\User $user */
@@ -126,6 +164,11 @@ class ProfileController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        // User verified tidak boleh hapus foto sembarangan
+        if ($user->is_verified) {
+            return back()->with('error', 'Akun terverifikasi tidak boleh menghapus foto profil.');
+        }
 
         if ($user->profile_photo_path) {
             Storage::disk('public')->delete($user->profile_photo_path);
@@ -165,12 +208,10 @@ class ProfileController extends Controller
                 'description' => $request->description,
             ];
 
-            // Simpan foto barang jika ada
             if ($request->hasFile('item_photo')) {
                 $data['item_photo_path'] = $request->file('item_photo')->store('inventory_photos', 'public');
             }
 
-            // Simpan dokumen jika ada
             if ($request->hasFile('document')) {
                 $data['document_path'] = $request->file('document')->store('inventory_documents', 'public');
             }
@@ -190,18 +231,14 @@ class ProfileController extends Controller
      */
     public function destroyInventory(Inventory $inventory)
     {
-        // Authorization: Pastikan user hanya bisa menghapus inventaris miliknya sendiri
         if ($inventory->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
         try {
-            // Hapus file foto jika ada
             if ($inventory->item_photo_path) {
                 Storage::disk('public')->delete($inventory->item_photo_path);
             }
-
-            // Hapus file dokumen jika ada
             if ($inventory->document_path) {
                 Storage::disk('public')->delete($inventory->document_path);
             }
@@ -214,5 +251,40 @@ class ProfileController extends Controller
             return redirect()->route('profile.edit')
                 ->with('error', 'Gagal menghapus inventaris: ' . $e->getMessage());
         }
+    }
+    
+    /**
+     * Menambah Riwayat Pekerjaan (Work History)
+     */
+    public function storeWorkHistory(Request $request)
+    {
+        $request->validate([
+            'position' => 'required|string|max:255',
+            'department' => 'required|string|max:255',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        $user = Auth::user();
+        
+        WorkHistory::create([
+            'user_id' => $user->id,
+            'position' => $request->position,
+            'department' => $request->department,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+        ]);
+
+        return redirect()->route('profile.edit')->with('success', 'Riwayat pekerjaan ditambahkan.');
+    }
+
+    /**
+     * Menghapus Riwayat Pekerjaan
+     */
+    public function destroyWorkHistory($id)
+    {
+        $history = WorkHistory::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $history->delete();
+        return redirect()->route('profile.edit')->with('success', 'Riwayat pekerjaan dihapus.');
     }
 }

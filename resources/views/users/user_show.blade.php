@@ -1,280 +1,226 @@
 @extends('layout.master')
 
-@section('title')
-    Detail User: {{ $user->name }}
-@endsection
-
-@section('heading')
-    Detail Pengguna
-@endsection
+@section('title', 'Detail User')
 
 @section('content')
+
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
 <div class="row">
-    {{-- ========================================================= --}}
-    {{-- KOLOM KIRI: PROFIL PENGGUNA --}}
-    {{-- ========================================================= --}}
+    {{-- KOLOM KIRI: FOTO & PANEL KONTROL ADMIN --}}
     <div class="col-md-4 grid-margin stretch-card">
         <div class="card">
             <div class="card-body text-center">
                 
-                {{-- Foto Profil --}}
-                <div class="mb-4">
+                {{-- Foto Profil Wrapper (Besar) --}}
+                <div class="mb-4 position-relative d-inline-block">
                     @if($user->profile_photo_path)
                         <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
-                             alt="profile" class="img-lg rounded-circle mb-3"
-                             style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #e3e3e3;">
+                             alt="profile" class="img-lg rounded-circle"
+                             style="width: 150px; height: 150px; object-fit: cover; border: {{ $user->is_verified ? '5px solid #0d6efd' : '3px solid #e3e3e3' }};">
                     @else
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random&size=128" 
-                             alt="profile" class="img-lg rounded-circle mb-3">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=150" 
+                             class="img-lg rounded-circle" style="width: 150px; height: 150px;">
                     @endif
-                    
-                    <h4 class="fw-bold">{{ $user->name }}</h4>
-                    <p class="text-muted mb-1">{{ strtoupper(str_replace('_', ' ', $user->role)) }}</p>
-                    
-                    <span class="badge {{ $user->is_active ? 'badge-success' : 'badge-danger' }}">
-                        {{ $user->is_active ? 'Status: Aktif' : 'Status: Non-Aktif' }}
-                    </span>
+
+                    {{-- Ikon Centang Biru Overlay --}}
+                    @if($user->is_verified)
+                        <div class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center" 
+                             style="bottom: 5px; right: 5px; width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                            <i class="mdi mdi-check-decagram text-primary" style="font-size: 30px;"></i>
+                        </div>
+                    @endif
                 </div>
                 
-                {{-- Detail Informasi --}}
-                <div class="text-start border-top pt-3">
-                    <div class="py-2">
-                        <label class="text-muted small fw-bold">ID Login</label>
-                        <p class="mb-0 text-dark font-weight-medium">{{ $user->login_id }}</p>
+                <h4 class="fw-bold mt-2">{{ $user->name }}</h4>
+                <p class="text-muted mb-3">{{ strtoupper(str_replace('_', ' ', $user->role)) }}</p>
+
+                {{-- Status Verifikasi (Badge) --}}
+                @if($user->is_verified)
+                    <div class="badge badge-primary px-3 py-2 mb-3"><i class="mdi mdi-check-decagram"></i> Akun Terverifikasi</div>
+                @else
+                    <div class="badge badge-secondary px-3 py-2 mb-3">Belum Verifikasi</div>
+                @endif
+
+                <hr>
+
+                {{-- ============================================= --}}
+                {{-- AREA NOTIFIKASI REQUEST GANTI FOTO (PENTING) --}}
+                {{-- ============================================= --}}
+                @if($user->photo_request_status == 'pending')
+                    <div class="alert alert-warning border-warning text-start shadow-sm">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="mdi mdi-camera-retake mdi-24px me-2"></i>
+                            <strong>Request Ganti Foto</strong>
+                        </div>
+                        <p class="small mb-2 lh-sm">User ini meminta izin untuk mengganti foto profilnya yang terkunci.</p>
+                        
+                        <form action="{{ route('users.approve-photo', $user->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn btn-warning text-white btn-sm w-100 fw-bold">
+                                <i class="mdi mdi-check"></i> Setujui Permintaan
+                            </button>
+                        </form>
                     </div>
-                    <div class="py-2">
-                        <label class="text-muted small fw-bold">Cabang (Homebase)</label>
-                        <p class="mb-0 text-dark">{{ $user->branch->name ?? 'Semua Cabang (Pusat)' }}</p>
-                    </div>
-                    <div class="py-2">
-                        <label class="text-muted small fw-bold">Divisi</label>
-                        <p class="mb-0 text-dark">{{ $user->division->name ?? '-' }}</p>
-                    </div>
-                    <div class="py-2">
-                        <label class="text-muted small fw-bold">Tanggal Bergabung</label>
-                        <p class="mb-0 text-dark">{{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->translatedFormat('d F Y') : '-' }}</p>
-                    </div>
-                    <div class="py-2">
-                        <label class="text-muted small fw-bold">Kontak</label>
-                        <p class="mb-0"><i class="mdi mdi-email me-1 text-primary"></i> {{ $user->email }}</p>
-                        @if($user->whatsapp)
-                            <p class="mb-0"><i class="mdi mdi-whatsapp me-1 text-success"></i> {{ $user->whatsapp }}</p>
+                @endif
+
+                {{-- ============================================= --}}
+                {{-- PANEL TOMBOL VERIFIKASI (ADMIN/AUDIT ONLY) --}}
+                {{-- ============================================= --}}
+                <div class="d-grid gap-2 mb-3">
+                    <form action="{{ route('users.verify', $user->id) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        
+                        @if($user->is_verified)
+                            {{-- Jika sudah verified, tombolnya merah (Cabut) --}}
+                            <button type="submit" class="btn btn-outline-danger btn-sm w-100" 
+                                onclick="return confirm('Yakin ingin mencabut verifikasi? Centang biru akan hilang dan user bisa ganti foto lagi.')">
+                                <i class="mdi mdi-close-circle"></i> Cabut Verifikasi
+                            </button>
+                        @else
+                            {{-- Jika belum verified, Cek Kelengkapan Data --}}
+                            @if($user->profile_photo_path && $user->ktp_photo_path && $user->whatsapp)
+                                <button type="submit" class="btn btn-primary btn-sm w-100 py-2">
+                                    <i class="mdi mdi-check-decagram"></i> Verifikasi Akun (Beri Centang Biru)
+                                </button>
+                                <small class="text-muted d-block mt-1 text-small">
+                                    Ini akan mengunci foto profil user.
+                                </small>
+                            @else
+                                <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
+                                    <i class="mdi mdi-alert-circle"></i> Data Belum Lengkap
+                                </button>
+                                <div class="text-start mt-2 px-2">
+                                    <small class="text-danger fw-bold d-block">Kekurangan:</small>
+                                    <ul class="text-danger small ps-3 mb-0">
+                                        @if(!$user->profile_photo_path) <li>Foto Profil kosong</li> @endif
+                                        @if(!$user->ktp_photo_path) <li>Foto KTP kosong</li> @endif
+                                        @if(!$user->whatsapp) <li>No WhatsApp kosong</li> @endif
+                                    </ul>
+                                </div>
+                            @endif
+                        @endif
+                    </form>
+                </div>
+
+                {{-- TOMBOL LIHAT KTP --}}
+                <div class="text-start bg-light p-3 rounded border">
+                    <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">DOKUMEN PRIBADI</h6>
+                    
+                    <div class="mb-2">
+                        <small class="d-block text-muted">Foto KTP:</small>
+                        @if($user->ktp_photo_path)
+                            <a href="{{ asset('storage/' . $user->ktp_photo_path) }}" target="_blank" 
+                               class="btn btn-inverse-info btn-sm w-100 mt-1">
+                                <i class="mdi mdi-card-account-details"></i> Lihat KTP Asli
+                            </a>
+                        @else
+                            <span class="badge badge-danger">Belum Upload</span>
                         @endif
                     </div>
                 </div>
 
-                {{-- Tombol Aksi --}}
-                <div class="mt-4 d-grid gap-2">
-                    <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning btn-sm text-white">
-                        <i class="mdi mdi-pencil"></i> Edit Profil
-                    </a>
-                    <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit" class="btn btn-sm w-100 {{ $user->is_active ? 'btn-danger' : 'btn-success' }}">
-                            <i class="mdi {{ $user->is_active ? 'mdi-account-off' : 'mdi-account-check' }}"></i>
-                            {{ $user->is_active ? 'Nonaktifkan Akun' : 'Aktifkan Akun' }}
-                        </button>
-                    </form>
-                    <a href="{{ route('users.index') }}" class="btn btn-light btn-sm">
-                        <i class="mdi mdi-arrow-left"></i> Kembali
-                    </a>
-                </div>
             </div>
         </div>
     </div>
 
-    {{-- ========================================================= --}}
-    {{-- KOLOM KANAN: STATISTIK & HISTORY --}}
-    {{-- ========================================================= --}}
+    {{-- KOLOM KANAN: DETAIL INFO TEKS --}}
     <div class="col-md-8 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Statistik Absensi ({{ $stats['current_month'] }})</h4>
-                <p class="card-description">Ringkasan performa kehadiran bulan ini.</p>
+                <h4 class="card-title">Detail Informasi Lengkap</h4>
                 
-                {{-- GRID STATISTIK --}}
                 <div class="row mt-4">
-                    {{-- Total Hadir --}}
                     <div class="col-md-6 mb-4">
-                        <div class="card bg-primary text-white h-100">
-                            <div class="card-body d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="mb-0 fw-bold">{{ $stats['present'] }}</h2>
-                                    <small>Total Kehadiran (Masuk)</small>
-                                </div>
-                                <i class="mdi mdi-calendar-check mdi-36px" style="opacity: 0.5"></i>
-                            </div>
-                        </div>
+                        <label class="fw-bold text-muted small text-uppercase">Email Login</label>
+                        <p class="h5">{{ $user->email }}</p>
                     </div>
-
-                    {{-- Tidak Hadir / Alpha --}}
                     <div class="col-md-6 mb-4">
-                        <div class="card bg-secondary text-white h-100">
-                            <div class="card-body d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="mb-0 fw-bold">{{ $stats['alpha'] }}</h2>
-                                    <small>Tidak Hadir / Alpha</small>
-                                </div>
-                                <i class="mdi mdi-account-off mdi-36px" style="opacity: 0.5"></i>
-                            </div>
-                        </div>
+                        <label class="fw-bold text-muted small text-uppercase">Nomor WhatsApp</label>
+                        <p class="h5">{{ $user->whatsapp ?? '-' }}</p>
                     </div>
-
-                    {{-- Tepat Waktu --}}
                     <div class="col-md-6 mb-4">
-                        <div class="card bg-success text-white h-100">
-                            <div class="card-body d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="mb-0 fw-bold">{{ $stats['on_time'] }}</h2>
-                                    <small>Tepat Waktu ({{ $stats['on_time_percentage'] }}%)</small>
-                                </div>
-                                <i class="mdi mdi-clock-check mdi-36px" style="opacity: 0.5"></i>
-                            </div>
-                        </div>
+                        <label class="fw-bold text-muted small text-uppercase">Lokasi Cabang</label>
+                        <p class="h5">{{ $user->branch->name ?? 'Pusat / Semua Cabang' }}</p>
                     </div>
-
-                    {{-- Terlambat --}}
                     <div class="col-md-6 mb-4">
-                        <div class="card bg-danger text-white h-100">
-                            <div class="card-body d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="mb-0 fw-bold">{{ $stats['late'] }}</h2>
-                                    <small>Terlambat ({{ $stats['late_percentage'] }}%)</small>
-                                </div>
-                                <i class="mdi mdi-clock-alert mdi-36px" style="opacity: 0.5"></i>
-                            </div>
-                        </div>
+                        <label class="fw-bold text-muted small text-uppercase">Divisi</label>
+                        <p class="h5">{{ $user->division->name ?? '-' }}</p>
                     </div>
-
-                    {{-- Pulang Cepat --}}
                     <div class="col-md-6 mb-4">
-                        <div class="card bg-warning text-white h-100">
-                            <div class="card-body d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="mb-0 fw-bold">{{ $stats['early'] }}</h2>
-                                    <small>Pulang Cepat</small>
-                                </div>
-                                <i class="mdi mdi-run-fast mdi-36px" style="opacity: 0.5"></i>
-                            </div>
-                        </div>
+                        <label class="fw-bold text-muted small text-uppercase">Tanggal Bergabung</label>
+                        <p class="h5">{{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->translatedFormat('d F Y') : '-' }}</p>
                     </div>
-
-                    {{-- Pending Verifikasi --}}
                     <div class="col-md-6 mb-4">
-                        <div class="card bg-info text-white h-100">
-                            <div class="card-body d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="mb-0 fw-bold">{{ $stats['pending'] }}</h2>
-                                    <small>Butuh Verifikasi</small>
-                                </div>
-                                <i class="mdi mdi-account-search mdi-36px" style="opacity: 0.5"></i>
-                            </div>
-                        </div>
+                        <label class="fw-bold text-muted small text-uppercase">Status Sistem</label>
+                        <p>
+                            <span class="badge {{ $user->is_active ? 'badge-success' : 'badge-danger' }} p-2">
+                                {{ $user->is_active ? 'AKUN AKTIF' : 'AKUN NON-AKTIF' }}
+                            </span>
+                        </p>
                     </div>
                 </div>
 
-                <hr class="my-4">
-
-                {{-- RECENT ACTIVITY TABLE --}}
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0 card-title">5 Riwayat Absensi Terakhir</h5>
+                {{-- Tabel 5 Absensi Terakhir (Preview) --}}
+                <div class="mt-4">
+                    <h5 class="card-title mb-3">5 Aktivitas Absensi Terakhir</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr class="bg-light">
+                                    <th>Tanggal</th>
+                                    <th>Masuk</th>
+                                    <th>Pulang</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentAttendance as $log)
+                                    <tr>
+                                        <td>{{ \Carbon\Carbon::parse($log->check_in_time)->format('d M Y') }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($log->check_in_time)->format('H:i') }}</td>
+                                        <td>{{ $log->check_out_time ? \Carbon\Carbon::parse($log->check_out_time)->format('H:i') : '-' }}</td>
+                                        <td>
+                                            @if($log->is_late_checkin) <span class="badge badge-danger">Telat</span> @endif
+                                            @if($log->status == 'present' || $log->status == 'verified') <span class="badge badge-success">Hadir</span> @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">Belum ada data absensi.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Jam Masuk</th>
-                                <th>Jam Pulang</th>
-                                <th>Tipe</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($recentAttendance as $log)
-                                <tr>
-                                    {{-- Tanggal --}}
-                                    <td>{{ \Carbon\Carbon::parse($log->check_in_time)->translatedFormat('d M Y') }}</td>
-                                    
-                                    {{-- Jam Masuk --}}
-                                    <td>
-                                        <span class="{{ $log->is_late_checkin ? 'text-danger fw-bold' : 'text-success' }}">
-                                            {{ \Carbon\Carbon::parse($log->check_in_time)->format('H:i') }}
-                                        </span>
-                                        @if($log->is_late_checkin)
-                                            <i class="mdi mdi-alert-circle text-danger ms-1" title="Terlambat"></i>
-                                        @endif
-                                    </td>
-                                    
-                                    {{-- Jam Pulang --}}
-                                    <td>
-                                        @if($log->check_out_time)
-                                            <span class="{{ $log->is_early_checkout ? 'text-warning fw-bold' : 'text-success' }}">
-                                                {{ \Carbon\Carbon::parse($log->check_out_time)->format('H:i') }}
-                                            </span>
-                                            @if($log->is_early_checkout)
-                                                <i class="mdi mdi-run text-warning ms-1" title="Pulang Cepat"></i>
-                                            @endif
-                                        @else
-                                            <span class="text-muted small">Belum Checkout</span>
-                                        @endif
-                                    </td>
-
-                                    {{-- Tipe Absen --}}
-                                    <td>
-                                        @if($log->attendance_type == 'scan')
-                                            <span class="badge badge-outline-primary">Security Scan</span>
-                                        @elseif($log->attendance_type == 'self')
-                                            <span class="badge badge-outline-info">Mandiri (Selfie)</span>
-                                        @elseif($log->attendance_type == 'system' || $log->presence_status == 'Alpha')
-                                            <span class="badge badge-outline-danger">System Auto</span>
-                                        @else
-                                            <span class="badge badge-outline-secondary">System</span>
-                                        @endif
-                                    </td>
-
-                                    {{-- Status Verifikasi (Include Logic Alpha) --}}
-                                    <td>
-                                        @if($log->presence_status == 'Alpha')
-                                            <div class="d-flex align-items-center">
-                                                <i class="mdi mdi-robot text-danger me-1"></i>
-                                                <span class="badge badge-danger">Alpha</span>
-                                            </div>
-                                        @elseif($log->status == 'verified' || $log->status == 'present' || $log->status == 'late')
-                                            <div class="d-flex align-items-center">
-                                                <i class="mdi mdi-check-circle text-success me-1"></i>
-                                                <span class="badge badge-success">Valid</span>
-                                            </div>
-                                        @elseif($log->status == 'rejected')
-                                            <div class="d-flex align-items-center">
-                                                <i class="mdi mdi-close-circle text-danger me-1"></i>
-                                                <span class="badge badge-danger">Ditolak</span>
-                                            </div>
-                                        @elseif($log->status == 'pending_verification')
-                                            <div class="d-flex align-items-center">
-                                                <i class="mdi mdi-clock text-warning me-1"></i>
-                                                <span class="badge badge-warning">Pending</span>
-                                            </div>
-                                        @else
-                                            <span class="badge badge-secondary">{{ $log->status }}</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-4">
-                                        <div class="text-muted">Belum ada data absensi untuk user ini.</div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+                    <a href="{{ route('users.index') }}" class="btn btn-light">
+                        <i class="mdi mdi-arrow-left"></i> Kembali ke Daftar User
+                    </a>
+                    <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning text-white">
+                        <i class="mdi mdi-pencil"></i> Edit Data User
+                    </a>
                 </div>
 
             </div>
         </div>
     </div>
 </div>
+
 @endsection

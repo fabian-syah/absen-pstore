@@ -18,7 +18,7 @@ use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\WorkScheduleController;
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\GlobalSearchController;
-use App\Http\Controllers\InventoryController; // Pastikan ini ada
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\AttendanceHistoryController;
 
 /*
@@ -93,6 +93,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Foto & KTP
         Route::delete('/photo', [ProfileController::class, 'deleteProfilePhoto'])->name('photo.delete');
         Route::put('/photo', [ProfileController::class, 'updatePhoto'])->name('photo.update');
+        
+        // [BARU] Request Ganti Foto (Jika User Verified)
+        Route::post('/photo/request', [ProfileController::class, 'requestPhotoChange'])->name('photo.request');
+
         Route::get('/photo/{user}', [ProfileController::class, 'getProfilePhoto'])->name('photo.get');
         Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update');
         Route::get('/ktp/{user}', [ProfileController::class, 'getKtpPhoto'])->name('ktp.get');
@@ -101,11 +105,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/work-history', [WorkHistoryController::class, 'store'])->name('work-history.store');
         Route::delete('/work-history/{history}', [WorkHistoryController::class, 'destroy'])->name('work-history.destroy');
 
-        // --- INVENTORY KHUSUS PROFILE (Menggunakan InventoryController) ---
-        // Perhatikan ini menggunakan InventoryController, bukan ProfileController lagi
+        // --- INVENTORY KHUSUS PROFILE ---
         Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store'); 
         Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
-        Route::get('/inventory', [InventoryController::class, 'showInventory'])->name('inventory.index'); // Opsional jika ingin list terpisah
+        Route::get('/inventory', [InventoryController::class, 'showInventory'])->name('inventory.index');
     });
 
     // === RUTE INVENTORY (SIDEBAR MENU) ===
@@ -115,10 +118,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
     });
 
-    // 2. Hanya ADMIN & AUDIT BISA MENGELOLA (Create, Edit, Update, Delete Global)
+    // 2. Hanya ADMIN & AUDIT BISA MENGELOLA
     Route::prefix('inventory')->name('inventory.')->middleware(['role:admin,audit'])->group(function () {
         Route::get('/create', [InventoryController::class, 'create'])->name('create');
-        Route::post('/', [InventoryController::class, 'store'])->name('store'); // Nama route sama dgn profile tapi URL beda
+        Route::post('/', [InventoryController::class, 'store'])->name('store');
         Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
         Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
         Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
@@ -136,9 +139,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::resource('divisions', DivisionController::class);
         Route::post('/divisions/{division}/toggle-status', [DivisionController::class, 'toggleStatus'])->name('divisions.toggle-status');
 
+        // USER MANAGEMENT
         Route::resource('users', UserController::class);
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+        
+        // [BARU] Verifikasi User & Approval Foto
+        Route::patch('/users/{user}/verify', [UserController::class, 'verifyUser'])->name('users.verify');
+        Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
 
         Route::prefix('verifikasi')->name('audit.')->group(function () {
             Route::get('/absensi', [AuditController::class, 'showVerificationList'])->name('verify.list');

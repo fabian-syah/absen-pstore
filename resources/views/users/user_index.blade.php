@@ -31,7 +31,6 @@
                                 <button class="btn btn-primary" type="submit">
                                     <i class="mdi mdi-magnify"></i>
                                 </button>
-                                {{-- Tombol Reset (Hanya muncul jika ada search) --}}
                                 @if (request('search'))
                                     <a href="{{ route('users.index') }}" class="btn btn-secondary" title="Reset Pencarian">
                                         <i class="mdi mdi-refresh"></i>
@@ -40,7 +39,6 @@
                             </div>
                         </form>
                     </div>
-                    {{-- AKHIR CONTAINER --}}
 
                     @if (session('success'))
                         <div class="alert alert-success" role="alert">
@@ -72,21 +70,31 @@
                                     <tr>
                                         <td> {{ $users->firstItem() + $key }} </td>
 
-                                        {{-- PROFIL --}}
+                                        {{-- PROFIL & CENTANG BIRU --}}
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="me-3">
+                                                <div class="me-3 position-relative">
                                                     @if ($user->profile_photo_path)
                                                         <img src="{{ asset('storage/' . $user->profile_photo_path) }}"
                                                             alt="profile" class="img-sm rounded-circle"
-                                                            style="width: 40px; height: 40px; object-fit: cover;">
+                                                            style="width: 40px; height: 40px; object-fit: cover; border: {{ $user->is_verified ? '2px solid #0d6efd' : 'none' }};">
                                                     @else
                                                         <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random"
                                                             alt="profile" class="img-sm rounded-circle">
                                                     @endif
+                                                    
+                                                    {{-- Indikator Centang Biru di List --}}
+                                                    @if($user->is_verified)
+                                                        <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
+                                                              style="bottom: -2px; right: -2px; width: 16px; height: 16px;">
+                                                            <i class="mdi mdi-check-decagram text-primary" style="font-size: 14px;"></i>
+                                                        </span>
+                                                    @endif
                                                 </div>
                                                 <div>
-                                                    <div class="fw-bold">{{ $user->name }}</div>
+                                                    <div class="fw-bold d-flex align-items-center gap-1">
+                                                        {{ $user->name }}
+                                                    </div>
                                                     <small class="text-muted">ID: {{ $user->login_id ?? '-' }}</small>
                                                 </div>
                                             </div>
@@ -104,38 +112,17 @@
 
                                         {{-- ROLE --}}
                                         <td>
-                                            @if ($user->role == 'admin' && $user->branch_id == null)
-                                                <span class="badge badge-danger">Super Admin</span>
-                                            @elseif($user->role == 'admin' && $user->branch_id != null)
-                                                <span class="badge badge-primary">Admin Cabang</span>
-                                            @elseif($user->role == 'audit')
-                                                <span class="badge badge-info">Audit</span>
-                                            @elseif($user->role == 'leader')
-                                                <span class="badge badge-success">Leader</span>
-                                            @elseif($user->role == 'security')
-                                                <span class="badge badge-warning">Security</span>
-                                            @else
-                                                <span class="badge badge-secondary">User Biasa</span>
-                                            @endif
+                                            <span class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
                                         </td>
 
                                         {{-- PENEMPATAN --}}
                                         <td>
                                             @if ($user->role == 'audit')
-                                                <div class="fw-bold text-primary">Audit Wilayah:</div>
-                                                <small class="text-muted" style="white-space: normal;">
-                                                    {{ $user->branches->pluck('name')->join(', ') ?: 'Belum ada wilayah' }}
-                                                </small>
+                                                <small>{{ $user->branches->pluck('name')->join(', ') ?: 'N/A' }}</small>
                                             @elseif($user->role == 'leader')
-                                                <div class="fw-bold">{{ $user->branch->name ?? 'N/A' }}</div>
-                                                <div class="text-success text-small fw-bold mt-1">Memimpin Divisi:</div>
-                                                <small class="text-muted" style="white-space: normal;">
-                                                    {{ $user->divisions->pluck('name')->join(', ') ?: 'Belum ada divisi' }}
-                                                </small>
+                                                <small>{{ $user->branch->name ?? 'N/A' }} (Div: {{ $user->divisions->pluck('name')->join(', ') }})</small>
                                             @else
-                                                <div class="fw-bold">{{ $user->branch->name ?? 'Semua Cabang' }}</div>
-                                                <small
-                                                    class="text-muted">{{ $user->division->name ?? 'Tanpa Divisi' }}</small>
+                                                <small>{{ $user->branch->name ?? 'Semua' }}</small>
                                             @endif
                                         </td>
 
@@ -159,9 +146,9 @@
 
                                         {{-- AKSI --}}
                                         <td>
-                                            {{-- Detail --}}
+                                            {{-- Detail (Dashboard User) --}}
                                             <a href="{{ route('users.show', $user->id) }}"
-                                                class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail">
+                                                class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail & Verifikasi">
                                                 <i class="mdi mdi-eye"></i>
                                             </a>
                                             
@@ -171,8 +158,7 @@
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
 
-                                            {{-- Hapus (Kecuali diri sendiri DAN bukan role audit) --}}
-                                            {{-- INI PERUBAHANNYA: Tambah cek role != audit --}}
+                                            {{-- Hapus (Kecuali diri sendiri & Audit) --}}
                                             @if ($user->id != auth()->id() && auth()->user()->role != 'audit')
                                                 <form action="{{ route('users.destroy', $user->id) }}" method="POST"
                                                     class="d-inline"
@@ -186,21 +172,16 @@
                                                 </form>
                                             @endif
 
-                                            {{-- TOMBOL TOGGLE STATUS (Nonaktifkan/Aktifkan) --}}
+                                            {{-- Toggle Status --}}
                                             @if ($user->id != auth()->id())
                                                 <form action="{{ route('users.toggle-status', $user->id) }}" method="POST"
                                                     class="d-inline">
                                                     @csrf
+                                                    @method('PATCH')
                                                     <button type="submit"
                                                         class="btn btn-icon btn-sm {{ $user->is_active ? 'btn-inverse-danger' : 'btn-inverse-success' }}"
-                                                        title="{{ $user->is_active ? 'Nonaktifkan User' : 'Aktifkan User' }}"
-                                                        onclick="return confirm('Apakah Anda yakin ingin mengubah status aktif user ini?')">
-
-                                                        @if ($user->is_active)
-                                                            <i class="mdi mdi-power-off"></i> {{-- Ikon Power Off (Merah) --}}
-                                                        @else
-                                                            <i class="mdi mdi-power"></i> {{-- Ikon Power On (Hijau) --}}
-                                                        @endif
+                                                        title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                                        <i class="mdi {{ $user->is_active ? 'mdi-power-off' : 'mdi-power' }}"></i>
                                                     </button>
                                                 </form>
                                             @endif
