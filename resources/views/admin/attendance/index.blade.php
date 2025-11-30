@@ -123,9 +123,9 @@
                         </table>
                     </div>
                     
-                    {{-- Pagination --}}
+                    {{-- Pagination (Persis seperti Data User) --}}
                     <div class="mt-4 d-flex justify-content-end">
-                        {{ $attendances->links() }} 
+                        {{ $attendances->links('pagination::bootstrap-5') }}
                     </div>
 
                 </div>
