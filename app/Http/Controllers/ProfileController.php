@@ -18,7 +18,10 @@ class ProfileController extends Controller
      */
     public function edit()
     {
-        $user = Auth::user();
+        // TAMBAHKAN ->fresh() DI SINI
+        // Ini memaksa Laravel mengambil data terbaru dari DB (termasuk is_verified)
+        $user = Auth::user()->fresh();
+
         $workHistories = $user->workHistories;
         $inventories = $user->inventories()->latest()->get();
 
@@ -91,7 +94,7 @@ class ProfileController extends Controller
 
             // Simpan foto baru
             $path = $request->file('profile_photo')->store('profile_photos', 'public');
-            
+
             // Siapkan data update
             $updateData = ['profile_photo_path' => $path];
 
@@ -105,7 +108,6 @@ class ProfileController extends Controller
 
             return redirect()->route('profile.edit')
                 ->with('success', 'Foto profil berhasil di-upload.');
-
         } catch (\Exception $e) {
             return redirect()->route('profile.edit')
                 ->with('error', 'Gagal mengupload foto: ' . $e->getMessage());
@@ -252,7 +254,7 @@ class ProfileController extends Controller
                 ->with('error', 'Gagal menghapus inventaris: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Menambah Riwayat Pekerjaan (Work History)
      */
@@ -266,7 +268,7 @@ class ProfileController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         WorkHistory::create([
             'user_id' => $user->id,
             'position' => $request->position,
