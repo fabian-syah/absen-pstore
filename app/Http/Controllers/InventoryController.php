@@ -175,6 +175,9 @@ class InventoryController extends Controller
      * - User Biasa: Hanya boleh hapus barang miliknya.
      * - Admin/Audit: Boleh hapus barang siapa saja.
      */
+    /**
+     * Destroy (Hapus Data)
+     */
     public function destroy(Request $request, $id)
     {
         $inventory = Inventory::findOrFail($id);
@@ -186,7 +189,7 @@ class InventoryController extends Controller
         }
 
         try {
-            // Hapus file fisik
+            // Hapus file fisik (Foto & Dokumen)
             if ($inventory->item_photo_path && Storage::disk('public')->exists($inventory->item_photo_path)) {
                 Storage::disk('public')->delete($inventory->item_photo_path);
             }
@@ -194,11 +197,22 @@ class InventoryController extends Controller
                 Storage::disk('public')->delete($inventory->document_path);
             }
 
+            // Hapus Data dari Database
             $inventory->delete();
 
-            return redirect()->back()->with('success', 'Inventaris berhasil dihapus.');
+            // === LOGIKA REDIRECT PERBAIKAN ===
+            
+            // 1. Cek apakah penghapusan dilakukan dari halaman Profile (URL sebelumnya mengandung kata 'profile')
+            if (str_contains(url()->previous(), 'profile')) {
+                return redirect()->route('profile.edit')->with('success', 'Inventaris berhasil dihapus.');
+            }
+
+            // 2. Default: Jika dari halaman Admin (Index atau Show), arahkan ke LIST UTAMA (Index)
+            // Jangan pakai back(), karena kalau dari halaman Show nanti jadi 404
+            return redirect()->route('inventory.index')->with('success', 'Inventaris berhasil dihapus.');
 
         } catch (\Exception $e) {
+            // Jika error, kembalikan ke halaman sebelumnya
             return redirect()->back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
         }
     }
