@@ -44,12 +44,12 @@
 
         <li class="nav-item nav-category">Menu Cabang</li>
         {{-- MENU BARU: MASTER DATA ABSENSI --}}
-            <li class="nav-item">
+            {{-- <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin.attendance.all') }}">
                     <i class="menu-icon mdi mdi-database-search"></i>
                     <span class="menu-title">Semua Data Absensi</span>
                 </a>
-            </li>
+            </li> --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('branches.index') }}">
                     <i class="menu-icon mdi mdi-domain"></i>
