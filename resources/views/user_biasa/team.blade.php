@@ -45,6 +45,7 @@
             position: relative;
         }
 
+        /* Status Online (Titik Hijau) */
         .avatar-wrapper::after {
             content: '';
             position: absolute;
@@ -55,6 +56,7 @@
             background: #10b981;
             border: 2px solid white;
             border-radius: 50%;
+            z-index: 5;
         }
 
         .avatar-wrapper.offline::after {
@@ -317,21 +319,27 @@
 
                                                 <div class="avatar-wrapper me-3 flex-shrink-0 {{ $isOnline ? '' : 'offline' }}"
                                                     style="width: 55px; height: 55px; min-width: 55px;">
+                                                    
+                                                    {{-- FOTO PROFIL --}}
                                                     @if ($member->profile_photo_path)
                                                         <img src="{{ Storage::url($member->profile_photo_path) }}"
                                                             class="rounded-circle shadow-sm"
-                                                            style="width: 55px; height: 55px; object-fit: cover; border: 3px solid white;">
+                                                            style="width: 55px; height: 55px; object-fit: cover; border: {{ $member->is_verified ? '3px solid #0d6efd' : '3px solid white' }};">
                                                     @else
                                                         <div class="rounded-circle bg-gradient text-white fw-bold d-flex align-items-center justify-content-center shadow-sm"
-                                                            style="width: 55px; height: 55px; font-size: 22px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 3px solid white;">
+                                                            style="width: 55px; height: 55px; font-size: 22px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: {{ $member->is_verified ? '3px solid #0d6efd' : '3px solid white' }};">
                                                             {{ strtoupper(substr($member->name, 0, 1)) }}
                                                         </div>
                                                     @endif
                                                 </div>
 
                                                 <div style="min-width: 0; flex: 1;">
-                                                    <h6 class="mb-2 fw-bold text-dark" style="font-size: 1rem;">
+                                                    {{-- NAMA MEMBER + Ikon Verifikasi --}}
+                                                    <h6 class="mb-2 fw-bold text-dark d-flex align-items-center" style="font-size: 1rem;">
                                                         {{ $member->name }}
+                                                        @if($member->is_verified)
+                                                            <i class="mdi mdi-check-decagram text-primary ms-1" title="Terverifikasi" style="font-size: 16px;"></i>
+                                                        @endif
                                                     </h6>
 
                                                     <div class="d-flex flex-wrap gap-2">
@@ -417,57 +425,49 @@
         </div>
     </div>
 
-    {{-- SECTION 2: CABANG SAYA (BARU) --}}
-    {{-- <div class="row">
-        <div class="col-12">
-            <h4 class="branch-section-title">Cabang Saya ({{ count($controlledBranches) }})</h4>
-        </div>
-    </div>
-
-    <div class="row">
-        @forelse ($controlledBranches as $branch)
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="branch-card-item p-4">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="branch-icon-box">
-                            <i class="mdi mdi-storefront-outline"></i>
-                        </div>
-                        <span class="badge bg-light text-secondary border">
-                            ID: {{ $branch->id }}
-                        </span>
-                    </div>
-
-                    <h5 class="fw-bold mb-2">{{ $branch->name }}</h5>
-                    <p class="text-muted small mb-3" style="min-height: 40px;">
-                        <i class="mdi mdi-map-marker-outline me-1"></i>
-                        {{ Str::limit($branch->address ?? 'Alamat belum diatur', 50) }}
-                    </p>
-
-                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                        <div class="branch-stat">
-                            <strong>{{ $branch->users_count }}</strong>
-                            Karyawan
-                        </div>
-
-                        UBAH BAGIAN INI: Dari Button menjadi A Href
-                        <a href="{{ route('team.branch.detail', $branch->id) }}"
-                            class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                            Detail <i class="mdi mdi-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        @empty
+    {{-- SECTION 2: CABANG SAYA (Jika User adalah Audit) --}}
+    @if(isset($controlledBranches) && $controlledBranches->count() > 0)
+        <div class="row">
             <div class="col-12">
-                <div class="card p-5 text-center border-0 shadow-sm">
-                    <div class="text-muted">
-                        <i class="mdi mdi-office-building-off" style="font-size: 3rem;"></i>
-                        <p class="mt-2">Anda tidak memiliki kontrol cabang khusus.</p>
+                <h4 class="branch-section-title">Cabang Saya ({{ count($controlledBranches) }})</h4>
+            </div>
+        </div>
+
+        <div class="row">
+            @foreach ($controlledBranches as $branch)
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="branch-card-item p-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="branch-icon-box">
+                                <i class="mdi mdi-storefront-outline"></i>
+                            </div>
+                            <span class="badge bg-light text-secondary border">
+                                ID: {{ $branch->id }}
+                            </span>
+                        </div>
+
+                        <h5 class="fw-bold mb-2">{{ $branch->name }}</h5>
+                        <p class="text-muted small mb-3" style="min-height: 40px;">
+                            <i class="mdi mdi-map-marker-outline me-1"></i>
+                            {{ Str::limit($branch->address ?? 'Alamat belum diatur', 50) }}
+                        </p>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                            <div class="branch-stat">
+                                <strong>{{ $branch->users_count }}</strong>
+                                Karyawan
+                            </div>
+
+                            <a href="{{ route('team.branch.detail', $branch->id) }}"
+                                class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                Detail <i class="mdi mdi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endforelse
-    </div> --}}
+            @endforeach
+        </div>
+    @endif
 
     {{-- Modal Image --}}
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
