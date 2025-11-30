@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ForgotPasswordController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
@@ -111,6 +112,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE ADMIN & AUDIT MANAGEMENT ===
     Route::middleware(['role:admin,audit'])->group(function () {
+        Route::get('/all-attendance', [AdminAttendanceController::class, 'index'])->name('admin.attendance.all');
         // Rute verifikasi attendance dengan detail
         Route::put('/audit/verify-attendance/{attendance}', [AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
         Route::put('/attendance/{id}/audit-update', [AttendanceHistoryController::class, 'updateByAudit'])
