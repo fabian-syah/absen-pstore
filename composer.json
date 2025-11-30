@@ -11,7 +11,6 @@
         "php": "^8.1",
         "fruitcake/laravel-cors": "^2.0.5",
         "guzzlehttp/guzzle": "^7.2",
-        "intervention/image": "*",
         "kreait/laravel-firebase": "^5.10",
         "laravel/framework": "^9.0",
         "laravel/sanctum": "^2.14",
