@@ -425,7 +425,7 @@
         </div>
     </div>
 
-    {{-- SECTION 2: CABANG SAYA (Jika User adalah Audit) --}}
+    {{-- SECTION 2: CABANG SAYA (Jika User adalah Audit)
     @if(isset($controlledBranches) && $controlledBranches->count() > 0)
         <div class="row">
             <div class="col-12">
@@ -467,7 +467,7 @@
                 </div>
             @endforeach
         </div>
-    @endif
+    @endif --}}
 
     {{-- Modal Image --}}
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
