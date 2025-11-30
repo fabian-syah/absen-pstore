@@ -20,14 +20,42 @@
                         </div>
                     </div>
 
-                    <p class="text-muted mb-4">
-                        Ambil foto selfie untuk melakukan absen <strong>{{ strtoupper($mode) }}</strong>. 
-                        Pastikan lokasi Anda akurat. Foto akan otomatis ditambahkan watermark timestamp.
-                    </p>
+                    {{-- ========================================================= --}}
+                    {{-- INFO ALERT: Jika Absen Pulang Lintas Hari (Lembur) --}}
+                    {{-- ========================================================= --}}
+                    @if ($mode == 'pulang' && isset($attendance) && !$attendance->check_in_time->isToday())
+                        <div class="alert alert-warning border-0 shadow-sm mb-4">
+                            <div class="d-flex align-items-start">
+                                <i class="mdi mdi-calendar-clock display-4 me-3"></i>
+                                <div>
+                                    <h5 class="fw-bold mb-1">Menutup Sesi Sebelumnya</h5>
+                                    <p class="mb-0 small">
+                                        Anda sedang melakukan <strong>Absen Pulang</strong> untuk sesi masuk tanggal: <br>
+                                        <span class="badge bg-warning text-dark mt-1">
+                                            {{ $attendance->check_in_time->translatedFormat('l, d F Y - H:i') }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <p class="text-muted mb-4">
+                            Ambil foto selfie untuk melakukan absen <strong>{{ strtoupper($mode) }}</strong>.
+                            Pastikan lokasi Anda akurat. Foto akan otomatis ditambahkan watermark timestamp.
+                        </p>
+                    @endif
 
                     <form class="forms-sample" action="{{ route('self.attend.store') }}" method="POST"
                         enctype="multipart/form-data" id="attendance-form">
                         @csrf
+
+                        {{-- ========================================================= --}}
+                        {{-- FIX PENTING: KIRIM ID ABSENSI JIKA MODE PULANG --}}
+                        {{-- Ini agar Controller tahu kita mau update sesi yg mana --}}
+                        {{-- ========================================================= --}}
+                        @if (isset($attendance) && $attendance)
+                            <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
+                        @endif
 
                         {{-- Preview Section --}}
                         <div class="row mb-4">
@@ -44,7 +72,8 @@
                                                     {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, d F Y H:i:s') }}
                                                 </div>
                                             </div>
-                                            <button type="button" id="retake-btn" class="btn btn-danger btn-sm mt-2 d-none">
+                                            <button type="button" id="retake-btn"
+                                                class="btn btn-danger btn-sm mt-2 d-none">
                                                 <i class="mdi mdi-camera-retake me-1"></i>Ambil Ulang
                                             </button>
                                         </div>
@@ -56,9 +85,9 @@
 
                                         <div class="d-flex gap-2 justify-content-center flex-wrap">
                                             {{-- Input File Hidden (Wajib ada untuk capture) --}}
-                                            <input type="file" name="photo" id="photo-input" class="d-none" accept="image/*"
-                                                capture="user" required>
-                                            
+                                            <input type="file" name="photo" id="photo-input" class="d-none"
+                                                accept="image/*" capture="user" required>
+
                                             {{-- Tombol Ambil Foto Saja --}}
                                             <button type="button" id="capture-btn" class="btn btn-dark">
                                                 <i class="mdi mdi-camera me-1"></i>Ambil Foto
@@ -116,7 +145,7 @@
                         <div class="form-group mb-4">
                             <label class="fw-semibold mb-2">Catatan Tambahan (Opsional)</label>
                             <textarea name="notes" class="form-control" rows="3"
-                                placeholder="Tambahkan catatan jika diperlukan, misal: Work From Home, meeting di luar kantor, dll."></textarea>
+                                placeholder="Tambahkan catatan jika diperlukan..."></textarea>
                         </div>
 
                         <div class="d-flex gap-2 flex-wrap">
@@ -235,7 +264,7 @@
 
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const photoInput = document.getElementById('photo-input');
             const captureBtn = document.getElementById('capture-btn');
             const previewImage = document.getElementById('preview-image');
@@ -281,12 +310,12 @@
             updateTimestamp();
 
             // Camera capture button
-            captureBtn.addEventListener('click', function () {
+            captureBtn.addEventListener('click', function() {
                 photoInput.click();
             });
 
             // Retake photo button
-            retakeBtn.addEventListener('click', function () {
+            retakeBtn.addEventListener('click', function() {
                 cameraPreview.classList.add('d-none');
                 cameraPlaceholder.classList.remove('d-none');
                 retakeBtn.classList.add('d-none');
@@ -295,11 +324,11 @@
             });
 
             // Preview image when file is selected
-            photoInput.addEventListener('change', function (event) {
+            photoInput.addEventListener('change', function(event) {
                 const file = event.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function (e) {
+                    reader.onload = function(e) {
                         previewImage.src = e.target.result;
                         cameraPreview.classList.remove('d-none');
                         cameraPlaceholder.classList.add('d-none');
@@ -314,7 +343,7 @@
             function getLocation() {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
-                        function (position) {
+                        function(position) {
                             // Success
                             const lat = position.coords.latitude;
                             const lng = position.coords.longitude;
@@ -337,7 +366,7 @@
 
                             updateSubmitButton();
                         },
-                        function (error) {
+                        function(error) {
                             // Error
                             let errorMessage = 'Gagal mengambil lokasi. ';
                             switch (error.code) {
@@ -360,8 +389,7 @@
                                     <span>${errorMessage}</span>
                                 </div>
                             `;
-                        },
-                        {
+                        }, {
                             enableHighAccuracy: true,
                             timeout: 10000,
                             maximumAge: 60000
@@ -394,7 +422,7 @@
             }
 
             // Form submission
-            document.getElementById('attendance-form').addEventListener('submit', function (e) {
+            document.getElementById('attendance-form').addEventListener('submit', function(e) {
                 const submitBtn = this.querySelector('button[type="submit"]');
                 submitBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin me-1"></i>Mengirim...';
                 submitBtn.disabled = true;
