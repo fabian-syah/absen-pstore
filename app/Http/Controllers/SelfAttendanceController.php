@@ -98,7 +98,7 @@ class SelfAttendanceController extends Controller
 
             // 1. Buat nama file unik (Format JPG)
             // Hasil: "foto_mandiri/randomstring.jpg" (TANPA awalan 'public/')
-            $filename = 'foto_mandiri/' . Str::random(40) . '.jpg';
+            $filename = 'public/foto_mandiri/' . Str::random(40) . '.jpg';
 
             // 2. Proses Resize & Kompresi
             $img = Image::make($file);
