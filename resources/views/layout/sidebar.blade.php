@@ -25,7 +25,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="{{ route('job-targets.index') }}">
                 <i class="menu-icon mdi mdi-clipboard-list"></i>
                 <span class="menu-title">Job Desk / Target</span>
             </a>

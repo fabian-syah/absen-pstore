@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\JobTargetController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DashboardController;
@@ -55,6 +56,11 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE RIWAYAT ABSENSI ===
     Route::get('/riwayat-absensi', [AttendanceHistoryController::class, 'index'])->name('attendance.history');
+
+    Route::get('/job-targets', [JobTargetController::class, 'index'])->name('job-targets.index');
+    Route::post('/job-targets', [JobTargetController::class, 'store'])->name('job-targets.store');
+    Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
+    Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
 
     // === RUTE BROADCAST ===
     Route::prefix('broadcast')->name('broadcast.')->group(function () {
