@@ -120,12 +120,11 @@
                                         {{-- 4. ALASAN --}}
                                         <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
 
-                                        {{-- 5. BUKTI (DIPERBAIKI DENGAN ONCLICK) --}}
+                                        {{-- 5. BUKTI (FIX: Pakai window.showImageModal) --}}
                                         <td>
                                             @if ($req->file_proof)
-                                                {{-- KITA PAKAI ONCLICK LANGSUNG AGAR PASTI JALAN --}}
                                                 <a href="javascript:void(0)" 
-                                                   onclick="showImageModal('{{ asset('storage/' . $req->file_proof) }}')"
+                                                   onclick="window.showImageModal('{{ asset('storage/' . $req->file_proof) }}')"
                                                    class="btn btn-inverse-secondary btn-icon btn-sm"
                                                    title="Lihat Bukti">
                                                     <i class="mdi mdi-eye"></i>
@@ -164,12 +163,13 @@
                                                     </button>
                                                 </form>
                                                 
+                                                {{-- Tombol Reject --}}
                                                 <button type="button" class="btn btn-danger btn-sm p-2" 
                                                         data-bs-toggle="modal" data-bs-target="#rejectModal{{ $req->id }}">
                                                     <i class="mdi mdi-close"></i>
                                                 </button>
                                                 
-                                                {{-- Modal Reject (Tetap Pakai Bawaan) --}}
+                                                {{-- Modal Reject (Inline Modal) --}}
                                                 <div class="modal fade" id="rejectModal{{ $req->id }}" tabindex="-1">
                                                     <div class="modal-dialog">
                                                         <div class="modal-content">
@@ -223,13 +223,12 @@
     </div>
 
     {{-- MODAL UNTUK PREVIEW GAMBAR --}}
-    {{-- ID modal ini dipanggil oleh script di bawah --}}
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Bukti Lampiran</h5>
-                    {{-- Tombol close kompatibel BS4 & BS5 --}}
+                    {{-- Tombol close support Bootstrap 4 & 5 --}}
                     <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center bg-light">
@@ -242,30 +241,38 @@
         </div>
     </div>
 
-@endsection
+    {{-- SCRIPT LANGSUNG DI DALAM CONTENT (Bukan di section script) --}}
+    {{-- Kita load jQuery via CDN untuk memastikan $ berfungsi --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-@section('scripts')
-<script>
-    // Fungsi ini dipanggil langsung oleh tombol mata (onclick)
-    function showImageModal(imageUrl) {
-        // 1. Ganti source gambar
-        var imgElement = document.getElementById('modalImagePreview');
-        imgElement.src = imageUrl;
+    <script>
+        // Membuat fungsi GLOBAL (window.) agar bisa dipanggil dari onclick
+        window.showImageModal = function(imageUrl) {
+            console.log('Mencoba membuka gambar: ' + imageUrl);
+            
+            // 1. Set URL Gambar
+            var imgElement = document.getElementById('modalImagePreview');
+            if (imgElement) {
+                imgElement.src = imageUrl;
+            }
 
-        // 2. Panggil Modal secara Manual menggunakan jQuery
-        // Ini bekerja baik di template Admin yang rata-rata pakai jQuery
-        $('#imageModal').modal('show');
-    }
+            // 2. Buka Modal (Support jQuery / Bootstrap)
+            // Kita coba pakai jQuery dulu karena template admin biasanya pakai ini
+            try {
+                $('#imageModal').modal('show');
+            } catch (e) {
+                console.error("jQuery error:", e);
+                // Fallback kalau jQuery gagal, pakai Vanilla JS Bootstrap 5
+                var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+                myModal.show();
+            }
+        };
 
-    // Reset gambar saat modal ditutup agar bersih
-    $(document).ready(function() {
-        $('#imageModal').on('hidden.bs.modal', function () {
-            $('#modalImagePreview').attr('src', '');
+        // Reset gambar saat modal ditutup
+        $(document).ready(function() {
+            $('#imageModal').on('hidden.bs.modal hidden.modal', function () {
+                $('#modalImagePreview').attr('src', '');
+            });
         });
-        // Backup untuk Bootstrap 4 event name
-        $('#imageModal').on('hidden.modal', function () {
-            $('#modalImagePreview').attr('src', '');
-        });
-    });
-</script>
+    </script>
 @endsection
