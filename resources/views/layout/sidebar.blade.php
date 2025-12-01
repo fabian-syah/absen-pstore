@@ -13,6 +13,12 @@
                 <span class="menu-title">Riwayat Absensi</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="mdi mdi-history menu-icon"></i>
+                <span class="menu-title">Riwayat Izin</span>
+            </a>
+        </li>
 
         {{-- =================================== --}}
         {{--     MENU UNTUK SEMUA ROLE        --}}
