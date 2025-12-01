@@ -137,28 +137,22 @@ class AuditController extends Controller
         return back()->with('success', 'Absensi berhasil diverifikasi.');
     }
 
-    /**
-     * Menampilkan daftar izin telat
-     */
-    // File: app/Http/Controllers/AuditController.php
+   // File: app/Http/Controllers/AuditController.php
 
     /**
      * Menampilkan daftar izin telat (HANYA PENDING)
      */
-    // File: app/Http/Controllers/AuditController.php
-
     public function showLatePermissions()
     {
         $user = Auth::user();
 
         // -------------------------------------------------------------
-        // UPDATE BAGIAN INI AGAR HANYA MUNCUL YANG PENDING
+        // UPDATE: Hanya ambil yang status = 'pending'
         // -------------------------------------------------------------
         $query = LeaveRequest::with(['user.division', 'user.branch'])
-            ->where('status', 'pending'); // <--- KUNCI: Paksa hanya ambil status 'pending'
-        // -------------------------------------------------------------
+            ->where('status', 'pending'); // <-- Hanya pending saja
 
-        // Logika Hak Akses (Admin vs Audit Cabang) - Biarkan tetap seperti ini
+        // Logika Hak Akses (Admin vs Audit Cabang)
         $isUniversalAccess = in_array($user->role, ['admin']);
 
         if (!$isUniversalAccess) {
@@ -181,13 +175,13 @@ class AuditController extends Controller
     }
 
     /**
-     * HALAMAN 2: HISTORY (Approved, Rejected, Cancelled)
+     * HALAMAN RIWAYAT (Approved, Rejected, Cancelled)
      */
     public function showLatePermissionsHistory()
     {
         $user = Auth::user();
 
-        // Query: Ambil SEMUA KECUALI pending (Approved, Rejected, Cancelled)
+        // Query: Ambil SEMUA KECUALI pending
         $query = LeaveRequest::with(['user.division', 'user.branch'])
             ->whereIn('status', ['approved', 'rejected', 'cancelled']);
 

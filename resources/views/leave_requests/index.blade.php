@@ -13,7 +13,7 @@
                         <h4 class="card-title">Verifikasi Izin & Keterlambatan</h4>
 
                         <div>
-                            {{-- PERBAIKAN 1: Tombol History hanya untuk Admin/Audit & Nama Route Diperbaiki --}}
+                            {{-- Tombol History hanya untuk Admin/Audit --}}
                             @if (in_array(auth()->user()->role, ['admin', 'audit']))
                                 <a href="{{ route('audit.late.history') }}" class="btn btn-inverse-info btn-sm me-2">
                                     <i class="mdi mdi-history"></i> Lihat Riwayat
@@ -52,7 +52,7 @@
                             <tbody>
                                 @forelse($requests as $req)
                                     <tr>
-                                        {{-- KOLOM 1: USER --}}
+                                        {{-- KOLOM USER --}}
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-primary rounded-circle d-flex justify-content-center align-items-center text-white me-2"
@@ -64,14 +64,13 @@
                                                     <small class="text-muted" style="font-size:11px;">
                                                         {{ $req->user->division->name ?? '-' }}
                                                         <span class="mx-1">|</span>
-                                                        <span
-                                                            class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
+                                                        <span class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
                                                     </small>
                                                 </div>
                                             </div>
                                         </td>
 
-                                        {{-- KOLOM 2: TIPE --}}
+                                        {{-- KOLOM TIPE --}}
                                         <td>
                                             @if ($req->type == 'sakit')
                                                 <span class="badge bg-danger text-white">Sakit</span>
@@ -86,7 +85,7 @@
                                             @endif
                                         </td>
 
-                                        {{-- KOLOM 3: WAKTU / TANGGAL --}}
+                                        {{-- KOLOM WAKTU/TANGGAL --}}
                                         <td>
                                             @if ($req->type == 'telat')
                                                 <div class="text-dark" style="font-size: 13px;">
@@ -106,10 +105,10 @@
                                             @endif
                                         </td>
 
-                                        {{-- KOLOM 4: ALASAN --}}
+                                        {{-- KOLOM ALASAN --}}
                                         <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
 
-                                        {{-- KOLOM 5: BUKTI --}}
+                                        {{-- KOLOM BUKTI --}}
                                         <td>
                                             @if ($req->file_proof)
                                                 <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank"
@@ -121,23 +120,15 @@
                                             @endif
                                         </td>
 
-                                        {{-- KOLOM 6: STATUS --}}
+                                        {{-- KOLOM STATUS --}}
                                         <td>
-                                            @if ($req->status == 'approved')
-                                                <span class="badge badge-opacity-success">Disetujui</span>
-                                            @elseif($req->status == 'rejected')
-                                                <span class="badge badge-opacity-danger">Ditolak</span>
-                                            @elseif($req->status == 'cancelled')
-                                                <span class="badge badge-opacity-secondary">Batal</span>
-                                            @else
-                                                <span class="badge badge-opacity-warning">Menunggu</span>
-                                            @endif
+                                            <span class="badge badge-opacity-warning">Menunggu</span>
                                         </td>
 
-                                        {{-- KOLOM 7: AKSI --}}
+                                        {{-- KOLOM AKSI --}}
                                         <td>
                                             {{-- USER: BATALKAN --}}
-                                            @if (auth()->id() == $req->user_id && !in_array($req->status, ['cancelled', 'rejected', 'approved']))
+                                            @if (auth()->id() == $req->user_id)
                                                 <form action="{{ route('leave-requests.cancel', $req->id) }}"
                                                     method="POST" class="d-inline"
                                                     onsubmit="return confirm('Konfirmasi tindakan ini?')">
@@ -150,11 +141,10 @@
                                             @endif
 
                                             {{-- ADMIN/AUDIT: APPROVE & REJECT --}}
-                                            @if (in_array(auth()->user()->role, ['admin', 'audit']) && $req->status == 'pending')
+                                            @if (in_array(auth()->user()->role, ['admin', 'audit']))
                                                 <form action="{{ route('late.approve', $req->id) }}" method="POST"
                                                     class="d-inline">
                                                     @csrf
-                                                    {{-- Gunakan POST karena di route definisinya POST untuk izin-telat/approve --}}
                                                     <button class="btn btn-success btn-sm p-2" title="Setujui"><i
                                                             class="mdi mdi-check"></i></button>
                                                 </form>
@@ -172,14 +162,12 @@
                                         <td colspan="7" class="text-center py-5">
                                             {{-- TAMPILAN SEMUA BERES --}}
                                             <div class="d-flex flex-column align-items-center justify-content-center">
-                                                {{-- Kamu bisa ganti icon ini dengan gambar jika mau --}}
                                                 <div class="bg-light rounded-circle mb-3 d-flex align-items-center justify-content-center"
                                                     style="width: 80px; height: 80px;">
                                                     <i class="mdi mdi-check-all text-success" style="font-size: 40px;"></i>
                                                 </div>
                                                 <h4 class="fw-bold text-dark">Semua Beres!</h4>
-                                                <p class="text-muted">Tidak ada pengajuan izin yang perlu diverifikasi saat
-                                                    ini.</p>
+                                                <p class="text-muted">Tidak ada pengajuan izin yang perlu diverifikasi saat ini.</p>
                                             </div>
                                         </td>
                                     </tr>
