@@ -61,7 +61,8 @@ class LeaveRequestController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('leave_requests.my_requests', compact('requests'));
+        // GUNAKAN VIEW YANG SUDAH ADA
+        return view('leave_requests.index', compact('requests'));
     }
 
     // MENAMPILKAN FORM
