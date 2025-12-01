@@ -151,7 +151,7 @@
                                                     {{-- KHUSUS WFH: WARNA HIJAU/BIRU (MASUK) --}}
                                                     <span class="status-badge bg-info text-white">
                                                         <i class="mdi mdi-laptop-mac"></i> 
-                                                        <span>WFH / Remote</span>
+                                                        <span>WFH / Dinas Luar</span>
                                                     </span>
                                                 @elseif ($leave->type == 'sakit')
                                                     <span class="status-badge bg-warning text-dark">
