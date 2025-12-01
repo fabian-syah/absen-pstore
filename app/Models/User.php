@@ -143,6 +143,12 @@ class User extends Authenticatable
         return $this->hasMany(Broadcast::class, 'created_by');
     }
 
+    public function leaveRequests(): HasMany
+    {
+        // Pastikan model LeaveRequest ada di App\Models\LeaveRequest
+        return $this->hasMany(\App\Models\LeaveRequest::class, 'user_id', 'id');
+    }
+
     /**
      * Find user by login credentials (whatsapp, instagram, tiktok, or email)
      */
