@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LeaveRequest;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Models\LateNotification;
@@ -25,13 +26,13 @@ class AuditController extends Controller
         // Query dasar: ambil yang status pending
         // Tambahkan eager loading 'user.branch' agar query di view lebih ringan
         $query = Attendance::where('status', 'pending_verification')
-            ->with(['user.division', 'user.branch']); 
+            ->with(['user.division', 'user.branch']);
 
         // --- LOGIKA HAK AKSES ---
         // PERUBAHAN DISINI: 
         // Hapus 'audit' dari array. Jadi hanya 'admin' yang bisa lihat semua cabang.
         // Role 'audit' sekarang akan ikut logic filter cabang di bawahnya.
-        $isUniversalAccess = in_array($user->role, ['admin']); 
+        $isUniversalAccess = in_array($user->role, ['admin']);
 
         // Jika BUKAN admin (berarti termasuk Audit), filter berdasarkan cabang dia
         if (!$isUniversalAccess) {
@@ -49,7 +50,7 @@ class AuditController extends Controller
                 $query->where('id', 0);
             }
         }
-        
+
         $pendingAttendances = $query->latest()->get();
 
         return view('audit.verification_list', compact('pendingAttendances'));
@@ -98,43 +99,43 @@ class AuditController extends Controller
      * =========================================================================
      */
     public function verifyAttendance(Request $request, Attendance $attendance)
-{
-    $request->validate([
-        'presence_status' => 'required|string|in:Masuk,WFH / Dinas Luar,Izin Telat,Sakit,Cuti,Alpha',
-        'audit_photo' => 'nullable|image|max:5120', // Max 5MB
-        'audit_note' => 'nullable|string|max:500'
-    ]);
+    {
+        $request->validate([
+            'presence_status' => 'required|string|in:Masuk,WFH / Dinas Luar,Izin Telat,Sakit,Cuti,Alpha',
+            'audit_photo' => 'nullable|image|max:5120', // Max 5MB
+            'audit_note' => 'nullable|string|max:500'
+        ]);
 
-    $user = Auth::user();
+        $user = Auth::user();
 
-    // Upload foto bukti audit jika ada
-    $auditPhotoPath = $attendance->audit_photo_path;
-    
-    if ($request->hasFile('audit_photo')) {
-        // Hapus foto lama jika ada
-        if ($auditPhotoPath && Storage::disk('public')->exists($auditPhotoPath)) {
-            Storage::disk('public')->delete($auditPhotoPath);
+        // Upload foto bukti audit jika ada
+        $auditPhotoPath = $attendance->audit_photo_path;
+
+        if ($request->hasFile('audit_photo')) {
+            // Hapus foto lama jika ada
+            if ($auditPhotoPath && Storage::disk('public')->exists($auditPhotoPath)) {
+                Storage::disk('public')->delete($auditPhotoPath);
+            }
+            // Simpan foto baru
+            $auditPhotoPath = $request->file('audit_photo')->store('audit-evidence', 'public');
         }
-        // Simpan foto baru
-        $auditPhotoPath = $request->file('audit_photo')->store('audit-evidence', 'public');
+
+        // Update data attendance
+        $attendance->update([
+            'status' => 'verified',
+            'presence_status' => $request->presence_status,
+            'audit_photo_path' => $auditPhotoPath,
+            'audit_note' => $request->audit_note,
+            'verified_by_user_id' => $user->id,
+        ]);
+
+        // Kirim notifikasi ke karyawan
+        $title = "Absensi Diverifikasi";
+        $body = "Absensi Anda tanggal " . $attendance->check_in_time->format('d/m/Y') . " telah diverifikasi sebagai: " . $request->presence_status;
+        $this->sendNotificationToUser($attendance->user, $title, $body);
+
+        return back()->with('success', 'Absensi berhasil diverifikasi.');
     }
-
-    // Update data attendance
-    $attendance->update([
-        'status' => 'verified',
-        'presence_status' => $request->presence_status,
-        'audit_photo_path' => $auditPhotoPath,
-        'audit_note' => $request->audit_note,
-        'verified_by_user_id' => $user->id,
-    ]);
-
-    // Kirim notifikasi ke karyawan
-    $title = "Absensi Diverifikasi";
-    $body = "Absensi Anda tanggal " . $attendance->check_in_time->format('d/m/Y') . " telah diverifikasi sebagai: " . $request->presence_status;
-    $this->sendNotificationToUser($attendance->user, $title, $body);
-
-    return back()->with('success', 'Absensi berhasil diverifikasi.');
-}
 
     /**
      * Menampilkan daftar izin telat
@@ -143,29 +144,35 @@ class AuditController extends Controller
     {
         $user = Auth::user();
 
-        $query = LateNotification::where('is_active', true)
-            ->with(['user', 'user.division']);
+        // 1. Query Dasar: Urutkan terbaru & Load relasi cabang (branch)
+        $query = LeaveRequest::with(['user.division', 'user.branch'])
+            // 2. LOGIKA HILANG DARI HISTORY: Hanya ambil yang statusnya 'pending'
+            ->where('status', 'pending');
 
-        // --- LOGIKA HAK AKSES (Sama seperti Verification List) ---
-        $isUniversalAccess = in_array($user->role, ['admin', 'audit']);
+        // 3. LOGIKA FILTER CABANG (Sama seperti yang Anda punya)
+        $isUniversalAccess = in_array($user->role, ['admin']); // Hanya Admin lihat semua
 
         if (!$isUniversalAccess) {
+            // Ambil ID cabang dari pivot table (branches) & homebase (branch_id)
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
             $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
             $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
 
             if (!empty($myBranchIds)) {
+                // Filter user yang branch_id nya ada di list audit
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
-                    $q->whereIn('users.branch_id', $myBranchIds);
+                    $q->whereIn('branch_id', $myBranchIds);
                 });
             } else {
+                // Jika audit tidak punya cabang, kosongkan hasil
                 $query->where('id', 0);
             }
         }
 
-        $latePermissions = $query->latest()->get();
+        $requests = $query->latest()->paginate(10); // Gunakan paginate biar rapi
 
-        return view('leave_requests.index', compact('latePermissions'));
+        // Pastikan nama view sesuai dengan file blade Anda
+        return view('leave_requests.index', compact('requests'));
     }
 
     // =========================================================================

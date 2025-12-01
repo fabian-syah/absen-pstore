@@ -51,8 +51,16 @@
                                                 </div>
                                                 <div>
                                                     <span class="fw-bold d-block text-dark">{{ $req->user->name }}</span>
-                                                    <small class="text-muted"
-                                                        style="font-size:11px;">{{ $req->user->division->name ?? '-' }}</small>
+
+                                                    {{-- PERUBAHAN DISINI: Menampilkan Divisi DAN Cabang --}}
+                                                    <small class="text-muted" style="font-size:11px;">
+                                                        {{ $req->user->division->name ?? '-' }}
+                                                        <span class="mx-1">|</span>
+                                                        {{-- Pastikan relasi 'branch' ada di model User --}}
+                                                        <span
+                                                            class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
+                                                    </small>
+
                                                 </div>
                                             </div>
                                         </td>
