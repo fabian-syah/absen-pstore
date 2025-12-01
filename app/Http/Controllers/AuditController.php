@@ -63,6 +63,47 @@ class AuditController extends Controller
     }
 
     /**
+     * Menampilkan daftar absensi manual yang perlu diverifikasi
+     */
+    public function showVerificationList()
+    {
+        $user = Auth::user();
+
+        // 1. Query Dasar: Ambil data Attendance
+        // Asumsi: Absensi yang butuh verifikasi statusnya 'pending' atau is_verified = 0
+        // Sesuaikan where clause ini dengan database kamu!
+        // Berdasarkan view blade kamu, variable harus bernama $pendingAttendances
+        $query = Attendance::with(['user.division', 'user.branch'])
+            ->where('status', 'pending')
+            ->whereNotNull('photo_path'); // Biasanya yang diverifikasi yang ada fotonya
+
+        // 2. Logika Hak Akses (Copy dari method showLatePermissions)
+        $isUniversalAccess = in_array($user->role, ['admin']);
+
+        if (!$isUniversalAccess) {
+            $pivotBranchIds = $user->branches->pluck('id')->toArray();
+            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!empty($myBranchIds)) {
+                $query->whereHas('user', function ($q) use ($myBranchIds) {
+                    $q->whereIn('branch_id', $myBranchIds);
+                });
+            } else {
+                // Jika user audit tidak punya cabang pegangan, kosongkan hasil
+                $query->where('id', 0);
+            }
+        }
+
+        $pendingAttendances = $query->latest()->get();
+
+        // 3. Return View
+        // Pastikan file blade yang kamu paste tadi disimpan di folder:
+        // resources/views/audit/verification_list.blade.php (atau sesuaikan namanya)
+        return view('audit.verification_list', compact('pendingAttendances'));
+    }
+
+    /**
      * HALAMAN RIWAYAT (Approved, Rejected, Cancelled)
      */
     public function showLatePermissionsHistory()
