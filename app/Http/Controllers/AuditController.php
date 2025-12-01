@@ -70,12 +70,12 @@ class AuditController extends Controller
         $user = Auth::user();
 
         // 1. Query Dasar: Ambil data Attendance
-        // Asumsi: Absensi yang butuh verifikasi statusnya 'pending' atau is_verified = 0
-        // Sesuaikan where clause ini dengan database kamu!
-        // Berdasarkan view blade kamu, variable harus bernama $pendingAttendances
         $query = Attendance::with(['user.division', 'user.branch'])
-            ->where('status', 'pending')
-            ->whereNotNull('photo_path'); // Biasanya yang diverifikasi yang ada fotonya
+            // UBAH BARIS DI BAWAH INI:
+            // Dari ->where('status', 'pending') 
+            // Menjadi:
+            ->where('status', 'pending_verification')
+            ->whereNotNull('photo_path');
 
         // 2. Logika Hak Akses (Copy dari method showLatePermissions)
         $isUniversalAccess = in_array($user->role, ['admin']);
