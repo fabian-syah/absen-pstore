@@ -24,10 +24,7 @@
                         <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
                         <div class="card-bank-content">
                             <p class="card-bank-label">Total User</p>
-                            {{-- Angka ini sekarang otomatis berkurang jika ada user dinonaktifkan --}}
                             <h2 class="card-bank-value">{{ $totalUsers }}</h2>
-
-                            {{-- Ubah teks deskripsi agar lebih akurat --}}
                             <p class="card-bank-desc">Karyawan Aktif</p>
                         </div>
                         <div class="card-bank-pattern"></div>
@@ -195,9 +192,7 @@
                         </h4>
                     </div>
 
-                    {{-- BAGIAN FOOTER ID CARD YANG DIUBAH --}}
                     <div class="card-id-footer d-flex justify-content-end align-items-end mt-4">
-                        {{-- VALID THRU DIHAPUS, GANTI DENGAN NOMOR ID --}}
                         <div class="text-end">
                             <p class="mb-0 text-white-50" style="font-size: 10px; letter-spacing: 1px;">NOMOR ID</p>
                             <p class="card-id-card-number mb-0"
@@ -206,8 +201,6 @@
                             </p>
                         </div>
                     </div>
-                    {{-- AKHIR BAGIAN FOOTER --}}
-
                 </div>
             </div>
         </div>
@@ -276,7 +269,8 @@
                             <div class="status-card {{ $isCrossDay ? 'status-warning' : 'status-success' }} mb-3">
                                 <div class="d-flex align-items-center">
                                     <div class="status-icon">
-                                        <i class="mdi {{ $isCrossDay ? 'mdi-calendar-clock' : 'mdi-clock-check' }}"></i>
+                                        <i
+                                            class="mdi {{ $isCrossDay ? 'mdi-calendar-clock' : 'mdi-clock-check' }}"></i>
                                     </div>
                                     <div class="flex-grow-1">
                                         @if ($isCrossDay)
@@ -342,48 +336,65 @@
                             </div>
                         @endif
 
-                        {{-- IZIN --}}
+                        {{-- IZIN / SAKIT / CUTI / WFH --}}
                     @elseif(isset($myLeaveToday) && $myLeaveToday && $myLeaveToday->user_id == Auth::id())
                         @php
-                            $leaveColor = $myLeaveToday->status == 'approved' ? 'status-success' : 'status-warning';
-                            $leaveIcon =
-                                $myLeaveToday->type == 'sakit'
-                                    ? 'mdi-hospital-box'
-                                    : ($myLeaveToday->type == 'telat'
-                                        ? 'mdi-clock-alert'
-                                        : 'mdi-bag-suitcase');
+                            // LOGIKA WARNA & ICON KHUSUS WFH
+                            if ($myLeaveToday->type == 'wfh') {
+                                // WFH dianggap MASUK (Success/Primary)
+                                $leaveColor = 'status-success'; 
+                                $leaveIcon = 'mdi-laptop-mac';
+                                $leaveTitle = 'Sedang Bekerja (WFH)';
+                                $leaveDesc = 'Absensi Dinas/Remote';
+                            } else {
+                                // Izin/Sakit/Cuti (Warning/Info)
+                                $leaveColor = $myLeaveToday->status == 'approved' ? 'status-success' : 'status-warning';
+                                $leaveIcon = $myLeaveToday->type == 'sakit' ? 'mdi-hospital-box' : ($myLeaveToday->type == 'telat' ? 'mdi-clock-alert' : 'mdi-bag-suitcase');
+                                $leaveTitle = 'Izin ' . ucfirst($myLeaveToday->type);
+                                $leaveDesc = $myLeaveToday->type == 'telat' ? 'Hadir pukul: ' . \Carbon\Carbon::parse($myLeaveToday->start_time)->format('H:i') : 'Sampai: ' . \Carbon\Carbon::parse($myLeaveToday->end_date)->format('d M Y');
+                            }
                         @endphp
+
                         <div class="status-card {{ $leaveColor }} mb-3">
                             <div class="d-flex align-items-start">
                                 <div class="status-icon"><i class="mdi {{ $leaveIcon }}"></i></div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between">
-                                        <h5 class="mb-1 fw-bold">Izin {{ ucfirst($myLeaveToday->type) }}</h5>
-                                        <span
-                                            class="badge {{ $myLeaveToday->status == 'approved' ? 'bg-success' : 'bg-warning' }}">
+                                        <h5 class="mb-1 fw-bold">{{ $leaveTitle }}</h5>
+                                        <span class="badge {{ $myLeaveToday->status == 'approved' ? 'bg-success' : 'bg-warning' }}">
                                             {{ strtoupper($myLeaveToday->status) }}
                                         </span>
                                     </div>
                                     <p class="text-muted mb-2 small">
-                                        {{ $myLeaveToday->type == 'telat' ? 'Hadir pukul: ' . \Carbon\Carbon::parse($myLeaveToday->start_time)->format('H:i') : 'Sampai: ' . \Carbon\Carbon::parse($myLeaveToday->end_date)->format('d M Y') }}
+                                        {{ $leaveDesc }}
                                     </p>
                                     <div class="bg-white p-2 rounded border mb-2">
-                                        <span class="fst-italic">"{{ $myLeaveToday->reason }}"</span>
+                                        <span class="fst-italic text-dark">"{{ $myLeaveToday->reason }}"</span>
                                     </div>
+                                    
+                                    {{-- TAMPILKAN TOMBOL LIHAT BUKTI JIKA WFH --}}
+                                    @if($myLeaveToday->type == 'wfh' && $myLeaveToday->file_proof)
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-light border" 
+                                                onclick="window.open('{{ Storage::url($myLeaveToday->file_proof) }}', '_blank')">
+                                                <i class="mdi mdi-image-area me-1"></i>Lihat Bukti WFH
+                                            </button>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
 
                             {{-- TOMBOL SELESAIKAN IZIN (Hanya jika status approved dan tipe BUKAN telat) --}}
                             @if ($myLeaveToday->status == 'approved' && $myLeaveToday->type != 'telat')
                                 <div class="mt-3 pt-3 border-top text-center">
-                                    <p class="small text-muted mb-2">Sudah kembali bekerja hari ini?</p>
+                                    <p class="small text-muted mb-2">Sudah kembali bekerja di kantor?</p>
                                     <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}"
                                         method="POST">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" class="btn btn-primary btn-sm w-100"
-                                            onclick="return confirm('Apakah Anda yakin ingin mengakhiri izin ini dan melakukan absensi hari ini?');">
-                                            <i class="mdi mdi-briefcase-check me-2"></i>Saya Masuk Kerja Sekarang
+                                            onclick="return confirm('Apakah Anda yakin ingin mengakhiri status ini?');">
+                                            <i class="mdi mdi-briefcase-check me-2"></i>Saya Masuk Kantor Sekarang
                                         </button>
                                     </form>
                                 </div>

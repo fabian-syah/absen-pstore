@@ -4,7 +4,6 @@
 @section('heading', 'Monitoring Tim & Wilayah')
 
 @push('styles')
-    {{-- Copy style dari file asli Anda, tidak ada perubahan di CSS --}}
     <style>
         .team-card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); overflow: hidden; }
         .team-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; color: white; }
@@ -70,10 +69,10 @@
                             <tbody>
                                 @forelse ($myTeam as $key => $member)
                                     @php
-                                        // 1. Cek Absensi (Masuk/WFH/Pulang)
+                                        // 1. Cek Absensi (Masuk/Pulang)
                                         $attendance = $member->attendances->first();
                                         
-                                        // 2. Cek Izin/Cuti/Sakit (Dari Controller: leaveRequests)
+                                        // 2. Cek Izin/Cuti/Sakit/WFH
                                         $leave = $member->leaveRequests->first();
                                         
                                         // Status Online (Hanya jika absen masuk & belum pulang)
@@ -132,22 +131,12 @@
 
                                         {{-- KOLOM STATUS --}}
                                         <td class="py-3">
-                                            {{-- PRIORITAS 1: ABSENSI (MASUK / WFH) --}}
+                                            {{-- PRIORITAS 1: ABSENSI FISIK --}}
                                             @if ($attendance)
-                                                @php
-                                                    $statusText = $attendance->presence_status ?? 'Masuk';
-                                                    $isWFH = stripos($statusText, 'WFH') !== false || stripos($statusText, 'Dinas') !== false;
-                                                @endphp
-
                                                 @if ($attendance->check_out_time)
                                                     <span class="status-badge bg-primary text-white">
                                                         <i class="mdi mdi-home-variant"></i> 
                                                         <span>Pulang {{ $attendance->check_out_time->format('H:i') }}</span>
-                                                    </span>
-                                                @elseif($isWFH)
-                                                    <span class="status-badge bg-info text-white">
-                                                        <i class="mdi mdi-laptop-mac"></i> 
-                                                        <span>WFH / Dinas</span>
                                                     </span>
                                                 @else
                                                     <span class="status-badge bg-success text-white">
@@ -156,9 +145,15 @@
                                                     </span>
                                                 @endif
 
-                                            {{-- PRIORITAS 2: IZIN / SAKIT / CUTI (LEAVE REQUEST) --}}
+                                            {{-- PRIORITAS 2: WFH / IZIN / SAKIT --}}
                                             @elseif ($leave)
-                                                @if ($leave->type == 'sakit')
+                                                @if($leave->type == 'wfh')
+                                                    {{-- KHUSUS WFH: WARNA HIJAU/BIRU (MASUK) --}}
+                                                    <span class="status-badge bg-info text-white">
+                                                        <i class="mdi mdi-laptop-mac"></i> 
+                                                        <span>WFH / Remote</span>
+                                                    </span>
+                                                @elseif ($leave->type == 'sakit')
                                                     <span class="status-badge bg-warning text-dark">
                                                         <i class="mdi mdi-medical-bag"></i> <span>Sakit</span>
                                                     </span>
@@ -172,7 +167,7 @@
                                                     </span>
                                                 @endif
 
-                                            {{-- PRIORITAS 3: TELAT (Tanpa Absen) / ALPHA --}}
+                                            {{-- PRIORITAS 3: TELAT / ALPHA --}}
                                             @elseif ($member->activeLateStatus)
                                                 <span class="status-badge bg-warning text-dark">
                                                     <i class="mdi mdi-clock-alert"></i> <span>Izin Telat</span>
@@ -186,12 +181,8 @@
 
                                         {{-- KOLOM BUKTI / FOTO --}}
                                         <td class="py-3">
-                                            @php
-                                                $isWFH_Att = $attendance && (stripos($attendance->presence_status, 'WFH') !== false || stripos($attendance->presence_status, 'Dinas') !== false);
-                                            @endphp
-
-                                            {{-- 1. Tampilkan Foto JIKA: Ada Absen (Masuk Normal) ATAU WFH --}}
-                                            @if ($attendance && ($attendance->photo_path || $isWFH_Att))
+                                            {{-- KONDISI 1: ADA ABSENSI BIASA (FOTO ABSEN) --}}
+                                            @if ($attendance && $attendance->photo_path)
                                                 <button type="button" class="view-photo-btn btn btn-sm"
                                                     data-bs-toggle="modal" data-bs-target="#imageModal"
                                                     data-src="{{ Storage::url($attendance->photo_out_path ?? $attendance->photo_path) }}">
@@ -202,7 +193,19 @@
                                                     <span>Lihat Foto</span>
                                                 </button>
                                             
-                                            {{-- 2. Tampilkan Pesan JIKA: Sakit/Izin/Cuti --}}
+                                            {{-- KONDISI 2: WFH (FOTO BUKTI WFH) --}}
+                                            @elseif ($leave && $leave->type == 'wfh' && $leave->file_proof)
+                                                <button type="button" class="view-photo-btn btn btn-sm"
+                                                    data-bs-toggle="modal" data-bs-target="#imageModal"
+                                                    data-src="{{ Storage::url($leave->file_proof) }}">
+                                                    <div class="photo-preview">
+                                                        <img src="{{ Storage::url($leave->file_proof) }}"
+                                                            style="width: 100%; height: 100%; object-fit: cover;">
+                                                    </div>
+                                                    <span>Lihat Bukti WFH</span>
+                                                </button>
+
+                                            {{-- KONDISI 3: SAKIT/IZIN LAIN (KETERANGAN TEXT) --}}
                                             @elseif ($leave)
                                                 <div class="text-muted small fst-italic">
                                                     <i class="mdi mdi-information-outline me-1"></i>
@@ -215,14 +218,13 @@
                                                     @endif
                                                 </div>
 
-                                            {{-- 3. Tampilkan Pesan JIKA: Izin Telat --}}
+                                            {{-- KONDISI 4: IZIN TELAT --}}
                                             @elseif ($member->activeLateStatus)
                                                 <div class="late-message">
                                                     <i class="mdi mdi-message-text me-1"></i>
                                                     "{{ \Illuminate\Support\Str::limit($member->activeLateStatus->message, 30) }}"
                                                 </div>
 
-                                            {{-- 4. Default --}}
                                             @else
                                                 <span class="text-muted small"><i class="mdi mdi-minus-circle me-1"></i>-</span>
                                             @endif
@@ -271,6 +273,5 @@
                 modalImg.src = src;
             });
         });
-        // test
     </script>
 @endpush
