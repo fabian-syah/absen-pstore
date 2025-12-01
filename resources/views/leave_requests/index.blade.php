@@ -120,14 +120,13 @@
                                         {{-- 4. ALASAN --}}
                                         <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
 
-                                        {{-- 5. BUKTI (MENGUBAH KE CARA YANG SAMA DENGAN RIWAYAT) --}}
+                                        {{-- 5. BUKTI (DIPERBAIKI DENGAN ONCLICK) --}}
                                         <td>
                                             @if ($req->file_proof)
+                                                {{-- KITA PAKAI ONCLICK LANGSUNG AGAR PASTI JALAN --}}
                                                 <a href="javascript:void(0)" 
+                                                   onclick="showImageModal('{{ asset('storage/' . $req->file_proof) }}')"
                                                    class="btn btn-inverse-secondary btn-icon btn-sm"
-                                                   data-bs-toggle="modal" 
-                                                   data-bs-target="#imageModal"
-                                                   data-src="{{ asset('storage/' . $req->file_proof) }}"
                                                    title="Lihat Bukti">
                                                     <i class="mdi mdi-eye"></i>
                                                 </a>
@@ -170,6 +169,7 @@
                                                     <i class="mdi mdi-close"></i>
                                                 </button>
                                                 
+                                                {{-- Modal Reject (Tetap Pakai Bawaan) --}}
                                                 <div class="modal fade" id="rejectModal{{ $req->id }}" tabindex="-1">
                                                     <div class="modal-dialog">
                                                         <div class="modal-content">
@@ -222,20 +222,21 @@
         </div>
     </div>
 
-    {{-- MODAL UNTUK PREVIEW GAMBAR (SAMA PERSIS DENGAN RIWAYAT) --}}
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    {{-- MODAL UNTUK PREVIEW GAMBAR --}}
+    {{-- ID modal ini dipanggil oleh script di bawah --}}
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="imageModalLabel">Bukti Lampiran</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">Bukti Lampiran</h5>
+                    {{-- Tombol close kompatibel BS4 & BS5 --}}
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center bg-light">
-                    {{-- Gambar akan di-load di sini --}}
                     <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 70vh; width: auto;">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -245,21 +246,25 @@
 
 @section('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var imageModal = document.getElementById('imageModal');
-        imageModal.addEventListener('show.bs.modal', function (event) {
-            // Tombol yang memicu modal
-            var button = event.relatedTarget;
-            // Ambil info dari atribut data-src
-            var imageUrl = button.getAttribute('data-src');
-            // Update src gambar di dalam modal
-            var modalImage = document.getElementById('modalImagePreview');
-            modalImage.src = imageUrl;
+    // Fungsi ini dipanggil langsung oleh tombol mata (onclick)
+    function showImageModal(imageUrl) {
+        // 1. Ganti source gambar
+        var imgElement = document.getElementById('modalImagePreview');
+        imgElement.src = imageUrl;
+
+        // 2. Panggil Modal secara Manual menggunakan jQuery
+        // Ini bekerja baik di template Admin yang rata-rata pakai jQuery
+        $('#imageModal').modal('show');
+    }
+
+    // Reset gambar saat modal ditutup agar bersih
+    $(document).ready(function() {
+        $('#imageModal').on('hidden.bs.modal', function () {
+            $('#modalImagePreview').attr('src', '');
         });
-        
-        // Opsional: Reset gambar saat modal ditutup (agar tidak ada flash gambar lama)
-        imageModal.addEventListener('hidden.bs.modal', function () {
-            document.getElementById('modalImagePreview').src = '';
+        // Backup untuk Bootstrap 4 event name
+        $('#imageModal').on('hidden.modal', function () {
+            $('#modalImagePreview').attr('src', '');
         });
     });
 </script>
