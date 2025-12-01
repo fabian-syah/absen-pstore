@@ -23,20 +23,12 @@ class AuditController extends Controller
     {
         $user = Auth::user();
 
-        // Query dasar: ambil yang status pending
-        // Tambahkan eager loading 'user.branch' agar query di view lebih ringan
         $query = Attendance::where('status', 'pending_verification')
             ->with(['user.division', 'user.branch']);
 
-        // --- LOGIKA HAK AKSES ---
-        // PERUBAHAN DISINI: 
-        // Hapus 'audit' dari array. Jadi hanya 'admin' yang bisa lihat semua cabang.
-        // Role 'audit' sekarang akan ikut logic filter cabang di bawahnya.
         $isUniversalAccess = in_array($user->role, ['admin']);
 
-        // Jika BUKAN admin (berarti termasuk Audit), filter berdasarkan cabang dia
         if (!$isUniversalAccess) {
-
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
             $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
             $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
@@ -46,7 +38,6 @@ class AuditController extends Controller
                     $q->whereIn('users.branch_id', $myBranchIds);
                 });
             } else {
-                // User tanpa cabang tidak boleh lihat apa-apa
                 $query->where('id', 0);
             }
         }
@@ -57,7 +48,7 @@ class AuditController extends Controller
     }
 
     /**
-     * Menyetujui Absensi Mandiri (Cara Lama / Quick Approve)
+     * Menyetujui Absensi Mandiri
      */
     public function approve(Attendance $attendance)
     {
@@ -74,7 +65,7 @@ class AuditController extends Controller
     }
 
     /**
-     * Menolak Absensi Mandiri (Hapus Data)
+     * Menolak Absensi Mandiri
      */
     public function reject(Attendance $attendance)
     {
@@ -94,33 +85,27 @@ class AuditController extends Controller
     }
 
     /**
-     * =========================================================================
-     * FITUR BARU: VERIFIKASI DETAIL DENGAN BUKTI & STATUS KHUSUS
-     * =========================================================================
+     * Verifikasi detail attendance
      */
     public function verifyAttendance(Request $request, Attendance $attendance)
     {
         $request->validate([
             'presence_status' => 'required|string|in:Masuk,WFH / Dinas Luar,Izin Telat,Sakit,Cuti,Alpha',
-            'audit_photo' => 'nullable|image|max:5120', // Max 5MB
+            'audit_photo' => 'nullable|image|max:5120',
             'audit_note' => 'nullable|string|max:500'
         ]);
 
         $user = Auth::user();
 
-        // Upload foto bukti audit jika ada
         $auditPhotoPath = $attendance->audit_photo_path;
 
         if ($request->hasFile('audit_photo')) {
-            // Hapus foto lama jika ada
             if ($auditPhotoPath && Storage::disk('public')->exists($auditPhotoPath)) {
                 Storage::disk('public')->delete($auditPhotoPath);
             }
-            // Simpan foto baru
             $auditPhotoPath = $request->file('audit_photo')->store('audit-evidence', 'public');
         }
 
-        // Update data attendance
         $attendance->update([
             'status' => 'verified',
             'presence_status' => $request->presence_status,
@@ -129,7 +114,6 @@ class AuditController extends Controller
             'verified_by_user_id' => $user->id,
         ]);
 
-        // Kirim notifikasi ke karyawan
         $title = "Absensi Diverifikasi";
         $body = "Absensi Anda tanggal " . $attendance->check_in_time->format('d/m/Y') . " telah diverifikasi sebagai: " . $request->presence_status;
         $this->sendNotificationToUser($attendance->user, $title, $body);
@@ -137,58 +121,18 @@ class AuditController extends Controller
         return back()->with('success', 'Absensi berhasil diverifikasi.');
     }
 
-   // File: app/Http/Controllers/AuditController.php
-
     /**
-     * Menampilkan daftar izin telat (HANYA PENDING)
+     * Menampilkan daftar izin telat (HANYA PENDING - Status: pending)
      */
-    // File: app/Http/Controllers/AuditController.php
-
-public function showLatePermissions()
-{
-    $user = Auth::user();
-
-    // PERBAIKAN: Pastikan HANYA ambil status pending
-    $query = LeaveRequest::with(['user.division', 'user.branch'])
-        ->where('status', 'pending'); // <-- INI HARUSNYA SUDAH BENAR
-
-    // Logika Hak Akses
-    $isUniversalAccess = in_array($user->role, ['admin']);
-
-    if (!$isUniversalAccess) {
-        $pivotBranchIds = $user->branches->pluck('id')->toArray();
-        $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-        $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
-
-        if (!empty($myBranchIds)) {
-            $query->whereHas('user', function ($q) use ($myBranchIds) {
-                $q->whereIn('branch_id', $myBranchIds);
-            });
-        } else {
-            $query->where('id', 0);
-        }
-    }
-
-    // Debug: Cek query SQL
-    // dd($query->toSql(), $query->getBindings());
-
-    $requests = $query->latest()->paginate(10);
-
-    return view('leave_requests.index', compact('requests'));
-}
-
-    /**
-     * HALAMAN RIWAYAT (Approved, Rejected, Cancelled)
-     */
-    public function showLatePermissionsHistory()
+    public function showLatePermissions()
     {
         $user = Auth::user();
 
-        // Query: Ambil SEMUA KECUALI pending
+        // FIX: Hanya ambil yang status = 'pending' saja
         $query = LeaveRequest::with(['user.division', 'user.branch'])
-            ->whereIn('status', ['approved', 'rejected', 'cancelled']);
+            ->where('status', 'pending'); // <-- INI PASTIKAN 'pending'
 
-        // LOGIKA FILTER CABANG (SAMA)
+        // Logika Hak Akses
         $isUniversalAccess = in_array($user->role, ['admin']);
 
         if (!$isUniversalAccess) {
@@ -207,28 +151,104 @@ public function showLatePermissions()
 
         $requests = $query->latest()->paginate(10);
 
-        // Pastikan ini mengarah ke View History
+        return view('leave_requests.index', compact('requests'));
+    }
+
+    /**
+     * HALAMAN RIWAYAT (Approved, Rejected, Cancelled)
+     */
+    public function showLatePermissionsHistory()
+    {
+        $user = Auth::user();
+
+        // FIX: Ambil semua kecuali pending
+        $query = LeaveRequest::with(['user.division', 'user.branch'])
+            ->whereIn('status', ['approved', 'rejected', 'cancelled']); // <-- INI PASTIKAN
+
+        $isUniversalAccess = in_array($user->role, ['admin']);
+
+        if (!$isUniversalAccess) {
+            $pivotBranchIds = $user->branches->pluck('id')->toArray();
+            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!empty($myBranchIds)) {
+                $query->whereHas('user', function ($q) use ($myBranchIds) {
+                    $q->whereIn('branch_id', $myBranchIds);
+                });
+            } else {
+                $query->where('id', 0);
+            }
+        }
+
+        $requests = $query->latest()->paginate(10);
+
         return view('leave_requests.history', compact('requests'));
     }
 
-    // =========================================================================
-    // FITUR: MISSED CHECKOUT (LUPA ABSEN PULANG)
-    // =========================================================================
+    /**
+     * Approve izin telat
+     */
+    public function approveLatePermission($id)
+    {
+        $leaveRequest = LeaveRequest::findOrFail($id);
+        
+        // FIX: Validasi status
+        if ($leaveRequest->status != 'pending') {
+            return back()->with('error', 'Izin ini sudah diproses sebelumnya (Status: ' . $leaveRequest->status . ').');
+        }
+        
+        $leaveRequest->update([
+            'status' => 'approved',
+            'approved_by_user_id' => Auth::id(),
+            'approved_at' => now(),
+        ]);
+
+        $title = "Izin Disetujui";
+        $body = "Pengajuan izin Anda pada " . $leaveRequest->start_date->format('d/m/Y') . " telah disetujui.";
+        $this->sendNotificationToUser($leaveRequest->user, $title, $body);
+
+        return redirect()->route('leave-requests.index')
+            ->with('success', 'Izin telah disetujui dan dipindahkan ke riwayat.');
+    }
 
     /**
-     * Menampilkan daftar karyawan yang sesi absensinya "Gantung" dari hari sebelumnya.
-     * Kondisi: Check In Ada, Check Out NULL, Tanggal Check In < Hari Ini.
+     * Reject izin telat
+     */
+    public function rejectLatePermission($id)
+    {
+        $leaveRequest = LeaveRequest::findOrFail($id);
+        
+        // FIX: Validasi status
+        if ($leaveRequest->status != 'pending') {
+            return back()->with('error', 'Izin ini sudah diproses sebelumnya (Status: ' . $leaveRequest->status . ').');
+        }
+        
+        $leaveRequest->update([
+            'status' => 'rejected',
+            'approved_by_user_id' => Auth::id(),
+            'approved_at' => now(),
+        ]);
+
+        $title = "Izin Ditolak";
+        $body = "Pengajuan izin Anda pada " . $leaveRequest->start_date->format('d/m/Y') . " telah ditolak.";
+        $this->sendNotificationToUser($leaveRequest->user, $title, $body);
+
+        return redirect()->route('leave-requests.index')
+            ->with('success', 'Izin telah ditolak dan dipindahkan ke riwayat.');
+    }
+
+    /**
+     * Menampilkan daftar missed checkout
      */
     public function showMissedCheckouts()
     {
         $user = Auth::user();
 
-        // Ambil data yang check_out-nya NULL DAN tanggal check_in-nya SEBELUM hari ini
         $query = Attendance::whereNull('check_out_time')
             ->whereDate('check_in_time', '<', today())
             ->with('user.division');
 
-        // --- LOGIKA HAK AKSES (Konsisten: Admin/Audit lihat semua) ---
         $isUniversalAccess = in_array($user->role, ['admin', 'audit']);
 
         if (!$isUniversalAccess) {
@@ -245,52 +265,41 @@ public function showLatePermissions()
             }
         }
 
-        // Urutkan dari yang terlama gantungnya
         $missedCheckouts = $query->orderBy('check_in_time', 'asc')->get();
 
         return view('audit.missed_checkout_list', compact('missedCheckouts'));
     }
 
     /**
-     * Proses Audit mengisikan jam pulang manual untuk karyawan yang lupa.
+     * Update missed checkout
      */
     public function updateMissedCheckout(Request $request, $id)
     {
         $request->validate([
-            'checkout_time' => 'required|date_format:H:i', // Audit input jam pulang (misal 17:00)
+            'checkout_time' => 'required|date_format:H:i',
             'notes' => 'nullable|string'
         ]);
 
         $attendance = Attendance::findOrFail($id);
 
-        // 1. Ambil tanggal dari Check In
         $checkInDate = Carbon::parse($attendance->check_in_time);
-
-        // 2. Gabungkan tanggal Check In dengan Jam yang diinput Audit
-        // Contoh: Check In tgl 20, Input 17:00 -> Hasil: 2023-11-20 17:00:00
         $checkOutDateTime = Carbon::parse($checkInDate->format('Y-m-d') . ' ' . $request->checkout_time);
 
-        // 3. Logika Lembur Lintas Hari
-        // Jika Jam Pulang yang diinput LEBIH KECIL dari Jam Masuk (Misal Masuk 08:00, Pulang 02:00)
-        // Maka sistem menganggap itu adalah jam 02:00 BESOKNYA.
         if ($checkOutDateTime->lt($attendance->check_in_time)) {
             $checkOutDateTime->addDay();
         }
 
-        // 4. Update Database
         $attendance->update([
             'check_out_time' => $checkOutDateTime,
-            'status' => 'verified', // Karena diinput manual oleh Audit, anggap verified
+            'status' => 'verified',
             'verified_by_user_id' => Auth::id(),
-            // Simpan catatan (Gabung dengan notes lama jika ada, atau buat baru)
             'audit_note' => 'Manual checkout by Audit: ' . $request->notes
         ]);
 
-        // 5. Kirim Notifikasi ke Karyawan
         $title = "Absen Pulang Diperbarui";
         $body = "Audit telah mengatur jam pulang Anda untuk tanggal " . $checkInDate->format('d/m/Y') . " menjadi jam " . $checkOutDateTime->format('H:i') . ".";
         $this->sendNotificationToUser($attendance->user, $title, $body);
 
-        return back()->with('success', 'Absen pulang berhasil diperbarui manual. Sesi karyawan telah ditutup.');
+        return back()->with('success', 'Absen pulang berhasil diperbarui manual.');
     }
 }

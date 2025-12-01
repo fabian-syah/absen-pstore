@@ -1,7 +1,7 @@
 @extends('layout.master')
 
 @section('title')
-    Daftar Persetujuan Izin (Pending)
+    Verifikasi Izin & Keterlambatan
 @endsection
 
 @section('content')
@@ -11,16 +11,15 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="card-title">Verifikasi Izin & Keterlambatan</h4>
-
                         <div>
-                            {{-- Tombol History hanya untuk Admin/Audit --}}
+                            {{-- Tombol History --}}
                             @if (in_array(auth()->user()->role, ['admin', 'audit']))
                                 <a href="{{ route('audit.late.history') }}" class="btn btn-inverse-info btn-sm me-2">
                                     <i class="mdi mdi-history"></i> Lihat Riwayat
                                 </a>
                             @endif
 
-                            {{-- Tombol Buat Baru (Hanya User Biasa/Leader) --}}
+                            {{-- Tombol Ajukan Baru (untuk user biasa) --}}
                             @if (in_array(auth()->user()->role, ['user_biasa', 'leader']))
                                 <a href="{{ route('leave-requests.create') }}" class="btn btn-primary btn-sm">
                                     <i class="mdi mdi-plus"></i> Ajukan Baru
@@ -29,9 +28,24 @@
                         </div>
                     </div>
 
+                    {{-- Debug Info --}}
+                    <div class="alert alert-info mb-3">
+                        <strong>Informasi Halaman:</strong><br>
+                        • Hanya menampilkan pengajuan dengan status <strong>PENDING</strong><br>
+                        • Total data: <strong>{{ $requests->total() }}</strong><br>
+                        • Setelah approve/reject, data akan pindah ke halaman Riwayat
+                    </div>
+
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show">
                             {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
@@ -52,7 +66,6 @@
                             <tbody>
                                 @forelse($requests as $req)
                                     <tr>
-                                        {{-- KOLOM USER --}}
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-primary rounded-circle d-flex justify-content-center align-items-center text-white me-2"
@@ -70,7 +83,6 @@
                                             </div>
                                         </td>
 
-                                        {{-- KOLOM TIPE --}}
                                         <td>
                                             @if ($req->type == 'sakit')
                                                 <span class="badge bg-danger text-white">Sakit</span>
@@ -85,7 +97,6 @@
                                             @endif
                                         </td>
 
-                                        {{-- KOLOM WAKTU/TANGGAL --}}
                                         <td>
                                             @if ($req->type == 'telat')
                                                 <div class="text-dark" style="font-size: 13px;">
@@ -105,10 +116,8 @@
                                             @endif
                                         </td>
 
-                                        {{-- KOLOM ALASAN --}}
                                         <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
 
-                                        {{-- KOLOM BUKTI --}}
                                         <td>
                                             @if ($req->file_proof)
                                                 <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank"
@@ -120,18 +129,16 @@
                                             @endif
                                         </td>
 
-                                        {{-- KOLOM STATUS --}}
                                         <td>
                                             <span class="badge badge-opacity-warning">Menunggu</span>
                                         </td>
 
-                                        {{-- KOLOM AKSI --}}
                                         <td>
-                                            {{-- USER: BATALKAN --}}
+                                            {{-- USER: BATALKAN (hanya untuk pengaju) --}}
                                             @if (auth()->id() == $req->user_id)
                                                 <form action="{{ route('leave-requests.cancel', $req->id) }}"
                                                     method="POST" class="d-inline"
-                                                    onsubmit="return confirm('Konfirmasi tindakan ini?')">
+                                                    onsubmit="return confirm('Yakin ingin membatalkan pengajuan?')">
                                                     @csrf @method('PATCH')
                                                     <button type="submit" class="btn btn-light btn-sm text-danger"
                                                         title="Batalkan Pengajuan">
@@ -143,16 +150,20 @@
                                             {{-- ADMIN/AUDIT: APPROVE & REJECT --}}
                                             @if (in_array(auth()->user()->role, ['admin', 'audit']))
                                                 <form action="{{ route('late.approve', $req->id) }}" method="POST"
-                                                    class="d-inline">
+                                                    class="d-inline"
+                                                    onsubmit="return confirm('Setujui pengajuan ini?')">
                                                     @csrf
-                                                    <button class="btn btn-success btn-sm p-2" title="Setujui"><i
-                                                            class="mdi mdi-check"></i></button>
+                                                    <button class="btn btn-success btn-sm p-2" title="Setujui">
+                                                        <i class="mdi mdi-check"></i>
+                                                    </button>
                                                 </form>
                                                 <form action="{{ route('late.reject', $req->id) }}" method="POST"
-                                                    class="d-inline">
+                                                    class="d-inline"
+                                                    onsubmit="return confirm('Tolak pengajuan ini?')">
                                                     @csrf
-                                                    <button class="btn btn-danger btn-sm p-2" title="Tolak"><i
-                                                            class="mdi mdi-close"></i></button>
+                                                    <button class="btn btn-danger btn-sm p-2" title="Tolak">
+                                                        <i class="mdi mdi-close"></i>
+                                                    </button>
                                                 </form>
                                             @endif
                                         </td>
@@ -160,7 +171,6 @@
                                 @empty
                                     <tr>
                                         <td colspan="7" class="text-center py-5">
-                                            {{-- TAMPILAN SEMUA BERES --}}
                                             <div class="d-flex flex-column align-items-center justify-content-center">
                                                 <div class="bg-light rounded-circle mb-3 d-flex align-items-center justify-content-center"
                                                     style="width: 80px; height: 80px;">
@@ -168,6 +178,11 @@
                                                 </div>
                                                 <h4 class="fw-bold text-dark">Semua Beres!</h4>
                                                 <p class="text-muted">Tidak ada pengajuan izin yang perlu diverifikasi saat ini.</p>
+                                                @if (in_array(auth()->user()->role, ['admin', 'audit']))
+                                                    <a href="{{ route('audit.late.history') }}" class="btn btn-inverse-info btn-sm mt-2">
+                                                        <i class="mdi mdi-history"></i> Lihat Riwayat
+                                                    </a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
