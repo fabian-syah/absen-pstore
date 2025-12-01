@@ -28,24 +28,14 @@
                         </div>
                     </div>
 
-                    {{-- Debug Info --}}
-                    @if (app()->environment('local'))
-                        <div class="alert alert-warning mb-3">
-                            <strong>Debug Info:</strong><br>
-                            • User ID: {{ auth()->id() }}<br>
-                            • User Role: {{ auth()->user()->role }}<br>
-                            • Route Name: {{ request()->route()->getName() }}<br>
-                            • Controller: {{ request()->route()->getActionName() }}
-                        </div>
-                    @endif
-
+                    {{-- Informasi Halaman --}}
                     <div class="alert alert-info mb-3">
-                        <strong>Informasi Halaman:</strong><br>
-                        • Hanya menampilkan pengajuan dengan status <strong>PENDING</strong><br>
-                        • Total data: <strong>{{ $requests->total() }}</strong><br>
-                        • Setelah approve/reject, data akan pindah ke halaman Riwayat
+                        <strong>Informasi:</strong><br>
+                        • Total data pending: <strong>{{ $requests->total() }}</strong><br>
+                        • Klik tombol mata (<i class="mdi mdi-eye"></i>) untuk melihat bukti foto.
                     </div>
 
+                    {{-- Notifikasi Sukses/Error --}}
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show">
                             {{ session('success') }}
@@ -76,6 +66,7 @@
                             <tbody>
                                 @forelse($requests as $req)
                                     <tr>
+                                        {{-- 1. USER INFO --}}
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-primary rounded-circle d-flex justify-content-center align-items-center text-white me-2"
@@ -85,15 +76,14 @@
                                                 <div>
                                                     <span class="fw-bold d-block text-dark">{{ $req->user->name }}</span>
                                                     <small class="text-muted" style="font-size:11px;">
-                                                        {{ $req->user->division->name ?? '-' }}
-                                                        <span class="mx-1">|</span>
-                                                        <span
-                                                            class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
+                                                        {{ $req->user->division->name ?? '-' }} | 
+                                                        <span class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
                                                     </small>
                                                 </div>
                                             </div>
                                         </td>
 
+                                        {{-- 2. TIPE IZIN --}}
                                         <td>
                                             @if ($req->type == 'sakit')
                                                 <span class="badge bg-danger text-white">Sakit</span>
@@ -108,12 +98,11 @@
                                             @endif
                                         </td>
 
+                                        {{-- 3. WAKTU --}}
                                         <td>
                                             @if ($req->type == 'telat')
                                                 <div class="text-dark" style="font-size: 13px;">
-                                                    <i class="mdi mdi-calendar"></i>
-                                                    {{ $req->start_date->format('d/m/Y') }}
-                                                    <br>
+                                                    <i class="mdi mdi-calendar"></i> {{ $req->start_date->format('d/m/Y') }}<br>
                                                     <strong class="text-danger"><i class="mdi mdi-clock"></i>
                                                         {{ \Carbon\Carbon::parse($req->start_time)->format('H:i') }}</strong>
                                                 </div>
@@ -128,15 +117,17 @@
                                             @endif
                                         </td>
 
+                                        {{-- 4. ALASAN --}}
                                         <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
 
-                                        {{-- KOLOM BUKTI (DIPERBARUI) --}}
+                                        {{-- 5. BUKTI (DIPERBAIKI) --}}
                                         <td>
                                             @if ($req->file_proof)
-                                                {{-- Kita simpan URL gambar di dalam fungsi onclick langsung --}}
-                                                <button type="button" class="btn btn-inverse-secondary btn-icon btn-sm"
-                                                    onclick="showImage('{{ asset('storage/' . $req->file_proof) }}')"
-                                                    title="Lihat Bukti">
+                                                {{-- MENGGUNAKAN ONCLICK FUNCTION AGAR LEBIH STABIL --}}
+                                                <button type="button" 
+                                                   class="btn btn-inverse-secondary btn-icon btn-sm"
+                                                   onclick="showImage('{{ asset('storage/' . $req->file_proof) }}')"
+                                                   title="Lihat Bukti">
                                                     <i class="mdi mdi-eye"></i>
                                                 </button>
                                             @else
@@ -144,19 +135,20 @@
                                             @endif
                                         </td>
 
+                                        {{-- 6. STATUS --}}
                                         <td>
                                             <span class="badge badge-opacity-warning">Menunggu</span>
                                         </td>
 
+                                        {{-- 7. AKSI --}}
                                         <td>
-                                            {{-- USER: BATALKAN (hanya untuk pengaju) --}}
+                                            {{-- USER: BATALKAN --}}
                                             @if (auth()->id() == $req->user_id)
                                                 <form action="{{ route('leave-requests.cancel', $req->id) }}"
                                                     method="POST" class="d-inline"
                                                     onsubmit="return confirm('Yakin ingin membatalkan pengajuan?')">
                                                     @csrf @method('PATCH')
-                                                    <button type="submit" class="btn btn-light btn-sm text-danger"
-                                                        title="Batalkan Pengajuan">
+                                                    <button type="submit" class="btn btn-light btn-sm text-danger" title="Batalkan">
                                                         <i class="mdi mdi-close-circle"></i> Batal
                                                     </button>
                                                 </form>
@@ -171,37 +163,30 @@
                                                         <i class="mdi mdi-check"></i>
                                                     </button>
                                                 </form>
-
-                                                <button type="button" class="btn btn-danger btn-sm p-2"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#rejectModal{{ $req->id }}">
+                                                
+                                                <button type="button" class="btn btn-danger btn-sm p-2" 
+                                                        data-bs-toggle="modal" data-bs-target="#rejectModal{{ $req->id }}">
                                                     <i class="mdi mdi-close"></i>
                                                 </button>
-
+                                                
                                                 <div class="modal fade" id="rejectModal{{ $req->id }}" tabindex="-1">
                                                     <div class="modal-dialog">
                                                         <div class="modal-content">
                                                             <div class="modal-header">
                                                                 <h5 class="modal-title">Tolak Pengajuan</h5>
-                                                                <button type="button" class="btn-close"
-                                                                    data-bs-dismiss="modal"></button>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                             </div>
-                                                            <form action="{{ route('late.reject', $req->id) }}"
-                                                                method="POST">
+                                                            <form action="{{ route('late.reject', $req->id) }}" method="POST">
                                                                 @csrf
                                                                 <div class="modal-body">
                                                                     <div class="mb-3">
-                                                                        <label class="form-label">Alasan Penolakan <span
-                                                                                class="text-danger">*</span></label>
-                                                                        <textarea name="rejection_reason" class="form-control" rows="3" required
-                                                                            placeholder="Masukkan alasan penolakan..."></textarea>
+                                                                        <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
+                                                                        <textarea name="rejection_reason" class="form-control" rows="3" required></textarea>
                                                                     </div>
                                                                 </div>
                                                                 <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary"
-                                                                        data-bs-dismiss="modal">Batal</button>
-                                                                    <button type="submit" class="btn btn-danger">Tolak
-                                                                        Pengajuan</button>
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                                    <button type="submit" class="btn btn-danger">Tolak</button>
                                                                 </div>
                                                             </form>
                                                         </div>
@@ -213,21 +198,12 @@
                                 @empty
                                     <tr>
                                         <td colspan="7" class="text-center py-5">
-                                            <div class="d-flex flex-column align-items-center justify-content-center">
-                                                <div class="bg-light rounded-circle mb-3 d-flex align-items-center justify-content-center"
-                                                    style="width: 80px; height: 80px;">
-                                                    <i class="mdi mdi-check-all text-success"
-                                                        style="font-size: 40px;"></i>
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="bg-light rounded-circle mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                                    <i class="mdi mdi-check-all text-success" style="font-size: 40px;"></i>
                                                 </div>
                                                 <h4 class="fw-bold text-dark">Semua Beres!</h4>
-                                                <p class="text-muted">Tidak ada pengajuan izin yang perlu diverifikasi saat
-                                                    ini.</p>
-                                                @if (in_array(auth()->user()->role, ['admin', 'audit']))
-                                                    <a href="{{ route('audit.late.history') }}"
-                                                        class="btn btn-inverse-info btn-sm mt-2">
-                                                        <i class="mdi mdi-history"></i> Lihat Riwayat
-                                                    </a>
-                                                @endif
+                                                <p class="text-muted">Tidak ada pengajuan izin pending.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -235,6 +211,8 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    {{-- Pagination --}}
                     <div class="mt-4 d-flex justify-content-end">
                         {{ $requests->links('pagination::bootstrap-5') }}
                     </div>
@@ -243,51 +221,47 @@
         </div>
     </div>
 
-    {{-- MODAL PREVIEW GAMBAR --}}
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+    {{-- MODAL PREVIEW GAMBAR (SATU UNTUK SEMUA) --}}
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="imageModalLabel">Bukti Lampiran</h5>
+                    <h5 class="modal-title">Bukti Lampiran</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center bg-light">
-                    {{-- Gambar akan di-load di sini --}}
-                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm"
-                        style="max-height: 400px;">
+                <div class="modal-body text-center bg-dark d-flex align-items-center justify-content-center" style="min-height: 300px;">
+                    {{-- Gambar di sini --}}
+                    <img id="modalImagePreview" src="" alt="Memuat gambar..." class="img-fluid" style="max-height: 80vh; max-width: 100%;">
                 </div>
             </div>
         </div>
     </div>
+
 @endsection
 
 @section('scripts')
-    <script>
-        // Debug info
-        console.log('Leave Requests Index Loaded');
-        console.log('Current User ID:', {{ auth()->id() }});
-        console.log('Current User Role:', '{{ auth()->user()->role }}');
-        console.log('Route:', '{{ request()->route()->getName() }}');
+<script>
+    // FUNGSI UNTUK MENAMPILKAN GAMBAR
+    function showImage(url) {
+        // 1. Log ke console untuk memastikan URL benar
+        console.log('Membuka gambar:', url);
 
-        // Script untuk Modal Gambar
-        document.addEventListener('DOMContentLoaded', function() {
-            var imageModal = document.getElementById('imageModal');
-            if (imageModal) {
-                imageModal.addEventListener('show.bs.modal', function(event) {
-                    // Tombol yang memicu modal
-                    var button = event.relatedTarget;
-                    // Ambil info dari atribut data-src
-                    var imageUrl = button.getAttribute('data-src');
-                    // Update src gambar di dalam modal
-                    var modalImage = document.getElementById('modalImagePreview');
-                    modalImage.src = imageUrl;
-                });
+        // 2. Ambil elemen gambar di modal
+        var imgElement = document.getElementById('modalImagePreview');
+        
+        // 3. Set src gambar SEBELUM modal muncul
+        imgElement.src = url;
 
-                // Reset gambar saat modal ditutup
-                imageModal.addEventListener('hidden.bs.modal', function() {
-                    document.getElementById('modalImagePreview').src = '';
-                });
-            }
-        });
-    </script>
+        // 4. Tampilkan modal menggunakan Bootstrap API
+        // Kita gunakan try-catch untuk support berbagai versi template
+        try {
+            var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+            myModal.show();
+        } catch (e) {
+            // Fallback jika pakai jQuery (Bootstrap 4 atau template lama)
+            console.log('Bootstrap 5 error, mencoba jQuery...', e);
+            $('#imageModal').modal('show');
+        }
+    }
+</script>
 @endsection
