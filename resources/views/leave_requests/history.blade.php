@@ -22,17 +22,18 @@
                         <table class="table table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th>User</th>
+                                    <th>User & Cabang</th> <!-- Update Header -->
                                     <th>Tipe</th>
                                     <th>Waktu / Tanggal</th>
                                     <th>Alasan</th>
                                     <th>Bukti</th>
-                                    <th>Status Akhir</th>
+                                    <th>Status & Approver</th> <!-- Update Header -->
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($requests as $req)
                                     <tr>
+                                        {{-- KOLOM USER & CABANG --}}
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-secondary rounded-circle d-flex justify-content-center align-items-center text-white me-2"
@@ -42,40 +43,75 @@
                                                 <div>
                                                     <span class="fw-bold d-block text-dark">{{ $req->user->name }}</span>
                                                     <small class="text-muted" style="font-size:11px;">
+                                                        {{-- Menampilkan Divisi --}}
                                                         {{ $req->user->division->name ?? '-' }}
+                                                        &bull; 
+                                                        {{-- UPDATE: Menampilkan Cabang --}}
+                                                        <span class="text-primary">{{ $req->user->branch->name ?? 'Pusat' }}</span>
                                                     </small>
                                                 </div>
                                             </div>
                                         </td>
                                         
                                         <td>
-                                            {{-- Badge Tipe --}}
                                             <span class="badge bg-light text-dark border">{{ ucfirst($req->type) }}</span>
                                         </td>
 
                                         <td>
                                             @if ($req->type == 'telat')
-                                                {{ $req->start_date->format('d/m/Y') }} <span class="text-muted">({{ \Carbon\Carbon::parse($req->start_time)->format('H:i') }})</span>
+                                                {{ $req->start_date->format('d/m/Y') }} 
+                                                <br>
+                                                <span class="text-muted" style="font-size: 11px;">
+                                                    Jam: {{ \Carbon\Carbon::parse($req->start_time)->format('H:i') }}
+                                                </span>
                                             @else
                                                 {{ $req->start_date->format('d M') }}
+                                                @if($req->end_date)
+                                                    - {{ \Carbon\Carbon::parse($req->end_date)->format('d M') }}
+                                                @endif
                                             @endif
                                         </td>
 
-                                        <td class="text-muted">{{ Str::limit($req->reason, 30) }}</td>
+                                        <td class="text-muted" style="max-width: 200px; white-space: normal; line-height: 1.2;">
+                                            {{ Str::limit($req->reason, 40) }}
+                                        </td>
                                         
                                         <td>
                                             @if($req->file_proof)
-                                                <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank" class="text-primary"><i class="mdi mdi-link"></i> Lihat</a>
+                                                <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank" class="text-primary" style="text-decoration: none;">
+                                                    <i class="mdi mdi-link"></i> Lihat
+                                                </a>
                                             @else - @endif
                                         </td>
 
+                                        {{-- KOLOM STATUS & APPROVER --}}
                                         <td>
                                             @if ($req->status == 'approved')
-                                                <span class="badge badge-opacity-success"><i class="mdi mdi-check-circle"></i> Disetujui</span>
+                                                <div class="d-flex flex-column">
+                                                    <span class="badge badge-opacity-success mb-1" style="width: fit-content;">
+                                                        <i class="mdi mdi-check-circle"></i> Disetujui
+                                                    </span>
+                                                    {{-- UPDATE: Menampilkan Nama Approver --}}
+                                                    <small class="text-muted" style="font-size: 10px;">
+                                                        Oleh: {{ $req->approver->name ?? 'Admin' }}
+                                                    </small>
+                                                </div>
+
                                             @elseif($req->status == 'rejected')
-                                                <span class="badge badge-opacity-danger"><i class="mdi mdi-close-circle"></i> Ditolak</span>
+                                                <div class="d-flex flex-column">
+                                                    <span class="badge badge-opacity-danger mb-1" style="width: fit-content;">
+                                                        <i class="mdi mdi-close-circle"></i> Ditolak
+                                                    </span>
+                                                    {{-- UPDATE: Menampilkan Nama Rejector --}}
+                                                    <small class="text-muted" style="font-size: 10px;">
+                                                        Oleh: {{ $req->approver->name ?? 'Admin' }}
+                                                    </small>
+                                                </div>
+
                                             @elseif($req->status == 'cancelled')
                                                 <span class="badge badge-opacity-secondary">Dibatalkan</span>
+                                            @else
+                                                <span class="badge badge-opacity-warning">Pending</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -84,9 +120,11 @@
                                 @endforelse
                             </tbody>
                         </table>
-                   <div class="mt-4 d-flex justify-content-end">
-                        {{ $requests->links('pagination::bootstrap-5') }}
+                        <div class="mt-4 d-flex justify-content-end">
+                            {{ $requests->links('pagination::bootstrap-5') }}
+                        </div>
                     </div>
+                </div>
             </div>
         </div>
     </div>

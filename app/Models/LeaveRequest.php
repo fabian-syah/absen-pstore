@@ -21,6 +21,7 @@ class LeaveRequest extends Model
         'status',
         'rejection_reason',
         'is_active',
+        'approved_by',      // <--- 1. TAMBAHKAN INI
     ];
 
     protected $casts = [
@@ -31,9 +32,17 @@ class LeaveRequest extends Model
         'is_active'  => 'boolean',
     ];
 
+    // Relasi ke User yang MEMBUAT request
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // <--- 2. TAMBAHKAN RELASI INI (User yang MENG-APPROVE)
+    public function approver()
+    {
+        // Relasi ke model User, tapi FK-nya 'approved_by'
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     // Scope Update: Izin Telat Aktif

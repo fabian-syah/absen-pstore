@@ -14,19 +14,19 @@ class LeaveRequestController extends Controller
     public function index()
     {
         $user = Auth::user();
-        // Eager load user & division untuk performa
-        $query = LeaveRequest::with(['user.division'])->latest();
+
+        // UPDATE: Tambahkan 'user.branch' dan 'approver' dalam eager loading
+        $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])->latest();
 
         // --- LOGIKA ROLE & CABANG ---
 
         if ($user->role == 'admin') {
-            // ADMIN: Melihat Semua Data
-            // (Tidak ada filter tambahan)
+            // ADMIN: Melihat Semua Data dari semua cabang dan divisi
+            // (Tidak ada filter 'where' tambahan)
         } elseif ($user->role == 'audit') {
             // AUDIT: Melihat data cabang yang dipegang + Punya sendiri
 
             // 1. Ambil ID Cabang dari Pivot (Multi Branch)
-            // Gunakan 'branches.id' atau 'id' tergantung relasi, pakai 'id' lebih aman via Eloquent
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
 
             // 2. Ambil ID Cabang dari Homebase (Single Branch)
@@ -46,7 +46,7 @@ class LeaveRequestController extends Controller
                     $mainQ->where('id', 0);
                 }
 
-                // Kondisi B: ATAU Melihat request milik diri sendiri (biar gak kosong melompong kalau belum assign cabang)
+                // Kondisi B: ATAU Melihat request milik diri sendiri
                 $mainQ->orWhere('user_id', $user->id);
             });
         } else {
@@ -58,8 +58,6 @@ class LeaveRequestController extends Controller
         return view('leave_requests.index', compact('requests'));
     }
 
-    // ... (Method create, store, dll TETAP SAMA, tidak perlu diubah) ...
-
     // MENAMPILKAN FORM
     public function create()
     {
@@ -67,22 +65,14 @@ class LeaveRequestController extends Controller
     }
 
     // MENYIMPAN DATA (User Submit)
-    // MENYIMPAN DATA (User Submit)
     public function store(Request $request)
     {
-        // 1. Update Rule Validasi
         $request->validate([
-            // Tambahkan tipe baru ke dalam 'in'
             'type' => 'required|in:telat,wfh,izin,sakit,cuti',
-
             'reason' => 'required|string|max:255',
-            'file_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // Max 5MB
+            'file_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'start_date' => 'required|date',
-
-            // end_date WAJIB jika BUKAN telat
             'end_date'   => 'required_unless:type,telat|nullable|date|after_or_equal:start_date',
-
-            // start_time WAJIB jika telat
             'start_time' => 'required_if:type,telat|nullable|date_format:H:i',
         ], [
             'file_proof.required' => 'Bukti foto/dokumen wajib diupload.',
@@ -99,13 +89,11 @@ class LeaveRequestController extends Controller
             'is_active' => true,
         ];
 
-        // 2. Logika Mapping Data
+        // Logika Mapping Data
         if ($request->type === 'telat') {
-            // Jika Telat: Simpan jam, kosongkan tanggal selesai
             $data['start_time'] = $request->start_time;
             $data['end_date'] = null;
         } else {
-            // Jika WFH, Izin, Sakit, Cuti: Simpan tanggal selesai, kosongkan jam
             $data['end_date'] = $request->end_date;
             $data['start_time'] = null;
         }
@@ -121,14 +109,13 @@ class LeaveRequestController extends Controller
         return redirect()->route('leave-requests.index')->with('success', 'Pengajuan berhasil dikirim.');
     }
 
-    // ACTION: USER BATALKAN / SAMPAI KANTOR
+    // ACTION: USER BATALKAN
     public function cancel(LeaveRequest $leaveRequest)
     {
         if ($leaveRequest->user_id != Auth::id()) {
             abort(403);
         }
 
-        // Update jadi cancelled & non-aktif
         $leaveRequest->update([
             'status' => 'cancelled',
             'is_active' => false
@@ -141,34 +128,41 @@ class LeaveRequestController extends Controller
     // ACTION: APPROVE (Admin/Audit)
     public function approve(LeaveRequest $leaveRequest)
     {
-        $leaveRequest->update(['status' => 'approved']);
+        // UPDATE: Simpan ID user yang melakukan approve
+        $leaveRequest->update([
+            'status' => 'approved',
+            'approved_by' => Auth::id()
+        ]);
+        
         return redirect()->back()->with('success', 'Pengajuan disetujui.');
     }
 
     // ACTION: REJECT (Admin/Audit)
     public function reject(LeaveRequest $leaveRequest)
     {
-        $leaveRequest->update(['status' => 'rejected', 'is_active' => false]);
+        // UPDATE: Simpan ID user yang melakukan reject
+        $leaveRequest->update([
+            'status' => 'rejected', 
+            'is_active' => false,
+            'approved_by' => Auth::id()
+        ]);
+        
         return redirect()->back()->with('success', 'Pengajuan ditolak.');
     }
 
+    // ACTION: FINISH EARLY (Masuk lebih awal)
     public function finishEarly(LeaveRequest $leaveRequest)
     {
-        // 1. Validasi kepemilikan
         if ($leaveRequest->user_id != Auth::id()) {
             abort(403);
         }
 
-        // 2. Pastikan tipe pengajuan mendukung (hanya untuk sakit/izin/cuti yang berdurasi)
         if (!in_array($leaveRequest->type, ['sakit', 'izin', 'cuti', 'wfh'])) {
             return back()->with('error', 'Tipe izin ini tidak bisa diselesaikan lebih awal.');
         }
 
-        // 3. Update Tanggal Selesai menjadi KEMARIN
-        // Logikanya: Jika hari ini dia masuk, maka izinnya dianggap selesai kemarin.
         $leaveRequest->update([
             'end_date' => Carbon::yesterday(),
-            // Opsional: Tambahkan catatan bahwa user masuk lebih awal jika perlu
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Status izin diperbarui. Selamat bekerja kembali!');
