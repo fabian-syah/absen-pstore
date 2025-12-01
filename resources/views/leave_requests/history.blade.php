@@ -84,9 +84,9 @@
                                 @endforelse
                             </tbody>
                         </table>
+                   <div class="mt-4 d-flex justify-content-end">
+                        {{ $users->links('pagination::bootstrap-5') }}
                     </div>
-                    <div class="mt-3">{{ $requests->links() }}</div>
-                </div>
             </div>
         </div>
     </div>

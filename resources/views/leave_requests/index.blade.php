@@ -190,8 +190,8 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-3">
-                        {{ $requests->links() }}
+                    <div class="mt-4 d-flex justify-content-end">
+                        {{ $users->links('pagination::bootstrap-5') }}
                     </div>
                 </div>
             </div>
