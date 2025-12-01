@@ -24,6 +24,7 @@
                         </div>
                     </div>
 
+                    {{-- Alert Success --}}
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="mdi mdi-check-circle-outline me-2"></i>
@@ -37,7 +38,8 @@
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="ps-4">User & Divisi</th>
+                                        {{-- Header Diperbarui --}}
+                                        <th class="ps-4">User, Divisi & Cabang</th>
                                         <th>Waktu Absen</th>
                                         <th>Foto</th>
                                         <th>Lokasi</th>
@@ -49,25 +51,38 @@
                                         <tr class="align-middle">
                                             <td class="ps-4">
                                                 <div class="d-flex align-items-center">
+                                                    {{-- Avatar --}}
                                                     <div class="avatar-sm me-3">
-                                                        <div
-                                                            class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle">
+                                                        <div class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle">
                                                             {{ substr($att->user->name ?? 'U', 0, 1) }}
                                                         </div>
                                                     </div>
+                                                    {{-- User Info --}}
                                                     <div>
                                                         <h6 class="mb-1 fw-semibold">{{ $att->user->name ?? 'User Dihapus' }}</h6>
-                                                        <span
-                                                            class="badge badge-outline-secondary">{{ $att->user->division->name ?? 'N/A' }}</span>
+                                                        
+                                                        {{-- Divisi --}}
+                                                        <span class="badge badge-outline-secondary">
+                                                            {{ $att->user->division->name ?? 'N/A' }}
+                                                        </span>
+
+                                                        {{-- Info Cabang (BARU) --}}
+                                                        <div class="d-block mt-1 text-muted small">
+                                                            <i class="mdi mdi-store-marker-outline me-1 text-primary"></i>
+                                                            {{ $att->user->branch->name ?? 'Pusat / Non-Cabang' }}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="text-nowrap">
-                                                    <i class="mdi mdi-clock-outline text-muted me-1"></i>
+                                                    <i class="mdi mdi-calendar-blank-outline text-muted me-1"></i>
                                                     {{ $att->check_in_time->format('d M Y') }}
                                                 </div>
-                                                <small class="text-muted">{{ $att->check_in_time->format('H:i') }}</small>
+                                                <div class="text-nowrap mt-1">
+                                                    <i class="mdi mdi-clock-outline text-muted me-1"></i>
+                                                    {{ $att->check_in_time->format('H:i') }} WIB
+                                                </div>
                                             </td>
                                             <td>
                                                 <a href="{{ Storage::url($att->photo_path) }}" target="_blank" class="image-popup">
@@ -76,44 +91,46 @@
                                                             class="rounded shadow-sm"
                                                             style="width: 100%; height: 100%; object-fit: cover;">
                                                         <div class="position-absolute top-0 end-0 m-1">
-                                                            <i
-                                                                class="mdi mdi-magnify-plus-outline text-white bg-dark bg-opacity-50 rounded-circle p-1"></i>
+                                                            <i class="mdi mdi-magnify-plus-outline text-white bg-dark bg-opacity-50 rounded-circle p-1"></i>
                                                         </div>
                                                     </div>
                                                 </a>
                                             </td>
                                             <td>
                                                 @if($att->latitude && $att->longitude)
-                                                    <a href="https://www.google.com/maps?q={{ $att->latitude }},{{ $att->longitude }}"
+                                                    <a href="http://maps.google.com/maps?q={{ $att->latitude }},{{ $att->longitude }}"
                                                         target="_blank" class="btn btn-outline-info btn-sm btn-icon">
-                                                        <i class="mdi mdi-map-marker-outline"></i>
-                                                        Maps
+                                                        <i class="mdi mdi-map-marker-radius"></i>
                                                     </a>
+                                                    <div class="small text-muted mt-1" style="font-size: 0.75rem;">
+                                                        Lihat Peta
+                                                    </div>
                                                 @else
-                                                    <span class="text-muted small">
-                                                        <i class="mdi mdi-map-marker-off"></i>
-                                                        No Location
+                                                    <span class="text-muted small d-flex align-items-center">
+                                                        <i class="mdi mdi-map-marker-off me-1"></i> No Loc
                                                     </span>
                                                 @endif
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-2">
+                                                    {{-- Form Approve --}}
                                                     <form action="{{ route('audit.approve', $att->id) }}" method="POST">
                                                         @csrf
                                                         @method('PUT')
                                                         <button type="submit" class="btn btn-success btn-sm btn-icon"
                                                             data-bs-toggle="tooltip" title="Setujui Absensi">
-                                                            <i class="mdi mdi-check"></i>
+                                                            <i class="mdi mdi-check-bold"></i>
                                                         </button>
                                                     </form>
 
+                                                    {{-- Form Reject --}}
                                                     <form action="{{ route('audit.reject', $att->id) }}" method="POST"
                                                         onsubmit="return confirm('Yakin ingin menolak absensi ini? Data akan dihapus.');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-danger btn-sm btn-icon"
                                                             data-bs-toggle="tooltip" title="Tolak Absensi">
-                                                            <i class="mdi mdi-close"></i>
+                                                            <i class="mdi mdi-close-thick"></i>
                                                         </button>
                                                     </form>
                                                 </div>
@@ -124,12 +141,15 @@
                             </table>
                         </div>
                     @else
+                        {{-- Empty State --}}
                         <div class="text-center py-5">
                             <div class="mb-4">
-                                <i class="mdi mdi-clipboard-check-outline display-4 text-muted"></i>
+                                <div class="avatar-lg mx-auto bg-light rounded-circle d-flex align-items-center justify-content-center">
+                                    <i class="mdi mdi-clipboard-check-outline display-4 text-muted"></i>
+                                </div>
                             </div>
                             <h5 class="text-muted">Tidak ada absensi menunggu persetujuan</h5>
-                            <p class="text-muted mb-4">Semua absensi sudah terverifikasi</p>
+                            <p class="text-muted mb-4">Semua absensi di cabang Anda sudah terverifikasi</p>
                         </div>
                     @endif
                 </div>
@@ -145,8 +165,8 @@
                     <h5 class="modal-title">Foto Absensi</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center">
-                    <img id="modalImage" src="" alt="Foto Absensi" class="img-fluid rounded">
+                <div class="modal-body text-center p-0">
+                    <img id="modalImage" src="" alt="Foto Absensi" class="img-fluid">
                 </div>
             </div>
         </div>
@@ -155,7 +175,6 @@
 
 @push('scripts')
     <script>
-        // Image popup functionality
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
@@ -163,7 +182,7 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             });
 
-            // Image popup
+            // Image popup logic
             const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
             const modalImage = document.getElementById('modalImage');
 
@@ -183,28 +202,35 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .avatar-title {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 600;
             font-size: 16px;
         }
 
         .btn-icon {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             padding: 0;
+            border-radius: 50%;
         }
 
-        .table> :not(caption)>*>* {
+        .table > :not(caption) > * > * {
             padding: 1rem 0.75rem;
         }
 
         .badge-outline-secondary {
-            border: 1px solid #6c757d;
+            border: 1px solid #ced4da;
             color: #6c757d;
             background: transparent;
         }
@@ -215,7 +241,7 @@
         }
 
         .table-hover tbody tr:hover {
-            background-color: rgba(0, 0, 0, 0.02);
+            background-color: rgba(0, 0, 0, 0.015);
         }
     </style>
 @endpush

@@ -23,14 +23,17 @@ class AuditController extends Controller
         $user = Auth::user();
 
         // Query dasar: ambil yang status pending
+        // Tambahkan eager loading 'user.branch' agar query di view lebih ringan
         $query = Attendance::where('status', 'pending_verification')
-            ->with('user.division');
+            ->with(['user.division', 'user.branch']); 
 
         // --- LOGIKA HAK AKSES ---
-        // Jika user adalah 'admin' atau 'audit', mereka bisa melihat SEMUA data (Universal Access).
-        $isUniversalAccess = in_array($user->role, ['admin', 'audit']);
+        // PERUBAHAN DISINI: 
+        // Hapus 'audit' dari array. Jadi hanya 'admin' yang bisa lihat semua cabang.
+        // Role 'audit' sekarang akan ikut logic filter cabang di bawahnya.
+        $isUniversalAccess = in_array($user->role, ['admin']); 
 
-        // Jika BUKAN admin/audit, baru kita filter berdasarkan cabang dia (misal Supervisor)
+        // Jika BUKAN admin (berarti termasuk Audit), filter berdasarkan cabang dia
         if (!$isUniversalAccess) {
 
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
@@ -42,12 +45,11 @@ class AuditController extends Controller
                     $q->whereIn('users.branch_id', $myBranchIds);
                 });
             } else {
-                // User biasa tanpa cabang tidak boleh lihat apa-apa
+                // User tanpa cabang tidak boleh lihat apa-apa
                 $query->where('id', 0);
             }
         }
-        // Jika admin/audit, filter cabang diabaikan, jadi melihat SEMUA data.
-
+        
         $pendingAttendances = $query->latest()->get();
 
         return view('audit.verification_list', compact('pendingAttendances'));
