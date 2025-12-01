@@ -123,10 +123,10 @@
                                         {{-- 5. BUKTI (DIPERBAIKI) --}}
                                         <td>
                                             @if ($req->file_proof)
-                                                {{-- MENGGUNAKAN ONCLICK FUNCTION AGAR LEBIH STABIL --}}
                                                 <button type="button" 
-                                                   class="btn btn-inverse-secondary btn-icon btn-sm"
-                                                   onclick="showImage('{{ asset('storage/' . $req->file_proof) }}')"
+                                                   class="btn btn-inverse-secondary btn-icon btn-sm view-image-btn"
+                                                   data-image-url="{{ asset('storage/' . $req->file_proof) }}"
+                                                   data-user-name="{{ $req->user->name }}"
                                                    title="Lihat Bukti">
                                                     <i class="mdi mdi-eye"></i>
                                                 </button>
@@ -222,16 +222,30 @@
     </div>
 
     {{-- MODAL PREVIEW GAMBAR (SATU UNTUK SEMUA) --}}
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Bukti Lampiran</h5>
+                    <h5 class="modal-title">Bukti Lampiran - <span id="modalUserName"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center bg-dark d-flex align-items-center justify-content-center" style="min-height: 300px;">
-                    {{-- Gambar di sini --}}
-                    <img id="modalImagePreview" src="" alt="Memuat gambar..." class="img-fluid" style="max-height: 80vh; max-width: 100%;">
+                <div class="modal-body text-center bg-dark p-0" style="min-height: 300px;">
+                    <img id="modalImagePreview" src="" 
+                         alt="Memuat gambar..." 
+                         class="img-fluid" 
+                         style="max-height: 80vh; object-fit: contain; width: 100%;">
+                    <div id="imageLoading" class="text-white py-5">
+                        <div class="spinner-border text-light" role="status">
+                            <span class="visually-hidden">Memuat...</span>
+                        </div>
+                        <p class="mt-2">Memuat gambar...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <a id="openInNewTab" href="#" target="_blank" class="btn btn-primary">
+                        <i class="mdi mdi-open-in-new"></i> Buka di Tab Baru
+                    </a>
                 </div>
             </div>
         </div>
@@ -241,27 +255,58 @@
 
 @section('scripts')
 <script>
-    // FUNGSI UNTUK MENAMPILKAN GAMBAR
-    function showImage(url) {
-        // 1. Log ke console untuk memastikan URL benar
-        console.log('Membuka gambar:', url);
-
-        // 2. Ambil elemen gambar di modal
-        var imgElement = document.getElementById('modalImagePreview');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ambil semua tombol view image
+        const viewButtons = document.querySelectorAll('.view-image-btn');
+        const imageModal = document.getElementById('imageModal');
+        const modalImagePreview = document.getElementById('modalImagePreview');
+        const modalUserName = document.getElementById('modalUserName');
+        const openInNewTab = document.getElementById('openInNewTab');
+        const imageLoading = document.getElementById('imageLoading');
         
-        // 3. Set src gambar SEBELUM modal muncul
-        imgElement.src = url;
-
-        // 4. Tampilkan modal menggunakan Bootstrap API
-        // Kita gunakan try-catch untuk support berbagai versi template
-        try {
-            var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
-            myModal.show();
-        } catch (e) {
-            // Fallback jika pakai jQuery (Bootstrap 4 atau template lama)
-            console.log('Bootstrap 5 error, mencoba jQuery...', e);
-            $('#imageModal').modal('show');
+        if (viewButtons.length > 0) {
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const imageUrl = this.getAttribute('data-image-url');
+                    const userName = this.getAttribute('data-user-name');
+                    
+                    // Set data modal
+                    modalUserName.textContent = userName;
+                    modalImagePreview.src = '';
+                    openInNewTab.href = imageUrl;
+                    
+                    // Tampilkan loading
+                    imageLoading.style.display = 'block';
+                    modalImagePreview.style.display = 'none';
+                    
+                    // Tampilkan modal
+                    const modal = new bootstrap.Modal(imageModal);
+                    modal.show();
+                    
+                    // Load gambar
+                    modalImagePreview.onload = function() {
+                        imageLoading.style.display = 'none';
+                        modalImagePreview.style.display = 'block';
+                    };
+                    
+                    modalImagePreview.onerror = function() {
+                        imageLoading.innerHTML = '<p class="text-danger">Gagal memuat gambar</p>';
+                    };
+                    
+                    // Set src setelah modal tampil
+                    setTimeout(() => {
+                        modalImagePreview.src = imageUrl;
+                    }, 100);
+                });
+            });
         }
-    }
+        
+        // Reset modal ketika ditutup
+        imageModal.addEventListener('hidden.bs.modal', function() {
+            modalImagePreview.src = '';
+            imageLoading.style.display = 'block';
+            modalImagePreview.style.display = 'none';
+        });
+    });
 </script>
 @endsection
