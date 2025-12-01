@@ -63,6 +63,61 @@ class AuditController extends Controller
     }
 
     /**
+     * MENYETUJUI Absensi Mandiri (Verifikasi)
+     * Route: audit.approve
+     */
+    public function approve($id)
+    {
+        // Cari data absensi berdasarkan ID
+        $attendance = Attendance::findOrFail($id);
+        
+        // Update status menjadi verified
+        $attendance->update([
+            'status' => 'verified',
+            'verified_by_user_id' => Auth::id(),
+            'audit_note' => 'Verified by ' . Auth::user()->name
+        ]);
+
+        // Kirim notifikasi ke user bahwa absennya diterima
+        try {
+            $title = "Absensi Disetujui";
+            $body = "Absensi mandiri Anda pada " . $attendance->check_in_time->format('d/m/Y H:i') . " telah diverifikasi.";
+            $this->sendNotificationToUser($attendance->user, $title, $body);
+        } catch (\Exception $e) {
+            // Abaikan error notifikasi agar tidak merusak flow
+        }
+
+        return back()->with('success', 'Absensi berhasil diverifikasi dan disetujui.');
+    }
+
+    /**
+     * MENOLAK Absensi Mandiri
+     * Route: audit.reject
+     */
+    public function reject($id)
+    {
+        // Cari data absensi
+        $attendance = Attendance::findOrFail($id);
+        
+        // Hapus file foto dari storage agar tidak menuh-menuhin server
+        if ($attendance->photo_path && Storage::disk('public')->exists($attendance->photo_path)) {
+            Storage::disk('public')->delete($attendance->photo_path);
+        }
+
+        if ($attendance->photo_out_path && Storage::disk('public')->exists($attendance->photo_out_path)) {
+            Storage::disk('public')->delete($attendance->photo_out_path);
+        }
+
+        // Hapus data dari database (Karena tombolnya "Tolak/Hapus")
+        $attendance->delete();
+
+        // OPSI: Jika tidak ingin dihapus tapi cuma diganti status, pakai ini:
+        // $attendance->update(['status' => 'rejected', 'verified_by_user_id' => Auth::id()]);
+
+        return back()->with('success', 'Data absensi berhasil ditolak dan dihapus.');
+    }
+
+    /**
      * Menampilkan daftar absensi manual yang perlu diverifikasi
      */
     public function showVerificationList()
