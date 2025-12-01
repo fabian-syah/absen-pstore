@@ -140,39 +140,41 @@ class AuditController extends Controller
     /**
      * Menampilkan daftar izin telat
      */
-   public function showLatePermissions()
-    {
-        $user = Auth::user();
+   // File: app/Http/Controllers/AuditController.php
 
-        // --- BAGIAN INI YANG PENTING DIUBAH ---
-        // Tambahkan ->where('status', 'pending') agar yang tampil HANYA yang pending
-        $query = LeaveRequest::with(['user.division', 'user.branch'])
-            ->where('status', 'pending'); 
-        // -------------------------------------
+public function showLatePermissions()
+{
+    $user = Auth::user();
 
-        // LOGIKA FILTER CABANG (JANGAN DIHAPUS)
-        $isUniversalAccess = in_array($user->role, ['admin']);
+    // === KUNCI PERUBAHAN ADA DISINI ===
+    // Tambahkan ->where('status', 'pending')
+    // Ini yang membuat data APPROVED/REJECTED tidak akan terpanggil ke halaman ini
+    $query = LeaveRequest::with(['user.division', 'user.branch'])
+        ->where('status', 'pending'); 
+    // ==================================
 
-        if (!$isUniversalAccess) {
-            $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+    // Logika Filter Cabang (Admin lihat semua, Audit lihat cabang sendiri)
+    $isUniversalAccess = in_array($user->role, ['admin']);
 
-            if (!empty($myBranchIds)) {
-                $query->whereHas('user', function ($q) use ($myBranchIds) {
-                    $q->whereIn('branch_id', $myBranchIds);
-                });
-            } else {
-                $query->where('id', 0);
-            }
+    if (!$isUniversalAccess) {
+        $pivotBranchIds = $user->branches->pluck('id')->toArray();
+        $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+        $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+        if (!empty($myBranchIds)) {
+            $query->whereHas('user', function ($q) use ($myBranchIds) {
+                $q->whereIn('branch_id', $myBranchIds);
+            });
+        } else {
+            // Jika audit tidak punya cabang, jangan tampilkan apa-apa
+            $query->where('id', 0);
         }
-
-        $requests = $query->latest()->paginate(10);
-
-        // Pastikan ini mengarah ke View daftar utama (index)
-        // Dan pastikan di web.php route namanya: 'audit.late.list'
-        return view('leave_requests.index', compact('requests'));
     }
+
+    $requests = $query->latest()->paginate(10);
+
+    return view('leave_requests.index', compact('requests'));
+}
 
     /**
      * HALAMAN 2: HISTORY (Approved, Rejected, Cancelled)

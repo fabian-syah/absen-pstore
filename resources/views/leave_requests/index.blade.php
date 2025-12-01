@@ -64,7 +64,8 @@
                                                     <small class="text-muted" style="font-size:11px;">
                                                         {{ $req->user->division->name ?? '-' }}
                                                         <span class="mx-1">|</span>
-                                                        <span class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
+                                                        <span
+                                                            class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
                                                     </small>
                                                 </div>
                                             </div>
@@ -110,11 +111,11 @@
 
                                         {{-- KOLOM 5: BUKTI --}}
                                         <td>
-                                            @if($req->file_proof)
-                                            <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank"
-                                                class="btn btn-inverse-secondary btn-icon btn-sm">
-                                                <i class="mdi mdi-eye"></i>
-                                            </a>
+                                            @if ($req->file_proof)
+                                                <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank"
+                                                    class="btn btn-inverse-secondary btn-icon btn-sm">
+                                                    <i class="mdi mdi-eye"></i>
+                                                </a>
                                             @else
                                                 -
                                             @endif
@@ -141,7 +142,8 @@
                                                     method="POST" class="d-inline"
                                                     onsubmit="return confirm('Konfirmasi tindakan ini?')">
                                                     @csrf @method('PATCH')
-                                                    <button type="submit" class="btn btn-light btn-sm text-danger" title="Batalkan Pengajuan">
+                                                    <button type="submit" class="btn btn-light btn-sm text-danger"
+                                                        title="Batalkan Pengajuan">
                                                         <i class="mdi mdi-close-circle"></i> Batal
                                                     </button>
                                                 </form>
@@ -149,16 +151,16 @@
 
                                             {{-- ADMIN/AUDIT: APPROVE & REJECT --}}
                                             @if (in_array(auth()->user()->role, ['admin', 'audit']) && $req->status == 'pending')
-                                                <form action="{{ route('late.approve', $req->id) }}"
-                                                    method="POST" class="d-inline">
-                                                    @csrf 
+                                                <form action="{{ route('late.approve', $req->id) }}" method="POST"
+                                                    class="d-inline">
+                                                    @csrf
                                                     {{-- Gunakan POST karena di route definisinya POST untuk izin-telat/approve --}}
                                                     <button class="btn btn-success btn-sm p-2" title="Setujui"><i
                                                             class="mdi mdi-check"></i></button>
                                                 </form>
-                                                <form action="{{ route('late.reject', $req->id) }}"
-                                                    method="POST" class="d-inline">
-                                                    @csrf 
+                                                <form action="{{ route('late.reject', $req->id) }}" method="POST"
+                                                    class="d-inline">
+                                                    @csrf
                                                     <button class="btn btn-danger btn-sm p-2" title="Tolak"><i
                                                             class="mdi mdi-close"></i></button>
                                                 </form>
@@ -167,7 +169,19 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4">Belum ada data pengajuan.</td>
+                                        <td colspan="7" class="text-center py-5">
+                                            {{-- TAMPILAN SEMUA BERES --}}
+                                            <div class="d-flex flex-column align-items-center justify-content-center">
+                                                {{-- Kamu bisa ganti icon ini dengan gambar jika mau --}}
+                                                <div class="bg-light rounded-circle mb-3 d-flex align-items-center justify-content-center"
+                                                    style="width: 80px; height: 80px;">
+                                                    <i class="mdi mdi-check-all text-success" style="font-size: 40px;"></i>
+                                                </div>
+                                                <h4 class="fw-bold text-dark">Semua Beres!</h4>
+                                                <p class="text-muted">Tidak ada pengajuan izin yang perlu diverifikasi saat
+                                                    ini.</p>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
