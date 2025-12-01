@@ -6,6 +6,7 @@ use App\Models\LeaveRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class LeaveRequestController extends Controller
 {
@@ -13,7 +14,13 @@ class LeaveRequestController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
+        Log::info('LeaveRequestController@index dipanggil', [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'role' => $user->role
+        ]);
+
         // Eager load 'approver' agar nama penyetuju bisa diambil
         $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])->latest();
 
@@ -48,13 +55,13 @@ class LeaveRequestController extends Controller
     public function myRequests()
     {
         $user = Auth::user();
-        
-        $requests = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
-                    ->where('user_id', $user->id)
-                    ->latest()
-                    ->paginate(10);
 
-        return view('leave_requests.index', compact('requests'));
+        $requests = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate(10);
+
+        return view('leave_requests.my_requests', compact('requests'));
     }
 
     // MENAMPILKAN FORM
@@ -102,35 +109,60 @@ class LeaveRequestController extends Controller
 
         LeaveRequest::create($data);
 
-        // LOGIKA REDIRECT BERDASARKAN ROLE (FIX 403)
+        // LOGIKA REDIRECT BERDASARKAN ROLE
         $role = Auth::user()->role;
         if (in_array($role, ['admin', 'audit'])) {
             return redirect()->route('leave-requests.index')->with('success', 'Pengajuan berhasil dikirim.');
-        } 
-        
+        }
+
         return redirect()->route('leave-requests.my-requests')->with('success', 'Pengajuan berhasil dikirim.');
     }
 
-    // ACTION: APPROVE
+    // ACTION: APPROVE - Method ini TIDAK DIGUNAKAN karena route menggunakan AuditController
     public function approve(LeaveRequest $leaveRequest)
     {
+        Log::info('LeaveRequestController@approve dipanggil', [
+            'leave_request_id' => $leaveRequest->id,
+            'current_status' => $leaveRequest->status,
+            'approver_id' => Auth::id(),
+            'approver_name' => Auth::user()->name
+        ]);
+
         $leaveRequest->update([
             'status' => 'approved',
-            'approved_by' => Auth::id() // Ini akan menyimpan ID 'Bian'
+            'approved_by' => Auth::id(),
+            'rejection_reason' => null,
         ]);
-        
+
+        Log::info('LeaveRequestController@approve selesai', [
+            'leave_request_id' => $leaveRequest->id,
+            'new_status' => $leaveRequest->status,
+            'approved_by' => $leaveRequest->approved_by
+        ]);
+
         return redirect()->back()->with('success', 'Pengajuan disetujui.');
     }
 
-    // ACTION: REJECT
-    public function reject(LeaveRequest $leaveRequest)
+    // ACTION: REJECT - Method ini TIDAK DIGUNAKAN karena route menggunakan AuditController
+    public function reject(Request $request, LeaveRequest $leaveRequest)
     {
-        $leaveRequest->update([
-            'status' => 'rejected', 
-            'is_active' => false,
-            'approved_by' => Auth::id() // Ini akan menyimpan ID 'Bian'
+        $request->validate([
+            'rejection_reason' => 'required|string|max:255',
         ]);
-        
+
+        Log::info('LeaveRequestController@reject dipanggil', [
+            'leave_request_id' => $leaveRequest->id,
+            'current_status' => $leaveRequest->status,
+            'approver_id' => Auth::id()
+        ]);
+
+        $leaveRequest->update([
+            'status' => 'rejected',
+            'is_active' => false,
+            'approved_by' => Auth::id(),
+            'rejection_reason' => $request->rejection_reason,
+        ]);
+
         return redirect()->back()->with('success', 'Pengajuan ditolak.');
     }
 

@@ -29,6 +29,16 @@
                     </div>
 
                     {{-- Debug Info --}}
+                    @if (app()->environment('local'))
+                    <div class="alert alert-warning mb-3">
+                        <strong>Debug Info:</strong><br>
+                        • User ID: {{ auth()->id() }}<br>
+                        • User Role: {{ auth()->user()->role }}<br>
+                        • Route Name: {{ request()->route()->getName() }}<br>
+                        • Controller: {{ request()->route()->getActionName() }}
+                    </div>
+                    @endif
+
                     <div class="alert alert-info mb-3">
                         <strong>Informasi Halaman:</strong><br>
                         • Hanya menampilkan pengajuan dengan status <strong>PENDING</strong><br>
@@ -149,6 +159,7 @@
 
                                             {{-- ADMIN/AUDIT: APPROVE & REJECT --}}
                                             @if (in_array(auth()->user()->role, ['admin', 'audit']))
+                                                <!-- Button Approve -->
                                                 <form action="{{ route('late.approve', $req->id) }}" method="POST"
                                                     class="d-inline"
                                                     onsubmit="return confirm('Setujui pengajuan ini?')">
@@ -157,14 +168,39 @@
                                                         <i class="mdi mdi-check"></i>
                                                     </button>
                                                 </form>
-                                                <form action="{{ route('late.reject', $req->id) }}" method="POST"
-                                                    class="d-inline"
-                                                    onsubmit="return confirm('Tolak pengajuan ini?')">
-                                                    @csrf
-                                                    <button class="btn btn-danger btn-sm p-2" title="Tolak">
-                                                        <i class="mdi mdi-close"></i>
-                                                    </button>
-                                                </form>
+                                                
+                                                <!-- Button Reject dengan Modal -->
+                                                <button type="button" class="btn btn-danger btn-sm p-2" 
+                                                        data-bs-toggle="modal" data-bs-target="#rejectModal{{ $req->id }}">
+                                                    <i class="mdi mdi-close"></i>
+                                                </button>
+                                                
+                                                <!-- Modal Reject -->
+                                                <div class="modal fade" id="rejectModal{{ $req->id }}" tabindex="-1">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Tolak Pengajuan</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <form action="{{ route('late.reject', $req->id) }}" method="POST">
+                                                                @csrf
+                                                                <div class="modal-body">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
+                                                                        <textarea name="rejection_reason" class="form-control" 
+                                                                                  rows="3" required 
+                                                                                  placeholder="Masukkan alasan penolakan..."></textarea>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                                    <button type="submit" class="btn btn-danger">Tolak Pengajuan</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             @endif
                                         </td>
                                     </tr>
@@ -197,4 +233,14 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+<script>
+    // Debug info
+    console.log('Leave Requests Index Loaded');
+    console.log('Current User ID:', {{ auth()->id() }});
+    console.log('Current User Role:', '{{ auth()->user()->role }}');
+    console.log('Route:', '{{ request()->route()->getName() }}');
+</script>
 @endsection

@@ -27,6 +27,7 @@ use App\Http\Controllers\AttendanceHistoryController;
 | Rute Publik
 |--------------------------------------------------------------------------
 */
+
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -98,10 +99,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/photo/{user}', [ProfileController::class, 'getProfilePhoto'])->name('photo.get');
         Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update');
         Route::get('/ktp/{user}', [ProfileController::class, 'getKtpPhoto'])->name('ktp.get');
-        
+
         Route::post('/work-history', [WorkHistoryController::class, 'store'])->name('work-history.store');
         Route::delete('/work-history/{history}', [WorkHistoryController::class, 'destroy'])->name('work-history.destroy');
-        
+
         Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store');
         Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
         Route::get('/inventory', [InventoryController::class, 'showInventory'])->name('inventory.index');
@@ -132,7 +133,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         Route::resource('divisions', DivisionController::class);
         Route::post('/divisions/{division}/toggle-status', [DivisionController::class, 'toggleStatus'])->name('divisions.toggle-status');
-        
+
         Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
 
@@ -153,20 +154,25 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // ===========================================
         // RUTE IZIN TELAT (AUDIT) - FIXED
         // ===========================================
-        
-        // 1. Daftar Izin PENDING (untuk verifikasi)
-        Route::get('/izin-telat', [AuditController::class, 'showLatePermissions'])
-            ->name('leave-requests.index'); // <- Route utama untuk halaman pending
-        
-        // 2. History Izin (SELESAI: approved, rejected, cancelled)
+
+        // 1. Daftar Izin PENDING (untuk verifikasi) - GUNAKAN LeaveRequestController
+        Route::get('/leave-requests', [LeaveRequestController::class, 'index'])
+            ->name('leave-requests.index')
+            ->middleware('role:admin,audit,user_biasa,leader,security');
+
+        // 2. History Izin (SELESAI: approved, rejected, cancelled) - Tetap di AuditController
         Route::get('/izin-telat/riwayat', [AuditController::class, 'showLatePermissionsHistory'])
-            ->name('audit.late.history');
-        
-        // 3. Aksi Approve/Reject
+            ->name('audit.late.history')
+            ->middleware('role:admin,audit');
+
+        // 3. Aksi Approve/Reject - Tetap di AuditController
         Route::post('/izin-telat/{id}/approve', [AuditController::class, 'approveLatePermission'])
-            ->name('late.approve');
+            ->name('late.approve')
+            ->middleware('role:admin,audit');
+
         Route::post('/izin-telat/{id}/reject', [AuditController::class, 'rejectLatePermission'])
-            ->name('late.reject');
+            ->name('late.reject')
+            ->middleware('role:admin,audit');
 
         // ===========================================
 
@@ -208,17 +214,17 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE LEAVE REQUESTS (IZIN/CUTI/SAKIT/WFH) ===
     Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
-        
+
         // Route ini bisa diakses User Biasa, Leader, Audit, Security
         Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
-            
+
             // 1. Melihat History Pengajuan Sendiri (Method Baru)
             Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');
-            
+
             // 2. Form & Submit
             Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
             Route::post('/store', [LeaveRequestController::class, 'store'])->name('store');
-            
+
             // 3. Aksi User
             Route::patch('/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
             Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finishEarly'])->name('finish-early');
