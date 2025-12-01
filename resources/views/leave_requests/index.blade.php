@@ -42,6 +42,7 @@
                             <tbody>
                                 @forelse($requests as $req)
                                     <tr>
+                                        {{-- KOLOM 1: USER --}}
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-primary rounded-circle d-flex justify-content-center align-items-center text-white me-2"
@@ -55,38 +56,55 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
-                                            @if ($req->type == 'sakit')
-                                                <span class="badge bg-danger text-white">Sakit</span>
-                                            @elseif($req->type == 'izin')
-                                                <span class="badge bg-info text-white">Izin</span>
-                                            @else
-                                                <span class="badge bg-warning text-dark">Telat</span>
-                                            @endif
-                                        </td>
+
+                                        {{-- KOLOM 2: TIPE (LOGIKA BARU DISINI) --}}
                                         <td>
                                             @if ($req->type == 'sakit')
                                                 <span class="badge bg-danger text-white">Sakit</span>
                                             @elseif($req->type == 'izin')
                                                 <span class="badge bg-info text-white">Izin</span>
                                             @elseif($req->type == 'wfh')
-                                                {{-- Tambahkan kondisi khusus untuk WFH --}}
                                                 <span class="badge bg-primary text-white">WFH / Dinas</span>
                                             @elseif($req->type == 'cuti')
-                                                {{-- Tambahkan kondisi untuk Cuti juga biar aman --}}
                                                 <span class="badge bg-success text-white">Cuti</span>
                                             @else
-                                                {{-- Sisanya baru dianggap Telat --}}
                                                 <span class="badge bg-warning text-dark">Telat</span>
                                             @endif
                                         </td>
+
+                                        {{-- KOLOM 3: WAKTU / TANGGAL (JANGAN ISI BADGE DISINI) --}}
+                                        <td>
+                                            @if ($req->type == 'telat')
+                                                <div class="text-dark" style="font-size: 13px;">
+                                                    <i class="mdi mdi-calendar"></i> {{ $req->start_date->format('d/m/Y') }}
+                                                    <br>
+                                                    <strong class="text-danger"><i class="mdi mdi-clock"></i>
+                                                        {{ \Carbon\Carbon::parse($req->start_time)->format('H:i') }}</strong>
+                                                </div>
+                                            @else
+                                                {{-- Untuk WFH, Sakit, Izin, Cuti --}}
+                                                <div class="text-dark" style="font-size: 13px;">
+                                                    <i class="mdi mdi-calendar-range"></i>
+                                                    {{ $req->start_date->format('d M') }}
+                                                    @if ($req->end_date && $req->end_date != $req->start_date)
+                                                        - {{ $req->end_date->format('d M') }}
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </td>
+
+                                        {{-- KOLOM 4: ALASAN --}}
                                         <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
+
+                                        {{-- KOLOM 5: BUKTI --}}
                                         <td>
                                             <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank"
                                                 class="btn btn-inverse-secondary btn-icon btn-sm">
                                                 <i class="mdi mdi-eye"></i>
                                             </a>
                                         </td>
+
+                                        {{-- KOLOM 6: STATUS --}}
                                         <td>
                                             @if ($req->status == 'approved')
                                                 <span class="badge badge-opacity-success">Disetujui</span>
@@ -98,11 +116,14 @@
                                                 <span class="badge badge-opacity-warning">Menunggu</span>
                                             @endif
                                         </td>
+
+                                        {{-- KOLOM 7: AKSI --}}
                                         <td>
                                             {{-- USER: BATALKAN / SAMPAI KANTOR --}}
                                             @if (auth()->id() == $req->user_id && !in_array($req->status, ['cancelled', 'rejected']))
-                                                <form action="{{ route('leave-requests.cancel', $req->id) }}" method="POST"
-                                                    class="d-inline" onsubmit="return confirm('Konfirmasi tindakan ini?')">
+                                                <form action="{{ route('leave-requests.cancel', $req->id) }}"
+                                                    method="POST" class="d-inline"
+                                                    onsubmit="return confirm('Konfirmasi tindakan ini?')">
                                                     @csrf @method('PATCH')
                                                     @if ($req->type == 'telat' && $req->status == 'approved')
                                                         <button type="submit" class="btn btn-success btn-sm text-white"
@@ -126,8 +147,8 @@
                                                     <button class="btn btn-success btn-sm p-2" title="Setujui"><i
                                                             class="mdi mdi-check"></i></button>
                                                 </form>
-                                                <form action="{{ route('leave-requests.reject', $req->id) }}" method="POST"
-                                                    class="d-inline">
+                                                <form action="{{ route('leave-requests.reject', $req->id) }}"
+                                                    method="POST" class="d-inline">
                                                     @csrf @method('PATCH')
                                                     <button class="btn btn-danger btn-sm p-2" title="Tolak"><i
                                                             class="mdi mdi-close"></i></button>
