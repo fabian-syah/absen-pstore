@@ -120,16 +120,17 @@
                                         {{-- 4. ALASAN --}}
                                         <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
 
-                                        {{-- 5. BUKTI (DIPERBAIKI) --}}
+                                        {{-- 5. BUKTI (MENGUBAH KE CARA YANG SAMA DENGAN RIWAYAT) --}}
                                         <td>
                                             @if ($req->file_proof)
-                                                <button type="button" 
-                                                   class="btn btn-inverse-secondary btn-icon btn-sm view-image-btn"
-                                                   data-image-url="{{ asset('storage/' . $req->file_proof) }}"
-                                                   data-user-name="{{ $req->user->name }}"
+                                                <a href="javascript:void(0)" 
+                                                   class="btn btn-inverse-secondary btn-icon btn-sm"
+                                                   data-bs-toggle="modal" 
+                                                   data-bs-target="#imageModal"
+                                                   data-src="{{ asset('storage/' . $req->file_proof) }}"
                                                    title="Lihat Bukti">
                                                     <i class="mdi mdi-eye"></i>
-                                                </button>
+                                                </a>
                                             @else
                                                 -
                                             @endif
@@ -221,31 +222,20 @@
         </div>
     </div>
 
-    {{-- MODAL PREVIEW GAMBAR (SATU UNTUK SEMUA) --}}
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    {{-- MODAL UNTUK PREVIEW GAMBAR (SAMA PERSIS DENGAN RIWAYAT) --}}
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Bukti Lampiran - <span id="modalUserName"></span></h5>
+                    <h5 class="modal-title" id="imageModalLabel">Bukti Lampiran</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center bg-dark p-0" style="min-height: 300px;">
-                    <img id="modalImagePreview" src="" 
-                         alt="Memuat gambar..." 
-                         class="img-fluid" 
-                         style="max-height: 80vh; object-fit: contain; width: 100%;">
-                    <div id="imageLoading" class="text-white py-5">
-                        <div class="spinner-border text-light" role="status">
-                            <span class="visually-hidden">Memuat...</span>
-                        </div>
-                        <p class="mt-2">Memuat gambar...</p>
-                    </div>
+                <div class="modal-body text-center bg-light">
+                    {{-- Gambar akan di-load di sini --}}
+                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 70vh; width: auto;">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <a id="openInNewTab" href="#" target="_blank" class="btn btn-primary">
-                        <i class="mdi mdi-open-in-new"></i> Buka di Tab Baru
-                    </a>
                 </div>
             </div>
         </div>
@@ -255,57 +245,21 @@
 
 @section('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Ambil semua tombol view image
-        const viewButtons = document.querySelectorAll('.view-image-btn');
-        const imageModal = document.getElementById('imageModal');
-        const modalImagePreview = document.getElementById('modalImagePreview');
-        const modalUserName = document.getElementById('modalUserName');
-        const openInNewTab = document.getElementById('openInNewTab');
-        const imageLoading = document.getElementById('imageLoading');
+    document.addEventListener('DOMContentLoaded', function () {
+        var imageModal = document.getElementById('imageModal');
+        imageModal.addEventListener('show.bs.modal', function (event) {
+            // Tombol yang memicu modal
+            var button = event.relatedTarget;
+            // Ambil info dari atribut data-src
+            var imageUrl = button.getAttribute('data-src');
+            // Update src gambar di dalam modal
+            var modalImage = document.getElementById('modalImagePreview');
+            modalImage.src = imageUrl;
+        });
         
-        if (viewButtons.length > 0) {
-            viewButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const imageUrl = this.getAttribute('data-image-url');
-                    const userName = this.getAttribute('data-user-name');
-                    
-                    // Set data modal
-                    modalUserName.textContent = userName;
-                    modalImagePreview.src = '';
-                    openInNewTab.href = imageUrl;
-                    
-                    // Tampilkan loading
-                    imageLoading.style.display = 'block';
-                    modalImagePreview.style.display = 'none';
-                    
-                    // Tampilkan modal
-                    const modal = new bootstrap.Modal(imageModal);
-                    modal.show();
-                    
-                    // Load gambar
-                    modalImagePreview.onload = function() {
-                        imageLoading.style.display = 'none';
-                        modalImagePreview.style.display = 'block';
-                    };
-                    
-                    modalImagePreview.onerror = function() {
-                        imageLoading.innerHTML = '<p class="text-danger">Gagal memuat gambar</p>';
-                    };
-                    
-                    // Set src setelah modal tampil
-                    setTimeout(() => {
-                        modalImagePreview.src = imageUrl;
-                    }, 100);
-                });
-            });
-        }
-        
-        // Reset modal ketika ditutup
-        imageModal.addEventListener('hidden.bs.modal', function() {
-            modalImagePreview.src = '';
-            imageLoading.style.display = 'block';
-            modalImagePreview.style.display = 'none';
+        // Opsional: Reset gambar saat modal ditutup (agar tidak ada flash gambar lama)
+        imageModal.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('modalImagePreview').src = '';
         });
     });
 </script>
