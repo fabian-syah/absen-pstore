@@ -128,10 +128,15 @@
 
                                         <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
 
+                                        {{-- KOLOM BUKTI (DIPERBARUI) --}}
                                         <td>
                                             @if ($req->file_proof)
-                                                <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank"
-                                                    class="btn btn-inverse-secondary btn-icon btn-sm">
+                                                <a href="javascript:void(0)" 
+                                                   class="btn btn-inverse-secondary btn-icon btn-sm"
+                                                   data-bs-toggle="modal" 
+                                                   data-bs-target="#imageModal"
+                                                   data-src="{{ asset('storage/' . $req->file_proof) }}"
+                                                   title="Lihat Bukti">
                                                     <i class="mdi mdi-eye"></i>
                                                 </a>
                                             @else
@@ -159,7 +164,6 @@
 
                                             {{-- ADMIN/AUDIT: APPROVE & REJECT --}}
                                             @if (in_array(auth()->user()->role, ['admin', 'audit']))
-                                                <!-- Button Approve -->
                                                 <form action="{{ route('late.approve', $req->id) }}" method="POST"
                                                     class="d-inline"
                                                     onsubmit="return confirm('Setujui pengajuan ini?')">
@@ -169,13 +173,11 @@
                                                     </button>
                                                 </form>
                                                 
-                                                <!-- Button Reject dengan Modal -->
                                                 <button type="button" class="btn btn-danger btn-sm p-2" 
                                                         data-bs-toggle="modal" data-bs-target="#rejectModal{{ $req->id }}">
                                                     <i class="mdi mdi-close"></i>
                                                 </button>
                                                 
-                                                <!-- Modal Reject -->
                                                 <div class="modal fade" id="rejectModal{{ $req->id }}" tabindex="-1">
                                                     <div class="modal-dialog">
                                                         <div class="modal-content">
@@ -189,8 +191,8 @@
                                                                     <div class="mb-3">
                                                                         <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
                                                                         <textarea name="rejection_reason" class="form-control" 
-                                                                                  rows="3" required 
-                                                                                  placeholder="Masukkan alasan penolakan..."></textarea>
+                                                                                    rows="3" required 
+                                                                                    placeholder="Masukkan alasan penolakan..."></textarea>
                                                                     </div>
                                                                 </div>
                                                                 <div class="modal-footer">
@@ -233,6 +235,22 @@
             </div>
         </div>
     </div>
+
+    {{-- MODAL PREVIEW GAMBAR --}}
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Bukti Lampiran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center bg-light">
+                    {{-- Gambar akan di-load di sini --}}
+                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
@@ -242,5 +260,26 @@
     console.log('Current User ID:', {{ auth()->id() }});
     console.log('Current User Role:', '{{ auth()->user()->role }}');
     console.log('Route:', '{{ request()->route()->getName() }}');
+
+    // Script untuk Modal Gambar
+    document.addEventListener('DOMContentLoaded', function () {
+        var imageModal = document.getElementById('imageModal');
+        if (imageModal) {
+            imageModal.addEventListener('show.bs.modal', function (event) {
+                // Tombol yang memicu modal
+                var button = event.relatedTarget;
+                // Ambil info dari atribut data-src
+                var imageUrl = button.getAttribute('data-src');
+                // Update src gambar di dalam modal
+                var modalImage = document.getElementById('modalImagePreview');
+                modalImage.src = imageUrl;
+            });
+
+            // Reset gambar saat modal ditutup
+            imageModal.addEventListener('hidden.bs.modal', function () {
+                document.getElementById('modalImagePreview').src = '';
+            });
+        }
+    });
 </script>
 @endsection
