@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use App\Models\User;
 use App\Models\Branch;
-use App\Models\Attendance;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 
 class TeamController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        $myId = $user->id;
+        // $myId = $user->id; // DELETE: Tidak perlu filter ID sendiri lagi
 
         // 1. KUMPULKAN SEMUA ID CABANG MILIK USER LOGIN
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
@@ -27,9 +26,9 @@ class TeamController extends Controller
 
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
-        // 2. QUERY USER LAIN (TIM)
-        $query = User::where('users.id', '!=', $myId)
-            ->where('users.is_active', true);
+        // 2. QUERY USER (TIM)
+        // UPDATE: Hapus ->where('users.id', '!=', $myId) agar akun sendiri muncul
+        $query = User::where('users.is_active', true);
 
         if (empty($myBranchIds)) {
             $query->where('users.id', 0);
@@ -44,8 +43,15 @@ class TeamController extends Controller
 
         // Ambil Data Tim
         $myTeam = $query->with([
+            // Ambil absensi hari ini
             'attendances' => function ($q) {
                 $q->whereDate('check_in_time', today());
+            },
+            // UPDATE: Ambil Izin/Sakit/Cuti yang Approved hari ini
+            'leaveRequests' => function ($q) {
+                $q->where('status', 'approved')
+                  ->whereDate('start_date', '<=', today())
+                  ->whereDate('end_date', '>=', today());
             },
             'activeLateStatus',
             'divisions',
@@ -57,8 +63,7 @@ class TeamController extends Controller
             ->select('users.*')
             ->get();
 
-        // 3. BARU: AMBIL DATA DETAIL CABANG UNTUK SECTION BAWAH
-        // Kita ambil data cabang berdasarkan $myBranchIds dan hitung user aktifnya
+        // 3. AMBIL DATA DETAIL CABANG
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->withCount(['users' => function ($q) {
                 $q->where('is_active', true);
