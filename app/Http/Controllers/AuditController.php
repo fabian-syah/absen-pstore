@@ -145,47 +145,38 @@ class AuditController extends Controller
     /**
      * Menampilkan daftar izin telat (HANYA PENDING)
      */
+    // File: app/Http/Controllers/AuditController.php
+
     public function showLatePermissions()
     {
         $user = Auth::user();
 
-        // =================================================================
-        // PERBAIKAN UTAMA DISINI
-        // =================================================================
-        // Kita kunci query agar HANYA mengambil status 'pending'.
-        // Data 'approved', 'rejected', 'cancelled' otomatis TIDAK AKAN DIAMBIL.
-
+        // -------------------------------------------------------------
+        // UPDATE BAGIAN INI AGAR HANYA MUNCUL YANG PENDING
+        // -------------------------------------------------------------
         $query = LeaveRequest::with(['user.division', 'user.branch'])
-            ->where('status', 'pending');
+            ->where('status', 'pending'); // <--- KUNCI: Paksa hanya ambil status 'pending'
+        // -------------------------------------------------------------
 
-        // =================================================================
-
-        // --- LOGIKA FILTER CABANG (JANGAN DIUBAH) ---
-        // Admin bisa lihat semua, User lain (Audit/Leader) hanya cabang sendiri
-
+        // Logika Hak Akses (Admin vs Audit Cabang) - Biarkan tetap seperti ini
         $isUniversalAccess = in_array($user->role, ['admin']);
 
         if (!$isUniversalAccess) {
-            // Ambil ID cabang user
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
             $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
             $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
 
             if (!empty($myBranchIds)) {
-                // Filter hanya user di cabang yang sama
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
                     $q->whereIn('branch_id', $myBranchIds);
                 });
             } else {
-                // Kalau tidak punya cabang, jangan tampilkan data apapun
                 $query->where('id', 0);
             }
         }
 
-        // Urutkan dari yang terlama atau terbaru (opsional), lalu paginate
         $requests = $query->latest()->paginate(10);
 
-        // Arahkan ke View
         return view('leave_requests.index', compact('requests'));
     }
 
