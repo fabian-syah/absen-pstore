@@ -142,37 +142,40 @@ class AuditController extends Controller
     /**
      * Menampilkan daftar izin telat (HANYA PENDING)
      */
-    public function showLatePermissions()
-    {
-        $user = Auth::user();
+    // File: app/Http/Controllers/AuditController.php
 
-        // -------------------------------------------------------------
-        // UPDATE: Hanya ambil yang status = 'pending'
-        // -------------------------------------------------------------
-        $query = LeaveRequest::with(['user.division', 'user.branch'])
-            ->where('status', 'pending'); // <-- Hanya pending saja
+public function showLatePermissions()
+{
+    $user = Auth::user();
 
-        // Logika Hak Akses (Admin vs Audit Cabang)
-        $isUniversalAccess = in_array($user->role, ['admin']);
+    // PERBAIKAN: Pastikan HANYA ambil status pending
+    $query = LeaveRequest::with(['user.division', 'user.branch'])
+        ->where('status', 'pending'); // <-- INI HARUSNYA SUDAH BENAR
 
-        if (!$isUniversalAccess) {
-            $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+    // Logika Hak Akses
+    $isUniversalAccess = in_array($user->role, ['admin']);
 
-            if (!empty($myBranchIds)) {
-                $query->whereHas('user', function ($q) use ($myBranchIds) {
-                    $q->whereIn('branch_id', $myBranchIds);
-                });
-            } else {
-                $query->where('id', 0);
-            }
+    if (!$isUniversalAccess) {
+        $pivotBranchIds = $user->branches->pluck('id')->toArray();
+        $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+        $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+        if (!empty($myBranchIds)) {
+            $query->whereHas('user', function ($q) use ($myBranchIds) {
+                $q->whereIn('branch_id', $myBranchIds);
+            });
+        } else {
+            $query->where('id', 0);
         }
-
-        $requests = $query->latest()->paginate(10);
-
-        return view('leave_requests.index', compact('requests'));
     }
+
+    // Debug: Cek query SQL
+    // dd($query->toSql(), $query->getBindings());
+
+    $requests = $query->latest()->paginate(10);
+
+    return view('leave_requests.index', compact('requests'));
+}
 
     /**
      * HALAMAN RIWAYAT (Approved, Rejected, Cancelled)
