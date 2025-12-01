@@ -157,7 +157,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         // [BARU] Verifikasi User & Approval Foto
         Route::patch('/users/{user}/verify', [UserController::class, 'verifyUser'])->name('users.verify');
-        Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
+        // Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo'); // Duplikat dihapus
 
         Route::prefix('verifikasi')->name('audit.')->group(function () {
             Route::get('/absensi', [AuditController::class, 'showVerificationList'])->name('verify.list');
@@ -166,9 +166,23 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::get('/laporan', [AuditController::class, 'showReports'])->name('reports');
         });
 
-        Route::get('/izin-telat', [AuditController::class, 'showLatePermissions'])->name('audit.late.list');
+        // ===========================================
+        // PEMBAHARUAN: RUTE IZIN TELAT (AUDIT)
+        // ===========================================
+        
+        // 1. History Izin (SELESAI)
+        Route::get('/izin-telat/riwayat', [AuditController::class, 'showLatePermissionsHistory'])
+            ->name('audit.late.history');
+
+        // 2. Daftar Izin (PENDING)
+        Route::get('/izin-telat', [AuditController::class, 'showLatePermissions'])
+            ->name('audit.late.list');
+        
+        // 3. Aksi Approve/Reject
         Route::post('/izin-telat/{lateNotification}/approve', [AuditController::class, 'approveLatePermission'])->name('late.approve');
         Route::post('/izin-telat/{lateNotification}/reject', [AuditController::class, 'rejectLatePermission'])->name('late.reject');
+
+        // ===========================================
 
         Route::get('/audit/missed-checkouts', [AuditController::class, 'showMissedCheckouts'])->name('audit.missed-checkout.list');
         Route::put('/audit/missed-checkouts/{id}', [AuditController::class, 'updateMissedCheckout'])->name('audit.missed-checkout.update');
@@ -206,8 +220,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/skip-checkout/{id}', [SelfAttendanceController::class, 'skipCheckOut'])->name('skip');
     });
 
-    // === RUTE LEAVE REQUESTS ===
+    // === RUTE LEAVE REQUESTS (USER BIASA) ===
     Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
+        // Ini Index untuk User biasa melihat request MEREKA sendiri
         Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
 
         Route::middleware(['role:user_biasa,leader,audit,security'])->group(function () {
@@ -217,6 +232,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finishEarly'])->name('finish-early');
         });
 
+        // Approve/Reject via Controller User (Opsional, jika admin akses lewat sini)
         Route::middleware(['role:admin,audit'])->group(function () {
             Route::patch('/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])->name('approve');
             Route::patch('/{leaveRequest}/reject', [LeaveRequestController::class, 'reject'])->name('reject');

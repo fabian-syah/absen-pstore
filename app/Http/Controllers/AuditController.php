@@ -144,35 +144,63 @@ class AuditController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Query Dasar: Urutkan terbaru & Load relasi cabang (branch)
+        // 1. Query Dasar: HANYA PENDING
         $query = LeaveRequest::with(['user.division', 'user.branch'])
-            // 2. LOGIKA HILANG DARI HISTORY: Hanya ambil yang statusnya 'pending'
-            ->where('status', 'pending');
+            ->where('status', 'pending'); // <--- PENTING: Filter Pending
 
-        // 3. LOGIKA FILTER CABANG (Sama seperti yang Anda punya)
-        $isUniversalAccess = in_array($user->role, ['admin']); // Hanya Admin lihat semua
+        // 2. LOGIKA FILTER CABANG (Copy-paste logic hak akses kamu yang sudah benar)
+        $isUniversalAccess = in_array($user->role, ['admin']); 
 
         if (!$isUniversalAccess) {
-            // Ambil ID cabang dari pivot table (branches) & homebase (branch_id)
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
             $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
             $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
 
             if (!empty($myBranchIds)) {
-                // Filter user yang branch_id nya ada di list audit
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
                     $q->whereIn('branch_id', $myBranchIds);
                 });
             } else {
-                // Jika audit tidak punya cabang, kosongkan hasil
                 $query->where('id', 0);
             }
         }
 
-        $requests = $query->latest()->paginate(10); // Gunakan paginate biar rapi
-
-        // Pastikan nama view sesuai dengan file blade Anda
+        $requests = $query->latest()->paginate(10); 
         return view('leave_requests.index', compact('requests'));
+    }
+
+    /**
+     * HALAMAN 2: HISTORY (Approved, Rejected, Cancelled)
+     */
+    public function showLatePermissionsHistory()
+    {
+        $user = Auth::user();
+
+        // 1. Query Dasar: SELAIN PENDING
+        $query = LeaveRequest::with(['user.division', 'user.branch'])
+            ->whereIn('status', ['approved', 'rejected', 'cancelled']); // <--- Filter Status Selesai
+
+        // 2. LOGIKA FILTER CABANG (Sama persis)
+        $isUniversalAccess = in_array($user->role, ['admin']);
+
+        if (!$isUniversalAccess) {
+            $pivotBranchIds = $user->branches->pluck('id')->toArray();
+            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!empty($myBranchIds)) {
+                $query->whereHas('user', function ($q) use ($myBranchIds) {
+                    $q->whereIn('branch_id', $myBranchIds);
+                });
+            } else {
+                $query->where('id', 0);
+            }
+        }
+
+        $requests = $query->latest()->paginate(10);
+        
+        // Kita gunakan view baru 'history'
+        return view('leave_requests.history', compact('requests'));
     }
 
     // =========================================================================

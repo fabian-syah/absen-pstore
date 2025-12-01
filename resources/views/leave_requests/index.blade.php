@@ -1,7 +1,7 @@
 @extends('layout.master')
 
 @section('title')
-    Daftar Izin
+    Daftar Persetujuan Izin (Pending)
 @endsection
 
 @section('content')
@@ -10,13 +10,21 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="card-title">Daftar Izin & Keterlambatan</h4>
-                        {{-- Tombol Buat Baru (Hanya User Biasa/Leader) --}}
-                        @if (in_array(auth()->user()->role, ['user_biasa', 'leader']))
-                            <a href="{{ route('leave-requests.create') }}" class="btn btn-primary btn-sm">
-                                <i class="mdi mdi-plus"></i> Ajukan Baru
+                        <h4 class="card-title">Verifikasi Izin & Keterlambatan</h4>
+                        
+                        <div>
+                            {{-- TOMBOL MENUJU HISTORY --}}
+                            <a href="{{ route('leave-requests.history') }}" class="btn btn-inverse-info btn-sm me-2">
+                                <i class="mdi mdi-history"></i> Lihat Riwayat
                             </a>
-                        @endif
+
+                            {{-- Tombol Buat Baru --}}
+                            @if (in_array(auth()->user()->role, ['user_biasa', 'leader']))
+                                <a href="{{ route('leave-requests.create') }}" class="btn btn-primary btn-sm">
+                                    <i class="mdi mdi-plus"></i> Ajukan Baru
+                                </a>
+                            @endif
+                        </div>
                     </div>
 
                     @if (session('success'))
@@ -42,139 +50,85 @@
                             <tbody>
                                 @forelse($requests as $req)
                                     <tr>
-                                        {{-- KOLOM 1: USER --}}
+                                        {{-- KOLOM USER --}}
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="bg-primary rounded-circle d-flex justify-content-center align-items-center text-white me-2"
+                                                <div class="bg-warning rounded-circle d-flex justify-content-center align-items-center text-white me-2"
                                                     style="width: 35px; height: 35px; font-weight:bold;">
                                                     {{ substr($req->user->name, 0, 1) }}
                                                 </div>
                                                 <div>
                                                     <span class="fw-bold d-block text-dark">{{ $req->user->name }}</span>
-
-                                                    {{-- PERUBAHAN DISINI: Menampilkan Divisi DAN Cabang --}}
                                                     <small class="text-muted" style="font-size:11px;">
-                                                        {{ $req->user->division->name ?? '-' }}
-                                                        <span class="mx-1">|</span>
-                                                        {{-- Pastikan relasi 'branch' ada di model User --}}
-                                                        <span
-                                                            class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
+                                                        {{ $req->user->division->name ?? '-' }} | 
+                                                        <span class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
                                                     </small>
-
                                                 </div>
                                             </div>
                                         </td>
-
-                                        {{-- KOLOM 2: TIPE (LOGIKA BARU DISINI) --}}
+                                        
+                                        {{-- KOLOM TIPE --}}
                                         <td>
-                                            @if ($req->type == 'sakit')
-                                                <span class="badge bg-danger text-white">Sakit</span>
-                                            @elseif($req->type == 'izin')
-                                                <span class="badge bg-info text-white">Izin</span>
-                                            @elseif($req->type == 'wfh')
-                                                <span class="badge bg-primary text-white">WFH / Dinas</span>
-                                            @elseif($req->type == 'cuti')
-                                                <span class="badge bg-success text-white">Cuti</span>
-                                            @else
-                                                <span class="badge bg-warning text-dark">Telat</span>
-                                            @endif
+                                             @if ($req->type == 'sakit') <span class="badge bg-danger text-white">Sakit</span>
+                                             @elseif($req->type == 'izin') <span class="badge bg-info text-white">Izin</span>
+                                             @elseif($req->type == 'wfh') <span class="badge bg-primary text-white">WFH</span>
+                                             @elseif($req->type == 'cuti') <span class="badge bg-success text-white">Cuti</span>
+                                             @else <span class="badge bg-warning text-dark">Telat</span>
+                                             @endif
                                         </td>
 
-                                        {{-- KOLOM 3: WAKTU / TANGGAL (JANGAN ISI BADGE DISINI) --}}
+                                        {{-- KOLOM TANGGAL --}}
                                         <td>
                                             @if ($req->type == 'telat')
-                                                <div class="text-dark" style="font-size: 13px;">
-                                                    <i class="mdi mdi-calendar"></i> {{ $req->start_date->format('d/m/Y') }}
-                                                    <br>
-                                                    <strong class="text-danger"><i class="mdi mdi-clock"></i>
-                                                        {{ \Carbon\Carbon::parse($req->start_time)->format('H:i') }}</strong>
-                                                </div>
+                                                {{ $req->start_date->format('d/m/Y') }} <br>
+                                                <strong class="text-danger">{{ \Carbon\Carbon::parse($req->start_time)->format('H:i') }}</strong>
                                             @else
-                                                {{-- Untuk WFH, Sakit, Izin, Cuti --}}
-                                                <div class="text-dark" style="font-size: 13px;">
-                                                    <i class="mdi mdi-calendar-range"></i>
-                                                    {{ $req->start_date->format('d M') }}
-                                                    @if ($req->end_date && $req->end_date != $req->start_date)
-                                                        - {{ $req->end_date->format('d M') }}
-                                                    @endif
-                                                </div>
+                                                {{ $req->start_date->format('d M') }}
+                                                @if ($req->end_date && $req->end_date != $req->start_date) - {{ $req->end_date->format('d M') }} @endif
                                             @endif
                                         </td>
 
-                                        {{-- KOLOM 4: ALASAN --}}
-                                        <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
-
-                                        {{-- KOLOM 5: BUKTI --}}
+                                        <td>{{ $req->reason }}</td>
+                                        
                                         <td>
-                                            <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank"
-                                                class="btn btn-inverse-secondary btn-icon btn-sm">
-                                                <i class="mdi mdi-eye"></i>
-                                            </a>
+                                            @if($req->file_proof)
+                                            <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank" class="btn btn-inverse-secondary btn-icon btn-sm"><i class="mdi mdi-eye"></i></a>
+                                            @else - @endif
                                         </td>
 
-                                        {{-- KOLOM 6: STATUS --}}
-                                        <td>
-                                            @if ($req->status == 'approved')
-                                                <span class="badge badge-opacity-success">Disetujui</span>
-                                            @elseif($req->status == 'rejected')
-                                                <span class="badge badge-opacity-danger">Ditolak</span>
-                                            @elseif($req->status == 'cancelled')
-                                                <span class="badge badge-opacity-secondary">Batal</span>
-                                            @else
-                                                <span class="badge badge-opacity-warning">Menunggu</span>
-                                            @endif
-                                        </td>
+                                        {{-- STATUS (Pasti Pending karena di filter controller) --}}
+                                        <td><span class="badge badge-opacity-warning">Menunggu</span></td>
 
-                                        {{-- KOLOM 7: AKSI --}}
+                                        {{-- AKSI (APPROVE / REJECT / CANCEL) --}}
                                         <td>
-                                            {{-- USER: BATALKAN / SAMPAI KANTOR --}}
-                                            @if (auth()->id() == $req->user_id && !in_array($req->status, ['cancelled', 'rejected']))
-                                                <form action="{{ route('leave-requests.cancel', $req->id) }}"
-                                                    method="POST" class="d-inline"
-                                                    onsubmit="return confirm('Konfirmasi tindakan ini?')">
+                                            {{-- User Batalkan --}}
+                                            @if (auth()->id() == $req->user_id)
+                                                <form action="{{ route('leave-requests.cancel', $req->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Batalkan?')">
                                                     @csrf @method('PATCH')
-                                                    @if ($req->type == 'telat' && $req->status == 'approved')
-                                                        <button type="submit" class="btn btn-success btn-sm text-white"
-                                                            title="Saya sudah sampai">
-                                                            <i class="mdi mdi-check-circle"></i> Sampai
-                                                        </button>
-                                                    @elseif($req->status == 'pending')
-                                                        <button type="submit" class="btn btn-light btn-sm text-danger"
-                                                            title="Batalkan Pengajuan">
-                                                            <i class="mdi mdi-close-circle"></i> Batal
-                                                        </button>
-                                                    @endif
+                                                    <button class="btn btn-light btn-sm text-danger"><i class="mdi mdi-close-circle"></i> Batal</button>
                                                 </form>
                                             @endif
 
-                                            {{-- ADMIN/AUDIT: APPROVE & REJECT --}}
-                                            @if (in_array(auth()->user()->role, ['admin', 'audit']) && $req->status == 'pending')
-                                                <form action="{{ route('leave-requests.approve', $req->id) }}"
-                                                    method="POST" class="d-inline">
+                                       {{--  --}} --}}
+                                            @if (in_array(auth()->user()->role, ['admin', 'audit']))
+                                                <form action="{{ route('leave-requests.approve', $req->id) }}" method="POST" class="d-inline">
                                                     @csrf @method('PATCH')
-                                                    <button class="btn btn-success btn-sm p-2" title="Setujui"><i
-                                                            class="mdi mdi-check"></i></button>
+                                                    <button class="btn btn-success btn-sm p-2"><i class="mdi mdi-check"></i></button>
                                                 </form>
-                                                <form action="{{ route('leave-requests.reject', $req->id) }}"
-                                                    method="POST" class="d-inline">
+                                                <form action="{{ route('leave-requests.reject', $req->id) }}" method="POST" class="d-inline">
                                                     @csrf @method('PATCH')
-                                                    <button class="btn btn-danger btn-sm p-2" title="Tolak"><i
-                                                            class="mdi mdi-close"></i></button>
+                                                    <button class="btn btn-danger btn-sm p-2"><i class="mdi mdi-close"></i></button>
                                                 </form>
                                             @endif
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center py-4">Belum ada data pengajuan.</td>
-                                    </tr>
+                                    <tr><td colspan="7" class="text-center py-4">Tidak ada pengajuan pending.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-3">
-                        {{ $requests->links() }}
-                    </div>
+                    <div class="mt-3">{{ $requests->links() }}</div>
                 </div>
             </div>
         </div>
