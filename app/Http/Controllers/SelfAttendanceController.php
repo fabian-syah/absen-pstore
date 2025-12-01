@@ -94,11 +94,21 @@ class SelfAttendanceController extends Controller
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
             $filename = 'public/foto_mandiri/' . Str::random(40) . '.jpg';
+            
+            // Buat instance image
             $img = Image::make($file);
+
+            // === FIX PENTING: Orientate ===
+            // Ini akan memutar gambar sesuai metadata EXIF kamera HP
+            // Wajib ditaruh SEBELUM resize
+            $img->orientate(); 
+            // ==============================
+
             $img->resize(800, null, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
+
             $compressedImage = (string) $img->encode('jpg', 60);
             Storage::disk('public')->put($filename, $compressedImage);
             $path = $filename;
