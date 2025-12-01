@@ -21,11 +21,14 @@ class LeaveRequestController extends Controller
             'role' => $user->role
         ]);
 
-        // Eager load 'approver' agar nama penyetuju bisa diambil
-        $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])->latest();
+        // PERBAIKAN: Hanya ambil yang status = 'pending' untuk verifikasi
+        $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
+            ->where('status', 'pending') // <- TAMBAHKAN INI
+            ->latest();
 
         if ($user->role == 'admin') {
-            // ADMIN: Melihat Semua Data
+            // ADMIN: Melihat Semua Data PENDING
+            Log::info('Admin melihat semua data pending');
         } elseif ($user->role == 'audit') {
             // AUDIT: Melihat data cabang yang dipegang + Punya sendiri
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
@@ -48,6 +51,12 @@ class LeaveRequestController extends Controller
         }
 
         $requests = $query->paginate(10);
+
+        Log::info('Data pending ditemukan', [
+            'total' => $requests->total(),
+            'count' => $requests->count()
+        ]);
+
         return view('leave_requests.index', compact('requests'));
     }
 

@@ -155,10 +155,12 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // RUTE IZIN TELAT (AUDIT) - FIXED
         // ===========================================
 
-        // 1. Daftar Izin PENDING (untuk verifikasi) - GUNAKAN LeaveRequestController
-        Route::get('/leave-requests', [LeaveRequestController::class, 'index'])
+        // === RUTE IZIN TELAT (AUDIT) - DIUBAH ===
+
+        // 1. Daftar Izin PENDING (untuk verifikasi) - GUNAKAN AuditController
+        Route::get('/leave-requests', [AuditController::class, 'showLatePermissions'])
             ->name('leave-requests.index')
-            ->middleware('role:admin,audit,user_biasa,leader,security');
+            ->middleware('role:admin,audit');
 
         // 2. History Izin (SELESAI: approved, rejected, cancelled) - Tetap di AuditController
         Route::get('/izin-telat/riwayat', [AuditController::class, 'showLatePermissionsHistory'])
@@ -173,6 +175,25 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/izin-telat/{id}/reject', [AuditController::class, 'rejectLatePermission'])
             ->name('late.reject')
             ->middleware('role:admin,audit');
+
+        // === RUTE LEAVE REQUESTS (IZIN/CUTI/SAKIT/WFH) ===
+        Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
+
+            // Route ini bisa diakses User Biasa, Leader, Audit, Security
+            Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
+
+                // 1. Melihat History Pengajuan Sendiri (Method Baru)
+                Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');
+
+                // 2. Form & Submit
+                Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
+                Route::post('/store', [LeaveRequestController::class, 'store'])->name('store');
+
+                // 3. Aksi User
+                Route::patch('/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
+                Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finishEarly'])->name('finish-early');
+            });
+        });
 
         // ===========================================
 

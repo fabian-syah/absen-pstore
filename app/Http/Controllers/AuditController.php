@@ -34,7 +34,7 @@ class AuditController extends Controller
 
         // Hanya ambil yang status = 'pending' saja
         $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
-            ->where('status', 'pending');
+            ->where('status', 'pending'); // <-- INI HARUS 'pending'
 
         // Logika Hak Akses
         $isUniversalAccess = in_array($user->role, ['admin']);
@@ -55,7 +55,7 @@ class AuditController extends Controller
 
         $requests = $query->latest()->paginate(10);
 
-        Log::info('Data ditemukan di showLatePermissions', [
+        Log::info('Data pending ditemukan di showLatePermissions', [
             'total' => $requests->total()
         ]);
 
@@ -101,7 +101,7 @@ class AuditController extends Controller
     {
         $leaveRequest = LeaveRequest::findOrFail($id);
         $approver = Auth::user();
-        
+
         Log::info('AuditController@approveLatePermission dipanggil', [
             'leave_request_id' => $id,
             'current_status' => $leaveRequest->status,
@@ -115,10 +115,10 @@ class AuditController extends Controller
                 'leave_request_id' => $id,
                 'current_status' => $leaveRequest->status
             ]);
-            
+
             return back()->with('error', 'Izin ini sudah diproses sebelumnya (Status: ' . $leaveRequest->status . ').');
         }
-        
+
         // PERBAIKAN: Gunakan kolom 'approved_by' bukan 'approved_by_user_id'
         $leaveRequest->update([
             'status' => 'approved',
@@ -152,7 +152,7 @@ class AuditController extends Controller
 
         $leaveRequest = LeaveRequest::findOrFail($id);
         $approver = Auth::user();
-        
+
         Log::info('AuditController@rejectLatePermission dipanggil', [
             'leave_request_id' => $id,
             'current_status' => $leaveRequest->status,
@@ -166,10 +166,10 @@ class AuditController extends Controller
                 'leave_request_id' => $id,
                 'current_status' => $leaveRequest->status
             ]);
-            
+
             return back()->with('error', 'Izin ini sudah diproses sebelumnya (Status: ' . $leaveRequest->status . ').');
         }
-        
+
         // PERBAIKAN: Gunakan kolom 'approved_by' bukan 'approved_by_user_id'
         $leaveRequest->update([
             'status' => 'rejected',
