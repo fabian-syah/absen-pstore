@@ -6,22 +6,21 @@ use App\Models\LeaveRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class LeaveRequestController extends Controller
 {
-    // MENAMPILKAN LIST DATA (Untuk Admin/Audit via Route Audit, atau Fallback)
+    // MENAMPILKAN LIST DATA (Pending List untuk Verifikasi)
     public function index()
     {
         $user = Auth::user();
         
-        // Query Dasar
+        // Eager load 'approver' agar nama penyetuju bisa diambil
         $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])->latest();
 
         if ($user->role == 'admin') {
-            // ADMIN: Semua data
+            // ADMIN: Melihat Semua Data
         } elseif ($user->role == 'audit') {
-            // AUDIT: Logic per cabang audit
+            // AUDIT: Melihat data cabang yang dipegang + Punya sendiri
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
             $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
             $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
@@ -37,7 +36,7 @@ class LeaveRequestController extends Controller
                 $mainQ->orWhere('user_id', $user->id);
             });
         } else {
-            // USER BIASA: Hanya data sendiri
+            // USER BIASA: Hanya lihat punya sendiri
             $query->where('user_id', $user->id);
         }
 
@@ -45,18 +44,16 @@ class LeaveRequestController extends Controller
         return view('leave_requests.index', compact('requests'));
     }
 
-    // --- BARU: Method Khusus untuk User Biasa melihat history ---
+    // LIST PENGAJUAN SAYA (History User)
     public function myRequests()
     {
         $user = Auth::user();
         
-        // Ambil data milik user yang sedang login saja
         $requests = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
                     ->where('user_id', $user->id)
                     ->latest()
                     ->paginate(10);
 
-        // Menggunakan view yang sama dengan index
         return view('leave_requests.index', compact('requests'));
     }
 
@@ -66,7 +63,7 @@ class LeaveRequestController extends Controller
         return view('leave_requests.create');
     }
 
-    // MENYIMPAN DATA (User Submit)
+    // MENYIMPAN DATA
     public function store(Request $request)
     {
         $request->validate([
@@ -79,7 +76,6 @@ class LeaveRequestController extends Controller
         ], [
             'file_proof.required' => 'Bukti foto/dokumen wajib diupload.',
             'start_time.required_if' => 'Jam kedatangan wajib diisi jika izin terlambat.',
-            'end_date.required_unless' => 'Tanggal selesai wajib diisi untuk pengajuan ini.',
         ]);
 
         $data = [
@@ -106,19 +102,39 @@ class LeaveRequestController extends Controller
 
         LeaveRequest::create($data);
 
-        // --- PERBAIKAN REDIRECT (Fix Error 403) ---
+        // LOGIKA REDIRECT BERDASARKAN ROLE (FIX 403)
         $role = Auth::user()->role;
-
-        // Jika Admin/Audit, kembali ke list verifikasi
         if (in_array($role, ['admin', 'audit'])) {
             return redirect()->route('leave-requests.index')->with('success', 'Pengajuan berhasil dikirim.');
         } 
         
-        // Jika User Biasa/Leader/Security, kembali ke list "Pengajuan Saya"
         return redirect()->route('leave-requests.my-requests')->with('success', 'Pengajuan berhasil dikirim.');
     }
 
-    // ACTION: USER BATALKAN
+    // ACTION: APPROVE
+    public function approve(LeaveRequest $leaveRequest)
+    {
+        $leaveRequest->update([
+            'status' => 'approved',
+            'approved_by' => Auth::id() // Ini akan menyimpan ID 'Bian'
+        ]);
+        
+        return redirect()->back()->with('success', 'Pengajuan disetujui.');
+    }
+
+    // ACTION: REJECT
+    public function reject(LeaveRequest $leaveRequest)
+    {
+        $leaveRequest->update([
+            'status' => 'rejected', 
+            'is_active' => false,
+            'approved_by' => Auth::id() // Ini akan menyimpan ID 'Bian'
+        ]);
+        
+        return redirect()->back()->with('success', 'Pengajuan ditolak.');
+    }
+
+    // ACTION: CANCEL (User)
     public function cancel(LeaveRequest $leaveRequest)
     {
         if ($leaveRequest->user_id != Auth::id()) {
@@ -130,50 +146,20 @@ class LeaveRequestController extends Controller
             'is_active' => false
         ]);
 
-        $msg = $leaveRequest->type == 'telat' ? 'Izin telat dibatalkan. Silakan lakukan absensi.' : 'Pengajuan izin dibatalkan.';
-        
-        // Redirect kembali ke halaman history user
+        $msg = $leaveRequest->type == 'telat' ? 'Izin telat dibatalkan.' : 'Pengajuan izin dibatalkan.';
         return redirect()->route('leave-requests.my-requests')->with('success', $msg);
     }
 
-    // ACTION: APPROVE (Admin/Audit)
-    public function approve(LeaveRequest $leaveRequest)
-    {
-        $leaveRequest->update([
-            'status' => 'approved',
-            'approved_by' => Auth::id()
-        ]);
-        
-        return redirect()->back()->with('success', 'Pengajuan disetujui.');
-    }
-
-    // ACTION: REJECT (Admin/Audit)
-    public function reject(LeaveRequest $leaveRequest)
-    {
-        $leaveRequest->update([
-            'status' => 'rejected', 
-            'is_active' => false,
-            'approved_by' => Auth::id()
-        ]);
-        
-        return redirect()->back()->with('success', 'Pengajuan ditolak.');
-    }
-
-    // ACTION: FINISH EARLY (Masuk lebih awal)
+    // ACTION: FINISH EARLY
     public function finishEarly(LeaveRequest $leaveRequest)
     {
-        if ($leaveRequest->user_id != Auth::id()) {
-            abort(403);
-        }
+        if ($leaveRequest->user_id != Auth::id()) abort(403);
 
         if (!in_array($leaveRequest->type, ['sakit', 'izin', 'cuti', 'wfh'])) {
             return back()->with('error', 'Tipe izin ini tidak bisa diselesaikan lebih awal.');
         }
 
-        $leaveRequest->update([
-            'end_date' => Carbon::yesterday(),
-        ]);
-
-        return redirect()->route('dashboard')->with('success', 'Status izin diperbarui. Selamat bekerja kembali!');
+        $leaveRequest->update(['end_date' => Carbon::yesterday()]);
+        return redirect()->route('dashboard')->with('success', 'Status izin diperbarui.');
     }
 }

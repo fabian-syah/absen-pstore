@@ -32,16 +32,24 @@ class LeaveRequest extends Model
         'is_active'  => 'boolean',
     ];
 
-    // Relasi ke User yang MEMBUAT request
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    // <--- 2. TAMBAHKAN RELASI INI (User yang MENG-APPROVE)
+    public function division()
+    {
+        return $this->hasOneThrough(Division::class, User::class, 'id', 'id', 'user_id', 'division_id');
+    }
+
+    public function branch()
+    {
+        return $this->hasOneThrough(Branch::class, User::class, 'id', 'id', 'user_id', 'branch_id');
+    }
+
+    // RELASI KE PENYETUJU (PENTING UNTUK MENAMPILKAN NAMA BIAN)
     public function approver()
     {
-        // Relasi ke model User, tapi FK-nya 'approved_by'
         return $this->belongsTo(User::class, 'approved_by');
     }
 
@@ -49,8 +57,8 @@ class LeaveRequest extends Model
     public function scopeActiveLatePermissions($query)
     {
         return $query->where('type', 'telat')
-                     ->where('is_active', true)
-                     ->where('status', 'approved')
-                     ->whereDate('start_date', today()); // Cek tanggal hari ini
+            ->where('is_active', true)
+            ->where('status', 'approved')
+            ->whereDate('start_date', today()); // Cek tanggal hari ini
     }
 }
