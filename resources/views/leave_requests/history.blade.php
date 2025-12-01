@@ -22,12 +22,12 @@
                         <table class="table table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th>User & Cabang</th> <!-- Update Header -->
+                                    <th>User & Cabang</th>
                                     <th>Tipe</th>
                                     <th>Waktu / Tanggal</th>
                                     <th>Alasan</th>
                                     <th>Bukti</th>
-                                    <th>Status & Approver</th> <!-- Update Header -->
+                                    <th>Status & Approver</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -43,10 +43,8 @@
                                                 <div>
                                                     <span class="fw-bold d-block text-dark">{{ $req->user->name }}</span>
                                                     <small class="text-muted" style="font-size:11px;">
-                                                        {{-- Menampilkan Divisi --}}
                                                         {{ $req->user->division->name ?? '-' }}
                                                         &bull; 
-                                                        {{-- UPDATE: Menampilkan Cabang --}}
                                                         <span class="text-primary">{{ $req->user->branch->name ?? 'Pusat' }}</span>
                                                     </small>
                                                 </div>
@@ -76,12 +74,22 @@
                                             {{ Str::limit($req->reason, 40) }}
                                         </td>
                                         
+                                        {{-- KOLOM BUKTI (DIPERBARUI) --}}
                                         <td>
                                             @if($req->file_proof)
-                                                <a href="{{ asset('storage/' . $req->file_proof) }}" target="_blank" class="text-primary" style="text-decoration: none;">
-                                                    <i class="mdi mdi-link"></i> Lihat
+                                                {{-- Ubah link menjadi trigger modal --}}
+                                                <a href="javascript:void(0)" 
+                                                   class="text-primary" 
+                                                   style="text-decoration: none; cursor: pointer;"
+                                                   data-bs-toggle="modal" 
+                                                   data-bs-target="#imageModal"
+                                                   data-src="{{ asset('storage/' . $req->file_proof) }}"
+                                                   title="Lihat Bukti">
+                                                    <i class="mdi mdi-eye"></i> Lihat
                                                 </a>
-                                            @else - @endif
+                                            @else 
+                                                - 
+                                            @endif
                                         </td>
 
                                         {{-- KOLOM STATUS & APPROVER --}}
@@ -91,7 +99,6 @@
                                                     <span class="badge badge-opacity-success mb-1" style="width: fit-content;">
                                                         <i class="mdi mdi-check-circle"></i> Disetujui
                                                     </span>
-                                                    {{-- UPDATE: Menampilkan Nama Approver --}}
                                                     <small class="text-muted" style="font-size: 10px;">
                                                         Oleh: {{ $req->approver->name ?? 'Admin' }}
                                                     </small>
@@ -102,7 +109,6 @@
                                                     <span class="badge badge-opacity-danger mb-1" style="width: fit-content;">
                                                         <i class="mdi mdi-close-circle"></i> Ditolak
                                                     </span>
-                                                    {{-- UPDATE: Menampilkan Nama Rejector --}}
                                                     <small class="text-muted" style="font-size: 10px;">
                                                         Oleh: {{ $req->approver->name ?? 'Admin' }}
                                                     </small>
@@ -128,4 +134,41 @@
             </div>
         </div>
     </div>
+
+    {{-- MODAL UNTUK PREVIEW GAMBAR --}}
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Bukti Lampiran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center bg-light">
+                    {{-- Gambar akan di-load di sini --}}
+                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- SCRIPT UNTUK MENANGANI GAMBAR DI MODAL --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var imageModal = document.getElementById('imageModal');
+            imageModal.addEventListener('show.bs.modal', function (event) {
+                // Tombol yang memicu modal
+                var button = event.relatedTarget;
+                // Ambil info dari atribut data-src
+                var imageUrl = button.getAttribute('data-src');
+                // Update src gambar di dalam modal
+                var modalImage = document.getElementById('modalImagePreview');
+                modalImage.src = imageUrl;
+            });
+            
+            // Opsional: Reset gambar saat modal ditutup (agar tidak ada flash gambar lama)
+            imageModal.addEventListener('hidden.bs.modal', function () {
+                document.getElementById('modalImagePreview').src = '';
+            });
+        });
+    </script>
 @endsection
