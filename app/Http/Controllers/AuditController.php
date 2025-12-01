@@ -140,47 +140,17 @@ class AuditController extends Controller
     /**
      * Menampilkan daftar izin telat
      */
-    public function showLatePermissions()
+   public function showLatePermissions()
     {
         $user = Auth::user();
 
-        // 1. Query Dasar: HANYA PENDING
+        // --- BAGIAN INI YANG PENTING DIUBAH ---
+        // Tambahkan ->where('status', 'pending') agar yang tampil HANYA yang pending
         $query = LeaveRequest::with(['user.division', 'user.branch'])
-            ->where('status', 'pending'); // <--- PENTING: Filter Pending
+            ->where('status', 'pending'); 
+        // -------------------------------------
 
-        // 2. LOGIKA FILTER CABANG (Copy-paste logic hak akses kamu yang sudah benar)
-        $isUniversalAccess = in_array($user->role, ['admin']); 
-
-        if (!$isUniversalAccess) {
-            $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
-
-            if (!empty($myBranchIds)) {
-                $query->whereHas('user', function ($q) use ($myBranchIds) {
-                    $q->whereIn('branch_id', $myBranchIds);
-                });
-            } else {
-                $query->where('id', 0);
-            }
-        }
-
-        $requests = $query->latest()->paginate(10); 
-        return view('leave_requests.index', compact('requests'));
-    }
-
-    /**
-     * HALAMAN 2: HISTORY (Approved, Rejected, Cancelled)
-     */
-    public function showLatePermissionsHistory()
-    {
-        $user = Auth::user();
-
-        // 1. Query Dasar: SELAIN PENDING
-        $query = LeaveRequest::with(['user.division', 'user.branch'])
-            ->whereIn('status', ['approved', 'rejected', 'cancelled']); // <--- Filter Status Selesai
-
-        // 2. LOGIKA FILTER CABANG (Sama persis)
+        // LOGIKA FILTER CABANG (JANGAN DIHAPUS)
         $isUniversalAccess = in_array($user->role, ['admin']);
 
         if (!$isUniversalAccess) {
@@ -198,8 +168,43 @@ class AuditController extends Controller
         }
 
         $requests = $query->latest()->paginate(10);
-        
-        // Kita gunakan view baru 'history'
+
+        // Pastikan ini mengarah ke View daftar utama (index)
+        // Dan pastikan di web.php route namanya: 'audit.late.list'
+        return view('leave_requests.index', compact('requests'));
+    }
+
+    /**
+     * HALAMAN 2: HISTORY (Approved, Rejected, Cancelled)
+     */
+    public function showLatePermissionsHistory()
+    {
+        $user = Auth::user();
+
+        // Query: Ambil SEMUA KECUALI pending (Approved, Rejected, Cancelled)
+        $query = LeaveRequest::with(['user.division', 'user.branch'])
+            ->whereIn('status', ['approved', 'rejected', 'cancelled']);
+
+        // LOGIKA FILTER CABANG (SAMA)
+        $isUniversalAccess = in_array($user->role, ['admin']);
+
+        if (!$isUniversalAccess) {
+            $pivotBranchIds = $user->branches->pluck('id')->toArray();
+            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!empty($myBranchIds)) {
+                $query->whereHas('user', function ($q) use ($myBranchIds) {
+                    $q->whereIn('branch_id', $myBranchIds);
+                });
+            } else {
+                $query->where('id', 0);
+            }
+        }
+
+        $requests = $query->latest()->paginate(10);
+
+        // Pastikan ini mengarah ke View History
         return view('leave_requests.history', compact('requests'));
     }
 
