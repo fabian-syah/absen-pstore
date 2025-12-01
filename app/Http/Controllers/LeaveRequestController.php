@@ -10,51 +10,53 @@ use Illuminate\Support\Facades\Storage;
 
 class LeaveRequestController extends Controller
 {
-    // MENAMPILKAN LIST DATA
+    // MENAMPILKAN LIST DATA (Untuk Admin/Audit via Route Audit, atau Fallback)
     public function index()
     {
         $user = Auth::user();
-
-        // UPDATE: Tambahkan 'user.branch' dan 'approver' dalam eager loading
+        
+        // Query Dasar
         $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])->latest();
 
-        // --- LOGIKA ROLE & CABANG ---
-
         if ($user->role == 'admin') {
-            // ADMIN: Melihat Semua Data dari semua cabang dan divisi
-            // (Tidak ada filter 'where' tambahan)
+            // ADMIN: Semua data
         } elseif ($user->role == 'audit') {
-            // AUDIT: Melihat data cabang yang dipegang + Punya sendiri
-
-            // 1. Ambil ID Cabang dari Pivot (Multi Branch)
+            // AUDIT: Logic per cabang audit
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
-
-            // 2. Ambil ID Cabang dari Homebase (Single Branch)
             $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-
-            // 3. Gabungkan & Hapus Duplikat
             $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
 
             $query->where(function ($mainQ) use ($user, $myBranchIds) {
-                // Kondisi A: User yang request ada di cabang yang dipegang Audit
                 if (!empty($myBranchIds)) {
                     $mainQ->whereHas('user', function ($q) use ($myBranchIds) {
                         $q->whereIn('users.branch_id', $myBranchIds);
                     });
                 } else {
-                    // Jika Audit belum punya cabang, force false untuk kondisi ini
                     $mainQ->where('id', 0);
                 }
-
-                // Kondisi B: ATAU Melihat request milik diri sendiri
                 $mainQ->orWhere('user_id', $user->id);
             });
         } else {
-            // USER BIASA / LEADER / SECURITY: Hanya lihat punya sendiri
+            // USER BIASA: Hanya data sendiri
             $query->where('user_id', $user->id);
         }
 
         $requests = $query->paginate(10);
+        return view('leave_requests.index', compact('requests'));
+    }
+
+    // --- BARU: Method Khusus untuk User Biasa melihat history ---
+    public function myRequests()
+    {
+        $user = Auth::user();
+        
+        // Ambil data milik user yang sedang login saja
+        $requests = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
+                    ->where('user_id', $user->id)
+                    ->latest()
+                    ->paginate(10);
+
+        // Menggunakan view yang sama dengan index
         return view('leave_requests.index', compact('requests'));
     }
 
@@ -89,7 +91,6 @@ class LeaveRequestController extends Controller
             'is_active' => true,
         ];
 
-        // Logika Mapping Data
         if ($request->type === 'telat') {
             $data['start_time'] = $request->start_time;
             $data['end_date'] = null;
@@ -98,7 +99,6 @@ class LeaveRequestController extends Controller
             $data['start_time'] = null;
         }
 
-        // Upload File
         if ($request->hasFile('file_proof')) {
             $path = $request->file('file_proof')->store('proofs', 'public');
             $data['file_proof'] = $path;
@@ -106,7 +106,16 @@ class LeaveRequestController extends Controller
 
         LeaveRequest::create($data);
 
-        return redirect()->route('leave-requests.index')->with('success', 'Pengajuan berhasil dikirim.');
+        // --- PERBAIKAN REDIRECT (Fix Error 403) ---
+        $role = Auth::user()->role;
+
+        // Jika Admin/Audit, kembali ke list verifikasi
+        if (in_array($role, ['admin', 'audit'])) {
+            return redirect()->route('leave-requests.index')->with('success', 'Pengajuan berhasil dikirim.');
+        } 
+        
+        // Jika User Biasa/Leader/Security, kembali ke list "Pengajuan Saya"
+        return redirect()->route('leave-requests.my-requests')->with('success', 'Pengajuan berhasil dikirim.');
     }
 
     // ACTION: USER BATALKAN
@@ -122,13 +131,14 @@ class LeaveRequestController extends Controller
         ]);
 
         $msg = $leaveRequest->type == 'telat' ? 'Izin telat dibatalkan. Silakan lakukan absensi.' : 'Pengajuan izin dibatalkan.';
-        return redirect()->route('dashboard')->with('success', $msg);
+        
+        // Redirect kembali ke halaman history user
+        return redirect()->route('leave-requests.my-requests')->with('success', $msg);
     }
 
     // ACTION: APPROVE (Admin/Audit)
     public function approve(LeaveRequest $leaveRequest)
     {
-        // UPDATE: Simpan ID user yang melakukan approve
         $leaveRequest->update([
             'status' => 'approved',
             'approved_by' => Auth::id()
@@ -140,7 +150,6 @@ class LeaveRequestController extends Controller
     // ACTION: REJECT (Admin/Audit)
     public function reject(LeaveRequest $leaveRequest)
     {
-        // UPDATE: Simpan ID user yang melakukan reject
         $leaveRequest->update([
             'status' => 'rejected', 
             'is_active' => false,

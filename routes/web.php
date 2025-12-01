@@ -206,16 +206,20 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/skip-checkout/{id}', [SelfAttendanceController::class, 'skipCheckOut'])->name('skip');
     });
 
-    // === RUTE LEAVE REQUESTS (UNTUK USER BIASA MENGELOLA PENGAJUAN MEREKA SENDIRI) ===
+    // === RUTE LEAVE REQUESTS (IZIN/CUTI/SAKIT/WFH) ===
     Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
-        // Hapus route index yang konflik
-        // Route::get('/', [LeaveRequestController::class, 'index'])->name('index'); // <- HAPUS INI
         
-        Route::middleware(['role:user_biasa,leader,audit,security'])->group(function () {
-            // User bisa melihat pengajuan mereka sendiri
+        // Route ini bisa diakses User Biasa, Leader, Audit, Security
+        Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
+            
+            // 1. Melihat History Pengajuan Sendiri (Method Baru)
             Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');
+            
+            // 2. Form & Submit
             Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
             Route::post('/store', [LeaveRequestController::class, 'store'])->name('store');
+            
+            // 3. Aksi User
             Route::patch('/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
             Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finishEarly'])->name('finish-early');
         });
