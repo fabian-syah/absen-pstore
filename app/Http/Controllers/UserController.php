@@ -108,7 +108,7 @@ class UserController extends Controller
             'multi_branches' => 'nullable|array',
             'profile_photo_path' => 'nullable|image|max:2048',
             'whatsapp' => 'nullable|string|max:20',
-            
+
             // Validasi Jam Kerja (Nullable)
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
@@ -122,7 +122,7 @@ class UserController extends Controller
         // check_in_end & check_out_end dikosongkan (NULL) agar fleksibel
         $data['check_in_start']  = $request->check_in_start ?: null;
         $data['check_out_start'] = $request->check_out_start ?: null;
-        $data['check_in_end']    = null; 
+        $data['check_in_end']    = null;
         $data['check_out_end']   = null;
 
         // Set Division ID Utama
@@ -203,7 +203,7 @@ class UserController extends Controller
             'role' => 'required|string|in:admin,audit,leader,security,user_biasa',
             'branch_id' => 'nullable|exists:branches,id',
             'whatsapp' => 'nullable|string|max:20',
-            
+
             // VALIDASI INPUT JAM
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
@@ -237,10 +237,10 @@ class UserController extends Controller
             $user->branches()->sync($request->multi_branches ?? []);
         } else {
             $user->divisions()->sync($request->multi_divisions ?? []);
-            
+
             if ($request->has('multi_divisions') && count($request->multi_divisions) > 0) {
-                 $user->division_id = $request->multi_divisions[0];
-                 $user->save();
+                $user->division_id = $request->multi_divisions[0];
+                $user->save();
             }
         }
 
@@ -255,7 +255,7 @@ class UserController extends Controller
         if (Auth::user()->role == 'audit') {
             return back()->with('error', 'Akses Ditolak: Role Audit tidak diizinkan menghapus data user.');
         }
-        
+
         if ($user->id == auth()->id()) {
             return back()->with('error', 'Tidak bisa hapus akun sendiri.');
         }
@@ -288,7 +288,7 @@ class UserController extends Controller
             if (!in_array($user->branch_id, $allowedBranchIds)) abort(403);
         }
 
-        $user->load(['branch', 'division', 'branches', 'divisions']); 
+        $user->load(['branch', 'division', 'branches', 'divisions']);
 
         $stats = $this->getSpecificUserStats($user->id);
 
@@ -336,7 +336,7 @@ class UserController extends Controller
         }
 
         $requests = $query->latest('updated_at')->paginate(10);
-        
+
         // VARIABEL $requests DIKIRIM KE VIEW DI SINI
         return view('users.photo_requests', compact('requests'));
     }
@@ -358,7 +358,9 @@ class UserController extends Controller
      */
     public function toggleStatus(User $user)
     {
+        // Mencegah user menonaktifkan diri sendiri (Safety)
         if ($user->id == auth()->id()) return back();
+
         $user->is_active = !$user->is_active;
         $user->save();
         return back()->with('success', 'Status user diperbarui.');
