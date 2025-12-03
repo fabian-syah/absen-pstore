@@ -99,7 +99,7 @@
         {{-- =================================== --}}
         {{--   MENU MANAGEMENT JAM KERJA BARU  --}}
         {{-- =================================== --}}
-        @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit' || auth()->user()->role == 'leader')
+        {{-- @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit' || auth()->user()->role == 'leader')
             <li class="nav-item nav-category">Management Jam Kerja</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('work-schedules.index') }}">
@@ -107,7 +107,7 @@
                     <span class="menu-title">Jam Kerja</span>
                 </a>
             </li>
-        @endif
+        @endif --}}
 
         {{-- =================================== --}}
         {{--   MENU KHUSUS VERIFIKASI (Super Admin & Audit) --}}
