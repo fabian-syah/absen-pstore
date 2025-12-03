@@ -52,7 +52,7 @@ class GlobalSearchController extends Controller
                         'type' => 'user',
                         'title' => $item->name,
                         'description' => "{$item->email} - {$divName} ({$branchName})",
-                        'url' => route('users.edit', $item->id),
+                        'url' => route('users.show', $item->id),
                         'icon' => 'mdi-account'
                     ];
                 });
