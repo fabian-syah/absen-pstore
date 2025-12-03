@@ -53,15 +53,18 @@
 
                         <div class="form-group mb-3">
                             <label>Nama Lengkap ( Sesuai KTP )</label>
-                            <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
+                            <input type="text" class="form-control" name="name"
+                                value="{{ old('name', $user->name) }}" required>
                         </div>
                         <div class="form-group mb-3">
                             <label>Tanggal Lahir (Opsional)</label>
-                            <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date', $user->birth_date) }}">
+                            <input type="date" class="form-control" name="birth_date"
+                                value="{{ old('birth_date', $user->birth_date) }}">
                         </div>
                         <div class="form-group mb-3">
                             <label>ID Login *</label>
-                            <input type="text" class="form-control" name="login_id" value="{{ old('login_id', $user->login_id) }}" required>
+                            <input type="text" class="form-control" name="login_id"
+                                value="{{ old('login_id', $user->login_id) }}" required>
                         </div>
                         <div class="form-group mb-3">
                             <label>Role</label>
@@ -78,7 +81,8 @@
                         </div>
                         <div class="form-group mb-3">
                             <label>awal masuk pstore ( opsional )</label>
-                            <input type="date" class="form-control" name="hire_date" value="{{ old('hire_date', $user->hire_date ? $user->hire_date->format('Y-m-d') : '') }}">
+                            <input type="date" class="form-control" name="hire_date"
+                                value="{{ old('hire_date', $user->hire_date ? $user->hire_date->format('Y-m-d') : '') }}">
                         </div>
                         <div class="form-group mb-3">
                             <label>Password Baru</label>
@@ -191,6 +195,13 @@
                                         <small class="text-muted">Waktu mulai absen pulang</small>
                                     </div>
                                 </div>
+
+                                {{-- TOMBOL HAPUS JAM (RESET) --}}
+                                <div class="mt-2">
+                                    <a href="javascript:void(0)" onclick="clearWorkHours()" class="text-danger small" style="text-decoration: none;">
+                                        <i class="mdi mdi-close-circle me-1"></i>Hapus / Reset ke Fleksibel
+                                    </a>
+                                </div>
                             </div>
                         </div>
 
@@ -217,6 +228,12 @@
 
             window.selectAll = function(selector) { $(selector).find('option').prop('selected', true); $(selector).trigger('change'); }
             window.clearAll = function(selector) { $(selector).val(null).trigger('change'); }
+
+            // FUNGSI BARU: RESET JAM KERJA
+            window.clearWorkHours = function() {
+                $('input[name="check_in_start"]').val('');
+                $('input[name="check_out_start"]').val('');
+            }
 
             window.toggleInputs = function() {
                 const role = $('#role').val();

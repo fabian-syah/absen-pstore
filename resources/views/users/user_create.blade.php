@@ -4,6 +4,7 @@
 @section('heading', 'Tambah User Baru')
 
 @section('content')
+    {{-- CSS SELECT2 --}}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
@@ -37,7 +38,7 @@
     <form class="forms-sample" action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="row">
-            {{-- KOLOM KIRI --}}
+            {{-- KOLOM KIRI: DATA LOGIN & ROLE --}}
             <div class="col-md-6 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
@@ -47,10 +48,12 @@
                             <label>Nama Lengkap ( Sesuai KTP )</label>
                             <input type="text" class="form-control" name="name" value="{{ old('name') }}" required>
                         </div>
+
                         <div class="form-group mb-3">
                             <label>Tanggal Lahir (Opsional)</label>
                             <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date') }}">
                         </div>
+
                         <div class="form-group mb-3">
                             <label>ID Login *</label>
                             <input type="text" class="form-control" name="login_id" value="{{ old('login_id') }}" required>
@@ -63,6 +66,7 @@
                             <label>Konfirmasi Password</label>
                             <input type="password" class="form-control" name="password_confirmation" required>
                         </div>
+
                         <div class="form-group mb-3">
                             <label>Role</label>
                             <select class="form-select" id="role" name="role" onchange="toggleInputs()" required>
@@ -74,6 +78,7 @@
                                 @endforeach
                             </select>
                         </div>
+
                         <div class="form-group mb-3">
                             <label>awal masuk pstore ( opsional )</label>
                             <input type="date" class="form-control" name="hire_date" value="{{ old('hire_date') }}">
@@ -82,12 +87,13 @@
                 </div>
             </div>
 
-            {{-- KOLOM KANAN --}}
+            {{-- KOLOM KANAN: PENEMPATAN & KONTAK --}}
             <div class="col-md-6 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title">Penempatan & Kontak</h4>
 
+                        {{-- SINGLE BRANCH --}}
                         <div class="form-group mb-3" id="single-branch-group">
                             <label>Cabang Utama (Lokasi Kerja)</label>
                             <select class="form-select select2-single" name="branch_id" data-placeholder="Pilih Cabang">
@@ -100,6 +106,7 @@
                             </select>
                         </div>
 
+                        {{-- MULTI BRANCH --}}
                         <div class="form-group mb-3 d-none" id="multi-branch-group">
                             <label class="text-primary fw-bold">Akses Wilayah Audit (Multi)</label>
                             <select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%">
@@ -115,6 +122,7 @@
                             </div>
                         </div>
 
+                        {{-- DIVISI --}}
                         <div class="form-group mb-3" id="multi-division-group">
                             <label class="text-success fw-bold">Divisi (Multi Select)</label>
                             <select class="form-select select2-multi" name="multi_divisions[]" multiple="multiple" style="width: 100%">
@@ -145,7 +153,7 @@
             </div>
         </div>
 
-        {{-- ROW BARU: SETTING JAM KERJA PERSONAL (DIGABUNG) --}}
+        {{-- ROW BARU: SETTING JAM KERJA PERSONAL --}}
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
@@ -173,10 +181,16 @@
                                     {{-- INPUT KANAN: JAM PULANG --}}
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Jam Pulang (Check Out)</label>
-                                        {{-- PERHATIKAN: name="check_out_start" --}}
                                         <input type="time" class="form-control" name="check_out_start" value="{{ old('check_out_start') }}">
                                         <small class="text-muted">Waktu mulai absen pulang</small>
                                     </div>
+                                </div>
+
+                                {{-- TOMBOL HAPUS JAM (RESET) --}}
+                                <div class="mt-2">
+                                    <a href="javascript:void(0)" onclick="clearWorkHours()" class="text-danger small" style="text-decoration: none;">
+                                        <i class="mdi mdi-close-circle me-1"></i>Hapus / Reset ke Fleksibel
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -208,6 +222,12 @@
 
             window.selectAll = function(selector) { $(selector).find('option').prop('selected', true); $(selector).trigger('change'); }
             window.clearAll = function(selector) { $(selector).val(null).trigger('change'); }
+
+            // FUNGSI BARU: RESET JAM KERJA
+            window.clearWorkHours = function() {
+                $('input[name="check_in_start"]').val('');
+                $('input[name="check_out_start"]').val('');
+            }
 
             window.toggleInputs = function() {
                 const role = $('#role').val();
