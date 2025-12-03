@@ -390,36 +390,50 @@ class UserController extends Controller
         ];
     }
 
-    /**
-     * Menampilkan daftar user yang minta ganti KTP (Pending)
-     */
     public function ktpRequests()
     {
         // Ambil user yang status request ktp-nya pending
-        $users = User::where('ktp_request_status', 'pending')
-            ->orderBy('updated_at', 'desc')
-            ->get();
-
+        $users = User::where('ktp_request_status', 'pending')->with('division')->get();
         return view('users.ktp-requests', compact('users'));
     }
 
-    /**
-     * Menyetujui permintaan ganti KTP
-     */
     public function approveKtpRequest(User $user)
     {
-        $user->update(['ktp_request_status' => 'approved']);
+        // 1. Hapus KTP Lama (jika ada)
+        if ($user->ktp_photo_path) {
+            Storage::disk('public')->delete($user->ktp_photo_path);
+        }
 
-        return back()->with('success', "Izin ganti KTP untuk {$user->name} telah disetujui. User sekarang bisa upload ulang.");
+        // 2. Pindahkan KTP Temp ke KTP Utama
+        // (Dalam storage Laravel, move file agak tricky antar folder, 
+        // jadi kita update path-nya saja atau copy file. 
+        // Disini kita asumsi file di temp valid jadi KTP utama).
+
+        $newPath = $user->ktp_photo_temp_path; // Path temp jadi path utama
+
+        // 3. Update User
+        $user->update([
+            'ktp_photo_path' => $newPath,
+            'ktp_photo_temp_path' => null, // Kosongkan temp
+            'ktp_request_status' => 'none' // Reset status
+        ]);
+
+        return back()->with('success', 'Permintaan ganti KTP disetujui.');
     }
 
-    /**
-     * Menolak permintaan ganti KTP (Opsional)
-     */
     public function rejectKtpRequest(User $user)
     {
-        $user->update(['ktp_request_status' => 'rejected']);
+        // 1. Hapus file temp
+        if ($user->ktp_photo_temp_path) {
+            Storage::disk('public')->delete($user->ktp_photo_temp_path);
+        }
 
-        return back()->with('success', "Permintaan ditolak.");
+        // 2. Update status
+        $user->update([
+            'ktp_photo_temp_path' => null,
+            'ktp_request_status' => 'rejected'
+        ]);
+
+        return back()->with('success', 'Permintaan ganti KTP ditolak.');
     }
 }

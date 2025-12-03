@@ -1,8 +1,5 @@
 <?php
 
-use App\Http\Controllers\AdminAttendanceController;
-use App\Http\Controllers\ForgotPasswordController;
-use App\Http\Controllers\JobTargetController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DashboardController;
@@ -21,6 +18,9 @@ use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\AttendanceHistoryController;
+use App\Http\Controllers\JobTargetController;
+use App\Http\Controllers\AdminAttendanceController;
+use App\Http\Controllers\ForgotPasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,7 +61,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
     Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
 
-    // Rute Khusus Riwayat Pribadi (Bisa diakses Admin, Audit, Leader, Security, User)
+    // Rute Khusus Riwayat Pribadi
     Route::get('/riwayat-izin-saya', [LeaveRequestController::class, 'personalHistory'])
         ->name('leave-requests.personal-history');
 
@@ -103,9 +103,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/photo/request', [ProfileController::class, 'requestPhotoChange'])->name('photo.request');
         Route::get('/photo/{user}', [ProfileController::class, 'getProfilePhoto'])->name('photo.get');
         
-        // KTP (Updated dengan Request Feature)
-        Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update');
-        Route::post('/ktp/request', [ProfileController::class, 'requestKtpChange'])->name('ktp.request'); // <-- NEW
+        // KTP (Updated Logic)
+        Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update'); // Upload pertama
+        Route::post('/ktp/request', [ProfileController::class, 'requestKtpChange'])->name('ktp.request'); // Request Ganti (Upload Temp)
         Route::get('/ktp/{user}', [ProfileController::class, 'getKtpPhoto'])->name('ktp.get');
 
         // Work History & Inventory
@@ -143,11 +143,11 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::resource('divisions', DivisionController::class);
         Route::post('/divisions/{division}/toggle-status', [DivisionController::class, 'toggleStatus'])->name('divisions.toggle-status');
 
-        // Approval Requests (FOTO)
+        // Approval Requests (FOTO PROFIL)
         Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
         
-        // Approval Requests (KTP) - NEW
+        // Approval Requests (KTP - NEW LOGIC)
         Route::get('/users/ktp-requests', [UserController::class, 'ktpRequests'])->name('users.ktp-requests');
         Route::patch('/users/{user}/approve-ktp', [UserController::class, 'approveKtpRequest'])->name('users.approve-ktp');
         Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');
@@ -167,14 +167,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         });
 
         // IZIN TELAT AUDIT
-        Route::get('/leave-requests', [AuditController::class, 'showLatePermissions'])
-            ->name('leave-requests.index');
-        Route::get('/izin-telat/riwayat', [AuditController::class, 'showLatePermissionsHistory'])
-            ->name('audit.late.history');
-        Route::post('/izin-telat/{id}/approve', [AuditController::class, 'approveLatePermission'])
-            ->name('late.approve');
-        Route::post('/izin-telat/{id}/reject', [AuditController::class, 'rejectLatePermission'])
-            ->name('late.reject');
+        Route::get('/leave-requests', [AuditController::class, 'showLatePermissions'])->name('leave-requests.index');
+        Route::get('/izin-telat/riwayat', [AuditController::class, 'showLatePermissionsHistory'])->name('audit.late.history');
+        Route::post('/izin-telat/{id}/approve', [AuditController::class, 'approveLatePermission'])->name('late.approve');
+        Route::post('/izin-telat/{id}/reject', [AuditController::class, 'rejectLatePermission'])->name('late.reject');
 
         Route::get('/audit/missed-checkouts', [AuditController::class, 'showMissedCheckouts'])->name('audit.missed-checkout.list');
         Route::put('/audit/missed-checkouts/{id}', [AuditController::class, 'updateMissedCheckout'])->name('audit.missed-checkout.update');
@@ -212,7 +208,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/skip-checkout/{id}', [SelfAttendanceController::class, 'skipCheckOut'])->name('skip');
     });
 
-    // === RUTE LEAVE REQUESTS (IZIN/CUTI/SAKIT/WFH) ===
+    // === RUTE LEAVE REQUESTS ===
     Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
         Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
             Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');

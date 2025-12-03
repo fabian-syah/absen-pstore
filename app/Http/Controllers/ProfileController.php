@@ -135,67 +135,40 @@ class ProfileController extends Controller
         return back()->with('success', 'Pengajuan ganti foto telah dikirim. Tunggu persetujuan Admin/Audit.');
     }
 
-    /**
-     * Update HANYA KTP (sekali upload atau setelah diapprove).
-     */
-    public function updateKtp(Request $request)
+    public function requestKtpChange(Request $request)
     {
         $request->validate([
             'ktp_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120', // 5MB
         ]);
 
-        /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // LOGIKA PENGECEKAN:
-        // 1. Jika KTP sudah ada DAN status request bukan 'approved', tolak.
-        if ($user->ktp_photo_path && $user->ktp_request_status !== 'approved') {
-            return redirect()->route('profile.edit')
-                ->with('error', 'KTP sudah ada. Silakan ajukan penggantian KTP terlebih dahulu.');
-        }
+        // 1. Upload ke folder temp
+        $path = $request->file('ktp_photo')->store('ktp_photos/temp', 'public');
 
-        try {
-            // Hapus KTP lama jika ada
-            if ($user->ktp_photo_path) {
-                Storage::disk('public')->delete($user->ktp_photo_path);
-            }
+        // 2. Simpan path temp dan ubah status jadi pending
+        $user->update([
+            'ktp_photo_temp_path' => $path,
+            'ktp_request_status' => 'pending'
+        ]);
 
-            $path = $request->file('ktp_photo')->store('ktp_photos', 'public');
-
-            // Simpan path & RESET status request ke 'none' agar terkunci lagi
-            $user->update([
-                'ktp_photo_path' => $path,
-                'ktp_request_status' => 'none'
-            ]);
-
-            return redirect()->route('profile.edit')
-                ->with('success', 'KTP berhasil di-upload.');
-        } catch (\Exception $e) {
-            return redirect()->route('profile.edit')
-                ->with('error', 'Gagal upload KTP: ' . $e->getMessage());
-        }
+        return redirect()->back()->with('success', 'Foto KTP baru berhasil diupload dan diajukan ke Admin.');
     }
 
-    /**
-     * FITUR BARU: Request Ganti KTP
-     */
-    public function requestKtpChange()
+    // updateKtp (Hanya untuk upload PERTAMA KALI)
+    public function updateKtp(Request $request)
     {
+        $request->validate(['ktp_photo' => 'required|image|max:5120']);
         $user = Auth::user();
 
-        // Jika belum punya KTP, tidak perlu request, langsung upload saja
-        if (!$user->ktp_photo_path) {
-            return back()->with('error', 'Anda belum upload KTP, silakan langsung upload.');
+        if ($user->ktp_photo_path) {
+            return back()->with('error', 'KTP sudah ada, gunakan tombol Ganti KTP.');
         }
 
-        if ($user->ktp_request_status === 'pending') {
-            return back()->with('error', 'Pengajuan ganti KTP sedang diproses.');
-        }
+        $path = $request->file('ktp_photo')->store('ktp_photos', 'public');
+        $user->update(['ktp_photo_path' => $path]);
 
-        // Set status jadi pending
-        $user->update(['ktp_request_status' => 'pending']);
-
-        return back()->with('success', 'Pengajuan ganti KTP dikirim. Tunggu persetujuan Admin/Audit.');
+        return back()->with('success', 'KTP berhasil diupload.');
     }
 
     /**
