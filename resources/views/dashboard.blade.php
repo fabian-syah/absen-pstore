@@ -172,54 +172,71 @@
     </div>
 
     <div class="row">
-        {{-- KARTU ID --}}
+        {{-- KARTU ID & QR CODE (Quick Access) --}}
         <div class="col-md-5 grid-margin stretch-card">
-            <div class="card card-id gradient-dark">
-                <div class="card-body">
-                    <div class="card-id-header">
-                        {{-- [MODIFIKASI] Ganti Chip Kuning dengan Foto Profil + Fitur Klik Modal --}}
-                        <div class="card-id-photo-wrapper">
-                            @if (Auth::user()->profile_photo_path)
-                                <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}" 
-                                     alt="Profile" 
-                                     class="id-card-img"
-                                     data-bs-toggle="modal" 
-                                     data-bs-target="#profilePhotoModal"
-                                     data-src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
-                                     title="Klik untuk memperbesar">
-                            @else
-                                {{-- Fallback jika tidak ada foto (Tampil inisial - Tidak bisa diklik) --}}
-                                <div class="id-card-img-placeholder">
-                                    {{ substr(Auth::user()->name, 0, 1) }}
+            <div class="row w-100 m-0 p-0">
+                
+                {{-- ID CARD VISUAL --}}
+                <div class="col-12 mb-3">
+                    <div class="card card-id gradient-dark">
+                        <div class="card-body">
+                            <div class="card-id-header">
+                                <div class="card-id-photo-wrapper">
+                                    @if (Auth::user()->profile_photo_path)
+                                        <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}" 
+                                             alt="Profile" 
+                                             class="id-card-img"
+                                             data-bs-toggle="modal" 
+                                             data-bs-target="#profilePhotoModal"
+                                             data-src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                             title="Klik untuk memperbesar">
+                                    @else
+                                        <div class="id-card-img-placeholder">
+                                            {{ substr(Auth::user()->name, 0, 1) }}
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
-                        </div>
-                        {{-- [AKHIR MODIFIKASI] --}}
-
-                        <div class="card-id-logo">
-                            <i class="mdi mdi-credit-card-outline"></i>
-                            <span>ID Card</span>
-                        </div>
-                    </div>
-                    <div class="card-id-details">
-                        <p class="card-id-label">NAMA</p>
-                        <h3 class="card-id-name">{{ strtoupper(Auth::user()->name) }}</h3>
-                        <p class="card-id-label">DIVISI</p>
-                        <h4 class="card-id-division">
-                            {{ strtoupper(Auth::user()->division->name ?? 'BELUM ADA DIVISI') }}
-                        </h4>
-                    </div>
-
-                    <div class="card-id-footer d-flex justify-content-end align-items-end mt-4">
-                        <div class="text-end">
-                            <p class="mb-0 text-white-50" style="font-size: 10px; letter-spacing: 1px;">NOMOR ID</p>
-                            <p class="card-id-card-number mb-0"
-                                style="font-size: 22px; letter-spacing: 2px; font-weight: 700;">
-                                {{ $idCardNumber ?? '000000 000000' }}
-                            </p>
+                                <div class="card-id-logo">
+                                    <i class="mdi mdi-credit-card-outline"></i>
+                                    <span>ID Card</span>
+                                </div>
+                            </div>
+                            <div class="card-id-details">
+                                <p class="card-id-label">NAMA</p>
+                                <h3 class="card-id-name">{{ strtoupper(Auth::user()->name) }}</h3>
+                                <p class="card-id-label">DIVISI</p>
+                                <h4 class="card-id-division">
+                                    {{ strtoupper(Auth::user()->division->name ?? 'BELUM ADA DIVISI') }}
+                                </h4>
+                            </div>
+                            <div class="card-id-footer d-flex justify-content-end align-items-end mt-4">
+                                <div class="text-end">
+                                    <p class="mb-0 text-white-50" style="font-size: 10px; letter-spacing: 1px;">NOMOR ID</p>
+                                    <p class="card-id-card-number mb-0"
+                                        style="font-size: 22px; letter-spacing: 2px; font-weight: 700;">
+                                        {{ $idCardNumber ?? '000000 000000' }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                {{-- [BARU] QR CODE CARD UNTUK SCAN SECURITY --}}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm" style="background: white; border-radius: 16px;">
+                        <div class="card-body d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="fw-bold mb-1">QR Code Absensi</h5>
+                                <p class="text-muted small mb-0">Tunjukkan ke Security</p>
+                            </div>
+                            <div class="bg-light p-2 rounded" id="dashboard-qrcode" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#qrModal">
+                                {{-- QR Code dirender via JS disini --}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -227,9 +244,15 @@
         <div class="col-md-7 grid-margin stretch-card">
             <div class="card card-status">
                 <div class="card-body">
-                    <h4 class="card-title mb-4">
-                        <i class="mdi mdi-calendar-today me-2"></i>Status Absensi
-                    </h4>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">
+                            <i class="mdi mdi-calendar-today me-2"></i>Status Absensi
+                        </h4>
+                        {{-- [BARU] MENAMPILKAN JAM KERJA / JADWAL --}}
+                        <span class="badge bg-light text-dark border">
+                            <i class="mdi mdi-clock-outline me-1"></i> Jadwal: {{ $todaySchedule }}
+                        </span>
+                    </div>
 
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show">
@@ -496,6 +519,22 @@
                         <h5 class="mb-0">{{ Auth::user()->name }}</h5>
                         <small class="opacity-75">Foto Profil</small>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL POPUP QR CODE (Untuk Scan Security) --}}
+    <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">QR Code Saya</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div id="qrcode-modal-display" class="d-flex justify-content-center"></div>
+                    <p class="mt-3 text-muted small">Tunjukkan ke Security untuk Scan</p>
                 </div>
             </div>
         </div>
@@ -925,9 +964,39 @@
 @endpush
 
 @push('scripts')
+    {{-- QRCode Lib --}}
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            
+            // --- SCRIPT UNTUK GENERATE QR CODE DI DASHBOARD ---
+            @if(Auth::user()->qr_code_value)
+                const qrValue = "{{ Auth::user()->qr_code_value }}";
+                
+                // 1. Tampilkan di Card Kecil (Dashboard)
+                new QRCode(document.getElementById("dashboard-qrcode"), {
+                    text: qrValue,
+                    width: 64,
+                    height: 64,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+
+                // 2. Tampilkan di Modal Besar (Saat diklik)
+                var qrModal = document.getElementById('qrModal');
+                qrModal.addEventListener('show.bs.modal', function (event) {
+                    var qrContainer = document.getElementById('qrcode-modal-display');
+                    qrContainer.innerHTML = ''; // Reset isi agar tidak double
+                    new QRCode(qrContainer, {
+                        text: qrValue,
+                        width: 256, // Ukuran lebih besar untuk scan mudah
+                        height: 256,
+                    });
+                });
+            @endif
+
             // --- SCRIPT CHART (TETAP SAMA) ---
             const ctx = document.getElementById('attendancePieChart').getContext('2d');
 
