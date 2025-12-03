@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Division;
 use App\Models\Branch;
 use App\Models\Attendance;
+use App\Models\WorkSchedule; // [BARU] Import Model
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -76,7 +77,12 @@ class UserController extends Controller
 
         $divisions = Division::all();
 
-        return view('users.user_create', compact('divisions', 'branches', 'allowedRoles'));
+        // [BARU] Ambil data Jam Kerja Aktif
+        $workSchedules = WorkSchedule::where('is_active', true)
+            ->orderBy('schedule_name')
+            ->get();
+
+        return view('users.user_create', compact('divisions', 'branches', 'allowedRoles', 'workSchedules'));
     }
 
     public function store(Request $request)
@@ -85,8 +91,8 @@ class UserController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'birth_date' => 'nullable|date', // Tambahan
-            'hire_date' => 'nullable|date',  // Tambahan
+            'birth_date' => 'nullable|date',
+            'hire_date' => 'nullable|date',
             'email' => 'required|string|email|max:255|unique:users',
             'login_id' => 'required|string|unique:users',
             'password' => 'required|string|min:8|confirmed',
@@ -96,6 +102,8 @@ class UserController extends Controller
             'multi_branches' => 'nullable|array',
             'profile_photo_path' => 'nullable|image|max:2048',
             'whatsapp' => 'nullable|string|max:20',
+            // [BARU] Validasi Work Schedule (Nullable)
+            'work_schedule_id' => 'nullable|exists:work_schedules,id',
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
@@ -112,7 +120,8 @@ class UserController extends Controller
 
         $data['password'] = Hash::make($request->password);
         $data['qr_code_value'] = (string) Str::uuid();
-        $data['hire_date'] = now();
+        // hire_date diambil dari input jika ada, jika tidak pakai now()
+        $data['hire_date'] = $request->hire_date ?? now();
 
         if ($request->hasFile('profile_photo_path')) {
             $path = $request->file('profile_photo_path')->store('profile-photos', 'public');
@@ -146,14 +155,15 @@ class UserController extends Controller
 
         $branches = Branch::all();
         $divisions = Division::all();
+        
+        // [BARU] Ambil data Jam Kerja juga untuk edit
+        $workSchedules = WorkSchedule::where('is_active', true)
+            ->orderBy('schedule_name')
+            ->get();
+
         $allowedRoles = ['admin', 'audit', 'leader', 'security', 'user_biasa'];
 
-        // Logika filter role/branch disederhanakan agar tidak terlalu panjang, tapi tetap aman
-        if ($auth_user->role != 'admin' || $auth_user->branch_id != null) {
-            // Logic khusus audit/admin cabang jika diperlukan
-        }
-
-        return view('users.user_edit', compact('user', 'divisions', 'branches', 'allowedRoles'));
+        return view('users.user_edit', compact('user', 'divisions', 'branches', 'allowedRoles', 'workSchedules'));
     }
 
     public function update(Request $request, User $user)
@@ -162,14 +172,16 @@ class UserController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'birth_date' => 'nullable|date', // Tambahan
-            'hire_date' => 'nullable|date',  // Tambahan
+            'birth_date' => 'nullable|date',
+            'hire_date' => 'nullable|date',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'login_id' => ['required', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|string|in:admin,audit,leader,security,user_biasa',
             'branch_id' => 'nullable|exists:branches,id',
             'whatsapp' => 'nullable|string|max:20',
+            // [BARU] Validasi Work Schedule
+            'work_schedule_id' => 'nullable|exists:work_schedules,id',
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
@@ -179,7 +191,6 @@ class UserController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
-        // Logic Update Foto (Jika admin yang upload, bisa bypass)
         if ($request->hasFile('profile_photo_path')) {
             if ($user->profile_photo_path) Storage::disk('public')->delete($user->profile_photo_path);
             $data['profile_photo_path'] = $request->file('profile_photo_path')->store('profile-photos', 'public');
@@ -219,9 +230,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * MENAMPILKAN DETAIL USER (Dashboard Verifikasi)
-     */
     public function show(User $user)
     {
         $auth_user = Auth::user();
@@ -235,9 +243,8 @@ class UserController extends Controller
             if (!in_array($user->branch_id, $allowedBranchIds)) abort(403);
         }
 
-        $user->load(['branch', 'division', 'branches', 'divisions']);
+        $user->load(['branch', 'division', 'branches', 'divisions', 'workSchedule']); // Load workSchedule relation
 
-        // Ambil statistik absensi user tersebut
         $stats = $this->getSpecificUserStats($user->id);
 
         $recentAttendance = Attendance::where('user_id', $user->id)
@@ -248,21 +255,15 @@ class UserController extends Controller
         return view('users.user_show', compact('user', 'stats', 'recentAttendance'));
     }
 
-    /**
-     * FITUR BARU: VERIFIKASI USER (CENTANG BIRU)
-     */
     public function verifyUser(User $user)
     {
-        // 1. Jika ingin memverifikasi
         if (!$user->is_verified) {
-            // Cek Syarat: Foto Profil, KTP, & WhatsApp harus ada
             if (!$user->profile_photo_path || !$user->ktp_photo_path || !$user->whatsapp) {
                 return back()->with('error', 'Gagal Verifikasi: User belum melengkapi Foto Profil, Foto KTP, atau No WhatsApp.');
             }
             $user->is_verified = true;
             $msg = 'User berhasil diverifikasi (Centang Biru Aktif). Foto profil user sekarang terkunci.';
         } else {
-            // 2. Jika ingin mencabut verifikasi
             $user->is_verified = false;
             $msg = 'Verifikasi dicabut (Centang Biru Non-Aktif).';
         }
@@ -271,16 +272,11 @@ class UserController extends Controller
         return back()->with('success', $msg);
     }
 
-    // App\Http\Controllers\UserController.php
-
     public function photoRequests()
     {
         $user = Auth::user();
-
-        // Query user yang request statusnya 'pending'
         $query = User::where('photo_request_status', 'pending')->with(['branch', 'division']);
 
-        // Filter berdasarkan hak akses (Audit hanya cabang tertentu, Admin Cabang hanya cabangnya)
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('branch_id', $user->branch_id);
         } elseif ($user->role == 'audit') {
@@ -289,23 +285,15 @@ class UserController extends Controller
         }
 
         $requests = $query->latest('updated_at')->paginate(10);
-
         return view('users.photo_requests', compact('requests'));
     }
 
-    /**
-     * FITUR BARU: APPROVE REQUEST GANTI FOTO
-     */
     public function approvePhotoRequest(User $user)
     {
         if ($user->photo_request_status !== 'pending') {
             return back()->with('error', 'Tidak ada permintaan ganti foto yang pending.');
         }
-
-        // Set status approved -> User bisa upload sekali
-        // Centang biru TETAP ADA, tapi user diberi akses upload.
         $user->update(['photo_request_status' => 'approved']);
-
         return back()->with('success', 'Izin ganti foto diberikan. User dapat mengupload foto baru sekarang.');
     }
 
@@ -317,7 +305,6 @@ class UserController extends Controller
         return back()->with('success', 'Status user diperbarui.');
     }
 
-    // Helper Stats (Internal)
     private function getSpecificUserStats($user_id)
     {
         $presentCount = Attendance::where('user_id', $user_id)
@@ -325,11 +312,10 @@ class UserController extends Controller
             ->whereIn('status', ['verified', 'present', 'late'])
             ->count();
 
-        // Simple return structure
         return [
             'total' => $presentCount,
             'present' => $presentCount,
-            'alpha' => 0, // Simplified logic needed
+            'alpha' => 0,
             'late' => 0,
             'early' => 0,
             'pending' => 0,

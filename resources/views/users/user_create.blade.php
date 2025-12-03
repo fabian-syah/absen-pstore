@@ -110,7 +110,6 @@
                             <input type="text" class="form-control" name="name" value="{{ old('name') }}" required>
                         </div>
 
-                        {{-- [BARU] TANGGAL LAHIR --}}
                         <div class="form-group mb-3">
                             <label>Tanggal Lahir (Opsional)</label>
                             <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date') }}">
@@ -129,6 +128,8 @@
                             <label>Konfirmasi Password</label>
                             <input type="password" class="form-control" name="password_confirmation" required>
                         </div>
+
+                        {{-- START ROLE --}}
                         <div class="form-group mb-3">
                             <label>Role</label>
                             <select class="form-select" id="role" name="role" onchange="toggleInputs()" required>
@@ -160,6 +161,27 @@
                                 @endif
                             </small>
                         </div>
+                        {{-- END ROLE --}}
+
+                        {{-- [BARU] FORM JAM KERJA (OPSIONAL) --}}
+                        <div class="form-group mb-3">
+                            <label>Jam Kerja Khusus (Opsional)</label>
+                            <select class="form-select" name="work_schedule_id">
+                                <option value="">-- Ikuti Default Sistem / Cabang --</option>
+                                @foreach($workSchedules as $schedule)
+                                    <option value="{{ $schedule->id }}" {{ old('work_schedule_id') == $schedule->id ? 'selected' : '' }}>
+                                        {{ $schedule->schedule_name }} 
+                                        ({{ $schedule->check_in_start ? \Carbon\Carbon::parse($schedule->check_in_start)->format('H:i') : 'Any' }} - 
+                                         {{ $schedule->check_out_end ? \Carbon\Carbon::parse($schedule->check_out_end)->format('H:i') : 'Any' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">
+                                Biarkan kosong jika ingin mengikuti pengaturan jam kerja Default atau Cabang.
+                            </small>
+                        </div>
+                        {{-- [AKHIR BARU] --}}
+
                     </div>
                 </div>
             </div>
@@ -251,7 +273,6 @@
                             <small class="text-muted">Pilih divisi dari cabang yang tersedia</small>
                         </div>
 
-                        {{-- [BARU] TANGGAL MASUK (HIRE DATE) --}}
                         <div class="form-group mb-3">
                             <label>awal masuk pstore ( opsional )</label>
                             <input type="date" class="form-control" name="hire_date" value="{{ old('hire_date') }}">
@@ -259,10 +280,6 @@
 
                         <hr>
 
-                        {{-- <div class="form-group mb-3">
-                            <label>Foto Profil</label>
-                            <input type="file" class="form-control" name="profile_photo_path">
-                        </div> --}}
                         <div class="form-group mb-3">
                             <label>Email</label>
                             <input type="email" class="form-control" name="email" placeholder="contoh@email.com"

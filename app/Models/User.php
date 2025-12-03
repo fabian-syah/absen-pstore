@@ -37,6 +37,7 @@ class User extends Authenticatable
         'division_id',     // Primary Division (Homebase)
         'qr_code_value',
         'branch_id',       // Primary Branch (Homebase)
+        'work_schedule_id', // <--- TAMBAHKAN INI
         'is_active',
         'profile_photo_path',
         'ktp_photo_path',
@@ -159,6 +160,12 @@ class User extends Authenticatable
             ->orWhere('tiktok', $loginId)
             ->orWhere('email', $loginId)
             ->first();
+    }
+
+    // Tambahkan Relasi di bawah
+    public function workSchedule(): BelongsTo
+    {
+        return $this->belongsTo(WorkSchedule::class, 'work_schedule_id');
     }
 
     public function isDataComplete()
