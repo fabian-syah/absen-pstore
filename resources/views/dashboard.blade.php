@@ -177,14 +177,18 @@
             <div class="card card-id gradient-dark">
                 <div class="card-body">
                     <div class="card-id-header">
-                        {{-- [MODIFIKASI] Ganti Chip Kuning dengan Foto Profil --}}
+                        {{-- [MODIFIKASI] Ganti Chip Kuning dengan Foto Profil + Fitur Klik Modal --}}
                         <div class="card-id-photo-wrapper">
                             @if (Auth::user()->profile_photo_path)
                                 <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}" 
                                      alt="Profile" 
-                                     class="id-card-img">
+                                     class="id-card-img"
+                                     data-bs-toggle="modal" 
+                                     data-bs-target="#profilePhotoModal"
+                                     data-src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                     title="Klik untuk memperbesar">
                             @else
-                                {{-- Fallback jika tidak ada foto (Tampil inisial) --}}
+                                {{-- Fallback jika tidak ada foto (Tampil inisial - Tidak bisa diklik) --}}
                                 <div class="id-card-img-placeholder">
                                     {{ substr(Auth::user()->name, 0, 1) }}
                                 </div>
@@ -475,6 +479,28 @@
         </div>
     </div>
 
+    {{-- MODAL POPUP FOTO PROFIL --}}
+    <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-body p-0 position-relative modal-image-wrapper text-center">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow"
+                        data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
+                    
+                    <div class="p-3">
+                        <img src="" id="profileModalImageSrc" class="img-fluid rounded shadow" 
+                             alt="Profile Photo"
+                             style="max-height: 80vh; max-width: 100%; object-fit: contain;">
+                    </div>
+                    <div class="mt-2 mb-3 text-white">
+                        <h5 class="mb-0">{{ Auth::user()->name }}</h5>
+                        <small class="opacity-75">Foto Profil</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('styles')
@@ -644,6 +670,13 @@
             border-radius: 8px;
             border: 2px solid rgba(255, 255, 255, 0.8);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            cursor: pointer; /* Menunjukkan bisa diklik */
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .id-card-img:hover {
+            transform: scale(1.05); /* Efek zoom saat hover */
+            border-color: #fff;
         }
 
         .id-card-img-placeholder {
@@ -661,6 +694,13 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
         /* [AKHIR MODIFIKASI] */
+
+        /* Style Wrapper Modal */
+        .modal-image-wrapper { 
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%); 
+            padding: 1rem; 
+            border-radius: 10px;
+        }
 
         .card-id-logo {
             display: flex;
@@ -888,10 +928,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // --- SCRIPT CHART (TETAP SAMA) ---
             const ctx = document.getElementById('attendancePieChart').getContext('2d');
 
             @if (auth()->user()->role == 'admin')
-                // CHART ADMIN
                 new Chart(ctx, {
                     type: 'doughnut',
                     data: {
@@ -924,7 +964,6 @@
                     }
                 });
             @elseif (auth()->user()->role == 'audit')
-                // CHART AUDIT
                 new Chart(ctx, {
                     type: 'pie',
                     data: {
@@ -949,7 +988,6 @@
                     }
                 });
             @elseif (auth()->user()->role == 'security')
-                // CHART SECURITY
                 new Chart(ctx, {
                     type: 'doughnut',
                     data: {
@@ -978,7 +1016,6 @@
                     }
                 });
             @else
-                // CHART USER LAIN (PERSONAL)
                 new Chart(ctx, {
                     type: 'pie',
                     data: {
@@ -1007,6 +1044,20 @@
                     }
                 });
             @endif
+
+            // --- SCRIPT MODAL FOTO PROFIL ---
+            var profilePhotoModal = document.getElementById('profilePhotoModal');
+            if (profilePhotoModal) {
+                profilePhotoModal.addEventListener('show.bs.modal', function (event) {
+                    // Tombol (img) yang mentrigger modal
+                    var button = event.relatedTarget;
+                    // Ambil info dari data-* attributes
+                    var src = button.getAttribute('data-src');
+                    // Update isi modal
+                    var modalImg = document.getElementById('profileModalImageSrc');
+                    modalImg.src = src;
+                });
+            }
         });
     </script>
 @endpush
