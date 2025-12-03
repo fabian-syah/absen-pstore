@@ -52,8 +52,15 @@
                             <tr>
                                 <td>
                                     @if($item->item_photo_path)
-                                        <img src="{{ asset('storage/'.$item->item_photo_path) }}" alt="img" 
-                                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                                        {{-- MODIFIKASI: Tambahkan data-bs-toggle dan class pointer --}}
+                                        <img src="{{ asset('storage/'.$item->item_photo_path) }}" 
+                                             alt="{{ $item->item_name }}" 
+                                             class="img-clickable"
+                                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; transition: 0.3s;"
+                                             data-bs-toggle="modal" 
+                                             data-bs-target="#imagePreviewModal"
+                                             data-img-src="{{ asset('storage/'.$item->item_photo_path) }}"
+                                             data-img-title="{{ $item->item_name }}">
                                     @else
                                         <div class="bg-secondary text-white d-flex justify-content-center align-items-center" 
                                              style="width: 50px; height: 50px; border-radius: 4px;">
@@ -84,7 +91,7 @@
                                             'Rusak Berat' => 'badge-danger',
                                             'Perbaikan' => 'badge-info',
                                         ];
-                                        $conditionKey = ucfirst(str_replace('_', ' ', $item->condition)); // Normalisasi string
+                                        $conditionKey = ucfirst(str_replace('_', ' ', $item->condition)); 
                                         $badgeClass = $badges[$conditionKey] ?? 'badge-secondary';
                                     @endphp
                                     <label class="badge {{ $badgeClass }}">{{ $conditionKey }}</label>
@@ -127,4 +134,51 @@
         </div>
     </div>
 </div>
+
+{{-- MODAL PREVIEW IMAGE --}}
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> {{-- modal-lg agar gambar besar --}}
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="imagePreviewModalLabel">Preview Gambar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                {{-- Gambar akan diisi lewat JS --}}
+                <img src="" id="previewImage" class="img-fluid rounded" alt="Preview" style="max-height: 80vh; width: auto;">
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
+
+@push('scripts')
+<script>
+    // Script untuk menangani modal gambar dinamis
+    var imageModal = document.getElementById('imagePreviewModal');
+    imageModal.addEventListener('show.bs.modal', function (event) {
+        // Tombol (gambar) yang memicu modal
+        var button = event.relatedTarget;
+        
+        // Ambil info dari data attributes
+        var imgSrc = button.getAttribute('data-img-src');
+        var imgTitle = button.getAttribute('data-img-title');
+        
+        // Update isi modal
+        var modalTitle = imageModal.querySelector('.modal-title');
+        var modalImg = imageModal.querySelector('#previewImage');
+        
+        modalTitle.textContent = imgTitle;
+        modalImg.src = imgSrc;
+    });
+</script>
+
+{{-- Style Tambahan untuk hover effect pada gambar kecil --}}
+<style>
+    .img-clickable:hover {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+</style>
+@endpush
