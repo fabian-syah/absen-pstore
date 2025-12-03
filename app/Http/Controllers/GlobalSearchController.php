@@ -90,7 +90,7 @@ class GlobalSearchController extends Controller
                         'type' => 'division',
                         'title' => $item->name,
                         'description' => "Branch: {$branchName}",
-                        'url' => route('divisions.edit', $item->id),
+                        'url' => route('divisions.show', $item->id),
                         'icon' => 'mdi-sitemap'
                     ];
                 });
@@ -106,7 +106,7 @@ class GlobalSearchController extends Controller
                         'type' => 'branch',
                         'title' => $item->name,
                         'description' => Str::limit($item->address, 40),
-                        'url' => route('branches.edit', $item->id),
+                        'url' => route('branches.show', $item->id),
                         'icon' => 'mdi-office-building'
                     ];
                 });
