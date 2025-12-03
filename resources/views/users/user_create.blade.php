@@ -253,16 +253,16 @@
 
                         {{-- [BARU] TANGGAL MASUK (HIRE DATE) --}}
                         <div class="form-group mb-3">
-                            <label>Tanggal Masuk (Hire Date - Opsional)</label>
+                            <label>awal masuk pstore ( opsional )</label>
                             <input type="date" class="form-control" name="hire_date" value="{{ old('hire_date') }}">
                         </div>
 
                         <hr>
 
-                        <div class="form-group mb-3">
+                        {{-- <div class="form-group mb-3">
                             <label>Foto Profil</label>
                             <input type="file" class="form-control" name="profile_photo_path">
-                        </div>
+                        </div> --}}
                         <div class="form-group mb-3">
                             <label>Email</label>
                             <input type="email" class="form-control" name="email" placeholder="contoh@email.com"
