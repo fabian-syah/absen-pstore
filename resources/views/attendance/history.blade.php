@@ -219,7 +219,7 @@
                                     <tr>
                                         <th>Tanggal</th>
                                         <th>Jam Masuk</th>
-                                        <th>Foto / Bukti</th> {{-- Diubah judul kolomnya --}}
+                                        <th>Foto / Bukti</th> 
                                         <th>Jam Pulang</th>
                                         <th>Foto Pulang</th>
                                         <th>Status</th>
@@ -240,7 +240,7 @@
                                                 <small class="text-muted">{{ $att->check_in_time->format('l') }}</small>
                                             </td>
 
-                                            {{-- JAM MASUK (MODIFIKASI: Menambah Jadwal Asli) --}}
+                                            {{-- JAM MASUK (DIPERBAIKI: PRIORITAS JAM KERJA PERSONAL) --}}
                                             <td>
                                                 <div class="d-flex flex-column">
                                                     {{-- Jam Absen Aktual --}}
@@ -254,19 +254,27 @@
                                                         @endif
                                                     </div>
                                                     
-                                                    {{-- Jam Jadwal Asli (Dari User->WorkSchedule) --}}
-                                                    @if($att->user && $att->user->workSchedule)
+                                                    {{-- LOGIKA TAMPILAN JADWAL (PERSONAL VS TEMPLATE) --}}
+                                                    @if($att->user && $att->user->check_in_start)
+                                                        {{-- Jika punya jadwal PERSONAL (Manual di user) --}}
+                                                        <small class="text-muted" style="font-size: 11px;">
+                                                            <i class="mdi mdi-clock-outline me-1"></i>
+                                                            Jadwal: {{ \Carbon\Carbon::parse($att->user->check_in_start)->format('H:i') }}
+                                                        </small>
+                                                    @elseif($att->user && $att->user->workSchedule)
+                                                        {{-- Jika punya jadwal TEMPLATE (Shift/Jadwal Umum) --}}
                                                         <small class="text-muted" style="font-size: 11px;">
                                                             <i class="mdi mdi-calendar-clock me-1"></i>
                                                             Jadwal: {{ \Carbon\Carbon::parse($att->user->workSchedule->start_time)->format('H:i') }}
                                                         </small>
                                                     @else
-                                                        <small class="text-muted" style="font-size: 11px;">-</small>
+                                                        {{-- Tidak ada jadwal (Fleksibel) --}}
+                                                        <small class="text-muted fst-italic" style="font-size: 11px;">- Fleksibel -</small>
                                                     @endif
                                                 </div>
                                             </td>
 
-                                            {{-- FOTO MASUK / BUKTI IZIN (MODIFIKASI: Menambah Foto Izin & Pop-up) --}}
+                                            {{-- FOTO MASUK / BUKTI IZIN --}}
                                             <td>
                                                 @php
                                                     $displayPhoto = null;
@@ -277,8 +285,7 @@
                                                         $displayPhoto = asset('storage/' . $att->photo_path);
                                                         $photoLabel = 'Masuk';
                                                     } 
-                                                    // 2. Cek Foto Izin/Sakit dari LeaveRequest (Jika ada relasi)
-                                                    // Pastikan Attendance Model memiliki relasi leaveRequest()
+                                                    // 2. Cek Foto Izin/Sakit
                                                     elseif ($att->leaveRequest && $att->leaveRequest->file_proof) {
                                                         $displayPhoto = asset('storage/' . $att->leaveRequest->file_proof);
                                                         $photoLabel = 'Izin/Sakit';
@@ -319,7 +326,7 @@
                                                 @endif
                                             </td>
 
-                                            {{-- FOTO PULANG (MODIFIKASI: Pop-up) --}}
+                                            {{-- FOTO PULANG --}}
                                             <td>
                                                 @if ($att->photo_out_path)
                                                     <div class="d-inline-block text-center">
@@ -405,7 +412,7 @@
                                                 @endif
                                             </td>
 
-                                            {{-- BUKTI AUDIT (MODIFIKASI: Pop-up) --}}
+                                            {{-- BUKTI AUDIT --}}
                                             <td>
                                                 @if ($att->audit_photo_path)
                                                     <div class="d-inline-block text-center">
@@ -490,10 +497,10 @@
     </div>
 
     {{-- ============================================================= --}}
-    {{-- MODAL PREVIEW IMAGE (POP-UP GAMBAR) --}}
+    {{-- MODAL PREVIEW IMAGE --}}
     {{-- ============================================================= --}}
     <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg"> {{-- modal-lg agar gambar besar --}}
+        <div class="modal-dialog modal-dialog-centered modal-lg"> 
             <div class="modal-content bg-transparent border-0 shadow-none">
                 <div class="modal-header border-0 p-0 mb-2">
                     <h5 class="modal-title text-white" id="imagePreviewModalLabel">Preview</h5>
@@ -507,7 +514,7 @@
     </div>
 
     {{-- ============================================================= --}}
-    {{-- MODAL SECTION (DIPINDAHKAN KELUAR TABLE UNTUK FIX IOS BUG) --}}
+    {{-- MODAL SECTION --}}
     {{-- ============================================================= --}}
     @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin') && $history->count() > 0)
         @foreach ($history as $att)
