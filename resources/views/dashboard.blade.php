@@ -177,7 +177,21 @@
             <div class="card card-id gradient-dark">
                 <div class="card-body">
                     <div class="card-id-header">
-                        <div class="card-bank-chip"></div>
+                        {{-- [MODIFIKASI] Ganti Chip Kuning dengan Foto Profil --}}
+                        <div class="card-id-photo-wrapper">
+                            @if (Auth::user()->profile_photo_path)
+                                <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}" 
+                                     alt="Profile" 
+                                     class="id-card-img">
+                            @else
+                                {{-- Fallback jika tidak ada foto (Tampil inisial) --}}
+                                <div class="id-card-img-placeholder">
+                                    {{ substr(Auth::user()->name, 0, 1) }}
+                                </div>
+                            @endif
+                        </div>
+                        {{-- [AKHIR MODIFIKASI] --}}
+
                         <div class="card-id-logo">
                             <i class="mdi mdi-credit-card-outline"></i>
                             <span>ID Card</span>
@@ -197,7 +211,7 @@
                             <p class="mb-0 text-white-50" style="font-size: 10px; letter-spacing: 1px;">NOMOR ID</p>
                             <p class="card-id-card-number mb-0"
                                 style="font-size: 22px; letter-spacing: 2px; font-weight: 700;">
-                                {{ $idCardNumber }}
+                                {{ $idCardNumber ?? '000000 000000' }}
                             </p>
                         </div>
                     </div>
@@ -616,6 +630,37 @@
             align-items: center;
             margin-bottom: 20px;
         }
+        
+        /* [MODIFIKASI] Style untuk Foto di ID Card */
+        .card-id-photo-wrapper {
+            position: relative;
+            z-index: 5;
+        }
+
+        .id-card-img {
+            width: 60px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .id-card-img-placeholder {
+            width: 60px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        /* [AKHIR MODIFIKASI] */
 
         .card-id-logo {
             display: flex;
@@ -828,6 +873,12 @@
 
             .card-id-card-number {
                 font-size: 18px !important;
+            }
+            
+            /* Responsive untuk foto ID Card */
+            .id-card-img, .id-card-img-placeholder {
+                width: 50px;
+                height: 60px;
             }
         }
     </style>
