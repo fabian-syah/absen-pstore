@@ -169,10 +169,10 @@
                             <label>WhatsApp</label>
                             <input type="text" class="form-control" name="whatsapp" placeholder="08xxx" value="{{ old('whatsapp') }}">
                         </div>
-                         <div class="form-group mb-3">
+                         {{-- <div class="form-group mb-3">
                             <label>Foto Profil</label>
                             <input type="file" class="form-control" name="profile_photo_path">
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>

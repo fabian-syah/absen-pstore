@@ -102,6 +102,19 @@
                             <label>Konfirmasi Password</label>
                             <input type="password" class="form-control" name="password_confirmation" placeholder="********">
                         </div>
+
+                        {{-- JAM KERJA --}}
+                        <div class="form-group mb-3">
+                            <label>Jam Kerja Khusus (Opsional)</label>
+                            <select class="form-select" name="work_schedule_id">
+                                <option value="">-- Ikuti Default Sistem / Cabang --</option>
+                                @foreach($workSchedules as $schedule)
+                                    <option value="{{ $schedule->id }}" {{ old('work_schedule_id', $user->work_schedule_id) == $schedule->id ? 'selected' : '' }}>
+                                        {{ $schedule->schedule_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -156,22 +169,9 @@
                             </div>
                         </div>
 
-                        {{-- JAM KERJA --}}
-                        <div class="form-group mb-3">
-                            <label>Jam Kerja Khusus (Opsional)</label>
-                            <select class="form-select" name="work_schedule_id">
-                                <option value="">-- Ikuti Default Sistem / Cabang --</option>
-                                @foreach($workSchedules as $schedule)
-                                    <option value="{{ $schedule->id }}" {{ old('work_schedule_id', $user->work_schedule_id) == $schedule->id ? 'selected' : '' }}>
-                                        {{ $schedule->schedule_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
                         <hr>
 
-                        <div class="form-group mb-3">
+                        {{-- <div class="form-group mb-3">
                             <label>Foto Profil</label>
                             <input type="file" class="form-control" name="profile_photo_path">
                             @if ($user->profile_photo_path)
@@ -179,7 +179,7 @@
                                     <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="Profile" class="img-thumbnail" style="max-height: 100px">
                                 </div>
                             @endif
-                        </div>
+                        </div> --}}
                         <div class="form-group mb-3">
                             <label>Email</label>
                             <input type="email" class="form-control" name="email" value="{{ old('email', $user->email) }}">
