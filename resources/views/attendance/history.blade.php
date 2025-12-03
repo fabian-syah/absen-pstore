@@ -66,6 +66,16 @@
             border: 2px solid #e2e8f0;
             border-radius: 8px;
         }
+
+        /* Style untuk gambar yang bisa diklik */
+        .img-clickable {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .img-clickable:hover {
+            transform: scale(1.1);
+            opacity: 0.9;
+        }
     </style>
 @endpush
 
@@ -209,7 +219,7 @@
                                     <tr>
                                         <th>Tanggal</th>
                                         <th>Jam Masuk</th>
-                                        <th>Foto Masuk</th>
+                                        <th>Foto / Bukti</th> {{-- Diubah judul kolomnya --}}
                                         <th>Jam Pulang</th>
                                         <th>Foto Pulang</th>
                                         <th>Status</th>
@@ -230,31 +240,63 @@
                                                 <small class="text-muted">{{ $att->check_in_time->format('l') }}</small>
                                             </td>
 
-                                            {{-- JAM MASUK --}}
+                                            {{-- JAM MASUK (MODIFIKASI: Menambah Jadwal Asli) --}}
                                             <td>
-                                                <div class="d-flex align-items-center">
-                                                    <i class="mdi mdi-login text-success me-2"></i>
-                                                    <span
-                                                        class="{{ $att->is_late_checkin ? 'text-danger fw-bold' : '' }}">
-                                                        {{ $att->check_in_time->format('H:i') }}
-                                                    </span>
-                                                    @if ($att->is_late_checkin)
-                                                        <span class="badge bg-danger ms-1"
-                                                            style="font-size: 9px;">Telat</span>
+                                                <div class="d-flex flex-column">
+                                                    {{-- Jam Absen Aktual --}}
+                                                    <div class="d-flex align-items-center mb-1">
+                                                        <i class="mdi mdi-login text-success me-2"></i>
+                                                        <span class="fw-bold {{ $att->is_late_checkin ? 'text-danger' : 'text-dark' }}">
+                                                            {{ $att->check_in_time->format('H:i') }}
+                                                        </span>
+                                                        @if ($att->is_late_checkin)
+                                                            <span class="badge bg-danger ms-1" style="font-size: 9px;">Telat</span>
+                                                        @endif
+                                                    </div>
+                                                    
+                                                    {{-- Jam Jadwal Asli (Dari User->WorkSchedule) --}}
+                                                    @if($att->user && $att->user->workSchedule)
+                                                        <small class="text-muted" style="font-size: 11px;">
+                                                            <i class="mdi mdi-calendar-clock me-1"></i>
+                                                            Jadwal: {{ \Carbon\Carbon::parse($att->user->workSchedule->start_time)->format('H:i') }}
+                                                        </small>
+                                                    @else
+                                                        <small class="text-muted" style="font-size: 11px;">-</small>
                                                     @endif
                                                 </div>
                                             </td>
 
-                                            {{-- FOTO MASUK --}}
+                                            {{-- FOTO MASUK / BUKTI IZIN (MODIFIKASI: Menambah Foto Izin & Pop-up) --}}
                                             <td>
-                                                @if ($att->photo_path)
-                                                    <a href="{{ asset('storage/' . $att->photo_path) }}" target="_blank"
-                                                        class="d-inline-block">
-                                                        <img src="{{ asset('storage/' . $att->photo_path) }}"
-                                                            alt="Masuk" class="rounded shadow-sm"
-                                                            style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #e2e8f0;">
-                                                        <small class="d-block text-center text-muted mt-1">Bukti</small>
-                                                    </a>
+                                                @php
+                                                    $displayPhoto = null;
+                                                    $photoLabel = 'Bukti';
+                                                    
+                                                    // 1. Cek Foto Absen Normal
+                                                    if ($att->photo_path) {
+                                                        $displayPhoto = asset('storage/' . $att->photo_path);
+                                                        $photoLabel = 'Masuk';
+                                                    } 
+                                                    // 2. Cek Foto Izin/Sakit dari LeaveRequest (Jika ada relasi)
+                                                    // Pastikan Attendance Model memiliki relasi leaveRequest()
+                                                    elseif ($att->leaveRequest && $att->leaveRequest->file_proof) {
+                                                        $displayPhoto = asset('storage/' . $att->leaveRequest->file_proof);
+                                                        $photoLabel = 'Izin/Sakit';
+                                                    }
+                                                @endphp
+
+                                                @if ($displayPhoto)
+                                                    <div class="d-inline-block text-center">
+                                                        <img src="{{ $displayPhoto }}"
+                                                            alt="{{ $photoLabel }}" 
+                                                            class="rounded shadow-sm img-clickable"
+                                                            style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #e2e8f0;"
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#imagePreviewModal"
+                                                            data-img-src="{{ $displayPhoto }}"
+                                                            data-img-title="Bukti {{ $photoLabel }} - {{ $att->check_in_time->format('d M Y') }}">
+                                                        <small class="d-block text-muted mt-1" style="font-size: 10px;">{{ $photoLabel }}</small>
+                                                    </div>
                                                 @else
                                                     <span class="text-muted small">-</span>
                                                 @endif
@@ -265,13 +307,11 @@
                                                 @if ($att->check_out_time)
                                                     <div class="d-flex align-items-center">
                                                         <i class="mdi mdi-logout text-primary me-2"></i>
-                                                        <span
-                                                            class="{{ $att->is_early_checkout ? 'text-warning fw-bold' : '' }}">
+                                                        <span class="{{ $att->is_early_checkout ? 'text-warning fw-bold' : '' }}">
                                                             {{ $att->check_out_time->format('H:i') }}
                                                         </span>
                                                         @if ($att->is_early_checkout)
-                                                            <span class="badge bg-warning ms-1"
-                                                                style="font-size: 9px;">Cepat</span>
+                                                            <span class="badge bg-warning ms-1" style="font-size: 9px;">Cepat</span>
                                                         @endif
                                                     </div>
                                                 @else
@@ -279,16 +319,20 @@
                                                 @endif
                                             </td>
 
-                                            {{-- FOTO PULANG --}}
+                                            {{-- FOTO PULANG (MODIFIKASI: Pop-up) --}}
                                             <td>
                                                 @if ($att->photo_out_path)
-                                                    <a href="{{ asset('storage/' . $att->photo_out_path) }}"
-                                                        target="_blank" class="d-inline-block">
+                                                    <div class="d-inline-block text-center">
                                                         <img src="{{ asset('storage/' . $att->photo_out_path) }}"
-                                                            alt="Pulang" class="rounded shadow-sm"
-                                                            style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #e2e8f0;">
-                                                        <small class="d-block text-center text-muted mt-1">Bukti</small>
-                                                    </a>
+                                                            alt="Pulang" 
+                                                            class="rounded shadow-sm img-clickable"
+                                                            style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #e2e8f0;"
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#imagePreviewModal"
+                                                            data-img-src="{{ asset('storage/' . $att->photo_out_path) }}"
+                                                            data-img-title="Foto Pulang - {{ $att->check_in_time->format('d M Y') }}">
+                                                        <small class="d-block text-muted mt-1" style="font-size: 10px;">Pulang</small>
+                                                    </div>
                                                 @else
                                                     <span class="text-muted small">-</span>
                                                 @endif
@@ -301,26 +345,16 @@
                                                         $statusLower = strtolower($att->presence_status);
                                                         $badgeColor = match (true) {
                                                             $statusLower == 'masuk' => 'bg-success',
-                                                            $statusLower == 'wfh' ||
-                                                            str_contains($statusLower, 'wfh') ||
-                                                            str_contains($statusLower, 'dinas')
-                                                                => 'bg-info',
-                                                            $statusLower == 'izin telat' ||
-                                                            str_contains($statusLower, 'telat')
-                                                                => 'bg-warning text-dark',
+                                                            $statusLower == 'wfh' || str_contains($statusLower, 'wfh') || str_contains($statusLower, 'dinas') => 'bg-info',
+                                                            $statusLower == 'izin telat' || str_contains($statusLower, 'telat') => 'bg-warning text-dark',
                                                             $statusLower == 'sakit' => 'bg-primary',
-                                                            $statusLower == 'cuti' || $statusLower == 'izin'
-                                                                => 'bg-secondary',
+                                                            $statusLower == 'cuti' || $statusLower == 'izin' => 'bg-secondary',
                                                             $statusLower == 'alpha' => 'bg-danger',
                                                             default => 'bg-dark',
                                                         };
                                                         $displayText = ucwords($att->presence_status);
                                                         if (str_contains(strtolower($displayText), 'wfh')) {
-                                                            $displayText = str_replace(
-                                                                ['Wfh', 'wfh'],
-                                                                'WFH',
-                                                                $displayText,
-                                                            );
+                                                            $displayText = str_replace(['Wfh', 'wfh'], 'WFH', $displayText);
                                                         }
                                                     @endphp
                                                     <span class="badge {{ $badgeColor }}">
@@ -337,16 +371,13 @@
                                                     @if ($att->presence_status == 'Alpha')
                                                         <div class="d-flex align-items-center">
                                                             <i class="mdi mdi-robot text-danger me-1"></i>
-                                                            <span class="badge bg-danger verification-badge">System
-                                                                Auto</span>
+                                                            <span class="badge bg-danger verification-badge">System Auto</span>
                                                         </div>
-                                                        <small class="text-muted d-block fst-italic"
-                                                            style="font-size: 10px;">Tidak Absen</small>
+                                                        <small class="text-muted d-block fst-italic" style="font-size: 10px;">Tidak Absen</small>
                                                     @elseif($att->attendance_type == 'manual')
                                                         <div class="d-flex align-items-center">
                                                             <i class="mdi mdi-pencil-box-outline text-info me-1"></i>
-                                                            <span
-                                                                class="badge bg-info text-white verification-badge">Dikoreksi</span>
+                                                            <span class="badge bg-info text-white verification-badge">Dikoreksi</span>
                                                         </div>
                                                         @if ($att->verifiedBy)
                                                             <small class="text-muted d-block" style="font-size: 11px;">
@@ -356,39 +387,37 @@
                                                     @else
                                                         <div class="d-flex align-items-center">
                                                             <i class="mdi mdi-check-circle verified-check me-1"></i>
-                                                            <span
-                                                                class="badge bg-success verification-badge">Terverifikasi</span>
+                                                            <span class="badge bg-success verification-badge">Terverifikasi</span>
                                                         </div>
                                                         @if ($att->verifiedBy)
-                                                            <small class="text-muted d-block">
-                                                                oleh: {{ $att->verifiedBy->name }}
-                                                            </small>
+                                                            <small class="text-muted d-block">oleh: {{ $att->verifiedBy->name }}</small>
                                                         @endif
                                                     @endif
                                                 @elseif($att->status == 'pending_verification')
                                                     <div class="d-flex align-items-center">
                                                         <i class="mdi mdi-clock-outline pending-clock me-1"></i>
-                                                        <span
-                                                            class="badge bg-warning text-dark verification-badge">Menunggu</span>
+                                                        <span class="badge bg-warning text-dark verification-badge">Menunggu</span>
                                                     </div>
                                                 @elseif($att->status == 'rejected')
                                                     <span class="badge bg-danger verification-badge">Ditolak</span>
                                                 @else
-                                                    <span class="badge bg-secondary verification-badge">Belum
-                                                        Diverifikasi</span>
+                                                    <span class="badge bg-secondary verification-badge">Belum Diverifikasi</span>
                                                 @endif
                                             </td>
 
-                                            {{-- BUKTI AUDIT --}}
+                                            {{-- BUKTI AUDIT (MODIFIKASI: Pop-up) --}}
                                             <td>
                                                 @if ($att->audit_photo_path)
-                                                    <a href="{{ asset('storage/' . $att->audit_photo_path) }}"
-                                                        target="_blank" class="d-inline-block">
+                                                    <div class="d-inline-block text-center">
                                                         <img src="{{ asset('storage/' . $att->audit_photo_path) }}"
-                                                            alt="Bukti Audit" class="audit-photo-thumb shadow-sm">
-                                                        <small
-                                                            class="d-block text-center text-muted mt-1">Audit</small>
-                                                    </a>
+                                                            alt="Bukti Audit" 
+                                                            class="audit-photo-thumb shadow-sm img-clickable"
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#imagePreviewModal"
+                                                            data-img-src="{{ asset('storage/' . $att->audit_photo_path) }}"
+                                                            data-img-title="Bukti Audit">
+                                                        <small class="d-block text-center text-muted mt-1">Audit</small>
+                                                    </div>
                                                 @else
                                                     <span class="text-muted small">-</span>
                                                 @endif
@@ -397,11 +426,9 @@
                                             {{-- METODE --}}
                                             <td>
                                                 @if ($att->attendance_type == 'scan')
-                                                    <span class="badge badge-outline-primary"><i
-                                                            class="mdi mdi-qrcode-scan me-1"></i> Scan</span>
+                                                    <span class="badge badge-outline-primary"><i class="mdi mdi-qrcode-scan me-1"></i> Scan</span>
                                                 @elseif($att->attendance_type == 'self')
-                                                    <span class="badge badge-outline-info"><i
-                                                            class="mdi mdi-camera-front-variant me-1"></i> Selfie</span>
+                                                    <span class="badge badge-outline-info"><i class="mdi mdi-camera-front-variant me-1"></i> Selfie</span>
                                                 @elseif($att->attendance_type == 'system')
                                                     <span class="badge badge-outline-danger">System</span>
                                                 @elseif($att->attendance_type == 'manual')
@@ -415,7 +442,6 @@
                                             @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
                                                 <td class="action-buttons">
                                                     <div class="btn-group btn-group-sm" role="group">
-                                                        {{-- TOMBOL VERIFIKASI (Hijau) --}}
                                                         @if ($att->status != 'verified')
                                                             <button type="button" class="btn btn-success"
                                                                 data-bs-toggle="modal"
@@ -425,7 +451,6 @@
                                                             </button>
                                                         @endif
 
-                                                        {{-- TOMBOL EDIT KHUSUS AUDIT (Biru/Info) --}}
                                                         @if (auth()->user()->role == 'audit')
                                                             <button type="button" class="btn btn-info text-white"
                                                                 data-bs-toggle="modal"
@@ -435,7 +460,6 @@
                                                             </button>
                                                         @endif
 
-                                                        {{-- TOMBOL TOLAK (Merah) --}}
                                                         @if ($att->status != 'verified')
                                                             <button type="button" class="btn btn-danger"
                                                                 data-bs-toggle="modal"
@@ -446,7 +470,6 @@
                                                         @endif
                                                     </div>
                                                 </td>
-                                                {{-- NOTE: KODE MODAL DIHAPUS DARI SINI DAN DILETAKKAN DI LUAR TABLE --}}
                                             @endif
                                         </tr>
                                     @endforeach
@@ -461,6 +484,23 @@
                                 {{ date('F Y', mktime(0, 0, 0, $selectedMonth, 1, $selectedYear)) }}</p>
                         </div>
                     @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ============================================================= --}}
+    {{-- MODAL PREVIEW IMAGE (POP-UP GAMBAR) --}}
+    {{-- ============================================================= --}}
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg"> {{-- modal-lg agar gambar besar --}}
+            <div class="modal-content bg-transparent border-0 shadow-none">
+                <div class="modal-header border-0 p-0 mb-2">
+                    <h5 class="modal-title text-white" id="imagePreviewModalLabel">Preview</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-0">
+                    <img src="" id="previewImage" class="img-fluid rounded" alt="Preview" style="max-height: 85vh; width: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
                 </div>
             </div>
         </div>
@@ -686,6 +726,22 @@
 
                 yearSelect.addEventListener('change', function() {
                     this.form.submit();
+                });
+            }
+
+            // Script untuk menangani modal preview gambar
+            var imagePreviewModal = document.getElementById('imagePreviewModal');
+            if (imagePreviewModal) {
+                imagePreviewModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    var imgSrc = button.getAttribute('data-img-src');
+                    var imgTitle = button.getAttribute('data-img-title');
+                    
+                    var modalTitle = imagePreviewModal.querySelector('.modal-title');
+                    var modalImg = imagePreviewModal.querySelector('#previewImage');
+                    
+                    modalTitle.textContent = imgTitle;
+                    modalImg.src = imgSrc;
                 });
             }
         });
