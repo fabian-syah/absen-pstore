@@ -4,6 +4,7 @@
 @section('heading', 'Monitoring Tim & Wilayah')
 
 @push('styles')
+    {{-- Style tetap sama --}}
     <style>
         .team-card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); overflow: hidden; }
         .team-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; color: white; }
@@ -11,8 +12,13 @@
         .member-card { transition: all 0.3s ease; border-left: 4px solid transparent; }
         .member-card:hover { background: #f8f9ff; border-left-color: #667eea; transform: translateX(5px); }
         .avatar-wrapper { position: relative; }
+        
+        /* Default Hijau (Online/WFH/Masuk) */
         .avatar-wrapper::after { content: ''; position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background: #10b981; border: 2px solid white; border-radius: 50%; z-index: 5; }
+        
+        /* Abu-abu (Offline/Cuti/Sakit/Telat/Belum Absen) */
         .avatar-wrapper.offline::after { background: #94a3b8; }
+        
         .status-badge { font-weight: 600; padding: 0.5rem 1rem; border-radius: 50px; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
         .status-badge i { font-size: 1rem; }
         .division-badge { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca; border: none; font-weight: 500; }
@@ -24,7 +30,6 @@
         .late-message { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 8px; font-style: italic; color: #92400e; max-width: 250px; }
         .empty-state { padding: 4rem 2rem; text-align: center; }
         .empty-state-icon { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
-        /* Style Modal & Mobile Responsive */
         @media (max-width: 768px) { .team-header { padding: 1.5rem; } .team-header h4 { font-size: 1.1rem; } .status-badge { padding: 0.4rem 0.8rem; font-size: 0.75rem; } .member-card { padding: 1rem !important; } .avatar-wrapper { width: 45px !important; height: 45px !important; min-width: 45px !important; } }
         .modal-content { border: none; border-radius: 20px; overflow: hidden; }
         .modal-image-wrapper { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1rem; }
@@ -75,8 +80,13 @@
                                         // 2. Cek Izin/Cuti/Sakit/WFH
                                         $leave = $member->leaveRequests->first();
                                         
-                                        // Status Online (Hanya jika absen masuk & belum pulang)
-                                        $isOnline = $attendance && !$attendance->check_out_time;
+                                        // Cek apakah sedang WFH
+                                        $isWfh = $leave && $leave->type == 'wfh';
+
+                                        // Status Online Hijau jika:
+                                        // - Sudah Absen Masuk & Belum Pulang
+                                        // - ATAU Sedang WFH (Disetujui)
+                                        $isOnline = ($attendance && !$attendance->check_out_time) || $isWfh;
                                     @endphp
 
                                     <tr class="member-card {{ Auth::id() == $member->id ? 'bg-light' : '' }}">
@@ -89,6 +99,11 @@
 
                                         <td class="py-3">
                                             <div class="d-flex align-items-center">
+                                                {{-- 
+                                                    LOGIKA CLASS:
+                                                    Jika $isOnline (Masuk/WFH) -> class '' (default css hijau)
+                                                    Jika tidak -> class 'offline' (css abu-abu)
+                                                --}}
                                                 <div class="avatar-wrapper me-3 flex-shrink-0 {{ $isOnline ? '' : 'offline' }}"
                                                     style="width: 55px; height: 55px; min-width: 55px;">
                                                     
@@ -148,7 +163,7 @@
                                             {{-- PRIORITAS 2: WFH / IZIN / SAKIT --}}
                                             @elseif ($leave)
                                                 @if($leave->type == 'wfh')
-                                                    {{-- KHUSUS WFH: WARNA HIJAU/BIRU (MASUK) --}}
+                                                    {{-- KHUSUS WFH: WARNA BIRU MUDA TAPI DOT HIJAU (DI ATAS) --}}
                                                     <span class="status-badge bg-info text-white">
                                                         <i class="mdi mdi-laptop-mac"></i> 
                                                         <span>WFH / Dinas Luar</span>
