@@ -43,6 +43,7 @@ class TeamController extends Controller
 
         // Ambil Data Tim
         $myTeam = $query->with([
+            'workSchedule', // <--- TAMBAHKAN INI (PENTING AGAR JADWAL SHIFT TERBACA)
             // Ambil absensi hari ini
             'attendances' => function ($q) {
                 $q->whereDate('check_in_time', today());
