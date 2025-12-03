@@ -6,11 +6,9 @@
 @section('content')
     {{-- CSS SELECT2 --}}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
     <style>
-        /* CSS KHUSUS SELECT2 (SAMA SEPERTI SEBELUMNYA) */
         .select2-container ul, .select2-container li, .select2-selection__rendered, span.select2-selection__choice {
             list-style: none !important; padding-left: 0 !important; margin-left: 0 !important;
         }
@@ -25,6 +23,8 @@
         .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice .select2-selection__choice__remove {
             border: none !important; background: transparent !important; margin-right: 5px !important; color: #999 !important;
         }
+        /* Custom Header Card Jam Kerja */
+        .card-header-teal { background-color: #008080; color: white; }
     </style>
 
     @if ($errors->any())
@@ -69,7 +69,6 @@
                             <input type="password" class="form-control" name="password_confirmation" required>
                         </div>
 
-                        {{-- ROLE SELECTION --}}
                         <div class="form-group mb-3">
                             <label>Role</label>
                             <select class="form-select" id="role" name="role" onchange="toggleInputs()" required>
@@ -82,26 +81,10 @@
                             </select>
                         </div>
 
-                        {{-- [PERBAIKAN] INPUT HIRE DATE DISINI (LABEL BARU) --}}
                         <div class="form-group mb-3">
                             <label>awal masuk pstore ( opsional )</label>
                             <input type="date" class="form-control" name="hire_date" value="{{ old('hire_date') }}">
                         </div>
-
-                        {{-- WORK SCHEDULE (OPSIONAL) --}}
-                        <div class="form-group mb-3">
-                            <label>Jam Kerja Khusus (Opsional)</label>
-                            <select class="form-select" name="work_schedule_id">
-                                <option value="">-- Ikuti Default Sistem / Cabang --</option>
-                                @foreach($workSchedules as $schedule)
-                                    <option value="{{ $schedule->id }}" {{ old('work_schedule_id') == $schedule->id ? 'selected' : '' }}>
-                                        {{ $schedule->schedule_name }} 
-                                    </option>
-                                @endforeach
-                            </select>
-                            <small class="text-muted">Biarkan kosong jika ikut default.</small>
-                        </div>
-
                     </div>
                 </div>
             </div>
@@ -112,7 +95,7 @@
                     <div class="card-body">
                         <h4 class="card-title">Penempatan & Kontak</h4>
 
-                        {{-- SINGLE BRANCH (HOMEBASE) --}}
+                        {{-- SINGLE BRANCH --}}
                         <div class="form-group mb-3" id="single-branch-group">
                             <label>Cabang Utama (Lokasi Kerja)</label>
                             <select class="form-select select2-single" name="branch_id" data-placeholder="Pilih Cabang">
@@ -125,7 +108,7 @@
                             </select>
                         </div>
 
-                        {{-- MULTI BRANCH (AUDIT) --}}
+                        {{-- MULTI BRANCH --}}
                         <div class="form-group mb-3 d-none" id="multi-branch-group">
                             <label class="text-primary fw-bold">Akses Wilayah Audit (Multi)</label>
                             <select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%">
@@ -157,8 +140,6 @@
                             </div>
                         </div>
 
-                        {{-- *PERHATIAN: INPUT HIRE DATE DUPLIKAT DI SINI SUDAH DIHAPUS* --}}
-
                         <hr>
 
                         <div class="form-group mb-3">
@@ -169,10 +150,71 @@
                             <label>WhatsApp</label>
                             <input type="text" class="form-control" name="whatsapp" placeholder="08xxx" value="{{ old('whatsapp') }}">
                         </div>
-                         {{-- <div class="form-group mb-3">
-                            <label>Foto Profil</label>
-                            <input type="file" class="form-control" name="profile_photo_path">
-                        </div> --}}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ROW BARU: SETTING JAM KERJA PERSONAL --}}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Atur Jam Kerja Personal</h4>
+                        <p class="card-description text-muted">
+                            Isi jam di bawah ini untuk mengatur jadwal spesifik user ini. <br>
+                            <strong>Biarkan kosong semua jika jam kerja Fleksibel/Bebas.</strong>
+                        </p>
+                        
+                        <div class="row">
+                            {{-- KARTU JAM MASUK --}}
+                            <div class="col-md-6">
+                                <div class="card border" style="border-color: #009688;">
+                                    <div class="card-header text-white" style="background-color: #009688;">
+                                        <h6 class="mb-0"><i class="mdi mdi-clock-in me-2"></i>Jam Masuk</h6>
+                                    </div>
+                                    <div class="card-body py-4">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold">Mulai Check In</label>
+                                                <input type="time" class="form-control" name="check_in_start" value="{{ old('check_in_start') }}">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold">Akhir Check In</label>
+                                                <input type="time" class="form-control" name="check_in_end" value="{{ old('check_in_end') }}">
+                                            </div>
+                                            <div class="col-12">
+                                                <small class="text-muted">Biarkan kosong jika bebas</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- KARTU JAM PULANG --}}
+                            <div class="col-md-6">
+                                <div class="card border" style="border-color: #ff9800;">
+                                    <div class="card-header text-dark" style="background-color: #ff9800;">
+                                        <h6 class="mb-0"><i class="mdi mdi-clock-out me-2"></i>Jam Pulang</h6>
+                                    </div>
+                                    <div class="card-body py-4">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold">Mulai Check Out</label>
+                                                <input type="time" class="form-control" name="check_out_start" value="{{ old('check_out_start') }}">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold">Akhir Check Out</label>
+                                                <input type="time" class="form-control" name="check_out_end" value="{{ old('check_out_end') }}">
+                                            </div>
+                                            <div class="col-12">
+                                                <small class="text-muted">Biarkan kosong jika bebas</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
