@@ -154,14 +154,9 @@
                     {{-- 3. BAGIAN DATA KTP --}}
                     <div class="text-center">
                         <h4 class="card-title">Data KTP</h4>
-                        @if ($user->ktp_photo_path)
-                            <p class="text-success small"><i class="mdi mdi-check-circle"></i> KTP Ter-upload</p>
-                            <a href="{{ asset('storage/' . $user->ktp_photo_path) }}" target="_blank"
-                                class="btn btn-secondary btn-sm w-100">
-                                <i class="mdi mdi-card-account-details"></i> Lihat KTP
-                            </a>
-                            <small class="d-block text-muted mt-2 text-small">Hubungi Admin jika ada kesalahan.</small>
-                        @else
+
+                        {{-- KONDISI 1: Belum punya KTP (Langsung Upload) --}}
+                        @if (!$user->ktp_photo_path)
                             <div class="alert alert-danger py-2 text-small">KTP Belum di-upload!</div>
                             <form action="{{ route('profile.ktp.update') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
@@ -169,8 +164,52 @@
                                 <label for="ktp_photo" class="btn btn-warning btn-sm w-100">Upload KTP</label>
                                 <input type="file" name="ktp_photo" id="ktp_photo" class="d-none"
                                     accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
-                                <small class="d-block text-muted mt-2 text-small">PENTING: KTP tidak bisa diubah setelah di-upload.</small>
+                                <small class="d-block text-muted mt-2 text-small">Format: JPG/PNG, Max 5MB.</small>
                             </form>
+
+                        {{-- KONDISI 2: Sudah punya KTP (Ada logika Request) --}}
+                        @else
+                            <p class="text-success small"><i class="mdi mdi-check-circle"></i> KTP Ter-upload</p>
+                            <a href="{{ asset('storage/' . $user->ktp_photo_path) }}" target="_blank"
+                                class="btn btn-secondary btn-sm w-100 mb-2">
+                                <i class="mdi mdi-card-account-details"></i> Lihat KTP
+                            </a>
+
+                            {{-- A. Request Disetujui (Bisa Upload Ulang) --}}
+                            @if ($user->ktp_request_status == 'approved')
+                                <div class="alert alert-success py-2 text-small">
+                                    <i class="mdi mdi-lock-open-check"></i> Akses dibuka. Silakan ganti.
+                                </div>
+                                <form action="{{ route('profile.ktp.update') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    @method('PUT')
+                                    <label for="ktp_photo_change" class="btn btn-success btn-sm w-100">Upload KTP Baru</label>
+                                    <input type="file" name="ktp_photo" id="ktp_photo_change" class="d-none"
+                                        accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
+                                </form>
+
+                            {{-- B. Request Pending --}}
+                            @elseif ($user->ktp_request_status == 'pending')
+                                <div class="alert alert-warning py-2 text-small">
+                                    <i class="mdi mdi-clock"></i> Menunggu persetujuan Admin.
+                                </div>
+                                <button class="btn btn-secondary btn-sm w-100" disabled>Request Terkirim</button>
+
+                            {{-- C. Normal (Terkunci) --}}
+                            @else
+                                @if($user->ktp_request_status == 'rejected')
+                                    <div class="alert alert-danger py-1 text-small mb-2">Request ditolak.</div>
+                                @endif
+                                
+                                <form action="{{ route('profile.ktp.request') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-warning btn-sm w-100"
+                                        onclick="return confirm('Ajukan izin ke Admin untuk mengganti foto KTP?')">
+                                        <i class="mdi mdi-key-variant"></i> Ajukan Ganti KTP
+                                    </button>
+                                </form>
+                                <small class="d-block text-muted mt-2 text-small">KTP terkunci. Ajukan izin jika ingin mengubah.</small>
+                            @endif
                         @endif
                     </div>
                 </div>

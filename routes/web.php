@@ -90,21 +90,25 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/{workSchedule}/edit', [WorkScheduleController::class, 'edit'])->name('edit');
         Route::put('/{workSchedule}', [WorkScheduleController::class, 'update'])->name('update');
         Route::delete('/{workSchedule}', [WorkScheduleController::class, 'destroy'])->name('destroy');
-        // File: routes/web.php
-        Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
     })->middleware('role:admin,audit');
 
     // === RUTE PROFILE ===
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
+        
+        // Foto Profil
         Route::delete('/photo', [ProfileController::class, 'deleteProfilePhoto'])->name('photo.delete');
         Route::put('/photo', [ProfileController::class, 'updatePhoto'])->name('photo.update');
         Route::post('/photo/request', [ProfileController::class, 'requestPhotoChange'])->name('photo.request');
         Route::get('/photo/{user}', [ProfileController::class, 'getProfilePhoto'])->name('photo.get');
+        
+        // KTP (Updated dengan Request Feature)
         Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update');
+        Route::post('/ktp/request', [ProfileController::class, 'requestKtpChange'])->name('ktp.request'); // <-- NEW
         Route::get('/ktp/{user}', [ProfileController::class, 'getKtpPhoto'])->name('ktp.get');
 
+        // Work History & Inventory
         Route::post('/work-history', [WorkHistoryController::class, 'store'])->name('work-history.store');
         Route::delete('/work-history/{history}', [WorkHistoryController::class, 'destroy'])->name('work-history.destroy');
 
@@ -139,8 +143,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::resource('divisions', DivisionController::class);
         Route::post('/divisions/{division}/toggle-status', [DivisionController::class, 'toggleStatus'])->name('divisions.toggle-status');
 
+        // Approval Requests (FOTO)
         Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
+        
+        // Approval Requests (KTP) - NEW
+        Route::get('/users/ktp-requests', [UserController::class, 'ktpRequests'])->name('users.ktp-requests');
+        Route::patch('/users/{user}/approve-ktp', [UserController::class, 'approveKtpRequest'])->name('users.approve-ktp');
+        Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');
 
         // USER MANAGEMENT
         Route::resource('users', UserController::class);
@@ -156,51 +166,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::get('/laporan', [AuditController::class, 'showReports'])->name('reports');
         });
 
-        // ===========================================
-        // RUTE IZIN TELAT (AUDIT) - FIXED
-        // ===========================================
-
-        // === RUTE IZIN TELAT (AUDIT) - DIUBAH ===
-
-        // 1. Daftar Izin PENDING (untuk verifikasi) - GUNAKAN AuditController
+        // IZIN TELAT AUDIT
         Route::get('/leave-requests', [AuditController::class, 'showLatePermissions'])
-            ->name('leave-requests.index')
-            ->middleware('role:admin,audit');
-
-        // 2. History Izin (SELESAI: approved, rejected, cancelled) - Tetap di AuditController
+            ->name('leave-requests.index');
         Route::get('/izin-telat/riwayat', [AuditController::class, 'showLatePermissionsHistory'])
-            ->name('audit.late.history')
-            ->middleware('role:admin,audit');
-
-        // 3. Aksi Approve/Reject - Tetap di AuditController
+            ->name('audit.late.history');
         Route::post('/izin-telat/{id}/approve', [AuditController::class, 'approveLatePermission'])
-            ->name('late.approve')
-            ->middleware('role:admin,audit');
-
+            ->name('late.approve');
         Route::post('/izin-telat/{id}/reject', [AuditController::class, 'rejectLatePermission'])
-            ->name('late.reject')
-            ->middleware('role:admin,audit');
-
-        // === RUTE LEAVE REQUESTS (IZIN/CUTI/SAKIT/WFH) ===
-        Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
-
-            // Route ini bisa diakses User Biasa, Leader, Audit, Security
-            Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
-
-                // 1. Melihat History Pengajuan Sendiri (Method Baru)
-                Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');
-
-                // 2. Form & Submit
-                Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
-                Route::post('/store', [LeaveRequestController::class, 'store'])->name('store');
-
-                // 3. Aksi User
-                Route::patch('/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
-                Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finishEarly'])->name('finish-early');
-            });
-        });
-
-        // ===========================================
+            ->name('late.reject');
 
         Route::get('/audit/missed-checkouts', [AuditController::class, 'showMissedCheckouts'])->name('audit.missed-checkout.list');
         Route::put('/audit/missed-checkouts/{id}', [AuditController::class, 'updateMissedCheckout'])->name('audit.missed-checkout.update');
@@ -240,18 +214,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE LEAVE REQUESTS (IZIN/CUTI/SAKIT/WFH) ===
     Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
-
-        // Route ini bisa diakses User Biasa, Leader, Audit, Security
         Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
-
-            // 1. Melihat History Pengajuan Sendiri (Method Baru)
             Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');
-
-            // 2. Form & Submit
             Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
             Route::post('/store', [LeaveRequestController::class, 'store'])->name('store');
-
-            // 3. Aksi User
             Route::patch('/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
             Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finishEarly'])->name('finish-early');
         });

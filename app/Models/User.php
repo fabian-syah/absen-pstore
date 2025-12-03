@@ -41,6 +41,7 @@ class User extends Authenticatable
         'is_active',
         'profile_photo_path',
         'ktp_photo_path',
+        'ktp_request_status', // <--- TAMBAHKAN INI
         'hire_date',
         'email',           // Opsional, hanya untuk sosmed
         'whatsapp',        // Opsional, hanya untuk sosmed

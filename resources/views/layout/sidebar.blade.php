@@ -137,11 +137,17 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="menu-icon mdi mdi-camera-retake-outline"></i>
-                    <span class="menu-title">Permintaan Ganti KTP</span>
-                    {{-- Badge Notifikasi Jumlah Request (Opsional - Perlu Logic di View Composer) --}}
-                    {{-- <span class="badge badge-warning ms-2">New</span> --}}
+                <a class="nav-link" href="{{ route('users.ktp-requests') }}">
+                    <i class="menu-icon mdi mdi-card-account-details-outline"></i>
+                    <span class="menu-title">Req. Ganti KTP</span>
+
+                    {{-- Optional: Badge hitung jumlah pending (perlu View Composer) --}}
+                    @php
+                        $ktpPendingCount = \App\Models\User::where('ktp_request_status', 'pending')->count();
+                    @endphp
+                    @if ($ktpPendingCount > 0)
+                        <span class="badge badge-danger ms-2">{{ $ktpPendingCount }}</span>
+                    @endif
                 </a>
             </li>
         @endif
@@ -165,28 +171,28 @@
         @if (auth()->user()->role == 'user_biasa' || auth()->user()->role == 'leader' || auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Menu Pengguna</li>
             <li class="nav-item">
-            <a class="nav-link" href="{{ route('team.index') }}">
-                <i class="menu-icon mdi mdi-account-multiple-outline"></i>
-                <span class="menu-title">Tim Saya</span>
-            </a>
+                <a class="nav-link" href="{{ route('team.index') }}">
+                    <i class="menu-icon mdi mdi-account-multiple-outline"></i>
+                    <span class="menu-title">Tim Saya</span>
+                </a>
             </li>
 
             @if (auth()->user()->role == 'audit')
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('team.my-branches') }}">
-                <i class="menu-icon mdi mdi-office-building-marker"></i>
-                <span class="menu-title">Cabang Saya</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('team.my-branches') }}">
+                        <i class="menu-icon mdi mdi-office-building-marker"></i>
+                        <span class="menu-title">Cabang Saya</span>
+                    </a>
+                </li>
             @endif
         @endif
-        
+
         @if (auth()->user()->role == 'audit' || auth()->user()->role == 'leader' || auth()->user()->role == 'admin')
             <li class="nav-item">
-            <a class="nav-link" href="#">
-                <i class="menu-icon mdi mdi-package-variant"></i>
-                <span class="menu-title">Inventaris Cabang</span>
-            </a>
+                <a class="nav-link" href="#">
+                    <i class="menu-icon mdi mdi-package-variant"></i>
+                    <span class="menu-title">Inventaris Cabang</span>
+                </a>
             </li>
         @endif
     </ul>

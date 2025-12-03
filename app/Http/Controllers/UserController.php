@@ -389,4 +389,37 @@ class UserController extends Controller
             'current_month' => Carbon::now()->format('F Y')
         ];
     }
+
+    /**
+     * Menampilkan daftar user yang minta ganti KTP (Pending)
+     */
+    public function ktpRequests()
+    {
+        // Ambil user yang status request ktp-nya pending
+        $users = User::where('ktp_request_status', 'pending')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return view('users.ktp-requests', compact('users'));
+    }
+
+    /**
+     * Menyetujui permintaan ganti KTP
+     */
+    public function approveKtpRequest(User $user)
+    {
+        $user->update(['ktp_request_status' => 'approved']);
+
+        return back()->with('success', "Izin ganti KTP untuk {$user->name} telah disetujui. User sekarang bisa upload ulang.");
+    }
+
+    /**
+     * Menolak permintaan ganti KTP (Opsional)
+     */
+    public function rejectKtpRequest(User $user)
+    {
+        $user->update(['ktp_request_status' => 'rejected']);
+
+        return back()->with('success', "Permintaan ditolak.");
+    }
 }
