@@ -23,8 +23,6 @@
         .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice .select2-selection__choice__remove {
             border: none !important; background: transparent !important; margin-right: 5px !important; color: #999 !important;
         }
-        /* Custom Header Card Jam Kerja */
-        .card-header-teal { background-color: #008080; color: white; }
     </style>
 
     @if ($errors->any())
@@ -40,7 +38,7 @@
     <form class="forms-sample" action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="row">
-            {{-- KOLOM KIRI: DATA LOGIN & ROLE --}}
+            {{-- KOLOM KIRI --}}
             <div class="col-md-6 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
@@ -89,13 +87,12 @@
                 </div>
             </div>
 
-            {{-- KOLOM KANAN: PENEMPATAN & KONTAK --}}
+            {{-- KOLOM KANAN --}}
             <div class="col-md-6 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title">Penempatan & Kontak</h4>
 
-                        {{-- SINGLE BRANCH --}}
                         <div class="form-group mb-3" id="single-branch-group">
                             <label>Cabang Utama (Lokasi Kerja)</label>
                             <select class="form-select select2-single" name="branch_id" data-placeholder="Pilih Cabang">
@@ -108,7 +105,6 @@
                             </select>
                         </div>
 
-                        {{-- MULTI BRANCH --}}
                         <div class="form-group mb-3 d-none" id="multi-branch-group">
                             <label class="text-primary fw-bold">Akses Wilayah Audit (Multi)</label>
                             <select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%">
@@ -124,7 +120,6 @@
                             </div>
                         </div>
 
-                        {{-- DIVISI --}}
                         <div class="form-group mb-3" id="multi-division-group">
                             <label class="text-success fw-bold">Divisi (Multi Select)</label>
                             <select class="form-select select2-multi" name="multi_divisions[]" multiple="multiple" style="width: 100%">
@@ -155,7 +150,7 @@
             </div>
         </div>
 
-        {{-- ROW BARU: SETTING JAM KERJA PERSONAL --}}
+        {{-- ROW BARU: SETTING JAM KERJA PERSONAL (HANYA JAM MASUK) --}}
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
@@ -167,8 +162,8 @@
                         </p>
                         
                         <div class="row">
-                            {{-- KARTU JAM MASUK --}}
-                            <div class="col-md-6">
+                            {{-- KARTU JAM MASUK (Full Width) --}}
+                            <div class="col-md-12">
                                 <div class="card border" style="border-color: #009688;">
                                     <div class="card-header text-white" style="background-color: #009688;">
                                         <h6 class="mb-0"><i class="mdi mdi-clock-in me-2"></i>Jam Masuk</h6>
@@ -176,11 +171,11 @@
                                     <div class="card-body py-4">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold">Mulai Check In</label>
+                                                <label class="form-label fw-bold">Mulai Check In (Jam Masuk)</label>
                                                 <input type="time" class="form-control" name="check_in_start" value="{{ old('check_in_start') }}">
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold">Akhir Check In</label>
+                                                <label class="form-label fw-bold">Akhir Check In (Batas Terlambat)</label>
                                                 <input type="time" class="form-control" name="check_in_end" value="{{ old('check_in_end') }}">
                                             </div>
                                             <div class="col-12">
@@ -190,30 +185,8 @@
                                     </div>
                                 </div>
                             </div>
-
-                            {{-- KARTU JAM PULANG --}}
-                            <div class="col-md-6">
-                                <div class="card border" style="border-color: #ff9800;">
-                                    <div class="card-header text-dark" style="background-color: #ff9800;">
-                                        <h6 class="mb-0"><i class="mdi mdi-clock-out me-2"></i>Jam Pulang</h6>
-                                    </div>
-                                    <div class="card-body py-4">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold">Mulai Check Out</label>
-                                                <input type="time" class="form-control" name="check_out_start" value="{{ old('check_out_start') }}">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold">Akhir Check Out</label>
-                                                <input type="time" class="form-control" name="check_out_end" value="{{ old('check_out_end') }}">
-                                            </div>
-                                            <div class="col-12">
-                                                <small class="text-muted">Biarkan kosong jika bebas</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            
+                            {{-- JAM PULANG DIHAPUS SESUAI PERMINTAAN --}}
                         </div>
                     </div>
                 </div>

@@ -168,7 +168,7 @@
             </div>
         </div>
 
-        {{-- ROW BARU: SETTING JAM KERJA PERSONAL --}}
+        {{-- ROW BARU: SETTING JAM KERJA PERSONAL (HANYA JAM MASUK) --}}
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
@@ -180,8 +180,8 @@
                         </p>
                         
                         <div class="row">
-                            {{-- KARTU JAM MASUK --}}
-                            <div class="col-md-6">
+                            {{-- KARTU JAM MASUK (Full Width) --}}
+                            <div class="col-md-12">
                                 <div class="card border" style="border-color: #009688;">
                                     <div class="card-header text-white" style="background-color: #009688;">
                                         <h6 class="mb-0"><i class="mdi mdi-clock-in me-2"></i>Jam Masuk</h6>
@@ -189,13 +189,13 @@
                                     <div class="card-body py-4">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold">Mulai Check In</label>
-                                                {{-- PERHATIKAN: Value diambil dari $user->check_in_start --}}
+                                                <label class="form-label fw-bold">Mulai Check In (Jam Masuk)</label>
+                                                {{-- Value diambil dari $user->check_in_start --}}
                                                 <input type="time" class="form-control" name="check_in_start" 
                                                     value="{{ old('check_in_start', $user->check_in_start ? date('H:i', strtotime($user->check_in_start)) : '') }}">
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold">Akhir Check In</label>
+                                                <label class="form-label fw-bold">Akhir Check In (Batas Terlambat)</label>
                                                 <input type="time" class="form-control" name="check_in_end" 
                                                     value="{{ old('check_in_end', $user->check_in_end ? date('H:i', strtotime($user->check_in_end)) : '') }}">
                                             </div>
@@ -207,31 +207,7 @@
                                 </div>
                             </div>
 
-                            {{-- KARTU JAM PULANG --}}
-                            <div class="col-md-6">
-                                <div class="card border" style="border-color: #ff9800;">
-                                    <div class="card-header text-dark" style="background-color: #ff9800;">
-                                        <h6 class="mb-0"><i class="mdi mdi-clock-out me-2"></i>Jam Pulang</h6>
-                                    </div>
-                                    <div class="card-body py-4">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold">Mulai Check Out</label>
-                                                <input type="time" class="form-control" name="check_out_start" 
-                                                    value="{{ old('check_out_start', $user->check_out_start ? date('H:i', strtotime($user->check_out_start)) : '') }}">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold">Akhir Check Out</label>
-                                                <input type="time" class="form-control" name="check_out_end" 
-                                                    value="{{ old('check_out_end', $user->check_out_end ? date('H:i', strtotime($user->check_out_end)) : '') }}">
-                                            </div>
-                                            <div class="col-12">
-                                                <small class="text-muted">Biarkan kosong jika bebas</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {{-- JAM PULANG DIHAPUS --}}
                         </div>
                     </div>
                 </div>
