@@ -82,12 +82,14 @@
                                                         <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random"
                                                             alt="profile" class="img-sm rounded-circle">
                                                     @endif
-                                                    
+
                                                     {{-- Indikator Centang Biru di List --}}
-                                                    @if($user->is_verified)
-                                                        <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
-                                                              style="bottom: -2px; right: -2px; width: 16px; height: 16px;">
-                                                            <i class="mdi mdi-check-decagram text-primary" style="font-size: 14px;"></i>
+                                                    @if ($user->is_verified)
+                                                        <span
+                                                            class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
+                                                            style="bottom: -2px; right: -2px; width: 16px; height: 16px;">
+                                                            <i class="mdi mdi-check-decagram text-primary"
+                                                                style="font-size: 14px;"></i>
                                                         </span>
                                                     @endif
                                                 </div>
@@ -112,7 +114,8 @@
 
                                         {{-- ROLE --}}
                                         <td>
-                                            <span class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
+                                            <span
+                                                class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
                                         </td>
 
                                         {{-- PENEMPATAN --}}
@@ -120,7 +123,8 @@
                                             @if ($user->role == 'audit')
                                                 <small>{{ $user->branches->pluck('name')->join(', ') ?: 'N/A' }}</small>
                                             @elseif($user->role == 'leader')
-                                                <small>{{ $user->branch->name ?? 'N/A' }} (Div: {{ $user->divisions->pluck('name')->join(', ') }})</small>
+                                                <small>{{ $user->branch->name ?? 'N/A' }} (Div:
+                                                    {{ $user->divisions->pluck('name')->join(', ') }})</small>
                                             @else
                                                 <small>{{ $user->branch->name ?? 'Semua' }}</small>
                                             @endif
@@ -148,10 +152,11 @@
                                         <td>
                                             {{-- Detail (Dashboard User) --}}
                                             <a href="{{ route('users.show', $user->id) }}"
-                                                class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail & Verifikasi">
+                                                class="btn btn-inverse-info btn-icon btn-sm"
+                                                title="Lihat Detail & Verifikasi">
                                                 <i class="mdi mdi-eye"></i>
                                             </a>
-                                            
+
                                             {{-- Edit --}}
                                             <a href="{{ route('users.edit', $user->id) }}"
                                                 class="btn btn-inverse-warning btn-icon btn-sm" title="Edit">
@@ -177,11 +182,12 @@
                                                 <form action="{{ route('users.toggle-status', $user->id) }}" method="POST"
                                                     class="d-inline">
                                                     @csrf
-                                                    @method('PATCH')
+                                                    {{-- Baris @method('PATCH') sudah dihapus, jadi form akan mengirim POST murni --}}
                                                     <button type="submit"
                                                         class="btn btn-icon btn-sm {{ $user->is_active ? 'btn-inverse-danger' : 'btn-inverse-success' }}"
                                                         title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
-                                                        <i class="mdi {{ $user->is_active ? 'mdi-power-off' : 'mdi-power' }}"></i>
+                                                        <i
+                                                            class="mdi {{ $user->is_active ? 'mdi-power-off' : 'mdi-power' }}"></i>
                                                     </button>
                                                 </form>
                                             @endif

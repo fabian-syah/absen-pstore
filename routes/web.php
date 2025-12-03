@@ -90,7 +90,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/{workSchedule}/edit', [WorkScheduleController::class, 'edit'])->name('edit');
         Route::put('/{workSchedule}', [WorkScheduleController::class, 'update'])->name('update');
         Route::delete('/{workSchedule}', [WorkScheduleController::class, 'destroy'])->name('destroy');
-        Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+        // File: routes/web.php
+        Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
     })->middleware('role:admin,audit');
 
     // === RUTE PROFILE ===
