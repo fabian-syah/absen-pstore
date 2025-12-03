@@ -163,7 +163,7 @@
                                                     </span>
                                                 @else
                                                     <span class="status-badge bg-warning text-dark">
-                                                        <i class="mdi mdi-file-document-outline"></i> <span>Izin</span>
+                                                        <i class="mdi mdi-file-document-outline"></i> <span>Izin/Libur</span>
                                                     </span>
                                                 @endif
 
