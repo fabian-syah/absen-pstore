@@ -170,6 +170,15 @@
                     </a>
                 </li>
             @endif
+
+            @if (auth()->user()->role == 'audit' || auth()->user()->role == 'leader' || auth()->user()->role == 'admin')
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="menu-icon mdi mdi mdi-package-variant"></i>
+                        <span class="menu-title">Inventaris Cabang</span>
+                    </a>
+                </li>
+            @endif
         @endif
     </ul>
 </nav>
