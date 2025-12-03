@@ -36,7 +36,7 @@
         <div class="card">
             <div class="card-body text-center">
                 
-                {{-- 1. FOTO PROFIL WRAPPER (KLIK UNTUK POPUP) --}}
+                {{-- 1. FOTO PROFIL WRAPPER --}}
                 <div class="mb-3 position-relative d-inline-block">
                     <a href="#" data-bs-toggle="modal" data-bs-target="#profilePhotoModal" title="Klik untuk memperbesar">
                         @if($user->profile_photo_path)
@@ -109,19 +109,14 @@
                 <div class="text-start mb-4">
                     <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">MENU & RIWAYAT</h6>
                     <div class="list-group list-group-flush">
-                        {{-- History Absen --}}
                         <a href="{{ route('attendance.history') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-calendar-clock text-primary me-2"></i> History Absen</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
                         </a>
-                        
-                        {{-- History Inventaris --}}
                         <a href="{{ route('inventory.index') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-package-variant text-success me-2"></i> History Inventaris</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
                         </a>
-
-                        {{-- History Job Desk --}}
                         <a href="{{ route('job-targets.index') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-clipboard-list text-info me-2"></i> History Job Desk</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
@@ -135,7 +130,6 @@
                 <div class="text-start bg-light p-3 rounded border mb-4">
                     <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">DOKUMEN PRIBADI (KTP)</h6>
                     
-                    {{-- KONDISI 1: Belum punya KTP (Upload Pertama) --}}
                     @if (!$user->ktp_photo_path)
                         <div class="alert alert-danger py-1 text-small mb-2">Belum Upload</div>
                         <form action="{{ route('profile.ktp.update') }}" method="POST" enctype="multipart/form-data">
@@ -146,8 +140,6 @@
                             <input type="file" name="ktp_photo" id="ktp_photo_first" class="d-none"
                                 accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
                         </form>
-
-                    {{-- KONDISI 2: Sudah punya KTP --}}
                     @else
                         <div class="mb-2">
                             <button type="button" class="btn btn-inverse-info btn-sm w-100" data-bs-toggle="modal" data-bs-target="#ktpModal">
@@ -155,7 +147,6 @@
                             </button>
                         </div>
 
-                        {{-- Logic Request Ganti KTP --}}
                         @if ($user->ktp_request_status == 'pending')
                             <div class="badge badge-warning w-100 py-2"><i class="mdi mdi-clock"></i> Menunggu Approval</div>
                         @elseif ($user->ktp_request_status == 'rejected')
@@ -197,7 +188,7 @@
                             <input type="email" class="form-control" name="email" value="{{ old('email', $user->email) }}" required>
                         </div>
                         
-                        {{-- Read Only Fields (Data Karyawan) --}}
+                        {{-- Read Only Fields --}}
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Lokasi Cabang</label>
                             <input type="text" class="form-control bg-light" value="{{ $user->branch->name ?? 'Pusat / Semua Cabang' }}" readonly>
@@ -240,16 +231,34 @@
                             <input type="text" class="form-control" name="linkedin" value="{{ old('linkedin', $user->linkedin) }}" placeholder="username">
                         </div>
 
-                        {{-- Keamanan --}}
+                        {{-- KEAMANAN (GANTI PASSWORD DENGAN BUTTON TOGGLE) --}}
                         <div class="col-12 mb-3"><hr></div>
-                        <div class="col-md-6 mb-4">
-                            <label class="fw-bold text-muted small text-uppercase">Password Baru</label>
-                            <input type="password" class="form-control" name="password" placeholder="Kosongkan jika tidak ubah">
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold text-muted small text-uppercase mb-0">Keamanan</h5>
+                                <button type="button" class="btn btn-outline-dark btn-sm" id="btn-toggle-password">
+                                    <i class="mdi mdi-lock-reset"></i> Ganti Password
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-4">
-                            <label class="fw-bold text-muted small text-uppercase">Konfirmasi Password</label>
-                            <input type="password" class="form-control" name="password_confirmation" placeholder="Ulangi password">
+
+                        {{-- CONTAINER PASSWORD (HIDDEN BY DEFAULT) --}}
+                        <div class="col-12 d-none" id="password-container">
+                            <div class="row p-3 mb-3 bg-light rounded border mx-1">
+                                <div class="col-md-6 mb-3">
+                                    <label class="fw-bold text-muted small text-uppercase">Password Baru</label>
+                                    <input type="password" class="form-control" name="password" id="input-password" placeholder="Min. 8 karakter">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="fw-bold text-muted small text-uppercase">Konfirmasi Password</label>
+                                    <input type="password" class="form-control" name="password_confirmation" id="input-password-confirm" placeholder="Ulangi password">
+                                </div>
+                                <div class="col-12">
+                                    <small class="text-danger">* Biarkan kosong jika tidak ingin mengganti password.</small>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
 
                     <div class="d-flex justify-content-end mt-3">
@@ -285,7 +294,7 @@
     </div>
 </div>
 
-{{-- 2. Modal KTP Besar (View) --}}
+{{-- 2. Modal KTP Besar --}}
 @if($user->ktp_photo_path)
 <div class="modal fade" id="ktpModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -331,3 +340,30 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnToggle = document.getElementById('btn-toggle-password');
+        const container = document.getElementById('password-container');
+        const inputPass = document.getElementById('input-password');
+        const inputConfirm = document.getElementById('input-password-confirm');
+
+        btnToggle.addEventListener('click', function() {
+            if (container.classList.contains('d-none')) {
+                // Show
+                container.classList.remove('d-none');
+                btnToggle.innerHTML = '<i class="mdi mdi-close"></i> Batal Ganti';
+                btnToggle.classList.replace('btn-outline-dark', 'btn-outline-danger');
+            } else {
+                // Hide & Clear
+                container.classList.add('d-none');
+                btnToggle.innerHTML = '<i class="mdi mdi-lock-reset"></i> Ganti Password';
+                btnToggle.classList.replace('btn-outline-danger', 'btn-outline-dark');
+                inputPass.value = '';
+                inputConfirm.value = '';
+            }
+        });
+    });
+</script>
+@endpush
