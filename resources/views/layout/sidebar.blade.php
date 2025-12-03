@@ -171,7 +171,9 @@
                 </li>
             @endif
 
+            @endif
             @if (auth()->user()->role == 'audit' || auth()->user()->role == 'leader' || auth()->user()->role == 'admin')
+            <li class="nav-item nav-category">Menu Pengguna</li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">
                         <i class="menu-icon mdi mdi mdi-package-variant"></i>
@@ -179,6 +181,5 @@
                     </a>
                 </li>
             @endif
-        @endif
     </ul>
 </nav>
