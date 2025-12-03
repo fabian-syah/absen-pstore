@@ -484,9 +484,9 @@
             <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h4 class="card-title mb-0"><i class="mdi mdi-chart-pie me-2"></i>Statistik Absensi</h4>
-                    <a href="{{ route('dashboard.export-pdf') }}" class="btn btn-danger btn-sm">
+                    {{-- <a href="{{ route('dashboard.export-pdf') }}" class="btn btn-danger btn-sm">
                         <i class="mdi mdi-file-pdf-box me-1"></i>Export PDF
-                    </a>
+                    </a> --}}
                 </div>
                 <div class="card-body">
                     <div class="row">
