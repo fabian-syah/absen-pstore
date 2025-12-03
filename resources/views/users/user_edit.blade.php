@@ -4,7 +4,6 @@
 @section('heading', 'Edit User: ' . $user->name)
 
 @section('content')
-    {{-- CSS SELECT2 --}}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
@@ -54,22 +53,16 @@
 
                         <div class="form-group mb-3">
                             <label>Nama Lengkap ( Sesuai KTP )</label>
-                            <input type="text" class="form-control" name="name"
-                                value="{{ old('name', $user->name) }}" required>
+                            <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
                         </div>
-
                         <div class="form-group mb-3">
                             <label>Tanggal Lahir (Opsional)</label>
-                            <input type="date" class="form-control" name="birth_date"
-                                value="{{ old('birth_date', $user->birth_date) }}">
+                            <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date', $user->birth_date) }}">
                         </div>
-
                         <div class="form-group mb-3">
                             <label>ID Login *</label>
-                            <input type="text" class="form-control" name="login_id"
-                                value="{{ old('login_id', $user->login_id) }}" required>
+                            <input type="text" class="form-control" name="login_id" value="{{ old('login_id', $user->login_id) }}" required>
                         </div>
-
                         <div class="form-group mb-3">
                             <label>Role</label>
                             <select class="form-select" id="role" name="role" onchange="toggleInputs()" required {{ $disabledAttr }}>
@@ -83,13 +76,10 @@
                                 <input type="hidden" name="role" value="{{ $user->role }}">
                             @endif
                         </div>
-
                         <div class="form-group mb-3">
                             <label>awal masuk pstore ( opsional )</label>
-                            <input type="date" class="form-control" name="hire_date"
-                                value="{{ old('hire_date', $user->hire_date ? $user->hire_date->format('Y-m-d') : '') }}">
+                            <input type="date" class="form-control" name="hire_date" value="{{ old('hire_date', $user->hire_date ? $user->hire_date->format('Y-m-d') : '') }}">
                         </div>
-
                         <div class="form-group mb-3">
                             <label>Password Baru</label>
                             <input type="password" class="form-control" name="password" placeholder="********">
@@ -109,7 +99,6 @@
                     <div class="card-body">
                         <h4 class="card-title">Penempatan & Kontak</h4>
 
-                        {{-- SINGLE BRANCH --}}
                         <div class="form-group mb-3" id="single-branch-group">
                             <label>Cabang Utama (Lokasi Kerja)</label>
                             <select class="form-select select2-single" name="branch_id" data-placeholder="Pilih Cabang" {{ $disabledAttr }}>
@@ -125,7 +114,6 @@
                             @endif
                         </div>
 
-                        {{-- MULTI BRANCH --}}
                         <div class="form-group mb-3 d-none" id="multi-branch-group">
                             <label class="text-primary fw-bold">Akses Wilayah Audit (Multi)</label>
                             <select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%" {{ $disabledAttr }}>
@@ -137,7 +125,6 @@
                             </select>
                         </div>
 
-                        {{-- DIVISI --}}
                         <div class="form-group mb-3" id="multi-division-group">
                             <label class="text-success fw-bold">Divisi (Multi Select)</label>
                             <select class="form-select select2-multi" name="multi_divisions[]" multiple="multiple" style="width: 100%">
@@ -168,7 +155,7 @@
             </div>
         </div>
 
-        {{-- ROW BARU: SETTING JAM KERJA PERSONAL (HANYA JAM MASUK) --}}
+        {{-- ROW BARU: SETTING JAM KERJA PERSONAL (DIGABUNG) --}}
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
@@ -176,39 +163,37 @@
                         <h4 class="card-title">Atur Jam Kerja Personal</h4>
                         <p class="card-description text-muted">
                             Update jam di bawah ini untuk mengubah jadwal spesifik user ini. <br>
-                            <strong>Biarkan kosong semua jika jam kerja Fleksibel/Bebas.</strong>
+                            <strong>Biarkan kosong jika jam kerja Fleksibel/Bebas.</strong>
                         </p>
                         
-                        <div class="row">
-                            {{-- KARTU JAM MASUK (Full Width) --}}
-                            <div class="col-md-12">
-                                <div class="card border" style="border-color: #009688;">
-                                    <div class="card-header text-white" style="background-color: #009688;">
-                                        <h6 class="mb-0"><i class="mdi mdi-clock-in me-2"></i>Jam Masuk</h6>
+                        {{-- SATU KARTU UNTUK KEDUANYA --}}
+                        <div class="card border" style="border-color: #009688;">
+                            <div class="card-header text-white" style="background-color: #009688;">
+                                <h6 class="mb-0"><i class="mdi mdi-clock-outline me-2"></i>Pengaturan Jam Kerja</h6>
+                            </div>
+                            <div class="card-body py-4">
+                                <div class="row">
+                                    {{-- INPUT KIRI: JAM MASUK --}}
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Jam Masuk (Check In)</label>
+                                        {{-- Value diambil dari $user->check_in_start --}}
+                                        <input type="time" class="form-control" name="check_in_start" 
+                                            value="{{ old('check_in_start', $user->check_in_start ? date('H:i', strtotime($user->check_in_start)) : '') }}">
+                                        <small class="text-muted">Waktu mulai absen masuk</small>
                                     </div>
-                                    <div class="card-body py-4">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold">Mulai Check In (Jam Masuk)</label>
-                                                {{-- Value diambil dari $user->check_in_start --}}
-                                                <input type="time" class="form-control" name="check_in_start" 
-                                                    value="{{ old('check_in_start', $user->check_in_start ? date('H:i', strtotime($user->check_in_start)) : '') }}">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold">Akhir Check In (Batas Terlambat)</label>
-                                                <input type="time" class="form-control" name="check_in_end" 
-                                                    value="{{ old('check_in_end', $user->check_in_end ? date('H:i', strtotime($user->check_in_end)) : '') }}">
-                                            </div>
-                                            <div class="col-12">
-                                                <small class="text-muted">Biarkan kosong jika bebas</small>
-                                            </div>
-                                        </div>
+
+                                    {{-- INPUT KANAN: JAM PULANG --}}
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Jam Pulang (Check Out)</label>
+                                        {{-- Value diambil dari $user->check_out_start --}}
+                                        <input type="time" class="form-control" name="check_out_start" 
+                                            value="{{ old('check_out_start', $user->check_out_start ? date('H:i', strtotime($user->check_out_start)) : '') }}">
+                                        <small class="text-muted">Waktu mulai absen pulang</small>
                                     </div>
                                 </div>
                             </div>
-
-                            {{-- JAM PULANG DIHAPUS --}}
                         </div>
+
                     </div>
                 </div>
             </div>
