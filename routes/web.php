@@ -61,6 +61,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
     Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
 
+    // Rute Khusus Riwayat Pribadi (Bisa diakses Admin, Audit, Leader, Security, User)
+    Route::get('/riwayat-izin-saya', [LeaveRequestController::class, 'personalHistory'])
+        ->name('leave-requests.personal-history');
+
     // === RUTE BROADCAST ===
     Route::prefix('broadcast')->name('broadcast.')->group(function () {
         Route::get('/notifications', [BroadcastController::class, 'getNotifications'])->name('notifications');

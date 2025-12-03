@@ -14,7 +14,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="{{ route('leave-requests.personal-history') }}">
                 <i class="mdi mdi-history menu-icon"></i>
                 <span class="menu-title">Riwayat Izin</span>
             </a>

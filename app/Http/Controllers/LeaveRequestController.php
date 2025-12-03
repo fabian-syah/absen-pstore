@@ -204,4 +204,18 @@ class LeaveRequestController extends Controller
         $leaveRequest->update(['end_date' => Carbon::yesterday()]);
         return redirect()->route('dashboard')->with('success', 'Status izin diperbarui.');
     }
+
+    public function personalHistory()
+    {
+        // LOGIKA PENTING: where('user_id', Auth::id())
+        // Ini mengunci data agar hanya milik user yang login yang muncul.
+        $requests = LeaveRequest::with(['approver'])
+            ->where('user_id', Auth::id()) // <--- KUNCI PRIVASI
+            ->whereIn('status', ['approved', 'rejected', 'cancelled']) // Mengambil yang statusnya sudah selesai
+            ->latest()
+            ->paginate(10);
+
+        // Kita lempar ke view BARU bernama 'personal_history'
+        return view('leave_requests.personal_history', compact('requests'));
+    }
 }
