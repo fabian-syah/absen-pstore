@@ -19,126 +19,151 @@
 @endif
 
 <div class="row">
-    {{-- KOLOM KIRI: FOTO & PANEL KONTROL ADMIN --}}
+    {{-- ================================================= --}}
+    {{-- KOLOM KIRI: FOTO, TOMBOL RIWAYAT & PANEL KONTROL --}}
+    {{-- ================================================= --}}
     <div class="col-md-4 grid-margin stretch-card">
         <div class="card">
             <div class="card-body text-center">
                 
-                {{-- Foto Profil Wrapper (Besar) --}}
-                <div class="mb-4 position-relative d-inline-block">
-                    @if($user->profile_photo_path)
-                        <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
-                             alt="profile" class="img-lg rounded-circle"
-                             style="width: 150px; height: 150px; object-fit: cover; border: {{ $user->is_verified ? '5px solid #0d6efd' : '3px solid #e3e3e3' }};">
-                    @else
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=150" 
-                             class="img-lg rounded-circle" style="width: 150px; height: 150px;">
-                    @endif
+                {{-- 1. FOTO PROFIL WRAPPER (KLIK UNTUK POPUP) --}}
+                <div class="mb-3 position-relative d-inline-block">
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#profilePhotoModal" title="Klik untuk memperbesar">
+                        @if($user->profile_photo_path)
+                            <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
+                                 alt="profile" class="img-lg rounded-circle"
+                                 style="width: 150px; height: 150px; object-fit: cover; border: {{ $user->is_verified ? '5px solid #0d6efd' : '3px solid #e3e3e3' }}; cursor: pointer;">
+                        @else
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=150" 
+                                 alt="profile" class="img-lg rounded-circle" 
+                                 style="width: 150px; height: 150px; cursor: pointer;">
+                        @endif
 
-                    {{-- Ikon Centang Biru Overlay --}}
-                    @if($user->is_verified)
-                        <div class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center" 
-                             style="bottom: 5px; right: 5px; width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-                            <i class="mdi mdi-check-decagram text-primary" style="font-size: 30px;"></i>
-                        </div>
-                    @endif
+                        {{-- Ikon Centang Biru Overlay --}}
+                        @if($user->is_verified)
+                            <div class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="bottom: 5px; right: 5px; width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                                <i class="mdi mdi-check-decagram text-primary" style="font-size: 30px;"></i>
+                            </div>
+                        @endif
+                    </a>
                 </div>
                 
                 <h4 class="fw-bold mt-2">{{ $user->name }}</h4>
-                <p class="text-muted mb-3">{{ strtoupper(str_replace('_', ' ', $user->role)) }}</p>
+                <p class="text-muted mb-2">{{ strtoupper(str_replace('_', ' ', $user->role)) }}</p>
 
                 {{-- Status Verifikasi (Badge) --}}
                 @if($user->is_verified)
-                    <div class="badge badge-primary px-3 py-2 mb-3"><i class="mdi mdi-check-decagram"></i> Akun Terverifikasi</div>
+                    <div class="badge badge-primary px-3 py-2 mb-4"><i class="mdi mdi-check-decagram"></i> Akun Terverifikasi</div>
                 @else
-                    <div class="badge badge-secondary px-3 py-2 mb-3">Belum Verifikasi</div>
+                    <div class="badge badge-secondary px-3 py-2 mb-4">Belum Verifikasi</div>
                 @endif
 
-                <hr>
+                {{-- ============================================= --}}
+                {{-- MENU NAVIGASI RIWAYAT (REQUEST BARU) --}}
+                {{-- ============================================= --}}
+                <div class="text-start mb-4">
+                    <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">MENU & RIWAYAT</h6>
+                    <div class="list-group list-group-flush">
+                        {{-- History Absen --}}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                            <span><i class="mdi mdi-calendar-clock text-primary me-2"></i> History Absen</span>
+                            <i class="mdi mdi-chevron-right text-muted"></i>
+                        </a>
+                        
+                        {{-- History Inventaris --}}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                            <span><i class="mdi mdi-package-variant text-success me-2"></i> History Inventaris</span>
+                            <i class="mdi mdi-chevron-right text-muted"></i>
+                        </a>
+
+                        {{-- History Divisi --}}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                            <span><i class="mdi mdi-sitemap text-warning me-2"></i> History Divisi</span>
+                            <i class="mdi mdi-chevron-right text-muted"></i>
+                        </a>
+
+                        {{-- History Job Desk --}}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                            <span><i class="mdi mdi-clipboard-list text-info me-2"></i> History Job Desk</span>
+                            <i class="mdi mdi-chevron-right text-muted"></i>
+                        </a>
+                    </div>
+                </div>
 
                 {{-- ============================================= --}}
-                {{-- AREA NOTIFIKASI REQUEST GANTI FOTO (PENTING) --}}
+                {{-- TOMBOL LIHAT KTP (MODAL POPUP) --}}
+                {{-- ============================================= --}}
+                <div class="text-start bg-light p-3 rounded border mb-4">
+                    <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">DOKUMEN PRIBADI</h6>
+                    
+                    <div class="mb-1">
+                        <small class="d-block text-muted mb-1">Foto KTP:</small>
+                        @if($user->ktp_photo_path)
+                            <button type="button" class="btn btn-inverse-info btn-sm w-100" data-bs-toggle="modal" data-bs-target="#ktpModal">
+                                <i class="mdi mdi-eye"></i> Lihat KTP (Popup)
+                            </button>
+                        @else
+                            <span class="badge badge-danger w-100">Belum Upload</span>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- ============================================= --}}
+                {{-- AREA NOTIFIKASI REQUEST GANTI FOTO --}}
                 {{-- ============================================= --}}
                 @if($user->photo_request_status == 'pending')
-                    <div class="alert alert-warning border-warning text-start shadow-sm">
+                    <div class="alert alert-warning border-warning text-start shadow-sm mb-3">
                         <div class="d-flex align-items-center mb-2">
                             <i class="mdi mdi-camera-retake mdi-24px me-2"></i>
                             <strong>Request Ganti Foto</strong>
                         </div>
-                        <p class="small mb-2 lh-sm">User ini meminta izin untuk mengganti foto profilnya yang terkunci.</p>
+                        <p class="small mb-2 lh-sm">User ini meminta izin untuk mengganti foto profilnya.</p>
                         
                         <form action="{{ route('users.approve-photo', $user->id) }}" method="POST">
                             @csrf
                             @method('PATCH')
                             <button type="submit" class="btn btn-warning text-white btn-sm w-100 fw-bold">
-                                <i class="mdi mdi-check"></i> Setujui Permintaan
+                                <i class="mdi mdi-check"></i> Setujui
                             </button>
                         </form>
                     </div>
                 @endif
 
                 {{-- ============================================= --}}
-                {{-- PANEL TOMBOL VERIFIKASI (ADMIN/AUDIT ONLY) --}}
+                {{-- PANEL TOMBOL VERIFIKASI --}}
                 {{-- ============================================= --}}
-                <div class="d-grid gap-2 mb-3">
+                <div class="d-grid gap-2">
                     <form action="{{ route('users.verify', $user->id) }}" method="POST">
                         @csrf
                         @method('PATCH')
                         
                         @if($user->is_verified)
-                            {{-- Jika sudah verified, tombolnya merah (Cabut) --}}
                             <button type="submit" class="btn btn-outline-danger btn-sm w-100" 
-                                onclick="return confirm('Yakin ingin mencabut verifikasi? Centang biru akan hilang dan user bisa ganti foto lagi.')">
+                                onclick="return confirm('Yakin ingin mencabut verifikasi?')">
                                 <i class="mdi mdi-close-circle"></i> Cabut Verifikasi
                             </button>
                         @else
-                            {{-- Jika belum verified, Cek Kelengkapan Data --}}
                             @if($user->profile_photo_path && $user->ktp_photo_path && $user->whatsapp)
                                 <button type="submit" class="btn btn-primary btn-sm w-100 py-2">
-                                    <i class="mdi mdi-check-decagram"></i> Verifikasi Akun (Beri Centang Biru)
+                                    <i class="mdi mdi-check-decagram"></i> Verifikasi Akun
                                 </button>
-                                <small class="text-muted d-block mt-1 text-small">
-                                    Ini akan mengunci foto profil user.
-                                </small>
                             @else
                                 <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
                                     <i class="mdi mdi-alert-circle"></i> Data Belum Lengkap
                                 </button>
-                                <div class="text-start mt-2 px-2">
-                                    <small class="text-danger fw-bold d-block">Kekurangan:</small>
-                                    <ul class="text-danger small ps-3 mb-0">
-                                        @if(!$user->profile_photo_path) <li>Foto Profil kosong</li> @endif
-                                        @if(!$user->ktp_photo_path) <li>Foto KTP kosong</li> @endif
-                                        @if(!$user->birth_date) <li>Tanggal Lahir kosong</li> @endif
-                                    </ul>
-                                </div>
                             @endif
                         @endif
                     </form>
-                </div>
-
-                {{-- TOMBOL LIHAT KTP --}}
-                <div class="text-start bg-light p-3 rounded border">
-                    <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">DOKUMEN PRIBADI</h6>
-                    
-                    <div class="mb-2">
-                        <small class="d-block text-muted">Foto KTP:</small>
-                        @if($user->ktp_photo_path)
-                            <a href="{{ asset('storage/' . $user->ktp_photo_path) }}" target="_blank" 
-                               class="btn btn-inverse-info btn-sm w-100 mt-1">
-                                <i class="mdi mdi-card-account-details"></i> Lihat KTP Asli
-                            </a>
-                        @else
-                            <span class="badge badge-danger">Belum Upload</span>
-                        @endif
-                    </div>
                 </div>
 
             </div>
         </div>
     </div>
 
-    {{-- KOLOM KANAN: DETAIL INFO TEKS --}}
+    {{-- ================================================= --}}
+    {{-- KOLOM KANAN: DETAIL INFO & ABSENSI TERAKHIR --}}
+    {{-- ================================================= --}}
     <div class="col-md-8 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
@@ -175,7 +200,7 @@
                     </div>
                 </div>
 
-                {{-- Tabel 5 Absensi Terakhir (Preview) --}}
+                {{-- Tabel 5 Absensi Terakhir --}}
                 <div class="mt-4">
                     <h5 class="card-title mb-3">5 Aktivitas Absensi Terakhir</h5>
                     <div class="table-responsive">
@@ -211,10 +236,10 @@
 
                 <div class="mt-4 pt-3 border-top d-flex justify-content-between">
                     <a href="{{ route('users.index') }}" class="btn btn-light">
-                        <i class="mdi mdi-arrow-left"></i> Kembali ke Daftar User
+                        <i class="mdi mdi-arrow-left"></i> Kembali
                     </a>
                     <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning text-white">
-                        <i class="mdi mdi-pencil"></i> Edit Data User
+                        <i class="mdi mdi-pencil"></i> Edit Data
                     </a>
                 </div>
 
@@ -222,5 +247,44 @@
         </div>
     </div>
 </div>
+
+{{-- ================================================= --}}
+{{-- MODALS (POPUP GAMBAR) --}}
+{{-- ================================================= --}}
+
+{{-- 1. Modal Foto Profil Besar --}}
+<div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0">
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                @if($user->profile_photo_path)
+                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="img-fluid rounded shadow-lg" style="max-height: 80vh;">
+                @else
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=500" class="img-fluid rounded shadow-lg">
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- 2. Modal KTP Besar --}}
+@if($user->ktp_photo_path)
+<div class="modal fade" id="ktpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Kartu Tanda Penduduk (KTP)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center bg-dark">
+                <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" class="img-fluid rounded" style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 @endsection
