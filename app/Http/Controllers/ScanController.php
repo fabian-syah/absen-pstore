@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Models\WorkSchedule;
+use App\Models\LeaveRequest; // <--- JANGAN LUPA IMPORT INI
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -20,13 +21,33 @@ class ScanController extends Controller
 
     public function checkUser(Request $request)
     {
-        // ... (KODE SAMA SEPERTI SEBELUMNYA) ...
         $request->validate(['qr_code' => 'required|string']);
         $user = User::with(['division', 'branch'])->where('qr_code_value', $request->qr_code)->first();
 
         if (!$user) {
             return response()->json(['status' => 'error', 'message' => 'QR Code tidak ditemukan.'], 404);
         }
+
+        // =========================================================================
+        // 1. CEK CUTI DI PREVIEW SCAN (ALERT DI SECURITY)
+        // =========================================================================
+        $today = today();
+        $isOnLeave = LeaveRequest::where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->where('type', '!=', 'telat') // Izin telat tetap boleh scan
+            // ->where('type', '!=', 'wfh') // Hapus komentar ini jika WFH Wajib Scan (Jarang terjadi)
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->first();
+
+        if ($isOnLeave) {
+            $endDateFormat = Carbon::parse($isOnLeave->end_date)->format('d M Y');
+            return response()->json([
+                'status' => 'error', 
+                'message' => "User sedang {$isOnLeave->type} (Sampai {$endDateFormat}). Tidak dapat melakukan absen."
+            ], 403);
+        }
+        // =========================================================================
 
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
@@ -68,9 +89,6 @@ class ScanController extends Controller
         ]);
     }
 
-    /**
-     * Store Attendance dengan Support JPEG Base64
-     */
     public function storeAttendance(Request $request)
     {
         $request->validate([
@@ -83,16 +101,29 @@ class ScanController extends Controller
         $securityUser = Auth::user();
         $workSchedule = WorkSchedule::getScheduleForUser($user->id);
         $currentTime = now();
+        $today = today();
 
-        // --- 1. PROSES BASE64 IMAGE (MODIFIED) ---
+        // =========================================================================
+        // 2. CEK CUTI SAAT SIMPAN (DOUBLE PROTECTION)
+        // =========================================================================
+        $isOnLeave = LeaveRequest::where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->where('type', '!=', 'telat')
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->exists();
+
+        if ($isOnLeave) {
+             return response()->json(['status' => 'error', 'message' => 'Gagal: User sedang dalam status Cuti/Izin.'], 403);
+        }
+        // =========================================================================
+
+        // --- PROSES BASE64 IMAGE ---
         $image = $request->image;
-        
-        // Hapus header base64 (baik itu png atau jpeg)
         $image = preg_replace('/^data:image\/(jpeg|png|jpg);base64,/', '', $image);
         $image = str_replace(' ', '+', $image);
         
         $typeLabel = $request->type;
-        // Simpan sebagai .jpg
         $imageName = 'attendance/capture_' . $typeLabel . '_' . time() . '_' . $user->id . '.jpg';
         
         Storage::disk('public')->put($imageName, base64_decode($image));
@@ -100,6 +131,7 @@ class ScanController extends Controller
 
         // Logic Absen Masuk
         if ($request->type == 'masuk') {
+            
             // Auto Reset Sesi Lama
             $hangingSessions = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
@@ -127,7 +159,7 @@ class ScanController extends Controller
                 'branch_id' => $user->branch_id,
                 'check_in_time' => $currentTime,
                 'status' => $status,
-                'photo_path' => $imageName, // Path jpg
+                'photo_path' => $imageName, 
                 'scanned_by_user_id' => $securityUser->id,
                 'work_schedule_id' => $workSchedule?->id,
                 'is_late_checkin' => $isLate,
@@ -158,7 +190,7 @@ class ScanController extends Controller
 
             $attendance->update([
                 'check_out_time' => $currentTime,
-                'photo_out_path' => $imageName, // Path jpg
+                'photo_out_path' => $imageName, 
                 'is_early_checkout' => $isEarlyCheckout,
             ]);
 
@@ -185,10 +217,8 @@ class ScanController extends Controller
         ]);
     }
 
-    // ... (Function getStats biarkan sama) ...
     public function getStats(Request $request)
     {
-         // (Gunakan kode lama Anda)
          $securityUser = Auth::user(); $today = today();
          $stats = [
             'total_scans_today' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('check_in_time', $today)->count(),
