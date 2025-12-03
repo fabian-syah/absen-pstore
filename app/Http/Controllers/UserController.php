@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Division;
 use App\Models\Branch;
 use App\Models\Attendance;
-use App\Models\WorkSchedule; // [BARU] Import Model
+use App\Models\WorkSchedule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +19,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        // Middleware: Hanya Admin dan Audit yang boleh akses
+        // Middleware: Hanya Admin dan Audit yang boleh akses manajemen user
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
             if (!in_array($user->role, ['admin', 'audit'])) {
@@ -29,6 +29,9 @@ class UserController extends Controller
         });
     }
 
+    /**
+     * Menampilkan daftar user
+     */
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -37,13 +40,15 @@ class UserController extends Controller
 
         // 1. Filter Role/Cabang
         if ($user->role == 'admin' && $user->branch_id != null) {
+            // Admin Cabang hanya melihat user di cabangnya
             $query->where('branch_id', $user->branch_id);
         } elseif ($user->role == 'audit') {
+            // Audit hanya melihat user di cabang yang ditugaskan
             $auditBranchIds = $user->branches->pluck('id')->toArray();
             $query->whereIn('branch_id', $auditBranchIds);
         }
 
-        // 2. Search
+        // 2. Search Logic
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -60,10 +65,14 @@ class UserController extends Controller
         return view('users.user_index', compact('users'));
     }
 
+    /**
+     * Menampilkan Form Tambah User
+     */
     public function create()
     {
         $user = Auth::user();
 
+        // Filter Cabang & Role berdasarkan siapa yang login
         if ($user->role == 'admin' && $user->branch_id != null) {
             $branches = Branch::where('id', $user->branch_id)->get();
             $allowedRoles = ['leader', 'security', 'user_biasa'];
@@ -77,7 +86,7 @@ class UserController extends Controller
 
         $divisions = Division::all();
 
-        // [BARU] Ambil data Jam Kerja Aktif
+        // Ambil data Jam Kerja Aktif untuk dropdown
         $workSchedules = WorkSchedule::where('is_active', true)
             ->orderBy('schedule_name')
             ->get();
@@ -85,6 +94,9 @@ class UserController extends Controller
         return view('users.user_create', compact('divisions', 'branches', 'allowedRoles', 'workSchedules'));
     }
 
+    /**
+     * Menyimpan User Baru ke Database
+     */
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -102,34 +114,42 @@ class UserController extends Controller
             'multi_branches' => 'nullable|array',
             'profile_photo_path' => 'nullable|image|max:2048',
             'whatsapp' => 'nullable|string|max:20',
-            // [BARU] Validasi Work Schedule (Nullable)
             'work_schedule_id' => 'nullable|exists:work_schedules,id',
         ]);
 
+        // Ambil semua input KECUALI yang perlu diproses manual
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
+        // Set Division ID Utama (ambil yg pertama dari array multi select)
         $data['division_id'] = ($request->has('multi_divisions') && count($request->multi_divisions) > 0) ? $request->multi_divisions[0] : null;
 
+        // Force Branch ID jika Admin Cabang
         if ($user->role == 'admin' && $user->branch_id != null) {
             $data['branch_id'] = $user->branch_id;
         }
+        // Admin Pusat tidak punya cabang spesifik
         if ($request->role == 'admin') {
             $data['branch_id'] = null;
             $data['division_id'] = null;
         }
 
+        // Enkripsi Password & Generate QR
         $data['password'] = Hash::make($request->password);
         $data['qr_code_value'] = (string) Str::uuid();
-        // hire_date diambil dari input jika ada, jika tidak pakai now()
-        $data['hire_date'] = $request->hire_date ?? now();
 
+        // Pastikan hire_date masuk (null jika kosong)
+        $data['hire_date'] = $request->hire_date ?? null;
+
+        // Upload Foto
         if ($request->hasFile('profile_photo_path')) {
             $path = $request->file('profile_photo_path')->store('profile-photos', 'public');
             $data['profile_photo_path'] = $path;
         }
 
+        // Simpan User
         $newUser = User::create($data);
 
+        // Sync Relasi Many-to-Many
         if ($request->role == 'audit' && $request->has('multi_branches')) {
             $newUser->branches()->sync($request->multi_branches);
         }
@@ -140,11 +160,15 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'User baru berhasil ditambahkan.');
     }
 
+    /**
+     * Menampilkan Form Edit User
+     */
     public function edit(User $user)
     {
         $user->load(['branches', 'divisions']);
         $auth_user = Auth::user();
 
+        // Security Check: Pastikan pengedit punya hak akses ke user ini
         if ($auth_user->role == 'audit') {
             $allowedBranchIds = $auth_user->branches->pluck('id')->toArray();
             if (!in_array($user->branch_id, $allowedBranchIds)) abort(403);
@@ -156,7 +180,6 @@ class UserController extends Controller
         $branches = Branch::all();
         $divisions = Division::all();
         
-        // [BARU] Ambil data Jam Kerja juga untuk edit
         $workSchedules = WorkSchedule::where('is_active', true)
             ->orderBy('schedule_name')
             ->get();
@@ -166,6 +189,9 @@ class UserController extends Controller
         return view('users.user_edit', compact('user', 'divisions', 'branches', 'allowedRoles', 'workSchedules'));
     }
 
+    /**
+     * Memperbarui Data User
+     */
     public function update(Request $request, User $user)
     {
         $auth_user = Auth::user();
@@ -180,56 +206,80 @@ class UserController extends Controller
             'role' => 'required|string|in:admin,audit,leader,security,user_biasa',
             'branch_id' => 'nullable|exists:branches,id',
             'whatsapp' => 'nullable|string|max:20',
-            // [BARU] Validasi Work Schedule
             'work_schedule_id' => 'nullable|exists:work_schedules,id',
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
-        // Update logic password & photo
+        // Update logic password jika diisi
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
 
+        // Update hire_date explicitly to be safe
+        $data['hire_date'] = $request->hire_date ?? null;
+
+        // Update Foto jika ada
         if ($request->hasFile('profile_photo_path')) {
             if ($user->profile_photo_path) Storage::disk('public')->delete($user->profile_photo_path);
             $data['profile_photo_path'] = $request->file('profile_photo_path')->store('profile-photos', 'public');
         }
 
+        // Eksekusi Update
         $user->update($data);
 
-        // Sync relations
+        // Sync relations Many-to-Many
         if ($request->role == 'audit') {
             $user->branches()->sync($request->multi_branches ?? []);
         } else {
+            // Untuk user biasa/leader, sync divisi
             $user->divisions()->sync($request->multi_divisions ?? []);
+            
+            // Update single division_id juga agar sinkron dengan pilihan pertama
+            if ($request->has('multi_divisions') && count($request->multi_divisions) > 0) {
+                 $user->division_id = $request->multi_divisions[0];
+                 $user->save();
+            }
         }
 
         return redirect()->route('users.index')->with('success', 'Data user berhasil diperbarui.');
     }
 
+    /**
+     * Menghapus User
+     */
     public function destroy(User $user)
     {
+        // Audit tidak boleh hapus user
         if (Auth::user()->role == 'audit') {
             return back()->with('error', 'Akses Ditolak: Role Audit tidak diizinkan menghapus data user.');
         }
+        
+        // Tidak boleh hapus diri sendiri
         if ($user->id == auth()->id()) {
             return back()->with('error', 'Tidak bisa hapus akun sendiri.');
         }
 
         try {
+            // Hapus file fisik
             if ($user->profile_photo_path) Storage::disk('public')->delete($user->profile_photo_path);
             if ($user->ktp_photo_path) Storage::disk('public')->delete($user->ktp_photo_path);
 
+            // Detach relasi
             $user->branches()->detach();
             $user->divisions()->detach();
+            
+            // Hapus record
             $user->delete();
             return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal hapus user.');
+            return back()->with('error', 'Gagal hapus user. Pastikan tidak ada data absensi terkait.');
         }
     }
 
+    /**
+     * Detail User
+     */
     public function show(User $user)
     {
         $auth_user = Auth::user();
@@ -243,7 +293,7 @@ class UserController extends Controller
             if (!in_array($user->branch_id, $allowedBranchIds)) abort(403);
         }
 
-        $user->load(['branch', 'division', 'branches', 'divisions', 'workSchedule']); // Load workSchedule relation
+        $user->load(['branch', 'division', 'branches', 'divisions', 'workSchedule']); 
 
         $stats = $this->getSpecificUserStats($user->id);
 
@@ -255,6 +305,9 @@ class UserController extends Controller
         return view('users.user_show', compact('user', 'stats', 'recentAttendance'));
     }
 
+    /**
+     * Verifikasi User (Centang Biru)
+     */
     public function verifyUser(User $user)
     {
         if (!$user->is_verified) {
@@ -272,6 +325,9 @@ class UserController extends Controller
         return back()->with('success', $msg);
     }
 
+    /**
+     * Halaman Request Ganti Foto
+     */
     public function photoRequests()
     {
         $user = Auth::user();
@@ -288,6 +344,9 @@ class UserController extends Controller
         return view('users.photo_requests', compact('requests'));
     }
 
+    /**
+     * Approve Request Foto
+     */
     public function approvePhotoRequest(User $user)
     {
         if ($user->photo_request_status !== 'pending') {
@@ -297,6 +356,9 @@ class UserController extends Controller
         return back()->with('success', 'Izin ganti foto diberikan. User dapat mengupload foto baru sekarang.');
     }
 
+    /**
+     * Aktif/Non-aktif User
+     */
     public function toggleStatus(User $user)
     {
         if ($user->id == auth()->id()) return back();
@@ -305,6 +367,9 @@ class UserController extends Controller
         return back()->with('success', 'Status user diperbarui.');
     }
 
+    /**
+     * Helper: Hitung Statistik Absensi User
+     */
     private function getSpecificUserStats($user_id)
     {
         $presentCount = Attendance::where('user_id', $user_id)
