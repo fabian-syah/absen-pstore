@@ -6,12 +6,13 @@ use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Google\Auth\Credentials\ServiceAccountCredentials;
+use GuzzleHttp\Client; // Tambahkan ini
 
 trait SendFcmNotification
 {
     public function sendNotificationToBranchRoles($roles, $branchId, $title, $body)
     {
-        // 1. Cari Token FCM milik Audit/Admin di cabang yang sama
+        // 1. Cari Token User Target
         $tokens = User::whereIn('role', $roles)
             ->where('branch_id', $branchId)
             ->whereNotNull('fcm_token')
@@ -19,27 +20,32 @@ trait SendFcmNotification
             ->toArray();
 
         if (empty($tokens)) {
-            Log::info('FCM: Tidak ada token user audit/admin ditemukan untuk cabang ID ' . $branchId);
+            Log::info("FCM: Tidak ada token user audit/admin ditemukan untuk cabang ID $branchId");
             return;
         }
 
-        // 2. Ambil Access Token dari File JSON (Pengganti Server Key)
+        // 2. Cek File Credentials
         $credentialsPath = storage_path('app/firebase_credentials.json');
-        
         if (!file_exists($credentialsPath)) {
-            Log::error('FCM Error: File firebase_credentials.json tidak ditemukan di storage/app/');
+            Log::error('FCM Error: File firebase_credentials.json tidak ditemukan.');
             return;
         }
 
-        // Generate OAuth2 Token dari Google
+        // 3. Generate OAuth2 Token (DENGAN BYPASS SSL)
+        // Ini perbaikan utama untuk Error cURL 60
         $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
         
         try {
             $credentials = new ServiceAccountCredentials($scopes, $credentialsPath);
-            $accessToken = $credentials->fetchAuthToken();
+            
+            // Buat Client Guzzle khusus yang mematikan verifikasi SSL
+            $httpClient = new Client(['verify' => false]);
+            
+            // Minta token menggunakan client tersebut
+            $accessToken = $credentials->fetchAuthToken($httpClient);
 
             if (!isset($accessToken['access_token'])) {
-                Log::error('FCM Error: Gagal generate access token.');
+                Log::error('FCM Error: Gagal generate access token (Empty result).');
                 return;
             }
         } catch (\Exception $e) {
@@ -47,12 +53,11 @@ trait SendFcmNotification
             return;
         }
 
-        // 3. Konfigurasi URL HTTP v1
-        // Project ID diambil dari file JSON atau .env (Pastikan sama: bote-1a4b9)
-        $projectId = 'bote-1a4b9'; 
+        // 4. Konfigurasi URL HTTP v1
+        $projectId = 'bote-1a4b9'; // Sesuai log anda
         $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
 
-        // 4. Kirim ke SETIAP Token (HTTP v1 butuh loop atau topic)
+        // 5. Kirim Notifikasi
         foreach ($tokens as $token) {
             $payload = [
                 "message" => [
@@ -66,22 +71,23 @@ trait SendFcmNotification
                             "Urgency" => "high"
                         ],
                         "fcm_options" => [
-                            "link" => url('/audit/verify-list') // Link saat notif diklik
+                            "link" => url('/audit/verify-list')
                         ]
                     ]
                 ]
             ];
 
             try {
-                $response = Http::withToken($accessToken['access_token'])
+                // Gunakan withoutVerifying() untuk bypass SSL saat pengiriman
+                $response = Http::withoutVerifying() 
+                    ->withToken($accessToken['access_token'])
                     ->withHeaders(['Content-Type' => 'application/json'])
                     ->post($url, $payload);
 
-                // Log hasil sukses/gagal
                 if ($response->successful()) {
-                    Log::info('FCM Success: ' . $response->body());
+                    Log::info('FCM V1 Success: ' . substr($response->body(), 0, 100));
                 } else {
-                    Log::error('FCM Failed: ' . $response->body());
+                    Log::error('FCM V1 Failed: ' . $response->body());
                 }
             } catch (\Exception $e) {
                 Log::error('FCM Send Error: ' . $e->getMessage());
