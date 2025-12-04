@@ -109,30 +109,30 @@
             // --- HANDLER SAAT TAB DIBUKA (FOREGROUND) ---
             messaging.onMessage((payload) => {
                 console.log('Pesan masuk (Foreground): ', payload);
-
-                // Ambil data dari payload
-                const title = payload.notification.title || "Notifikasi Baru";
-                const body = payload.notification.body || "Ada pembaruan data absensi.";
+                
+                // Ambil data dari payload.data (BUKAN payload.notification)
+                // Fallback ke payload.notification jika format lama masih nyangkut
+                const title = payload.data ? payload.data.title : payload.notification.title;
+                const body = payload.data ? payload.data.body : payload.notification.body;
+                const url = payload.data ? payload.data.url : '/';
                 const icon = '/assets/images/favicon.png';
 
-                // 1. MAINKAN SUARA (Pastikan file sound/notification.mp3 ada, atau hapus jika tidak perlu)
-                // const audio = new Audio('/sound/notification.mp3');
-                // audio.play().catch(e => console.log('Audio play error:', e));
-
-                // 2. PAKSA MUNCUL POPUP
+                // Tampilkan Notifikasi Browser
                 if (Notification.permission === 'granted') {
                     const notif = new Notification(title, {
                         body: body,
                         icon: icon,
-                        requireInteraction: true // Notif tidak akan hilang sendiri sampai diklik
                     });
 
                     notif.onclick = function() {
                         window.focus();
-                        window.location.href = "{{ route('audit.verify.list') }}";
+                        window.location.href = url;
                         this.close();
                     };
                 }
+                
+                // OPSI: Tampilkan Alert Javascript Biasa untuk memastikan data masuk
+                // alert("NOTIF BARU:\n" + title + "\n" + body); 
             });
         @endif
     </script>

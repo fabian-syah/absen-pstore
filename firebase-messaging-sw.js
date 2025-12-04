@@ -14,26 +14,42 @@ firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
-// Handler Latar Belakang (Background)
+// Handler Background (Saat Tab Ditutup/Minimize)
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Background message: ', payload);
+  console.log('[SW] Background Data Message Received:', payload);
 
-  const notificationTitle = payload.notification.title;
+  // KARENA KITA PAKAI 'data', KITA HARUS AMBIL DARI payload.data
+  const notificationTitle = payload.data.title;
   const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/assets/images/favicon.png', // Pastikan icon ini ada
+    body: payload.data.body,
+    icon: '/assets/images/favicon.png', // Pastikan gambar ini ada!
+    tag: 'audit-notification', // Agar notif tidak menumpuk
+    renotify: true, // Agar bunyi terus meski notif lama belum diclose
     data: {
-        url: 'https://absenps.com/verifikasi/absensi' // Link tujuan saat diklik
+        url: payload.data.url
     }
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Event Klik Notifikasi (Agar saat diklik membuka halaman)
+// Event Klik Notifikasi
 self.addEventListener('notificationclick', function(event) {
+    console.log('[SW] Notification click received.');
     event.notification.close();
+
     event.waitUntil(
-        clients.openWindow(event.notification.data.url || 'https://absenps.com')
+        clients.matchAll({type: 'window'}).then(windowClients => {
+            // Cek kalau tab sudah terbuka, fokuskan. Kalau belum, buka baru.
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.url === event.notification.data.url && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(event.notification.data.url);
+            }
+        })
     );
 });

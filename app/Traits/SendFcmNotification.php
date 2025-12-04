@@ -34,13 +34,13 @@ trait SendFcmNotification
         // 3. Generate OAuth2 Token (DENGAN BYPASS SSL)
         // Ini perbaikan utama untuk Error cURL 60
         $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
-        
+
         try {
             $credentials = new ServiceAccountCredentials($scopes, $credentialsPath);
-            
+
             // Buat Client Guzzle khusus yang mematikan verifikasi SSL
             $httpClient = new Client(['verify' => false]);
-            
+
             // Minta token menggunakan client tersebut
             $accessToken = $credentials->fetchAuthToken($httpClient);
 
@@ -62,16 +62,21 @@ trait SendFcmNotification
             $payload = [
                 "message" => [
                     "token" => $token,
-                    "notification" => [
-                        "title" => $title,
-                        "body"  => $body,
+                    // PERUBAHAN DISINI: Gunakan 'data' bukan 'notification'
+                    // Semua value di dalam 'data' WAJIB STRING
+                    "data" => [
+                        "title" => (string) $title,
+                        "body"  => (string) $body,
+                        "url"   => (string) url('/audit/verify-list'),
+                        "type"  => "audit_alert"
+                    ],
+                    // Tambahkan konfigurasi prioritas Android/Web
+                    "android" => [
+                        "priority" => "high"
                     ],
                     "webpush" => [
                         "headers" => [
                             "Urgency" => "high"
-                        ],
-                        "fcm_options" => [
-                            "link" => url('/audit/verify-list')
                         ]
                     ]
                 ]
@@ -79,7 +84,7 @@ trait SendFcmNotification
 
             try {
                 // Gunakan withoutVerifying() untuk bypass SSL saat pengiriman
-                $response = Http::withoutVerifying() 
+                $response = Http::withoutVerifying()
                     ->withToken($accessToken['access_token'])
                     ->withHeaders(['Content-Type' => 'application/json'])
                     ->post($url, $payload);
