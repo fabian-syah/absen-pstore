@@ -57,26 +57,39 @@ trait SendFcmNotification
         $projectId = 'bote-1a4b9'; // Sesuai log anda
         $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
 
-        // 5. Kirim Notifikasi
         foreach ($tokens as $token) {
             $payload = [
                 "message" => [
                     "token" => $token,
-                    // PERUBAHAN DISINI: Gunakan 'data' bukan 'notification'
-                    // Semua value di dalam 'data' WAJIB STRING
-                    "data" => [
-                        "title" => (string) $title,
-                        "body"  => (string) $body,
-                        "url"   => (string) url('/audit/verify-list'),
-                        "type"  => "audit_alert"
+                    
+                    // KITA PAKAI HYBRID: NOTIFICATION + DATA
+                    // Ini memaksa sistem operasi langsung menampilkan notif
+                    "notification" => [
+                        "title" => $title,
+                        "body"  => $body,
                     ],
-                    // Tambahkan konfigurasi prioritas Android/Web
+                    "data" => [
+                        "url" => url('/audit/verify-list'),
+                        "type" => "audit_alert"
+                    ],
+                    // KONFIGURASI AGAR MUNCUL DI LAYAR (PRIORITY HIGH)
                     "android" => [
-                        "priority" => "high"
+                        "priority" => "high",
+                        "notification" => [
+                            "channel_id" => "default",
+                            "sound" => "default",
+                            "priority" => "high",
+                            "default_sound" => true,
+                            "default_vibrate_timings" => true,
+                            "click_action" => url('/audit/verify-list')
+                        ]
                     ],
                     "webpush" => [
                         "headers" => [
                             "Urgency" => "high"
+                        ],
+                        "fcm_options" => [
+                            "link" => url('/audit/verify-list')
                         ]
                     ]
                 ]
