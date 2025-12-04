@@ -241,40 +241,26 @@
                                                 <small class="text-muted">{{ $att->check_in_time->format('l') }}</small>
                                             </td>
 
-                                            {{-- JAM MASUK (MODIFIKASI: LOGIC MERAH JIKA TELAT) --}}
+                                            {{-- JAM MASUK --}}
                                             <td>
                                                 <div class="d-flex flex-column">
                                                     @php
-                                                        // 1. Tentukan Jadwal Mana yang Dipakai (Personal > Template)
                                                         $scheduleTime = null;
-                                                        $source = ''; // Untuk label (Personal / Shift)
-
                                                         if ($att->user && $att->user->check_in_start) {
-                                                            // Prioritas 1: Jadwal Personal User
-                                                            $scheduleTime = $att->user->check_in_start; // Format "H:i:s"
-                                                            $source = 'Personal';
+                                                            $scheduleTime = $att->user->check_in_start;
                                                         } elseif ($att->user && $att->user->workSchedule) {
-                                                            // Prioritas 2: Jadwal Template (Shift)
-                                                            $scheduleTime = $att->user->workSchedule->start_time; // Format "H:i:s"
-                                                            $source = 'Shift';
+                                                            $scheduleTime = $att->user->workSchedule->start_time;
                                                         }
 
-                                                        // 2. Cek Telat atau Tidak
                                                         $isRealLate = false;
                                                         $lateMinutes = 0;
-
                                                         if ($scheduleTime) {
-                                                            // Ambil jam aktual dan jadwal dalam format H:i
                                                             $actualStr = $att->check_in_time->format('H:i');
                                                             $scheduleStr = \Carbon\Carbon::parse($scheduleTime)->format(
                                                                 'H:i',
                                                             );
-
-                                                            // Bandingkan String Waktu
                                                             if ($actualStr > $scheduleStr) {
                                                                 $isRealLate = true;
-
-                                                                // Hitung selisih menit (Opsional, untuk info)
                                                                 $actualCarbon = \Carbon\Carbon::parse($actualStr);
                                                                 $scheduleCarbon = \Carbon\Carbon::parse($scheduleStr);
                                                                 $lateMinutes = $scheduleCarbon->diffInMinutes(
@@ -284,18 +270,13 @@
                                                         }
                                                     @endphp
 
-                                                    {{-- TAMPILAN JAM AKTUAL --}}
                                                     <div class="d-flex align-items-center mb-1">
                                                         <i
                                                             class="mdi mdi-login {{ $isRealLate ? 'text-danger' : 'text-success' }} me-2"></i>
-
-                                                        {{-- Jika Telat, Text Merah (text-danger), Jika Tepat, Text Hitam (text-dark) --}}
                                                         <span
                                                             class="fw-bold {{ $isRealLate ? 'text-danger' : 'text-dark' }}">
                                                             {{ $att->check_in_time->format('H:i') }}
                                                         </span>
-
-                                                        {{-- Badge Telat --}}
                                                         @if ($isRealLate)
                                                             <span class="badge bg-danger ms-1" style="font-size: 9px;">
                                                                 Telat {{ $lateMinutes }}m
@@ -303,11 +284,9 @@
                                                         @endif
                                                     </div>
 
-                                                    {{-- TAMPILAN INFORMASI JADWAL --}}
                                                     @if ($scheduleTime)
                                                         <small class="text-muted" style="font-size: 11px;">
                                                             <i class="mdi mdi-clock-outline me-1"></i>
-                                                            {{-- Tampilkan Jadwal --}}
                                                             Jadwal:
                                                             {{ \Carbon\Carbon::parse($scheduleTime)->format('H:i') }}
                                                         </small>
@@ -318,36 +297,58 @@
                                                 </div>
                                             </td>
 
-                                            {{-- FOTO MASUK / BUKTI IZIN --}}
+                                            {{-- FOTO MASUK / BUKTI IZIN (MODIFIKASI: MENAMPILKAN NOTES) --}}
                                             <td>
                                                 @php
                                                     $displayPhoto = null;
-                                                    $photoLabel = 'Bukti';
 
-                                                    // 1. Cek Foto Absen Normal
+                                                    // 1. Logika Gambar
                                                     if ($att->photo_path) {
                                                         $displayPhoto = asset('storage/' . $att->photo_path);
-                                                        $photoLabel = 'Masuk';
-                                                    }
-                                                    // 2. Cek Foto Izin/Sakit
-                                                    elseif ($att->leaveRequest && $att->leaveRequest->file_proof) {
+                                                    } elseif ($att->leaveRequest && $att->leaveRequest->file_proof) {
                                                         $displayPhoto = asset(
                                                             'storage/' . $att->leaveRequest->file_proof,
                                                         );
-                                                        $photoLabel = 'Izin/Sakit';
+                                                    }
+
+                                                    // 2. Logika Label (Catatan vs Status Default)
+                                                    $labelMasuk = 'Masuk'; // Default dasar
+
+                                                    if ($att->leaveRequest) {
+                                                        $labelMasuk = 'Izin/Sakit';
+                                                    } elseif ($att->presence_status) {
+                                                        $labelMasuk = $att->presence_status; // WFH, Dinas Luar, dll
+                                                    }
+
+                                                    // Cek apakah ada notes dari user
+                                                    if (!empty($att->notes)) {
+                                                        $cleanNote = $att->notes;
+                                                        // Jika ada pemisah "| Pulang:", kita ambil bagian depannya saja untuk kolom ini
+                                                        if (str_contains($cleanNote, '| Pulang:')) {
+                                                            $parts = explode('| Pulang:', $cleanNote);
+                                                            $cleanNote = trim($parts[0]);
+                                                        }
+                                                        // Gunakan notes user jika ada
+                                                        if (!empty($cleanNote)) {
+                                                            $labelMasuk = $cleanNote;
+                                                        }
                                                     }
                                                 @endphp
 
                                                 @if ($displayPhoto)
-                                                    <div class="d-inline-block text-center">
-                                                        <img src="{{ $displayPhoto }}" alt="{{ $photoLabel }}"
+                                                    <div class="d-inline-block text-center" style="max-width: 150px;">
+                                                        <img src="{{ $displayPhoto }}" alt="Foto Masuk"
                                                             class="rounded shadow-sm img-clickable"
                                                             style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #e2e8f0;"
                                                             data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
                                                             data-img-src="{{ $displayPhoto }}"
-                                                            data-img-title="Bukti {{ $photoLabel }} - {{ $att->check_in_time->format('d M Y') }}">
-                                                        <small class="d-block text-muted mt-1"
-                                                            style="font-size: 10px;">{{ $photoLabel }}</small>
+                                                            data-img-title="Bukti Masuk - {{ $att->check_in_time->format('d M Y') }}">
+
+                                                        {{-- TAMPILKAN LABEL / NOTES DI SINI --}}
+                                                        <small class="d-block text-muted mt-1 text-wrap"
+                                                            style="font-size: 10px; line-height: 1.2;">
+                                                            {{ \Illuminate\Support\Str::limit($labelMasuk, 50) }}
+                                                        </small>
                                                     </div>
                                                 @else
                                                     <span class="text-muted small">-</span>
@@ -373,18 +374,33 @@
                                                 @endif
                                             </td>
 
-                                            {{-- FOTO PULANG --}}
+                                            {{-- FOTO PULANG (MODIFIKASI: MENAMPILKAN NOTES PULANG) --}}
                                             <td>
+                                                @php
+                                                    // Logika Label Pulang
+                                                    $labelPulang = 'Pulang'; // Default
+
+                                                    // Cek jika notes mengandung kata kunci "Pulang:" (dari Controller)
+                                                    if (!empty($att->notes) && str_contains($att->notes, 'Pulang:')) {
+                                                        $parts = explode('Pulang:', $att->notes);
+                                                        $labelPulang = trim(end($parts)); // Ambil bagian akhir setelah kata 'Pulang:'
+                                                    }
+                                                @endphp
+
                                                 @if ($att->photo_out_path)
-                                                    <div class="d-inline-block text-center">
+                                                    <div class="d-inline-block text-center" style="max-width: 150px;">
                                                         <img src="{{ asset('storage/' . $att->photo_out_path) }}"
                                                             alt="Pulang" class="rounded shadow-sm img-clickable"
                                                             style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #e2e8f0;"
                                                             data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
                                                             data-img-src="{{ asset('storage/' . $att->photo_out_path) }}"
                                                             data-img-title="Foto Pulang - {{ $att->check_in_time->format('d M Y') }}">
-                                                        <small class="d-block text-muted mt-1"
-                                                            style="font-size: 10px;">Pulang</small>
+
+                                                        {{-- TAMPILKAN LABEL / NOTES PULANG DI SINI --}}
+                                                        <small class="d-block text-muted mt-1 text-wrap"
+                                                            style="font-size: 10px; line-height: 1.2;">
+                                                            {{ \Illuminate\Support\Str::limit($labelPulang, 50) }}
+                                                        </small>
                                                     </div>
                                                 @else
                                                     <span class="text-muted small">-</span>
@@ -398,12 +414,10 @@
                                                         $statusLower = strtolower($att->presence_status);
                                                         $badgeColor = match (true) {
                                                             $statusLower == 'masuk' => 'bg-success',
-                                                            $statusLower == 'wfh' ||
-                                                                str_contains($statusLower, 'wfh') ||
+                                                            str_contains($statusLower, 'wfh') ||
                                                                 str_contains($statusLower, 'dinas')
                                                                 => 'bg-info',
-                                                            $statusLower == 'izin telat' ||
-                                                                str_contains($statusLower, 'telat')
+                                                            str_contains($statusLower, 'telat')
                                                                 => 'bg-warning text-dark',
                                                             $statusLower == 'sakit' => 'bg-primary',
                                                             $statusLower == 'cuti' || $statusLower == 'izin'
@@ -411,17 +425,9 @@
                                                             $statusLower == 'alpha' => 'bg-danger',
                                                             default => 'bg-dark',
                                                         };
-                                                        $displayText = ucwords($att->presence_status);
-                                                        if (str_contains(strtolower($displayText), 'wfh')) {
-                                                            $displayText = str_replace(
-                                                                ['Wfh', 'wfh'],
-                                                                'WFH',
-                                                                $displayText,
-                                                            );
-                                                        }
                                                     @endphp
                                                     <span class="badge {{ $badgeColor }}">
-                                                        {{ $displayText }}
+                                                        {{ ucwords($att->presence_status) }}
                                                     </span>
                                                 @else
                                                     <span class="badge bg-secondary">Belum Diatur</span>
@@ -437,29 +443,18 @@
                                                             <span class="badge bg-danger verification-badge">System
                                                                 Auto</span>
                                                         </div>
-                                                        <small class="text-muted d-block fst-italic"
-                                                            style="font-size: 10px;">Tidak Absen</small>
                                                     @elseif($att->attendance_type == 'manual')
                                                         <div class="d-flex align-items-center">
                                                             <i class="mdi mdi-pencil-box-outline text-info me-1"></i>
                                                             <span
                                                                 class="badge bg-info text-white verification-badge">Dikoreksi</span>
                                                         </div>
-                                                        @if ($att->verifiedBy)
-                                                            <small class="text-muted d-block" style="font-size: 11px;">
-                                                                Edit: {{ $att->verifiedBy->name }}
-                                                            </small>
-                                                        @endif
                                                     @else
                                                         <div class="d-flex align-items-center">
                                                             <i class="mdi mdi-check-circle verified-check me-1"></i>
                                                             <span
                                                                 class="badge bg-success verification-badge">Terverifikasi</span>
                                                         </div>
-                                                        @if ($att->verifiedBy)
-                                                            <small class="text-muted d-block">oleh:
-                                                                {{ $att->verifiedBy->name }}</small>
-                                                        @endif
                                                     @endif
                                                 @elseif($att->status == 'pending_verification')
                                                     <div class="d-flex align-items-center">
@@ -470,8 +465,7 @@
                                                 @elseif($att->status == 'rejected')
                                                     <span class="badge bg-danger verification-badge">Ditolak</span>
                                                 @else
-                                                    <span class="badge bg-secondary verification-badge">Belum
-                                                        Diverifikasi</span>
+                                                    <span class="badge bg-secondary verification-badge">Belum Verif</span>
                                                 @endif
                                             </td>
 
@@ -485,7 +479,8 @@
                                                             data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
                                                             data-img-src="{{ asset('storage/' . $att->audit_photo_path) }}"
                                                             data-img-title="Bukti Audit">
-                                                        <small class="d-block text-center text-muted mt-1">Audit</small>
+                                                        <small class="d-block text-center text-muted mt-1"
+                                                            style="font-size: 9px;">Audit</small>
                                                     </div>
                                                 @else
                                                     <span class="text-muted small">-</span>
@@ -504,8 +499,6 @@
                                                     <span class="badge badge-outline-danger">System</span>
                                                 @elseif($att->attendance_type == 'manual')
                                                     <span class="badge badge-outline-warning">Audit Edit</span>
-                                                @elseif($att->attendance_type == 'leave')
-                                                    <span class="badge badge-outline-secondary">Surat Izin</span>
                                                 @endif
                                             </td>
 
@@ -517,7 +510,7 @@
                                                             <button type="button" class="btn btn-success"
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#verifyModal{{ $att->id }}"
-                                                                title="Verifikasi Absensi">
+                                                                title="Verifikasi">
                                                                 <i class="mdi mdi-check"></i>
                                                             </button>
                                                         @endif
@@ -526,7 +519,7 @@
                                                             <button type="button" class="btn btn-info text-white"
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#editAuditModal{{ $att->id }}"
-                                                                title="Edit Data (Koreksi)">
+                                                                title="Koreksi">
                                                                 <i class="mdi mdi-pencil"></i>
                                                             </button>
                                                         @endif
@@ -535,7 +528,7 @@
                                                             <button type="button" class="btn btn-danger"
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#rejectModal{{ $att->id }}"
-                                                                title="Tolak Absensi">
+                                                                title="Tolak">
                                                                 <i class="mdi mdi-close"></i>
                                                             </button>
                                                         @endif
