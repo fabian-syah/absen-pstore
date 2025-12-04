@@ -6,13 +6,13 @@ use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Google\Auth\Credentials\ServiceAccountCredentials;
-use GuzzleHttp\Client; // Tambahkan ini
+use GuzzleHttp\Client;
 
 trait SendFcmNotification
 {
     public function sendNotificationToBranchRoles($roles, $branchId, $title, $body)
     {
-        // 1. Cari Token User Target
+        // 1. Cari Token
         $tokens = User::whereIn('role', $roles)
             ->where('branch_id', $branchId)
             ->whereNotNull('fcm_token')
@@ -24,28 +24,19 @@ trait SendFcmNotification
             return;
         }
 
-        // 2. Cek File Credentials
+        // 2. Ambil Access Token
         $credentialsPath = storage_path('app/firebase_credentials.json');
-        if (!file_exists($credentialsPath)) {
-            Log::error('FCM Error: File firebase_credentials.json tidak ditemukan.');
-            return;
-        }
-
-        // 3. Generate OAuth2 Token (DENGAN BYPASS SSL)
-        // Ini perbaikan utama untuk Error cURL 60
-        $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
-
+        
         try {
+            $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
             $credentials = new ServiceAccountCredentials($scopes, $credentialsPath);
-
-            // Buat Client Guzzle khusus yang mematikan verifikasi SSL
+            
+            // Bypass SSL (Fix cURL error 60)
             $httpClient = new Client(['verify' => false]);
-
-            // Minta token menggunakan client tersebut
             $accessToken = $credentials->fetchAuthToken($httpClient);
 
             if (!isset($accessToken['access_token'])) {
-                Log::error('FCM Error: Gagal generate access token (Empty result).');
+                Log::error('FCM Error: Gagal generate access token.');
                 return;
             }
         } catch (\Exception $e) {
@@ -53,55 +44,56 @@ trait SendFcmNotification
             return;
         }
 
-        // 4. Konfigurasi URL HTTP v1
-        $projectId = 'bote-1a4b9'; // Sesuai log anda
+        $projectId = env('FIREBASE_PROJECT_ID', 'bote-1a4b9');
         $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
+        $link = url('/audit/verify-list'); // Link tujuan saat diklik
 
-        // 4. Kirim ke SETIAP Token
+        // 3. Kirim ke Setiap Token
         foreach ($tokens as $token) {
             $payload = [
                 "message" => [
                     "token" => $token,
                     
-                    // [PERBAIKAN UTAMA] Gunakan 'notification' object standar
+                    // A. Bagian NOTIFICATION (Standar agar muncul otomatis di Background)
                     "notification" => [
                         "title" => $title,
                         "body"  => $body,
                     ],
-                    // Data tambahan untuk logika klik (URL redirection)
-                    "data" => [
-                        "click_action" => url('/audit/verifikasi/absensi'), // Link halaman verifikasi
-                        "type" => "audit_alert"
-                    ],
-                    // Konfigurasi agar Prioritas Tinggi (Muncul di layar)
-                    "android" => [
-                        "priority" => "high",
-                        "notification" => [
-                            "channel_id" => "default_channel",
-                            "default_sound" => true,
-                            "default_vibrate_timings" => true,
-                            "click_action" => url('/audit/verifikasi/absensi')
-                        ]
-                    ],
+
+                    // B. Bagian WEBPUSH (Khusus Chrome/Edge Desktop/Android)
                     "webpush" => [
                         "headers" => [
                             "Urgency" => "high"
                         ],
+                        "notification" => [
+                            "title" => $title,
+                            "body"  => $body,
+                            "icon"  => "https://cdn-icons-png.flaticon.com/512/1827/1827301.png", // Icon Online (Aman)
+                            "click_action" => $link
+                        ],
                         "fcm_options" => [
-                            "link" => url('/audit/verifikasi/absensi')
+                            "link" => $link
                         ]
+                    ],
+
+                    // C. Bagian DATA (Untuk custom handler di JS Foreground)
+                    "data" => [
+                        "title" => (string) $title,
+                        "body"  => (string) $body,
+                        "url"   => (string) $link,
+                        "type"  => "audit_alert"
                     ]
                 ]
             ];
 
             try {
-                $response = Http::withoutVerifying() // Bypass SSL jika perlu
+                $response = Http::withoutVerifying()
                     ->withToken($accessToken['access_token'])
                     ->withHeaders(['Content-Type' => 'application/json'])
                     ->post($url, $payload);
 
                 if ($response->successful()) {
-                    Log::info('FCM Success: ' . substr($response->body(), 0, 100));
+                    Log::info('FCM Success: ' . substr($response->body(), 0, 50));
                 } else {
                     Log::error('FCM Failed: ' . $response->body());
                 }
