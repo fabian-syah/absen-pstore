@@ -15,18 +15,27 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 // Handler Background (Saat Tab Ditutup/Minimize)
-messaging.onBackgroundMessage((payload) => {
-  console.log('[SW] Background Data Message Received:', payload);
+messaging.onBackgroundMessage(function(payload) {
+  console.log('[SW] Pesan Masuk:', payload);
 
-  // KARENA KITA PAKAI 'data', KITA HARUS AMBIL DARI payload.data
-  const notificationTitle = payload.data.title;
+  // Cek apakah data ada di payload.data (Server Laravel pakai format 'data')
+  // Atau di payload.notification (Format standar Firebase)
+  const data = payload.data || payload.notification;
+
+  if (!data) {
+      console.error('[SW] Payload kosong!', payload);
+      return;
+  }
+
+  const notificationTitle = data.title || "Info Absensi";
   const notificationOptions = {
-    body: payload.data.body,
-    icon: '/assets/images/favicon.png', // Pastikan gambar ini ada!
-    tag: 'audit-notification', // Agar notif tidak menumpuk
-    renotify: true, // Agar bunyi terus meski notif lama belum diclose
+    body: data.body || "Ada pembaruan data.",
+    // Pakai icon Google dulu biar pasti muncul (hindari 404)
+    icon: 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png',
+    tag: 'audit-notif-' + Date.now(),
+    renotify: true,
     data: {
-        url: payload.data.url
+        url: data.url || '/'
     }
   };
 
@@ -35,20 +44,24 @@ messaging.onBackgroundMessage((payload) => {
 
 // Event Klik Notifikasi
 self.addEventListener('notificationclick', function(event) {
-    console.log('[SW] Notification click received.');
+    console.log('[SW] Notifikasi diklik.');
     event.notification.close();
 
     event.waitUntil(
-        clients.matchAll({type: 'window'}).then(windowClients => {
-            // Cek kalau tab sudah terbuka, fokuskan. Kalau belum, buka baru.
-            for (var i = 0; i < windowClients.length; i++) {
-                var client = windowClients[i];
-                if (client.url === event.notification.data.url && 'focus' in client) {
+        clients.matchAll({type: 'window'}).then(function(clientList) {
+            // Cek URL tujuan
+            const urlToOpen = event.notification.data.url || '/';
+
+            // Jika tab sudah ada, fokuskan
+            for (var i = 0; i < clientList.length; i++) {
+                var client = clientList[i];
+                if (client.url === urlToOpen && 'focus' in client) {
                     return client.focus();
                 }
             }
+            // Jika belum ada, buka baru
             if (clients.openWindow) {
-                return clients.openWindow(event.notification.data.url);
+                return clients.openWindow(urlToOpen);
             }
         })
     );
