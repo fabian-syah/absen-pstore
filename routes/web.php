@@ -47,6 +47,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // --- Rute Utama ---
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+    Route::post('/update-fcm-token', [UserController::class, 'updateFcmToken'])->name('update.fcm.token');
     // Route::get('/dashboard/export-pdf', [DashboardController::class, 'exportAttendancePDF'])->name('dashboard.export-pdf');
 
     // --- Rute Search Global ---
