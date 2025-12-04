@@ -35,8 +35,8 @@
                 </a>
             </li>
 
-            {{-- Search - Hanya untuk Admin --}}
-            @if (auth()->user()->role == 'admin')
+            {{-- Search - Untuk Admin DAN Audit --}}
+            @if (in_array(auth()->user()->role, ['admin', 'audit']))
                 <li class="nav-item">
                     <div class="search-form position-relative">
                         <i class="icon-search position-absolute search-icon"></i>
@@ -69,7 +69,6 @@
                         </div>
                     </div>
                     <div id="broadcastList" style="max-height: 400px; overflow-y: auto;">
-                        {{-- Broadcast items akan di-load via JavaScript --}}
                         <div class="dropdown-item text-center py-5">
                             <div class="spinner-border text-primary mb-2" role="status" style="width: 2rem; height: 2rem;">
                                 <span class="visually-hidden">Loading...</span>
@@ -100,7 +99,6 @@
                             </div>
                         @endif
 
-                        {{-- Ikon Centang Biru Kecil di Pojok --}}
                         @if(Auth::user()->is_verified)
                             <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
                                   style="bottom: -2px; right: -2px; width: 14px; height: 14px; border: 1px solid white;">
@@ -112,7 +110,6 @@
 
                 <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown">
                     <div class="dropdown-header text-center">
-                        {{-- Foto Profil Besar di Dropdown --}}
                         <div class="position-relative d-inline-block mb-2">
                             @if (Auth::user()->profile_photo_path)
                                 <img class="img-md rounded-circle"
@@ -121,11 +118,10 @@
                             @else
                                 <div class="profile-initial-dropdown"
                                      style="border: {{ Auth::user()->is_verified ? '3px solid #0d6efd' : '3px solid white' }};">
-                                    {{ getInitials(Auth::user()->name) }}
+                                     {{ getInitials(Auth::user()->name) }}
                                 </div>
                             @endif
 
-                            {{-- Ikon Centang Biru Besar --}}
                             @if(Auth::user()->is_verified)
                                 <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
                                       style="bottom: 0; right: 0; width: 20px; height: 20px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -151,9 +147,6 @@
                     <a class="dropdown-item">
                         <i class="dropdown-item-icon mdi mdi-message-text-outline text-primary me-2"></i> Messages
                     </a>
-                    {{-- <a class="dropdown-item">
-                        <i class="dropdown-item-icon mdi mdi-calendar-check-outline text-primary me-2"></i> Activity
-                    </a> --}}
                     <a class="dropdown-item">
                         <i class="dropdown-item-icon mdi mdi-help-circle-outline text-primary me-2"></i> FAQ
                     </a>
@@ -179,13 +172,96 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ==========================================
+        // 1. GLOBAL SEARCH LOGIC (ADMIN & AUDIT)
+        // ==========================================
+        const searchInput = document.getElementById('globalSearch');
+        const searchResults = document.getElementById('searchResults');
+        let searchTimeout = null;
+
+        if (searchInput && searchResults) {
+            // Event Listener Typing
+            searchInput.addEventListener('input', function() {
+                const query = this.value;
+                const url = this.getAttribute('data-url');
+
+                // Clear debounce
+                clearTimeout(searchTimeout);
+
+                if (query.length < 2) {
+                    searchResults.classList.remove('show');
+                    searchResults.innerHTML = '';
+                    return;
+                }
+
+                // Debounce 500ms (tunggu user selesai ngetik)
+                searchTimeout = setTimeout(() => {
+                    fetch(`${url}?q=${encodeURIComponent(query)}`)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network error');
+                            return response.json();
+                        })
+                        .then(data => {
+                            renderSearchResults(data.results);
+                        })
+                        .catch(error => {
+                            console.error('Search error:', error);
+                            searchResults.innerHTML = '<div class="dropdown-item text-danger">Error loading results</div>';
+                            searchResults.classList.add('show');
+                        });
+                }, 500);
+            });
+
+            // Tampilkan hasil saat input di-klik (jika sudah ada isinya)
+            searchInput.addEventListener('focus', function() {
+                if (this.value.length >= 2 && searchResults.innerHTML !== '') {
+                    searchResults.classList.add('show');
+                }
+            });
+
+            // Sembunyikan jika klik di luar area search
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.remove('show');
+                }
+            });
+        }
+
+        // Render Search Results HTML
+        function renderSearchResults(results) {
+            if (!results || results.length === 0) {
+                searchResults.innerHTML = '<div class="dropdown-item text-muted py-3 text-center">No results found</div>';
+            } else {
+                let html = '';
+                results.forEach(item => {
+                    html += `
+                        <a href="${item.url}" class="dropdown-item py-2 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="mdi ${item.icon} text-primary" style="font-size: 20px;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 text-dark" style="font-size: 14px; font-weight: 600;">${escapeHtml(item.title)}</h6>
+                                    <small class="text-muted" style="font-size: 12px; white-space: normal;">${escapeHtml(item.description)}</small>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                });
+                searchResults.innerHTML = html;
+            }
+            searchResults.classList.add('show');
+        }
+
+        // ==========================================
+        // 2. BROADCAST NOTIFICATIONS LOGIC
+        // ==========================================
         const broadcastDropdown = document.getElementById('broadcastDropdown');
         const broadcastList = document.getElementById('broadcastList');
         const broadcastCount = document.getElementById('broadcastCount');
         const broadcastTotal = document.getElementById('broadcastTotal');
         const viewAllBroadcasts = document.getElementById('viewAllBroadcasts');
 
-        // Load broadcast notifications
         function loadBroadcastNotifications() {
             fetch('{{ route('broadcast.notifications') }}', {
                     headers: {
@@ -210,7 +286,6 @@
             const broadcasts = data.broadcasts || [];
             const unreadCount = data.unread_count || 0;
 
-            // Update count badge
             if (unreadCount > 0) {
                 broadcastCount.textContent = unreadCount > 99 ? '99+' : unreadCount;
                 broadcastCount.style.display = 'flex';
@@ -220,7 +295,6 @@
                 broadcastTotal.textContent = 'No unread';
             }
 
-            // Update broadcast list
             if (broadcasts.length === 0) {
                 broadcastList.innerHTML = `
                 <div class="empty-state text-center py-5">
@@ -281,7 +355,13 @@
         `;
         }
 
+        // ==========================================
+        // 3. UTILITY FUNCTIONS (Shared)
+        // ==========================================
+        
+        // Mencegah XSS Injection
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
@@ -303,26 +383,30 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
-        // Event listener untuk view all broadcasts
-        viewAllBroadcasts.addEventListener('click', function() {
-            @if (auth()->user()->role == 'admin')
-                window.location.href = '{{ route('broadcast.index') }}';
-            @else
-                showAllBroadcastsModal();
-            @endif
-        });
+        // ==========================================
+        // 4. INIT
+        // ==========================================
 
-        function showAllBroadcastsModal() {
-            alert('Show all broadcasts modal');
+        // View All Listener
+        if(viewAllBroadcasts) {
+            viewAllBroadcasts.addEventListener('click', function() {
+                @if (auth()->user()->role == 'admin')
+                    window.location.href = '{{ route('broadcast.index') }}';
+                @else
+                    showAllBroadcastsModal();
+                @endif
+            });
         }
 
-        // Load notifications on page load
+        function showAllBroadcastsModal() {
+            alert('Fitur View All untuk user biasa belum aktif.');
+        }
+
+        // Init Notification Load
         loadBroadcastNotifications();
-
-        // Refresh notifications every 30 seconds
+        // Refresh tiap 30 detik
         setInterval(loadBroadcastNotifications, 30000);
-
-        // Load notifications when dropdown is opened
+        // Refresh saat dropdown dibuka
         if (broadcastDropdown) {
             broadcastDropdown.addEventListener('click', function() {
                 loadBroadcastNotifications();
@@ -330,6 +414,7 @@
         }
     });
 
+    // Fullscreen Toggle
     function toggleFullScreen() {
         if (!document.fullscreenElement &&
             !document.webkitFullscreenElement &&
@@ -359,204 +444,7 @@
 </script>
 
 <style>
-    /* Notification Dropdown Styles */
-    .notification-dropdown .nav-link {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        background: #f8f9fa;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-
-    .notification-dropdown .nav-link:hover {
-        background: #e9ecef;
-        transform: scale(1.05);
-    }
-
-    .notification-icon {
-        font-size: 20px;
-        color: #495057;
-    }
-
-    /* Notification Badge - Angka Merah Kecil */
-    .notification-badge {
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        background: linear-gradient(135deg, #ff4757 0%, #dc3545 100%);
-        color: white;
-        border-radius: 10px;
-        padding: 2px 6px;
-        font-size: 10px;
-        font-weight: 700;
-        min-width: 18px;
-        height: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4);
-        border: 2px solid white;
-        animation: badge-pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes badge-pulse {
-        0%, 100% {
-            transform: scale(1);
-        }
-        50% {
-            transform: scale(1.1);
-        }
-    }
-
-    /* Dropdown Header */
-    .dropdown-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .dropdown-header h6 {
-        color: white;
-    }
-
-    .dropdown-header small {
-        color: rgba(255, 255, 255, 0.8);
-    }
-
-    .dropdown-header .mdi {
-        color: white;
-        opacity: 0.9;
-    }
-
-    /* Broadcast Item Styles */
-    .broadcast-item {
-        border-left: 3px solid transparent;
-        transition: all 0.2s ease;
-        cursor: pointer;
-    }
-
-    .broadcast-item:hover {
-        background: #f8f9fa;
-        border-left-color: #667eea;
-    }
-
-    .broadcast-item.unread {
-        background: #f0f4ff;
-        border-left-color: #667eea;
-    }
-
-    .broadcast-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        flex-shrink: 0;
-    }
-
-    .broadcast-icon.text-danger {
-        background: #ffebee;
-        color: #dc3545;
-    }
-
-    .broadcast-icon.text-warning {
-        background: #fff3e0;
-        color: #ff9800;
-    }
-
-    .broadcast-icon.text-info {
-        background: #e3f2fd;
-        color: #2196f3;
-    }
-
-    .broadcast-title {
-        font-size: 14px;
-        color: #212529;
-        line-height: 1.4;
-    }
-
-    .broadcast-message {
-        font-size: 13px;
-        line-height: 1.4;
-        margin: 0;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .broadcast-read-more {
-        color: #667eea;
-        font-size: 12px;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-
-    .broadcast-item:hover .broadcast-read-more {
-        color: #764ba2;
-    }
-
-    .broadcast-time {
-        color: #6c757d;
-        font-size: 11px;
-        white-space: nowrap;
-    }
-
-    .unread-dot {
-        width: 8px;
-        height: 8px;
-        background: #667eea;
-        border-radius: 50%;
-        display: inline-block;
-        margin-left: 8px;
-        flex-shrink: 0;
-    }
-
-    /* Empty State */
-    .empty-state {
-        padding: 40px 20px;
-    }
-
-    .empty-icon {
-        font-size: 64px;
-        color: #dee2e6;
-        line-height: 1;
-    }
-
-    .empty-icon.text-danger {
-        color: #dc3545;
-    }
-
-    .empty-state h6 {
-        font-size: 16px;
-        margin-bottom: 4px;
-    }
-
-    .empty-state p {
-        font-size: 13px;
-    }
-
-    /* Scrollbar */
-    #broadcastList::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #broadcastList::-webkit-scrollbar-track {
-        background: #f8f9fa;
-    }
-
-    #broadcastList::-webkit-scrollbar-thumb {
-        background: #cbd5e0;
-        border-radius: 3px;
-    }
-
-    #broadcastList::-webkit-scrollbar-thumb:hover {
-        background: #a0aec0;
-    }
-
-    /* Search Form Styles */
+    /* --- CSS TAMBAHAN UNTUK SEARCH --- */
     .search-form {
         position: relative;
         margin-right: 15px;
@@ -611,6 +499,7 @@
     .search-results .dropdown-item {
         padding: 12px 16px;
         border-bottom: 1px solid #f1f3f5;
+        white-space: normal; /* Agar text panjang turun ke bawah */
     }
 
     .search-results .dropdown-item:last-child {
@@ -621,7 +510,134 @@
         background-color: #f8f9fa;
     }
 
-    /* Profile Initial Styles */
+    /* --- CSS LAMA (BROADCAST DLL) --- */
+    .notification-dropdown .nav-link {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .notification-dropdown .nav-link:hover {
+        background: #e9ecef;
+        transform: scale(1.05);
+    }
+
+    .notification-icon {
+        font-size: 20px;
+        color: #495057;
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: linear-gradient(135deg, #ff4757 0%, #dc3545 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 2px 6px;
+        font-size: 10px;
+        font-weight: 700;
+        min-width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4);
+        border: 2px solid white;
+        animation: badge-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes badge-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .dropdown-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .dropdown-header h6 { color: white; }
+    .dropdown-header small { color: rgba(255, 255, 255, 0.8); }
+    .dropdown-header .mdi { color: white; opacity: 0.9; }
+
+    .broadcast-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .broadcast-item:hover {
+        background: #f8f9fa;
+        border-left-color: #667eea;
+    }
+
+    .broadcast-item.unread {
+        background: #f0f4ff;
+        border-left-color: #667eea;
+    }
+
+    .broadcast-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .broadcast-icon.text-danger { background: #ffebee; color: #dc3545; }
+    .broadcast-icon.text-warning { background: #fff3e0; color: #ff9800; }
+    .broadcast-icon.text-info { background: #e3f2fd; color: #2196f3; }
+
+    .broadcast-title { font-size: 14px; color: #212529; line-height: 1.4; }
+    
+    .broadcast-message {
+        font-size: 13px;
+        line-height: 1.4;
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .broadcast-read-more {
+        color: #667eea;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .broadcast-item:hover .broadcast-read-more { color: #764ba2; }
+    .broadcast-time { color: #6c757d; font-size: 11px; white-space: nowrap; }
+
+    .unread-dot {
+        width: 8px;
+        height: 8px;
+        background: #667eea;
+        border-radius: 50%;
+        display: inline-block;
+        margin-left: 8px;
+        flex-shrink: 0;
+    }
+
+    .empty-state { padding: 40px 20px; }
+    .empty-icon { font-size: 64px; color: #dee2e6; line-height: 1; }
+    .empty-icon.text-danger { color: #dc3545; }
+    .empty-state h6 { font-size: 16px; margin-bottom: 4px; }
+    .empty-state p { font-size: 13px; }
+
+    #broadcastList::-webkit-scrollbar { width: 6px; }
+    #broadcastList::-webkit-scrollbar-track { background: #f8f9fa; }
+    #broadcastList::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+    #broadcastList::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+
     .profile-initial-nav {
         width: 40px;
         height: 40px;
@@ -659,19 +675,9 @@
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
-        .search-form {
-            margin: 10px 0;
-            width: 100%;
-        }
-
-        .search-input {
-            width: 100%;
-        }
-
-        .notification-dropdown .dropdown-menu {
-            min-width: 320px !important;
-        }
+        .search-form { margin: 10px 0; width: 100%; }
+        .search-input { width: 100%; }
+        .notification-dropdown .dropdown-menu { min-width: 320px !important; }
     }
 </style>

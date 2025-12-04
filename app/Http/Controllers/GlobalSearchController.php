@@ -29,8 +29,9 @@ class GlobalSearchController extends Controller
              return response()->json(['results' => []], 401);
         }
 
-        // 3. Validasi Role (Hanya Admin)
-        if ($user->role !== 'admin') {
+        // 3. Validasi Role (UBAH DISINI: Admin DAN Audit boleh akses)
+        // Kita gunakan !in_array untuk mengecek apakah role user TIDAK ADA di dalam daftar
+        if (!in_array($user->role, ['admin', 'audit'])) {
              return response()->json(['results' => []]); 
         }
 
@@ -44,7 +45,6 @@ class GlobalSearchController extends Controller
                 ->limit(5)
                 ->get()
                 ->map(function ($item) {
-                    // Gunakan ?-> (Null Safe Operator) untuk mencegah error jika data kosong
                     $divName = $item->division?->name ?? '-'; 
                     $branchName = $item->branch?->name ?? '-';
 
@@ -58,22 +58,21 @@ class GlobalSearchController extends Controller
                 });
             $results = $results->merge($users);
 
-            // === SEARCH 2: BROADCASTS (Sesuai Model Anda) ===
+            // === SEARCH 2: BROADCASTS ===
             $broadcasts = Broadcast::where('title', 'like', "%{$query}%")
                 ->orWhere('message', 'like', "%{$query}%")
                 ->orderBy('created_at', 'desc') // Tampilkan yang terbaru
                 ->limit(5)
                 ->get()
                 ->map(function ($item) {
-                    // Logika status untuk deskripsi hasil search
                     $status = $item->is_published ? 'Published' : 'Draft';
-                    $priority = ucfirst($item->priority); // High/Normal
+                    $priority = ucfirst($item->priority); 
                     
                     return [
                         'type' => 'broadcast',
                         'title' => $item->title,
                         'description' => "[{$status} - {$priority}] " . Str::limit($item->message, 40),
-                        'url' => route('broadcast.show', $item->id), // Pastikan route ini ada
+                        'url' => route('broadcast.show', $item->id), 
                         'icon' => 'mdi-bullhorn'
                     ];
                 });
@@ -119,7 +118,7 @@ class GlobalSearchController extends Controller
             // Tangkap error agar tidak White Screen of Death
             return response()->json([
                 'results' => [],
-                'error' => $e->getMessage() // Bisa dilihat di Console Browser -> Network
+                'error' => $e->getMessage() 
             ], 500);
         }
     }
