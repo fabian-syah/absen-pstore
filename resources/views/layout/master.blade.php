@@ -129,22 +129,27 @@
                     });
             }
 
-            // --- HANDLER FOREGROUND (SAAT TAB DIBUKA) ---
+            // --- HANDLER FOREGROUND AGRESIF ---
             messaging.onMessage((payload) => {
-                console.log('Pesan masuk (Foreground): ', payload);
+                console.log('DATA DITERIMA:', payload);
 
-                // Paksa Payload Data
-                const title = payload.data ? payload.data.title : (payload.notification ? payload.notification
-                    .title : "Notifikasi Baru");
-                const body = payload.data ? payload.data.body : (payload.notification ? payload.notification.body :
-                    "Cek dashboard untuk detail.");
-                const icon =
-                'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png'; // Icon default google
+                // Ambil data langsung dari 'data' (karena kita pakai Data Message dari server)
+                // Jika payload.data kosong, coba payload.notification (jaga-jaga)
+                var data = payload.data || payload.notification;
 
+                var title = data.title || "Info Absensi";
+                var body = data.body || "Ada pembaruan data.";
+                var icon = 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png';
+
+                // 1. Tampilkan Alert Browser (Pasti muncul kalau script jalan)
+                // alert("NOTIF MASUK: " + title); 
+
+                // 2. Tampilkan Notifikasi Native
                 if (Notification.permission === 'granted') {
                     new Notification(title, {
                         body: body,
-                        icon: icon
+                        icon: icon,
+                        tag: 'audit-notif-' + Math.random()
                     });
                 }
             });
