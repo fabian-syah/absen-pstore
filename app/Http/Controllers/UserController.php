@@ -35,19 +35,32 @@ class UserController extends Controller
     {
         $user = Auth::user();
 
+        // Eager load relasi yang dibutuhkan
         $query = User::with(['division', 'branch', 'branches', 'divisions']);
 
-        // 1. Filter Role/Cabang
+        // ================================================================
+        // 1. FILTER CABANG (Sesuai Role Login)
+        // ================================================================
+        
         if ($user->role == 'admin' && $user->branch_id != null) {
-            // Admin Cabang hanya melihat user di cabangnya
+            // Admin Cabang: Hanya melihat user di cabangnya sendiri
             $query->where('branch_id', $user->branch_id);
+
         } elseif ($user->role == 'audit') {
-            // Audit hanya melihat user di cabang yang ditugaskan
-            $auditBranchIds = $user->branches->pluck('id')->toArray();
+            // Audit (Multi Cabang):
+            // Ambil semua ID cabang yang dipegang oleh Audit
+            // Menggunakan pluck dari relasi branches()
+            $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
+
+            // Filter Query: User yang branch_id-nya ada di dalam list cabang Audit
             $query->whereIn('branch_id', $auditBranchIds);
         }
 
-        // 2. Search Logic
+        // ================================================================
+        // 2. LOGIKA PENCARIAN (SEARCH)
+        // ================================================================
+        // Filter search ini akan berjalan DI DALAM batasan cabang di atas.
+        
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -57,6 +70,7 @@ class UserController extends Controller
             });
         }
 
+        // Eksekusi Query
         $users = $query->latest()
             ->paginate(10)
             ->appends(['search' => $request->search]);
@@ -71,14 +85,16 @@ class UserController extends Controller
     {
         $user = Auth::user();
 
-        // Filter Cabang & Role berdasarkan siapa yang login
+        // Filter Dropdown Cabang saat Create User
         if ($user->role == 'admin' && $user->branch_id != null) {
             $branches = Branch::where('id', $user->branch_id)->get();
             $allowedRoles = ['leader', 'security', 'user_biasa'];
         } elseif ($user->role == 'audit') {
-            $branches = $user->branches;
+            // Audit hanya bisa mendaftarkan user ke cabang yang dia pegang
+            $branches = $user->branches; 
             $allowedRoles = ['audit', 'leader', 'security', 'user_biasa'];
         } else {
+            // Admin Pusat (Super Admin)
             $branches = Branch::all();
             $allowedRoles = ['admin', 'audit', 'leader', 'security', 'user_biasa'];
         }
@@ -108,18 +124,13 @@ class UserController extends Controller
             'multi_branches' => 'nullable|array',
             'profile_photo_path' => 'nullable|image|max:2048',
             'whatsapp' => 'nullable|string|max:20',
-
-            // Validasi Jam Kerja (Nullable)
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
-        // LOGIKA JAM KERJA:
-        // Input 1 (Kiri) -> check_in_start
-        // Input 2 (Kanan) -> check_out_start
-        // check_in_end & check_out_end dikosongkan (NULL) agar fleksibel
+        // Logika Jam Kerja
         $data['check_in_start']  = $request->check_in_start ?: null;
         $data['check_out_start'] = $request->check_out_start ?: null;
         $data['check_in_end']    = null;
@@ -132,6 +143,7 @@ class UserController extends Controller
         if ($user->role == 'admin' && $user->branch_id != null) {
             $data['branch_id'] = $user->branch_id;
         }
+        // Admin Pusat tidak wajib punya branch
         if ($request->role == 'admin') {
             $data['branch_id'] = null;
             $data['division_id'] = null;
@@ -170,11 +182,19 @@ class UserController extends Controller
         $user->load(['branches', 'divisions']);
         $auth_user = Auth::user();
 
-        // Security Check
+        // ================================================================
+        // SECURITY CHECK (Mencegah Akses ID via URL)
+        // ================================================================
         if ($auth_user->role == 'audit') {
-            $allowedBranchIds = $auth_user->branches->pluck('id')->toArray();
-            if (!in_array($user->branch_id, $allowedBranchIds)) abort(403);
+            // Cek apakah user yg diedit ada di cabang yg dipegang audit
+            $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
+            
+            // Jika user punya branch_id, cek apakah ada di list audit
+            if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
+                abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
+            }
         }
+        
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
@@ -191,8 +211,6 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $auth_user = Auth::user();
-
         $request->validate([
             'name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
@@ -203,28 +221,22 @@ class UserController extends Controller
             'role' => 'required|string|in:admin,audit,leader,security,user_biasa',
             'branch_id' => 'nullable|exists:branches,id',
             'whatsapp' => 'nullable|string|max:20',
-
-            // VALIDASI INPUT JAM
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
-        // Update logic password jika diisi
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
 
-        // LOGIKA JAM KERJA UPDATE:
         $data['check_in_start']  = $request->check_in_start ?: null;
         $data['check_out_start'] = $request->check_out_start ?: null;
         $data['check_in_end']    = null;
         $data['check_out_end']   = null;
-
         $data['hire_date'] = $request->hire_date ?? null;
 
-        // Update Foto jika ada
         if ($request->hasFile('profile_photo_path')) {
             if ($user->profile_photo_path) Storage::disk('public')->delete($user->profile_photo_path);
             $data['profile_photo_path'] = $request->file('profile_photo_path')->store('profile-photos', 'public');
@@ -232,12 +244,11 @@ class UserController extends Controller
 
         $user->update($data);
 
-        // Sync relations Many-to-Many
+        // Sync relations
         if ($request->role == 'audit') {
             $user->branches()->sync($request->multi_branches ?? []);
         } else {
             $user->divisions()->sync($request->multi_divisions ?? []);
-
             if ($request->has('multi_divisions') && count($request->multi_divisions) > 0) {
                 $user->division_id = $request->multi_divisions[0];
                 $user->save();
@@ -280,12 +291,15 @@ class UserController extends Controller
     {
         $auth_user = Auth::user();
 
+        // Security Check untuk Detail
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
         if ($auth_user->role == 'audit') {
-            $allowedBranchIds = $auth_user->branches->pluck('id')->toArray();
-            if (!in_array($user->branch_id, $allowedBranchIds)) abort(403);
+            $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
+            if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
+                abort(403, 'Akses Ditolak: User ini berada di luar wilayah cabang Anda.');
+            }
         }
 
         $user->load(['branch', 'division', 'branches', 'divisions']);
@@ -301,8 +315,52 @@ class UserController extends Controller
     }
 
     /**
-     * Verifikasi User (Centang Biru)
+     * Halaman Request Ganti Foto
      */
+    public function photoRequests()
+    {
+        $user = Auth::user();
+        $query = User::where('photo_request_status', 'pending')->with(['branch', 'division']);
+
+        // Filter berdasarkan Role
+        if ($user->role == 'admin' && $user->branch_id != null) {
+            $query->where('branch_id', $user->branch_id);
+            
+        } elseif ($user->role == 'audit') {
+            // Audit hanya melihat request dari cabang yang dia pegang
+            $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
+            $query->whereIn('branch_id', $auditBranchIds);
+        }
+
+        $requests = $query->latest('updated_at')->paginate(10);
+        return view('users.photo_requests', compact('requests'));
+    }
+
+    /**
+     * Halaman Request Ganti KTP
+     */
+    public function ktpRequests()
+    {
+        $user = Auth::user();
+        $query = User::where('ktp_request_status', 'pending')->with('division');
+
+        // Tambahkan filter cabang untuk KTP Request juga
+        if ($user->role == 'admin' && $user->branch_id != null) {
+            $query->where('branch_id', $user->branch_id);
+            
+        } elseif ($user->role == 'audit') {
+            $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
+            $query->whereIn('branch_id', $auditBranchIds);
+        }
+
+        $users = $query->get();
+        return view('users.ktp-requests', compact('users'));
+    }
+
+    // =========================================================================
+    // METODE LAIN (Helper & Action Buttons) - TIDAK PERLU UBAH LOGIC SEARCH
+    // =========================================================================
+
     public function verifyUser(User $user)
     {
         if (!$user->is_verified) {
@@ -320,30 +378,6 @@ class UserController extends Controller
         return back()->with('success', $msg);
     }
 
-    /**
-     * Halaman Request Ganti Foto
-     */
-    public function photoRequests()
-    {
-        $user = Auth::user();
-        $query = User::where('photo_request_status', 'pending')->with(['branch', 'division']);
-
-        if ($user->role == 'admin' && $user->branch_id != null) {
-            $query->where('branch_id', $user->branch_id);
-        } elseif ($user->role == 'audit') {
-            $auditBranchIds = $user->branches->pluck('id')->toArray();
-            $query->whereIn('branch_id', $auditBranchIds);
-        }
-
-        $requests = $query->latest('updated_at')->paginate(10);
-
-        // VARIABEL $requests DIKIRIM KE VIEW DI SINI
-        return view('users.photo_requests', compact('requests'));
-    }
-
-    /**
-     * Approve Request Foto
-     */
     public function approvePhotoRequest(User $user)
     {
         if ($user->photo_request_status !== 'pending') {
@@ -353,12 +387,8 @@ class UserController extends Controller
         return back()->with('success', 'Izin ganti foto diberikan. User dapat mengupload foto baru sekarang.');
     }
 
-    /**
-     * Aktif/Non-aktif User
-     */
     public function toggleStatus(User $user)
     {
-        // Mencegah user menonaktifkan diri sendiri (Safety)
         if ($user->id == auth()->id()) return back();
 
         $user->is_active = !$user->is_active;
@@ -366,9 +396,6 @@ class UserController extends Controller
         return back()->with('success', 'Status user diperbarui.');
     }
 
-    /**
-     * Helper: Hitung Statistik Absensi User
-     */
     private function getSpecificUserStats($user_id)
     {
         $presentCount = Attendance::where('user_id', $user_id)
@@ -390,65 +417,41 @@ class UserController extends Controller
         ];
     }
 
-    public function ktpRequests()
-    {
-        // Ambil user yang status request ktp-nya pending
-        $users = User::where('ktp_request_status', 'pending')->with('division')->get();
-        return view('users.ktp-requests', compact('users'));
-    }
-
     public function approveKtpRequest(User $user)
     {
-        // 1. Hapus KTP Lama (jika ada)
         if ($user->ktp_photo_path) {
             Storage::disk('public')->delete($user->ktp_photo_path);
         }
-
-        // 2. Pindahkan KTP Temp ke KTP Utama
-        // (Dalam storage Laravel, move file agak tricky antar folder, 
-        // jadi kita update path-nya saja atau copy file. 
-        // Disini kita asumsi file di temp valid jadi KTP utama).
-
-        $newPath = $user->ktp_photo_temp_path; // Path temp jadi path utama
-
-        // 3. Update User
+        $newPath = $user->ktp_photo_temp_path;
         $user->update([
             'ktp_photo_path' => $newPath,
-            'ktp_photo_temp_path' => null, // Kosongkan temp
-            'ktp_request_status' => 'none' // Reset status
+            'ktp_photo_temp_path' => null,
+            'ktp_request_status' => 'none'
         ]);
-
         return back()->with('success', 'Permintaan ganti KTP disetujui.');
     }
 
     public function rejectKtpRequest(User $user)
     {
-        // 1. Hapus file temp
         if ($user->ktp_photo_temp_path) {
             Storage::disk('public')->delete($user->ktp_photo_temp_path);
         }
-
-        // 2. Update status
         $user->update([
             'ktp_photo_temp_path' => null,
             'ktp_request_status' => 'rejected'
         ]);
-
         return back()->with('success', 'Permintaan ganti KTP ditolak.');
     }
 
-    // Di UserController.php atau HomeController.php
     public function updateFcmToken(Request $request)
     {
         try {
             $request->validate([
                 'token' => 'required|string'
             ]);
-
             $user = Auth::user();
             $user->fcm_token = $request->token;
             $user->save();
-
             return response()->json(['success' => true, 'message' => 'Token updated']);
         } catch (\Exception $e) {
             return response()->json(['success' => false], 500);
