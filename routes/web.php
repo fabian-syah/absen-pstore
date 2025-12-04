@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+use App\Traits\SendFcmNotification;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DashboardController;
@@ -69,6 +71,34 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/riwayat-izin-saya', [LeaveRequestController::class, 'personalHistory'])
         ->name('leave-requests.personal-history');
 
+    Route::get('/test-fcm', function () {
+        // Panggil Trait secara manual via anonymous class atau controller sementara
+        $sender = new class {
+            use SendFcmNotification;
+        };
+
+        // GANTI '2' DENGAN ID CABANG AUDIT ANDA
+        $branchId = 2;
+
+        // Cek Token Dulu
+        $audit = User::where('role', 'audit')->where('branch_id', $branchId)->first();
+        if (!$audit) return "User Audit tidak ditemukan di cabang $branchId";
+        if (!$audit->fcm_token) return "User Audit ditemukan TAPI token FCM kosong (NULL). Suruh Audit login dan allow notif dulu.";
+
+        // Coba Kirim
+        try {
+            $sender->sendNotificationToBranchRoles(
+                ['audit'],
+                $branchId,
+                "Tes Notifikasi",
+                "Ini adalah pesan tes dari server untuk memastikan sistem berjalan."
+            );
+            return "Perintah kirim sudah dijalankan. Cek Log Laravel untuk hasil detailnya.";
+        } catch (\Exception $e) {
+            return "Error: " . $e->getMessage();
+        }
+    });
+
     // === RUTE BROADCAST ===
     Route::prefix('broadcast')->name('broadcast.')->group(function () {
         Route::get('/notifications', [BroadcastController::class, 'getNotifications'])->name('notifications');
@@ -100,13 +130,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
-        
+
         // Foto Profil
         Route::delete('/photo', [ProfileController::class, 'deleteProfilePhoto'])->name('photo.delete');
         Route::put('/photo', [ProfileController::class, 'updatePhoto'])->name('photo.update');
         Route::post('/photo/request', [ProfileController::class, 'requestPhotoChange'])->name('photo.request');
         Route::get('/photo/{user}', [ProfileController::class, 'getProfilePhoto'])->name('photo.get');
-        
+
         // KTP (Updated Logic)
         Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update'); // Upload pertama
         Route::post('/ktp/request', [ProfileController::class, 'requestKtpChange'])->name('ktp.request'); // Request Ganti (Upload Temp)
@@ -150,7 +180,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Approval Requests (FOTO PROFIL)
         Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
-        
+
         // Approval Requests (KTP - NEW LOGIC)
         Route::get('/users/ktp-requests', [UserController::class, 'ktpRequests'])->name('users.ktp-requests');
         Route::patch('/users/{user}/approve-ktp', [UserController::class, 'approveKtpRequest'])->name('users.approve-ktp');
