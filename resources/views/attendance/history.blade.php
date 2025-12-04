@@ -424,11 +424,25 @@
                                                             <i class="mdi mdi-pencil-box-outline text-info me-1"></i>
                                                             <span class="badge bg-info text-white verification-badge">Dikoreksi</span>
                                                         </div>
+                                                        {{-- MENAMPILKAN PENGECEK --}}
+                                                        @if($att->verifier)
+                                                            <small class="d-block text-muted mt-1 fst-italic" style="font-size: 10px;">
+                                                                <i class="mdi mdi-account-check me-1"></i> {{ $att->verifier->name }}
+                                                            </small>
+                                                        @endif
                                                     @else
+                                                        {{-- STATUS TERVERIFIKASI NORMAL --}}
                                                         <div class="d-flex align-items-center">
                                                             <i class="mdi mdi-check-circle verified-check me-1"></i>
                                                             <span class="badge bg-success verification-badge">Terverifikasi</span>
                                                         </div>
+                                                        
+                                                        {{-- TAMBAHAN: MENAMPILKAN SIAPA YANG VERIFIKASI --}}
+                                                        @if($att->verifier)
+                                                            <small class="d-block text-muted mt-1 fst-italic" style="font-size: 10px;">
+                                                                <i class="mdi mdi-account-check-outline me-1"></i> {{ $att->verifier->name }}
+                                                            </small>
+                                                        @endif
                                                     @endif
                                                 @elseif($att->status == 'pending_verification')
                                                     <div class="d-flex align-items-center">

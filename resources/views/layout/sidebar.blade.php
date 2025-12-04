@@ -152,11 +152,12 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.index') }}">
-                    <i class="menu-icon mdi mdi-package-remove"></i>
-                    <span class="menu-title">Pengembalian Inventaris</span>
-                </a>
-            </li>
+    <a class="nav-link" href="#">
+        <i class="menu-icon mdi mdi-package-variant-minus"></i>
+        <span class="menu-title">Pengembalian Inventaris</span>
+    </a>
+</li>
+
         @endif
 
         {{-- =================================== --}}

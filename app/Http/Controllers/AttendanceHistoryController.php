@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\WorkSchedule;
 use App\Models\LeaveRequest;
-use App\Models\User; // Pastikan model User di-load jika perlu cari employee
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Barryvdh\DomPDF\Facade\Pdf; // Import PDF Facade
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AttendanceHistoryController extends Controller
 {
@@ -19,7 +19,6 @@ class AttendanceHistoryController extends Controller
         $user = Auth::user();
 
         // 1. Tentukan User Target (Diri sendiri atau Karyawan lain jika Audit/Admin)
-        // Jika ada parameter employeeId & branchId (Mode Audit melihat karyawan lain)
         if ($request->has('employeeId') && (Auth::user()->role == 'audit' || Auth::user()->role == 'admin')) {
             $targetUser = User::find($request->employeeId);
             $employee = $targetUser; // Variabel untuk view
@@ -48,7 +47,7 @@ class AttendanceHistoryController extends Controller
         $nextMonth = $nextDate->month;
         $nextYear  = $nextDate->year;
 
-        // 4. Ambil Data (Menggunakan Helper Private)
+        // 4. Ambil Data
         $data = $this->getHistoryData($targetUser, $selectedMonth, $selectedYear);
 
         $history = $data['history'];
@@ -69,7 +68,6 @@ class AttendanceHistoryController extends Controller
     {
         $user = Auth::user();
 
-        // Cek jika sedang melihat karyawan lain (untuk admin/audit)
         if ($request->has('employeeId') && (Auth::user()->role == 'audit' || Auth::user()->role == 'admin')) {
             $targetUser = User::find($request->employeeId);
         } else {
@@ -79,7 +77,6 @@ class AttendanceHistoryController extends Controller
         $selectedMonth = $request->get('month', date('m'));
         $selectedYear = $request->get('year', date('Y'));
 
-        // Ambil data yang sama persis dengan index
         $data = $this->getHistoryData($targetUser, $selectedMonth, $selectedYear);
 
         $pdf = Pdf::loadView('attendance.export_pdf', [
@@ -92,11 +89,13 @@ class AttendanceHistoryController extends Controller
         return $pdf->download('Laporan_Absensi_' . $targetUser->name . '_' . $selectedMonth . '-' . $selectedYear . '.pdf');
     }
 
-    // --- HELPER PRIVATE AGAR KODINGAN TIDAK DUPLIKAT ---
+    // --- HELPER PRIVATE ---
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
         // 1. AMBIL DATA ABSENSI ASLI
-        $attendances = Attendance::where('user_id', $user->id)
+        // MODIFIKASI: Tambahkan eager loading 'verifier' agar tidak N+1 query di view
+        $attendances = Attendance::with('verifier') 
+            ->where('user_id', $user->id)
             ->whereYear('check_in_time', $selectedYear)
             ->whereMonth('check_in_time', $selectedMonth)
             ->orderBy('check_in_time', 'desc')
@@ -125,14 +124,14 @@ class AttendanceHistoryController extends Controller
             foreach ($period as $date) {
                 if ($date->month == $selectedMonth && $date->year == $selectedYear) {
                     
-                    // Cek Conflict: Prioritaskan Data Absen Asli (misal dia masuk tapi setengah hari izin)
+                    // Cek Conflict
                     $alreadyAttendance = $attendances->filter(function ($att) use ($date) {
                         return $att->check_in_time->isSameDay($date);
                     })->isNotEmpty();
 
                     if (!$alreadyAttendance) {
                         $fakeAtt = new Attendance();
-                        $fakeAtt->id = 'leave_' . $leave->id . '_' . $date->timestamp; // ID unik dummy
+                        $fakeAtt->id = 'leave_' . $leave->id . '_' . $date->timestamp; 
                         $fakeAtt->user_id = $user->id;
                         $fakeAtt->check_in_time = $date->copy()->setTime(8, 0, 0); 
                         $fakeAtt->check_out_time = null;
@@ -151,8 +150,8 @@ class AttendanceHistoryController extends Controller
                         $fakeAtt->audit_photo_path = null;
                         $fakeAtt->audit_note = "Pengajuan: " . $leave->reason;
                         
-                        // Tambahkan properti dummy leaveRequest agar view tidak error saat akses $att->leaveRequest
                         $fakeAtt->setRelation('leaveRequest', $leave);
+                        // Untuk leave, verifier biasanya null atau bisa di-set dummy jika perlu
 
                         $historyCollection->push($fakeAtt);
                     }
@@ -188,7 +187,6 @@ class AttendanceHistoryController extends Controller
         return ['history' => $history, 'summary' => $summary];
     }
 
-    // --- METHOD AUDIT UPDATE (TETAP SAMA SEPERTI SEBELUMNYA) ---
     public function updateByAudit(Request $request, $id)
     {
         if (Auth::user()->role !== 'audit') {
