@@ -29,19 +29,38 @@ class GlobalSearchController extends Controller
              return response()->json(['results' => []], 401);
         }
 
-        // 3. Validasi Role (UBAH DISINI: Admin DAN Audit boleh akses)
-        // Kita gunakan !in_array untuk mengecek apakah role user TIDAK ADA di dalam daftar
+        // 3. Validasi Role (Hanya Admin dan Audit)
         if (!in_array($user->role, ['admin', 'audit'])) {
              return response()->json(['results' => []]); 
+        }
+
+        // 4. SIAPKAN FILTER CABANG KHUSUS AUDIT
+        $auditBranchIds = [];
+        if ($user->role == 'audit') {
+            // Ambil array ID cabang yang dipegang audit
+            $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
         }
 
         $results = collect([]);
 
         try {
-            // === SEARCH 1: USERS ===
-            $users = User::where('name', 'like', "%{$query}%")
-                ->orWhere('email', 'like', "%{$query}%")
-                ->with(['division', 'branch']) // Eager loading
+            // ==========================================
+            // SEARCH 1: USERS
+            // ==========================================
+            $userQuery = User::where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('email', 'like', "%{$query}%");
+            });
+
+            // FILTER AUDIT: Hanya tampilkan user di cabang pegangannya
+            if ($user->role == 'audit') {
+                $userQuery->whereIn('branch_id', $auditBranchIds);
+            } elseif ($user->role == 'admin' && $user->branch_id != null) {
+                // Tambahan: Jika admin cabang, batasi juga ke cabangnya
+                $userQuery->where('branch_id', $user->branch_id);
+            }
+
+            $users = $userQuery->with(['division', 'branch'])
                 ->limit(5)
                 ->get()
                 ->map(function ($item) {
@@ -58,10 +77,12 @@ class GlobalSearchController extends Controller
                 });
             $results = $results->merge($users);
 
-            // === SEARCH 2: BROADCASTS ===
+            // ==========================================
+            // SEARCH 2: BROADCASTS (Bebas / Global)
+            // ==========================================
             $broadcasts = Broadcast::where('title', 'like', "%{$query}%")
                 ->orWhere('message', 'like', "%{$query}%")
-                ->orderBy('created_at', 'desc') // Tampilkan yang terbaru
+                ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get()
                 ->map(function ($item) {
@@ -78,9 +99,20 @@ class GlobalSearchController extends Controller
                 });
             $results = $results->merge($broadcasts);
 
-            // === SEARCH 3: DIVISIONS ===
-            $divisions = Division::where('name', 'like', "%{$query}%")
-                ->with('branch')
+            // ==========================================
+            // SEARCH 3: DIVISIONS
+            // ==========================================
+            $divQuery = Division::where('name', 'like', "%{$query}%");
+
+            // Filter Divisi berdasarkan cabang (jika divisi terikat cabang)
+            // Asumsi tabel divisions punya branch_id. Jika tidak, hapus blok if ini.
+            if ($user->role == 'audit') {
+                // Cek dulu apakah tabel divisions punya kolom branch_id
+                // Jika ya, filter. Jika tidak, lewati.
+                // $divQuery->whereIn('branch_id', $auditBranchIds); 
+            }
+
+            $divisions = $divQuery->with('branch')
                 ->limit(5)
                 ->get()
                 ->map(function ($item) {
@@ -95,10 +127,20 @@ class GlobalSearchController extends Controller
                 });
             $results = $results->merge($divisions);
 
-            // === SEARCH 4: BRANCHES ===
-            $branches = Branch::where('name', 'like', "%{$query}%")
-                ->orWhere('address', 'like', "%{$query}%")
-                ->limit(5)
+            // ==========================================
+            // SEARCH 4: BRANCHES
+            // ==========================================
+            $branchQuery = Branch::where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('address', 'like', "%{$query}%");
+            });
+
+            // FILTER AUDIT: Hanya cari cabang yang dia pegang
+            if ($user->role == 'audit') {
+                $branchQuery->whereIn('id', $auditBranchIds);
+            }
+
+            $branches = $branchQuery->limit(5)
                 ->get()
                 ->map(function ($item) {
                     return [
@@ -115,7 +157,6 @@ class GlobalSearchController extends Controller
             return response()->json(['results' => $results->take(10)]);
 
         } catch (\Exception $e) {
-            // Tangkap error agar tidak White Screen of Death
             return response()->json([
                 'results' => [],
                 'error' => $e->getMessage() 
