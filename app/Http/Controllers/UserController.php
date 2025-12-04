@@ -436,4 +436,22 @@ class UserController extends Controller
 
         return back()->with('success', 'Permintaan ganti KTP ditolak.');
     }
+
+    // Di UserController.php atau HomeController.php
+    public function updateFcmToken(Request $request)
+    {
+        try {
+            $request->validate([
+                'token' => 'required|string'
+            ]);
+
+            $user = Auth::user();
+            $user->fcm_token = $request->token;
+            $user->save();
+
+            return response()->json(['success' => true, 'message' => 'Token updated']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false], 500);
+        }
+    }
 }

@@ -2,92 +2,51 @@
 
 namespace App\Traits;
 
-use App\Models\UserDeviceToken;
-use Kreait\Firebase\Messaging\CloudMessage;
-use Kreait\Firebase\Messaging\Notification;
 use App\Models\User;
-use Kreait\Firebase\Messaging\AndroidConfig;
-use Kreait\Firebase\Messaging\ApnsConfig;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 trait SendFcmNotification
 {
-    /**
-     * Mengirim notifikasi ke SATU user spesifik.
-     * (Fungsi ini sudah benar dan tidak berubah)
-     */
-    protected function sendNotificationToUser(User $user, $title, $body)
+    public function sendNotificationToBranchRoles($roles, $branchId, $title, $body)
     {
-        $tokens = UserDeviceToken::where('user_id', $user->id)->pluck('token')->toArray();
-        if (empty($tokens)) return;
-
-        $messaging = app('firebase.messaging');
-        $notification = Notification::create($title, $body);
-        $androidConfig = AndroidConfig::new()->withSound('default');
-        $apnsConfig = ApnsConfig::new()->withSound('default');
-        $message = CloudMessage::new()
-            ->withNotification($notification)
-            ->withAndroidConfig($androidConfig)
-            ->withApnsConfig($apnsConfig);
-
-        try {
-            $report = $messaging->sendMulticast($message, $tokens);
-            if ($report->hasFailures()) {
-                foreach ($report->failures()->tokens() as $token) {
-                    UserDeviceToken::where('token', $token)->delete();
-                }
-            }
-        } catch (\Exception $e) {
-            // Log::error('FCM Send Error: '. $e->getMessage());
-        }
-    }
-
-    /**
-     * FUNGSI BARU: Mengirim notifikasi ke role di CABANG SPESIFIK + SUPER ADMIN
-     *
-     * @param array $roles - Cth: ['admin', 'audit']
-     * @param int $branch_id - ID Cabang tempat kejadian
-     * @param string $title - Judul notifikasi
-     * @param string $body - Isi pesan
-     */
-    protected function sendNotificationToBranchRoles(array $roles, $branch_id, $title, $body)
-    {
-        // 1. Ambil token untuk Admin/Audit di CABANG SPESIFIK itu
-        $branchTokens = UserDeviceToken::whereHas('user', function ($query) use ($roles, $branch_id) {
-            $query->whereIn('role', $roles)
-                ->where('branch_id', $branch_id);
-        })->pluck('token')->toArray();
-
-        // 2. Ambil token untuk SEMUA Super Admin (admin yg branch_id-nya null)
-        $superAdminTokens = UserDeviceToken::whereHas('user', function ($query) {
-            $query->where('role', 'admin')
-                ->whereNull('branch_id');
-        })->pluck('token')->toArray();
-
-        // 3. Gabungkan semua token (hapus duplikat jika ada)
-        $tokens = array_unique(array_merge($branchTokens, $superAdminTokens));
+        // 1. Cari Audit/Admin di Cabang yang sama yang punya FCM Token
+        $tokens = User::whereIn('role', $roles)
+            ->where('branch_id', $branchId)
+            ->whereNotNull('fcm_token')
+            ->pluck('fcm_token')
+            ->toArray();
 
         if (empty($tokens)) {
-            return; // Tidak ada device untuk dikirimi
+            return;
         }
 
-        $messaging = app('firebase.messaging');
-        $notification = Notification::create($title, $body);
-        $androidConfig = AndroidConfig::new()->withSound('default');
-        $apnsConfig = ApnsConfig::new()->withSound('default');
-        $message = CloudMessage::new()
-            ->withNotification($notification)
-            ->withAndroidConfig($androidConfig)
-            ->withApnsConfig($apnsConfig);
+        // 2. Kirim Notifikasi via Firebase (Contoh menggunakan Legacy API atau HTTP v1)
+        // Pastikan Anda menaruh FIREBASE_SERVER_KEY di .env
+        
+        $serverKey = env('FIREBASE_SERVER_KEY'); 
+        $url = 'https://fcm.googleapis.com/fcm/send';
+
+        $data = [
+            "registration_ids" => $tokens,
+            "notification" => [
+                "title" => $title,
+                "body" => $body,
+                "icon" => "ic_launcher", // Sesuaikan icon aplikasi jika ada
+                "sound" => "default",
+                "click_action" => url('/audit/verify-list') // Link saat notif diklik
+            ]
+        ];
 
         try {
-            $report = $messaging->sendMulticast($message, $tokens);
-            if ($report->hasFailures()) {
-                foreach ($report->failures()->tokens() as $token) {
-                    UserDeviceToken::where('token', $token)->delete();
-                }
-            }
+            $response = Http::withHeaders([
+                'Authorization' => 'key=' . $serverKey,
+                'Content-Type' => 'application/json',
+            ])->post($url, $data);
+
+            Log::info('FCM Result: ' . $response->body());
         } catch (\Exception $e) {
-            // Log::error('FCM Send Error: '. $e->getMessage());
+            Log::error('FCM Error: ' . $e->getMessage());
         }
     }
 }
