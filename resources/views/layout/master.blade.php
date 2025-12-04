@@ -56,12 +56,11 @@
     {{-- ================================================================= --}}
     {{-- FIREBASE NOTIFICATION LOGIC (KHUSUS AUDIT & ADMIN) --}}
     {{-- ================================================================= --}}
-    
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
     <script>
-        // Ambil config dari Laravel Service
         var firebaseConfig = {
             apiKey: "{{ config('services.firebase.api_key') }}",
             authDomain: "{{ config('services.firebase.auth_domain') }}",
@@ -74,56 +73,65 @@
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
-        
+
         const messaging = firebase.messaging();
 
-        // Hanya jalankan jika User Login adalah AUDIT atau ADMIN
-        @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
-            
+        @if (auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
+
+            // --- FUNGSI UPDATE TOKEN ---
             function sendTokenToServer(token) {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                fetch("{{ route('update.fcm.token') }}", { 
+                fetch("{{ route('update.fcm.token') }}", {
                     method: "POST",
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
-                    body: JSON.stringify({ token: token })
-                }).then(response => {
-                    return response.json();
-                }).then(data => {
-                    console.log("FCM Token status:", data.message);
-                }).catch(err => {
-                    console.log("Gagal menyimpan token.", err);
-                });
+                    body: JSON.stringify({
+                        token: token
+                    })
+                }).then(res => console.log("Token updated")).catch(err => console.log("Token error", err));
             }
 
+            // --- PERMISSION ---
             Notification.requestPermission().then((permission) => {
                 if (permission === 'granted') {
-                    // Ambil Token VAPID
-                    messaging.getToken({ vapidKey: "{{ config('services.firebase.vapid_key') }}" })
-                    .then((currentToken) => {
-                        if (currentToken) {
-                            sendTokenToServer(currentToken);
-                        } else {
-                            console.log('No Registration Token available');
-                        }
-                    }).catch((err) => {
-                        console.log('Error retrieving token', err);
-                    });
+                    console.log('Notifikasi diizinkan.');
+                    messaging.getToken({
+                            vapidKey: "{{ config('services.firebase.vapid_key') }}"
+                        })
+                        .then((currentToken) => {
+                            if (currentToken) sendTokenToServer(currentToken);
+                        });
                 }
             });
 
-            // Foreground Message Handler
+            // --- HANDLER SAAT TAB DIBUKA (FOREGROUND) ---
             messaging.onMessage((payload) => {
-                console.log('Message received: ', payload);
-                const notificationTitle = payload.notification.title;
-                const notificationOptions = {
-                    body: payload.notification.body,
-                    icon: '/assets/images/favicon.png' 
-                };
+                console.log('Pesan masuk (Foreground): ', payload);
+
+                // Ambil data dari payload
+                const title = payload.notification.title || "Notifikasi Baru";
+                const body = payload.notification.body || "Ada pembaruan data absensi.";
+                const icon = '/assets/images/favicon.png';
+
+                // 1. MAINKAN SUARA (Pastikan file sound/notification.mp3 ada, atau hapus jika tidak perlu)
+                // const audio = new Audio('/sound/notification.mp3');
+                // audio.play().catch(e => console.log('Audio play error:', e));
+
+                // 2. PAKSA MUNCUL POPUP
                 if (Notification.permission === 'granted') {
-                    new Notification(notificationTitle, notificationOptions);
+                    const notif = new Notification(title, {
+                        body: body,
+                        icon: icon,
+                        requireInteraction: true // Notif tidak akan hilang sendiri sampai diklik
+                    });
+
+                    notif.onclick = function() {
+                        window.focus();
+                        window.location.href = "{{ route('audit.verify.list') }}";
+                        this.close();
+                    };
                 }
             });
         @endif
@@ -131,4 +139,5 @@
 
     @stack('scripts')
 </body>
+
 </html>
