@@ -1,8 +1,7 @@
-// File: public/firebase-messaging-sw.js
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-// Salin config yang sama persis dengan di master.blade.php / .env
+// Salin Config Manual (JANGAN PAKAI BLADE {{ config(...) }} DISINI)
 const firebaseConfig = {
     apiKey: "AIzaSyA27iUWIsqv_6A4kzGq12qt0eEicfkgOmI",
     authDomain: "bote-1a4b9.firebaseapp.com",
@@ -16,14 +15,13 @@ firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
-// Handler untuk pesan background
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/assets/images/favicon.png' // Pastikan path icon benar
+    icon: '/assets/images/favicon.png' 
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
