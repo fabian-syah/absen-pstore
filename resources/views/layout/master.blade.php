@@ -23,6 +23,8 @@
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
 
+    <link rel="manifest" href="/manifest.json">
+
     @stack('styles')
 </head>
 
