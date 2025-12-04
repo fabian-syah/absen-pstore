@@ -9,7 +9,7 @@ use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use App\Traits\SendFcmNotification; // Wajib ada
+use App\Traits\SendFcmNotification;
 use Carbon\Carbon;
 use Intervention\Image\Facades\Image;
 use Illuminate\Support\Str;
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 
 class SelfAttendanceController extends Controller
 {
-    use SendFcmNotification; // Wajib ada
+    use SendFcmNotification;
 
     public function create() 
     {
@@ -90,7 +90,7 @@ class SelfAttendanceController extends Controller
         $currentTime = now();
         $today = today();
 
-        // Validasi Cuti (Backend Protection)
+        // Validasi Cuti
         $isOnLeave = LeaveRequest::where('user_id', $user->id)
             ->where('status', 'approved')
             ->where('type', '!=', 'telat')
@@ -142,6 +142,9 @@ class SelfAttendanceController extends Controller
         $notifBody = "";
         $message = "";
 
+        // [PERBAIKAN SINTAKS] Simpan nama cabang di variabel dulu
+        $branchName = $user->branch->name ?? '-';
+
         // === ABSEN PULANG ===
         if ($attendanceToUpdate) {
             $isEarly = false;
@@ -180,7 +183,8 @@ class SelfAttendanceController extends Controller
             if ($newStatus == 'pending_verification') {
                 $shouldSendNotif = true;
                 $notifTitle = "Verifikasi Pulang";
-                $notifBody = "{$user->name} melakukan absen pulang (Mandiri) di cabang {$user->branch->name ?? '-'}";
+                // [PERBAIKAN SINTAKS] Menggunakan variabel $branchName
+                $notifBody = "{$user->name} melakukan absen pulang (Mandiri) di cabang {$branchName}";
             }
         } 
         // === ABSEN MASUK ===
@@ -228,7 +232,8 @@ class SelfAttendanceController extends Controller
 
             $shouldSendNotif = true;
             $notifTitle = "Verifikasi Masuk";
-            $notifBody = "{$user->name} melakukan absen masuk (Mandiri) di cabang {$user->branch->name ?? '-'}";
+            // [PERBAIKAN SINTAKS] Menggunakan variabel $branchName
+            $notifBody = "{$user->name} melakukan absen masuk (Mandiri) di cabang {$branchName}";
         }
 
         // KIRIM NOTIFIKASI KE AUDIT
@@ -275,7 +280,9 @@ class SelfAttendanceController extends Controller
         ]);
         
         $title = "Izin Telat Masuk";
-        $body = "{$user->name} mengajukan izin telat di cabang {$user->branch->name ?? '-'}";
+        // [PERBAIKAN SINTAKS] Simpan cabang dulu
+        $branchName = $user->branch->name ?? '-';
+        $body = "{$user->name} mengajukan izin telat di cabang {$branchName}";
         
         try {
             $this->sendNotificationToBranchRoles(['audit', 'admin'], $user->branch_id, $title, $body);
