@@ -49,11 +49,20 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        
+        // [TAMBAHAN] Hapus FCM Token di database saat logout
+        // Agar saat login nanti dia memaksa simpan ulang
+        if ($user) {
+            $user->fcm_token = null;
+            $user->save();
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/login');
     }
 }
