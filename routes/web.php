@@ -47,13 +47,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // --- Rute Utama ---
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
-    Route::get('/dashboard/export-pdf', [DashboardController::class, 'exportAttendancePDF'])->name('dashboard.export-pdf');
+    // Route::get('/dashboard/export-pdf', [DashboardController::class, 'exportAttendancePDF'])->name('dashboard.export-pdf');
 
     // --- Rute Search Global ---
     Route::get('/search', [GlobalSearchController::class, 'search'])->name('search');
 
     // === RUTE RIWAYAT ABSENSI ===
     Route::get('/riwayat-absensi', [AttendanceHistoryController::class, 'index'])->name('attendance.history');
+    // [BARU] Route Export PDF Attendance History
+    Route::get('/attendance/export-pdf', [AttendanceHistoryController::class, 'exportPdf'])->name('attendance.export.pdf');
 
     // === RUTE JOB TARGETS ===
     Route::get('/job-targets', [JobTargetController::class, 'index'])->name('job-targets.index');
