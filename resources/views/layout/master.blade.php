@@ -5,6 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>@yield('title') </title>
+
+    {{-- PENTING: Meta Token untuk keamanan Request AJAX ke Server --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    {{-- CSS Assets --}}
     <link rel="stylesheet" href="{{ asset('assets/vendors/feather/feather.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendors/mdi/css/materialdesignicons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendors/ti-icons/css/themify-icons.css') }}">
@@ -19,25 +24,10 @@
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
 
     @stack('styles')
-    </head>
+</head>
 
 <body class="with-welcome-text">
     <div class="container-scroller">
-        {{-- <div class="row p-0 m-0 proBanner" id="proBanner">
-            <div class="col-md-12 p-0 m-0"> --}}
-                {{-- <div class="card-body card-body-padding px-3 d-flex align-items-center justify-content-between">
-                    <div class="ps-lg-3">
-                    </div>
-                    {{-- <div class="d-flex align-items-center justify-content-between">
-                        <a href="https://www.bootstrapdash.com/product/star-admin-pro/"><i
-                                class="ti-home me-3 text-white"></i></a>
-                        <button id="bannerClose" class="btn border-0 p-0">
-                            <i class="ti-close text-white"></i>
-                        </button>
-                    </div> --}}
-                </div>
-            </div>
-        </div>
         @include('layout.header')
         <div class="container-fluid page-body-wrapper">
             @include('layout.sidebar')
@@ -46,9 +36,11 @@
                     @yield('content')
                 </div>
                 @include('layout.footer')
-                </div>
             </div>
         </div>
+    </div>
+
+    {{-- JS Assets --}}
     <script src="{{ asset('assets/vendors/js/vendor.bundle.base.js') }}"></script>
     <script src="{{ asset('assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js') }}"></script>
     <script src="{{ asset('assets/vendors/chart.js/chart.umd.js') }}"></script>
@@ -60,8 +52,83 @@
     <script src="{{ asset('assets/js/todolist.js') }}"></script>
     <script src="{{ asset('assets/js/jquery.cookie.js') }}" type="text/javascript"></script>
     <script src="{{ asset('assets/js/dashboard.js') }}"></script>
-    {{-- Selalu letakkan @stack('scripts') di PALING AKHIR --}}
-    @stack('scripts')
-    </body>
 
+    {{-- ================================================================= --}}
+    {{-- FIREBASE NOTIFICATION LOGIC (KHUSUS AUDIT & ADMIN) --}}
+    {{-- ================================================================= --}}
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+
+    <script>
+        // Ambil config dari Laravel Service
+        var firebaseConfig = {
+            apiKey: "{{ config('services.firebase.api_key') }}",
+            authDomain: "{{ config('services.firebase.auth_domain') }}",
+            projectId: "{{ config('services.firebase.project_id') }}",
+            storageBucket: "{{ config('services.firebase.storage_bucket') }}",
+            messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
+            appId: "{{ config('services.firebase.app_id') }}"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const messaging = firebase.messaging();
+
+        // Hanya jalankan jika User Login adalah AUDIT atau ADMIN
+        @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
+            
+            function sendTokenToServer(token) {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                fetch("{{ route('update.fcm.token') }}", { 
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ token: token })
+                }).then(response => {
+                    return response.json();
+                }).then(data => {
+                    console.log("FCM Token status:", data.message);
+                }).catch(err => {
+                    console.log("Gagal menyimpan token.", err);
+                });
+            }
+
+            Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                    // Ambil Token VAPID
+                    messaging.getToken({ vapidKey: "{{ config('services.firebase.vapid_key') }}" })
+                    .then((currentToken) => {
+                        if (currentToken) {
+                            sendTokenToServer(currentToken);
+                        } else {
+                            console.log('No Registration Token available');
+                        }
+                    }).catch((err) => {
+                        console.log('Error retrieving token', err);
+                    });
+                }
+            });
+
+            // Foreground Message Handler
+            messaging.onMessage((payload) => {
+                console.log('Message received: ', payload);
+                const notificationTitle = payload.notification.title;
+                const notificationOptions = {
+                    body: payload.notification.body,
+                    icon: '/assets/images/favicon.png' 
+                };
+                if (Notification.permission === 'granted') {
+                    new Notification(notificationTitle, notificationOptions);
+                }
+            });
+        @endif
+    </script>
+
+    @stack('scripts')
+</body>
 </html>

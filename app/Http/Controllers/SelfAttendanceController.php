@@ -9,23 +9,24 @@ use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use App\Traits\SendFcmNotification; // Pastikan ini ada
+use App\Traits\SendFcmNotification; // Wajib ada
 use Carbon\Carbon;
 use Intervention\Image\Facades\Image;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SelfAttendanceController extends Controller
 {
-    use SendFcmNotification;
+    use SendFcmNotification; // Wajib ada
 
-    // ... (Method create() biarkan sama seperti kode anda sebelumnya) ...
     public function create() 
     {
-        // Copy paste isi create() dari kode user sebelumnya, tidak ada perubahan di sini
         $user = Auth::user();
         $today = today();
         $yesterday = Carbon::yesterday()->startOfDay();
 
+        // Cek Cuti
         $isOnLeave = LeaveRequest::where('user_id', $user->id)
             ->where('status', 'approved')
             ->where('type', '!=', 'telat') 
@@ -38,6 +39,7 @@ class SelfAttendanceController extends Controller
             return redirect()->route('dashboard')->with('error', $msg);
         }
 
+        // Cek Sesi Gantung
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', $yesterday)
@@ -48,6 +50,7 @@ class SelfAttendanceController extends Controller
             $mode = 'pulang';
             $attendance = $activeSession;
         } else {
+            // Cek Selesai
             $finishedToday = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', $today)
                 ->whereNotNull('check_out_time')
@@ -59,13 +62,14 @@ class SelfAttendanceController extends Controller
             $mode = 'masuk';
             $attendance = null;
 
+            // Cek Laporan Telat Aktif
             $activeLateStatus = LateNotification::where('user_id', $user->id)
                 ->where('is_active', true)
                 ->whereDate('created_at', $today)
                 ->first();
 
             if ($activeLateStatus) {
-                return redirect()->route('dashboard')->with('error', 'Hapus laporan telat dulu.');
+                return redirect()->route('dashboard')->with('error', 'Hapus laporan telat dulu sebelum absen.');
             }
         }
 
@@ -86,7 +90,7 @@ class SelfAttendanceController extends Controller
         $currentTime = now();
         $today = today();
 
-        // Validasi Cuti
+        // Validasi Cuti (Backend Protection)
         $isOnLeave = LeaveRequest::where('user_id', $user->id)
             ->where('status', 'approved')
             ->where('type', '!=', 'telat')
@@ -133,14 +137,12 @@ class SelfAttendanceController extends Controller
 
         $workSchedule = WorkSchedule::getScheduleForUser($user->id);
         
-        // Variabel Notifikasi
         $shouldSendNotif = false;
         $notifTitle = "";
         $notifBody = "";
+        $message = "";
 
-        // =========================================================
-        // LOGIKA ABSEN PULANG (UPDATE)
-        // =========================================================
+        // === ABSEN PULANG ===
         if ($attendanceToUpdate) {
             $isEarly = false;
             if ($attendanceToUpdate->check_in_time->isToday()) {
@@ -154,7 +156,6 @@ class SelfAttendanceController extends Controller
             }
 
             $currentStatus = $attendanceToUpdate->status;
-            // Jika sebelumnya verified, kembalikan ke pending agar dicek ulang audit
             $newStatus = ($currentStatus == 'verified' || $currentStatus == 'present') ? $currentStatus : 'pending_verification';
 
             $finalNotes = $attendanceToUpdate->notes;
@@ -176,23 +177,21 @@ class SelfAttendanceController extends Controller
 
             $message = "Berhasil absen pulang.";
 
-            // [MODIFIKASI] Set Notifikasi untuk Pulang
             if ($newStatus == 'pending_verification') {
                 $shouldSendNotif = true;
                 $notifTitle = "Verifikasi Pulang";
-                $notifBody = "{$user->name} melakukan absen pulang (Mandiri) & menunggu verifikasi.";
+                $notifBody = "{$user->name} melakukan absen pulang (Mandiri) di cabang {$user->branch->name ?? '-'}";
             }
         } 
-        // =========================================================
-        // LOGIKA ABSEN MASUK (CREATE)
-        // =========================================================
+        // === ABSEN MASUK ===
         else {
-            // Bersihkan sesi lama
+            // Auto Close Sesi Lama
             Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '<', today())
-                ->update(['check_out_time' => \DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed', 'status' => 'rejected']);
+                ->update(['check_out_time' => DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed', 'status' => 'rejected']);
 
+            // Cek Double Entry
             $alreadyFinished = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', today())
                 ->whereNotNull('check_out_time')
@@ -227,26 +226,24 @@ class SelfAttendanceController extends Controller
 
             $message = 'Berhasil absen masuk. Menunggu verifikasi.';
 
-            // [MODIFIKASI] Set Notifikasi untuk Masuk
             $shouldSendNotif = true;
             $notifTitle = "Verifikasi Masuk";
-            $notifBody = "{$user->name} melakukan absen masuk (Mandiri) & menunggu verifikasi.";
+            $notifBody = "{$user->name} melakukan absen masuk (Mandiri) di cabang {$user->branch->name ?? '-'}";
         }
 
-        // [MODIFIKASI] Eksekusi Kirim Notifikasi
+        // KIRIM NOTIFIKASI KE AUDIT
         if ($shouldSendNotif) {
             try {
                 // Kirim ke role 'audit' di branch yang sama
                 $this->sendNotificationToBranchRoles(['audit'], $user->branch_id, $notifTitle, $notifBody);
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Gagal kirim notif FCM: " . $e->getMessage());
+                Log::error("Gagal kirim notif FCM Controller: " . $e->getMessage());
             }
         }
 
         return redirect()->route('dashboard')->with('success', $message);
     }
 
-    // Fungsi Lewati Checkout (untuk sesi gantung)
     public function skipCheckOut($id)
     {
         $user = Auth::user();
@@ -258,14 +255,11 @@ class SelfAttendanceController extends Controller
                 'photo_out_path' => null,
                 'notes'          => $attendance->notes . ' | User lupa absen pulang (Sesi ditutup via tombol Lewati)',
             ]);
-
             return redirect()->route('dashboard')->with('success', 'Sesi kemarin ditutup.');
         }
-
         return redirect()->route('dashboard')->with('error', 'Sesi tidak valid.');
     }
 
-    // Fungsi Izin Telat (Tidak berubah)
     public function storeLateStatus(Request $request)
     {
         $request->validate(['message' => 'required|string|max:255']);
@@ -281,10 +275,10 @@ class SelfAttendanceController extends Controller
         ]);
         
         $title = "Izin Telat Masuk";
-        $body = "{$user->name} mengajukan izin telat.";
+        $body = "{$user->name} mengajukan izin telat di cabang {$user->branch->name ?? '-'}";
         
         try {
-            $this->sendNotificationToBranchRoles(['admin', 'audit'], $user->branch_id, $title, $body);
+            $this->sendNotificationToBranchRoles(['audit', 'admin'], $user->branch_id, $title, $body);
         } catch (\Exception $e) { }
         
         return redirect()->route('dashboard')->with('success', 'Laporan telat berhasil dikirim.');
