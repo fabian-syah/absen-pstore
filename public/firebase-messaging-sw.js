@@ -1,35 +1,30 @@
-// Impor skrip Firebase (sesuai versi 12.5.0 Anda)
-importScripts("https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js");
-importScripts("https://www.gstatic.com/firebasejs/12.5.0/firebase-messaging.js");
+// File: public/firebase-messaging-sw.js
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-// ======================================================
-// PASTE OBJECT 'firebaseConfig' YANG SAMA DI SINI LAGI
-// ======================================================
+// Salin config yang sama persis dengan di master.blade.php / .env
 const firebaseConfig = {
-    apiKey: "AIzaSyCdEV7DdFYMP5L4rV5qK4JIGjn2I2hO7lA",
-    authDomain: "pstore-absensi.firebaseapp.com",
-    projectId: "pstore-absensi",
-    storageBucket: "pstore-absensi.firebasestorage.app",
-    messagingSenderId: "550936407111",
-    appId: "1:550936407111:web:cc466d98a2434440bf1562",
-    measurementId: "G-L04DJFBZHH"
+    apiKey: "AIzaSyA27iUWIsqv_6A4kzGq12qt0eEicfkgOmI",
+    authDomain: "bote-1a4b9.firebaseapp.com",
+    projectId: "bote-1a4b9",
+    storageBucket: "bote-1a4b9.firebasestorage.app",
+    messagingSenderId: "898324022444",
+    appId: "1:898324022444:web:e930d0fa96262ddf6c4b09"
 };
-// ======================================================
 
-initializeApp(firebaseConfig);
-const messaging = getMessaging();
+firebase.initializeApp(firebaseConfig);
 
-// Menerima notifikasi saat website DITUTUP (background)
-self.addEventListener('push', (event) => {
-    const payload = event.data.json();
-    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+const messaging = firebase.messaging();
 
-    const notificationTitle = payload.notification.title;
-    const notificationOptions = {
-        body: payload.notification.body,
-        icon: '/assets/images/logo-mini.svg',
-        sound: '/sounds/suara-notif.mp3' // <-- GANTI DI SINI
-    };
+// Handler untuk pesan background
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: '/assets/images/favicon.png' // Pastikan path icon benar
+  };
 
-    event.waitUntil(self.registration.showNotification(notificationTitle, notificationOptions));
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
