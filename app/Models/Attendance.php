@@ -29,6 +29,7 @@ class Attendance extends Model
         'is_late_checkin',
         'is_early_checkout',
         'attendance_type',
+        'notes',
     ];
 
     protected $casts = [
