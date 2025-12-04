@@ -69,11 +69,12 @@
     {{-- FIREBASE NOTIFICATION LOGIC (KHUSUS AUDIT & ADMIN) --}}
     {{-- ================================================================= --}}
     
-   {{-- 1. Load Library Firebase --}}
+    {{-- 1. Load Library Firebase --}}
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
     <script>
+        // 2. Konfigurasi Firebase dari Config Laravel
         var firebaseConfig = {
             apiKey: "{{ config('services.firebase.api_key') }}",
             authDomain: "{{ config('services.firebase.auth_domain') }}",
@@ -89,14 +90,12 @@
         
         const messaging = firebase.messaging();
 
+        // Hanya jalankan jika User Login adalah AUDIT atau ADMIN
         @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
             
-            // FUNGSI: Kirim Token ke Database
+            // --- FUNGSI SIMPAN TOKEN KE SERVER ---
             function sendTokenToServer(token) {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                
-                console.log("Mengirim token ke server..."); // Debugging
-
                 fetch("{{ route('update.fcm.token') }}", { 
                     method: "POST",
                     headers: {
@@ -107,72 +106,83 @@
                 }).then(response => {
                     return response.json();
                 }).then(data => {
-                    console.log("Server Response:", data.message);
+                    console.log("FCM Token status:", data.message);
                 }).catch(err => {
-                    console.log("Gagal update token:", err);
+                    console.log("Gagal menyimpan token ke server.", err);
                 });
             }
 
-            // LOGIKA UTAMA: Jalankan setiap kali halaman dimuat
+            // --- PERBAIKAN: MANUAL REGISTER SERVICE WORKER ---
+            // Ini memaksa browser mengaktifkan file background agar siap terima pesan
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/firebase-messaging-sw.js')
                 .then(function(registration) {
+                    console.log('Service Worker Registered with scope:', registration.scope);
                     
-                    // Cek Izin
-                    if (Notification.permission === 'granted') {
-                        // Langsung ambil token yang sudah ada (Current Token)
-                        messaging.getToken({ 
-                            vapidKey: "{{ config('services.firebase.vapid_key') }}",
-                            serviceWorkerRegistration: registration 
-                        })
-                        .then((currentToken) => {
-                            if (currentToken) {
-                                // PAKSA KIRIM KE SERVER SEKARANG
-                                // (Walaupun browser sudah punya, server mungkin belum karena habis logout)
-                                sendTokenToServer(currentToken);
-                            } else {
-                                console.log('Token belum tersedia, meminta izin...');
-                                Notification.requestPermission();
-                            }
-                        }).catch((err) => {
-                            console.log('Error ambil token:', err);
-                        });
-                    } else if (Notification.permission !== 'denied') {
-                        // Jika belum ada izin, minta dulu
-                        Notification.requestPermission().then((permission) => {
-                            if (permission === 'granted') {
-                                location.reload(); // Reload agar token terambil
-                            }
-                        });
-                    }
+                    // Setelah SW aktif, minta izin notifikasi
+                    Notification.requestPermission().then((permission) => {
+                        if (permission === 'granted') {
+                            console.log('Izin notifikasi diberikan.');
+                            
+                            // Ambil Token menggunakan SW registration yang valid
+                            messaging.getToken({ 
+                                vapidKey: "{{ config('services.firebase.vapid_key') }}",
+                                serviceWorkerRegistration: registration 
+                            })
+                            .then((currentToken) => {
+                                if (currentToken) {
+                                    // Selalu kirim token saat halaman dimuat (untuk jaga-jaga kalau habis logout)
+                                    sendTokenToServer(currentToken);
+                                } else {
+                                    console.log('Tidak ada token tersedia.');
+                                }
+                            }).catch((err) => {
+                                console.log('Error mengambil token:', err);
+                            });
+                        } else {
+                            console.log('Izin notifikasi DITOLAK user.');
+                        }
+                    });
 
+                }).catch(function(err) {
+                    console.log('Service Worker registration failed:', err);
                 });
             }
 
-            // HANDLER FOREGROUND (Tab Aktif)
+            // --- HANDLER SAAT TAB DIBUKA (FOREGROUND) - VERSI AGRESIF ---
             messaging.onMessage((payload) => {
-                console.log('Pesan masuk:', payload);
-                const data = payload.data || payload.notification || {};
-                const title = data.title || "Notifikasi";
-                const body = data.body || "Pesan baru masuk.";
-                const icon = 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png';
+                console.log('DATA DITERIMA (Foreground): ', payload);
+                
+                // Ambil data langsung dari 'data' payload (Standar V1)
+                // Fallback ke 'notification' jika kosong
+                var data = payload.data || payload.notification || {};
 
+                var title = data.title || "Notifikasi Baru";
+                var body = data.body || "Cek dashboard untuk detail.";
+                // Gunakan icon online google biar aman dari error 404 lokal
+                var icon = 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png'; 
+                var url = data.url || '/';
+
+                // Tampilkan Notifikasi Native
                 if (Notification.permission === 'granted') {
                     var notif = new Notification(title, {
                         body: body,
                         icon: icon,
-                        tag: 'audit-notif-' + Date.now()
+                        tag: 'audit-alert-' + Date.now(), // Tag unik
+                        requireInteraction: true // Notif tidak hilang sendiri
                     });
+
                     notif.onclick = function() {
                         window.focus();
-                        window.location.href = "{{ route('audit.verify.list') }}";
+                        if(url) window.location.href = url;
                         this.close();
                     };
+                } else {
+                    console.log("Notifikasi masuk tapi izin belum granted.");
                 }
             });
         @endif
     </script>
-    @endif
 
     {{-- Stack Scripts untuk halaman spesifik --}}
     @stack('scripts')
