@@ -1213,68 +1213,6 @@
             "time": "2023-10-12T05:21:21+00:00"
         },
         {
-            "name": "google/auth",
-            "version": "v1.49.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/googleapis/google-auth-library-php.git",
-                "reference": "68e3d88cb59a49f713e3db25d4f6bb3cc0b70764"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/68e3d88cb59a49f713e3db25d4f6bb3cc0b70764",
-                "reference": "68e3d88cb59a49f713e3db25d4f6bb3cc0b70764",
-                "shasum": ""
-            },
-            "require": {
-                "firebase/php-jwt": "^6.0",
-                "guzzlehttp/guzzle": "^7.4.5",
-                "guzzlehttp/psr7": "^2.4.5",
-                "php": "^8.1",
-                "psr/cache": "^2.0||^3.0",
-                "psr/http-message": "^1.1||^2.0",
-                "psr/log": "^3.0"
-            },
-            "require-dev": {
-                "guzzlehttp/promises": "^2.0",
-                "kelvinmo/simplejwt": "0.7.1",
-                "phpseclib/phpseclib": "^3.0.35",
-                "phpspec/prophecy-phpunit": "^2.1",
-                "phpunit/phpunit": "^9.6",
-                "sebastian/comparator": ">=1.2.3",
-                "squizlabs/php_codesniffer": "^4.0",
-                "symfony/filesystem": "^6.3||^7.3",
-                "symfony/process": "^6.0||^7.0",
-                "webmozart/assert": "^1.11"
-            },
-            "suggest": {
-                "phpseclib/phpseclib": "May be used in place of OpenSSL for signing strings or for token management. Please require version ^2."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Google\\Auth\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0"
-            ],
-            "description": "Google Auth Library for PHP",
-            "homepage": "https://github.com/google/google-auth-library-php",
-            "keywords": [
-                "Authentication",
-                "google",
-                "oauth2"
-            ],
-            "support": {
-                "docs": "https://cloud.google.com/php/docs/reference/auth/latest",
-                "issues": "https://github.com/googleapis/google-auth-library-php/issues",
-                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.49.0"
-            },
-            "time": "2025-11-06T21:27:55+00:00"
-        },
-        {
             "name": "google/cloud-core",
             "version": "v1.68.2",
             "source": {
@@ -1289,7 +1227,6 @@
                 "shasum": ""
             },
             "require": {
-                "google/auth": "^1.34",
                 "google/gax": "^1.38.0",
                 "guzzlehttp/guzzle": "^6.5.8||^7.4.4",
                 "guzzlehttp/promises": "^1.4||^2.0",
@@ -1471,7 +1408,6 @@
                 "shasum": ""
             },
             "require": {
-                "google/auth": "^1.49",
                 "google/common-protos": "^4.4",
                 "google/grpc-gcp": "^0.4",
                 "google/longrunning": "~0.4",
@@ -1528,7 +1464,6 @@
                 "shasum": ""
             },
             "require": {
-                "google/auth": "^1.3",
                 "google/protobuf": "^v3.25.3||^4.26.1",
                 "grpc/grpc": "^v1.13.0",
                 "php": "^8.0",
@@ -1724,9 +1659,6 @@
             },
             "require": {
                 "php": ">=7.0.0"
-            },
-            "require-dev": {
-                "google/auth": "^v1.3.0"
             },
             "suggest": {
                 "ext-protobuf": "For better performance, install the protobuf C extension.",
@@ -2188,7 +2120,6 @@
                 "ext-mbstring": "*",
                 "fig/http-message-util": "^1.1.5",
                 "firebase/php-jwt": "^6.10.2",
-                "google/auth": "^v1.45",
                 "google/cloud-storage": "^1.45",
                 "guzzlehttp/guzzle": "^7.9.2",
                 "guzzlehttp/promises": "^2.0.4",
