@@ -57,31 +57,30 @@ trait SendFcmNotification
         $projectId = 'bote-1a4b9'; // Sesuai log anda
         $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
 
+        // 4. Kirim ke SETIAP Token
         foreach ($tokens as $token) {
             $payload = [
                 "message" => [
                     "token" => $token,
                     
-                    // KITA PAKAI HYBRID: NOTIFICATION + DATA
-                    // Ini memaksa sistem operasi langsung menampilkan notif
+                    // [PERBAIKAN UTAMA] Gunakan 'notification' object standar
                     "notification" => [
                         "title" => $title,
                         "body"  => $body,
                     ],
+                    // Data tambahan untuk logika klik (URL redirection)
                     "data" => [
-                        "url" => url('/audit/verify-list'),
+                        "click_action" => url('/audit/verifikasi/absensi'), // Link halaman verifikasi
                         "type" => "audit_alert"
                     ],
-                    // KONFIGURASI AGAR MUNCUL DI LAYAR (PRIORITY HIGH)
+                    // Konfigurasi agar Prioritas Tinggi (Muncul di layar)
                     "android" => [
                         "priority" => "high",
                         "notification" => [
-                            "channel_id" => "default",
-                            "sound" => "default",
-                            "priority" => "high",
+                            "channel_id" => "default_channel",
                             "default_sound" => true,
                             "default_vibrate_timings" => true,
-                            "click_action" => url('/audit/verify-list')
+                            "click_action" => url('/audit/verifikasi/absensi')
                         ]
                     ],
                     "webpush" => [
@@ -89,23 +88,22 @@ trait SendFcmNotification
                             "Urgency" => "high"
                         ],
                         "fcm_options" => [
-                            "link" => url('/audit/verify-list')
+                            "link" => url('/audit/verifikasi/absensi')
                         ]
                     ]
                 ]
             ];
 
             try {
-                // Gunakan withoutVerifying() untuk bypass SSL saat pengiriman
-                $response = Http::withoutVerifying()
+                $response = Http::withoutVerifying() // Bypass SSL jika perlu
                     ->withToken($accessToken['access_token'])
                     ->withHeaders(['Content-Type' => 'application/json'])
                     ->post($url, $payload);
 
                 if ($response->successful()) {
-                    Log::info('FCM V1 Success: ' . substr($response->body(), 0, 100));
+                    Log::info('FCM Success: ' . substr($response->body(), 0, 100));
                 } else {
-                    Log::error('FCM V1 Failed: ' . $response->body());
+                    Log::error('FCM Failed: ' . $response->body());
                 }
             } catch (\Exception $e) {
                 Log::error('FCM Send Error: ' . $e->getMessage());

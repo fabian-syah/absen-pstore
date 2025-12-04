@@ -11,51 +11,25 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const messaging = firebase.messaging();
 
-// Handler Background (Saat Tab Ditutup/Minimize)
-messaging.onBackgroundMessage(function(payload) {
-  console.log('[SW] Pesan Masuk:', payload);
+// Handler Background: Kosongkan saja handler onBackgroundMessage
+// Biarkan browser menghandle tampilan notifikasi secara otomatis dari payload 'notification' PHP.
 
-  // Cek apakah data ada di payload.data (Server Laravel pakai format 'data')
-  // Atau di payload.notification (Format standar Firebase)
-  const data = payload.data || payload.notification;
-
-  if (!data) {
-      console.error('[SW] Payload kosong!', payload);
-      return;
-  }
-
-  const notificationTitle = data.title || "Info Absensi";
-  const notificationOptions = {
-    body: data.body || "Ada pembaruan data.",
-    // Pakai icon Google dulu biar pasti muncul (hindari 404)
-    icon: 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png',
-    tag: 'audit-notif-' + Date.now(),
-    renotify: true,
-    data: {
-        url: data.url || '/'
-    }
-  };
-
-  return self.registration.showNotification(notificationTitle, notificationOptions);
-});
-
-// Event Klik Notifikasi
+// Handler Klik Notifikasi (Penting agar membuka halaman)
 self.addEventListener('notificationclick', function(event) {
     console.log('[SW] Notifikasi diklik.');
     event.notification.close();
 
-    event.waitUntil(
-        clients.matchAll({type: 'window'}).then(function(clientList) {
-            // Cek URL tujuan
-            const urlToOpen = event.notification.data.url || '/';
+    // Ambil URL dari payload data atau fallback ke home
+    const urlToOpen = event.notification.data?.click_action || event.notification.data?.url || '/';
 
+    event.waitUntil(
+        clients.matchAll({type: 'window', includeUncontrolled: true}).then(function(clientList) {
             // Jika tab sudah ada, fokuskan
             for (var i = 0; i < clientList.length; i++) {
                 var client = clientList[i];
-                if (client.url === urlToOpen && 'focus' in client) {
+                if (client.url.includes(urlToOpen) && 'focus' in client) {
                     return client.focus();
                 }
             }

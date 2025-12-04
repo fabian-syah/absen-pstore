@@ -149,36 +149,31 @@
                 });
             }
 
-            // --- HANDLER SAAT TAB DIBUKA (FOREGROUND) - VERSI AGRESIF ---
+           // --- HANDLER FOREGROUND (SAAT TAB DIBUKA) ---
             messaging.onMessage((payload) => {
-                console.log('DATA DITERIMA (Foreground): ', payload);
+                console.log('Pesan masuk (Foreground): ', payload);
                 
-                // Ambil data langsung dari 'data' payload (Standar V1)
-                // Fallback ke 'notification' jika kosong
-                var data = payload.data || payload.notification || {};
-
-                var title = data.title || "Notifikasi Baru";
-                var body = data.body || "Cek dashboard untuk detail.";
-                // Gunakan icon online google biar aman dari error 404 lokal
-                var icon = 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png'; 
-                var url = data.url || '/';
+                // Ambil data dari payload 'notification' (karena sekarang PHP kirim itu)
+                const title = payload.notification ? payload.notification.title : "Notifikasi Baru";
+                const body = payload.notification ? payload.notification.body : "Cek dashboard.";
+                const icon = 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png';
+                
+                // Ambil URL dari data
+                const url = payload.data ? payload.data.click_action : '/';
 
                 // Tampilkan Notifikasi Native
                 if (Notification.permission === 'granted') {
                     var notif = new Notification(title, {
                         body: body,
                         icon: icon,
-                        tag: 'audit-alert-' + Date.now(), // Tag unik
-                        requireInteraction: true // Notif tidak hilang sendiri
+                        tag: 'audit-alert-' + Date.now()
                     });
 
                     notif.onclick = function() {
                         window.focus();
-                        if(url) window.location.href = url;
+                        window.location.href = url;
                         this.close();
                     };
-                } else {
-                    console.log("Notifikasi masuk tapi izin belum granted.");
                 }
             });
         @endif
