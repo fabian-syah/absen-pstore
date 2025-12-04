@@ -26,7 +26,7 @@ class LoginController extends Controller
         $user = User::where('login_id', $request->login_id)->first();
 
         // 2. Cek User Ditemukan & Password Benar
-        if ($user && (Hash::check($request->password, $user->password))) {
+       if ($user && (Hash::check($request->password, $user->password))) {
 
             // 3. CEK STATUS AKTIF (LOGIKA BARU)
             if ($user->is_active == 0) {
@@ -38,7 +38,7 @@ class LoginController extends Controller
             // Jika lolos semua, login
             Auth::login($user, $request->remember);
             $request->session()->regenerate();
-            return redirect()->intended('/dashboard');
+            return redirect()->route('dashboard');
         }
 
         // Jika gagal
