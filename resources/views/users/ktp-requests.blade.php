@@ -35,10 +35,12 @@
                                 </td>
                                 <td>{{ $user->division->name ?? '-' }}</td>
                                 
-                                {{-- Kolom KTP Lama --}}
+                                {{-- ======================= --}}
+                                {{-- KOLOM KTP LAMA --}}
+                                {{-- ======================= --}}
                                 <td class="text-center">
                                     @if($user->ktp_photo_path)
-                                        {{-- Thumbnail --}}
+                                        {{-- Thumbnail Kecil di Tabel --}}
                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
                                              alt="Old KTP" 
                                              class="img-thumbnail"
@@ -46,18 +48,20 @@
                                              data-bs-toggle="modal" 
                                              data-bs-target="#modalOldKtp{{ $user->id }}">
                                         
-                                        {{-- Modal View Old --}}
+                                        {{-- MODAL POPUP (DIPERBAIKI) --}}
                                         <div class="modal fade" id="modalOldKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg"> {{-- modal-lg biar lebar --}}
                                                 <div class="modal-content">
-                                                    <div class="modal-header border-0 pb-0">
-                                                        <h5 class="modal-title fs-6 text-muted">KTP Lama: {{ $user->name }}</h5>
+                                                    <div class="modal-header py-2">
+                                                        <h5 class="modal-title fs-6">KTP Lama: {{ $user->name }}</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body text-center p-2">
+                                                    {{-- p-0 biar full tanpa jarak putih --}}
+                                                    <div class="modal-body p-0 text-center bg-light d-flex align-items-center justify-content-center" style="min-height: 200px;">
+                                                        {{-- w-100 biar dipaksa lebar, max-height biar gak kelebihan layar HP --}}
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
-                                                             class="img-fluid rounded shadow-sm"
-                                                             style="max-height: 85vh; width: auto; max-width: 100%;">
+                                                             class="img-fluid w-100"
+                                                             style="max-height: 80vh; object-fit: contain;">
                                                     </div>
                                                 </div>
                                             </div>
@@ -67,10 +71,12 @@
                                     @endif
                                 </td>
 
-                                {{-- Kolom KTP Baru --}}
+                                {{-- ======================= --}}
+                                {{-- KOLOM KTP BARU --}}
+                                {{-- ======================= --}}
                                 <td class="text-center">
                                     @if($user->ktp_photo_temp_path)
-                                        {{-- Thumbnail --}}
+                                        {{-- Thumbnail Kecil --}}
                                         <div class="position-relative d-inline-block">
                                             <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
                                                  alt="New KTP" 
@@ -83,18 +89,18 @@
                                             </span>
                                         </div>
 
-                                        {{-- Modal View New --}}
+                                        {{-- MODAL POPUP (DIPERBAIKI) --}}
                                         <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                                 <div class="modal-content">
-                                                    <div class="modal-header border-0 pb-0">
+                                                    <div class="modal-header py-2">
                                                         <h5 class="modal-title fs-6 text-success fw-bold">Calon KTP Baru: {{ $user->name }}</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body text-center p-2">
+                                                    <div class="modal-body p-0 text-center bg-light d-flex align-items-center justify-content-center" style="min-height: 200px;">
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
-                                                             class="img-fluid rounded shadow-sm"
-                                                             style="max-height: 85vh; width: auto; max-width: 100%;">
+                                                             class="img-fluid w-100"
+                                                             style="max-height: 80vh; object-fit: contain;">
                                                     </div>
                                                 </div>
                                             </div>
