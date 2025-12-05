@@ -211,9 +211,16 @@ class AttendanceHistoryController extends Controller
         $workSchedule = WorkSchedule::getScheduleForUser($attendance->user_id);
         $isLate = $attendance->is_late_checkin;
         
-        if ($workSchedule && $request->presence_status == 'Masuk') {
-            $scheduleStart = Carbon::parse($originalDate . ' ' . $workSchedule->check_in_end);
-            $isLate = $newCheckIn->gt($scheduleStart);
+        // MODIFIKASI: Hanya hitung telat jika tanggal absensi >= 1 Desember 2025
+        if ($newCheckIn->format('Y-m-d') >= '2025-12-01') {
+            if ($workSchedule && $request->presence_status == 'Masuk') {
+                $scheduleStart = Carbon::parse($originalDate . ' ' . $workSchedule->check_in_end);
+                $isLate = $newCheckIn->gt($scheduleStart);
+            }
+        } else {
+            // Jika sebelum Desember 2025, anggap tidak telat (karena jadwal belum berlaku)
+            // Kecuali mau di-set manual, tapi defaultnya false agar aman.
+            $isLate = false; 
         }
 
         $auditPhotoPath = $attendance->audit_photo_path;

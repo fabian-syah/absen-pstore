@@ -98,11 +98,10 @@
                                 </div>
                                 <div class="col-auto">
                                     <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
-                                        {{-- MODIFIKASI: MULAI DARI 2025 --}}
                                         @php
                                             $startYear = 2025;
                                             $currentYear = date('Y');
-                                            $endYear = $currentYear + 1; // Tampilkan sampai tahun depan
+                                            $endYear = $currentYear + 1; 
                                         @endphp
                                         @for ($y = $startYear; $y <= $endYear; $y++)
                                             <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>
@@ -176,7 +175,7 @@
                 </div>
             </div>
 
-            {{-- Baris 2 (Detail Kecil) --}}
+            {{-- Baris 2 --}}
             <div class="row mb-3">
                 <div class="col-md-4 mb-2">
                     <div class="card bg-warning text-white border-0 shadow-sm">
@@ -247,27 +246,47 @@
                                                 <small class="text-muted">{{ $att->check_in_time->format('l') }}</small>
                                             </td>
 
-                                            {{-- JAM MASUK --}}
+                                            {{-- JAM MASUK (MODIFIKASI DISINI) --}}
                                             <td>
                                                 <div class="d-flex flex-column">
                                                     @php
                                                         $scheduleTime = null;
-                                                        if ($att->user && $att->user->check_in_start) {
-                                                            $scheduleTime = $att->user->check_in_start;
-                                                        } elseif ($att->user && $att->user->workSchedule) {
-                                                            $scheduleTime = $att->user->workSchedule->start_time;
+                                                        
+                                                        // LOGIKA JADWAL: 
+                                                        // Hanya ambil jadwal jika tanggal >= 1 Desember 2025
+                                                        // Tanggal sebelum itu dianggap fleksibel (tidak hitung telat)
+                                                        $cutoffDate = \Carbon\Carbon::create(2025, 12, 1);
+                                                        
+                                                        if ($att->check_in_time->gte($cutoffDate)) {
+                                                            if ($att->user && $att->user->check_in_start) {
+                                                                $scheduleTime = $att->user->check_in_start;
+                                                            } elseif ($att->user && $att->user->workSchedule) {
+                                                                $scheduleTime = $att->user->workSchedule->start_time;
+                                                            }
                                                         }
 
                                                         $isRealLate = false;
-                                                        $lateMinutes = 0;
+                                                        $lateStr = ''; // String untuk tampilan jam/menit
+
                                                         if ($scheduleTime) {
                                                             $actualStr = $att->check_in_time->format('H:i');
                                                             $scheduleStr = \Carbon\Carbon::parse($scheduleTime)->format('H:i');
+                                                            
                                                             if ($actualStr > $scheduleStr) {
                                                                 $isRealLate = true;
                                                                 $actualCarbon = \Carbon\Carbon::parse($actualStr);
                                                                 $scheduleCarbon = \Carbon\Carbon::parse($scheduleStr);
                                                                 $lateMinutes = $scheduleCarbon->diffInMinutes($actualCarbon);
+                                                                
+                                                                // LOGIKA DISPLAY JAM/MENIT
+                                                                $hours = floor($lateMinutes / 60);
+                                                                $mins = $lateMinutes % 60;
+                                                                
+                                                                if ($hours > 0) {
+                                                                    $lateStr = "{$hours}j {$mins}m"; // Contoh: 1j 30m
+                                                                } else {
+                                                                    $lateStr = "{$mins}m"; // Contoh: 45m
+                                                                }
                                                             }
                                                         }
                                                     @endphp
@@ -279,7 +298,7 @@
                                                         </span>
                                                         @if ($isRealLate)
                                                             <span class="badge bg-danger ms-1" style="font-size: 9px;">
-                                                                Telat {{ $lateMinutes }}m
+                                                                Telat {{ $lateStr }}
                                                             </span>
                                                         @endif
                                                     </div>
@@ -290,6 +309,7 @@
                                                             Jadwal: {{ \Carbon\Carbon::parse($scheduleTime)->format('H:i') }}
                                                         </small>
                                                     @else
+                                                        {{-- Jika sebelum des 2025 atau tidak ada jadwal --}}
                                                         <small class="text-muted fst-italic" style="font-size: 11px;">- Fleksibel -</small>
                                                     @endif
                                                 </div>
@@ -424,20 +444,16 @@
                                                             <i class="mdi mdi-pencil-box-outline text-info me-1"></i>
                                                             <span class="badge bg-info text-white verification-badge">Dikoreksi</span>
                                                         </div>
-                                                        {{-- MENAMPILKAN PENGECEK --}}
                                                         @if($att->verifier)
                                                             <small class="d-block text-muted mt-1 fst-italic" style="font-size: 10px;">
                                                                 <i class="mdi mdi-account-check me-1"></i> {{ $att->verifier->name }}
                                                             </small>
                                                         @endif
                                                     @else
-                                                        {{-- STATUS TERVERIFIKASI NORMAL --}}
                                                         <div class="d-flex align-items-center">
                                                             <i class="mdi mdi-check-circle verified-check me-1"></i>
                                                             <span class="badge bg-success verification-badge">Terverifikasi</span>
                                                         </div>
-                                                        
-                                                        {{-- TAMBAHAN: MENAMPILKAN SIAPA YANG VERIFIKASI --}}
                                                         @if($att->verifier)
                                                             <small class="d-block text-muted mt-1 fst-italic" style="font-size: 10px;">
                                                                 <i class="mdi mdi-account-check-outline me-1"></i> {{ $att->verifier->name }}
