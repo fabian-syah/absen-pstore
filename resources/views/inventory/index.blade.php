@@ -25,7 +25,7 @@
                                 <i class="mdi mdi-account-box"></i> Sedang Dipakai
                             </a>
                             <a href="{{ route('inventory.available') }}" class="btn btn-sm {{ request()->routeIs('inventory.available') ? 'btn-success' : 'btn-outline-success' }}">
-                                <i class="mdi mdi-warehouse"></i> Gudang (Available)
+                                <i class="mdi mdi-warehouse"></i> Dikembalikan (Available)
                             </a>
                         </div>
                     @endif
