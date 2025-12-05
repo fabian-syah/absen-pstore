@@ -102,7 +102,7 @@
                                 {{-- KOLOM 3: KTP LAMA (BERUBAH MENJADI KOTAK) --}}
                                 {{-- =================================== --}}
                                 <td class="text-center">
-                                    @if($user->ktp_photo_path)
+                                    @if($user->ktp_photo_path && file_exists(storage_path('app/public/' . $user->ktp_photo_path)))
                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
                                              alt="Old KTP" 
                                              class="rounded shadow-sm"
@@ -125,7 +125,14 @@
                                             </div>
                                         </div>
                                     @else
-                                        <span class="badge bg-secondary text-white">Kosong</span>
+                                        {{-- Default image jika tidak ada KTP lama --}}
+                                        <div class="d-inline-block">
+                                            <img src="{{ asset('images/default-ktp.jpg') }}" 
+                                                 alt="Default KTP" 
+                                                 class="rounded shadow-sm"
+                                                 style="width: 80px; height: 50px; object-fit: cover; opacity: 0.6;">
+                                        </div>
+                                        <small class="d-block text-muted mt-1">Belum ada KTP</small>
                                     @endif
                                 </td>
 
@@ -133,7 +140,7 @@
                                 {{-- KOLOM 4: KTP BARU (REQUEST) (BERUBAH MENJADI KOTAK) --}}
                                 {{-- =================================== --}}
                                 <td class="text-center">
-                                    @if($user->ktp_photo_temp_path)
+                                    @if($user->ktp_photo_temp_path && file_exists(storage_path('app/public/' . $user->ktp_photo_temp_path)))
                                         <div class="position-relative d-inline-block">
                                             <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
                                                  alt="New KTP" 
