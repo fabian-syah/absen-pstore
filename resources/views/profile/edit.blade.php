@@ -69,7 +69,7 @@
                 @if($user->is_verified)
                     <div class="badge badge-primary px-3 py-2 mb-4"><i class="mdi mdi-check-decagram"></i> Akun Terverifikasi</div>
                 @else
-                    <div class="badge badge-secondary px-3 py-2 mb-2">User Biasa</div>
+                    <div class="badge badge-secondary px-3 py-2 mb-4">User Biasa (Belum Verifikasi)</div>
                 @endif
 
                 {{-- C. LOGIKA TOMBOL GANTI FOTO (INTI FITUR BARU) --}}
@@ -84,6 +84,7 @@
                             <input type="file" name="profile_photo" id="profile_photo" class="d-none"
                                 accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
                         </form>
+                        <small class="text-muted d-block mt-1" style="font-size: 10px;">Status: Bebas Edit (Unverified)</small>
                     
                     {{-- KONDISI 2: User Verified (Terkunci Default) --}}
                     @else
@@ -117,6 +118,7 @@
                                     <i class="mdi mdi-key-variant"></i> Request Ganti Foto
                                 </button>
                             </form>
+                            <small class="text-muted d-block mt-1" style="font-size: 10px;">Status: Terkunci (Verified)</small>
                         @endif
                     @endif
                 </div>
@@ -197,7 +199,7 @@
                         {{-- Data Dasar --}}
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Nama Lengkap (Sesuai KTP)</label>
-                            <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" readonly>
+                            <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
                         </div>
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Email Login</label>
