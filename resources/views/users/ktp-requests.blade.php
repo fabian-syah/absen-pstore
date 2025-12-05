@@ -55,7 +55,6 @@
                                         {{-- Foto Profil Thumbnail (KOTAK PERSEGI) --}}
                                         <div class="me-3">
                                             @if($user->profile_photo_path)
-                                                {{-- PERHATIKAN STYLE DI BAWAH INI --}}
                                                 <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
                                                      alt="profile" 
                                                      class="rounded shadow-sm" 
@@ -100,13 +99,13 @@
                                 <td>{{ $user->division->name ?? '-' }}</td>
                                 
                                 {{-- =================================== --}}
-                                {{-- KOLOM 3: KTP LAMA --}}
+                                {{-- KOLOM 3: KTP LAMA (BERUBAH MENJADI KOTAK) --}}
                                 {{-- =================================== --}}
                                 <td class="text-center">
                                     @if($user->ktp_photo_path)
                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
                                              alt="Old KTP" 
-                                             class="img-thumbnail"
+                                             class="rounded shadow-sm"
                                              style="width: 80px; height: 50px; cursor: pointer; object-fit: cover;"
                                              data-bs-toggle="modal" 
                                              data-bs-target="#modalOldKtp{{ $user->id }}">
@@ -131,15 +130,15 @@
                                 </td>
 
                                 {{-- =================================== --}}
-                                {{-- KOLOM 4: KTP BARU (REQUEST) --}}
+                                {{-- KOLOM 4: KTP BARU (REQUEST) (BERUBAH MENJADI KOTAK) --}}
                                 {{-- =================================== --}}
                                 <td class="text-center">
                                     @if($user->ktp_photo_temp_path)
                                         <div class="position-relative d-inline-block">
                                             <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
                                                  alt="New KTP" 
-                                                 class="img-thumbnail border-success"
-                                                 style="width: 80px; height: 50px; cursor: pointer; object-fit: cover; border-width: 2px;"
+                                                 class="rounded border border-success shadow-sm"
+                                                 style="width: 80px; height: 50px; cursor: pointer; object-fit: cover;"
                                                  data-bs-toggle="modal" 
                                                  data-bs-target="#modalNewKtp{{ $user->id }}">
                                             <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle">
