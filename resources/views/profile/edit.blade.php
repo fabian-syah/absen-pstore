@@ -72,9 +72,8 @@
                     <div class="badge badge-secondary px-3 py-2 mb-4">User Biasa</div>
                 @endif
 
-                {{-- C. LOGIKA TOMBOL GANTI FOTO (INTI FITUR BARU) --}}
+                {{-- C. LOGIKA TOMBOL GANTI FOTO --}}
                 <div class="mb-4">
-                    
                     {{-- KONDISI 1: Belum punya foto sama sekali -> Boleh Upload --}}
                     @if(!$user->profile_photo_path)
                         <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data">
@@ -89,8 +88,6 @@
                     
                     {{-- KONDISI 2: Sudah punya foto -> Terkunci / Cek Request --}}
                     @else
-                        
-                        {{-- Case A: Sudah Disetujui Admin (Akses Dibuka) --}}
                         @if($user->photo_request_status == 'approved')
                             <div class="alert alert-success py-1 small mb-2"><i class="mdi mdi-lock-open"></i> Akses Dibuka (1x Upload)</div>
                             <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data">
@@ -101,8 +98,6 @@
                                 <input type="file" name="profile_photo" id="profile_photo_unlock" class="d-none"
                                     accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
                             </form>
-
-                        {{-- Case B: Sedang Menunggu Persetujuan --}}
                         @elseif($user->photo_request_status == 'pending')
                             <div class="alert alert-warning py-1 small mb-2">
                                 <i class="mdi mdi-clock"></i> Menunggu Admin
@@ -110,8 +105,6 @@
                             <button class="btn btn-sm btn-secondary w-100" disabled>
                                 Request Sedang Diproses...
                             </button>
-
-                        {{-- Case C: Terkunci (Normal State) --}}
                         @else
                             <form action="{{ route('profile.photo.request') }}" method="POST">
                                 @csrf
@@ -122,7 +115,6 @@
                             </form>
                             <small class="text-muted d-block mt-1" style="font-size: 10px;">Foto Terkunci. Perlu izin untuk mengganti.</small>
                         @endif
-
                     @endif
                 </div>
 
@@ -202,8 +194,15 @@
                         {{-- Data Dasar --}}
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Nama Lengkap (Sesuai KTP)</label>
-                            <input type="text" class="form-control bg-light" name="name" value="{{ old('name', $user->name) }}" readonly>
+                            <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
                         </div>
+                        
+                        {{-- INPUT TANGGAL LAHIR (BARU) --}}
+                        <div class="col-md-6 mb-4">
+                            <label class="fw-bold text-muted small text-uppercase">Tanggal Lahir</label>
+                            <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date', $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('Y-m-d') : '') }}">
+                        </div>
+
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Email Login</label>
                             <input type="email" class="form-control" name="email" value="{{ old('email', $user->email) }}" required>
@@ -223,8 +222,11 @@
                             <input type="text" class="form-control bg-light" value="{{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->translatedFormat('d F Y') : '-' }}" readonly>
                         </div>
                         <div class="col-md-6 mb-4">
-                            <label class="fw-bold text-muted small text-uppercase">Status Sistem</label>
-                            <input type="text" class="form-control bg-light" value="{{ $user->is_active ? 'AKUN AKTIF' : 'NON-AKTIF' }}" readonly>
+                            <label class="fw-bold text-muted small text-uppercase">Status Akun</label>
+                            <input type="text" class="form-control bg-light" 
+                                   value="{{ $user->is_active ? 'AKUN AKTIF' : 'NON-AKTIF' }}" 
+                                   style="color: white; font-weight: bold; background-color: {{ $user->is_active ? '#28a745' : '#dc3545' }} !important; border-color: {{ $user->is_active ? '#28a745' : '#dc3545' }};" 
+                                   readonly>
                         </div>
 
                         {{-- Kontak & Sosmed --}}
@@ -294,7 +296,7 @@
 </div>
 
 {{-- ================================================= --}}
-{{-- MODALS --}}
+{{-- MODALS (FOTO & KTP) --}}
 {{-- ================================================= --}}
 
 {{-- 1. Modal Foto Profil Besar --}}
@@ -368,7 +370,6 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Script untuk Toggle Password Form
         const btnToggle = document.getElementById('btn-toggle-password');
         const container = document.getElementById('password-container');
         const inputPass = document.getElementById('input-password');
@@ -377,12 +378,10 @@
         if(btnToggle){
             btnToggle.addEventListener('click', function() {
                 if (container.classList.contains('d-none')) {
-                    // Show Password Fields
                     container.classList.remove('d-none');
                     btnToggle.innerHTML = '<i class="mdi mdi-close"></i> Batal Ganti';
                     btnToggle.classList.replace('btn-outline-dark', 'btn-outline-danger');
                 } else {
-                    // Hide & Clear Fields
                     container.classList.add('d-none');
                     btnToggle.innerHTML = '<i class="mdi mdi-lock-reset"></i> Ganti Password';
                     btnToggle.classList.replace('btn-outline-danger', 'btn-outline-dark');

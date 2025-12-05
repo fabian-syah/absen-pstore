@@ -28,7 +28,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update data TEKS (Nama, Email, Sosmed, Password).
+     * Update data TEKS (Nama, Tanggal Lahir, Email, Sosmed, Password).
      */
     public function update(Request $request)
     {
@@ -37,6 +37,7 @@ class ProfileController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'birth_date' => 'nullable|date', // <--- VALIDASI TANGGAL LAHIR
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
             'whatsapp' => 'nullable|string|max:20',
@@ -46,8 +47,16 @@ class ProfileController extends Controller
             'linkedin' => 'nullable|string|max:100',
         ]);
 
+        // Masukkan birth_date ke dalam data yang akan diupdate
         $data = $request->only([
-            'name', 'email', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'linkedin'
+            'name', 
+            'birth_date', // <--- TAMBAHKAN DI SINI
+            'email', 
+            'whatsapp', 
+            'instagram', 
+            'tiktok', 
+            'facebook', 
+            'linkedin'
         ]);
 
         if ($request->filled('password')) {
@@ -74,7 +83,6 @@ class ProfileController extends Controller
 
         // --- LOGIKA UTAMA ---
         // Jika user SUDAH PUNYA foto DAN status requestnya BUKAN approved, maka TOLAK.
-        // Ini berlaku untuk user verified maupun belum.
         if ($user->profile_photo_path && $user->photo_request_status !== 'approved') {
             return redirect()->route('profile.edit')
                 ->with('error', 'Foto profil terkunci. Anda sudah pernah upload. Silakan ajukan request ganti foto.');
@@ -105,28 +113,24 @@ class ProfileController extends Controller
     }
 
     /**
-     * Request Ganti Foto (Berlaku untuk semua user yg sudah punya foto)
+     * Request Ganti Foto
      */
     public function requestPhotoChange()
     {
         $user = Auth::user();
 
-        // Jika belum punya foto, tidak perlu request, langsung upload saja.
         if (!$user->profile_photo_path) {
             return back()->with('success', 'Anda belum memiliki foto profil. Silakan langsung upload tanpa perlu izin.');
         }
 
-        // Cek jika sudah pending
         if ($user->photo_request_status === 'pending') {
             return back()->with('error', 'Pengajuan Anda sedang diproses. Mohon tunggu persetujuan Admin.');
         }
 
-        // Cek jika sudah approved tapi user malah request lagi (kasus jarang, tapi preventif)
         if ($user->photo_request_status === 'approved') {
             return back()->with('success', 'Izin sudah diberikan! Silakan langsung upload foto baru.');
         }
 
-        // Kirim Request
         $user->update(['photo_request_status' => 'pending']);
 
         return back()->with('success', 'Permintaan ganti foto dikirim. Tunggu Admin memberikan akses.');
@@ -138,10 +142,6 @@ class ProfileController extends Controller
     public function deleteProfilePhoto()
     {
         $user = Auth::user();
-
-        // Jika aturan "sekali pasang", maka user TIDAK BOLEH hapus foto sembarangan
-        // karena kalau dihapus, dia jadi "belum punya foto" dan bisa upload lagi tanpa izin.
-        // Jadi kita kunci fitur delete kecuali sudah dapat izin approved.
         
         if ($user->profile_photo_path && $user->photo_request_status !== 'approved') {
             return back()->with('error', 'Foto profil tidak dapat dihapus sembarangan. Silakan request ganti foto untuk mengubahnya.');
@@ -156,7 +156,7 @@ class ProfileController extends Controller
             ->with('success', 'Foto profil dihapus.');
     }
 
-    // --- LOGIKA KTP (TIDAK DIUBAH) ---
+    // --- LOGIKA KTP ---
     public function requestKtpChange(Request $request)
     {
         $request->validate(['ktp_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120']);
@@ -187,7 +187,6 @@ class ProfileController extends Controller
     // --- WORK HISTORY & INVENTORY ---
     public function storeInventory(Request $request)
     {
-        // ... (Kode sama seperti sebelumnya)
         $user = Auth::user();
         $request->validate([
             'item_name' => 'required|string|max:255',
