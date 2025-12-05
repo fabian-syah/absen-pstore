@@ -66,15 +66,15 @@
                 <div class="text-start mb-4">
                     <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">MENU & RIWAYAT</h6>
                     <div class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                        <a href="{{ route('attendance.history') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-calendar-clock text-primary me-2"></i> History Absen</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                        <a href="{{ route('inventory.index') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-package-variant text-success me-2"></i> History Inventaris</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                        <a href="{{ route('job-targets.index') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-clipboard-list text-info me-2"></i> History Job Desk</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
                         </a>
@@ -345,4 +345,4 @@
 </div>
 @endif
 
-@endsection
+@endsection 
