@@ -4,23 +4,24 @@
 
 @section('content')
 
+{{-- 1. ALERT NOTIFIKASI --}}
 @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show">
-        {{ session('success') }}
+        <i class="mdi mdi-check-circle me-1"></i> {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
 
 @if (session('error'))
     <div class="alert alert-danger alert-dismissible fade show">
-        {{ session('error') }}
+        <i class="mdi mdi-alert-circle me-1"></i> {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
 
 @if ($errors->any())
     <div class="alert alert-danger">
-        <ul class="mb-0">
+        <ul class="mb-0 ps-3">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -30,13 +31,13 @@
 
 <div class="row">
     {{-- ================================================= --}}
-    {{-- KOLOM KIRI: FOTO, MENU RIWAYAT & PANEL KTP --}}
+    {{-- KOLOM KIRI: FOTO, STATUS, MENU & KTP --}}
     {{-- ================================================= --}}
     <div class="col-md-4 grid-margin stretch-card">
         <div class="card">
             <div class="card-body text-center">
                 
-                {{-- 1. FOTO PROFIL WRAPPER --}}
+                {{-- A. TAMPILAN FOTO PROFIL --}}
                 <div class="mb-3 position-relative d-inline-block">
                     <a href="#" data-bs-toggle="modal" data-bs-target="#profilePhotoModal" title="Klik untuk memperbesar">
                         @if($user->profile_photo_path)
@@ -46,14 +47,15 @@
                         @else
                             <div class="profile-initial-dropdown mx-auto"
                                 style="background-color: #007bff; width: 150px; height: 150px; line-height: 150px; font-size: 40px; border-radius: 50%; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center;">
-                                {{ getInitials($user->name) }}
+                                {{ substr($user->name, 0, 1) }}
                             </div>
                         @endif
 
                         {{-- Ikon Centang Biru Overlay --}}
                         @if($user->is_verified)
                             <div class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center" 
-                                 style="bottom: 5px; right: 5px; width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                                 style="bottom: 5px; right: 5px; width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"
+                                 title="Akun Terverifikasi">
                                 <i class="mdi mdi-check-decagram text-primary" style="font-size: 30px;"></i>
                             </div>
                         @endif
@@ -63,49 +65,63 @@
                 <h4 class="fw-bold mt-2">{{ $user->name }}</h4>
                 <p class="text-muted mb-2">{{ strtoupper(str_replace('_', ' ', $user->role)) }}</p>
 
-                {{-- Status Verifikasi (Badge) --}}
+                {{-- B. BADGE STATUS --}}
                 @if($user->is_verified)
                     <div class="badge badge-primary px-3 py-2 mb-4"><i class="mdi mdi-check-decagram"></i> Akun Terverifikasi</div>
                 @else
                     <div class="badge badge-secondary px-3 py-2 mb-2">User Biasa</div>
-                    {{-- Form Upload Foto Jika Belum Verified --}}
-                    <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data" class="mb-4">
-                        @csrf @method('PUT')
-                        <label for="profile_photo" class="btn btn-sm btn-outline-primary w-100 mt-2">
-                            <i class="mdi mdi-camera"></i> Ganti Foto Profil
-                        </label>
-                        <input type="file" name="profile_photo" id="profile_photo" class="d-none"
-                            accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
-                    </form>
                 @endif
 
-                {{-- Logic Ganti Foto Jika Verified --}}
-                @if ($user->is_verified)
-                    @if($user->photo_request_status == 'approved')
-                        <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data" class="mb-4">
+                {{-- C. LOGIKA TOMBOL GANTI FOTO (INTI FITUR BARU) --}}
+                <div class="mb-4">
+                    {{-- KONDISI 1: User Belum Verified (Bebas Ganti) --}}
+                    @if(!$user->is_verified)
+                        <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data">
                             @csrf @method('PUT')
-                            <div class="alert alert-success py-1 small mb-2">Akses dibuka. Silakan upload.</div>
-                            <label for="profile_photo_unlock" class="btn btn-sm btn-success w-100">
-                                <i class="mdi mdi-upload"></i> Upload Foto Baru
+                            <label for="profile_photo" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="mdi mdi-camera"></i> Ganti Foto Profil
                             </label>
-                            <input type="file" name="profile_photo" id="profile_photo_unlock" class="d-none"
+                            <input type="file" name="profile_photo" id="profile_photo" class="d-none"
                                 accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
                         </form>
-                    @elseif($user->photo_request_status == 'pending')
-                        <div class="alert alert-warning py-1 small mb-4">Request ganti foto sedang diproses.</div>
+                    
+                    {{-- KONDISI 2: User Verified (Terkunci Default) --}}
                     @else
-                        <form action="{{ route('profile.photo.request') }}" method="POST" class="mb-4">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-inverse-warning w-100" onclick="return confirm('Ajukan izin ganti foto?')">
-                                <i class="mdi mdi-key-variant"></i> Req. Ganti Foto
-                            </button>
-                        </form>
-                    @endif
-                @endif
+                        {{-- Case A: Sudah Disetujui Admin (Tombol Upload Muncul) --}}
+                        @if($user->photo_request_status == 'approved')
+                            <div class="alert alert-success py-1 small mb-2"><i class="mdi mdi-lock-open"></i> Akses Dibuka (1x Upload)</div>
+                            <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data">
+                                @csrf @method('PUT')
+                                <label for="profile_photo_unlock" class="btn btn-sm btn-success w-100">
+                                    <i class="mdi mdi-upload"></i> Upload Foto Baru
+                                </label>
+                                <input type="file" name="profile_photo" id="profile_photo_unlock" class="d-none"
+                                    accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
+                            </form>
 
-                {{-- ============================================= --}}
-                {{-- MENU NAVIGASI RIWAYAT --}}
-                {{-- ============================================= --}}
+                        {{-- Case B: Sedang Menunggu Persetujuan (Tombol Disable) --}}
+                        @elseif($user->photo_request_status == 'pending')
+                            <div class="alert alert-warning py-1 small mb-2">
+                                <i class="mdi mdi-clock"></i> Menunggu Persetujuan Admin
+                            </div>
+                            <button class="btn btn-sm btn-secondary w-100" disabled>
+                                Request Sedang Diproses...
+                            </button>
+
+                        {{-- Case C: Terkunci Default (Tombol Request) --}}
+                        @else
+                            <form action="{{ route('profile.photo.request') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-inverse-warning w-100" 
+                                        onclick="return confirm('Karena akun Anda terverifikasi, ganti foto memerlukan izin Admin. Lanjutkan request?')">
+                                    <i class="mdi mdi-key-variant"></i> Request Ganti Foto
+                                </button>
+                            </form>
+                        @endif
+                    @endif
+                </div>
+
+                {{-- D. MENU NAVIGASI RIWAYAT --}}
                 <div class="text-start mb-4">
                     <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">MENU & RIWAYAT</h6>
                     <div class="list-group list-group-flush">
@@ -124,14 +140,12 @@
                     </div>
                 </div>
 
-                {{-- ============================================= --}}
-                {{-- DOKUMEN PRIBADI (KTP) --}}
-                {{-- ============================================= --}}
+                {{-- E. DOKUMEN PRIBADI (KTP) --}}
                 <div class="text-start bg-light p-3 rounded border mb-4">
                     <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">DOKUMEN PRIBADI (KTP)</h6>
                     
                     @if (!$user->ktp_photo_path)
-                        <div class="alert alert-danger py-1 text-small mb-2">Belum Upload</div>
+                        <div class="alert alert-danger py-1 text-small mb-2 text-center">Belum Upload</div>
                         <form action="{{ route('profile.ktp.update') }}" method="POST" enctype="multipart/form-data">
                             @csrf @method('PUT')
                             <label for="ktp_photo_first" class="btn btn-warning btn-sm w-100">
@@ -147,10 +161,11 @@
                             </button>
                         </div>
 
+                        {{-- Status Request Ganti KTP --}}
                         @if ($user->ktp_request_status == 'pending')
-                            <div class="badge badge-warning w-100 py-2"><i class="mdi mdi-clock"></i> Menunggu Approval</div>
+                            <div class="badge badge-warning w-100 py-2"><i class="mdi mdi-clock"></i> Menunggu Approval Admin</div>
                         @elseif ($user->ktp_request_status == 'rejected')
-                            <div class="text-danger small mb-1 text-center">Request Ditolak.</div>
+                            <div class="text-danger small mb-1 text-center fw-bold">Request Sebelumnya Ditolak.</div>
                             <button type="button" class="btn btn-outline-warning btn-sm w-100" data-bs-toggle="modal" data-bs-target="#changeKtpModal">
                                 <i class="mdi mdi-sync"></i> Ajukan Lagi
                             </button>
@@ -179,6 +194,7 @@
                     @method('PUT')
 
                     <div class="row">
+                        {{-- Data Dasar --}}
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Nama Lengkap (Sesuai KTP)</label>
                             <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
@@ -188,7 +204,7 @@
                             <input type="email" class="form-control" name="email" value="{{ old('email', $user->email) }}" required>
                         </div>
                         
-                        {{-- Read Only Fields --}}
+                        {{-- Read Only Fields (Info Kantor) --}}
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Lokasi Cabang</label>
                             <input type="text" class="form-control bg-light" value="{{ $user->branch->name ?? 'Pusat / Semua Cabang' }}" readonly>
@@ -287,7 +303,9 @@
                 @if($user->profile_photo_path)
                     <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="img-fluid rounded shadow-lg" style="max-height: 80vh;">
                 @else
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=500" class="img-fluid rounded shadow-lg">
+                    <div class="bg-primary text-white rounded shadow-lg d-flex align-items-center justify-content-center mx-auto" style="width: 300px; height: 300px; font-size: 100px;">
+                        {{ substr($user->name, 0, 1) }}
+                    </div>
                 @endif
             </div>
         </div>
@@ -311,7 +329,7 @@
 </div>
 @endif
 
-{{-- 3. Modal Form Ganti KTP --}}
+{{-- 3. Modal Form Ganti KTP (Pengajuan) --}}
 <div class="modal fade" id="changeKtpModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -323,11 +341,12 @@
                 @csrf
                 <div class="modal-body">
                     <div class="alert alert-info small">
-                        Upload foto KTP baru Anda. Foto akan direview oleh Admin sebelum diganti secara permanen.
+                        <i class="mdi mdi-information-outline"></i> Upload foto KTP baru Anda. Foto akan direview oleh Admin sebelum data diperbarui secara permanen.
                     </div>
-                    <div class="form-group">
-                        <label>Foto KTP Baru *</label>
+                    <div class="form-group mb-3">
+                        <label class="fw-bold">Foto KTP Baru *</label>
                         <input type="file" name="ktp_photo" class="form-control" accept="image/*" required>
+                        <small class="text-muted">Format: JPG, PNG, JPEG. Maks 5MB.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -344,26 +363,29 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Script untuk Toggle Password Form
         const btnToggle = document.getElementById('btn-toggle-password');
         const container = document.getElementById('password-container');
         const inputPass = document.getElementById('input-password');
         const inputConfirm = document.getElementById('input-password-confirm');
 
-        btnToggle.addEventListener('click', function() {
-            if (container.classList.contains('d-none')) {
-                // Show
-                container.classList.remove('d-none');
-                btnToggle.innerHTML = '<i class="mdi mdi-close"></i> Batal Ganti';
-                btnToggle.classList.replace('btn-outline-dark', 'btn-outline-danger');
-            } else {
-                // Hide & Clear
-                container.classList.add('d-none');
-                btnToggle.innerHTML = '<i class="mdi mdi-lock-reset"></i> Ganti Password';
-                btnToggle.classList.replace('btn-outline-danger', 'btn-outline-dark');
-                inputPass.value = '';
-                inputConfirm.value = '';
-            }
-        });
+        if(btnToggle){
+            btnToggle.addEventListener('click', function() {
+                if (container.classList.contains('d-none')) {
+                    // Show Password Fields
+                    container.classList.remove('d-none');
+                    btnToggle.innerHTML = '<i class="mdi mdi-close"></i> Batal Ganti';
+                    btnToggle.classList.replace('btn-outline-dark', 'btn-outline-danger');
+                } else {
+                    // Hide & Clear Fields
+                    container.classList.add('d-none');
+                    btnToggle.innerHTML = '<i class="mdi mdi-lock-reset"></i> Ganti Password';
+                    btnToggle.classList.replace('btn-outline-danger', 'btn-outline-dark');
+                    inputPass.value = '';
+                    inputConfirm.value = '';
+                }
+            });
+        }
     });
 </script>
 @endpush
