@@ -48,22 +48,24 @@
                                              data-bs-toggle="modal" 
                                              data-bs-target="#modalOldKtp{{ $user->id }}">
                                         
-                                        {{-- MODAL POPUP TRANSPARAN --}}
+                                        {{-- MODAL POPUP FIX IOS & KOTAK --}}
                                         <div class="modal fade" id="modalOldKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                {{-- bg-transparent menghilangkan kotak putih/hitam --}}
-                                                <div class="modal-content bg-transparent border-0 shadow-none">
-                                                    {{-- Header minimalis dengan text putih --}}
-                                                    <div class="modal-header border-0 p-2">
-                                                        <h5 class="modal-title text-white fs-6">KTP Lama: {{ $user->name }}</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    {{-- Body tanpa padding --}}
-                                                    <div class="modal-body p-0 text-center">
-                                                        {{-- Style width 100% + height auto adalah kunci fix iOS --}}
+                                                {{-- Style inline ini memaksa reset border-radius tema yang bikin oval --}}
+                                                <div class="modal-content bg-transparent border-0 shadow-none" 
+                                                     style="border-radius: 0 !important; overflow: visible !important;">
+                                                    
+                                                    <div class="modal-body p-0 text-center position-relative">
+                                                        {{-- Tombol Close Floating (Melayang) --}}
+                                                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2" 
+                                                                data-bs-dismiss="modal" 
+                                                                style="z-index: 9999; background-color: rgba(0,0,0,0.5); padding: 0.8rem; border-radius: 50%;">
+                                                        </button>
+
+                                                        {{-- Gambar Full --}}
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
-                                                             class="img-fluid" 
-                                                             style="width: 100%; height: auto; max-height: 85vh; display: block; margin: 0 auto;">
+                                                             class="d-block w-100" 
+                                                             style="height: auto; max-height: 85vh; object-fit: contain; margin: 0 auto; border-radius: 0 !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
                                                     </div>
                                                 </div>
                                             </div>
@@ -91,18 +93,21 @@
                                             </span>
                                         </div>
 
-                                        {{-- MODAL POPUP TRANSPARAN --}}
+                                        {{-- MODAL POPUP FIX IOS & KOTAK --}}
                                         <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                <div class="modal-content bg-transparent border-0 shadow-none">
-                                                    <div class="modal-header border-0 p-2">
-                                                        <h5 class="modal-title text-success fw-bold fs-6">Calon KTP Baru: {{ $user->name }}</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body p-0 text-center">
+                                                <div class="modal-content bg-transparent border-0 shadow-none" 
+                                                     style="border-radius: 0 !important; overflow: visible !important;">
+                                                    
+                                                    <div class="modal-body p-0 text-center position-relative">
+                                                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2" 
+                                                                data-bs-dismiss="modal" 
+                                                                style="z-index: 9999; background-color: rgba(0,0,0,0.5); padding: 0.8rem; border-radius: 50%;">
+                                                        </button>
+
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
-                                                             class="img-fluid" 
-                                                             style="width: 100%; height: auto; max-height: 85vh; display: block; margin: 0 auto;">
+                                                             class="d-block w-100" 
+                                                             style="height: auto; max-height: 85vh; object-fit: contain; margin: 0 auto; border-radius: 0 !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
                                                     </div>
                                                 </div>
                                             </div>
