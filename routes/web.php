@@ -157,7 +157,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
     });
 
-    Route::prefix('inventory')->name('inventory.')->middleware(['role:admin,audit'])->group(function () {
+    Route::prefix('inventory')->name('inventory.')->middleware(['role:admin,audit,leader,security,user_biasa'])->group(function () {
         Route::get('/create', [InventoryController::class, 'create'])->name('create');
         Route::post('/', [InventoryController::class, 'store'])->name('store');
         Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
