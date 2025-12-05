@@ -5,7 +5,7 @@
 @section('content')
 
 {{-- ================================================= --}}
-{{-- 1. ALERT NOTIFIKASI (Sama seperti Edit Profil) --}}
+{{-- 1. ALERT NOTIFIKASI (Sama persis style halaman Profil) --}}
 {{-- ================================================= --}}
 @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show">
@@ -48,23 +48,24 @@
                             @foreach($users as $user)
                             <tr>
                                 {{-- =================================== --}}
-                                {{-- KOLOM 1: USER INFO (FOTO KOTAK) --}}
+                                {{-- KOLOM 1: USER INFO (FOTO KOTAK PERSEGI) --}}
                                 {{-- =================================== --}}
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        {{-- Foto Profil Thumbnail (KOTAK / SQUARE) --}}
+                                        {{-- Foto Profil Thumbnail (KOTAK PERSEGI) --}}
                                         <div class="me-3">
                                             @if($user->profile_photo_path)
+                                                {{-- PERHATIKAN STYLE DI BAWAH INI --}}
                                                 <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
                                                      alt="profile" 
                                                      class="rounded shadow-sm" 
-                                                     style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
+                                                     style="width: 50px; height: 50px; object-fit: cover; cursor: pointer; border-radius: 8px !important;"
                                                      data-bs-toggle="modal" 
                                                      data-bs-target="#modalProfile{{ $user->id }}"
                                                      title="Lihat Foto Profil">
                                             @else
                                                 <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center shadow-sm" 
-                                                     style="width: 50px; height: 50px; font-weight: bold; font-size: 20px;">
+                                                     style="width: 50px; height: 50px; font-weight: bold; font-size: 20px; border-radius: 8px !important;">
                                                     {{ substr($user->name, 0, 1) }}
                                                 </div>
                                             @endif
@@ -75,7 +76,7 @@
                                         </div>
                                     </div>
 
-                                    {{-- MODAL FOTO PROFIL (RESPONSIVE KOTAK) --}}
+                                    {{-- MODAL FOTO PROFIL (POP UP KOTAK BESAR) --}}
                                     @if($user->profile_photo_path)
                                     <div class="modal fade" id="modalProfile{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
@@ -84,10 +85,10 @@
                                                     <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="modal-body text-center">
-                                                    {{-- Foto Besar Responsive --}}
+                                                    {{-- Foto Besar Responsive KOTAK --}}
                                                     <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
                                                          class="img-fluid rounded shadow-lg" 
-                                                         style="max-height: 80vh; width: auto; max-width: 100%;">
+                                                         style="max-height: 80vh; width: auto; max-width: 100%; object-fit: contain;">
                                                 </div>
                                             </div>
                                         </div>
