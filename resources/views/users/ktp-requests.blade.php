@@ -4,7 +4,7 @@
 
 @section('content')
 
-{{-- 1. ALERT NOTIFIKASI (Style seperti halaman Profil) --}}
+{{-- 1. ALERT NOTIFIKASI --}}
 @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show">
         <i class="mdi mdi-check-circle me-1"></i> {{ session('success') }}
@@ -46,12 +46,18 @@
                                 {{-- Kolom 1: User Info --}}
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        {{-- Avatar Kecil --}}
+                                        {{-- FOTO USER (KOTAK) --}}
                                         <div class="me-3">
                                             @if($user->profile_photo_path)
-                                                <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                                {{-- Menggunakan class 'rounded' agar kotak, bukan 'rounded-circle' --}}
+                                                <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
+                                                     alt="avatar" 
+                                                     class="rounded shadow-sm" 
+                                                     style="width: 45px; height: 45px; object-fit: cover;">
                                             @else
-                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                {{-- Placeholder Kotak --}}
+                                                <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center shadow-sm" 
+                                                     style="width: 45px; height: 45px; font-weight: bold;">
                                                     {{ substr($user->name, 0, 1) }}
                                                 </div>
                                             @endif
@@ -141,7 +147,7 @@
                                             <button type="submit" class="btn btn-success btn-sm text-white" 
                                                 onclick="return confirm('Apakah Anda yakin ingin menyetujui KTP baru ini? Foto lama akan diganti.')"
                                                 title="Setujui Perubahan">
-                                                <i class="mdi mdi-check"></i> Setujui
+                                                <i class="mdi mdi-check"></i>
                                             </button>
                                         </form>
 
@@ -152,7 +158,7 @@
                                             <button type="submit" class="btn btn-danger btn-sm text-white" 
                                                 onclick="return confirm('Tolak permintaan ini? Foto draft akan dihapus.')"
                                                 title="Tolak Permintaan">
-                                                <i class="mdi mdi-close"></i> Tolak
+                                                <i class="mdi mdi-close"></i>
                                             </button>
                                         </form>
                                     </div>
