@@ -19,6 +19,7 @@ use App\Http\Controllers\WorkScheduleController;
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\InventoryReturnController; // [BARU] Import Controller Pengembalian
 use App\Http\Controllers\AttendanceHistoryController;
 use App\Http\Controllers\JobTargetController;
 use App\Http\Controllers\AdminAttendanceController;
@@ -151,7 +152,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/inventory', [InventoryController::class, 'showInventory'])->name('inventory.index');
     });
 
-    // === RUTE INVENTORY ===
+    // === RUTE INVENTORY (CRUD & DETAIL) ===
     Route::prefix('inventory')->name('inventory.')->group(function () {
         Route::get('/', [InventoryController::class, 'index'])->name('index');
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
@@ -163,6 +164,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
         Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
         Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
+    });
+
+    // === [BARU] RUTE PENGEMBALIAN INVENTARIS (Inventory Return) ===
+    Route::middleware(['role:admin,audit'])->group(function () {
+        // Halaman List Pengembalian
+        Route::get('/inventory-returns', [InventoryReturnController::class, 'index'])->name('inventory-returns.index');
+        // Proses Pengembalian (Tombol dari Inventory Index)
+        Route::post('/inventory/{id}/return', [InventoryReturnController::class, 'store'])->name('inventory.process-return');
     });
 
     // === RUTE ADMIN & AUDIT MANAGEMENT ===

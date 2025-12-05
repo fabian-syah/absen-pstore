@@ -48,13 +48,6 @@
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Menu Cabang</li>
-            {{-- MENU BARU: MASTER DATA ABSENSI --}}
-            {{-- <li class="nav-item">
-                <a class="nav-link" href="{{ route('admin.attendance.all') }}">
-                    <i class="menu-icon mdi mdi-database-search"></i>
-                    <span class="menu-title">Semua Data Absensi</span>
-                </a>
-            </li> --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('branches.index') }}">
                     <i class="menu-icon mdi mdi-domain"></i>
@@ -97,19 +90,6 @@
         @endif
 
         {{-- =================================== --}}
-        {{--   MENU MANAGEMENT JAM KERJA BARU  --}}
-        {{-- =================================== --}}
-        {{-- @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit' || auth()->user()->role == 'leader')
-            <li class="nav-item nav-category">Management Jam Kerja</li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('work-schedules.index') }}">
-                    <i class="menu-icon mdi mdi-clock-outline"></i>
-                    <span class="menu-title">Jam Kerja</span>
-                </a>
-            </li>
-        @endif --}}
-
-        {{-- =================================== --}}
         {{--   MENU KHUSUS VERIFIKASI (Super Admin & Audit) --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')
@@ -131,8 +111,6 @@
                 <a class="nav-link" href="{{ route('users.photo-requests') }}">
                     <i class="menu-icon mdi mdi-camera-retake-outline"></i>
                     <span class="menu-title">Permintaan Ganti Foto</span>
-                    {{-- Badge Notifikasi Jumlah Request (Opsional - Perlu Logic di View Composer) --}}
-                    {{-- <span class="badge badge-warning ms-2">New</span> --}}
                 </a>
             </li>
 
@@ -152,11 +130,11 @@
             </li>
 
             <li class="nav-item">
-    <a class="nav-link" href="#">
-        <i class="menu-icon mdi mdi-package-variant-minus"></i>
-        <span class="menu-title">Pengembalian Inventaris</span>
-    </a>
-</li>
+                <a class="nav-link" href="{{ route('inventory-returns.index') }}">
+                    <i class="menu-icon mdi mdi-package-variant-minus"></i>
+                    <span class="menu-title">Pengembalian Inventaris</span>
+                </a>
+            </li>
 
         @endif
 
