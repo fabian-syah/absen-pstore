@@ -283,7 +283,7 @@ class UserController extends Controller
     }
 
     /**
-     * Detail User
+     * Detail User (DIPERBAIKI UNTUK MENGHILANGKAN ALPHA / SYSTEM AUTO)
      */
     public function show(User $user)
     {
@@ -305,13 +305,22 @@ class UserController extends Controller
         $stats = $this->getSpecificUserStats($user->id);
 
         // =========================================================================
-        // FILTER KETAT: HANYA YANG HADIR (Bukan Alpha, Izin, Sakit)
+        // FILTER SUPER KETAT: MEMBUANG SYSTEM AUTO / ALPHA / 00:00
         // =========================================================================
         $recentAttendance = Attendance::where('user_id', $user->id)
-            ->whereNotNull('check_in_time') // Wajib ada jam masuk (Bukan NULL)
-            ->where('status', '!=', 'alpha') // Wajib bukan Alpha
-            ->where('status', '!=', 'absent') // Jaga-jaga jika statusnya 'absent'
-            ->whereIn('status', ['present', 'verified', 'late']) // Whitelist status hadir
+            // 1. Pastikan Jam Masuk Valid (Bukan NULL dan Bukan 00:00:00)
+            ->whereNotNull('check_in_time')
+            ->whereTime('check_in_time', '!=', '00:00:00')
+            
+            // 2. Buang Status Alpha & Absent & System
+            ->where('status', '!=', 'alpha')
+            ->where('status', '!=', 'absent')
+            ->where('presence_status', '!=', 'Alpha') // Cek kolom presence_status juga
+            ->where('attendance_type', '!=', 'system') // KUNCI UTAMA: Buang yang tipe System
+            
+            // 3. Hanya ambil yang statusnya Benar-Benar Hadir / Verifikasi
+            ->whereIn('status', ['present', 'verified', 'late', 'pending_verification'])
+            
             ->latest('check_in_time')
             ->take(5)
             ->get();
@@ -405,6 +414,8 @@ class UserController extends Controller
     {
         $presentCount = Attendance::where('user_id', $user_id)
             ->whereMonth('check_in_time', Carbon::now()->month)
+            ->where('status', '!=', 'alpha') // Jangan hitung alpha
+            ->where('attendance_type', '!=', 'system') // Jangan hitung system
             ->whereIn('status', ['verified', 'present', 'late'])
             ->count();
 

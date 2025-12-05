@@ -39,10 +39,12 @@ class SelfAttendanceController extends Controller
             return redirect()->route('dashboard')->with('error', $msg);
         }
 
-        // Cek Sesi Gantung
+        // Cek Sesi Gantung (ABAIKAN ALPHA)
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', $yesterday)
+            ->where('status', '!=', 'alpha') // [FIX] Abaikan status Alpha
+            ->where('status', '!=', 'absent') 
             ->orderBy('check_in_time', 'desc')
             ->first();
 
@@ -50,10 +52,12 @@ class SelfAttendanceController extends Controller
             $mode = 'pulang';
             $attendance = $activeSession;
         } else {
-            // Cek Selesai
+            // Cek Selesai (ABAIKAN ALPHA)
             $finishedToday = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', $today)
                 ->whereNotNull('check_out_time')
+                ->where('status', '!=', 'alpha') // [FIX] Abaikan status Alpha
+                ->where('status', '!=', 'absent')
                 ->exists();
 
             if ($finishedToday) {
@@ -105,7 +109,8 @@ class SelfAttendanceController extends Controller
         $attendanceToUpdate = null;
         if ($request->has('attendance_id') && $request->attendance_id) {
             $attendanceToUpdate = Attendance::find($request->attendance_id);
-            if ($attendanceToUpdate && ($attendanceToUpdate->user_id != $user->id || $attendanceToUpdate->check_out_time != null)) {
+            // Validasi tambahan: Pastikan bukan Alpha
+            if ($attendanceToUpdate && ($attendanceToUpdate->user_id != $user->id || $attendanceToUpdate->check_out_time != null || $attendanceToUpdate->status == 'alpha')) {
                 $attendanceToUpdate = null;
             }
         }
@@ -114,6 +119,7 @@ class SelfAttendanceController extends Controller
             $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', today())
                 ->whereNull('check_out_time')
+                ->where('status', '!=', 'alpha') // [FIX] Abaikan Alpha
                 ->first();
         }
 
@@ -142,7 +148,6 @@ class SelfAttendanceController extends Controller
         $notifBody = "";
         $message = "";
 
-        // [PERBAIKAN SINTAKS] Simpan nama cabang di variabel dulu
         $branchName = $user->branch->name ?? '-';
 
         // === ABSEN PULANG ===
@@ -183,22 +188,23 @@ class SelfAttendanceController extends Controller
             if ($newStatus == 'pending_verification') {
                 $shouldSendNotif = true;
                 $notifTitle = "Verifikasi Pulang";
-                // [PERBAIKAN SINTAKS] Menggunakan variabel $branchName
                 $notifBody = "{$user->name} melakukan absen pulang (Mandiri) di cabang {$branchName}";
             }
         } 
         // === ABSEN MASUK ===
         else {
-            // Auto Close Sesi Lama
+            // Auto Close Sesi Lama (Abaikan Alpha)
             Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '<', today())
+                ->where('status', '!=', 'alpha') // [FIX] Jangan close alpha (karena alpha sudah closed logic-nya)
                 ->update(['check_out_time' => DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed', 'status' => 'rejected']);
 
-            // Cek Double Entry
+            // Cek Double Entry (Abaikan Alpha)
             $alreadyFinished = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', today())
                 ->whereNotNull('check_out_time')
+                ->where('status', '!=', 'alpha') // [FIX]
                 ->exists();
 
             if ($alreadyFinished) {
@@ -232,7 +238,6 @@ class SelfAttendanceController extends Controller
 
             $shouldSendNotif = true;
             $notifTitle = "Verifikasi Masuk";
-            // [PERBAIKAN SINTAKS] Menggunakan variabel $branchName
             $notifBody = "{$user->name} melakukan absen masuk (Mandiri) di cabang {$branchName}";
         }
 
@@ -280,7 +285,6 @@ class SelfAttendanceController extends Controller
         ]);
         
         $title = "Izin Telat Masuk";
-        // [PERBAIKAN SINTAKS] Simpan cabang dulu
         $branchName = $user->branch->name ?? '-';
         $body = "{$user->name} mengajukan izin telat di cabang {$branchName}";
         
