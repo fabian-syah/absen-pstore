@@ -119,7 +119,6 @@
                     <i class="menu-icon mdi mdi-card-account-details-outline"></i>
                     <span class="menu-title">Req. Ganti KTP</span>
 
-                    {{-- Optional: Badge hitung jumlah pending (perlu View Composer) --}}
                     @php
                         $ktpPendingCount = \App\Models\User::where('ktp_request_status', 'pending')->count();
                     @endphp
@@ -129,10 +128,11 @@
                 </a>
             </li>
 
+            {{-- LINK INI MENUJU KE HISTORY (Admin Only), TAPI SEMUA USER BISA "AKSI" DARI MENU INVENTARIS UTAMA --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('inventory-returns.index') }}">
                     <i class="menu-icon mdi mdi-package-variant-minus"></i>
-                    <span class="menu-title">Pengembalian Inventaris</span>
+                    <span class="menu-title">History Pengembalian</span>
                 </a>
             </li>
 

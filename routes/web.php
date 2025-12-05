@@ -19,7 +19,7 @@ use App\Http\Controllers\WorkScheduleController;
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\InventoryReturnController; // [BARU] Import Controller Pengembalian
+use App\Http\Controllers\InventoryReturnController; 
 use App\Http\Controllers\AttendanceHistoryController;
 use App\Http\Controllers\JobTargetController;
 use App\Http\Controllers\AdminAttendanceController;
@@ -52,14 +52,12 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     Route::post('/update-fcm-token', [UserController::class, 'updateFcmToken'])->name('update.fcm.token');
-    // Route::get('/dashboard/export-pdf', [DashboardController::class, 'exportAttendancePDF'])->name('dashboard.export-pdf');
 
     // --- Rute Search Global ---
     Route::get('/search', [GlobalSearchController::class, 'search'])->name('search');
 
     // === RUTE RIWAYAT ABSENSI ===
     Route::get('/riwayat-absensi', [AttendanceHistoryController::class, 'index'])->name('attendance.history');
-    // [BARU] Route Export PDF Attendance History
     Route::get('/attendance/export-pdf', [AttendanceHistoryController::class, 'exportPdf'])->name('attendance.export.pdf');
 
     // === RUTE JOB TARGETS ===
@@ -72,29 +70,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/riwayat-izin-saya', [LeaveRequestController::class, 'personalHistory'])
         ->name('leave-requests.personal-history');
 
+    // Test FCM Route
     Route::get('/test-fcm', function () {
-        // Panggil Trait secara manual via anonymous class atau controller sementara
-        $sender = new class {
-            use SendFcmNotification;
-        };
-
-        // GANTI '2' DENGAN ID CABANG AUDIT ANDA
-        $branchId = 2;
-
-        // Cek Token Dulu
-        $audit = User::where('role', 'audit')->where('branch_id', $branchId)->first();
-        if (!$audit) return "User Audit tidak ditemukan di cabang $branchId";
-        if (!$audit->fcm_token) return "User Audit ditemukan TAPI token FCM kosong (NULL). Suruh Audit login dan allow notif dulu.";
-
-        // Coba Kirim
+        $sender = new class { use SendFcmNotification; };
+        $branchId = 2; // Sesuaikan ID Cabang
         try {
-            $sender->sendNotificationToBranchRoles(
-                ['audit'],
-                $branchId,
-                "Tes Notifikasi",
-                "Ini adalah pesan tes dari server untuk memastikan sistem berjalan."
-            );
-            return "Perintah kirim sudah dijalankan. Cek Log Laravel untuk hasil detailnya.";
+            $sender->sendNotificationToBranchRoles(['audit'], $branchId, "Tes Notifikasi", "Pesan tes server.");
+            return "Perintah kirim dijalankan.";
         } catch (\Exception $e) {
             return "Error: " . $e->getMessage();
         }
@@ -104,6 +86,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::prefix('broadcast')->name('broadcast.')->group(function () {
         Route::get('/notifications', [BroadcastController::class, 'getNotifications'])->name('notifications');
         Route::post('/{broadcast}/mark-read', [BroadcastController::class, 'markAsRead'])->name('mark-read');
+        Route::get('/{broadcast}', [BroadcastController::class, 'show'])->name('show');
 
         Route::middleware(['role:admin'])->group(function () {
             Route::get('/', [BroadcastController::class, 'index'])->name('index');
@@ -113,68 +96,78 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::put('/{broadcast}', [BroadcastController::class, 'update'])->name('update');
             Route::delete('/{broadcast}', [BroadcastController::class, 'destroy'])->name('destroy');
         });
-
-        Route::get('/{broadcast}', [BroadcastController::class, 'show'])->name('show');
     });
 
     // === RUTE WORK SCHEDULES ===
-    Route::prefix('work-schedules')->name('work-schedules.')->group(function () {
+    Route::prefix('work-schedules')->name('work-schedules.')->middleware('role:admin,audit')->group(function () {
         Route::get('/', [WorkScheduleController::class, 'index'])->name('index');
         Route::get('/create', [WorkScheduleController::class, 'create'])->name('create');
         Route::post('/', [WorkScheduleController::class, 'store'])->name('store');
         Route::get('/{workSchedule}/edit', [WorkScheduleController::class, 'edit'])->name('edit');
         Route::put('/{workSchedule}', [WorkScheduleController::class, 'update'])->name('update');
         Route::delete('/{workSchedule}', [WorkScheduleController::class, 'destroy'])->name('destroy');
-    })->middleware('role:admin,audit');
+    });
 
     // === RUTE PROFILE ===
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
-
-        // Foto Profil
+        
+        // Foto & KTP
         Route::delete('/photo', [ProfileController::class, 'deleteProfilePhoto'])->name('photo.delete');
         Route::put('/photo', [ProfileController::class, 'updatePhoto'])->name('photo.update');
         Route::post('/photo/request', [ProfileController::class, 'requestPhotoChange'])->name('photo.request');
         Route::get('/photo/{user}', [ProfileController::class, 'getProfilePhoto'])->name('photo.get');
-
-        // KTP (Updated Logic)
-        Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update'); // Upload pertama
-        Route::post('/ktp/request', [ProfileController::class, 'requestKtpChange'])->name('ktp.request'); // Request Ganti (Upload Temp)
+        Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update');
+        Route::post('/ktp/request', [ProfileController::class, 'requestKtpChange'])->name('ktp.request');
         Route::get('/ktp/{user}', [ProfileController::class, 'getKtpPhoto'])->name('ktp.get');
 
-        // Work History & Inventory
+        // Work History
         Route::post('/work-history', [WorkHistoryController::class, 'store'])->name('work-history.store');
         Route::delete('/work-history/{history}', [WorkHistoryController::class, 'destroy'])->name('work-history.destroy');
-
+        
+        // Inventory (Profile Source)
         Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store');
         Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
         Route::get('/inventory', [InventoryController::class, 'showInventory'])->name('inventory.index');
     });
 
-    // === RUTE INVENTORY (CRUD & DETAIL) ===
+    // ==========================================================
+    //  RUTE INVENTARIS (Disesuaikan Permintaan)
+    // ==========================================================
+    
+    // GROUP 1: AKSES UNTUK SEMUA ROLE (Admin, Audit, Leader, Security, User Biasa)
+    // Fitur: Lihat List, Lihat Detail, Tambah Baru, Aksi Kembalikan
     Route::prefix('inventory')->name('inventory.')->group(function () {
+        // Read
         Route::get('/', [InventoryController::class, 'index'])->name('index');
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
-    });
-
-    Route::prefix('inventory')->name('inventory.')->middleware(['role:admin,audit,leader,security,user_biasa'])->group(function () {
+        
+        // Create (Semua Role Bisa Tambah)
         Route::get('/create', [InventoryController::class, 'create'])->name('create');
         Route::post('/', [InventoryController::class, 'store'])->name('store');
-        Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
-        Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
-        Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
+        
+        // [BARU] Aksi Kembalikan (POST) - Semua Role Bisa
+        Route::post('/{id}/return', [InventoryReturnController::class, 'store'])->name('process-return');
     });
 
-    // === [BARU] RUTE PENGEMBALIAN INVENTARIS (Inventory Return) ===
+    // GROUP 2: HANYA ADMIN & AUDIT (Edit, Delete, Melihat History List Pengembalian)
     Route::middleware(['role:admin,audit'])->group(function () {
-        // Halaman List Pengembalian
-        Route::get('/inventory-returns', [InventoryReturnController::class, 'index'])->name('inventory-returns.index');
-        // Proses Pengembalian (Tombol dari Inventory Index)
-        Route::post('/inventory/{id}/return', [InventoryReturnController::class, 'store'])->name('inventory.process-return');
-    });
+        
+        // Edit & Delete Inventory
+        Route::prefix('inventory')->name('inventory.')->group(function () {
+            Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
+            Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
+            Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
+        });
 
-    // === RUTE ADMIN & AUDIT MANAGEMENT ===
+        // Halaman List Riwayat Pengembalian (Sidebar Menu)
+        Route::get('/inventory-returns', [InventoryReturnController::class, 'index'])->name('inventory-returns.index');
+    });
+    
+    // ==========================================================
+
+    // === RUTE ADMIN & AUDIT MANAGEMENT (Lainnya) ===
     Route::middleware(['role:admin,audit'])->group(function () {
         Route::get('/all-attendance', [AdminAttendanceController::class, 'index'])->name('admin.attendance.all');
         Route::put('/audit/verify-attendance/{attendance}', [AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
@@ -186,11 +179,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::resource('divisions', DivisionController::class);
         Route::post('/divisions/{division}/toggle-status', [DivisionController::class, 'toggleStatus'])->name('divisions.toggle-status');
 
-        // Approval Requests (FOTO PROFIL)
+        // Approval Requests
         Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
-
-        // Approval Requests (KTP - NEW LOGIC)
         Route::get('/users/ktp-requests', [UserController::class, 'ktpRequests'])->name('users.ktp-requests');
         Route::patch('/users/{user}/approve-ktp', [UserController::class, 'approveKtpRequest'])->name('users.approve-ktp');
         Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');
@@ -209,7 +200,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::get('/laporan', [AuditController::class, 'showReports'])->name('reports');
         });
 
-        // IZIN TELAT AUDIT
+        // IZIN TELAT
         Route::get('/leave-requests', [AuditController::class, 'showLatePermissions'])->name('leave-requests.index');
         Route::get('/izin-telat/riwayat', [AuditController::class, 'showLatePermissionsHistory'])->name('audit.late.history');
         Route::post('/izin-telat/{id}/approve', [AuditController::class, 'approveLatePermission'])->name('late.approve');
