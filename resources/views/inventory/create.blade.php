@@ -25,8 +25,8 @@
                     @csrf
                     
                     <div class="form-group">
-                        <label>Nama Barang / Aset <span class="text-danger">*</span></label>
-                        <input type="text" name="item_name" class="form-control" required placeholder="Contoh: Laptop Asus ROG" value="{{ old('item_name') }}">
+                        <label>Nama Barang / Aset ( Merk / series / tipe / RAM / GB )<span class="text-danger">*</span></label>
+                        <input type="text" name="item_name" class="form-control" required placeholder="Contoh: Laptop Asus ROG / iPhone 13" value="{{ old('item_name') }}">
                     </div>
 
                     <div class="row">
@@ -34,9 +34,13 @@
                             <label>Kategori <span class="text-danger">*</span></label>
                             <select name="category" class="form-control" required>
                                 <option value="">-- Pilih Kategori --</option>
-                                <option value="Elektronik" {{ old('category') == 'Elektronik' ? 'selected' : '' }}>Elektronik</option>
-                                <option value="Perkantoran" {{ old('category') == 'Perkantoran' ? 'selected' : '' }}>Perkantoran</option>
-                                <option value="Kendaraan" {{ old('category') == 'Kendaraan' ? 'selected' : '' }}>Kendaraan</option>
+                                <option value="Handphone" {{ old('category') == 'Handphone' ? 'selected' : '' }}>Handphone</option>
+                                <option value="iPad / Tab" {{ old('category') == 'iPad / Tab' ? 'selected' : '' }}>iPad / Tab</option>
+                                <option value="Laptop" {{ old('category') == 'Laptop' ? 'selected' : '' }}>Laptop</option>
+                                <option value="Motor / Sepeda" {{ old('category') == 'Motor / Sepeda' ? 'selected' : '' }}>Motor / Sepeda</option>
+                                <option value="Mobil" {{ old('category') == 'Mobil' ? 'selected' : '' }}>Mobil</option>
+                                <option value="Kamera / Lensa" {{ old('category') == 'Kamera / Lensa' ? 'selected' : '' }}>Kamera / Lensa</option>
+                                <option value="Accesories" {{ old('category') == 'Accesories' ? 'selected' : '' }}>Accesories</option>
                                 <option value="Lainnya" {{ old('category') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                             </select>
                         </div>
@@ -54,7 +58,8 @@
 
                     <div class="row">
                         <div class="col-md-6 form-group">
-                            <label>Nomor Seri (Serial Number)</label>
+                            {{-- Label diupdate sesuai request --}}
+                            <label>Nomor Seri (IMEI, Serial Number, Plat Nomor)</label>
                             <input type="text" name="serial_number" class="form-control" placeholder="Kosongkan jika tidak ada" value="{{ old('serial_number') }}">
                         </div>
                         <div class="col-md-6 form-group">
