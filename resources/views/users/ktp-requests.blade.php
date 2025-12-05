@@ -41,7 +41,8 @@
                                         {{-- Thumbnail --}}
                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
                                              alt="Old KTP" 
-                                             style="width: 50px; height: 35px; cursor: pointer; border-radius: 4px;"
+                                             class="img-thumbnail"
+                                             style="width: 80px; height: 50px; object-fit: cover; cursor: pointer;"
                                              data-bs-toggle="modal" 
                                              data-bs-target="#modalOldKtp{{ $user->id }}">
                                         
@@ -49,12 +50,14 @@
                                         <div class="modal fade" id="modalOldKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                                 <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">KTP Lama: {{ $user->name }}</h5>
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fs-6 text-muted">KTP Lama: {{ $user->name }}</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body text-center bg-dark">
-                                                        <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" class="img-fluid rounded">
+                                                    <div class="modal-body text-center p-2">
+                                                        <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
+                                                             class="img-fluid rounded shadow-sm"
+                                                             style="max-height: 85vh; width: auto; max-width: 100%;">
                                                     </div>
                                                 </div>
                                             </div>
@@ -68,28 +71,36 @@
                                 <td class="text-center">
                                     @if($user->ktp_photo_temp_path)
                                         {{-- Thumbnail --}}
-                                        <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
-                                             alt="New KTP" 
-                                             style="width: 50px; height: 35px; cursor: pointer; border-radius: 4px; border: 2px solid #28a745;"
-                                             data-bs-toggle="modal" 
-                                             data-bs-target="#modalNewKtp{{ $user->id }}">
+                                        <div class="position-relative d-inline-block">
+                                            <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
+                                                 alt="New KTP" 
+                                                 class="img-thumbnail border-success"
+                                                 style="width: 80px; height: 50px; object-fit: cover; cursor: pointer; border-width: 2px;"
+                                                 data-bs-toggle="modal" 
+                                                 data-bs-target="#modalNewKtp{{ $user->id }}">
+                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style="font-size: 0.6rem;">
+                                                Baru
+                                            </span>
+                                        </div>
 
                                         {{-- Modal View New --}}
                                         <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                                 <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Calon KTP Baru: {{ $user->name }}</h5>
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fs-6 text-success fw-bold">Calon KTP Baru: {{ $user->name }}</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body text-center bg-dark">
-                                                        <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" class="img-fluid rounded">
+                                                    <div class="modal-body text-center p-2">
+                                                        <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
+                                                             class="img-fluid rounded shadow-sm"
+                                                             style="max-height: 85vh; width: auto; max-width: 100%;">
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     @else
-                                        <span class="text-danger">Error: File Hilang</span>
+                                        <span class="text-danger small">File Hilang</span>
                                     @endif
                                 </td>
 
@@ -100,7 +111,7 @@
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="btn btn-success btn-sm text-white" 
-                                                onclick="return confirm('Setujui penggantian KTP ini?')">
+                                                onclick="return confirm('Setujui penggantian KTP ini? Foto lama akan dihapus permanen.')">
                                                 <i class="mdi mdi-check"></i> Setujui
                                             </button>
                                         </form>
@@ -109,7 +120,7 @@
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="btn btn-danger btn-sm text-white" 
-                                                onclick="return confirm('Tolak dan hapus foto baru?')">
+                                                onclick="return confirm('Tolak pengajuan ini?')">
                                                 <i class="mdi mdi-close"></i> Tolak
                                             </button>
                                         </form>
@@ -121,7 +132,7 @@
                     </table>
                 </div>
                 @else
-                    <div class="alert alert-info">Tidak ada permintaan ganti KTP saat ini.</div>
+                    <div class="alert alert-info mt-3">Tidak ada permintaan ganti KTP saat ini.</div>
                 @endif
             </div>
         </div>
