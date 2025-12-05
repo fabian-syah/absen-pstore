@@ -48,20 +48,19 @@
                                              data-bs-toggle="modal" 
                                              data-bs-target="#modalOldKtp{{ $user->id }}">
                                         
-                                        {{-- MODAL POPUP (DIPERBAIKI) --}}
+                                        {{-- MODAL POPUP (DIPERBAIKI UNTUK IOS/ANDROID) --}}
                                         <div class="modal fade" id="modalOldKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered modal-lg"> {{-- modal-lg biar lebar --}}
+                                            <div class="modal-dialog modal-dialog-centered modal-lg">
                                                 <div class="modal-content">
-                                                    <div class="modal-header py-2">
+                                                    <div class="modal-header py-2 border-0">
                                                         <h5 class="modal-title fs-6">KTP Lama: {{ $user->name }}</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    {{-- p-0 biar full tanpa jarak putih --}}
-                                                    <div class="modal-body p-0 text-center bg-light d-flex align-items-center justify-content-center" style="min-height: 200px;">
-                                                        {{-- w-100 biar dipaksa lebar, max-height biar gak kelebihan layar HP --}}
+                                                    {{-- Hapus d-flex, ganti bg-dark biar gambar jelas --}}
+                                                    <div class="modal-body p-0 text-center bg-dark">
+                                                        {{-- Style width 100% memaksa gambar selebar layar, display block menghindari bug spasi --}}
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
-                                                             class="img-fluid w-100"
-                                                             style="max-height: 80vh; object-fit: contain;">
+                                                             style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; display: block; margin: 0 auto;">
                                                     </div>
                                                 </div>
                                             </div>
@@ -89,18 +88,18 @@
                                             </span>
                                         </div>
 
-                                        {{-- MODAL POPUP (DIPERBAIKI) --}}
+                                        {{-- MODAL POPUP (DIPERBAIKI UNTUK IOS/ANDROID) --}}
                                         <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                                 <div class="modal-content">
-                                                    <div class="modal-header py-2">
+                                                    <div class="modal-header py-2 border-0">
                                                         <h5 class="modal-title fs-6 text-success fw-bold">Calon KTP Baru: {{ $user->name }}</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body p-0 text-center bg-light d-flex align-items-center justify-content-center" style="min-height: 200px;">
+                                                    {{-- Hapus d-flex, ganti bg-dark --}}
+                                                    <div class="modal-body p-0 text-center bg-dark">
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
-                                                             class="img-fluid w-100"
-                                                             style="max-height: 80vh; object-fit: contain;">
+                                                             style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; display: block; margin: 0 auto;">
                                                     </div>
                                                 </div>
                                             </div>
