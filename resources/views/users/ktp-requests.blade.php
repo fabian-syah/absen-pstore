@@ -40,7 +40,7 @@
                                 {{-- ======================= --}}
                                 <td class="text-center">
                                     @if($user->ktp_photo_path)
-                                        {{-- Thumbnail Kecil di Tabel --}}
+                                        {{-- Thumbnail --}}
                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
                                              alt="Old KTP" 
                                              class="img-thumbnail"
@@ -48,19 +48,22 @@
                                              data-bs-toggle="modal" 
                                              data-bs-target="#modalOldKtp{{ $user->id }}">
                                         
-                                        {{-- MODAL POPUP (DIPERBAIKI UNTUK IOS/ANDROID) --}}
+                                        {{-- MODAL POPUP TRANSPARAN --}}
                                         <div class="modal fade" id="modalOldKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                <div class="modal-content">
-                                                    <div class="modal-header py-2 border-0">
-                                                        <h5 class="modal-title fs-6">KTP Lama: {{ $user->name }}</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                {{-- bg-transparent menghilangkan kotak putih/hitam --}}
+                                                <div class="modal-content bg-transparent border-0 shadow-none">
+                                                    {{-- Header minimalis dengan text putih --}}
+                                                    <div class="modal-header border-0 p-2">
+                                                        <h5 class="modal-title text-white fs-6">KTP Lama: {{ $user->name }}</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    {{-- Hapus d-flex, ganti bg-dark biar gambar jelas --}}
-                                                    <div class="modal-body p-0 text-center bg-dark">
-                                                        {{-- Style width 100% memaksa gambar selebar layar, display block menghindari bug spasi --}}
+                                                    {{-- Body tanpa padding --}}
+                                                    <div class="modal-body p-0 text-center">
+                                                        {{-- Style width 100% + height auto adalah kunci fix iOS --}}
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
-                                                             style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; display: block; margin: 0 auto;">
+                                                             class="img-fluid" 
+                                                             style="width: 100%; height: auto; max-height: 85vh; display: block; margin: 0 auto;">
                                                     </div>
                                                 </div>
                                             </div>
@@ -75,7 +78,7 @@
                                 {{-- ======================= --}}
                                 <td class="text-center">
                                     @if($user->ktp_photo_temp_path)
-                                        {{-- Thumbnail Kecil --}}
+                                        {{-- Thumbnail --}}
                                         <div class="position-relative d-inline-block">
                                             <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
                                                  alt="New KTP" 
@@ -88,18 +91,18 @@
                                             </span>
                                         </div>
 
-                                        {{-- MODAL POPUP (DIPERBAIKI UNTUK IOS/ANDROID) --}}
+                                        {{-- MODAL POPUP TRANSPARAN --}}
                                         <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                <div class="modal-content">
-                                                    <div class="modal-header py-2 border-0">
-                                                        <h5 class="modal-title fs-6 text-success fw-bold">Calon KTP Baru: {{ $user->name }}</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                <div class="modal-content bg-transparent border-0 shadow-none">
+                                                    <div class="modal-header border-0 p-2">
+                                                        <h5 class="modal-title text-success fw-bold fs-6">Calon KTP Baru: {{ $user->name }}</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    {{-- Hapus d-flex, ganti bg-dark --}}
-                                                    <div class="modal-body p-0 text-center bg-dark">
+                                                    <div class="modal-body p-0 text-center">
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
-                                                             style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; display: block; margin: 0 auto;">
+                                                             class="img-fluid" 
+                                                             style="width: 100%; height: auto; max-height: 85vh; display: block; margin: 0 auto;">
                                                     </div>
                                                 </div>
                                             </div>
