@@ -9,7 +9,39 @@
             <div class="card-body">
                 <h4 class="card-title">Daftar Inventaris & Aset</h4>
                 
-                {{-- ... Search form & Add Button Code (Sama seperti sebelumnya) ... --}}
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    
+                    {{-- TOMBOL TAMBAH: SEMUA ROLE BISA --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'security', 'user_biasa']))
+                        <a href="{{ route('inventory.create') }}" class="btn btn-primary btn-sm">
+                            <i class="mdi mdi-plus"></i> Tambah Barang
+                        </a>
+                    @endif
+                    
+                    {{-- SEARCH FORM --}}
+                    <form action="{{ route('inventory.index') }}" method="GET" class="d-flex">
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            <input type="text" name="search" class="form-control" placeholder="Cari aset / user..." value="{{ request('search') }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="mdi mdi-magnify"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Alert Messages --}}
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
                 
                 <div class="table-responsive">
                     <table class="table table-hover">
@@ -27,11 +59,12 @@
                             @forelse($inventories as $item)
                             <tr>
                                 <td>
-                                    {{-- ... Code Foto (Sama seperti sebelumnya) ... --}}
                                     @if($item->item_photo_path)
-                                         <img src="{{ asset('storage/'.$item->item_photo_path) }}" style="width: 50px; height: 50px; border-radius: 4px;">
+                                         <img src="{{ asset('storage/'.$item->item_photo_path) }}" style="width: 50px; height: 50px; border-radius: 4px; object-fit: cover;">
                                     @else
-                                        <div class="bg-secondary" style="width: 50px; height: 50px; border-radius: 4px;"></div>
+                                        <div class="bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px; border-radius: 4px;">
+                                            <i class="mdi mdi-image-off"></i>
+                                        </div>
                                     @endif
                                 </td>
                                 <td>
@@ -47,41 +80,64 @@
                                         <span class="badge badge-success">Available</span>
                                     @endif
                                 </td>
-                                <td>{{ $item->condition }}</td>
+                                <td>
+                                    @php
+                                        $badges = [
+                                            'Baik' => 'badge-success',
+                                            'Baru' => 'badge-primary',
+                                            'Rusak Ringan' => 'badge-warning',
+                                            'Rusak Berat' => 'badge-danger',
+                                            'Perbaikan' => 'badge-info',
+                                        ];
+                                        $bg = $badges[$item->condition] ?? 'badge-secondary';
+                                    @endphp
+                                    <label class="badge {{ $bg }}">{{ $item->condition }}</label>
+                                </td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        {{-- View Button --}}
-                                        <a href="{{ route('inventory.show', $item->id) }}" class="btn btn-inverse-info btn-icon btn-sm"><i class="mdi mdi-eye"></i></a>
+                                        {{-- View Button (SEMUA ROLE) --}}
+                                        <a href="{{ route('inventory.show', $item->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat"><i class="mdi mdi-eye"></i></a>
 
-                                        @if(auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
-                                            {{-- Edit Button --}}
-                                            <a href="{{ route('inventory.edit', $item->id) }}" class="btn btn-inverse-warning btn-icon btn-sm"><i class="mdi mdi-pencil"></i></a>
+                                        {{-- Edit & Delete (ADMIN & AUDIT ONLY) --}}
+                                        @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                                            <a href="{{ route('inventory.edit', $item->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
                                             
-                                            {{-- TOMBOL KEMBALIKAN BARANG (Hanya muncul jika barang ada pemiliknya) --}}
-                                            @if($item->user_id)
-                                                <button type="button" 
-                                                        class="btn btn-inverse-primary btn-icon btn-sm" 
-                                                        title="Proses Pengembalian"
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#returnModal"
-                                                        data-id="{{ $item->id }}"
-                                                        data-name="{{ $item->item_name }}"
-                                                        data-user="{{ $item->user->name }}">
-                                                    <i class="mdi mdi-keyboard-return"></i>
-                                                </button>
-                                            @endif
-
-                                            {{-- Delete Button --}}
-                                            <form action="{{ route('inventory.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus?')">
+                                            <form action="{{ route('inventory.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus barang ini?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm"><i class="mdi mdi-delete"></i></button>
+                                                <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm" title="Hapus"><i class="mdi mdi-delete"></i></button>
                                             </form>
+                                        @endif
+
+                                        {{-- Return Button (SEMUA ROLE - Jika barang milik dia ATAU Admin/Audit) --}}
+                                        @php
+                                            $canReturn = false;
+                                            // Admin/Audit bisa mengembalikan barang siapa saja
+                                            if(in_array(auth()->user()->role, ['admin', 'audit'])) {
+                                                $canReturn = true;
+                                            }
+                                            // User biasa hanya bisa mengembalikan barang miliknya
+                                            elseif($item->user_id == auth()->id()) {
+                                                $canReturn = true;
+                                            }
+                                        @endphp
+
+                                        @if($item->user_id && $canReturn)
+                                            <button type="button" 
+                                                    class="btn btn-inverse-primary btn-icon btn-sm" 
+                                                    title="Kembalikan Barang"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#returnModal"
+                                                    data-id="{{ $item->id }}"
+                                                    data-name="{{ $item->item_name }}"
+                                                    data-user="{{ $item->user->name }}">
+                                                <i class="mdi mdi-keyboard-return"></i>
+                                            </button>
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="6" class="text-center">Data kosong.</td></tr>
+                            <tr><td colspan="6" class="text-center py-4">Data inventaris kosong.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -104,7 +160,7 @@
                 @csrf
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <i class="mdi mdi-information-outline"></i> Barang ini akan dilepas dari penanggung jawabnya dan status akan menjadi "Available".
+                        <i class="mdi mdi-information-outline"></i> Status barang akan berubah menjadi <strong>Available</strong> (Tanpa Pemilik).
                     </div>
 
                     <div class="form-group mb-3">
@@ -113,24 +169,24 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Dikembalikan Oleh (User Saat Ini)</label>
+                        <label>Pemilik Saat Ini</label>
                         <input type="text" id="modalUserName" class="form-control" readonly>
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Bukti Foto Pengembalian <span class="text-danger">*</span></label>
+                        <label>Bukti Foto <span class="text-danger">*</span></label>
                         <input type="file" name="return_photo" class="form-control" required accept="image/*">
-                        <small class="text-muted">Foto akan otomatis dikompres (Max 100KB)</small>
+                        <small class="text-muted">Max 5MB (Otomatis Kompres)</small>
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Catatan / Kondisi Akhir</label>
-                        <textarea name="note" class="form-control" rows="3" placeholder="Contoh: Barang dikembalikan lengkap dengan charger, kondisi baik."></textarea>
+                        <label>Catatan</label>
+                        <textarea name="note" class="form-control" rows="3" placeholder="Kondisi barang saat dikembalikan..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Proses & Approve</button>
+                    <button type="submit" class="btn btn-primary">Proses Pengembalian</button>
                 </div>
             </form>
         </div>
@@ -139,7 +195,6 @@
 
 @push('scripts')
 <script>
-    // Script untuk mengisi data ke Modal Return
     var returnModal = document.getElementById('returnModal');
     returnModal.addEventListener('show.bs.modal', function (event) {
         var button = event.relatedTarget;
@@ -147,11 +202,10 @@
         var name = button.getAttribute('data-name');
         var user = button.getAttribute('data-user');
 
-        // Update Form Action URL
+        // Set Action URL dinamis
         var form = document.getElementById('returnForm');
         form.action = '/inventory/' + id + '/return';
 
-        // Update Input Fields
         document.getElementById('modalItemName').value = name;
         document.getElementById('modalUserName').value = user;
     });

@@ -11,13 +11,11 @@ use Illuminate\Support\Facades\Storage;
 class InventoryController extends Controller
 {
     /**
-     * Tampilkan List Barang (Sidebar Menu)
-     * - Semua Role bisa melihat.
-     * - Admin/Audit punya tombol aksi lebih banyak di View.
+     * Tampilkan List Barang
      */
     public function index(Request $request)
     {
-        $query = Inventory::with('user'); // Load data user pemilik barang
+        $query = Inventory::with('user'); 
 
         // Logika Pencarian
         if ($request->has('search') && $request->search != '') {
@@ -32,33 +30,36 @@ class InventoryController extends Controller
             });
         }
 
+        // Jika User Biasa/Leader/Security, hanya lihat barang sendiri? 
+        // (Opsional: Jika ingin semua bisa lihat semua, biarkan kode ini. 
+        // Jika hanya ingin lihat punya sendiri, uncomment baris bawah)
+        // if (!in_array(Auth::user()->role, ['admin', 'audit'])) {
+        //     $query->where('user_id', Auth::id());
+        // }
+
         $inventories = $query->latest()->paginate(10)->withQueryString();
         return view('inventory.index', compact('inventories'));
     }
 
     /**
-     * Form Create (Khusus Admin/Audit lewat Sidebar)
+     * Form Create
+     * Diakses oleh: Admin, Audit, Leader, Security, User Biasa
      */
     public function create()
     {
+        // Kita tetap kirim data users untuk dropdown (hanya dipakai Admin/Audit di view)
         $users = User::where('is_active', 1)->orderBy('name')->get();
         return view('inventory.create', compact('users'));
     }
 
     /**
-     * Store (Simpan Data)
-     * Menangani request dari 2 sumber:
-     * 1. Halaman Profile (User input barang sendiri) -> Redirect ke Profile
-     * 2. Halaman Admin (Sidebar input barang orang lain) -> Redirect ke Index Inventory
+     * Simpan Data
      */
     public function store(Request $request)
     {
         $user = Auth::user();
-        
-        // Cek hidden input 'is_profile_action' untuk menentukan sumber request
-        $isFromProfile = $request->has('is_profile_action');
 
-        // Validasi
+        // Validasi Dasar
         $rules = [
             'item_name'     => 'required|string|max:255',
             'category'      => 'required|string',
@@ -66,54 +67,50 @@ class InventoryController extends Controller
             'received_date' => 'required|date',
             'condition'     => 'required|string',
             'description'   => 'nullable|string|max:1000',
-            'item_photo'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // Max 5MB
-            'document'      => 'nullable|file|mimes:pdf,doc,docx|max:10240',    // Max 10MB
+            'item_photo'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'document'      => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ];
 
-        // Jika dari Admin Sidebar, WAJIB pilih user_id target
-        if (!$isFromProfile) {
+        // Jika Admin/Audit, Wajib pilih user lain. Jika User Biasa, tidak perlu validasi user_id (otomatis)
+        if ($user->role == 'admin' || $user->role == 'audit') {
             $rules['user_id'] = 'required|exists:users,id';
         }
 
         $request->validate($rules);
 
         try {
-            $data = $request->except(['item_photo', 'document', 'is_profile_action']);
+            $data = $request->except(['item_photo', 'document']);
 
-            // LOGIKA PENENTUAN PEMILIK BARANG
-            if ($isFromProfile) {
-                $data['user_id'] = $user->id; // Otomatis diri sendiri
+            // === LOGIKA PENENTUAN PEMILIK ===
+            if ($user->role == 'admin' || $user->role == 'audit') {
+                // Admin bisa set pemilik barang ke orang lain
+                $data['user_id'] = $request->user_id;
             } else {
-                $data['user_id'] = $request->user_id; // Dari dropdown admin
+                // User biasa/Leader/Security otomatis barang milik sendiri
+                $data['user_id'] = $user->id;
             }
 
-            // UPLOAD FOTO
+            // Upload Foto
             if ($request->hasFile('item_photo')) {
                 $data['item_photo_path'] = $request->file('item_photo')->store('inventory_photos', 'public');
             }
 
-            // UPLOAD DOKUMEN
+            // Upload Dokumen
             if ($request->hasFile('document')) {
                 $data['document_path'] = $request->file('document')->store('inventory_documents', 'public');
             }
 
             Inventory::create($data);
 
-            // REDIRECT SESUAI SUMBER REQUEST
-            if ($isFromProfile) {
-                return redirect()->route('profile.edit')->with('success', 'Inventaris berhasil ditambahkan ke profil Anda.');
-            } else {
-                return redirect()->route('inventory.index')->with('success', 'Data inventaris berhasil ditambahkan.');
-            }
+            return redirect()->route('inventory.index')->with('success', 'Data inventaris berhasil ditambahkan.');
 
         } catch (\Exception $e) {
-            $route = $isFromProfile ? 'profile.edit' : 'inventory.index';
-            return redirect()->route($route)->with('error', 'Gagal menyimpan: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
     /**
-     * Show Detail Barang
+     * Show Detail
      */
     public function show($id)
     {
@@ -122,20 +119,29 @@ class InventoryController extends Controller
     }
 
     /**
-     * Edit Form (Khusus Admin Sidebar)
+     * Edit (Hanya Admin & Audit)
      */
     public function edit($id)
     {
+        // Cek Role di Middleware atau disini
+        if (!in_array(Auth::user()->role, ['admin', 'audit'])) {
+            abort(403, 'Anda tidak memiliki akses edit.');
+        }
+
         $inventory = Inventory::findOrFail($id);
         $users = User::where('is_active', 1)->orderBy('name')->get();
         return view('inventory.edit', compact('inventory', 'users'));
     }
 
     /**
-     * Update (Khusus Admin Sidebar)
+     * Update (Hanya Admin & Audit)
      */
     public function update(Request $request, $id)
     {
+        if (!in_array(Auth::user()->role, ['admin', 'audit'])) {
+            abort(403);
+        }
+
         $inventory = Inventory::findOrFail($id);
 
         $request->validate([
@@ -149,7 +155,6 @@ class InventoryController extends Controller
 
         $data = $request->except(['item_photo', 'document']);
 
-        // Update Foto
         if ($request->hasFile('item_photo')) {
             if ($inventory->item_photo_path && Storage::disk('public')->exists($inventory->item_photo_path)) {
                 Storage::disk('public')->delete($inventory->item_photo_path);
@@ -157,7 +162,6 @@ class InventoryController extends Controller
             $data['item_photo_path'] = $request->file('item_photo')->store('inventory_photos', 'public');
         }
 
-        // Update Dokumen
         if ($request->hasFile('document')) {
             if ($inventory->document_path && Storage::disk('public')->exists($inventory->document_path)) {
                 Storage::disk('public')->delete($inventory->document_path);
@@ -171,25 +175,17 @@ class InventoryController extends Controller
     }
 
     /**
-     * Destroy (Hapus Data)
-     * - User Biasa: Hanya boleh hapus barang miliknya.
-     * - Admin/Audit: Boleh hapus barang siapa saja.
-     */
-    /**
-     * Destroy (Hapus Data)
+     * Hapus (Hanya Admin & Audit)
      */
     public function destroy(Request $request, $id)
     {
-        $inventory = Inventory::findOrFail($id);
-        $user = Auth::user();
-
-        // CEK PERMISSIONS
-        if ($user->role !== 'admin' && $user->role !== 'audit' && $inventory->user_id !== $user->id) {
-            abort(403, 'Anda tidak berhak menghapus data ini.');
+        if (!in_array(Auth::user()->role, ['admin', 'audit'])) {
+            abort(403, 'Akses Ditolak');
         }
 
+        $inventory = Inventory::findOrFail($id);
+
         try {
-            // Hapus file fisik (Foto & Dokumen)
             if ($inventory->item_photo_path && Storage::disk('public')->exists($inventory->item_photo_path)) {
                 Storage::disk('public')->delete($inventory->item_photo_path);
             }
@@ -197,22 +193,11 @@ class InventoryController extends Controller
                 Storage::disk('public')->delete($inventory->document_path);
             }
 
-            // Hapus Data dari Database
             $inventory->delete();
 
-            // === LOGIKA REDIRECT PERBAIKAN ===
-            
-            // 1. Cek apakah penghapusan dilakukan dari halaman Profile (URL sebelumnya mengandung kata 'profile')
-            if (str_contains(url()->previous(), 'profile')) {
-                return redirect()->route('profile.edit')->with('success', 'Inventaris berhasil dihapus.');
-            }
-
-            // 2. Default: Jika dari halaman Admin (Index atau Show), arahkan ke LIST UTAMA (Index)
-            // Jangan pakai back(), karena kalau dari halaman Show nanti jadi 404
             return redirect()->route('inventory.index')->with('success', 'Inventaris berhasil dihapus.');
 
         } catch (\Exception $e) {
-            // Jika error, kembalikan ke halaman sebelumnya
             return redirect()->back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
         }
     }
