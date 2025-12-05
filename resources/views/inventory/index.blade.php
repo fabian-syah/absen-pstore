@@ -95,28 +95,28 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        {{-- View Button (SEMUA ROLE) --}}
-                                        <a href="{{ route('inventory.show', $item->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat"><i class="mdi mdi-eye"></i></a>
+                                        {{-- 1. TOMBOL LIHAT (SEMUA ROLE) --}}
+                                        <a href="{{ route('inventory.show', $item->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail"><i class="mdi mdi-eye"></i></a>
 
-                                        {{-- Edit & Delete (ADMIN & AUDIT ONLY) --}}
+                                        {{-- 2. TOMBOL EDIT & HAPUS (HANYA ADMIN & AUDIT) --}}
                                         @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                                            {{-- Edit --}}
                                             <a href="{{ route('inventory.edit', $item->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
                                             
-                                            <form action="{{ route('inventory.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus barang ini?')">
+                                            {{-- Delete --}}
+                                            <form action="{{ route('inventory.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus barang ini secara permanen?')">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm" title="Hapus"><i class="mdi mdi-delete"></i></button>
                                             </form>
                                         @endif
 
-                                        {{-- Return Button (SEMUA ROLE - Jika barang milik dia ATAU Admin/Audit) --}}
+                                        {{-- 3. TOMBOL KEMBALIKAN BARANG --}}
+                                        {{-- Muncul jika: 1. Admin/Audit, ATAU 2. User pemilik barang tersebut --}}
                                         @php
                                             $canReturn = false;
-                                            // Admin/Audit bisa mengembalikan barang siapa saja
                                             if(in_array(auth()->user()->role, ['admin', 'audit'])) {
                                                 $canReturn = true;
-                                            }
-                                            // User biasa hanya bisa mengembalikan barang miliknya
-                                            elseif($item->user_id == auth()->id()) {
+                                            } elseif($item->user_id == auth()->id()) {
                                                 $canReturn = true;
                                             }
                                         @endphp
@@ -124,7 +124,7 @@
                                         @if($item->user_id && $canReturn)
                                             <button type="button" 
                                                     class="btn btn-inverse-primary btn-icon btn-sm" 
-                                                    title="Kembalikan Barang"
+                                                    title="Ajukan Pengembalian"
                                                     data-bs-toggle="modal" 
                                                     data-bs-target="#returnModal"
                                                     data-id="{{ $item->id }}"
