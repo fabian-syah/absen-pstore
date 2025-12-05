@@ -18,17 +18,15 @@
                         </a>
                     @endif
 
-                    {{-- TOMBOL SWITCH VIEW (Untuk Admin/Audit) --}}
-                    @if(in_array(auth()->user()->role, ['admin', 'audit']))
-                        <div class="btn-group" role="group">
-                            <a href="{{ route('inventory.index') }}" class="btn btn-sm {{ request()->routeIs('inventory.index') ? 'btn-info' : 'btn-outline-info' }}">
-                                <i class="mdi mdi-account-box"></i> Sedang Dipakai
-                            </a>
-                            <a href="{{ route('inventory.available') }}" class="btn btn-sm {{ request()->routeIs('inventory.available') ? 'btn-success' : 'btn-outline-success' }}">
-                                <i class="mdi mdi-warehouse"></i> Dikembalikan (Available)
-                            </a>
-                        </div>
-                    @endif
+                    {{-- TOMBOL SWITCH VIEW (UNTUK SEMUA ROLE) --}}
+                    <div class="btn-group" role="group">
+                        <a href="{{ route('inventory.index') }}" class="btn btn-sm {{ request()->routeIs('inventory.index') ? 'btn-info' : 'btn-outline-info' }}">
+                            <i class="mdi mdi-account-box"></i> Sedang Dipakai
+                        </a>
+                        <a href="{{ route('inventory.available') }}" class="btn btn-sm {{ request()->routeIs('inventory.available') ? 'btn-success' : 'btn-outline-success' }}">
+                            <i class="mdi mdi-warehouse"></i> Dikembalikan (Available)
+                        </a>
+                    </div>
                     
                     {{-- SEARCH FORM --}}
                     <form action="{{ url()->current() }}" method="GET" class="d-flex">

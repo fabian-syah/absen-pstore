@@ -141,8 +141,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // 1. LIST BARANG AKTIF (Dipinjamkan) - Semua Role (Terfilter di Controller)
         Route::get('/', [InventoryController::class, 'index'])->name('index');
         
-        // 2. LIST BARANG AVAILABLE (Gudang) - Admin & Audit Only
-        Route::get('/available', [InventoryController::class, 'available'])->name('available')->middleware('role:admin,audit');
+        // 2. LIST BARANG AVAILABLE (Gudang) - SEMUA ROLE BISA LIHAT
+        Route::get('/available', [InventoryController::class, 'available'])
+            ->name('available')
+            ->middleware('role:admin,audit,leader,security,user_biasa'); // Update disini
 
         // 3. DETAIL - Semua Role (Terfilter di Controller)
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');

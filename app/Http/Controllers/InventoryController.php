@@ -64,19 +64,12 @@ class InventoryController extends Controller
     {
         $user = Auth::user();
         
-        // Admin & Audit bisa lihat semua barang available (di gudang)
-        // User biasa tidak perlu lihat gudang (biasanya), tapi kalau mau, bisa dibuka.
-        // Disini saya buat Admin & Audit saja yang bisa lihat stok gudang.
-        if (!in_array($user->role, ['admin', 'audit'])) {
-            abort(403, 'Akses Ditolak');
-        }
+        // CATATAN: Semua role boleh melihat daftar barang di gudang (untuk referensi/request)
+        // Kita HAPUS pembatasan 403 disini.
 
         $query = Inventory::whereNull('user_id'); // HANYA YANG KOSONG (AVAILABLE)
 
-        // Filter Audit: Mungkin audit hanya mau lihat aset gudang cabang tertentu?
-        // Karena table inventory tidak ada kolom branch_id, maka aset available dianggap GLOBAL atau milik PUSAT.
-        // Jadi Audit tetap bisa lihat semua yang available untuk diaudit fisiknya.
-
+        // FILTER SEARCH
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -90,7 +83,7 @@ class InventoryController extends Controller
         
         $pageTitle = 'Daftar Inventaris Available (Gudang)';
         
-        // Kita reuse view index, tapi nanti di view kita cek jika user_id null
+        // Reuse view index
         return view('inventory.index', compact('inventories', 'pageTitle'));
     }
 
@@ -172,8 +165,15 @@ class InventoryController extends Controller
         $inventory = Inventory::with('user')->findOrFail($id);
         $user = Auth::user();
 
-        if (!in_array($user->role, ['admin', 'audit']) && $inventory->user_id != $user->id) {
-            abort(403, 'Anda tidak berhak melihat data ini.');
+        // Jika barang available (user_id null), semua role boleh lihat detailnya
+        if ($inventory->user_id === null) {
+            // Izinkan semua role melihat detail barang gudang
+        } 
+        // Jika barang dipakai orang lain (user_id tidak null)
+        else {
+             if (!in_array($user->role, ['admin', 'audit']) && $inventory->user_id != $user->id) {
+                abort(403, 'Anda tidak berhak melihat data ini.');
+            }
         }
         
         // Audit cek cabang
