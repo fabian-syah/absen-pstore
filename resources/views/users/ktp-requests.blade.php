@@ -4,7 +4,9 @@
 
 @section('content')
 
-{{-- 1. ALERT NOTIFIKASI --}}
+{{-- ================================================= --}}
+{{-- 1. ALERT NOTIFIKASI (Sama seperti Edit Profil) --}}
+{{-- ================================================= --}}
 @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show">
         <i class="mdi mdi-check-circle me-1"></i> {{ session('success') }}
@@ -23,6 +25,8 @@
     <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
+                
+                {{-- Header Card --}}
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h4 class="card-title mb-0">Daftar Permintaan Ganti KTP</h4>
                     <span class="badge bg-warning text-dark">Pending: {{ $users->count() }}</span>
@@ -43,21 +47,24 @@
                         <tbody>
                             @foreach($users as $user)
                             <tr>
-                                {{-- Kolom 1: User Info --}}
+                                {{-- =================================== --}}
+                                {{-- KOLOM 1: USER INFO (FOTO KOTAK) --}}
+                                {{-- =================================== --}}
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        {{-- FOTO USER (KOTAK) --}}
+                                        {{-- Foto Profil Thumbnail (KOTAK / SQUARE) --}}
                                         <div class="me-3">
                                             @if($user->profile_photo_path)
-                                                {{-- Menggunakan class 'rounded' agar kotak, bukan 'rounded-circle' --}}
                                                 <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
-                                                     alt="avatar" 
+                                                     alt="profile" 
                                                      class="rounded shadow-sm" 
-                                                     style="width: 45px; height: 45px; object-fit: cover;">
+                                                     style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
+                                                     data-bs-toggle="modal" 
+                                                     data-bs-target="#modalProfile{{ $user->id }}"
+                                                     title="Lihat Foto Profil">
                                             @else
-                                                {{-- Placeholder Kotak --}}
                                                 <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center shadow-sm" 
-                                                     style="width: 45px; height: 45px; font-weight: bold;">
+                                                     style="width: 50px; height: 50px; font-weight: bold; font-size: 20px;">
                                                     {{ substr($user->name, 0, 1) }}
                                                 </div>
                                             @endif
@@ -67,24 +74,43 @@
                                             <small class="text-muted">{{ $user->email }}</small>
                                         </div>
                                     </div>
+
+                                    {{-- MODAL FOTO PROFIL (RESPONSIVE KOTAK) --}}
+                                    @if($user->profile_photo_path)
+                                    <div class="modal fade" id="modalProfile{{ $user->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content bg-transparent border-0">
+                                                <div class="modal-header border-0">
+                                                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    {{-- Foto Besar Responsive --}}
+                                                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
+                                                         class="img-fluid rounded shadow-lg" 
+                                                         style="max-height: 80vh; width: auto; max-width: 100%;">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
                                 </td>
 
-                                {{-- Kolom 2: Divisi --}}
+                                {{-- KOLOM 2: DIVISI --}}
                                 <td>{{ $user->division->name ?? '-' }}</td>
                                 
-                                {{-- Kolom 3: KTP Lama --}}
+                                {{-- =================================== --}}
+                                {{-- KOLOM 3: KTP LAMA --}}
+                                {{-- =================================== --}}
                                 <td class="text-center">
                                     @if($user->ktp_photo_path)
-                                        {{-- Thumbnail Old --}}
                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
                                              alt="Old KTP" 
                                              class="img-thumbnail"
                                              style="width: 80px; height: 50px; cursor: pointer; object-fit: cover;"
                                              data-bs-toggle="modal" 
-                                             data-bs-target="#modalOldKtp{{ $user->id }}"
-                                             title="Klik untuk memperbesar">
+                                             data-bs-target="#modalOldKtp{{ $user->id }}">
 
-                                        {{-- MODAL OLD KTP --}}
+                                        {{-- MODAL KTP LAMA --}}
                                         <div class="modal fade" id="modalOldKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                                 <div class="modal-content">
@@ -92,8 +118,8 @@
                                                         <h5 class="modal-title">KTP Lama: {{ $user->name }}</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body text-center bg-secondary">
-                                                        <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" class="img-fluid rounded shadow">
+                                                    <div class="modal-body text-center bg-dark">
+                                                        <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" class="img-fluid rounded">
                                                     </div>
                                                 </div>
                                             </div>
@@ -103,19 +129,24 @@
                                     @endif
                                 </td>
 
-                                {{-- Kolom 4: KTP Baru (Draft) --}}
+                                {{-- =================================== --}}
+                                {{-- KOLOM 4: KTP BARU (REQUEST) --}}
+                                {{-- =================================== --}}
                                 <td class="text-center">
                                     @if($user->ktp_photo_temp_path)
-                                        {{-- Thumbnail New --}}
-                                        <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
-                                             alt="New KTP" 
-                                             class="img-thumbnail border-success"
-                                             style="width: 80px; height: 50px; cursor: pointer; object-fit: cover; border-width: 2px;"
-                                             data-bs-toggle="modal" 
-                                             data-bs-target="#modalNewKtp{{ $user->id }}"
-                                             title="Klik untuk memperbesar">
+                                        <div class="position-relative d-inline-block">
+                                            <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
+                                                 alt="New KTP" 
+                                                 class="img-thumbnail border-success"
+                                                 style="width: 80px; height: 50px; cursor: pointer; object-fit: cover; border-width: 2px;"
+                                                 data-bs-toggle="modal" 
+                                                 data-bs-target="#modalNewKtp{{ $user->id }}">
+                                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle">
+                                                <span class="visually-hidden">New</span>
+                                            </span>
+                                        </div>
 
-                                        {{-- MODAL NEW KTP --}}
+                                        {{-- MODAL KTP BARU --}}
                                         <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                                 <div class="modal-content">
@@ -124,29 +155,32 @@
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body text-center bg-dark">
-                                                        <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" class="img-fluid rounded shadow">
+                                                        <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" class="img-fluid rounded">
                                                     </div>
                                                     <div class="modal-footer justify-content-center">
-                                                        <small class="text-muted">Periksa data pada foto ini sebelum menyetujui.</small>
+                                                        <small class="text-muted">Pastikan data terlihat jelas sebelum disetujui.</small>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     @else
-                                        <span class="text-danger small"><i class="mdi mdi-alert"></i> File Hilang</span>
+                                        <span class="text-danger small"><i class="mdi mdi-alert"></i> File Error</span>
                                     @endif
                                 </td>
 
-                                {{-- Kolom 5: Aksi --}}
+                                {{-- =================================== --}}
+                                {{-- KOLOM 5: AKSI --}}
+                                {{-- =================================== --}}
                                 <td>
                                     <div class="d-flex gap-2">
                                         {{-- Tombol Approve --}}
                                         <form action="{{ route('users.approve-ktp', $user->id) }}" method="POST">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="btn btn-success btn-sm text-white" 
-                                                onclick="return confirm('Apakah Anda yakin ingin menyetujui KTP baru ini? Foto lama akan diganti.')"
-                                                title="Setujui Perubahan">
+                                            <button type="submit" class="btn btn-success btn-sm text-white rounded-circle p-2" 
+                                                style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"
+                                                onclick="return confirm('Setujui penggantian KTP ini?')"
+                                                title="Setujui">
                                                 <i class="mdi mdi-check"></i>
                                             </button>
                                         </form>
@@ -155,9 +189,10 @@
                                         <form action="{{ route('users.reject-ktp', $user->id) }}" method="POST">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="btn btn-danger btn-sm text-white" 
-                                                onclick="return confirm('Tolak permintaan ini? Foto draft akan dihapus.')"
-                                                title="Tolak Permintaan">
+                                            <button type="submit" class="btn btn-danger btn-sm text-white rounded-circle p-2" 
+                                                style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"
+                                                onclick="return confirm('Tolak permintaan ini?')"
+                                                title="Tolak">
                                                 <i class="mdi mdi-close"></i>
                                             </button>
                                         </form>
@@ -169,9 +204,10 @@
                     </table>
                 </div>
                 @else
+                    {{-- State Kosong --}}
                     <div class="alert alert-light border text-center py-5">
-                        <i class="mdi mdi-folder-open-outline d-block mb-2" style="font-size: 30px;"></i>
-                        <h6 class="text-muted">Tidak ada permintaan ganti KTP yang pending.</h6>
+                        <i class="mdi mdi-check-all d-block mb-2 text-success" style="font-size: 40px;"></i>
+                        <h6 class="text-muted">Semua permintaan KTP sudah diproses.</h6>
                     </div>
                 @endif
             </div>
