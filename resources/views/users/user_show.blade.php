@@ -126,8 +126,7 @@
                             {{-- TikTok --}}
                             @if($user->tiktok)
                                 <a href="{{ $user->tiktok }}" target="_blank" class="text-decoration-none" title="TikTok">
-                                    {{-- Menggunakan icon music note jika mdi-tiktok tidak tersedia di versi lama --}}
-                                    <i class="mdi mdi-music-note text-dark" style="font-size: 28px;"></i> 
+                                    <img src="https://img.icons8.com/material/96/tiktok.png" alt="TikTok" style="width: 28px; height: 28px;">
                                 </a>
                             @endif
 
