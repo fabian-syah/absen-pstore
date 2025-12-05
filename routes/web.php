@@ -133,46 +133,41 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // ==========================================================
-    //  RUTE INVENTARIS (Disesuaikan Permintaan)
+    //  RUTE INVENTARIS
     // ==========================================================
     
-    // GROUP 1: AKSES UNTUK SEMUA ROLE (Admin, Audit, Leader, Security, User Biasa)
-    // Fitur: Lihat List, Lihat Detail, Tambah Baru, Aksi Kembalikan
     Route::prefix('inventory')->name('inventory.')->group(function () {
-        // Semua Role bisa lihat & submit return
+        
+        // 1. LIST BARANG AKTIF (Dipinjamkan) - Semua Role (Terfilter di Controller)
         Route::get('/', [InventoryController::class, 'index'])->name('index');
+        
+        // 2. LIST BARANG AVAILABLE (Gudang) - Admin & Audit Only
+        Route::get('/available', [InventoryController::class, 'available'])->name('available')->middleware('role:admin,audit');
+
+        // 3. DETAIL - Semua Role (Terfilter di Controller)
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
         
+        // 4. CREATE & STORE - Semua Role (Admin, Audit, Leader, Security, User Biasa)
         Route::middleware(['role:admin,audit,leader,security,user_biasa'])->group(function () {
             Route::get('/create', [InventoryController::class, 'create'])->name('create');
             Route::post('/', [InventoryController::class, 'store'])->name('store');
             
-            // Submit Pengembalian (User isi form -> Status Pending)
+            // AKSI KEMBALIKAN (Return Request)
             Route::post('/{id}/return', [InventoryReturnController::class, 'store'])->name('process-return');
         });
 
-        // Admin Only Actions
-        Route::middleware(['role:admin,audit'])->group(function () {
+        // 5. EDIT & DELETE - ADMIN ONLY
+        Route::middleware(['role:admin'])->group(function () {
             Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
             Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
             Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
         });
     });
 
-    // GROUP 2: HANYA ADMIN & AUDIT (Edit, Delete, Melihat History List Pengembalian)
+    // ================= RIWAYAT PENGEMBALIAN (Inventory Returns) =================
+    // Ini halaman khusus untuk melihat riwayat barang yang dikembalikan & Approval
     Route::middleware(['role:admin,audit'])->group(function () {
-        
-        // Edit & Delete Inventory
-        Route::prefix('inventory')->name('inventory.')->group(function () {
-            Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
-            Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
-            Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
-        });
-
-        // Halaman List Riwayat Pengembalian (Sidebar Menu)
-      Route::get('/inventory-returns', [InventoryReturnController::class, 'index'])->name('inventory-returns.index');
-        
-        // Aksi Approve (Tombol Centang Hijau)
+        Route::get('/inventory-returns', [InventoryReturnController::class, 'index'])->name('inventory-returns.index');
         Route::post('/inventory-returns/{id}/approve', [InventoryReturnController::class, 'approve'])->name('inventory-returns.approve');
     });
     

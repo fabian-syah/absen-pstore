@@ -1,25 +1,37 @@
 @extends('layout.master')
 
-@section('title', 'Daftar Inventaris')
+@section('title', $pageTitle ?? 'Daftar Inventaris')
 
 @section('content')
 <div class="row">
     <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Daftar Inventaris & Aset</h4>
+                <h4 class="card-title">{{ $pageTitle ?? 'Daftar Inventaris' }}</h4>
                 
                 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                     
-                    {{-- TOMBOL TAMBAH: SEMUA ROLE BISA --}}
+                    {{-- TOMBOL TAMBAH --}}
                     @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'security', 'user_biasa']))
                         <a href="{{ route('inventory.create') }}" class="btn btn-primary btn-sm">
                             <i class="mdi mdi-plus"></i> Tambah Barang
                         </a>
                     @endif
+
+                    {{-- TOMBOL SWITCH VIEW (Untuk Admin/Audit) --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                        <div class="btn-group" role="group">
+                            <a href="{{ route('inventory.index') }}" class="btn btn-sm {{ request()->routeIs('inventory.index') ? 'btn-info' : 'btn-outline-info' }}">
+                                <i class="mdi mdi-account-box"></i> Sedang Dipakai
+                            </a>
+                            <a href="{{ route('inventory.available') }}" class="btn btn-sm {{ request()->routeIs('inventory.available') ? 'btn-success' : 'btn-outline-success' }}">
+                                <i class="mdi mdi-warehouse"></i> Gudang (Available)
+                            </a>
+                        </div>
+                    @endif
                     
                     {{-- SEARCH FORM --}}
-                    <form action="{{ route('inventory.index') }}" method="GET" class="d-flex">
+                    <form action="{{ url()->current() }}" method="GET" class="d-flex">
                         <div class="input-group input-group-sm" style="width: 250px;">
                             <input type="text" name="search" class="form-control" placeholder="Cari aset / user..." value="{{ request('search') }}">
                             <button class="btn btn-primary" type="submit">
@@ -29,17 +41,16 @@
                     </form>
                 </div>
 
-                {{-- Alert Messages --}}
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
                 @if(session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
                 
@@ -74,10 +85,10 @@
                                 <td>{{ ucfirst($item->category) }}</td>
                                 <td>
                                     @if($item->user)
-                                        {{ $item->user->name }}
+                                        <span class="fw-bold">{{ $item->user->name }}</span>
                                         <br><small class="text-muted">{{ $item->user->branch->name ?? '-' }}</small>
                                     @else
-                                        <span class="badge badge-success">Available</span>
+                                        <span class="badge badge-success">Gudang / Available</span>
                                     @endif
                                 </td>
                                 <td>
@@ -95,33 +106,32 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        {{-- 1. TOMBOL LIHAT (SEMUA ROLE) --}}
+                                        {{-- 1. SHOW (SEMUA ROLE) --}}
                                         <a href="{{ route('inventory.show', $item->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail"><i class="mdi mdi-eye"></i></a>
 
-                                        {{-- 2. TOMBOL EDIT & HAPUS (HANYA ADMIN & AUDIT) --}}
-                                        @if(in_array(auth()->user()->role, ['admin', 'audit']))
-                                            {{-- Edit --}}
+                                        {{-- 2. EDIT & DELETE (ADMIN ONLY) --}}
+                                        @if(auth()->user()->role == 'admin')
                                             <a href="{{ route('inventory.edit', $item->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
                                             
-                                            {{-- Delete --}}
                                             <form action="{{ route('inventory.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus barang ini secara permanen?')">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm" title="Hapus"><i class="mdi mdi-delete"></i></button>
                                             </form>
                                         @endif
 
-                                        {{-- 3. TOMBOL KEMBALIKAN BARANG --}}
-                                        {{-- Muncul jika: 1. Admin/Audit, ATAU 2. User pemilik barang tersebut --}}
+                                        {{-- 3. RETURN (JIKA PUNYA PEMILIK & IZIN SESUAI) --}}
                                         @php
                                             $canReturn = false;
-                                            if(in_array(auth()->user()->role, ['admin', 'audit'])) {
-                                                $canReturn = true;
-                                            } elseif($item->user_id == auth()->id()) {
-                                                $canReturn = true;
+                                            if($item->user_id) { // Hanya barang yg ada pemiliknya yg bisa dikembalikan
+                                                if(in_array(auth()->user()->role, ['admin', 'audit'])) {
+                                                    $canReturn = true; // Admin/Audit bisa mengembalikan barang siapa saja
+                                                } elseif($item->user_id == auth()->id()) {
+                                                    $canReturn = true; // User bisa mengembalikan barang sendiri
+                                                }
                                             }
                                         @endphp
 
-                                        @if($item->user_id && $canReturn)
+                                        @if($canReturn)
                                             <button type="button" 
                                                     class="btn btn-inverse-primary btn-icon btn-sm" 
                                                     title="Ajukan Pengembalian"
@@ -137,7 +147,7 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="6" class="text-center py-4">Data inventaris kosong.</td></tr>
+                            <tr><td colspan="6" class="text-center py-4">Data inventaris tidak ditemukan.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -148,7 +158,7 @@
     </div>
 </div>
 
-{{-- MODAL PENGEMBALIAN INVENTARIS --}}
+{{-- MODAL --}}
 <div class="modal fade" id="returnModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -180,12 +190,12 @@
                     <div class="form-group mb-3">
                         <label>Bukti Foto <span class="text-danger">*</span></label>
                         <input type="file" name="return_photo" class="form-control" required accept="image/*">
-                        <small class="text-muted">Format: JPG/PNG, Maksimal 5MB (Otomatis Kompres)</small>
+                        <small class="text-muted">Max 5MB (Otomatis Kompres)</small>
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Catatan / Kondisi Akhir</label>
-                        <textarea name="note" class="form-control" rows="3" placeholder="Contoh: Barang dikembalikan lengkap dengan charger, kondisi baik..."></textarea>
+                        <label>Catatan</label>
+                        <textarea name="note" class="form-control" rows="3" placeholder="Kondisi barang saat dikembalikan..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -206,7 +216,6 @@
         var name = button.getAttribute('data-name');
         var user = button.getAttribute('data-user');
 
-        // Set Action URL dinamis
         var form = document.getElementById('returnForm');
         form.action = '/inventory/' + id + '/return';
 
