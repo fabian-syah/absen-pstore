@@ -48,7 +48,7 @@
                             @foreach($users as $user)
                             <tr>
                                 {{-- =================================== --}}
-                                {{-- KOLOM 1: USER INFO (FOTO KOTAK)     --}}
+                                {{-- KOLOM 1: USER INFO                  --}}
                                 {{-- =================================== --}}
                                 <td>
                                     <div class="d-flex align-items-center">
@@ -105,8 +105,7 @@
                                         {{-- Thumbnail --}}
                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
                                              alt="Old KTP" 
-                                             class="rounded border shadow-sm"
-                                             style="width: 80px; height: 50px; cursor: pointer; object-fit: cover;"
+                                             style="width: 50px; height: 35px; cursor: pointer; border-radius: 4px;"
                                              data-bs-toggle="modal" 
                                              data-bs-target="#modalOldKtp{{ $user->id }}">
                                         
@@ -125,7 +124,6 @@
                                             </div>
                                         </div>
                                     @else
-                                        {{-- Tampilan Kosong (Tanpa Gambar Default) --}}
                                         <span class="badge bg-secondary">Kosong</span>
                                     @endif
                                 </td>
