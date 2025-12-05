@@ -194,13 +194,13 @@
                         {{-- Data Dasar --}}
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Nama Lengkap (Sesuai KTP)</label>
-                            <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
+                            <input type="text" class="form-control bg-light" name="name" value="{{ old('name', $user->name) }}" readonly>
                         </div>
                         
                         {{-- INPUT TANGGAL LAHIR (BARU) --}}
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Tanggal Lahir</label>
-                            <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date', $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('Y-m-d') : '') }}">
+                            <input type="date" class="form-control bg-light" name="birth_date" value="{{ old('birth_date', $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('Y-m-d') : '') }}" readonly>
                         </div>
 
                         <div class="col-md-6 mb-4">
@@ -223,7 +223,7 @@
                         </div>
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Status Akun</label>
-                            <input type="text" class="form-control bg-light" 
+                            <input type="text" class="form-control bg-lig`ht" 
                                    value="{{ $user->is_active ? 'AKUN AKTIF' : 'NON-AKTIF' }}" 
                                    style="color: white; font-weight: bold; background-color: {{ $user->is_active ? '#28a745' : '#dc3545' }} !important; border-color: {{ $user->is_active ? '#28a745' : '#dc3545' }};" 
                                    readonly>
