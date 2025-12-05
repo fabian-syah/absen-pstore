@@ -175,7 +175,6 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Aksi Approve (Tombol Centang Hijau)
         Route::post('/inventory-returns/{id}/approve', [InventoryReturnController::class, 'approve'])->name('inventory-returns.approve');
     });
-    });
     
     // ==========================================================
 
