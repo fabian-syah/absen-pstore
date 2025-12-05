@@ -69,26 +69,28 @@
                 @if($user->is_verified)
                     <div class="badge badge-primary px-3 py-2 mb-4"><i class="mdi mdi-check-decagram"></i> Akun Terverifikasi</div>
                 @else
-                    <div class="badge badge-secondary px-3 py-2 mb-4">User Biasa (Belum Verifikasi)</div>
+                    <div class="badge badge-secondary px-3 py-2 mb-4">User Biasa</div>
                 @endif
 
                 {{-- C. LOGIKA TOMBOL GANTI FOTO (INTI FITUR BARU) --}}
                 <div class="mb-4">
-                    {{-- KONDISI 1: User Belum Verified (Bebas Ganti) --}}
-                    @if(!$user->is_verified)
+                    
+                    {{-- KONDISI 1: Belum punya foto sama sekali -> Boleh Upload --}}
+                    @if(!$user->profile_photo_path)
                         <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data">
                             @csrf @method('PUT')
-                            <label for="profile_photo" class="btn btn-sm btn-outline-primary w-100">
-                                <i class="mdi mdi-camera"></i> Ganti Foto Profil
+                            <label for="profile_photo" class="btn btn-sm btn-primary w-100">
+                                <i class="mdi mdi-camera"></i> Upload Foto Profil
                             </label>
                             <input type="file" name="profile_photo" id="profile_photo" class="d-none"
                                 accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
                         </form>
-                        <small class="text-muted d-block mt-1" style="font-size: 10px;">Status: Bebas Edit (Unverified)</small>
+                        <small class="text-muted d-block mt-1" style="font-size: 10px;">Upload pertama kali gratis akses.</small>
                     
-                    {{-- KONDISI 2: User Verified (Terkunci Default) --}}
+                    {{-- KONDISI 2: Sudah punya foto -> Terkunci / Cek Request --}}
                     @else
-                        {{-- Case A: Sudah Disetujui Admin (Tombol Upload Muncul) --}}
+                        
+                        {{-- Case A: Sudah Disetujui Admin (Akses Dibuka) --}}
                         @if($user->photo_request_status == 'approved')
                             <div class="alert alert-success py-1 small mb-2"><i class="mdi mdi-lock-open"></i> Akses Dibuka (1x Upload)</div>
                             <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data">
@@ -100,26 +102,27 @@
                                     accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
                             </form>
 
-                        {{-- Case B: Sedang Menunggu Persetujuan (Tombol Disable) --}}
+                        {{-- Case B: Sedang Menunggu Persetujuan --}}
                         @elseif($user->photo_request_status == 'pending')
                             <div class="alert alert-warning py-1 small mb-2">
-                                <i class="mdi mdi-clock"></i> Menunggu Persetujuan Admin
+                                <i class="mdi mdi-clock"></i> Menunggu Admin
                             </div>
                             <button class="btn btn-sm btn-secondary w-100" disabled>
                                 Request Sedang Diproses...
                             </button>
 
-                        {{-- Case C: Terkunci Default (Tombol Request) --}}
+                        {{-- Case C: Terkunci (Normal State) --}}
                         @else
                             <form action="{{ route('profile.photo.request') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-sm btn-inverse-warning w-100" 
-                                        onclick="return confirm('Karena akun Anda terverifikasi, ganti foto memerlukan izin Admin. Lanjutkan request?')">
+                                        onclick="return confirm('Foto profil terkunci setelah upload pertama. Ajukan izin ganti foto?')">
                                     <i class="mdi mdi-key-variant"></i> Request Ganti Foto
                                 </button>
                             </form>
-                            <small class="text-muted d-block mt-1" style="font-size: 10px;">Status: Terkunci (Verified)</small>
+                            <small class="text-muted d-block mt-1" style="font-size: 10px;">Foto Terkunci. Perlu izin untuk mengganti.</small>
                         @endif
+
                     @endif
                 </div>
 
@@ -199,7 +202,7 @@
                         {{-- Data Dasar --}}
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Nama Lengkap (Sesuai KTP)</label>
-                            <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
+                            <input type="text" class="form-control bg-light" name="name" value="{{ old('name', $user->name) }}" readonly>
                         </div>
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Email Login</label>
