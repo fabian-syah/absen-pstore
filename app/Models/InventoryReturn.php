@@ -11,21 +11,21 @@ class InventoryReturn extends Model
 
     protected $guarded = ['id'];
 
-    // Relasi ke Barang
+    // Barang yang dikembalikan
     public function inventory()
     {
         return $this->belongsTo(Inventory::class);
     }
 
-    // Relasi ke User yang mengembalikan
+    // User pemilik barang (yang mengembalikan)
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relasi ke Admin yang memproses
-    public function admin()
+    // Admin yang memproses (Approved By)
+    public function approver()
     {
-        return $this->belongsTo(User::class, 'admin_id');
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

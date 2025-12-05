@@ -8,19 +8,27 @@
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Riwayat Pengembalian Inventaris</h4>
-                <p class="card-description">Daftar barang yang telah dikembalikan oleh karyawan.</p>
+                <p class="card-description">Daftar barang yang dikembalikan. Setujui untuk melepas barang dari user.</p>
                 
+                {{-- Alert --}}
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped align-middle">
                         <thead>
                             <tr>
-                                <th>Tanggal</th>
+                                <th>Tanggal Req</th>
                                 <th>Barang</th>
                                 <th>Dikembalikan Oleh</th>
-                                <th>Diproses Oleh</th>
                                 <th>Bukti Foto</th>
                                 <th>Catatan</th>
                                 <th>Status</th>
+                                <th>Aksi / Approver</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -33,22 +41,50 @@
                                     <small class="text-muted">{{ $return->inventory->serial_number ?? '-' }}</small>
                                 </td>
                                 <td>
-                                    {{ $return->user->name ?? 'User Dihapus' }}
-                                    <br><small class="text-muted">{{ $return->user->branch->name ?? '-' }}</small>
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <div class="fw-bold">{{ $return->user->name ?? 'User Dihapus' }}</div>
+                                            <small class="text-muted">{{ $return->user->branch->name ?? '-' }}</small>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td>{{ $return->admin->name ?? 'System' }}</td>
                                 <td>
                                     <a href="{{ asset('storage/'.$return->photo_path) }}" target="_blank">
+                                        {{-- FOTO KOTAK SESUAI REQUEST --}}
                                         <img src="{{ asset('storage/'.$return->photo_path) }}" 
                                              alt="Bukti" 
-                                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+                                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
                                     </a>
                                 </td>
                                 <td style="max-width: 200px; white-space: normal;">
                                     {{ $return->note ?? '-' }}
                                 </td>
                                 <td>
-                                    <label class="badge badge-success">Approved</label>
+                                    @if($return->status == 'pending')
+                                        <label class="badge badge-warning">Menunggu Verifikasi</label>
+                                    @elseif($return->status == 'approved')
+                                        <label class="badge badge-success">Approved</label>
+                                    @else
+                                        <label class="badge badge-danger">Ditolak</label>
+                                    @endif
+                                </td>
+                                <td>
+                                    {{-- LOGIKA TOMBOL APPROVE --}}
+                                    @if($return->status == 'pending')
+                                        <form action="{{ route('inventory-returns.approve', $return->id) }}" method="POST" onsubmit="return confirm('Yakin barang sudah diterima fisik? Status barang akan menjadi Available.')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-success btn-sm text-white" title="Setujui Pengembalian">
+                                                <i class="mdi mdi-check-circle"></i> Approve
+                                            </button>
+                                        </form>
+                                    @else
+                                        {{-- JIKA SUDAH DI APPROVE, TAMPILKAN NAMA ADMIN --}}
+                                        <div class="text-muted small">
+                                            <i class="mdi mdi-account-check"></i> 
+                                            {{ $return->approver->name ?? 'System' }}
+                                        </div>
+                                        <small class="text-muted">{{ $return->updated_at->format('d/m/Y H:i') }}</small>
+                                    @endif
                                 </td>
                             </tr>
                             @empty

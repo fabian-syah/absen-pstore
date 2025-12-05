@@ -160,7 +160,11 @@
                 @csrf
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <i class="mdi mdi-information-outline"></i> Status barang akan berubah menjadi <strong>Available</strong> (Tanpa Pemilik).
+                        <i class="mdi mdi-information-outline"></i> 
+                        <strong>Proses Pengembalian:</strong><br>
+                        1. Upload foto bukti pengembalian.<br>
+                        2. Status akan menjadi <strong>Menunggu Verifikasi</strong>.<br>
+                        3. Admin akan memverifikasi fisik barang sebelum status berubah menjadi <strong>Available</strong>.
                     </div>
 
                     <div class="form-group mb-3">
@@ -176,17 +180,17 @@
                     <div class="form-group mb-3">
                         <label>Bukti Foto <span class="text-danger">*</span></label>
                         <input type="file" name="return_photo" class="form-control" required accept="image/*">
-                        <small class="text-muted">Max 5MB (Otomatis Kompres)</small>
+                        <small class="text-muted">Format: JPG/PNG, Maksimal 5MB (Otomatis Kompres)</small>
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Catatan</label>
-                        <textarea name="note" class="form-control" rows="3" placeholder="Kondisi barang saat dikembalikan..."></textarea>
+                        <label>Catatan / Kondisi Akhir</label>
+                        <textarea name="note" class="form-control" rows="3" placeholder="Contoh: Barang dikembalikan lengkap dengan charger, kondisi baik..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Proses Pengembalian</button>
+                    <button type="submit" class="btn btn-primary">Ajukan Pengembalian</button>
                 </div>
             </form>
         </div>

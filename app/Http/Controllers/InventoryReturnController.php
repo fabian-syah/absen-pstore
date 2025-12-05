@@ -16,12 +16,12 @@ class InventoryReturnController extends Controller
      */
     public function index()
     {
-        // Hanya Admin/Audit
-        if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'audit') {
+        // Hanya Admin/Audit yang boleh lihat history & approve
+        if (!in_array(Auth::user()->role, ['admin', 'audit'])) {
             abort(403, 'Akses Ditolak');
         }
 
-        $returns = InventoryReturn::with(['inventory', 'user', 'admin'])
+        $returns = InventoryReturn::with(['inventory', 'user', 'approver'])
                     ->latest()
                     ->paginate(10);
 
@@ -29,65 +29,90 @@ class InventoryReturnController extends Controller
     }
 
     /**
-     * Proses Pengembalian Barang (Dari Modal di Inventory Index)
+     * TAHAP 1: Request Pengembalian (Oleh User atau Admin)
      */
     public function store(Request $request, $id)
     {
-        // Validasi
         $request->validate([
-            'return_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120', // Max upload awal 5MB, nanti dicompress
+            'return_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120',
             'note'         => 'nullable|string',
         ]);
 
         $inventory = Inventory::findOrFail($id);
 
-        // Pastikan barang memang sedang dipakai seseorang
         if (!$inventory->user_id) {
-            return back()->with('error', 'Barang ini statusnya sudah tidak ada pemilik (Available).');
+            return back()->with('error', 'Barang ini statusnya Available (tidak ada pemilik).');
         }
 
         try {
-            // 1. PROSES GAMBAR (COMPRESS MAX 100KB)
+            // 1. Upload & Compress Foto
             $file = $request->file('return_photo');
             $filename = 'return_' . Str::random(10) . '_' . time() . '.jpg';
             $path = 'inventory_returns/' . $filename;
             
-            // Fungsi Kompresi Custom
-            $this->compressAndSaveImage($file, $path, 100); // Target 100KB
+            $this->compressAndSaveImage($file, $path, 100); // Max 100KB
 
-            // 2. SIMPAN DATA PENGEMBALIAN
+            // 2. Buat Data Pengembalian (STATUS: PENDING)
             InventoryReturn::create([
                 'inventory_id' => $inventory->id,
-                'user_id'      => $inventory->user_id, // User lama
-                'admin_id'     => Auth::id(),          // Admin yang memproses
+                'user_id'      => $inventory->user_id, // User pemilik saat ini
                 'photo_path'   => $path,
                 'note'         => $request->note,
                 'return_date'  => now(),
-                'status'       => 'approved',
+                'status'       => 'pending', // <--- PENTING: Masih Pending
+                // 'approved_by' dikosongkan dulu
             ]);
 
-            // 3. UPDATE INVENTORY (Lepas User & Update Kondisi jika perlu)
-            $inventory->update([
-                'user_id' => null, // Barang jadi available
-                // 'condition' => 'Baik' // Opsional: reset kondisi atau biarkan sesuai input terakhir
-            ]);
+            // CATATAN: Kita TIDAK mengubah inventory->user_id menjadi NULL disini.
+            // Barang masih milik user sampai Admin klik Approve.
 
-            return redirect()->route('inventory.index')->with('success', 'Barang berhasil dikembalikan & User dilepas.');
+            return redirect()->route('inventory.index')->with('success', 'Permintaan pengembalian dikirim. Menunggu persetujuan Admin.');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memproses pengembalian: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memproses: ' . $e->getMessage());
         }
     }
 
     /**
-     * Helper Function: Compress Image until < targetSize (KB)
+     * TAHAP 2: Approve Pengembalian (Oleh Admin)
+     */
+    public function approve($id)
+    {
+        // Cek Role
+        if (!in_array(Auth::user()->role, ['admin', 'audit'])) {
+            abort(403);
+        }
+
+        $returnRequest = InventoryReturn::findOrFail($id);
+        $inventory = Inventory::findOrFail($returnRequest->inventory_id);
+
+        try {
+            // 1. Update Status Pengembalian jadi Approved
+            $returnRequest->update([
+                'status' => 'approved',
+                'approved_by' => Auth::id() // Catat siapa yang approve
+            ]);
+
+            // 2. Update Inventory jadi Available (Lepas User)
+            $inventory->update([
+                'user_id' => null, // <--- DISINI BARU DILEPAS
+                'condition' => 'Baik' // Opsional: reset kondisi default
+            ]);
+
+            return back()->with('success', 'Pengembalian disetujui. Barang sekarang statusnya Available.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal approve: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Helper Compress Image
      */
     private function compressAndSaveImage($file, $path, $targetKb)
     {
-        // Load gambar ke memory (PHP GD Library)
         $source = imagecreatefromstring(file_get_contents($file));
         
-        // Cek orientasi (kadang HP upload miring) - Opsional
         if (function_exists('exif_read_data')) {
             $exif = @exif_read_data($file);
             if (!empty($exif['Orientation'])) {
@@ -99,7 +124,6 @@ class InventoryReturnController extends Controller
             }
         }
 
-        // Resize jika terlalu besar (misal lebar > 1000px) agar file size turun drastis
         $width = imagesx($source);
         $height = imagesy($source);
         $maxWidth = 800;
@@ -112,23 +136,16 @@ class InventoryReturnController extends Controller
             $source = $tempImage;
         }
 
-        // Loop kompresi kualitas
-        $quality = 75; // Start quality
+        $quality = 75;
         $tempPath = sys_get_temp_dir() . '/' . basename($path);
         
         do {
-            // Simpan ke temp
             imagejpeg($source, $tempPath, $quality);
-            $fileSize = filesize($tempPath) / 1024; // KB
-            
-            // Kurangi kualitas jika masih kegedean
+            $fileSize = filesize($tempPath) / 1024;
             $quality -= 5;
         } while ($fileSize > $targetKb && $quality > 10);
 
-        // Pindahkan dari temp ke Storage Laravel
         Storage::disk('public')->put($path, file_get_contents($tempPath));
-        
-        // Bersihkan memory
         imagedestroy($source);
         unlink($tempPath);
     }
