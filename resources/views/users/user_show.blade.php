@@ -4,9 +4,17 @@
 
 @section('content')
 
+{{-- TAMPILKAN ERROR JIKA GAGAL VERIFIKASI (KARENA FOTO/KTP KOSONG) --}}
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="mdi mdi-alert-circle me-2"></i> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
 @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show">
-        {{ session('success') }}
+        <i class="mdi mdi-check-circle me-2"></i> {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
@@ -45,7 +53,6 @@
                 <div class="text-start mb-4 mt-4">
                     <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">MENU & RIWAYAT</h6>
                     <div class="list-group list-group-flush">
-                        {{-- Menggunakan route history dengan parameter employeeId agar bisa liat full history user ini --}}
                         <a href="{{ route('attendance.history', ['employeeId' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-calendar-clock text-primary me-2"></i> History Absen Full</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
@@ -53,21 +60,46 @@
                     </div>
                 </div>
 
-                {{-- Tombol Verifikasi --}}
+                {{-- AREA VERIFIKASI & KTP --}}
                 <div class="d-grid gap-2">
                     <form action="{{ route('users.verify', $user->id) }}" method="POST">
                         @csrf @method('PATCH')
+                        
                         @if($user->is_verified)
                             <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('Cabut verifikasi?')">
                                 <i class="mdi mdi-close-circle"></i> Cabut Verifikasi
                             </button>
                         @else
+                            {{-- Tombol Verifikasi (Hanya berfungsi jika controller meloloskan, jika tidak akan redirect back with error) --}}
                             <button type="submit" class="btn btn-primary btn-sm w-100">
                                 <i class="mdi mdi-check-decagram"></i> Verifikasi Akun
                             </button>
                         @endif
                     </form>
+
+                    {{-- TOMBOL LIHAT KTP (POP UP) - DI BAWAH VERIFIKASI --}}
+                    @if($user->ktp_photo_path)
+                        <button type="button" class="btn btn-info btn-sm text-white w-100 mt-1" data-bs-toggle="modal" data-bs-target="#ktpPhotoModal">
+                            <i class="mdi mdi-card-account-details-outline"></i> Lihat Foto KTP
+                        </button>
+                    @else
+                        <button type="button" class="btn btn-secondary btn-sm w-100 mt-1" disabled>
+                            <i class="mdi mdi-close-circle-outline"></i> KTP Belum Diupload
+                        </button>
+                    @endif
                 </div>
+                
+                {{-- Indikator Status Kelengkapan --}}
+                @if(!$user->is_verified)
+                    <div class="mt-2 text-start small">
+                        <span class="d-block {{ $user->profile_photo_path ? 'text-success' : 'text-danger' }}">
+                            <i class="mdi {{ $user->profile_photo_path ? 'mdi-check' : 'mdi-close' }}"></i> Foto Profil
+                        </span>
+                        <span class="d-block {{ $user->ktp_photo_path ? 'text-success' : 'text-danger' }}">
+                            <i class="mdi {{ $user->ktp_photo_path ? 'mdi-check' : 'mdi-close' }}"></i> Foto KTP
+                        </span>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -96,8 +128,7 @@
                         <p class="h6">{{ $user->whatsapp ?? '-' }}</p>
                     </div>
 
-                    {{-- === TAMBAHAN BARU: TANGGAL LAHIR & SOSMED === --}}
-                    
+                    {{-- TANGGAL LAHIR & SOSMED --}}
                     <div class="col-md-6 mb-3">
                         <label class="fw-bold text-muted small">Tanggal Lahir</label>
                         <p class="h6">
@@ -109,37 +140,29 @@
                     <div class="col-md-6 mb-3">
                         <label class="fw-bold text-muted small">Media Sosial</label>
                         <div class="d-flex align-items-center gap-3 mt-1">
-                            {{-- Facebook --}}
                             @if($user->facebook)
                                 <a href="{{ $user->facebook }}" target="_blank" class="text-decoration-none" title="Facebook">
                                     <i class="mdi mdi-facebook text-primary" style="font-size: 28px;"></i>
                                 </a>
                             @endif
-
-                            {{-- Instagram --}}
                             @if($user->instagram)
                                 <a href="{{ $user->instagram }}" target="_blank" class="text-decoration-none" title="Instagram">
                                     <i class="mdi mdi-instagram text-danger" style="font-size: 28px;"></i>
                                 </a>
                             @endif
-
-                            {{-- TikTok --}}
                             @if($user->tiktok)
                                 <a href="{{ $user->tiktok }}" target="_blank" class="text-decoration-none" title="TikTok">
-                                    <img src="https://img.icons8.com/material/96/tiktok.png" alt="TikTok" style="width: 28px; height: 28px;">
+                                    <i class="mdi mdi-music-note text-dark" style="font-size: 28px;"></i> 
                                 </a>
                             @endif
-
                             @if(!$user->facebook && !$user->instagram && !$user->tiktok)
                                 <span class="text-muted small">-</span>
                             @endif
                         </div>
                     </div>
-                    {{-- ============================================= --}}
-
                 </div>
 
-                {{-- TABEL 5 AKTIVITAS TERAKHIR (CLEAN VERSION) --}}
+                {{-- TABEL 5 AKTIVITAS TERAKHIR --}}
                 <div class="mt-4">
                     <h5 class="card-title mb-3 border-bottom pb-2">5 Kehadiran Terakhir</h5>
                     <div class="table-responsive">
@@ -155,13 +178,10 @@
                             <tbody>
                                 @forelse($recentAttendance as $log)
                                     <tr>
-                                        {{-- Tanggal --}}
                                         <td>
                                             <div class="fw-bold">{{ \Carbon\Carbon::parse($log->check_in_time)->format('d M Y') }}</div>
                                             <small class="text-muted">{{ \Carbon\Carbon::parse($log->check_in_time)->format('l') }}</small>
                                         </td>
-                                        
-                                        {{-- Jam Masuk --}}
                                         <td>
                                             <span class="fw-bold text-dark">
                                                 {{ \Carbon\Carbon::parse($log->check_in_time)->format('H:i') }}
@@ -170,8 +190,6 @@
                                                 <i class="mdi mdi-alert-circle text-warning ms-1" title="Terlambat"></i>
                                             @endif
                                         </td>
-
-                                        {{-- Jam Pulang --}}
                                         <td>
                                             @if($log->check_out_time)
                                                 <span class="fw-bold text-dark">
@@ -184,21 +202,13 @@
                                                 <span class="badge bg-secondary">Belum</span>
                                             @endif
                                         </td>
-
-                                        {{-- Status (Clean Badge) --}}
                                         <td>
                                             @if($log->presence_status == 'Izin' || $log->presence_status == 'Sakit' || $log->presence_status == 'Cuti')
-                                                <span class="badge bg-info">
-                                                    {{ $log->presence_status }}
-                                                </span>
+                                                <span class="badge bg-info">{{ $log->presence_status }}</span>
                                             @elseif($log->is_late_checkin)
-                                                <span class="badge bg-warning text-dark">
-                                                    Telat Hadir
-                                                </span>
+                                                <span class="badge bg-warning text-dark">Telat Hadir</span>
                                             @else
-                                                <span class="badge bg-success">
-                                                    Hadir / Tepat Waktu
-                                                </span>
+                                                <span class="badge bg-success">Hadir / Tepat Waktu</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -225,13 +235,35 @@
     </div>
 </div>
 
-{{-- MODALS --}}
+{{-- MODAL FOTO PROFIL --}}
 <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-transparent border-0 text-center">
             @if($user->profile_photo_path)
                 <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="img-fluid rounded shadow-lg" style="max-height: 80vh;">
             @endif
+        </div>
+    </div>
+</div>
+
+{{-- MODAL FOTO KTP (BARU DITAMBAHKAN) --}}
+<div class="modal fade" id="ktpPhotoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-white shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Foto KTP - {{ $user->name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                @if($user->ktp_photo_path)
+                    <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" class="img-fluid" style="width: 100%; object-fit: contain;">
+                @else
+                    <div class="p-5 text-muted">
+                        <i class="mdi mdi-image-off display-1"></i>
+                        <p class="mt-2">Tidak ada foto KTP.</p>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 </div>

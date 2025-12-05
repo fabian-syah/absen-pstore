@@ -28,37 +28,18 @@ class UserController extends Controller
         });
     }
 
-    /**
-     * Menampilkan daftar user
-     */
     public function index(Request $request)
     {
         $user = Auth::user();
-
-        // Eager load relasi yang dibutuhkan
         $query = User::with(['division', 'branch', 'branches', 'divisions']);
 
-        // ================================================================
-        // 1. FILTER CABANG (Sesuai Role Login)
-        // ================================================================
-        
         if ($user->role == 'admin' && $user->branch_id != null) {
-            // Admin Cabang: Hanya melihat user di cabangnya sendiri
             $query->where('branch_id', $user->branch_id);
-
         } elseif ($user->role == 'audit') {
-            // Audit (Multi Cabang):
-            // Ambil semua ID cabang yang dipegang oleh Audit
             $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
-
-            // Filter Query: User yang branch_id-nya ada di dalam list cabang Audit
             $query->whereIn('branch_id', $auditBranchIds);
         }
 
-        // ================================================================
-        // 2. LOGIKA PENCARIAN (SEARCH)
-        // ================================================================
-        
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -68,7 +49,6 @@ class UserController extends Controller
             });
         }
 
-        // Eksekusi Query
         $users = $query->latest()
             ->paginate(10)
             ->appends(['search' => $request->search]);
@@ -76,23 +56,17 @@ class UserController extends Controller
         return view('users.user_index', compact('users'));
     }
 
-    /**
-     * Menampilkan Form Tambah User
-     */
     public function create()
     {
         $user = Auth::user();
 
-        // Filter Dropdown Cabang saat Create User
         if ($user->role == 'admin' && $user->branch_id != null) {
             $branches = Branch::where('id', $user->branch_id)->get();
             $allowedRoles = ['leader', 'security', 'user_biasa'];
         } elseif ($user->role == 'audit') {
-            // Audit hanya bisa mendaftarkan user ke cabang yang dia pegang
             $branches = $user->branches; 
             $allowedRoles = ['audit', 'leader', 'security', 'user_biasa'];
         } else {
-            // Admin Pusat (Super Admin)
             $branches = Branch::all();
             $allowedRoles = ['admin', 'audit', 'leader', 'security', 'user_biasa'];
         }
@@ -102,9 +76,6 @@ class UserController extends Controller
         return view('users.user_create', compact('divisions', 'branches', 'allowedRoles'));
     }
 
-    /**
-     * Menyimpan User Baru ke Database
-     */
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -128,40 +99,32 @@ class UserController extends Controller
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
-        // Logika Jam Kerja
         $data['check_in_start']  = $request->check_in_start ?: null;
         $data['check_out_start'] = $request->check_out_start ?: null;
         $data['check_in_end']    = null;
         $data['check_out_end']   = null;
 
-        // Set Division ID Utama
         $data['division_id'] = ($request->has('multi_divisions') && count($request->multi_divisions) > 0) ? $request->multi_divisions[0] : null;
 
-        // Force Branch ID jika Admin Cabang
         if ($user->role == 'admin' && $user->branch_id != null) {
             $data['branch_id'] = $user->branch_id;
         }
-        // Admin Pusat tidak wajib punya branch
         if ($request->role == 'admin') {
             $data['branch_id'] = null;
             $data['division_id'] = null;
         }
 
-        // Enkripsi Password & Generate QR
         $data['password'] = Hash::make($request->password);
         $data['qr_code_value'] = (string) Str::uuid();
         $data['hire_date'] = $request->hire_date ?? null;
 
-        // Upload Foto
         if ($request->hasFile('profile_photo_path')) {
             $path = $request->file('profile_photo_path')->store('profile-photos', 'public');
             $data['profile_photo_path'] = $path;
         }
 
-        // Simpan User
         $newUser = User::create($data);
 
-        // Sync Relasi Many-to-Many
         if ($request->role == 'audit' && $request->has('multi_branches')) {
             $newUser->branches()->sync($request->multi_branches);
         }
@@ -172,22 +135,13 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'User baru berhasil ditambahkan.');
     }
 
-    /**
-     * Menampilkan Form Edit User
-     */
     public function edit(User $user)
     {
         $user->load(['branches', 'divisions']);
         $auth_user = Auth::user();
 
-        // ================================================================
-        // SECURITY CHECK (Mencegah Akses ID via URL)
-        // ================================================================
         if ($auth_user->role == 'audit') {
-            // Cek apakah user yg diedit ada di cabang yg dipegang audit
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
-            
-            // Jika user punya branch_id, cek apakah ada di list audit
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
             }
@@ -204,9 +158,6 @@ class UserController extends Controller
         return view('users.user_edit', compact('user', 'divisions', 'branches', 'allowedRoles'));
     }
 
-    /**
-     * Memperbarui Data User
-     */
     public function update(Request $request, User $user)
     {
         $request->validate([
@@ -242,7 +193,6 @@ class UserController extends Controller
 
         $user->update($data);
 
-        // Sync relations
         if ($request->role == 'audit') {
             $user->branches()->sync($request->multi_branches ?? []);
         } else {
@@ -256,9 +206,6 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Data user berhasil diperbarui.');
     }
 
-    /**
-     * Menghapus User
-     */
     public function destroy(User $user)
     {
         if (Auth::user()->role == 'audit') {
@@ -282,14 +229,10 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Detail User (DIPERBAIKI UNTUK MENGHILANGKAN ALPHA / SYSTEM AUTO)
-     */
     public function show(User $user)
     {
         $auth_user = Auth::user();
 
-        // Security Check untuk Detail
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
@@ -304,23 +247,14 @@ class UserController extends Controller
 
         $stats = $this->getSpecificUserStats($user->id);
 
-        // =========================================================================
-        // FILTER SUPER KETAT: MEMBUANG SYSTEM AUTO / ALPHA / 00:00
-        // =========================================================================
         $recentAttendance = Attendance::where('user_id', $user->id)
-            // 1. Pastikan Jam Masuk Valid (Bukan NULL dan Bukan 00:00:00)
             ->whereNotNull('check_in_time')
             ->whereTime('check_in_time', '!=', '00:00:00')
-            
-            // 2. Buang Status Alpha & Absent & System
             ->where('status', '!=', 'alpha')
             ->where('status', '!=', 'absent')
-            ->where('presence_status', '!=', 'Alpha') // Cek kolom presence_status juga
-            ->where('attendance_type', '!=', 'system') // KUNCI UTAMA: Buang yang tipe System
-            
-            // 3. Hanya ambil yang statusnya Benar-Benar Hadir / Verifikasi
+            ->where('presence_status', '!=', 'Alpha')
+            ->where('attendance_type', '!=', 'system')
             ->whereIn('status', ['present', 'verified', 'late', 'pending_verification'])
-            
             ->latest('check_in_time')
             ->take(5)
             ->get();
@@ -328,20 +262,37 @@ class UserController extends Controller
         return view('users.user_show', compact('user', 'stats', 'recentAttendance'));
     }
 
-    /**
-     * Halaman Request Ganti Foto
-     */
+    // =========================================================================
+    // UPDATE: VERIFIKASI USER WAJIB ADA FOTO PROFIL & KTP
+    // =========================================================================
+    public function verifyUser(User $user)
+    {
+        if (!$user->is_verified) {
+            // SYARAT: Foto Profil DAN Foto KTP Wajib Ada
+            if (empty($user->profile_photo_path) || empty($user->ktp_photo_path)) {
+                return back()->with('error', 'Gagal Verifikasi: User harus mengunggah Foto Profil DAN Foto KTP terlebih dahulu!');
+            }
+
+            $user->is_verified = true;
+            $msg = 'User berhasil diverifikasi (Centang Biru Aktif). Foto profil user sekarang terkunci.';
+        } else {
+            $user->is_verified = false;
+            $msg = 'Verifikasi dicabut (Centang Biru Non-Aktif).';
+        }
+
+        $user->save();
+        return back()->with('success', $msg);
+    }
+
     public function photoRequests()
     {
         $user = Auth::user();
         $query = User::where('photo_request_status', 'pending')->with(['branch', 'division']);
 
-        // Filter berdasarkan Role
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('branch_id', $user->branch_id);
             
         } elseif ($user->role == 'audit') {
-            // Audit hanya melihat request dari cabang yang dia pegang
             $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
             $query->whereIn('branch_id', $auditBranchIds);
         }
@@ -350,15 +301,11 @@ class UserController extends Controller
         return view('users.photo_requests', compact('requests'));
     }
 
-    /**
-     * Halaman Request Ganti KTP
-     */
     public function ktpRequests()
     {
         $user = Auth::user();
         $query = User::where('ktp_request_status', 'pending')->with('division');
 
-        // Tambahkan filter cabang untuk KTP Request juga
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('branch_id', $user->branch_id);
             
@@ -369,27 +316,6 @@ class UserController extends Controller
 
         $users = $query->get();
         return view('users.ktp-requests', compact('users'));
-    }
-
-    // =========================================================================
-    // METODE LAIN (Helper & Action Buttons)
-    // =========================================================================
-
-    public function verifyUser(User $user)
-    {
-        if (!$user->is_verified) {
-            if (!$user->profile_photo_path || !$user->ktp_photo_path || !$user->whatsapp) {
-                return back()->with('error', 'Gagal Verifikasi: User belum melengkapi Foto Profil, Foto KTP, atau No WhatsApp.');
-            }
-            $user->is_verified = true;
-            $msg = 'User berhasil diverifikasi (Centang Biru Aktif). Foto profil user sekarang terkunci.';
-        } else {
-            $user->is_verified = false;
-            $msg = 'Verifikasi dicabut (Centang Biru Non-Aktif).';
-        }
-
-        $user->save();
-        return back()->with('success', $msg);
     }
 
     public function approvePhotoRequest(User $user)
@@ -414,8 +340,8 @@ class UserController extends Controller
     {
         $presentCount = Attendance::where('user_id', $user_id)
             ->whereMonth('check_in_time', Carbon::now()->month)
-            ->where('status', '!=', 'alpha') // Jangan hitung alpha
-            ->where('attendance_type', '!=', 'system') // Jangan hitung system
+            ->where('status', '!=', 'alpha') 
+            ->where('attendance_type', '!=', 'system') 
             ->whereIn('status', ['verified', 'present', 'late'])
             ->count();
 
