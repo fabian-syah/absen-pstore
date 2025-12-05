@@ -23,9 +23,15 @@ class InventoryReturn extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Admin yang memproses (Approved By)
+    // Admin yang memproses (Menggunakan admin_id)
+    public function admin() // Bisa dipanggil $return->admin->name
+    {
+        return $this->belongsTo(User::class, 'admin_id');
+    }
+    
+    // Alias untuk approver agar view tidak error jika pakai $return->approver
     public function approver()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'admin_id');
     }
 }
