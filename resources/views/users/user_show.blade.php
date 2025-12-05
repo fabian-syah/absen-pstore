@@ -34,9 +34,10 @@
                                  alt="profile" class="img-lg rounded-circle"
                                  style="width: 150px; height: 150px; object-fit: cover; border: {{ $user->is_verified ? '5px solid #0d6efd' : '3px solid #e3e3e3' }}; cursor: pointer;">
                         @else
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=150" 
-                                 alt="profile" class="img-lg rounded-circle" 
-                                 style="width: 150px; height: 150px; cursor: pointer;">
+                            <div class="profile-initial-dropdown mx-auto"
+                                style="background-color: #007bff; width: 150px; height: 150px; line-height: 150px; font-size: 40px; border-radius: 50%; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                                {{ substr($user->name, 0, 1) }}
+                            </div>
                         @endif
 
                         {{-- Ikon Centang Biru Overlay --}}
@@ -60,30 +61,19 @@
                 @endif
 
                 {{-- ============================================= --}}
-                {{-- MENU NAVIGASI RIWAYAT (REQUEST BARU) --}}
+                {{-- MENU NAVIGASI RIWAYAT --}}
                 {{-- ============================================= --}}
                 <div class="text-start mb-4">
                     <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">MENU & RIWAYAT</h6>
                     <div class="list-group list-group-flush">
-                        {{-- History Absen --}}
                         <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-calendar-clock text-primary me-2"></i> History Absen</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
                         </a>
-                        
-                        {{-- History Inventaris --}}
                         <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-package-variant text-success me-2"></i> History Inventaris</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
                         </a>
-
-                        {{-- History Divisi --}}
-                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
-                            <span><i class="mdi mdi-sitemap text-warning me-2"></i> History Divisi</span>
-                            <i class="mdi mdi-chevron-right text-muted"></i>
-                        </a>
-
-                        {{-- History Job Desk --}}
                         <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-clipboard-list text-info me-2"></i> History Job Desk</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
@@ -170,14 +160,80 @@
                 <h4 class="card-title">Detail Informasi Lengkap</h4>
                 
                 <div class="row mt-4">
+                    {{-- 1. INFORMASI DASAR --}}
+                    <div class="col-12 mb-2">
+                        <h6 class="text-primary fw-bold border-bottom pb-2">DATA PRIBADI</h6>
+                    </div>
+
                     <div class="col-md-6 mb-4">
                         <label class="fw-bold text-muted small text-uppercase">Email Login</label>
                         <p class="h5">{{ $user->email }}</p>
                     </div>
+                    
+                    {{-- TANGGAL LAHIR (BARU) --}}
+                    <div class="col-md-6 mb-4">
+                        <label class="fw-bold text-muted small text-uppercase">Tanggal Lahir</label>
+                        <p class="h5">
+                            @if($user->birth_date)
+                                {{ \Carbon\Carbon::parse($user->birth_date)->translatedFormat('d F Y') }}
+                                <small class="text-muted text-small">({{ \Carbon\Carbon::parse($user->birth_date)->age }} Tahun)</small>
+                            @else
+                                -
+                            @endif
+                        </p>
+                    </div>
+
+                    {{-- 2. KONTAK & SOSMED --}}
+                    <div class="col-12 mb-2 mt-2">
+                        <h6 class="text-primary fw-bold border-bottom pb-2">KONTAK & SOSIAL MEDIA</h6>
+                    </div>
+
                     <div class="col-md-6 mb-4">
                         <label class="fw-bold text-muted small text-uppercase">Nomor WhatsApp</label>
-                        <p class="h5">{{ $user->whatsapp ?? '-' }}</p>
+                        <p class="h5">
+                            @if($user->whatsapp)
+                                <a href="https://wa.me/{{ $user->whatsapp }}" target="_blank" class="text-decoration-none text-dark">
+                                    <i class="mdi mdi-whatsapp text-success"></i> {{ $user->whatsapp }}
+                                </a>
+                            @else
+                                -
+                            @endif
+                        </p>
                     </div>
+
+                    {{-- INSTAGRAM (BARU) --}}
+                    <div class="col-md-6 mb-4">
+                        <label class="fw-bold text-muted small text-uppercase">Instagram</label>
+                        <p class="h5">
+                            @if($user->instagram)
+                                <a href="https://instagram.com/{{ str_replace('@', '', $user->instagram) }}" target="_blank" class="text-decoration-none text-dark">
+                                    <i class="mdi mdi-instagram text-danger"></i> {{ $user->instagram }}
+                                </a>
+                            @else
+                                -
+                            @endif
+                        </p>
+                    </div>
+
+                    {{-- FACEBOOK (BARU) --}}
+                    <div class="col-md-6 mb-4">
+                        <label class="fw-bold text-muted small text-uppercase">Facebook</label>
+                        <p class="h5">
+                            @if($user->facebook)
+                                <a href="{{ $user->facebook }}" target="_blank" class="text-decoration-none text-dark">
+                                    <i class="mdi mdi-facebook text-primary"></i> {{ $user->facebook }}
+                                </a>
+                            @else
+                                -
+                            @endif
+                        </p>
+                    </div>
+
+                    {{-- 3. INFORMASI PEKERJAAN --}}
+                    <div class="col-12 mb-2 mt-2">
+                        <h6 class="text-primary fw-bold border-bottom pb-2">DATA PEKERJAAN</h6>
+                    </div>
+
                     <div class="col-md-6 mb-4">
                         <label class="fw-bold text-muted small text-uppercase">Lokasi Cabang</label>
                         <p class="h5">{{ $user->branch->name ?? 'Pusat / Semua Cabang' }}</p>
@@ -263,7 +319,9 @@
                 @if($user->profile_photo_path)
                     <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="img-fluid rounded shadow-lg" style="max-height: 80vh;">
                 @else
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=500" class="img-fluid rounded shadow-lg">
+                    <div class="bg-primary text-white rounded shadow-lg d-flex align-items-center justify-content-center mx-auto" style="width: 300px; height: 300px; font-size: 100px;">
+                        {{ substr($user->name, 0, 1) }}
+                    </div>
                 @endif
             </div>
         </div>
