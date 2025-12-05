@@ -258,7 +258,7 @@
 
                 {{-- Tabel 5 Absensi Terakhir --}}
                 <div class="mt-4">
-                    <h5 class="card-title mb-3">5 Aktivitas Absensi Terakhir</h5>
+                    <h5 class="card-title mb-3">5 Aktivitas Absensi Terakhir (Hanya Hadir)</h5>
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead>
@@ -277,12 +277,14 @@
                                         <td>{{ $log->check_out_time ? \Carbon\Carbon::parse($log->check_out_time)->format('H:i') : '-' }}</td>
                                         <td>
                                             @if($log->is_late_checkin) <span class="badge badge-danger">Telat</span> @endif
-                                            @if($log->status == 'present' || $log->status == 'verified') <span class="badge badge-success">Hadir</span> @endif
+                                            @if($log->status == 'present' || $log->status == 'verified' || $log->status == 'late') 
+                                                <span class="badge badge-success">Hadir</span> 
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted">Belum ada data absensi.</td>
+                                        <td colspan="4" class="text-center text-muted">Belum ada data kehadiran.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -345,4 +347,4 @@
 </div>
 @endif
 
-@endsection 
+@endsection

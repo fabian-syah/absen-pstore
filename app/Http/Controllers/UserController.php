@@ -49,7 +49,6 @@ class UserController extends Controller
         } elseif ($user->role == 'audit') {
             // Audit (Multi Cabang):
             // Ambil semua ID cabang yang dipegang oleh Audit
-            // Menggunakan pluck dari relasi branches()
             $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
 
             // Filter Query: User yang branch_id-nya ada di dalam list cabang Audit
@@ -59,7 +58,6 @@ class UserController extends Controller
         // ================================================================
         // 2. LOGIKA PENCARIAN (SEARCH)
         // ================================================================
-        // Filter search ini akan berjalan DI DALAM batasan cabang di atas.
         
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -306,7 +304,12 @@ class UserController extends Controller
 
         $stats = $this->getSpecificUserStats($user->id);
 
+        // ========================================================
+        // FILTER: HANYA TAMPILKAN YANG HADIR (Present, Verified, Late)
+        // Tidak menampilkan: Sakit, Izin, Cuti, Alpha, WFH, Dinas Luar
+        // ========================================================
         $recentAttendance = Attendance::where('user_id', $user->id)
+            ->whereIn('status', ['present', 'verified', 'late']) 
             ->latest('check_in_time')
             ->take(5)
             ->get();
@@ -358,7 +361,7 @@ class UserController extends Controller
     }
 
     // =========================================================================
-    // METODE LAIN (Helper & Action Buttons) - TIDAK PERLU UBAH LOGIC SEARCH
+    // METODE LAIN (Helper & Action Buttons)
     // =========================================================================
 
     public function verifyUser(User $user)
