@@ -170,7 +170,7 @@
                         <p class="h5">{{ $user->email }}</p>
                     </div>
                     
-                    {{-- TANGGAL LAHIR (BARU) --}}
+                    {{-- TANGGAL LAHIR --}}
                     <div class="col-md-6 mb-4">
                         <label class="fw-bold text-muted small text-uppercase">Tanggal Lahir</label>
                         <p class="h5">
@@ -201,7 +201,7 @@
                         </p>
                     </div>
 
-                    {{-- INSTAGRAM (BARU) --}}
+                    {{-- INSTAGRAM --}}
                     <div class="col-md-6 mb-4">
                         <label class="fw-bold text-muted small text-uppercase">Instagram</label>
                         <p class="h5">
@@ -215,7 +215,7 @@
                         </p>
                     </div>
 
-                    {{-- FACEBOOK (BARU) --}}
+                    {{-- FACEBOOK --}}
                     <div class="col-md-6 mb-4">
                         <label class="fw-bold text-muted small text-uppercase">Facebook</label>
                         <p class="h5">
@@ -273,18 +273,30 @@
                                 @forelse($recentAttendance as $log)
                                     <tr>
                                         <td>{{ \Carbon\Carbon::parse($log->check_in_time)->format('d M Y') }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($log->check_in_time)->format('H:i') }}</td>
-                                        <td>{{ $log->check_out_time ? \Carbon\Carbon::parse($log->check_out_time)->format('H:i') : '-' }}</td>
+                                        {{-- Tampilkan Masuk --}}
                                         <td>
-                                            @if($log->is_late_checkin) <span class="badge badge-danger">Telat</span> @endif
-                                            @if($log->status == 'present' || $log->status == 'verified' || $log->status == 'late') 
-                                                <span class="badge badge-success">Hadir</span> 
+                                            {{ \Carbon\Carbon::parse($log->check_in_time)->format('H:i') }}
+                                        </td>
+                                        {{-- Tampilkan Pulang (Cek jika kosong) --}}
+                                        <td>
+                                            @if($log->check_out_time && $log->check_out_time != '00:00:00')
+                                                {{ \Carbon\Carbon::parse($log->check_out_time)->format('H:i') }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        {{-- Status --}}
+                                        <td>
+                                            @if($log->is_late_checkin)
+                                                <span class="badge badge-danger">Telat</span>
+                                            @else
+                                                <span class="badge badge-success">Hadir / Tepat Waktu</span>
                                             @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted">Belum ada data kehadiran.</td>
+                                        <td colspan="4" class="text-center text-muted">Belum ada data kehadiran (Masuk & Pulang).</td>
                                     </tr>
                                 @endforelse
                             </tbody>

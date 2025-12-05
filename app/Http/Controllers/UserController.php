@@ -304,12 +304,14 @@ class UserController extends Controller
 
         $stats = $this->getSpecificUserStats($user->id);
 
-        // ========================================================
-        // FILTER: HANYA TAMPILKAN YANG HADIR (Present, Verified, Late)
-        // Tidak menampilkan: Sakit, Izin, Cuti, Alpha, WFH, Dinas Luar
-        // ========================================================
+        // =========================================================================
+        // FILTER KETAT: HANYA YANG HADIR (Bukan Alpha, Izin, Sakit)
+        // =========================================================================
         $recentAttendance = Attendance::where('user_id', $user->id)
-            ->whereIn('status', ['present', 'verified', 'late']) 
+            ->whereNotNull('check_in_time') // Wajib ada jam masuk (Bukan NULL)
+            ->where('status', '!=', 'alpha') // Wajib bukan Alpha
+            ->where('status', '!=', 'absent') // Jaga-jaga jika statusnya 'absent'
+            ->whereIn('status', ['present', 'verified', 'late']) // Whitelist status hadir
             ->latest('check_in_time')
             ->take(5)
             ->get();
