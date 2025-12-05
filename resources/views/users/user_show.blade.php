@@ -95,6 +95,49 @@
                         <label class="fw-bold text-muted small">WhatsApp</label>
                         <p class="h6">{{ $user->whatsapp ?? '-' }}</p>
                     </div>
+
+                    {{-- === TAMBAHAN BARU: TANGGAL LAHIR & SOSMED === --}}
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold text-muted small">Tanggal Lahir</label>
+                        <p class="h6">
+                            <i class="mdi mdi-cake-variant text-warning me-1"></i>
+                            {{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->translatedFormat('d F Y') : '-' }}
+                        </p>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold text-muted small">Media Sosial</label>
+                        <div class="d-flex align-items-center gap-3 mt-1">
+                            {{-- Facebook --}}
+                            @if($user->facebook)
+                                <a href="{{ $user->facebook }}" target="_blank" class="text-decoration-none" title="Facebook">
+                                    <i class="mdi mdi-facebook text-primary" style="font-size: 28px;"></i>
+                                </a>
+                            @endif
+
+                            {{-- Instagram --}}
+                            @if($user->instagram)
+                                <a href="{{ $user->instagram }}" target="_blank" class="text-decoration-none" title="Instagram">
+                                    <i class="mdi mdi-instagram text-danger" style="font-size: 28px;"></i>
+                                </a>
+                            @endif
+
+                            {{-- TikTok --}}
+                            @if($user->tiktok)
+                                <a href="{{ $user->tiktok }}" target="_blank" class="text-decoration-none" title="TikTok">
+                                    {{-- Menggunakan icon music note jika mdi-tiktok tidak tersedia di versi lama --}}
+                                    <i class="mdi mdi-music-note text-dark" style="font-size: 28px;"></i> 
+                                </a>
+                            @endif
+
+                            @if(!$user->facebook && !$user->instagram && !$user->tiktok)
+                                <span class="text-muted small">-</span>
+                            @endif
+                        </div>
+                    </div>
+                    {{-- ============================================= --}}
+
                 </div>
 
                 {{-- TABEL 5 AKTIVITAS TERAKHIR (CLEAN VERSION) --}}
