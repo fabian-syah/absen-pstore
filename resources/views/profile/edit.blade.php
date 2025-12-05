@@ -250,8 +250,8 @@
                             </div>
                         </div>
                         <div class="col-md-6 mb-4">
-                            <label class="fw-bold text-muted small text-uppercase">LinkedIn</label>
-                            <input type="text" class="form-control" name="linkedin" value="{{ old('linkedin', $user->linkedin) }}" placeholder="username">
+                            <label class="fw-bold text-muted small text-uppercase">Facebook</label>
+                            <input type="text" class="form-control" name="facebook" value="{{ old('facebook', $user->facebook) }}" placeholder="username">
                         </div>
 
                         {{-- KEAMANAN (GANTI PASSWORD DENGAN BUTTON TOGGLE) --}}

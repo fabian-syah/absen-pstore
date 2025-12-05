@@ -44,7 +44,6 @@ class ProfileController extends Controller
             'instagram' => 'nullable|string|max:100',
             'tiktok' => 'nullable|string|max:100',
             'facebook' => 'nullable|string|max:100',
-            'linkedin' => 'nullable|string|max:100',
         ]);
 
         // Masukkan birth_date ke dalam data yang akan diupdate
@@ -56,7 +55,6 @@ class ProfileController extends Controller
             'instagram', 
             'tiktok', 
             'facebook', 
-            'linkedin'
         ]);
 
         if ($request->filled('password')) {
