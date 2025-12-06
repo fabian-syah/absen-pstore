@@ -10,6 +10,7 @@
                 <h4 class="card-title">{{ $pageTitle ?? 'Daftar Inventaris' }}</h4>
                 
                 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    {{-- TOMBOL TAMBAH BARANG --}}
                     @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'security', 'user_biasa']))
                         <a href="{{ route('inventory.create') }}" class="btn btn-primary btn-sm">
                             <i class="mdi mdi-plus"></i> Tambah Barang
@@ -18,14 +19,21 @@
                     
                     {{-- TOMBOL NAVIGASI FILTER --}}
                     <div class="btn-group" role="group">
+                        {{-- Tombol Utama: Text disesuaikan Role --}}
                         <a href="{{ route('inventory.index') }}" class="btn btn-sm {{ request()->routeIs('inventory.index') ? 'btn-info' : 'btn-outline-info' }}">
-                            <i class="mdi mdi-account-box"></i> Sedang Dipakai
-                        </a>
-                        <a href="{{ route('inventory.available') }}" class="btn btn-sm {{ request()->routeIs('inventory.available') ? 'btn-success' : 'btn-outline-success' }}">
-                            <i class="mdi mdi-warehouse"></i> Dikembalikan (Available)
+                            @if(auth()->user()->role == 'admin')
+                                <i class="mdi mdi-account-group"></i> Barang Aktif (Semua)
+                            @else
+                                <i class="mdi mdi-account-box"></i> Barang Saya
+                            @endif
                         </a>
 
-                        {{-- [BARU] TOMBOL KHUSUS ADMIN: LIHAT SEMUA --}}
+                        {{-- Tombol Gudang --}}
+                        <a href="{{ route('inventory.available') }}" class="btn btn-sm {{ request()->routeIs('inventory.available') ? 'btn-success' : 'btn-outline-success' }}">
+                            <i class="mdi mdi-warehouse"></i> Gudang (Available)
+                        </a>
+
+                        {{-- TOMBOL KHUSUS ADMIN: MASTER DATA --}}
                         @if(auth()->user()->role == 'admin')
                             <a href="{{ route('inventory.admin.all') }}" class="btn btn-sm {{ request()->routeIs('inventory.admin.all') ? 'btn-danger' : 'btn-outline-danger' }}">
                                 <i class="mdi mdi-database"></i> Master Data (Semua)
@@ -33,6 +41,7 @@
                         @endif
                     </div>
 
+                    {{-- SEARCH FORM --}}
                     <form action="{{ url()->current() }}" method="GET" class="d-flex">
                         <div class="input-group input-group-sm" style="width: 250px;">
                             <input type="text" name="search" class="form-control" placeholder="Cari aset / user..." value="{{ request('search') }}">

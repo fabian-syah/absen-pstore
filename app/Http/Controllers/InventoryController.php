@@ -13,6 +13,7 @@ class InventoryController extends Controller
 {
     /**
      * Tampilkan List Barang AKTIF (Sedang Dipakai)
+     * PERUBAHAN: Audit, Leader, Security, User Biasa hanya lihat milik sendiri.
      */
     public function index(Request $request)
     {
@@ -20,18 +21,9 @@ class InventoryController extends Controller
         $query = Inventory::with('user')->whereNotNull('user_id');
 
         // === FILTER HAK AKSES ===
-        if ($user->role == 'admin') {
-            // Admin: Lihat Semua (tapi tetap via route index biasa)
-        } elseif ($user->role == 'audit') {
-            // Audit: Lihat aset di cabang yang dipegang + aset sendiri
-            $branchIds = $user->branches()->pluck('branches.id');
-            $query->where(function($q) use ($branchIds, $user) {
-                $q->whereHas('user', function($sub) use ($branchIds) {
-                    $sub->whereIn('branch_id', $branchIds);
-                })->orWhere('user_id', $user->id);
-            });
-        } else {
-            // Leader, Security, User Biasa: Hanya milik sendiri
+        // Jika Admin: Bisa lihat semua barang yang sedang dipakai orang lain.
+        // Jika BUKAN Admin (Audit, Leader, Security, User Biasa): HANYA milik sendiri.
+        if ($user->role !== 'admin') {
             $query->where('user_id', $user->id);
         }
 
@@ -49,13 +41,19 @@ class InventoryController extends Controller
         }
 
         $inventories = $query->latest()->paginate(10)->withQueryString();
-        $pageTitle = 'Daftar Inventaris Saya / Aktif';
+        
+        // Judul dinamis
+        if ($user->role == 'admin') {
+            $pageTitle = 'Daftar Barang Aktif (Semua User)';
+        } else {
+            $pageTitle = 'Inventaris Saya';
+        }
         
         return view('inventory.index', compact('inventories', 'pageTitle'));
     }
 
     /**
-     * [BARU] Tampilkan SEMUA DATA (KHUSUS ADMIN)
+     * Tampilkan SEMUA DATA (KHUSUS ADMIN)
      * Menampilkan semua barang (baik yang dipakai maupun di gudang) tanpa filter user.
      */
     public function adminIndex(Request $request)
@@ -66,7 +64,6 @@ class InventoryController extends Controller
         }
 
         // 2. QUERY SEMUA DATA
-        // Kita ambil relasi user dan branch untuk keperluan search & display
         $query = Inventory::with(['user', 'user.branch']); 
 
         // 3. FITUR PENCARIAN GLOBAL
@@ -86,7 +83,7 @@ class InventoryController extends Controller
             });
         }
 
-        // 4. RETURN VIEW (Gunakan view yang sama)
+        // 4. RETURN VIEW
         $inventories = $query->latest()->paginate(10)->withQueryString();
         $pageTitle = 'Master Data Inventaris (Admin View)';
         
