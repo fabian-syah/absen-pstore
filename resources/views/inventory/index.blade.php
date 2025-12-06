@@ -186,7 +186,9 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3">{{ $inventories->links() }}</div>
+                 <div class="mt-4 d-flex justify-content-end">
+                        {{ $inventories->links('pagination::bootstrap-5') }}
+                    </div>
             </div>
         </div>
     </div>
