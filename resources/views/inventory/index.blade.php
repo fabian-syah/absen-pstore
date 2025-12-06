@@ -117,7 +117,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3">{{ $inventories->links() }}</div>
+                {{ $inventories->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>
