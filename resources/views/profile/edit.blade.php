@@ -74,7 +74,7 @@
 
                 {{-- C. LOGIKA TOMBOL GANTI FOTO --}}
                 <div class="mb-4">
-                    {{-- KONDISI 1: Belum punya foto sama sekali -> Boleh Upload --}}
+                    {{-- KONDISI 1: Belum punya foto sama sekali -> Boleh Upload Langsung --}}
                     @if(!$user->profile_photo_path)
                         <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data">
                             @csrf @method('PUT')
@@ -86,34 +86,32 @@
                         </form>
                         <small class="text-muted d-block mt-1" style="font-size: 10px;">Upload pertama kali gratis akses.</small>
                     
-                    {{-- KONDISI 2: Sudah punya foto -> Terkunci / Cek Request --}}
+                    {{-- KONDISI 2: Sudah punya foto -> Cek Status Request --}}
                     @else
-                        @if($user->photo_request_status == 'approved')
-                            <div class="alert alert-success py-1 small mb-2"><i class="mdi mdi-lock-open"></i> Akses Dibuka (1x Upload)</div>
-                            <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data">
-                                @csrf @method('PUT')
-                                <label for="profile_photo_unlock" class="btn btn-sm btn-success w-100">
-                                    <i class="mdi mdi-upload"></i> Upload Foto Baru
-                                </label>
-                                <input type="file" name="profile_photo" id="profile_photo_unlock" class="d-none"
-                                    accept="image/jpeg,image/png,image/jpg" onchange="this.form.submit()">
-                            </form>
-                        @elseif($user->photo_request_status == 'pending')
-                            <div class="alert alert-warning py-1 small mb-2">
-                                <i class="mdi mdi-clock"></i> Menunggu Admin
+                        @if($user->photo_request_status == 'pending')
+                            {{-- Sedang Pending --}}
+                            <div class="alert alert-warning py-2 small mb-1">
+                                <i class="mdi mdi-clock"></i> Pengajuan ganti foto sedang diproses.
                             </div>
                             <button class="btn btn-sm btn-secondary w-100" disabled>
-                                Request Sedang Diproses...
+                                Menunggu Approval
                             </button>
+
+                        @elseif($user->photo_request_status == 'rejected')
+                             {{-- Ditolak Admin --}}
+                            <div class="alert alert-danger py-1 small mb-2 text-center">Pengajuan Ditolak.</div>
+                            <button type="button" class="btn btn-sm btn-outline-danger w-100" 
+                                    data-bs-toggle="modal" data-bs-target="#changeProfilePhotoModal">
+                                <i class="mdi mdi-sync"></i> Ajukan Ulang
+                            </button>
+
                         @else
-                            <form action="{{ route('profile.photo.request') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="btn btn-sm btn-inverse-warning w-100" 
-                                        onclick="return confirm('Foto profil terkunci setelah upload pertama. Ajukan izin ganti foto?')">
-                                    <i class="mdi mdi-key-variant"></i> Request Ganti Foto
-                                </button>
-                            </form>
-                            <small class="text-muted d-block mt-1" style="font-size: 10px;">Foto Terkunci. Perlu izin untuk mengganti.</small>
+                            {{-- Normal / Approved (Bisa request ganti lagi) --}}
+                            <button type="button" class="btn btn-sm btn-inverse-warning w-100" 
+                                    data-bs-toggle="modal" data-bs-target="#changeProfilePhotoModal">
+                                <i class="mdi mdi-camera-retake"></i> Ganti Foto Profil
+                            </button>
+                            <small class="text-muted d-block mt-1" style="font-size: 10px;">Foto baru perlu persetujuan Admin.</small>
                         @endif
                     @endif
                 </div>
@@ -197,7 +195,7 @@
                             <input type="text" class="form-control bg-light" name="name" value="{{ old('name', $user->name) }}" readonly>
                         </div>
                         
-                        {{-- INPUT TANGGAL LAHIR (BARU) --}}
+                        {{-- INPUT TANGGAL LAHIR --}}
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Tanggal Lahir</label>
                             <input type="date" class="form-control bg-light" name="birth_date" value="{{ old('birth_date', $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('Y-m-d') : '') }}" readonly>
@@ -223,7 +221,7 @@
                         </div>
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Status Akun</label>
-                            <input type="text" class="form-control bg-lig`ht" 
+                            <input type="text" class="form-control bg-light" 
                                    value="{{ $user->is_active ? 'AKUN AKTIF' : 'NON-AKTIF' }}" 
                                    style="color: white; font-weight: bold; background-color: {{ $user->is_active ? '#28a745' : '#dc3545' }} !important; border-color: {{ $user->is_active ? '#28a745' : '#dc3545' }};" 
                                    readonly>
@@ -296,10 +294,10 @@
 </div>
 
 {{-- ================================================= --}}
-{{-- MODALS (FOTO & KTP) --}}
+{{-- MODALS (FOTO PROFIL & KTP) --}}
 {{-- ================================================= --}}
 
-{{-- 1. Modal Foto Profil Besar --}}
+{{-- 1. Modal Foto Profil Besar (View Only) --}}
 <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-transparent border-0">
@@ -319,7 +317,36 @@
     </div>
 </div>
 
-{{-- 2. Modal KTP Besar --}}
+{{-- 2. MODAL REQUEST GANTI FOTO PROFIL (BARU) --}}
+<div class="modal fade" id="changeProfilePhotoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajukan Ganti Foto Profil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('profile.photo.request') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-info small">
+                        <i class="mdi mdi-information-outline"></i> Upload foto profil baru yang rapi & sopan. Foto akan direview oleh Admin sebelum diterapkan.
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="fw-bold">Pilih Foto Baru *</label>
+                        <input type="file" name="profile_photo" class="form-control" accept="image/*" required>
+                        <small class="text-muted">Format: JPG, PNG, JPEG. Maks 5MB.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Upload & Ajukan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- 3. Modal KTP Besar --}}
 @if($user->ktp_photo_path)
 <div class="modal fade" id="ktpModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -336,7 +363,7 @@
 </div>
 @endif
 
-{{-- 3. Modal Form Ganti KTP (Pengajuan) --}}
+{{-- 4. Modal Form Ganti KTP (Pengajuan) --}}
 <div class="modal fade" id="changeKtpModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">

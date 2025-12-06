@@ -18,9 +18,7 @@ class ProfileController extends Controller
      */
     public function edit()
     {
-        // Ambil data user terbaru (termasuk status request & path foto)
-        $user = Auth::user()->fresh();
-
+        $user = Auth::user()->fresh(); // Refresh data user
         $workHistories = $user->workHistories;
         $inventories = $user->inventories()->latest()->get();
 
@@ -37,7 +35,7 @@ class ProfileController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'birth_date' => 'nullable|date', // <--- VALIDASI TANGGAL LAHIR
+            'birth_date' => 'nullable|date',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
             'whatsapp' => 'nullable|string|max:20',
@@ -46,10 +44,9 @@ class ProfileController extends Controller
             'facebook' => 'nullable|string|max:100',
         ]);
 
-        // Masukkan birth_date ke dalam data yang akan diupdate
         $data = $request->only([
             'name', 
-            'birth_date', // <--- TAMBAHKAN DI SINI
+            'birth_date', 
             'email', 
             'whatsapp', 
             'instagram', 
@@ -68,7 +65,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update FOTO PROFIL (Logika: Sekali Upload -> Terkunci)
+     * Upload Foto Profil PERTAMA KALI (Langsung Aktif)
      */
     public function updatePhoto(Request $request)
     {
@@ -79,110 +76,127 @@ class ProfileController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // --- LOGIKA UTAMA ---
-        // Jika user SUDAH PUNYA foto DAN status requestnya BUKAN approved, maka TOLAK.
-        if ($user->profile_photo_path && $user->photo_request_status !== 'approved') {
-            return redirect()->route('profile.edit')
-                ->with('error', 'Foto profil terkunci. Anda sudah pernah upload. Silakan ajukan request ganti foto.');
+        // Jika user SUDAH punya foto, tidak boleh pakai fungsi ini (harus lewat request)
+        if ($user->profile_photo_path) {
+            return back()->with('error', 'Anda sudah memiliki foto profil. Gunakan fitur "Ganti Foto" untuk mengajukan perubahan.');
         }
 
         try {
-            // Hapus foto lama jika ada
-            if ($user->profile_photo_path) {
-                Storage::disk('public')->delete($user->profile_photo_path);
-            }
-
-            // Simpan foto baru
             $path = $request->file('profile_photo')->store('profile_photos', 'public');
 
-            // Update database dan LANGSUNG KUNCI KEMBALI (set status ke 'none')
             $user->update([
                 'profile_photo_path' => $path,
-                'photo_request_status' => 'none' 
+                'photo_request_status' => 'none' // Reset status
             ]);
 
             return redirect()->route('profile.edit')
-                ->with('success', 'Foto profil berhasil diperbarui dan sekarang terkunci kembali.');
+                ->with('success', 'Foto profil berhasil diupload.');
 
         } catch (\Exception $e) {
-            return redirect()->route('profile.edit')
-                ->with('error', 'Gagal mengupload foto: ' . $e->getMessage());
+            return back()->with('error', 'Gagal upload: ' . $e->getMessage());
         }
     }
 
     /**
-     * Request Ganti Foto
+     * REQUEST Ganti Foto (Upload ke Temp Path & Set Pending)
+     * Ini digunakan jika user SUDAH punya foto sebelumnya.
      */
-    public function requestPhotoChange()
+    public function requestPhotoChange(Request $request)
     {
+        $request->validate([
+            'profile_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+        ]);
+
         $user = Auth::user();
 
-        if (!$user->profile_photo_path) {
-            return back()->with('success', 'Anda belum memiliki foto profil. Silakan langsung upload tanpa perlu izin.');
-        }
-
+        // Cek jika sedang pending
         if ($user->photo_request_status === 'pending') {
-            return back()->with('error', 'Pengajuan Anda sedang diproses. Mohon tunggu persetujuan Admin.');
+            return back()->with('error', 'Pengajuan sebelumnya masih diproses.');
         }
 
-        if ($user->photo_request_status === 'approved') {
-            return back()->with('success', 'Izin sudah diberikan! Silakan langsung upload foto baru.');
+        try {
+            // Hapus temp foto lama jika ada
+            if ($user->profile_photo_temp_path) {
+                Storage::disk('public')->delete($user->profile_photo_temp_path);
+            }
+
+            // Simpan ke folder TEMP
+            $path = $request->file('profile_photo')->store('profile_photos/temp', 'public');
+
+            // Update database: simpan path temp & ubah status jadi pending
+            $user->update([
+                'profile_photo_temp_path' => $path,
+                'photo_request_status' => 'pending'
+            ]);
+
+            return back()->with('success', 'Foto baru berhasil diupload. Mohon tunggu persetujuan Admin untuk penerapannya.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal upload request: ' . $e->getMessage());
         }
-
-        $user->update(['photo_request_status' => 'pending']);
-
-        return back()->with('success', 'Permintaan ganti foto dikirim. Tunggu Admin memberikan akses.');
     }
 
     /**
-     * Hapus Foto Profil
+     * Hapus Foto Profil (Opsional, jika diizinkan)
      */
     public function deleteProfilePhoto()
     {
+        // Fitur ini biasanya dimatikan jika sistem mewajibkan approval ketat
+        // Namun jika diaktifkan, pastikan menghapus path dan temp path
         $user = Auth::user();
         
-        if ($user->profile_photo_path && $user->photo_request_status !== 'approved') {
-            return back()->with('error', 'Foto profil tidak dapat dihapus sembarangan. Silakan request ganti foto untuk mengubahnya.');
-        }
-
         if ($user->profile_photo_path) {
             Storage::disk('public')->delete($user->profile_photo_path);
-            $user->update(['profile_photo_path' => null]);
         }
+        
+        $user->update([
+            'profile_photo_path' => null,
+            'photo_request_status' => 'none'
+        ]);
 
-        return redirect()->route('profile.edit')
-            ->with('success', 'Foto profil dihapus.');
+        return back()->with('success', 'Foto profil dihapus.');
     }
 
-    // --- LOGIKA KTP ---
+    // --- LOGIKA KTP (SAMA SEPERTI REQUEST FOTO) ---
+
     public function requestKtpChange(Request $request)
     {
         $request->validate(['ktp_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120']);
+        
         $user = Auth::user();
+        
+        // Hapus temp lama jika ada
+        if ($user->ktp_photo_temp_path) {
+            Storage::disk('public')->delete($user->ktp_photo_temp_path);
+        }
+
         $path = $request->file('ktp_photo')->store('ktp_photos/temp', 'public');
+        
         $user->update([
             'ktp_photo_temp_path' => $path,
             'ktp_request_status' => 'pending'
         ]);
-        return redirect()->back()->with('success', 'Foto KTP baru berhasil diupload dan diajukan ke Admin.');
+
+        return back()->with('success', 'Foto KTP baru berhasil diajukan. Menunggu approval Admin.');
     }
 
     public function updateKtp(Request $request)
     {
         $request->validate(['ktp_photo' => 'required|image|max:5120']);
         $user = Auth::user();
+        
         if ($user->ktp_photo_path) {
             return back()->with('error', 'KTP sudah ada, gunakan tombol Ganti KTP.');
         }
+
         $path = $request->file('ktp_photo')->store('ktp_photos', 'public');
         $user->update(['ktp_photo_path' => $path]);
+        
         return back()->with('success', 'KTP berhasil diupload.');
     }
 
-    public function getKtpPhoto(User $user) { }
-    public function getProfilePhoto(User $user) { }
+    // --- INVENTORY & WORK HISTORY ---
 
-    // --- WORK HISTORY & INVENTORY ---
     public function storeInventory(Request $request)
     {
         $user = Auth::user();
@@ -193,28 +207,37 @@ class ProfileController extends Controller
             'condition' => 'required|string',
             'item_photo' => 'nullable|image|max:5120',
         ]);
+
         try {
             $data = $request->except(['item_photo', 'document']);
             $data['user_id'] = $user->id;
-            if ($request->hasFile('item_photo')) $data['item_photo_path'] = $request->file('item_photo')->store('inventory_photos', 'public');
-            if ($request->hasFile('document')) $data['document_path'] = $request->file('document')->store('inventory_documents', 'public');
+
+            if ($request->hasFile('item_photo')) {
+                $data['item_photo_path'] = $request->file('item_photo')->store('inventory_photos', 'public');
+            }
+            if ($request->hasFile('document')) {
+                $data['document_path'] = $request->file('document')->store('inventory_documents', 'public');
+            }
+
             Inventory::create($data);
             return redirect()->route('profile.edit')->with('success', 'Inventaris ditambahkan.');
         } catch (\Exception $e) {
             return back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
     public function destroyInventory(Inventory $inventory) {
         if ($inventory->user_id !== Auth::id()) abort(403);
         $inventory->delete();
         return back()->with('success', 'Inventaris dihapus.');
     }
-    public function showInventory() { }
+
     public function storeWorkHistory(Request $request) {
         $request->validate([ 'position' => 'required', 'department' => 'required', 'start_date' => 'required|date' ]);
         WorkHistory::create(array_merge($request->all(), ['user_id' => Auth::id()]));
         return back()->with('success', 'Riwayat pekerjaan ditambahkan.');
     }
+
     public function destroyWorkHistory($id) {
         WorkHistory::where('id', $id)->where('user_id', Auth::id())->delete();
         return back()->with('success', 'Dihapus.');
