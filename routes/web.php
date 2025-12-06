@@ -24,7 +24,7 @@ use App\Http\Controllers\AttendanceHistoryController;
 use App\Http\Controllers\JobTargetController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ForgotPasswordController;
-use App\Http\Controllers\BranchInventoryController; // Pastikan Controller ini di-import (Opsional jika pakai path lengkap di bawah)
+use App\Http\Controllers\BranchInventoryController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -145,7 +145,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // 2. LIST BARANG AVAILABLE (Gudang) - SEMUA ROLE BISA LIHAT
         Route::get('/available', [InventoryController::class, 'available'])
             ->name('available')
-            ->middleware('role:admin,audit,leader,security,user_biasa'); // Update disini
+            ->middleware('role:admin,audit,leader,security,user_biasa');
 
         // 3. DETAIL - Semua Role (Terfilter di Controller)
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
@@ -275,8 +275,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     //  Akses: Admin, Audit, Leader
     // ==========================================================
     Route::middleware(['role:admin,audit,leader'])->group(function () {
-        Route::get('/inventaris-cabang', [App\Http\Controllers\BranchInventoryController::class, 'index'])
+        // Halaman List Cabang
+        Route::get('/inventaris-cabang', [BranchInventoryController::class, 'index'])
             ->name('inventory.branches');
+
+        // Halaman Detail Cabang
+        Route::get('/inventaris-cabang/{id}', [BranchInventoryController::class, 'show'])
+            ->name('inventory.branch.detail');
     });
 
     // === RUTE API ===

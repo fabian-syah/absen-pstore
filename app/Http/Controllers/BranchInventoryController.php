@@ -73,4 +73,41 @@ class BranchInventoryController extends Controller
 
         return view('inventory.branch_inventory_list', compact('branches'));
     }
+
+    // Tambahkan method ini di dalam class BranchInventoryController
+
+    /**
+     * Menampilkan Detail Inventaris di Satu Cabang Tertentu
+     */
+    public function show($id)
+    {
+        $user = Auth::user();
+        $branch = Branch::findOrFail($id);
+
+        // --- VALIDASI AKSES (Security) ---
+        // 1. Jika Leader/Admin Cabang -> Cek apakah ini cabangnya dia?
+        if (($user->role == 'leader' || ($user->role == 'admin' && $user->branch_id != null)) && $user->branch_id != $branch->id) {
+            abort(403, 'Anda tidak memiliki akses ke cabang ini.');
+        }
+        
+        // 2. Jika Audit -> Cek apakah cabang ini ada di list audit dia?
+        if ($user->role == 'audit') {
+            $auditBranchIds = $user->branches->pluck('id')->toArray();
+            if (!in_array($branch->id, $auditBranchIds)) {
+                abort(403, 'Cabang ini bukan wilayah audit Anda.');
+            }
+        }
+
+        // --- AMBIL DATA INVENTARIS ---
+        // Ambil semua barang yang user_id nya adalah karyawan di cabang ini
+        // Menggunakan whereHas untuk memfilter user berdasarkan branch_id
+        $inventories = \App\Models\Inventory::with('user')
+            ->whereHas('user', function($q) use ($branch) {
+                $q->where('branch_id', $branch->id);
+            })
+            ->latest()
+            ->get();
+
+        return view('inventory.branch_inventory_detail', compact('branch', 'inventories'));
+    }
 }
