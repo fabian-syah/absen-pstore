@@ -188,7 +188,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // === RUTE ADMIN & AUDIT MANAGEMENT (Lainnya) ===
     Route::middleware(['role:admin,audit'])->group(function () {
         Route::get('/all-attendance', [AdminAttendanceController::class, 'index'])->name('admin.attendance.all');
-        Route::put('/audit/verify-attendance/{attendance}', [AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
+        Route::put('/audit/verify-attendance/{id}', [App\Http\Controllers\AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
         Route::put('/attendance/{id}/audit-update', [AttendanceHistoryController::class, 'updateByAudit'])->name('audit.update.attendance');
 
         Route::resource('branches', BranchController::class);

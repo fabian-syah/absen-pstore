@@ -70,7 +70,7 @@ class AuditController extends Controller
     {
         // Cari data absensi berdasarkan ID
         $attendance = Attendance::findOrFail($id);
-        
+
         // Update status menjadi verified
         $attendance->update([
             'status' => 'verified',
@@ -98,7 +98,7 @@ class AuditController extends Controller
     {
         // Cari data absensi
         $attendance = Attendance::findOrFail($id);
-        
+
         // Hapus file foto dari storage agar tidak menuh-menuhin server
         if ($attendance->photo_path && Storage::disk('public')->exists($attendance->photo_path)) {
             Storage::disk('public')->delete($attendance->photo_path);
@@ -352,5 +352,60 @@ class AuditController extends Controller
         $this->sendNotificationToUser($attendance->user, $title, $body);
 
         return back()->with('success', 'Absen pulang berhasil diperbarui manual.');
+    }
+
+    /**
+     * Memverifikasi Absensi (Dari Modal Verifikasi)
+     * Route: audit.verify.attendance
+     */
+    public function verifyAttendance(Request $request, $id)
+    {
+        // 1. Validasi Input
+        $request->validate([
+            'presence_status' => 'required|string',
+            'audit_photo'     => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
+            'audit_note'      => 'nullable|string',
+        ]);
+
+        // 2. Cari Data Absensi
+        $attendance = Attendance::findOrFail($id);
+
+        // 3. Siapkan Data Update
+        $updateData = [
+            'presence_status'     => $request->presence_status,
+            'status'              => 'verified',
+            'verified_by_user_id' => Auth::id(),
+            'audit_note'          => $request->audit_note,
+        ];
+
+        // 4. Handle Upload Foto Audit (Jika ada)
+        if ($request->hasFile('audit_photo')) {
+            // Hapus foto audit lama jika ada (opsional)
+            if ($attendance->audit_photo_path && Storage::disk('public')->exists($attendance->audit_photo_path)) {
+                Storage::disk('public')->delete($attendance->audit_photo_path);
+            }
+
+            // Simpan foto baru
+            $path = $request->file('audit_photo')->store('attendance/audit', 'public');
+            $updateData['audit_photo_path'] = $path;
+        }
+
+        // 5. Update Database
+        $attendance->update($updateData);
+
+        // 6. Kirim Notifikasi ke User (Opsional)
+        try {
+            $title = "Verifikasi Absensi";
+            $body  = "Absensi tanggal " . $attendance->check_in_time->format('d M Y') .
+                " telah diverifikasi menjadi: " . $request->presence_status;
+
+            $this->sendNotificationToUser($attendance->user, $title, $body);
+        } catch (\Exception $e) {
+            // Abaikan error notifikasi agar tidak menggagalkan proses simpan
+            Log::error("Gagal kirim notif audit: " . $e->getMessage());
+        }
+
+        // 7. Redirect kembali
+        return back()->with('success', 'Absensi berhasil diverifikasi.');
     }
 }
