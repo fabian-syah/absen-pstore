@@ -88,10 +88,7 @@
                             <label>Kondisi Saat Ini <span class="text-danger">*</span></label>
                             <select name="condition" class="form-control" required>
                                 <option value="Baru">Baru</option>
-                                <option value="Baik">Baik</option>
-                                <option value="Rusak Ringan">Rusak Ringan</option>
-                                <option value="Rusak Berat">Rusak Berat</option>
-                                <option value="Perbaikan">Dalam Perbaikan</option>
+                                <option value="second">Second</option>
                             </select>
                         </div>
                     </div>
