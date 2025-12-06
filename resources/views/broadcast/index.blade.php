@@ -70,7 +70,7 @@
                             </tbody>
                         </table>
                     </div>
-                    {{ $broadcasts->links() }}
+                    {{ $broadcasts->links('pagination::bootstrap-5') }}
                 @else
                     <div class="text-center py-5">
                         <i class="mdi mdi-bullhorn-outline display-4 text-muted"></i>

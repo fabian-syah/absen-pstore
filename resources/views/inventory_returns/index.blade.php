@@ -143,7 +143,7 @@
                 </div>
 
                 <div class="mt-4 d-flex justify-content-end">
-                    {{ $returns->links() }}
+                     {{ $returns->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         </div>

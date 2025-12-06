@@ -91,7 +91,7 @@
 
                     {{-- Pagination --}}
                     <div class="mt-3 d-flex justify-content-end">
-                        {{ $members->links() }}
+                        {{ $members->links('pagination::bootstrap-5') }}
                     </div>
 
                 </div>
