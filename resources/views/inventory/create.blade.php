@@ -127,12 +127,12 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Dokumen (Faktur/Garansi)</label>
+                            <label>Dokumen (Faktur/Garansi) ( Opsional )</label>
                             <input type="file" name="document" class="form-control" accept=".pdf,.doc,.docx">
                         </div>
 
                         <div class="form-group">
-                            <label>Keterangan Tambahan</label>
+                            <label>Keterangan Tambahan ( Opsional )</label>
                             <textarea name="description" class="form-control" rows="4">{{ old('description') }}</textarea>
                         </div>
 
