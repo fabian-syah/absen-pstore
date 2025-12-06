@@ -39,7 +39,6 @@
                     
                     <div class="d-flex gap-2">
                         {{-- TOMBOL TAMBAH INVENTARIS KHUSUS CABANG INI --}}
-                        {{-- Logic: Admin, Audit, Leader boleh nambah di cabang yg mereka akses --}}
                         @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
                             <a href="{{ route('inventory.create', ['branch_id' => $branch->id]) }}" 
                                class="btn btn-primary btn-sm shadow-sm">
@@ -55,7 +54,7 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Foto</th>
+                                <th style="min-width: 120px;">Dokumentasi</th>
                                 <th>Nama Barang</th>
                                 <th>Kategori</th>
                                 <th>Kondisi</th>
@@ -67,15 +66,49 @@
                         <tbody>
                             @forelse($inventories as $item)
                                 <tr>
-                                    {{-- FOTO --}}
+                                    {{-- KOLOM DOKUMENTASI (2 FOTO) --}}
                                     <td>
-                                        @if($item->item_photo_path)
-                                             <img src="{{ asset('storage/'.$item->item_photo_path) }}" style="width: 50px; height: 50px; border-radius: 4px; object-fit: cover;">
-                                        @else
-                                            <div class="bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px; border-radius: 4px;">
-                                                <i class="mdi mdi-image-off"></i>
+                                        <div class="d-flex gap-2">
+                                            {{-- 1. Foto Barang --}}
+                                            <div class="text-center">
+                                                @if($item->item_photo_path)
+                                                    <img src="{{ asset('storage/'.$item->item_photo_path) }}" 
+                                                         class="cursor-pointer"
+                                                         title="Klik untuk memperbesar (Fisik Barang)"
+                                                         style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; border: 1px solid #ddd; cursor: pointer;"
+                                                         data-bs-toggle="modal" 
+                                                         data-bs-target="#imagePreviewModal"
+                                                         data-bs-img-src="{{ asset('storage/'.$item->item_photo_path) }}"
+                                                         data-bs-img-title="Foto Fisik Barang: {{ $item->item_name }}">
+                                                @else
+                                                    <div class="bg-secondary d-flex align-items-center justify-content-center text-white" 
+                                                         style="width: 45px; height: 45px; border-radius: 4px;" title="No Image">
+                                                        <i class="mdi mdi-image-off"></i>
+                                                    </div>
+                                                @endif
+                                                <div style="font-size: 9px;" class="text-muted mt-1">Brg</div>
                                             </div>
-                                        @endif
+
+                                            {{-- 2. Foto User (Serah Terima) --}}
+                                            <div class="text-center">
+                                                @if($item->user_item_photo_path)
+                                                    <img src="{{ asset('storage/'.$item->user_item_photo_path) }}" 
+                                                         class="cursor-pointer"
+                                                         title="Klik untuk memperbesar (Bukti Serah Terima)"
+                                                         style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; border: 2px solid #57B657; cursor: pointer;"
+                                                         data-bs-toggle="modal" 
+                                                         data-bs-target="#imagePreviewModal"
+                                                         data-bs-img-src="{{ asset('storage/'.$item->user_item_photo_path) }}"
+                                                         data-bs-img-title="Bukti Serah Terima: {{ $item->user->name ?? 'User' }}">
+                                                @else
+                                                     <div class="bg-light d-flex align-items-center justify-content-center text-muted border" 
+                                                         style="width: 45px; height: 45px; border-radius: 4px;" title="Belum ada foto user">
+                                                        <i class="mdi mdi-account-off"></i>
+                                                    </div>
+                                                @endif
+                                                <div style="font-size: 9px;" class="text-success mt-1">User</div>
+                                            </div>
+                                        </div>
                                     </td>
 
                                     {{-- NAMA --}}
@@ -144,4 +177,48 @@
         </div>
     </div>
 </div>
+
+{{-- MODAL PREVIEW IMAGE (CLEAN POP-UP) --}}
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="previewTitle">Foto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="previewImage" src="" alt="Preview" class="img-fluid rounded" style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    // Script untuk Modal Image Preview (POP-UP)
+    var imageModal = document.getElementById('imagePreviewModal');
+    imageModal.addEventListener('show.bs.modal', function (event) {
+        // Tombol / Gambar yang diklik
+        var button = event.relatedTarget;
+        
+        // Ambil data dari atribut
+        var imgSrc = button.getAttribute('data-bs-img-src');
+        var imgTitle = button.getAttribute('data-bs-img-title');
+        
+        // Update isi modal
+        var modalImg = imageModal.querySelector('#previewImage');
+        var modalTitle = imageModal.querySelector('#previewTitle');
+        
+        modalImg.src = imgSrc;
+        modalTitle.textContent = imgTitle || 'Detail Foto';
+    });
+
+    // Bersihkan src saat modal ditutup
+    imageModal.addEventListener('hidden.bs.modal', function () {
+        var modalImg = imageModal.querySelector('#previewImage');
+        modalImg.src = '';
+    });
+</script>
+@endpush
+
 @endsection
