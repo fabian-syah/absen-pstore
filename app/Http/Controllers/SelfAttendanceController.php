@@ -20,44 +20,60 @@ class SelfAttendanceController extends Controller
 {
     use SendFcmNotification;
 
-    public function create() 
+    public function create()
     {
         $user = Auth::user();
         $today = today();
-        $yesterday = Carbon::yesterday()->startOfDay();
 
-        // Cek Cuti
+        // 1. Cek apakah ada sesi kemarin yang belum di-checkout (LUPA PULANG)
+        // Jika ada sesi aktif tapi TANGGALNYA bukan hari ini, tutup otomatis.
+        $hangingSession = Attendance::where('user_id', $user->id)
+            ->whereNull('check_out_time')
+            ->whereDate('check_in_time', '<', $today) // Cek sesi sebelum hari ini
+            ->where('status', '!=', 'alpha')
+            ->first();
+
+        if ($hangingSession) {
+            // Auto Close sesi hantu tersebut
+            $hangingSession->update([
+                'check_out_time' => Carbon::parse($hangingSession->check_in_time)->endOfDay(), // Set ke 23:59:59 hari itu
+                'notes' => $hangingSession->notes . ' | Auto-closed by System (User forgot checkout)',
+                'status' => 'pending_verification' // Atau biarkan status lama
+            ]);
+
+            // Opsional: Beri notifikasi kecil
+            session()->flash('warning', 'Sesi kemarin otomatis ditutup karena lupa absen pulang.');
+        }
+
+        // 2. Cek Cuti (Logic Lama Tetap Dipakai)
         $isOnLeave = LeaveRequest::where('user_id', $user->id)
             ->where('status', 'approved')
-            ->where('type', '!=', 'telat') 
+            ->where('type', '!=', 'telat')
             ->whereDate('start_date', '<=', $today)
             ->whereDate('end_date', '>=', $today)
             ->first();
 
         if ($isOnLeave) {
-            $msg = "Anda tercatat sedang " . strtoupper($isOnLeave->type) . " hari ini.";
-            return redirect()->route('dashboard')->with('error', $msg);
+            return redirect()->route('dashboard')->with('error', "Anda sedang status " . strtoupper($isOnLeave->type) . " hari ini.");
         }
 
-        // Cek Sesi Gantung (ABAIKAN ALPHA)
+        // 3. Cek Status HARI INI
+        // Sekarang kita yakin hanya mengecek sesi HARI INI karena sesi kemarin sudah dibereskan di atas.
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', $yesterday)
-            ->where('status', '!=', 'alpha') // [FIX] Abaikan status Alpha
-            ->where('status', '!=', 'absent') 
-            ->orderBy('check_in_time', 'desc')
+            ->whereDate('check_in_time', $today) // Hanya cek hari ini
+            ->where('status', '!=', 'alpha')
             ->first();
 
         if ($activeSession) {
             $mode = 'pulang';
             $attendance = $activeSession;
         } else {
-            // Cek Selesai (ABAIKAN ALPHA)
+            // Cek apakah sudah selesai hari ini
             $finishedToday = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', $today)
                 ->whereNotNull('check_out_time')
-                ->where('status', '!=', 'alpha') // [FIX] Abaikan status Alpha
-                ->where('status', '!=', 'absent')
+                ->where('status', '!=', 'alpha')
                 ->exists();
 
             if ($finishedToday) {
@@ -66,7 +82,7 @@ class SelfAttendanceController extends Controller
             $mode = 'masuk';
             $attendance = null;
 
-            // Cek Laporan Telat Aktif
+            // Cek Laporan Telat
             $activeLateStatus = LateNotification::where('user_id', $user->id)
                 ->where('is_active', true)
                 ->whereDate('created_at', $today)
@@ -79,11 +95,10 @@ class SelfAttendanceController extends Controller
 
         return view('user_biasa.absen', compact('mode', 'attendance'));
     }
-
     public function store(Request $request)
     {
         $request->validate([
-            'photo' => 'required|image|max:51200', 
+            'photo' => 'required|image|max:51200',
             'latitude' => 'required',
             'longitude' => 'required',
             'attendance_id' => 'nullable|exists:attendances,id',
@@ -128,9 +143,9 @@ class SelfAttendanceController extends Controller
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
             $filename = 'public/foto_mandiri/' . Str::random(40) . '.jpg';
-            
+
             $img = Image::make($file);
-            $img->orientate(); 
+            $img->orientate();
             $img->resize(800, null, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
@@ -142,7 +157,7 @@ class SelfAttendanceController extends Controller
         }
 
         $workSchedule = WorkSchedule::getScheduleForUser($user->id);
-        
+
         $shouldSendNotif = false;
         $notifTitle = "";
         $notifBody = "";
@@ -190,7 +205,7 @@ class SelfAttendanceController extends Controller
                 $notifTitle = "Verifikasi Pulang";
                 $notifBody = "{$user->name} melakukan absen pulang (Mandiri) di cabang {$branchName}";
             }
-        } 
+        }
         // === ABSEN MASUK ===
         else {
             // Auto Close Sesi Lama (Abaikan Alpha)
@@ -274,24 +289,25 @@ class SelfAttendanceController extends Controller
     {
         $request->validate(['message' => 'required|string|max:255']);
         $user = Auth::user();
-        
+
         LateNotification::where('user_id', $user->id)->update(['is_active' => false]);
-        
+
         LateNotification::create([
             'user_id' => $user->id,
             'branch_id' => $user->branch_id,
             'message' => $request->message,
             'is_active' => true,
         ]);
-        
+
         $title = "Izin Telat Masuk";
         $branchName = $user->branch->name ?? '-';
         $body = "{$user->name} mengajukan izin telat di cabang {$branchName}";
-        
+
         try {
             $this->sendNotificationToBranchRoles(['audit', 'admin'], $user->branch_id, $title, $body);
-        } catch (\Exception $e) { }
-        
+        } catch (\Exception $e) {
+        }
+
         return redirect()->route('dashboard')->with('success', 'Laporan telat berhasil dikirim.');
     }
 
@@ -299,7 +315,7 @@ class SelfAttendanceController extends Controller
     {
         $notification = LateNotification::where('user_id', Auth::id())
             ->where('is_active', true)->whereDate('created_at', today())->first();
-            
+
         if ($notification) {
             $notification->delete();
             return redirect()->route('dashboard')->with('success', 'Laporan telat dihapus.');

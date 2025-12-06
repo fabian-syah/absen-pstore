@@ -211,6 +211,7 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Element Selector
             const photoInput = document.getElementById('photo-input');
             const captureBtn = document.getElementById('capture-btn');
             const previewImage = document.getElementById('preview-image');
@@ -221,54 +222,28 @@
             const locationStatus = document.getElementById('location-status');
             const locationDetails = document.getElementById('location-details');
             const coordinatesDisplay = document.getElementById('coordinates-display');
-            const accuracyDisplay = document.getElementById('accuracy-display');
-            const timeDisplay = document.getElementById('time-display');
-            const watermarkPreview = document.getElementById('watermark-preview');
+            const form = document.getElementById('attendance-form');
 
-            const attendanceMode = "{{ ucfirst($mode) }}";
-
-            // Update Time
-            function updateTimestamp() {
-                const now = new Date();
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' };
-                const formatter = new Intl.DateTimeFormat('id-ID', options);
-                const timestamp = formatter.format(now);
-
-                if (watermarkPreview) watermarkPreview.textContent = timestamp;
-                if (timeDisplay) timeDisplay.textContent = timestamp;
-            }
-            setInterval(updateTimestamp, 1000);
-            updateTimestamp();
-
-            // Camera Logic
-            captureBtn.addEventListener('click', () => photoInput.click());
-            
-            retakeBtn.addEventListener('click', () => {
-                cameraPreview.classList.add('d-none');
-                cameraPlaceholder.classList.remove('d-none');
-                retakeBtn.classList.add('d-none');
-                photoInput.value = '';
-                updateSubmitButton();
-            });
-
-            photoInput.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        previewImage.src = e.target.result;
-                        cameraPreview.classList.remove('d-none');
-                        cameraPlaceholder.classList.add('d-none');
-                        retakeBtn.classList.remove('d-none');
-                        updateSubmitButton();
-                    };
-                    reader.readAsDataURL(file);
+            // === 1. CEK KONEKSI INTERNET (UX Improvement) ===
+            function updateOnlineStatus() {
+                if (!navigator.onLine) {
+                    locationStatus.innerHTML = `
+                        <div class="alert alert-danger mb-0">
+                            <i class="mdi mdi-wifi-off me-2"></i>
+                            <strong>Anda Offline!</strong> Pastikan ada koneksi internet untuk mengirim absen.
+                        </div>`;
+                    submitButton.disabled = true;
                 }
-            });
+            }
+            window.addEventListener('online',  getLocation); // Coba ambil lokasi lagi pas online
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
 
-            // Geolocation Logic
+            // === 2. GEOLOCATION DENGAN RETRY & TIMEOUT LEBIH PANJANG ===
             function getLocation() {
                 if (navigator.geolocation) {
+                    locationStatus.innerHTML = `<div class="text-info"><i class="mdi mdi-loading mdi-spin me-2"></i>Mencari lokasi (Akurasi tinggi)...</div>`;
+                    
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             const lat = position.coords.latitude;
@@ -279,40 +254,108 @@
                             document.getElementById('longitude').value = lng;
                             document.getElementById('accuracy').value = acc;
 
-                            coordinatesDisplay.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                            accuracyDisplay.textContent = `± ${Math.round(acc)} meter`;
-
-                            locationStatus.innerHTML = `<div class="d-flex align-items-center text-success"><i class="mdi mdi-check-circle-outline me-2"></i><span>Lokasi berhasil didapat!</span></div>`;
+                            coordinatesDisplay.innerHTML = `${lat.toFixed(6)}, ${lng.toFixed(6)} <br><span class="badge badge-success mt-1">Akurasi: ${Math.round(acc)}m</span>`;
+                            
+                            document.getElementById('accuracy-display').innerText = `± ${Math.round(acc)} meter`;
+                            
+                            locationStatus.innerHTML = `<div class="text-success"><i class="mdi mdi-check-circle me-2"></i>Lokasi Terkunci!</div>`;
                             locationDetails.classList.remove('d-none');
-                            updateSubmitButton();
+                            checkFormValidity();
                         },
                         (error) => {
-                            let msg = 'Gagal mengambil lokasi.';
-                            if (error.code === error.PERMISSION_DENIED) msg = 'Mohon izinkan akses lokasi.';
-                            locationStatus.innerHTML = `<div class="d-flex align-items-center text-danger"><i class="mdi mdi-alert-circle-outline me-2"></i><span>${msg}</span></div>`;
-                        }, 
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+                            let msg = "Gagal deteksi lokasi.";
+                            if(error.code == 1) msg = "Izin lokasi ditolak. Mohon aktifkan GPS.";
+                            else if(error.code == 2) msg = "Sinyal GPS lemah/tidak tersedia. Coba geser ke area terbuka.";
+                            else if(error.code == 3) msg = "Waktu habis (Timeout). Coba refresh halaman.";
+                            
+                            locationStatus.innerHTML = `
+                                <div class="alert alert-warning">
+                                    <i class="mdi mdi-alert me-1"></i> ${msg} <br>
+                                    <button type="button" onclick="window.location.reload()" class="btn btn-sm btn-outline-dark mt-2">Coba Lagi</button>
+                                </div>`;
+                        },
+                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 } // Timeout diperpanjang jadi 15 detik
                     );
                 } else {
-                    locationStatus.innerHTML = `<div class="text-danger">Browser tidak support Geolocation.</div>`;
+                    locationStatus.innerHTML = "Browser tidak mendukung Geolocation.";
                 }
             }
 
-            function updateSubmitButton() {
-                const hasPhoto = !cameraPreview.classList.contains('d-none');
-                const hasLocation = document.getElementById('latitude').value !== '';
-                submitButton.disabled = !(hasPhoto && hasLocation);
-                submitButton.innerHTML = `<i class="mdi mdi-send me-1"></i>Kirim Absen ${attendanceMode}`;
-            }
+            // === 3. LOGIKA KAMERA & KOMPRESI GAMBAR (PENTING!) ===
+            captureBtn.addEventListener('click', () => photoInput.click());
 
-            document.getElementById('attendance-form').addEventListener('submit', function() {
-                const btn = this.querySelector('button[type="submit"]');
-                btn.innerHTML = '<i class="mdi mdi-loading mdi-spin me-1"></i>Mengirim...';
-                btn.disabled = true;
+            photoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Tampilkan loading
+                    previewImage.src = '';
+                    cameraPlaceholder.innerHTML = '<i class="mdi mdi-loading mdi-spin display-4"></i><p>Memproses Foto...</p>';
+                    
+                    // Kompresi Gambar menggunakan Canvas
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+
+                            // Set ukuran maksimal (misal lebar 800px) agar file ringan
+                            const MAX_WIDTH = 800;
+                            const scaleSize = MAX_WIDTH / img.width;
+                            canvas.width = MAX_WIDTH;
+                            canvas.height = img.height * scaleSize;
+
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                            // Konversi ke format JPEG kualitas 70%
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.7); 
+                            
+                            // Tampilkan Preview
+                            previewImage.src = dataUrl;
+                            cameraPreview.classList.remove('d-none');
+                            cameraPlaceholder.classList.add('d-none');
+                            retakeBtn.classList.remove('d-none');
+
+                            // Ganti file input asli dengan file hasil kompresi (Opsional, tapi lebih baik kirim base64 atau blob)
+                            // Di sini kita biarkan input file asli, tapi kita bisa inject hidden input jika mau full JS submit.
+                            // Namun, trik paling mudah untuk form standard: 
+                            // Kita convert dataUrl kembali ke File object dan replace input (sedikit tricky)
+                            // ATAU: Kita biarkan PHP handle resize (seperti kodemu sekarang), 
+                            // TAPI resize canvas di atas memastikan user melihat preview cepat.
+                            
+                            checkFormValidity();
+                        }
+                        img.src = event.target.result;
+                    }
+                    reader.readAsDataURL(file);
+                }
             });
 
+            retakeBtn.addEventListener('click', () => {
+                cameraPreview.classList.add('d-none');
+                cameraPlaceholder.classList.remove('d-none');
+                cameraPlaceholder.innerHTML = '<i class="mdi mdi-camera display-4 text-muted mb-3"></i><p class="text-muted mb-3">Klik tombol untuk foto</p>';
+                retakeBtn.classList.add('d-none');
+                photoInput.value = ''; // Reset input
+                checkFormValidity();
+            });
+
+            // === 4. VALIDASI TOMBOL KIRIM ===
+            function checkFormValidity() {
+                const hasPhoto = photoInput.files.length > 0;
+                const hasLocation = document.getElementById('latitude').value !== '';
+                
+                if (hasPhoto && hasLocation) {
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('btn-secondary');
+                    submitButton.classList.add('btn-dark');
+                } else {
+                    submitButton.disabled = true;
+                }
+            }
+            
+            // Initial call
             getLocation();
-            updateSubmitButton();
         });
     </script>
 @endpush
