@@ -19,12 +19,12 @@ use App\Http\Controllers\WorkScheduleController;
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\InventoryReturnController; 
+use App\Http\Controllers\InventoryReturnController;
 use App\Http\Controllers\AttendanceHistoryController;
 use App\Http\Controllers\JobTargetController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ForgotPasswordController;
-use App\Http\Controllers\BranchInventoryController; 
+use App\Http\Controllers\BranchInventoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,7 +73,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // Test FCM Route
     Route::get('/test-fcm', function () {
-        $sender = new class { use SendFcmNotification; };
+        $sender = new class {
+            use SendFcmNotification;
+        };
         $branchId = 2; // Sesuaikan ID Cabang
         try {
             $sender->sendNotificationToBranchRoles(['audit'], $branchId, "Tes Notifikasi", "Pesan tes server.");
@@ -113,7 +115,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
-        
+
         // Foto & KTP
         Route::delete('/photo', [ProfileController::class, 'deleteProfilePhoto'])->name('photo.delete');
         Route::put('/photo', [ProfileController::class, 'updatePhoto'])->name('photo.update');
@@ -126,7 +128,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Work History
         Route::post('/work-history', [WorkHistoryController::class, 'store'])->name('work-history.store');
         Route::delete('/work-history/{history}', [WorkHistoryController::class, 'destroy'])->name('work-history.destroy');
-        
+
         // Inventory (Profile Source)
         Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store');
         Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
@@ -136,12 +138,12 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // ==========================================================
     //  RUTE INVENTARIS
     // ==========================================================
-    
+
     Route::prefix('inventory')->name('inventory.')->group(function () {
-        
+
         // 1. LIST BARANG AKTIF (Dipinjamkan) - Semua Role (Terfilter di Controller)
         Route::get('/', [InventoryController::class, 'index'])->name('index');
-        
+
         // 2. LIST BARANG AVAILABLE (Gudang) - SEMUA ROLE BISA LIHAT
         Route::get('/available', [InventoryController::class, 'available'])
             ->name('available')
@@ -149,12 +151,12 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         // 3. DETAIL - Semua Role (Terfilter di Controller)
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
-        
+
         // 4. CREATE & STORE - Semua Role (Admin, Audit, Leader, Security, User Biasa)
         Route::middleware(['role:admin,audit,leader,security,user_biasa'])->group(function () {
             Route::get('/create', [InventoryController::class, 'create'])->name('create');
             Route::post('/', [InventoryController::class, 'store'])->name('store');
-            
+
             // AKSI KEMBALIKAN (Return Request)
             Route::post('/{id}/return', [InventoryReturnController::class, 'store'])->name('process-return');
         });
@@ -171,9 +173,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // Ini halaman khusus untuk melihat riwayat barang yang dikembalikan & Approval
     Route::middleware(['role:admin,audit'])->group(function () {
         Route::get('/inventory-returns', [InventoryReturnController::class, 'index'])->name('inventory-returns.index');
+        // Route Approve (Sudah ada)
         Route::post('/inventory-returns/{id}/approve', [InventoryReturnController::class, 'approve'])->name('inventory-returns.approve');
+
+        // Route Reject (WAJIB DITAMBAHKAN)
+        Route::post('/inventory-returns/{id}/reject', [InventoryReturnController::class, 'reject'])->name('inventory-returns.reject');
     });
-    
+
     // ==========================================================
 
     // === RUTE ADMIN & AUDIT MANAGEMENT (Lainnya) ===

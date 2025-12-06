@@ -35,7 +35,7 @@ class InventoryReturnController extends Controller
     {
         $request->validate([
             'return_photo'  => 'required|image|mimes:jpeg,png,jpg|max:5120',
-            'receiver_name' => 'required|string|max:255', // Validasi Nama Penerima
+            'receiver_name' => 'required|string|max:255',
             'note'          => 'nullable|string',
         ]);
 
@@ -54,16 +54,16 @@ class InventoryReturnController extends Controller
 
             $this->compressAndSaveImage($file, $path, 100);
 
-            // 2. Buat Data (Status Pending, admin_id KOSONG)
+            // 2. Buat Data (Status Pending)
             InventoryReturn::create([
                 'inventory_id'  => $inventory->id,
                 'user_id'       => $inventory->user_id,
-                'receiver_name' => $request->receiver_name, // Simpan Nama Penerima
+                'receiver_name' => $request->receiver_name,
                 'photo_path'    => $path,
                 'note'          => $request->note,
                 'return_date'   => now(),
                 'status'        => 'pending',
-                'admin_id'      => null, // PENTING: Dikosongkan dulu karena belum diapprove
+                'admin_id'      => null,
             ]);
 
             return redirect()->route('inventory.index')->with('success', 'Permintaan pengembalian dikirim. Menunggu verifikasi Admin.');
@@ -83,8 +83,8 @@ class InventoryReturnController extends Controller
 
         $returnRequest = InventoryReturn::findOrFail($id);
 
-        if ($returnRequest->status == 'approved') {
-            return back()->with('error', 'Data ini sudah disetujui sebelumnya.');
+        if ($returnRequest->status != 'pending') {
+            return back()->with('error', 'Status pengembalian tidak valid.');
         }
 
         $inventory = Inventory::findOrFail($returnRequest->inventory_id);
@@ -99,12 +99,46 @@ class InventoryReturnController extends Controller
             // 2. Update Inventory jadi Available (Lepas User)
             $inventory->update([
                 'user_id' => null,
-                // 'condition' => 'Baik' // Dihapus agar tidak error ENUM
             ]);
 
             return back()->with('success', 'Pengembalian disetujui. Barang sekarang statusnya Available.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal approve: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * TAHAP 3: Reject Pengembalian (Oleh Admin -> Ditolak)
+     * (INI YANG DITAMBAHKAN)
+     */
+    public function reject(Request $request, $id)
+    {
+        if (!in_array(Auth::user()->role, ['admin', 'audit'])) {
+            abort(403);
+        }
+
+        $request->validate([
+            'rejection_note' => 'required|string|max:255',
+        ]);
+
+        $returnRequest = InventoryReturn::findOrFail($id);
+
+        if ($returnRequest->status != 'pending') {
+            return back()->with('error', 'Status pengembalian tidak valid untuk ditolak.');
+        }
+
+        try {
+            $returnRequest->update([
+                'status'   => 'rejected',
+                'admin_id' => Auth::id(),
+                // Tambahkan alasan penolakan ke catatan
+                'note'     => $returnRequest->note . " | [Ditolak]: " . $request->rejection_note
+            ]);
+
+            return back()->with('success', 'Pengembalian berhasil ditolak.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menolak: ' . $e->getMessage());
         }
     }
 
@@ -116,15 +150,9 @@ class InventoryReturnController extends Controller
             $exif = @exif_read_data($file);
             if (!empty($exif['Orientation'])) {
                 switch ($exif['Orientation']) {
-                    case 3:
-                        $source = imagerotate($source, 180, 0);
-                        break;
-                    case 6:
-                        $source = imagerotate($source, -90, 0);
-                        break;
-                    case 8:
-                        $source = imagerotate($source, 90, 0);
-                        break;
+                    case 3: $source = imagerotate($source, 180, 0); break;
+                    case 6: $source = imagerotate($source, -90, 0); break;
+                    case 8: $source = imagerotate($source, 90, 0); break;
                 }
             }
         }
