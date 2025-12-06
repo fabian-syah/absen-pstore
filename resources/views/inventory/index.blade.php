@@ -18,7 +18,7 @@
                         </a>
                     @endif
 
-                    {{-- TOMBOL SWITCH VIEW (UNTUK SEMUA ROLE) --}}
+                    {{-- TOMBOL SWITCH VIEW --}}
                     <div class="btn-group" role="group">
                         <a href="{{ route('inventory.index') }}" class="btn btn-sm {{ request()->routeIs('inventory.index') ? 'btn-info' : 'btn-outline-info' }}">
                             <i class="mdi mdi-account-box"></i> Sedang Dipakai
@@ -53,10 +53,10 @@
                 @endif
                 
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th>Foto</th>
+                                <th style="min-width: 120px;">Dokumentasi</th>
                                 <th>Nama Barang</th>
                                 <th>Kategori</th>
                                 <th>Penanggung Jawab</th>
@@ -67,15 +67,41 @@
                         <tbody>
                             @forelse($inventories as $item)
                             <tr>
+                                {{-- KOLOM FOTO (UPDATE: MENAMPILKAN 2 FOTO) --}}
                                 <td>
-                                    @if($item->item_photo_path)
-                                         <img src="{{ asset('storage/'.$item->item_photo_path) }}" style="width: 50px; height: 50px; border-radius: 4px; object-fit: cover;">
-                                    @else
-                                        <div class="bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px; border-radius: 4px;">
-                                            <i class="mdi mdi-image-off"></i>
+                                    <div class="d-flex gap-2">
+                                        {{-- 1. Foto Barang --}}
+                                        <div class="text-center">
+                                            @if($item->item_photo_path)
+                                                <img src="{{ asset('storage/'.$item->item_photo_path) }}" 
+                                                     title="Fisik Barang"
+                                                     style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; border: 1px solid #ddd;">
+                                            @else
+                                                <div class="bg-secondary d-flex align-items-center justify-content-center text-white" 
+                                                     style="width: 45px; height: 45px; border-radius: 4px;" title="No Image">
+                                                    <i class="mdi mdi-image-off"></i>
+                                                </div>
+                                            @endif
+                                            <div style="font-size: 9px;" class="text-muted mt-1">Brg</div>
                                         </div>
-                                    @endif
+
+                                        {{-- 2. Foto User (Serah Terima) --}}
+                                        <div class="text-center">
+                                            @if($item->user_item_photo_path)
+                                                <img src="{{ asset('storage/'.$item->user_item_photo_path) }}" 
+                                                     title="Bukti Serah Terima"
+                                                     style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; border: 2px solid #57B657;">
+                                            @else
+                                                 <div class="bg-light d-flex align-items-center justify-content-center text-muted border" 
+                                                     style="width: 45px; height: 45px; border-radius: 4px;" title="Belum ada foto user">
+                                                    <i class="mdi mdi-account-off"></i>
+                                                </div>
+                                            @endif
+                                            <div style="font-size: 9px;" class="text-success mt-1">User</div>
+                                        </div>
+                                    </div>
                                 </td>
+
                                 <td>
                                     <div class="fw-bold">{{ $item->item_name }}</div>
                                     <small class="text-muted">{{ $item->serial_number }}</small>
@@ -104,10 +130,10 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        {{-- 1. SHOW (SEMUA ROLE) --}}
+                                        {{-- 1. SHOW --}}
                                         <a href="{{ route('inventory.show', $item->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail"><i class="mdi mdi-eye"></i></a>
 
-                                        {{-- 2. EDIT & DELETE (ADMIN ONLY) --}}
+                                        {{-- 2. EDIT & DELETE --}}
                                         @if(auth()->user()->role == 'admin')
                                             <a href="{{ route('inventory.edit', $item->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
                                             
@@ -117,14 +143,14 @@
                                             </form>
                                         @endif
 
-                                        {{-- 3. RETURN (JIKA PUNYA PEMILIK & IZIN SESUAI) --}}
+                                        {{-- 3. RETURN --}}
                                         @php
                                             $canReturn = false;
-                                            if($item->user_id) { // Hanya barang yg ada pemiliknya yg bisa dikembalikan
+                                            if($item->user_id) {
                                                 if(in_array(auth()->user()->role, ['admin', 'audit'])) {
-                                                    $canReturn = true; // Admin/Audit bisa mengembalikan barang siapa saja
+                                                    $canReturn = true;
                                                 } elseif($item->user_id == auth()->id()) {
-                                                    $canReturn = true; // User bisa mengembalikan barang sendiri
+                                                    $canReturn = true;
                                                 }
                                             }
                                         @endphp
@@ -156,7 +182,7 @@
     </div>
 </div>
 
-{{-- MODAL --}}
+{{-- MODAL RETURN (Tetap sama seperti sebelumnya) --}}
 <div class="modal fade" id="returnModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -171,8 +197,7 @@
                         <i class="mdi mdi-information-outline"></i> 
                         <strong>Proses Pengembalian:</strong><br>
                         1. Upload foto bukti pengembalian.<br>
-                        2. Status akan menjadi <strong>Menunggu Verifikasi</strong>.<br>
-                        3. Admin akan memverifikasi fisik barang sebelum status berubah menjadi <strong>Available</strong>.
+                        2. Status akan menjadi <strong>Menunggu Verifikasi</strong>.
                     </div>
 
                     <div class="form-group mb-3">
