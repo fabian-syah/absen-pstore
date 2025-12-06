@@ -41,7 +41,7 @@
                         @endif
 
                         <div class="form-group">
-                            <label>Nama barang ( Merk / series / tipe / RAM / GB )<span class="text-danger">*</span></label>
+                            <label>Nama barang ( Merk / series / tipe / RAM / GB )<span class="text-danger">*</span></label>
                             <input type="text" name="item_name" class="form-control" required
                                 placeholder="Contoh: Laptop Asus ROG" value="{{ old('item_name') }}">
                         </div>
@@ -101,7 +101,7 @@
 
                         <div class="row">
                             <div class="col-md-6 form-group">
-                                <label>Nomor seri ( IMEI, serial number, plat nomer )</label>
+                                <label>Nomor seri ( IMEI, serial number, plat nomer )</label>
                                 <input type="text" name="serial_number" class="form-control" placeholder="Opsional"
                                     value="{{ old('serial_number') }}">
                             </div>
@@ -112,7 +112,7 @@
                             </div>
                         </div>
 
-                        {{-- UPDATE: DUA KOLOM UPLOAD FOTO --}}
+                        {{-- DUA KOLOM UPLOAD FOTO --}}
                         <div class="row">
                             <div class="col-md-6 form-group">
                                 <label>Foto 1: Fisik Barang <span class="text-danger">*</span></label>

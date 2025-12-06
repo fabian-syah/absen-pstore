@@ -21,11 +21,17 @@ class InventoryController extends Controller
 
         // === FILTER HAK AKSES ===
         if ($user->role == 'admin') {
-            // 1. ADMIN: Bisa melihat SEMUA barang
-            // Tidak ada filter user_id
+            // Admin: Lihat Semua
+        } elseif ($user->role == 'audit') {
+            // Audit: Lihat aset di cabang yang dipegang + aset sendiri
+            $branchIds = $user->branches()->pluck('branches.id');
+            $query->where(function($q) use ($branchIds, $user) {
+                $q->whereHas('user', function($sub) use ($branchIds) {
+                    $sub->whereIn('branch_id', $branchIds);
+                })->orWhere('user_id', $user->id);
+            });
         } else {
-            // 2. AUDIT, LEADER, SECURITY, USER BIASA:
-            // Hanya bisa melihat barang milik DIRI SENDIRI
+            // Leader, Security, User Biasa: Hanya milik sendiri
             $query->where('user_id', $user->id);
         }
 
@@ -53,10 +59,6 @@ class InventoryController extends Controller
      */
     public function available(Request $request)
     {
-        // Barang gudang (available) biasanya boleh dilihat semua role untuk referensi
-        // atau jika ingin dibatasi hanya admin, tambahkan logic if admin di sini.
-        // Default: Semua role bisa lihat barang available.
-        
         $query = Inventory::whereNull('user_id'); 
 
         if ($request->has('search') && $request->search != '') {
@@ -76,16 +78,20 @@ class InventoryController extends Controller
 
     /**
      * Form Create
+     * Logic: 
+     * - Admin: Bisa pilih semua user.
+     * - Audit/Leader (via Menu Cabang): Bisa pilih user di cabang tertentu (jika ada param branch_id).
+     * - Default (Menu Utama): Hanya diri sendiri.
      */
     public function create(Request $request)
     {
         $currentUser = Auth::user();
-        $targetBranchId = $request->get('branch_id'); 
+        $targetBranchId = $request->get('branch_id'); // Parameter dari tombol di menu cabang
         
         $users = collect(); 
-        $fixedUser = null; 
+        $fixedUser = null; // Jika tidak null, maka form user terkunci ke orang ini
 
-        // 1. JIKA ADMIN -> Bebas pilih siapa saja (Bisa filter by branch jika ada param)
+        // 1. JIKA ADMIN -> Bebas pilih siapa saja
         if ($currentUser->role == 'admin') {
             if ($targetBranchId) {
                 $users = User::where('branch_id', $targetBranchId)->where('is_active', 1)->orderBy('name')->get();
@@ -94,8 +100,25 @@ class InventoryController extends Controller
             }
         }
         
-        // 2. SELAIN ADMIN (Audit, Leader, Security, User Biasa)
-        // Hanya bisa input untuk DIRI SENDIRI
+        // 2. JIKA AUDIT / LEADER MEMBUKA DARI MENU CABANG
+        elseif (($currentUser->role == 'audit' || $currentUser->role == 'leader') && $targetBranchId) {
+            
+            // Validasi: Apakah Audit/Leader berhak atas cabang ini?
+            $canAccess = false;
+            if ($currentUser->role == 'leader' && $currentUser->branch_id == $targetBranchId) $canAccess = true;
+            if ($currentUser->role == 'audit' && in_array($targetBranchId, $currentUser->branches->pluck('id')->toArray())) $canAccess = true;
+
+            if ($canAccess) {
+                // AMBIL SEMUA USER DI CABANG TERSEBUT
+                $users = User::where('branch_id', $targetBranchId)->where('is_active', 1)->orderBy('name')->get();
+                // SET FIXED USER JADI NULL AGAR BISA PILIH
+                $fixedUser = null; 
+            } else {
+                abort(403, 'Anda tidak memiliki akses untuk menambah aset di cabang ini.');
+            }
+        }
+
+        // 3. JIKA DARI MENU UTAMA (Audit/Leader/Security/User Biasa) -> Hanya Diri Sendiri
         else {
             $fixedUser = $currentUser;
         }
@@ -117,13 +140,14 @@ class InventoryController extends Controller
             'received_date'   => 'required|date',
             'condition'       => 'required|string',
             'description'     => 'nullable|string|max:1000',
-            'item_photo'      => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', 
+            'item_photo'      => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
             'user_item_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
             'document'        => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ];
 
-        // Validasi User ID: Hanya wajib jika Admin yang input (karena dropdown)
-        if ($user->role == 'admin') {
+        // Validasi User ID
+        // Jika Admin, atau (Audit/Leader dengan branch_id target) -> User ID Wajib dipilih
+        if ($user->role == 'admin' || ($request->has('target_branch_id') && in_array($user->role, ['audit', 'leader']))) {
             $rules['user_id'] = 'required|exists:users,id';
         }
 
@@ -134,14 +158,22 @@ class InventoryController extends Controller
 
             // LOGIC USER ID
             if ($user->role == 'admin') {
-                // Admin bisa set user lain
                 $data['user_id'] = $request->user_id;
-            } else {
-                // Role lain (Audit/Leader/Security/User) otomatis ke diri sendiri
+            } 
+            // LOGIC BARU: Audit/Leader Input untuk user lain di cabang
+            elseif ($request->has('target_branch_id') && in_array($user->role, ['audit', 'leader'])) {
+                // Pastikan user yang dipilih benar-benar ada di cabang target (Security Layer)
+                $targetUser = User::find($request->user_id);
+                if($targetUser->branch_id != $request->target_branch_id) {
+                     return back()->with('error', 'User tidak valid untuk cabang ini.');
+                }
+                $data['user_id'] = $request->user_id;
+            }
+            else {
+                // Default: Barang milik diri sendiri
                 $data['user_id'] = $user->id;
             }
 
-            // SIMPAN FOTO & DOKUMEN
             if ($request->hasFile('item_photo')) {
                 $data['item_photo_path'] = $request->file('item_photo')->store('inventory_photos', 'public');
             }
@@ -156,8 +188,8 @@ class InventoryController extends Controller
 
             Inventory::create($data);
 
-            // Redirect logic
-            if ($request->has('target_branch_id') && $user->role == 'admin') {
+            // Redirect balik sesuai asal
+            if ($request->has('target_branch_id')) {
                 return redirect()->route('inventory.branch.detail', $request->target_branch_id)
                     ->with('success', 'Inventaris cabang berhasil ditambahkan.');
             }
@@ -177,23 +209,36 @@ class InventoryController extends Controller
         $inventory = Inventory::with('user')->findOrFail($id);
         $user = Auth::user();
 
-        // 1. Barang Gudang (Available) -> Semua boleh lihat detail
+        // 1. Barang Gudang -> Semua boleh lihat
         if ($inventory->user_id === null) {
              return view('inventory.show', compact('inventory'));
         }
 
-        // 2. Admin -> Boleh lihat punya siapa saja
-        if ($user->role == 'admin') {
-            return view('inventory.show', compact('inventory'));
-        }
-
-        // 3. Pemilik Barang -> Boleh lihat punya sendiri
+        // 2. Barang Milik Sendiri -> Boleh
         if ($inventory->user_id == $user->id) {
             return view('inventory.show', compact('inventory'));
         }
 
-        // 4. Role Lain (Audit, Leader, dll) -> DITOLAK jika bukan punya sendiri
-        abort(403, 'Anda tidak berhak melihat data inventaris ini.');
+        // 3. Admin -> Boleh Semua
+        if ($user->role == 'admin') {
+            return view('inventory.show', compact('inventory'));
+        }
+
+        // 4. Audit & Leader -> Cek Cabang
+        if (in_array($user->role, ['audit', 'leader'])) {
+            $allowedBranches = [];
+            if ($user->role == 'audit') {
+                $allowedBranches = $user->branches->pluck('id')->toArray();
+            } else { // Leader
+                $allowedBranches = [$user->branch_id];
+            }
+
+            if (in_array($inventory->user->branch_id, $allowedBranches)) {
+                return view('inventory.show', compact('inventory'));
+            }
+        }
+
+        abort(403, 'Anda tidak berhak melihat data ini.');
     }
 
     /**
