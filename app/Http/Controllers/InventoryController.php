@@ -134,8 +134,8 @@ class InventoryController extends Controller
             'condition'       => 'required|string',
             'description'     => 'nullable|string|max:1000',
             // VALIDASI 2 FOTO
-            'item_photo'      => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // Wajib Foto Barang
-            'user_item_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // Wajib Foto Diri+Barang
+            'item_photo'      => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // Wajib Foto Barang
+            'user_item_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // Wajib Foto Diri+Barang
             'document'        => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ];
 
@@ -239,8 +239,8 @@ class InventoryController extends Controller
             'user_id'         => 'nullable',
             'category'        => 'required',
             'condition'       => 'required',
-            'item_photo'      => 'nullable|image|max:5120',
-            'user_item_photo' => 'nullable|image|max:5120', // Foto User+Barang Update
+            'item_photo'      => 'nullable|image|max:10240',
+            'user_item_photo' => 'nullable|image|max:10240', // Foto User+Barang Update
             'document'        => 'nullable|file|max:10240',
         ]);
 
