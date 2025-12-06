@@ -22,8 +22,8 @@ class InventoryReturnController extends Controller
 
         // Load relasi inventory, user, dan admin
         $returns = InventoryReturn::with(['inventory', 'user', 'admin'])
-                    ->latest()
-                    ->paginate(10);
+            ->latest()
+            ->paginate(10);
 
         return view('inventory_returns.index', compact('returns'));
     }
@@ -50,8 +50,8 @@ class InventoryReturnController extends Controller
             $file = $request->file('return_photo');
             $filename = 'return_' . Str::random(10) . '_' . time() . '.jpg';
             $path = 'inventory_returns/' . $filename;
-            
-            $this->compressAndSaveImage($file, $path, 100); 
+
+            $this->compressAndSaveImage($file, $path, 100);
 
             // 2. Buat Data (Status Pending, admin_id KOSONG)
             InventoryReturn::create([
@@ -60,12 +60,11 @@ class InventoryReturnController extends Controller
                 'photo_path'   => $path,
                 'note'         => $request->note,
                 'return_date'  => now(),
-                'status'       => 'pending', 
+                'status'       => 'pending',
                 'admin_id'     => null, // PENTING: Dikosongkan dulu karena belum diapprove
             ]);
 
             return redirect()->route('inventory.index')->with('success', 'Permintaan pengembalian dikirim. Menunggu verifikasi Admin.');
-
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal memproses: ' . $e->getMessage());
         }
@@ -81,29 +80,28 @@ class InventoryReturnController extends Controller
         }
 
         $returnRequest = InventoryReturn::findOrFail($id);
-        
-        // Cek jika sudah diapprove sebelumnya
-        if($returnRequest->status == 'approved') {
+
+        if ($returnRequest->status == 'approved') {
             return back()->with('error', 'Data ini sudah disetujui sebelumnya.');
         }
 
         $inventory = Inventory::findOrFail($returnRequest->inventory_id);
 
         try {
-            // 1. Update Status Pengembalian jadi Approved & Isi admin_id
+            // 1. Update Status Pengembalian jadi Approved
             $returnRequest->update([
                 'status' => 'approved',
-                'admin_id' => Auth::id() // Catat admin yang login saat ini
+                'admin_id' => Auth::id()
             ]);
 
             // 2. Update Inventory jadi Available (Lepas User)
+            // SOLUSI: Hapus update 'condition' => 'Baik' karena tidak sesuai ENUM database
             $inventory->update([
-                'user_id' => null, 
-                'condition' => 'Baik' 
+                'user_id' => null,
+                // 'condition' => 'Baik' <--- HAPUS BARIS INI
             ]);
 
             return back()->with('success', 'Pengembalian disetujui. Barang sekarang statusnya Available.');
-
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal approve: ' . $e->getMessage());
         }
@@ -117,9 +115,15 @@ class InventoryReturnController extends Controller
             $exif = @exif_read_data($file);
             if (!empty($exif['Orientation'])) {
                 switch ($exif['Orientation']) {
-                    case 3: $source = imagerotate($source, 180, 0); break;
-                    case 6: $source = imagerotate($source, -90, 0); break;
-                    case 8: $source = imagerotate($source, 90, 0); break;
+                    case 3:
+                        $source = imagerotate($source, 180, 0);
+                        break;
+                    case 6:
+                        $source = imagerotate($source, -90, 0);
+                        break;
+                    case 8:
+                        $source = imagerotate($source, 90, 0);
+                        break;
                 }
             }
         }
