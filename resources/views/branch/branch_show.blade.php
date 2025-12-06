@@ -51,7 +51,7 @@
                     <p class="text-muted mb-4">Karyawan yang terdaftar di cabang ini.</p>
 
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover align-middle">
                             <thead>
                                 <tr>
                                     <th>Foto</th>
@@ -65,31 +65,50 @@
                                 @forelse($users as $user)
                                     <tr>
                                         <td>
-                                            @if ($user->profile_photo_path)
-                                                <img src="{{ asset('storage/' . $user->profile_photo_path) }}"
-                                                    alt="image" class="img-sm rounded-circle" />
-                                            @else
-                                                <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random"
-                                                    alt="image" class="img-sm rounded-circle" />
-                                            @endif
+                                            <div class="position-relative d-inline-block">
+                                                @if ($user->profile_photo_path)
+                                                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}"
+                                                        alt="image" 
+                                                        class="img-sm rounded-circle"
+                                                        style="width: 40px; height: 40px; object-fit: cover; border: {{ $user->is_verified ? '2px solid #0d6efd' : '2px solid #e9ecef' }}; padding: 1px;" />
+                                                @else
+                                                    {{-- Fallback ke Initial jika tidak ada foto --}}
+                                                    <div class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
+                                                         style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-size: 14px; border: {{ $user->is_verified ? '2px solid #0d6efd' : '2px solid #e9ecef' }};">
+                                                        {{ strtoupper(substr($user->name, 0, 2)) }}
+                                                    </div>
+                                                @endif
+
+                                                {{-- Verified Badge --}}
+                                                @if($user->is_verified)
+                                                    <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
+                                                          style="bottom: -2px; right: -2px; width: 16px; height: 16px; border: 1px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                        <i class="mdi mdi-check-decagram text-primary" style="font-size: 12px;"></i>
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
-                                            <h6 class="mb-0">{{ $user->name }}</h6>
-                                            <small class="text-muted">{{ $user->login_id }}</small>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <h6 class="mb-0 fw-semibold">{{ $user->name }}</h6>
+                                                @if($user->is_verified)
+                                                    <i class="mdi mdi-check-decagram text-primary" title="Verified Account" style="font-size: 14px;"></i>
+                                                @endif
+                                            </div>
+                                            <small class="text-muted d-block mt-1">{{ $user->login_id }}</small>
                                         </td>
                                         <td>
                                             @if ($user->division)
-                                                <span
-                                                    class="badge badge-outline-primary">{{ $user->division->name }}</span>
+                                                <span class="badge badge-outline-primary rounded-pill">{{ $user->division->name }}</span>
                                             @else
-                                                <span class="text-muted">-</span>
+                                                <span class="text-muted small fst-italic">-</span>
                                             @endif
                                         </td>
                                         <td>
                                             @if ($user->is_active)
-                                                <span class="badge badge-success">Aktif</span>
+                                                <span class="badge badge-success rounded-pill"><i class="mdi mdi-check me-1"></i> Aktif</span>
                                             @else
-                                                <span class="badge badge-danger">Non-Aktif</span>
+                                                <span class="badge badge-danger rounded-pill"><i class="mdi mdi-close me-1"></i> Non-Aktif</span>
                                             @endif
                                         </td>
                                         <td>
@@ -101,9 +120,13 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted">
-                                            <i class="mdi mdi-account-off d-block fs-3 mb-2"></i>
-                                            Belum ada karyawan di cabang ini.
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="bg-light rounded-circle p-3 mb-2">
+                                                    <i class="mdi mdi-account-off fs-2 text-secondary"></i>
+                                                </div>
+                                                <p class="mb-0">Belum ada karyawan di cabang ini.</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -112,11 +135,11 @@
                     </div>
 
                     {{-- Pagination Links --}}
-                    <<div class="mt-4 d-flex justify-content-end">
+                    <div class="mt-4 d-flex justify-content-end">
                         {{ $users->links('pagination::bootstrap-5') }}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     </div>
 @endsection
