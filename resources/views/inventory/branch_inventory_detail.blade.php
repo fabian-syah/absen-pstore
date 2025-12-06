@@ -12,7 +12,7 @@
 
 @section('content')
 <div class="row">
-    {{-- HEADER INFO CABANG (Style Gradient Ungu/Biru sesuai gambar) --}}
+    {{-- HEADER INFO CABANG --}}
     <div class="col-12 mb-4">
         <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px;">
             <div class="card-body p-4">
@@ -34,12 +34,20 @@
     <div class="col-12">
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                     <h4 class="card-title mb-0">Daftar Inventaris di {{ $branch->name }}</h4>
                     
-                    {{-- Filter Ringan (Opsional visual saja) --}}
-                    <div>
-                        <span class="badge bg-light text-secondary border">Total: {{ $inventories->count() }}</span>
+                    <div class="d-flex gap-2">
+                        {{-- TOMBOL TAMBAH INVENTARIS KHUSUS CABANG INI --}}
+                        {{-- Logic: Admin, Audit, Leader boleh nambah di cabang yg mereka akses --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
+                            <a href="{{ route('inventory.create', ['branch_id' => $branch->id]) }}" 
+                               class="btn btn-primary btn-sm shadow-sm">
+                                <i class="mdi mdi-plus-circle me-1"></i> Tambah Aset Cabang
+                            </a>
+                        @endif
+
+                        <span class="badge bg-light text-secondary border d-flex align-items-center">Total: {{ $inventories->count() }}</span>
                     </div>
                 </div>
                 
@@ -59,7 +67,7 @@
                         <tbody>
                             @forelse($inventories as $item)
                                 <tr>
-                                    {{-- FOTO (Disamakan dengan Index) --}}
+                                    {{-- FOTO --}}
                                     <td>
                                         @if($item->item_photo_path)
                                              <img src="{{ asset('storage/'.$item->item_photo_path) }}" style="width: 50px; height: 50px; border-radius: 4px; object-fit: cover;">
@@ -70,37 +78,31 @@
                                         @endif
                                     </td>
 
-                                    {{-- NAMA BARANG --}}
+                                    {{-- NAMA --}}
                                     <td>
                                         <div class="fw-bold text-dark">{{ $item->item_name }}</div>
-                                        <small class="text-muted">
-                                            SN: {{ $item->serial_number ?? '-' }}
-                                        </small>
+                                        <small class="text-muted">SN: {{ $item->serial_number ?? '-' }}</small>
                                     </td>
 
-                                    {{-- KATEGORI (Style teks biasa agar terbaca jelas) --}}
-                                    <td>
-                                        {{ ucfirst($item->category) }}
-                                    </td>
+                                    {{-- KATEGORI --}}
+                                    <td>{{ ucfirst($item->category) }}</td>
 
-                                    {{-- KONDISI (Logika Badge Warna) --}}
+                                    {{-- KONDISI --}}
                                     <td>
                                         @php
                                             $badgeClass = match($item->condition) {
-                                                'Baru' => 'badge-success',     // Hijau
-                                                'Baik' => 'badge-primary',     // Biru
-                                                'Rusak Ringan' => 'badge-warning', // Kuning/Orange
-                                                'Rusak Berat' => 'badge-danger',   // Merah
-                                                'Perbaikan' => 'badge-info',       // Cyan/Biru Muda
+                                                'Baru' => 'badge-success',
+                                                'Baik' => 'badge-primary',
+                                                'Rusak Ringan' => 'badge-warning',
+                                                'Rusak Berat' => 'badge-danger',
+                                                'Perbaikan' => 'badge-info',
                                                 default => 'badge-secondary'
                                             };
                                         @endphp
-                                        <label class="badge {{ $badgeClass }}">
-                                            {{ $item->condition }}
-                                        </label>
+                                        <label class="badge {{ $badgeClass }}">{{ $item->condition }}</label>
                                     </td>
 
-                                    {{-- PEMEGANG (USER) --}}
+                                    {{-- PEMEGANG --}}
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <i class="mdi mdi-account-circle-outline fs-5 text-muted me-2"></i>
@@ -111,7 +113,7 @@
                                         </div>
                                     </td>
 
-                                    {{-- TANGGAL TERIMA --}}
+                                    {{-- TANGGAL --}}
                                     <td class="text-muted">
                                         {{ \Carbon\Carbon::parse($item->received_date)->format('d M Y') }}
                                     </td>
@@ -130,7 +132,7 @@
                                         <div class="d-flex flex-column align-items-center">
                                             <i class="mdi mdi-package-variant-closed text-secondary opacity-25" style="font-size: 4rem;"></i>
                                             <p class="mt-3 fw-bold">Belum ada inventaris tercatat.</p>
-                                            <small>Cabang ini belum memiliki aset yang terdaftar pada sistem.</small>
+                                            <small>Cabang ini belum memiliki aset yang terdaftar.</small>
                                         </div>
                                     </td>
                                 </tr>
