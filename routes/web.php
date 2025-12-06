@@ -24,6 +24,7 @@ use App\Http\Controllers\AttendanceHistoryController;
 use App\Http\Controllers\JobTargetController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\BranchInventoryController; // Pastikan Controller ini di-import (Opsional jika pakai path lengkap di bawah)
 
 /*
 |--------------------------------------------------------------------------
@@ -267,6 +268,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/performance', [AuditController::class, 'performanceReport'])->name('performance');
         Route::get('/leave', [AuditController::class, 'leaveReport'])->name('leave');
         Route::get('/export/attendance', [AuditController::class, 'exportAttendance'])->name('export.attendance');
+    });
+
+    // ==========================================================
+    //  [BARU] RUTE MONITORING WILAYAH (INVENTARIS CABANG)
+    //  Akses: Admin, Audit, Leader
+    // ==========================================================
+    Route::middleware(['role:admin,audit,leader'])->group(function () {
+        Route::get('/inventaris-cabang', [App\Http\Controllers\BranchInventoryController::class, 'index'])
+            ->name('inventory.branches');
     });
 
     // === RUTE API ===

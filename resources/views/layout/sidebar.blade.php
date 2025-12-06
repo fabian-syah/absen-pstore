@@ -1,6 +1,8 @@
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <ul class="nav">
-        {{-- Tombol Dashboard (Semua Role) --}}
+        {{-- =================================== --}}
+        {{--       DASHBOARD & RIWAYAT           --}}
+        {{-- =================================== --}}
         <li class="nav-item">
             <a class="nav-link" href="/">
                 <i class="mdi mdi-grid-large menu-icon"></i>
@@ -21,7 +23,7 @@
         </li>
 
         {{-- =================================== --}}
-        {{--     MENU UNTUK SEMUA ROLE        --}}
+        {{--     MENU UMUM (SEMUA ROLE)          --}}
         {{-- =================================== --}}
         <li class="nav-item nav-category">Menu Umum</li>
         <li class="nav-item">
@@ -44,7 +46,7 @@
         </li>
 
         {{-- =================================== --}}
-        {{--     MENU UNTUK SUPER ADMIN        --}}
+        {{--     MENU KHUSUS SUPER ADMIN         --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Menu Cabang</li>
@@ -57,7 +59,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--   MENU UNTUK SUPER ADMIN & AUDIT   --}}
+        {{--    MANAJEMEN TIM (ADMIN ONLY)       --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Manajemen Tim</li>
@@ -75,9 +77,8 @@
             </li>
         @endif
 
-
         {{-- =================================== --}}
-        {{--   MENU UNTUK SUPER ADMIN & AUDIT   --}}
+        {{--    MANAJEMEN TIM (AUDIT ONLY)       --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Manajemen Tim</li>
@@ -90,7 +91,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--   MENU KHUSUS VERIFIKASI (Super Admin & Audit) --}}
+        {{--     VERIFIKASI (ADMIN & AUDIT)      --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Verifikasi</li>
@@ -106,19 +107,16 @@
                     <span class="menu-title">Daftar Izin / Telat</span>
                 </a>
             </li>
-            {{-- [BARU] Menu Approval Ganti Foto --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('users.photo-requests') }}">
                     <i class="menu-icon mdi mdi-camera-retake-outline"></i>
                     <span class="menu-title">Permintaan Ganti Foto</span>
                 </a>
             </li>
-
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('users.ktp-requests') }}">
                     <i class="menu-icon mdi mdi-card-account-details-outline"></i>
                     <span class="menu-title">Req. Ganti KTP</span>
-
                     @php
                         $ktpPendingCount = \App\Models\User::where('ktp_request_status', 'pending')->count();
                     @endphp
@@ -127,19 +125,16 @@
                     @endif
                 </a>
             </li>
-
-            {{-- LINK INI MENUJU KE HISTORY (Admin Only), TAPI SEMUA USER BISA "AKSI" DARI MENU INVENTARIS UTAMA --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('inventory-returns.index') }}">
                     <i class="menu-icon mdi mdi-package-variant-minus"></i>
                     <span class="menu-title">History Pengembalian</span>
                 </a>
             </li>
-
         @endif
 
         {{-- =================================== --}}
-        {{--     MENU UNTUK SECURITY         --}}
+        {{--        MENU SECURITY                --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'security')
             <li class="nav-item nav-category">Menu Security</li>
@@ -152,7 +147,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--     MENU UNTUK LEADER, user_biasa, & AUDIT --}}
+        {{--    MENU TIM (USER, LEADER, AUDIT)   --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'user_biasa' || auth()->user()->role == 'leader' || auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Menu Pengguna</li>
@@ -173,14 +168,22 @@
             @endif
         @endif
 
-        @if (auth()->user()->role == 'audit' || auth()->user()->role == 'leader' || auth()->user()->role == 'admin')
+        {{-- =================================== --}}
+        {{--    MONITORING (ADMIN, AUDIT, LEADER)--}}
+        {{-- =================================== --}}
+        @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
+            
+            <li class="nav-item nav-category">Monitoring Wilayah</li>
+
+            {{-- MENU INVENTARIS CABANG --}}
             <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="menu-icon mdi mdi-package-variant"></i>
+                <a class="nav-link" href="{{ route('inventory.branches') }}">
+                    <i class="menu-icon mdi mdi-package-variant-closed"></i>
                     <span class="menu-title">Inventaris Cabang</span>
                 </a>
             </li>
 
+            {{-- MENU TARGET CABANG --}}
             <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="menu-icon mdi mdi-target"></i>
@@ -188,5 +191,6 @@
                 </a>
             </li>
         @endif
+
     </ul>
 </nav>
