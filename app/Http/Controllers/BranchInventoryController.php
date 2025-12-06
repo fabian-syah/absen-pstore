@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
-use App\Models\Inventory; // Jangan lupa use Model Inventory
+use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -53,13 +53,11 @@ class BranchInventoryController extends Controller
             });
         }
 
-
         // --- 3. AMBIL DATA DENGAN EAGER LOADING ---
         // Kita perlu relasi: Branch -> Users -> Inventories
         $branches = $query->with(['users.inventories' => function ($q) {
             // Kita bisa filter barang di sini jika mau
         }])->latest()->get();
-
 
         // --- 4. HITUNG RINGKASAN KATEGORI ---
         $branches->transform(function ($branch) {
@@ -80,8 +78,8 @@ class BranchInventoryController extends Controller
             return $branch;
         });
 
-        // Pastikan nama view sesuai dengan lokasi file index.blade.php kamu
-        return view('inventory.branch.index', compact('branches'));
+        // PERBAIKAN: Mengarah ke file 'resources/views/inventory/branch_inventory_list.blade.php'
+        return view('inventory.branch_inventory_list', compact('branches'));
     }
 
     /**
@@ -112,7 +110,7 @@ class BranchInventoryController extends Controller
                 $q->where('branch_id', $branch->id);
             });
 
-        // --- SEARCH DI HALAMAN DETAIL (Opsional tapi bagus) ---
+        // --- SEARCH DI HALAMAN DETAIL ---
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $inventoryQuery->where(function($q) use ($search) {
@@ -127,8 +125,7 @@ class BranchInventoryController extends Controller
 
         $inventories = $inventoryQuery->latest()->get();
 
-        // Pastikan nama view sesuai dengan lokasi file detail kamu
-        // Biasanya: inventory/branch/detail.blade.php atau inventory/branch_inventory_detail.blade.php
-        return view('inventory.branch.detail', compact('branch', 'inventories'));
+        // Asumsi nama file detail adalah 'branch_inventory_detail.blade.php' di folder inventory
+        return view('inventory.branch_inventory_detail', compact('branch', 'inventories'));
     }
 }
