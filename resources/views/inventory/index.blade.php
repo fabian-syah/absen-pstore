@@ -67,15 +67,20 @@
                         <tbody>
                             @forelse($inventories as $item)
                             <tr>
-                                {{-- KOLOM FOTO (UPDATE: MENAMPILKAN 2 FOTO) --}}
+                                {{-- KOLOM FOTO (MODAL TRIGGER) --}}
                                 <td>
                                     <div class="d-flex gap-2">
                                         {{-- 1. Foto Barang --}}
                                         <div class="text-center">
                                             @if($item->item_photo_path)
                                                 <img src="{{ asset('storage/'.$item->item_photo_path) }}" 
-                                                     title="Fisik Barang"
-                                                     style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; border: 1px solid #ddd;">
+                                                     class="cursor-pointer"
+                                                     title="Klik untuk memperbesar (Fisik Barang)"
+                                                     style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; border: 1px solid #ddd; cursor: pointer;"
+                                                     data-bs-toggle="modal" 
+                                                     data-bs-target="#imagePreviewModal"
+                                                     data-bs-img-src="{{ asset('storage/'.$item->item_photo_path) }}"
+                                                     data-bs-img-title="Foto Fisik Barang: {{ $item->item_name }}">
                                             @else
                                                 <div class="bg-secondary d-flex align-items-center justify-content-center text-white" 
                                                      style="width: 45px; height: 45px; border-radius: 4px;" title="No Image">
@@ -89,8 +94,13 @@
                                         <div class="text-center">
                                             @if($item->user_item_photo_path)
                                                 <img src="{{ asset('storage/'.$item->user_item_photo_path) }}" 
-                                                     title="Bukti Serah Terima"
-                                                     style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; border: 2px solid #57B657;">
+                                                     class="cursor-pointer"
+                                                     title="Klik untuk memperbesar (Bukti Serah Terima)"
+                                                     style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; border: 2px solid #57B657; cursor: pointer;"
+                                                     data-bs-toggle="modal" 
+                                                     data-bs-target="#imagePreviewModal"
+                                                     data-bs-img-src="{{ asset('storage/'.$item->user_item_photo_path) }}"
+                                                     data-bs-img-title="Bukti Serah Terima: {{ $item->user->name ?? 'User' }}">
                                             @else
                                                  <div class="bg-light d-flex align-items-center justify-content-center text-muted border" 
                                                      style="width: 45px; height: 45px; border-radius: 4px;" title="Belum ada foto user">
@@ -182,7 +192,22 @@
     </div>
 </div>
 
-{{-- MODAL RETURN (Tetap sama seperti sebelumnya) --}}
+{{-- MODAL PREVIEW IMAGE (CLEAN POP-UP) --}}
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="previewTitle">Foto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="previewImage" src="" alt="Preview" class="img-fluid rounded" style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL RETURN --}}
 <div class="modal fade" id="returnModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -232,6 +257,7 @@
 
 @push('scripts')
 <script>
+    // Script untuk Modal Return
     var returnModal = document.getElementById('returnModal');
     returnModal.addEventListener('show.bs.modal', function (event) {
         var button = event.relatedTarget;
@@ -244,6 +270,26 @@
 
         document.getElementById('modalItemName').value = name;
         document.getElementById('modalUserName').value = user;
+    });
+
+    // Script untuk Modal Image Preview (POP-UP)
+    var imageModal = document.getElementById('imagePreviewModal');
+    imageModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var imgSrc = button.getAttribute('data-bs-img-src');
+        var imgTitle = button.getAttribute('data-bs-img-title');
+        
+        var modalImg = imageModal.querySelector('#previewImage');
+        var modalTitle = imageModal.querySelector('#previewTitle');
+        
+        modalImg.src = imgSrc;
+        modalTitle.textContent = imgTitle || 'Foto Dokumentasi';
+    });
+    
+    // Bersihkan src saat modal ditutup
+    imageModal.addEventListener('hidden.bs.modal', function () {
+        var modalImg = imageModal.querySelector('#previewImage');
+        modalImg.src = '';
     });
 </script>
 @endpush

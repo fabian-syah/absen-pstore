@@ -16,11 +16,19 @@
                     @if ($inventory->item_photo_path)
                         <img src="{{ asset('storage/' . $inventory->item_photo_path) }}"
                             class="img-fluid rounded mb-2 shadow-sm border" alt="Foto Barang"
-                            style="width: 100%; max-height: 300px; object-fit: contain;">
-                        <a href="{{ asset('storage/' . $inventory->item_photo_path) }}" target="_blank"
-                            class="btn btn-sm btn-outline-primary w-100">
+                            style="width: 100%; max-height: 300px; object-fit: contain; cursor: pointer;"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#imagePreviewModal"
+                            data-bs-img-src="{{ asset('storage/' . $inventory->item_photo_path) }}"
+                            data-bs-img-title="Foto Fisik Barang: {{ $inventory->item_name }}">
+                            
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#imagePreviewModal"
+                            data-bs-img-src="{{ asset('storage/' . $inventory->item_photo_path) }}"
+                            data-bs-img-title="Foto Fisik Barang: {{ $inventory->item_name }}">
                             <i class="mdi mdi-magnify-plus"></i> Perbesar
-                        </a>
+                        </button>
                     @else
                         <div class="py-4 bg-light rounded text-muted border border-dashed">
                             <i class="mdi mdi-image-off mdi-36px"></i>
@@ -35,11 +43,19 @@
                     @if ($inventory->user_item_photo_path)
                         <img src="{{ asset('storage/' . $inventory->user_item_photo_path) }}"
                             class="img-fluid rounded mb-2 shadow-sm border border-success" alt="Foto Serah Terima"
-                            style="width: 100%; max-height: 300px; object-fit: contain;">
-                        <a href="{{ asset('storage/' . $inventory->user_item_photo_path) }}" target="_blank"
-                            class="btn btn-sm btn-outline-success w-100">
+                            style="width: 100%; max-height: 300px; object-fit: contain; cursor: pointer;"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#imagePreviewModal"
+                            data-bs-img-src="{{ asset('storage/' . $inventory->user_item_photo_path) }}"
+                            data-bs-img-title="Bukti Serah Terima: {{ $inventory->user->name }}">
+
+                        <button type="button" class="btn btn-sm btn-outline-success w-100"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#imagePreviewModal"
+                            data-bs-img-src="{{ asset('storage/' . $inventory->user_item_photo_path) }}"
+                            data-bs-img-title="Bukti Serah Terima: {{ $inventory->user->name }}">
                             <i class="mdi mdi-magnify-plus"></i> Perbesar
-                        </a>
+                        </button>
                     @else
                         <div class="py-4 bg-light rounded text-muted border border-dashed">
                             <i class="mdi mdi-account-off mdi-36px"></i>
@@ -141,4 +157,48 @@
         </div>
     </div>
 </div>
+
+{{-- MODAL PREVIEW IMAGE (SHARED) --}}
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="previewTitle">Foto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="previewImage" src="" alt="Preview" class="img-fluid rounded" style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    // Script untuk Modal Image Preview (POP-UP)
+    var imageModal = document.getElementById('imagePreviewModal');
+    imageModal.addEventListener('show.bs.modal', function (event) {
+        // Tombol / Gambar yang diklik
+        var button = event.relatedTarget;
+        
+        // Ambil data dari atribut
+        var imgSrc = button.getAttribute('data-bs-img-src');
+        var imgTitle = button.getAttribute('data-bs-img-title');
+        
+        // Update isi modal
+        var modalImg = imageModal.querySelector('#previewImage');
+        var modalTitle = imageModal.querySelector('#previewTitle');
+        
+        modalImg.src = imgSrc;
+        modalTitle.textContent = imgTitle || 'Detail Foto';
+    });
+
+    // Bersihkan src saat modal ditutup
+    imageModal.addEventListener('hidden.bs.modal', function () {
+        var modalImg = imageModal.querySelector('#previewImage');
+        modalImg.src = '';
+    });
+</script>
+@endpush
+
 @endsection
