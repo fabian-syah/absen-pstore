@@ -33,10 +33,10 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Tanggal</th>
-                                <th style="min-width: 140px;">Dokumentasi Aset (Awal)</th> {{-- FOTO MASTER --}}
+                                <th style="min-width: 140px;">Dokumentasi Aset (Awal)</th>
                                 <th>Barang</th>
-                                <th>Pengembali & Penerima</th> {{-- USER & RECEIVER --}}
-                                <th style="min-width: 100px;">Bukti Return</th> {{-- FOTO SAAT RETURN --}}
+                                <th>Pengembali & Penerima</th> {{-- KOLOM PENERIMA ADA DISINI --}}
+                                <th style="min-width: 100px;">Bukti Return</th>
                                 <th>Catatan</th>
                                 <th>Status</th>
                                 <th style="min-width: 140px;">Aksi</th>
@@ -54,36 +54,36 @@
                                 {{-- 2. DOKUMENTASI AWAL (REFERENSI) --}}
                                 <td>
                                     <div class="d-flex gap-2">
-                                        {{-- Foto Fisik Barang (Master) --}}
+                                        {{-- Foto Fisik Barang (Master) - DIPAKSA KOTAK --}}
                                         <div class="text-center">
                                             @if($return->inventory && $return->inventory->item_photo_path)
                                                 <img src="{{ asset('storage/'.$return->inventory->item_photo_path) }}" 
-                                                     class="cursor-pointer"
-                                                     style="width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 1px solid #dee2e6;"
+                                                     class="cursor-pointer shadow-sm"
+                                                     style="width: 45px; height: 45px; border-radius: 6px !important; object-fit: cover; border: 1px solid #dee2e6;"
                                                      data-bs-toggle="modal" 
                                                      data-bs-target="#imagePreviewModal"
                                                      data-bs-image="{{ asset('storage/'.$return->inventory->item_photo_path) }}"
                                                      title="Foto Fisik Barang (Master)">
                                             @else
                                                 <div class="bg-secondary d-flex align-items-center justify-content-center text-white rounded" 
-                                                     style="width: 45px; height: 45px;" title="Tidak ada foto barang"><i class="mdi mdi-image-off"></i></div>
+                                                     style="width: 45px; height: 45px; border-radius: 6px !important;" title="Tidak ada foto barang"><i class="mdi mdi-image-off"></i></div>
                                             @endif
                                             <div style="font-size: 9px;" class="text-muted mt-1">Brg Awal</div>
                                         </div>
 
-                                        {{-- Foto User+Barang (Master) --}}
+                                        {{-- Foto User+Barang (Master) - DIPAKSA KOTAK --}}
                                         <div class="text-center">
                                             @if($return->inventory && $return->inventory->user_item_photo_path)
                                                 <img src="{{ asset('storage/'.$return->inventory->user_item_photo_path) }}" 
-                                                     class="cursor-pointer"
-                                                     style="width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 2px solid #57B657;"
+                                                     class="cursor-pointer shadow-sm"
+                                                     style="width: 45px; height: 45px; border-radius: 6px !important; object-fit: cover; border: 2px solid #57B657;"
                                                      data-bs-toggle="modal" 
                                                      data-bs-target="#imagePreviewModal"
                                                      data-bs-image="{{ asset('storage/'.$return->inventory->user_item_photo_path) }}"
                                                      title="Foto User Bersama Barang (Master)">
                                             @else
                                                 <div class="bg-light d-flex align-items-center justify-content-center text-muted border rounded" 
-                                                     style="width: 45px; height: 45px;" title="Tidak ada foto user"><i class="mdi mdi-account-off"></i></div>
+                                                     style="width: 45px; height: 45px; border-radius: 6px !important;" title="Tidak ada foto user"><i class="mdi mdi-account-off"></i></div>
                                             @endif
                                             <div style="font-size: 9px;" class="text-success mt-1">User Awal</div>
                                         </div>
@@ -97,33 +97,38 @@
                                     <small class="text-muted">SN: {{ $return->inventory->serial_number ?? '-' }}</small>
                                 </td>
 
-                                {{-- 4. PENGEMBALI & PENERIMA --}}
+                                {{-- 4. PENGEMBALI & PENERIMA (PERBAIKAN TAMPILAN NAMA) --}}
                                 <td>
                                     {{-- User yang mengembalikan --}}
                                     @if($return->user)
                                         <div class="fw-bold text-dark">{{ $return->user->name }}</div>
-                                        <div class="text-muted small mb-2"><i class="mdi mdi-map-marker-radius"></i> {{ $return->user->branch->name ?? 'Non-Cabang' }}</div>
-                                    @else
-                                        <span class="text-danger fst-italic">User Terhapus</span>
-                                    @endif
-
-                                    {{-- PENERIMA FISIK (INFO PENTING) --}}
-                                    @if($return->receiver_name)
-                                        <div class="d-inline-block bg-info bg-opacity-10 text-info px-2 py-1 rounded small border border-info">
-                                            <i class="mdi mdi-hand-right me-1"></i> 
-                                            Diterima: <strong>{{ $return->receiver_name }}</strong>
+                                        <div class="text-muted small mb-2">
+                                            <i class="mdi mdi-map-marker-radius"></i> {{ $return->user->branch->name ?? 'Non-Cabang' }}
                                         </div>
                                     @else
-                                        <div class="text-danger small fst-italic">Nama penerima tidak dicatat</div>
+                                        <span class="text-danger fst-italic">User Terhapus</span>
+                                        <div class="mb-2"></div>
                                     @endif
+
+                                    {{-- PENERIMA FISIK (PERBAIKAN CSS AGAR TERLIHAT) --}}
+                                    <div class="mt-1 pt-1 border-top">
+                                        <small class="text-muted d-block" style="font-size: 10px;">DITERIMA OLEH:</small>
+                                        @if(!empty($return->receiver_name))
+                                            <span class="badge badge-outline-info fw-bold text-dark" style="font-size: 12px; border: 1px solid #17a2b8;">
+                                                <i class="mdi mdi-hand-right me-1"></i> {{ $return->receiver_name }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted small fst-italic">- Data Lama -</span>
+                                        @endif
+                                    </div>
                                 </td>
 
-                                {{-- 5. BUKTI RETURN (FOTO SAAT INI) --}}
+                                {{-- 5. BUKTI RETURN (FOTO SAAT INI) - DIPAKSA KOTAK --}}
                                 <td>
                                     <img src="{{ asset('storage/'.$return->photo_path) }}" 
                                          alt="Bukti" 
-                                         class="img-thumbnail clickable-image shadow-sm"
-                                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #ffaf00;"
+                                         class="clickable-image shadow-sm"
+                                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px !important; cursor: pointer; border: 2px solid #ffaf00;"
                                          data-bs-toggle="modal" 
                                          data-bs-target="#imagePreviewModal"
                                          data-bs-image="{{ asset('storage/'.$return->photo_path) }}"
