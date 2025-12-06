@@ -10,7 +10,7 @@
                 <h4 class="card-title">Riwayat Pengembalian Inventaris</h4>
                 <p class="card-description">
                     Daftar barang yang dikembalikan. 
-                    <span class="text-muted">Setujui permintaan untuk mengubah status barang menjadi Available di gudang.</span>
+                    <span class="text-muted">Klik gambar untuk memperbesar.</span>
                 </p>
                 
                 {{-- Alert Sukses --}}
@@ -35,7 +35,6 @@
                             <tr>
                                 <th>Tanggal Req</th>
                                 <th>Barang</th>
-                                {{-- UPDATE: Judul Kolom Diperjelas --}}
                                 <th>Penanggung Jawab</th> 
                                 <th>Diproses Oleh</th>
                                 <th>Bukti Foto</th>
@@ -61,7 +60,7 @@
                                     <small class="text-muted">SN: {{ $return->inventory->serial_number ?? '-' }}</small>
                                 </td>
 
-                                {{-- 3. Penanggung Jawab (User yg mengembalikan) --}}
+                                {{-- 3. Penanggung Jawab --}}
                                 <td>
                                     @if($return->user)
                                         <div class="fw-bold">{{ $return->user->name }}</div>
@@ -83,14 +82,16 @@
                                     @endif
                                 </td>
 
-                                {{-- 5. Bukti Foto --}}
+                                {{-- 5. Bukti Foto (MODIFIKASI DISINI) --}}
                                 <td>
-                                    <a href="{{ asset('storage/'.$return->photo_path) }}" target="_blank">
-                                        <img src="{{ asset('storage/'.$return->photo_path) }}" 
-                                             alt="Bukti Return" 
-                                             class="img-thumbnail"
-                                             style="width: 80px; height: 80px; object-fit: cover;">
-                                    </a>
+                                    <img src="{{ asset('storage/'.$return->photo_path) }}" 
+                                         alt="Bukti Return" 
+                                         class="img-thumbnail clickable-image"
+                                         style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;"
+                                         data-bs-toggle="modal" 
+                                         data-bs-target="#imagePreviewModal"
+                                         data-bs-image="{{ asset('storage/'.$return->photo_path) }}"
+                                         title="Klik untuk memperbesar">
                                 </td>
 
                                 {{-- 6. Catatan --}}
@@ -148,4 +149,45 @@
         </div>
     </div>
 </div>
+
+{{-- MODAL PREVIEW IMAGE (Pop Up) --}}
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagePreviewModalLabel">Bukti Foto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center bg-light">
+                <img id="previewImage" src="" alt="Preview" class="img-fluid" style="max-height: 80vh; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- SCRIPT KHUSUS HALAMAN INI --}}
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        var imageModal = document.getElementById('imagePreviewModal');
+        
+        // Event Listener saat modal akan dibuka
+        imageModal.addEventListener('show.bs.modal', function (event) {
+            // Tombol (gambar) yang memicu modal
+            var button = event.relatedTarget;
+            // Ambil URL gambar dari atribut data-bs-image
+            var imageUrl = button.getAttribute('data-bs-image');
+            
+            // Update src gambar di dalam modal
+            var modalImage = imageModal.querySelector('#previewImage');
+            modalImage.src = imageUrl;
+        });
+        
+        // Reset src saat modal ditutup (opsional, untuk kebersihan memori)
+        imageModal.addEventListener('hidden.bs.modal', function () {
+            var modalImage = imageModal.querySelector('#previewImage');
+            modalImage.src = '';
+        });
+    });
+</script>
+
 @endsection
