@@ -18,7 +18,8 @@ class Inventory extends Model
         'received_date',
         'condition',
         'description',
-        'item_photo_path',
+        'item_photo_path',      // Foto Barang
+        'user_item_photo_path', // Foto User + Barang (BARU)
         'document_path'
     ];
 
@@ -40,6 +41,14 @@ class Inventory extends Model
     public function getItemPhotoAttribute()
     {
         return $this->item_photo_path ? Storage::url($this->item_photo_path) : null;
+    }
+
+    /**
+     * Accessor untuk user_item_photo URL (BARU)
+     */
+    public function getUserItemPhotoAttribute()
+    {
+        return $this->user_item_photo_path ? Storage::url($this->user_item_photo_path) : null;
     }
 
     /**

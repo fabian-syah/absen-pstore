@@ -104,10 +104,18 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Foto Barang</label>
-                        <input type="file" name="item_photo" class="form-control" accept="image/*">
-                        <small class="text-muted">Format: JPG/PNG, Max 5MB</small>
+                    {{-- UPDATE: DUA KOLOM UPLOAD FOTO --}}
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label>Foto 1: Fisik Barang <span class="text-danger">*</span></label>
+                            <input type="file" name="item_photo" class="form-control" accept="image/*" required>
+                            <small class="text-muted">Foto detail barangnya saja.</small>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Foto 2: Foto Diri + Barang <span class="text-danger">*</span></label>
+                            <input type="file" name="user_item_photo" class="form-control" accept="image/*" required>
+                            <small class="text-muted">Foto selfie/dipegang user sebagai bukti serah terima.</small>
+                        </div>
                     </div>
 
                     <div class="form-group">

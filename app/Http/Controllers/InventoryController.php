@@ -78,10 +78,6 @@ class InventoryController extends Controller
 
     /**
      * Form Create
-     * Logic: 
-     * - Admin: Bisa pilih semua user.
-     * - Audit/Leader (via Menu Cabang): Bisa pilih user di cabang tertentu (jika ada param branch_id).
-     * - Default (Menu Utama): Hanya diri sendiri.
      */
     public function create(Request $request)
     {
@@ -131,18 +127,19 @@ class InventoryController extends Controller
         $user = Auth::user();
 
         $rules = [
-            'item_name'     => 'required|string|max:255',
-            'category'      => 'required|string',
-            'serial_number' => 'nullable|string|max:100',
-            'received_date' => 'required|date',
-            'condition'     => 'required|string',
-            'description'   => 'nullable|string|max:1000',
-            'item_photo'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'document'      => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'item_name'       => 'required|string|max:255',
+            'category'        => 'required|string',
+            'serial_number'   => 'nullable|string|max:100',
+            'received_date'   => 'required|date',
+            'condition'       => 'required|string',
+            'description'     => 'nullable|string|max:1000',
+            // VALIDASI 2 FOTO
+            'item_photo'      => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // Wajib Foto Barang
+            'user_item_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // Wajib Foto Diri+Barang
+            'document'        => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ];
 
         // Validasi User ID
-        // Jika Admin, atau (Audit/Leader dengan branch_id target) -> User ID Wajib dipilih
         if ($user->role == 'admin' || ($request->has('target_branch_id') && in_array($user->role, ['audit', 'leader']))) {
             $rules['user_id'] = 'required|exists:users,id';
         }
@@ -150,14 +147,13 @@ class InventoryController extends Controller
         $request->validate($rules);
 
         try {
-            $data = $request->except(['item_photo', 'document', 'target_branch_id']);
+            $data = $request->except(['item_photo', 'user_item_photo', 'document', 'target_branch_id']);
 
             // LOGIC USER ID
             if ($user->role == 'admin') {
                 $data['user_id'] = $request->user_id;
             } 
             elseif ($request->has('target_branch_id') && in_array($user->role, ['audit', 'leader'])) {
-                // Pastikan user yang dipilih benar-benar ada di cabang target (Security Layer)
                 $targetUser = User::find($request->user_id);
                 if($targetUser->branch_id != $request->target_branch_id) {
                      return back()->with('error', 'User tidak valid untuk cabang ini.');
@@ -165,12 +161,17 @@ class InventoryController extends Controller
                 $data['user_id'] = $request->user_id;
             }
             else {
-                // Default: Barang milik diri sendiri
                 $data['user_id'] = $user->id;
             }
 
+            // SIMPAN FOTO 1 (BARANG)
             if ($request->hasFile('item_photo')) {
                 $data['item_photo_path'] = $request->file('item_photo')->store('inventory_photos', 'public');
+            }
+
+            // SIMPAN FOTO 2 (USER + BARANG)
+            if ($request->hasFile('user_item_photo')) {
+                $data['user_item_photo_path'] = $request->file('user_item_photo')->store('inventory_user_photos', 'public');
             }
 
             if ($request->hasFile('document')) {
@@ -179,7 +180,6 @@ class InventoryController extends Controller
 
             Inventory::create($data);
 
-            // Redirect balik sesuai asal
             if ($request->has('target_branch_id')) {
                 return redirect()->route('inventory.branch.detail', $request->target_branch_id)
                     ->with('success', 'Inventaris cabang berhasil ditambahkan.');
@@ -200,33 +200,14 @@ class InventoryController extends Controller
         $inventory = Inventory::with('user')->findOrFail($id);
         $user = Auth::user();
 
-        // 1. Barang Gudang -> Semua boleh lihat
-        if ($inventory->user_id === null) {
-             return view('inventory.show', compact('inventory'));
-        }
+        // Izin Akses (Tetap sama)
+        if ($inventory->user_id === null) return view('inventory.show', compact('inventory'));
+        if ($inventory->user_id == $user->id) return view('inventory.show', compact('inventory'));
+        if ($user->role == 'admin') return view('inventory.show', compact('inventory'));
 
-        // 2. Barang Milik Sendiri -> Boleh
-        if ($inventory->user_id == $user->id) {
-            return view('inventory.show', compact('inventory'));
-        }
-
-        // 3. Admin -> Boleh Semua
-        if ($user->role == 'admin') {
-            return view('inventory.show', compact('inventory'));
-        }
-
-        // 4. Audit & Leader -> Cek Cabang
         if (in_array($user->role, ['audit', 'leader'])) {
-            $allowedBranches = [];
-            if ($user->role == 'audit') {
-                $allowedBranches = $user->branches->pluck('id')->toArray();
-            } else { // Leader
-                $allowedBranches = [$user->branch_id];
-            }
-
-            if (in_array($inventory->user->branch_id, $allowedBranches)) {
-                return view('inventory.show', compact('inventory'));
-            }
+            $allowedBranches = ($user->role == 'audit') ? $user->branches->pluck('id')->toArray() : [$user->branch_id];
+            if (in_array($inventory->user->branch_id, $allowedBranches)) return view('inventory.show', compact('inventory'));
         }
 
         abort(403, 'Anda tidak berhak melihat data ini.');
@@ -254,21 +235,31 @@ class InventoryController extends Controller
         $inventory = Inventory::findOrFail($id);
 
         $request->validate([
-            'item_name' => 'required|string|max:255',
-            'user_id'   => 'nullable',
-            'category'  => 'required',
-            'condition' => 'required',
-            'item_photo'=> 'nullable|image|max:5120',
-            'document'  => 'nullable|file|max:10240',
+            'item_name'       => 'required|string|max:255',
+            'user_id'         => 'nullable',
+            'category'        => 'required',
+            'condition'       => 'required',
+            'item_photo'      => 'nullable|image|max:5120',
+            'user_item_photo' => 'nullable|image|max:5120', // Foto User+Barang Update
+            'document'        => 'nullable|file|max:10240',
         ]);
 
-        $data = $request->except(['item_photo', 'document']);
+        $data = $request->except(['item_photo', 'user_item_photo', 'document']);
 
+        // Update Foto Barang
         if ($request->hasFile('item_photo')) {
             if ($inventory->item_photo_path && Storage::disk('public')->exists($inventory->item_photo_path)) {
                 Storage::disk('public')->delete($inventory->item_photo_path);
             }
             $data['item_photo_path'] = $request->file('item_photo')->store('inventory_photos', 'public');
+        }
+
+        // Update Foto User+Barang
+        if ($request->hasFile('user_item_photo')) {
+            if ($inventory->user_item_photo_path && Storage::disk('public')->exists($inventory->user_item_photo_path)) {
+                Storage::disk('public')->delete($inventory->user_item_photo_path);
+            }
+            $data['user_item_photo_path'] = $request->file('user_item_photo')->store('inventory_user_photos', 'public');
         }
 
         if ($request->hasFile('document')) {
@@ -293,9 +284,15 @@ class InventoryController extends Controller
         $inventory = Inventory::findOrFail($id);
 
         try {
+            // Hapus Foto 1
             if ($inventory->item_photo_path && Storage::disk('public')->exists($inventory->item_photo_path)) {
                 Storage::disk('public')->delete($inventory->item_photo_path);
             }
+            // Hapus Foto 2
+            if ($inventory->user_item_photo_path && Storage::disk('public')->exists($inventory->user_item_photo_path)) {
+                Storage::disk('public')->delete($inventory->user_item_photo_path);
+            }
+            // Hapus Dokumen
             if ($inventory->document_path && Storage::disk('public')->exists($inventory->document_path)) {
                 Storage::disk('public')->delete($inventory->document_path);
             }
