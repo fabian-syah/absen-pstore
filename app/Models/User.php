@@ -40,6 +40,7 @@ class User extends Authenticatable
         'work_schedule_id', // <--- TAMBAHKAN INI
         'is_active',
         'profile_photo_path',
+        'profile_photo_temp_path', // <--- Wajib ada
         'ktp_photo_path',
         'ktp_request_status', // <--- TAMBAHKAN INI
         'ktp_photo_temp_path', // <--- WAJIB DITAMBAHKAN DI SINI
