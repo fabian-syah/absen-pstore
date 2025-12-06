@@ -7,25 +7,24 @@
     <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Riwayat Pengembalian Inventaris</h4>
-                <p class="card-description">
-                    Daftar barang yang dikembalikan. 
-                    <span class="text-muted">Klik gambar untuk memperbesar.</span>
-                </p>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 class="card-title mb-1">Riwayat Pengembalian Inventaris</h4>
+                        <p class="card-description mb-0 text-muted">Verifikasi barang yang dikembalikan oleh user.</p>
+                    </div>
+                </div>
                 
-                {{-- Alert Sukses --}}
+                {{-- Alert Notifications --}}
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <i class="mdi mdi-check-circle me-1"></i> {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
-
-                {{-- Alert Error --}}
                 @if(session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <i class="mdi mdi-alert-circle me-1"></i> {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
 
@@ -33,107 +32,152 @@
                     <table class="table table-striped align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Tanggal Req</th>
+                                <th>Tanggal</th>
+                                <th style="min-width: 140px;">Dokumentasi Aset (Awal)</th> {{-- FOTO MASTER --}}
                                 <th>Barang</th>
-                                <th>Penanggung Jawab</th> 
-                                <th>Diproses Oleh</th>
-                                <th>Bukti Foto</th>
+                                <th>Pengembali & Penerima</th> {{-- USER & RECEIVER --}}
+                                <th style="min-width: 100px;">Bukti Return</th> {{-- FOTO SAAT RETURN --}}
                                 <th>Catatan</th>
                                 <th>Status</th>
-                                <th>Aksi</th>
+                                <th style="min-width: 140px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($returns as $return)
                             <tr>
-                                {{-- 1. Tanggal --}}
+                                {{-- 1. TANGGAL --}}
                                 <td>
-                                    {{ \Carbon\Carbon::parse($return->return_date)->translatedFormat('d M Y') }}
-                                    <br>
+                                    <div class="fw-bold">{{ \Carbon\Carbon::parse($return->return_date)->translatedFormat('d M Y') }}</div>
                                     <small class="text-muted">{{ \Carbon\Carbon::parse($return->return_date)->format('H:i') }} WIB</small>
                                 </td>
 
-                                {{-- 2. Detail Barang --}}
+                                {{-- 2. DOKUMENTASI AWAL (REFERENSI) --}}
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        {{-- Foto Fisik Barang (Master) --}}
+                                        <div class="text-center">
+                                            @if($return->inventory && $return->inventory->item_photo_path)
+                                                <img src="{{ asset('storage/'.$return->inventory->item_photo_path) }}" 
+                                                     class="cursor-pointer"
+                                                     style="width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 1px solid #dee2e6;"
+                                                     data-bs-toggle="modal" 
+                                                     data-bs-target="#imagePreviewModal"
+                                                     data-bs-image="{{ asset('storage/'.$return->inventory->item_photo_path) }}"
+                                                     title="Foto Fisik Barang (Master)">
+                                            @else
+                                                <div class="bg-secondary d-flex align-items-center justify-content-center text-white rounded" 
+                                                     style="width: 45px; height: 45px;" title="Tidak ada foto barang"><i class="mdi mdi-image-off"></i></div>
+                                            @endif
+                                            <div style="font-size: 9px;" class="text-muted mt-1">Brg Awal</div>
+                                        </div>
+
+                                        {{-- Foto User+Barang (Master) --}}
+                                        <div class="text-center">
+                                            @if($return->inventory && $return->inventory->user_item_photo_path)
+                                                <img src="{{ asset('storage/'.$return->inventory->user_item_photo_path) }}" 
+                                                     class="cursor-pointer"
+                                                     style="width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 2px solid #57B657;"
+                                                     data-bs-toggle="modal" 
+                                                     data-bs-target="#imagePreviewModal"
+                                                     data-bs-image="{{ asset('storage/'.$return->inventory->user_item_photo_path) }}"
+                                                     title="Foto User Bersama Barang (Master)">
+                                            @else
+                                                <div class="bg-light d-flex align-items-center justify-content-center text-muted border rounded" 
+                                                     style="width: 45px; height: 45px;" title="Tidak ada foto user"><i class="mdi mdi-account-off"></i></div>
+                                            @endif
+                                            <div style="font-size: 9px;" class="text-success mt-1">User Awal</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                {{-- 3. DETAIL BARANG --}}
                                 <td>
                                     <span class="fw-bold text-primary">{{ $return->inventory->item_name ?? 'Barang Dihapus' }}</span>
                                     <br>
                                     <small class="text-muted">SN: {{ $return->inventory->serial_number ?? '-' }}</small>
                                 </td>
 
-                                {{-- 3. Penanggung Jawab --}}
+                                {{-- 4. PENGEMBALI & PENERIMA --}}
                                 <td>
+                                    {{-- User yang mengembalikan --}}
                                     @if($return->user)
-                                        <div class="fw-bold">{{ $return->user->name }}</div>
-                                        <small class="text-muted">
-                                            <i class="mdi mdi-map-marker-outline"></i> {{ $return->user->branch->name ?? 'Pusat' }}
-                                        </small>
+                                        <div class="fw-bold text-dark">{{ $return->user->name }}</div>
+                                        <div class="text-muted small mb-2"><i class="mdi mdi-map-marker-radius"></i> {{ $return->user->branch->name ?? 'Non-Cabang' }}</div>
                                     @else
                                         <span class="text-danger fst-italic">User Terhapus</span>
                                     @endif
-                                </td>
 
-                                {{-- 4. Admin Eksekutor --}}
-                                <td>
-                                    @if($return->admin)
-                                        <div class="fw-bold">{{ $return->admin->name }}</div>
-                                        <small class="text-success">Admin</small>
+                                    {{-- PENERIMA FISIK (INFO PENTING) --}}
+                                    @if($return->receiver_name)
+                                        <div class="d-inline-block bg-info bg-opacity-10 text-info px-2 py-1 rounded small border border-info">
+                                            <i class="mdi mdi-hand-right me-1"></i> 
+                                            Diterima: <strong>{{ $return->receiver_name }}</strong>
+                                        </div>
                                     @else
-                                        <span class="text-muted fst-italic">- Menunggu -</span>
+                                        <div class="text-danger small fst-italic">Nama penerima tidak dicatat</div>
                                     @endif
                                 </td>
 
-                                {{-- 5. Bukti Foto (MODIFIKASI DISINI) --}}
+                                {{-- 5. BUKTI RETURN (FOTO SAAT INI) --}}
                                 <td>
                                     <img src="{{ asset('storage/'.$return->photo_path) }}" 
-                                         alt="Bukti Return" 
-                                         class="img-thumbnail clickable-image"
-                                         style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;"
+                                         alt="Bukti" 
+                                         class="img-thumbnail clickable-image shadow-sm"
+                                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #ffaf00;"
                                          data-bs-toggle="modal" 
                                          data-bs-target="#imagePreviewModal"
                                          data-bs-image="{{ asset('storage/'.$return->photo_path) }}"
-                                         title="Klik untuk memperbesar">
+                                         title="Bukti Kondisi Saat Dikembalikan">
                                 </td>
 
-                                {{-- 6. Catatan --}}
-                                <td style="max-width: 200px; white-space: normal;">
-                                    {{ $return->note ?? '-' }}
+                                {{-- 6. CATATAN --}}
+                                <td style="max-width: 150px;">
+                                    <div class="text-wrap" style="font-size: 0.9rem;">
+                                        {{ $return->note ?? '-' }}
+                                    </div>
                                 </td>
 
-                                {{-- 7. Status Badge --}}
+                                {{-- 7. STATUS --}}
                                 <td>
                                     @if($return->status == 'pending')
-                                        <label class="badge badge-warning text-dark">
-                                            <i class="mdi mdi-clock-outline"></i> PendingVerif
-                                        </label>
+                                        <span class="badge bg-warning text-dark"><i class="mdi mdi-clock-outline"></i> Pending</span>
                                     @elseif($return->status == 'approved')
-                                        <label class="badge badge-success">
-                                            <i class="mdi mdi-check-circle"></i> Approved
-                                        </label>
+                                        <span class="badge bg-success"><i class="mdi mdi-check-all"></i> Approved</span>
+                                        <div style="font-size: 10px;" class="text-muted mt-1">Oleh: {{ $return->admin->name ?? 'Admin' }}</div>
                                     @else
-                                        <label class="badge badge-danger">Ditolak</label>
+                                        <span class="badge bg-danger"><i class="mdi mdi-close-circle"></i> Ditolak</span>
+                                        <div style="font-size: 10px;" class="text-muted mt-1">Oleh: {{ $return->admin->name ?? 'Admin' }}</div>
                                     @endif
                                 </td>
 
-                                {{-- 8. Tombol Aksi --}}
+                                {{-- 8. AKSI (APPROVE & REJECT) --}}
                                 <td>
                                     @if($return->status == 'pending')
-                                        <form action="{{ route('inventory-returns.approve', $return->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin barang fisik sudah diterima? \n\nSetelah disetujui:\n1. Barang akan lepas dari {{ $return->user->name ?? 'User' }}.\n2. Status barang menjadi AVAILABLE (Gudang).')">
-                                            @csrf
-                                            <button type="submit" class="btn btn-success btn-sm text-white shadow-sm" title="Terima Barang">
-                                                <i class="mdi mdi-check"></i> Approve
+                                        <div class="d-flex gap-2">
+                                            {{-- Tombol Approve --}}
+                                            <form action="{{ route('inventory-returns.approve', $return->id) }}" method="POST" onsubmit="return confirm('KONFIRMASI APPROVE:\n\nPastikan barang fisik sudah diterima oleh {{ $return->receiver_name }} dan kondisinya sesuai.\n\nStatus barang akan menjadi AVAILABLE di gudang.')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-success btn-sm text-white shadow-sm" title="Setujui Pengembalian">
+                                                    <i class="mdi mdi-check"></i> Approve
+                                                </button>
+                                            </form>
+
+                                            {{-- Tombol Reject (Trigger Modal) --}}
+                                            <button type="button" class="btn btn-danger btn-sm text-white shadow-sm" title="Tolak Pengembalian" 
+                                                    data-bs-toggle="modal" data-bs-target="#rejectModal" 
+                                                    data-id="{{ $return->id }}" data-item="{{ $return->inventory->item_name ?? '-' }}">
+                                                <i class="mdi mdi-close"></i> Tolak
                                             </button>
-                                        </form>
+                                        </div>
                                     @else
-                                        <span class="text-muted small">
-                                            <i class="mdi mdi-check-all text-success"></i> Selesai
-                                        </span>
+                                        <span class="text-muted small fst-italic"><i class="mdi mdi-lock"></i> Selesai</span>
                                     @endif
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
-                                    <i class="mdi mdi-file-document-box-outline" style="font-size: 3rem;"></i>
+                                <td colspan="9" class="text-center py-5 text-muted">
+                                    <i class="mdi mdi-file-document-box-multiple-outline" style="font-size: 3rem;"></i>
                                     <p class="mt-2">Belum ada data pengembalian inventaris.</p>
                                 </td>
                             </tr>
@@ -143,51 +187,91 @@
                 </div>
 
                 <div class="mt-4 d-flex justify-content-end">
-                     {{ $returns->links('pagination::bootstrap-5') }}
+                    {{ $returns->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-{{-- MODAL PREVIEW IMAGE (Pop Up) --}}
-<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+{{-- 1. MODAL PREVIEW IMAGE --}}
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imagePreviewModalLabel">Bukti Foto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Preview Foto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-center bg-light">
-                <img id="previewImage" src="" alt="Preview" class="img-fluid" style="max-height: 80vh; border-radius: 8px;">
+            <div class="modal-body text-center bg-light rounded m-2">
+                <img id="previewImage" src="" class="img-fluid rounded shadow-sm" style="max-height: 80vh;">
             </div>
         </div>
     </div>
 </div>
 
-{{-- SCRIPT KHUSUS HALAMAN INI --}}
+{{-- 2. MODAL REJECT (ALASAN PENOLAKAN) --}}
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="mdi mdi-alert-circle-outline"></i> Tolak Pengembalian</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="rejectForm" action="" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-warning py-2 text-small">
+                        Anda akan menolak pengembalian untuk barang: <br>
+                        <strong id="rejectItemName" class="text-dark"></strong>
+                    </div>
+                    
+                    <div class="form-group mb-0">
+                        <label class="fw-bold mb-1">Alasan Penolakan <span class="text-danger">*</span></label>
+                        <textarea name="rejection_note" class="form-control" rows="4" required 
+                                  placeholder="Contoh: Foto bukti buram, barang fisik belum sampai, atau salah input."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger">Konfirmasi Tolak</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- SCRIPT --}}
 <script>
     document.addEventListener("DOMContentLoaded", function(){
-        var imageModal = document.getElementById('imagePreviewModal');
         
-        // Event Listener saat modal akan dibuka
+        // Logic Modal Preview Image
+        var imageModal = document.getElementById('imagePreviewModal');
         imageModal.addEventListener('show.bs.modal', function (event) {
-            // Tombol (gambar) yang memicu modal
             var button = event.relatedTarget;
-            // Ambil URL gambar dari atribut data-bs-image
             var imageUrl = button.getAttribute('data-bs-image');
-            
-            // Update src gambar di dalam modal
             var modalImage = imageModal.querySelector('#previewImage');
             modalImage.src = imageUrl;
         });
         
-        // Reset src saat modal ditutup (opsional, untuk kebersihan memori)
+        // Bersihkan gambar saat modal tutup (hemat memori)
         imageModal.addEventListener('hidden.bs.modal', function () {
             var modalImage = imageModal.querySelector('#previewImage');
             modalImage.src = '';
         });
+
+        // Logic Modal Reject
+        var rejectModal = document.getElementById('rejectModal');
+        rejectModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var id = button.getAttribute('data-id');
+            var itemName = button.getAttribute('data-item');
+            
+            var form = document.getElementById('rejectForm');
+            // Pastikan route ini sesuai dengan web.php kamu
+            form.action = '/inventory-returns/' + id + '/reject'; 
+            
+            document.getElementById('rejectItemName').textContent = itemName;
+        });
     });
 </script>
-
 @endsection
