@@ -47,6 +47,7 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
+                                <th>Foto</th>
                                 <th>Nama Barang</th>
                                 <th>Kategori</th>
                                 <th>Kondisi</th>
@@ -58,47 +59,45 @@
                         <tbody>
                             @forelse($inventories as $item)
                                 <tr>
-                                    {{-- NAMA BARANG & FOTO --}}
+                                    {{-- FOTO (Disamakan dengan Index) --}}
                                     <td>
-                                        <div class="d-flex align-items-center">
-                                            @if($item->item_photo)
-                                                <img src="{{ asset('storage/'.$item->item_photo) }}" class="rounded-3 me-3" width="45" height="45" style="object-fit: cover; border: 1px solid #eee;">
-                                            @else
-                                                <div class="rounded-3 bg-light text-secondary d-flex align-items-center justify-content-center me-3 border" style="width: 45px; height: 45px;">
-                                                    <i class="mdi mdi-image-off"></i>
-                                                </div>
-                                            @endif
-                                            <div>
-                                                <div class="fw-bold text-dark">{{ $item->item_name }}</div>
-                                                <small class="text-muted" style="font-size: 0.75rem;">
-                                                    SN: {{ $item->serial_number ?? '-' }}
-                                                </small>
+                                        @if($item->item_photo_path)
+                                             <img src="{{ asset('storage/'.$item->item_photo_path) }}" style="width: 50px; height: 50px; border-radius: 4px; object-fit: cover;">
+                                        @else
+                                            <div class="bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px; border-radius: 4px;">
+                                                <i class="mdi mdi-image-off"></i>
                                             </div>
-                                        </div>
+                                        @endif
                                     </td>
 
-                                    {{-- KATEGORI --}}
+                                    {{-- NAMA BARANG --}}
                                     <td>
-                                        <span class="badge bg-info bg-opacity-10 text-info border border-info">
-                                            {{ $item->category }}
-                                        </span>
+                                        <div class="fw-bold text-dark">{{ $item->item_name }}</div>
+                                        <small class="text-muted">
+                                            SN: {{ $item->serial_number ?? '-' }}
+                                        </small>
+                                    </td>
+
+                                    {{-- KATEGORI (Style teks biasa agar terbaca jelas) --}}
+                                    <td>
+                                        {{ ucfirst($item->category) }}
                                     </td>
 
                                     {{-- KONDISI (Logika Badge Warna) --}}
                                     <td>
                                         @php
                                             $badgeClass = match($item->condition) {
-                                                'Baru' => 'bg-success',
-                                                'Baik' => 'bg-primary',
-                                                'Rusak Ringan' => 'bg-warning text-dark',
-                                                'Rusak Berat' => 'bg-danger',
-                                                'Perbaikan' => 'bg-secondary',
-                                                default => 'bg-light text-dark border'
+                                                'Baru' => 'badge-success',     // Hijau
+                                                'Baik' => 'badge-primary',     // Biru
+                                                'Rusak Ringan' => 'badge-warning', // Kuning/Orange
+                                                'Rusak Berat' => 'badge-danger',   // Merah
+                                                'Perbaikan' => 'badge-info',       // Cyan/Biru Muda
+                                                default => 'badge-secondary'
                                             };
                                         @endphp
-                                        <span class="badge {{ $badgeClass }}">
+                                        <label class="badge {{ $badgeClass }}">
                                             {{ $item->condition }}
-                                        </span>
+                                        </label>
                                     </td>
 
                                     {{-- PEMEGANG (USER) --}}
@@ -127,7 +126,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-5 text-muted">
+                                    <td colspan="7" class="text-center py-5 text-muted">
                                         <div class="d-flex flex-column align-items-center">
                                             <i class="mdi mdi-package-variant-closed text-secondary opacity-25" style="font-size: 4rem;"></i>
                                             <p class="mt-3 fw-bold">Belum ada inventaris tercatat.</p>
