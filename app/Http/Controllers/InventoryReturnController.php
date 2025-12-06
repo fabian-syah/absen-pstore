@@ -34,8 +34,9 @@ class InventoryReturnController extends Controller
     public function store(Request $request, $id)
     {
         $request->validate([
-            'return_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120',
-            'note'         => 'nullable|string',
+            'return_photo'  => 'required|image|mimes:jpeg,png,jpg|max:5120',
+            'receiver_name' => 'required|string|max:255', // Validasi Nama Penerima
+            'note'          => 'nullable|string',
         ]);
 
         $inventory = Inventory::findOrFail($id);
@@ -55,13 +56,14 @@ class InventoryReturnController extends Controller
 
             // 2. Buat Data (Status Pending, admin_id KOSONG)
             InventoryReturn::create([
-                'inventory_id' => $inventory->id,
-                'user_id'      => $inventory->user_id,
-                'photo_path'   => $path,
-                'note'         => $request->note,
-                'return_date'  => now(),
-                'status'       => 'pending',
-                'admin_id'     => null, // PENTING: Dikosongkan dulu karena belum diapprove
+                'inventory_id'  => $inventory->id,
+                'user_id'       => $inventory->user_id,
+                'receiver_name' => $request->receiver_name, // Simpan Nama Penerima
+                'photo_path'    => $path,
+                'note'          => $request->note,
+                'return_date'   => now(),
+                'status'        => 'pending',
+                'admin_id'      => null, // PENTING: Dikosongkan dulu karena belum diapprove
             ]);
 
             return redirect()->route('inventory.index')->with('success', 'Permintaan pengembalian dikirim. Menunggu verifikasi Admin.');
@@ -90,15 +92,14 @@ class InventoryReturnController extends Controller
         try {
             // 1. Update Status Pengembalian jadi Approved
             $returnRequest->update([
-                'status' => 'approved',
+                'status'   => 'approved',
                 'admin_id' => Auth::id()
             ]);
 
             // 2. Update Inventory jadi Available (Lepas User)
-            // SOLUSI: Hapus update 'condition' => 'Baik' karena tidak sesuai ENUM database
             $inventory->update([
                 'user_id' => null,
-                // 'condition' => 'Baik' <--- HAPUS BARIS INI
+                // 'condition' => 'Baik' // Dihapus agar tidak error ENUM
             ]);
 
             return back()->with('success', 'Pengembalian disetujui. Barang sekarang statusnya Available.');
@@ -107,7 +108,7 @@ class InventoryReturnController extends Controller
         }
     }
 
-    // Helper Compress Image (Tetap sama)
+    // Helper Compress Image
     private function compressAndSaveImage($file, $path, $targetKb)
     {
         $source = imagecreatefromstring(file_get_contents($file));
