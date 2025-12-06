@@ -21,7 +21,7 @@ class InventoryController extends Controller
 
         // === FILTER HAK AKSES ===
         if ($user->role == 'admin') {
-            // Admin: Lihat Semua
+            // Admin: Lihat Semua (tapi tetap via route index biasa)
         } elseif ($user->role == 'audit') {
             // Audit: Lihat aset di cabang yang dipegang + aset sendiri
             $branchIds = $user->branches()->pluck('branches.id');
@@ -55,6 +55,45 @@ class InventoryController extends Controller
     }
 
     /**
+     * [BARU] Tampilkan SEMUA DATA (KHUSUS ADMIN)
+     * Menampilkan semua barang (baik yang dipakai maupun di gudang) tanpa filter user.
+     */
+    public function adminIndex(Request $request)
+    {
+        // 1. CEK HAK AKSES (Security Layer)
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Akses ditolak. Halaman ini khusus Admin.');
+        }
+
+        // 2. QUERY SEMUA DATA
+        // Kita ambil relasi user dan branch untuk keperluan search & display
+        $query = Inventory::with(['user', 'user.branch']); 
+
+        // 3. FITUR PENCARIAN GLOBAL
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('item_name', 'like', '%' . $search . '%')
+                  ->orWhere('serial_number', 'like', '%' . $search . '%')
+                  ->orWhere('category', 'like', '%' . $search . '%')
+                  ->orWhere('condition', 'like', '%' . $search . '%')
+                  ->orWhereHas('user', function($u) use ($search) {
+                      $u->where('name', 'like', '%' . $search . '%')
+                        ->orWhereHas('branch', function($b) use ($search) {
+                            $b->where('name', 'like', '%' . $search . '%');
+                        });
+                  });
+            });
+        }
+
+        // 4. RETURN VIEW (Gunakan view yang sama)
+        $inventories = $query->latest()->paginate(10)->withQueryString();
+        $pageTitle = 'Master Data Inventaris (Admin View)';
+        
+        return view('inventory.index', compact('inventories', 'pageTitle'));
+    }
+
+    /**
      * Tampilkan List Barang AVAILABLE (Gudang)
      */
     public function available(Request $request)
@@ -78,10 +117,6 @@ class InventoryController extends Controller
 
     /**
      * Form Create
-     * Logic: 
-     * - Admin: Bisa pilih semua user.
-     * - Audit/Leader (via Menu Cabang): Bisa pilih user di cabang tertentu (jika ada param branch_id).
-     * - Default (Menu Utama): Hanya diri sendiri.
      */
     public function create(Request $request)
     {
@@ -165,7 +200,7 @@ class InventoryController extends Controller
                 // Pastikan user yang dipilih benar-benar ada di cabang target (Security Layer)
                 $targetUser = User::find($request->user_id);
                 if($targetUser->branch_id != $request->target_branch_id) {
-                     return back()->with('error', 'User tidak valid untuk cabang ini.');
+                      return back()->with('error', 'User tidak valid untuk cabang ini.');
                 }
                 $data['user_id'] = $request->user_id;
             }

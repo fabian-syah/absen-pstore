@@ -161,8 +161,11 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::post('/{id}/return', [InventoryReturnController::class, 'store'])->name('process-return');
         });
 
-        // 5. EDIT & DELETE - ADMIN ONLY
+        // 5. EDIT & DELETE & ALL DATA - ADMIN ONLY
         Route::middleware(['role:admin'])->group(function () {
+            // [BARU] Master Data (Admin View - Semua Data)
+            Route::get('/all-data', [InventoryController::class, 'adminIndex'])->name('admin.all');
+
             Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
             Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
             Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');

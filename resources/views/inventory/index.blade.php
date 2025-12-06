@@ -9,13 +9,14 @@
             <div class="card-body">
                 <h4 class="card-title">{{ $pageTitle ?? 'Daftar Inventaris' }}</h4>
                 
-                {{-- ... (BAGIAN TOMBOL SAMA SEPERTI SEBELUMNYA) ... --}}
                 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                     @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'security', 'user_biasa']))
                         <a href="{{ route('inventory.create') }}" class="btn btn-primary btn-sm">
                             <i class="mdi mdi-plus"></i> Tambah Barang
                         </a>
                     @endif
+                    
+                    {{-- TOMBOL NAVIGASI FILTER --}}
                     <div class="btn-group" role="group">
                         <a href="{{ route('inventory.index') }}" class="btn btn-sm {{ request()->routeIs('inventory.index') ? 'btn-info' : 'btn-outline-info' }}">
                             <i class="mdi mdi-account-box"></i> Sedang Dipakai
@@ -23,7 +24,15 @@
                         <a href="{{ route('inventory.available') }}" class="btn btn-sm {{ request()->routeIs('inventory.available') ? 'btn-success' : 'btn-outline-success' }}">
                             <i class="mdi mdi-warehouse"></i> Dikembalikan (Available)
                         </a>
+
+                        {{-- [BARU] TOMBOL KHUSUS ADMIN: LIHAT SEMUA --}}
+                        @if(auth()->user()->role == 'admin')
+                            <a href="{{ route('inventory.admin.all') }}" class="btn btn-sm {{ request()->routeIs('inventory.admin.all') ? 'btn-danger' : 'btn-outline-danger' }}">
+                                <i class="mdi mdi-database"></i> Master Data (Semua)
+                            </a>
+                        @endif
                     </div>
+
                     <form action="{{ url()->current() }}" method="GET" class="d-flex">
                         <div class="input-group input-group-sm" style="width: 250px;">
                             <input type="text" name="search" class="form-control" placeholder="Cari aset / user..." value="{{ request('search') }}">
@@ -44,7 +53,7 @@
                     </div>
                 @endif
                 
-                {{-- TABLE CONTENT (SAMA SEPERTI SEBELUMNYA) --}}
+                {{-- TABLE CONTENT --}}
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
