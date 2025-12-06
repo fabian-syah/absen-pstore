@@ -143,6 +143,20 @@
             margin-bottom: 1rem;
         }
 
+        .audit-pill {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50px;
+            padding: 4px 12px;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .audit-pill:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
         @media (max-width: 768px) {
             .team-header {
                 padding: 1.5rem;
@@ -204,6 +218,38 @@
                             <i class="mdi mdi-account-group me-2"></i>{{ $myTeam->count() }} Orang
                         </span>
                     </div>
+
+                    {{-- [BARU] Bagian Tampilan Audit Penanggung Jawab --}}
+                    @if(isset($assignedAudits) && $assignedAudits->count() > 0)
+                        <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <small class="text-white-50 fw-bold text-uppercase me-2" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                                    <i class="mdi mdi-shield-account me-1"></i> Audit Wilayah:
+                                </small>
+                                
+                                @foreach($assignedAudits as $audit)
+                                    <div class="audit-pill">
+                                        {{-- Avatar Kecil Audit --}}
+                                        @if($audit->profile_photo_path)
+                                            <img src="{{ Storage::url($audit->profile_photo_path) }}" 
+                                                 class="rounded-circle me-2" 
+                                                 width="20" height="20" 
+                                                 style="object-fit: cover; border: 1px solid white;">
+                                        @else
+                                            <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center me-2 fw-bold"
+                                                 style="width: 20px; height: 20px; font-size: 10px;">
+                                                {{ substr($audit->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        
+                                        <span class="text-white small fw-bold">{{ $audit->name }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                    {{-- Akhir Bagian Audit --}}
+
                 </div>
 
                 <div class="card-body p-0">

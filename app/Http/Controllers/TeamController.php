@@ -72,7 +72,18 @@ class TeamController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        return view('user_biasa.team', compact('myTeam', 'myBranchIds', 'controlledBranches'));
+        // 4. [BARU] AMBIL DATA AUDIT YANG MEMEGANG CABANG INI
+        $assignedAudits = collect();
+        if (!empty($myBranchIds)) {
+            $assignedAudits = User::where('role', 'audit')
+                ->where('is_active', true)
+                ->whereHas('branches', function($q) use ($myBranchIds) {
+                    $q->whereIn('branches.id', $myBranchIds);
+                })
+                ->get();
+        }
+
+        return view('user_biasa.team', compact('myTeam', 'myBranchIds', 'controlledBranches', 'assignedAudits'));
     }
 
     public function showBranch($id)
