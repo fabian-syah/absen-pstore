@@ -47,7 +47,20 @@
                 </div>
                 
                 <h4 class="fw-bold mt-2">{{ $user->name }}</h4>
-                <p class="text-muted mb-2">{{ strtoupper(str_replace('_', ' ', $user->role)) }}</p>
+                <p class="text-muted mb-1">{{ strtoupper(str_replace('_', ' ', $user->role)) }}</p>
+
+                {{-- STATUS AKTIF / NON-AKTIF (BARU DITAMBAHKAN) --}}
+                <div class="mb-3">
+                    @if($user->is_active)
+                        <span class="badge rounded-pill bg-success px-3 py-2">
+                            <i class="mdi mdi-account-check me-1"></i> AKTIF
+                        </span>
+                    @else
+                        <span class="badge rounded-pill bg-danger px-3 py-2">
+                            <i class="mdi mdi-account-off me-1"></i> NON-AKTIF
+                        </span>
+                    @endif
+                </div>
 
                 {{-- Menu Navigasi --}}
                 <div class="text-start mb-4 mt-4">
@@ -70,14 +83,14 @@
                                 <i class="mdi mdi-close-circle"></i> Cabut Verifikasi
                             </button>
                         @else
-                            {{-- Tombol Verifikasi (Hanya berfungsi jika controller meloloskan, jika tidak akan redirect back with error) --}}
+                            {{-- Tombol Verifikasi --}}
                             <button type="submit" class="btn btn-primary btn-sm w-100">
                                 <i class="mdi mdi-check-decagram"></i> Verifikasi Akun
                             </button>
                         @endif
                     </form>
 
-                    {{-- TOMBOL LIHAT KTP (POP UP) - DI BAWAH VERIFIKASI --}}
+                    {{-- TOMBOL LIHAT KTP (POP UP) --}}
                     @if($user->ktp_photo_path)
                         <button type="button" class="btn btn-info btn-sm text-white w-100 mt-1" data-bs-toggle="modal" data-bs-target="#ktpPhotoModal">
                             <i class="mdi mdi-card-account-details-outline"></i> Lihat Foto KTP
@@ -246,7 +259,7 @@
     </div>
 </div>
 
-{{-- MODAL FOTO KTP (BARU DITAMBAHKAN) --}}
+{{-- MODAL FOTO KTP --}}
 <div class="modal fade" id="ktpPhotoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-white shadow-lg">
