@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\Inventory; // Jangan lupa use Model Inventory
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,35 +25,43 @@ class BranchInventoryController extends Controller
     /**
      * Menampilkan daftar cabang beserta ringkasan inventarisnya.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $query = Branch::query();
 
-        // --- LOGIC FILTER DATA CABANG ---
+        // --- 1. LOGIC FILTER DATA CABANG (Security Layer) ---
 
-        // 1. Jika Admin Cabang ATAU Leader -> Hanya lihat cabangnya sendiri
+        // Jika Admin Cabang ATAU Leader -> Hanya lihat cabangnya sendiri
         if (($user->role == 'admin' && $user->branch_id != null) || $user->role == 'leader') {
             $query->where('id', $user->branch_id);
         } 
-        
-        // 2. Jika Audit -> Hanya lihat cabang yang diaudit (dari tabel pivot)
+        // Jika Audit -> Hanya lihat cabang yang diaudit (dari tabel pivot)
         elseif ($user->role == 'audit') {
             $auditBranchIds = $user->branches->pluck('id')->toArray();
             $query->whereIn('id', $auditBranchIds);
         }
-        
-        // 3. Jika Super Admin (Admin tanpa branch_id) -> Melihat SEMUA (Tidak ada where)
+        // Jika Super Admin (Admin tanpa branch_id) -> Melihat SEMUA (Tidak ada where)
 
         
-        // --- AMBIL DATA DENGAN EAGER LOADING ---
+        // --- 2. LOGIC SEARCH / PENCARIAN ---
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")       // Cari Nama Cabang
+                  ->orWhere('address', 'like', "%{$search}%"); // Cari Alamat Cabang
+            });
+        }
+
+
+        // --- 3. AMBIL DATA DENGAN EAGER LOADING ---
         // Kita perlu relasi: Branch -> Users -> Inventories
         $branches = $query->with(['users.inventories' => function ($q) {
-            // Opsional: Jika ingin memfilter barang rusak berat agar tidak dihitung, buka komen ini:
-            // $q->where('condition', '!=', 'Rusak Berat'); 
+            // Kita bisa filter barang di sini jika mau
         }])->latest()->get();
 
-        // --- HITUNG RINGKASAN KATEGORI ---
+
+        // --- 4. HITUNG RINGKASAN KATEGORI ---
         $branches->transform(function ($branch) {
             // Gabungkan semua inventaris dari semua user di cabang ini menjadi satu koleksi
             $allInventories = $branch->users->flatMap(function ($user) {
@@ -71,15 +80,14 @@ class BranchInventoryController extends Controller
             return $branch;
         });
 
-        return view('inventory.branch_inventory_list', compact('branches'));
+        // Pastikan nama view sesuai dengan lokasi file index.blade.php kamu
+        return view('inventory.branch.index', compact('branches'));
     }
-
-    // Tambahkan method ini di dalam class BranchInventoryController
 
     /**
      * Menampilkan Detail Inventaris di Satu Cabang Tertentu
      */
-    public function show($id)
+    public function show($id, Request $request)
     {
         $user = Auth::user();
         $branch = Branch::findOrFail($id);
@@ -99,15 +107,28 @@ class BranchInventoryController extends Controller
         }
 
         // --- AMBIL DATA INVENTARIS ---
-        // Ambil semua barang yang user_id nya adalah karyawan di cabang ini
-        // Menggunakan whereHas untuk memfilter user berdasarkan branch_id
-        $inventories = \App\Models\Inventory::with('user')
+        $inventoryQuery = Inventory::with('user')
             ->whereHas('user', function($q) use ($branch) {
                 $q->where('branch_id', $branch->id);
-            })
-            ->latest()
-            ->get();
+            });
 
-        return view('inventory.branch_inventory_detail', compact('branch', 'inventories'));
+        // --- SEARCH DI HALAMAN DETAIL (Opsional tapi bagus) ---
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $inventoryQuery->where(function($q) use ($search) {
+                $q->where('item_name', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($sub) use ($search) {
+                      $sub->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $inventories = $inventoryQuery->latest()->get();
+
+        // Pastikan nama view sesuai dengan lokasi file detail kamu
+        // Biasanya: inventory/branch/detail.blade.php atau inventory/branch_inventory_detail.blade.php
+        return view('inventory.branch.detail', compact('branch', 'inventories'));
     }
 }

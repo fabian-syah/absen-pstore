@@ -9,9 +9,9 @@
     .branch-section-title {
         position: relative;
         padding-left: 1.5rem;
-        margin-bottom: 1.5rem;
         color: #1e293b;
         font-weight: 700;
+        margin-bottom: 0; /* Reset margin bottom karena pakai flex */
     }
 
     .branch-section-title::before {
@@ -104,12 +104,30 @@
 @endpush
 
 @section('content')
-    <div class="row">
-        <div class="col-12">
+    {{-- Header Section: Judul & Search Bar --}}
+    <div class="row align-items-center mb-4">
+        <div class="col-md-6 mb-3 mb-md-0">
             <h4 class="branch-section-title">Ringkasan Aset Cabang ({{ count($branches) }})</h4>
+        </div>
+        <div class="col-md-6">
+            <form action="{{ url()->current() }}" method="GET">
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="mdi mdi-magnify text-muted"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control border-start-0 ps-0" 
+                           placeholder="Cari Nama Cabang atau Alamat..." 
+                           value="{{ request('search') }}">
+                    <button class="btn btn-primary text-white" type="submit">Cari</button>
+                    @if(request('search'))
+                        <a href="{{ url()->current() }}" class="btn btn-light border" title="Reset"><i class="mdi mdi-refresh"></i></a>
+                    @endif
+                </div>
+            </form>
         </div>
     </div>
 
+    {{-- Content Section: Grid Card --}}
     <div class="row">
         @forelse ($branches as $branch)
             <div class="col-xl-3 col-md-6 mb-4">
@@ -180,8 +198,10 @@
             <div class="col-12">
                 <div class="card p-5 text-center border-0 shadow-sm">
                     <div class="text-muted">
-                        <i class="mdi mdi-package-variant" style="font-size: 3rem;"></i>
-                        <p class="mt-2">Tidak ada data cabang yang ditemukan untuk Anda.</p>
+                        <i class="mdi mdi-magnify-remove-outline" style="font-size: 4rem;"></i>
+                        <h4 class="mt-3">Data tidak ditemukan</h4>
+                        <p>Tidak ada cabang yang cocok dengan pencarian "<strong>{{ request('search') }}</strong>".</p>
+                        <a href="{{ url()->current() }}" class="btn btn-secondary btn-sm mt-2">Reset Pencarian</a>
                     </div>
                 </div>
             </div>
