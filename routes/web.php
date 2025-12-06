@@ -197,6 +197,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Approval Requests
         Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
+        
+        // --- ADDED THIS LINE (FIX ERROR) ---
+        Route::delete('/users/{user}/reject-photo', [UserController::class, 'rejectPhotoRequest'])->name('users.reject-photo');
+        
         Route::get('/users/ktp-requests', [UserController::class, 'ktpRequests'])->name('users.ktp-requests');
         Route::patch('/users/{user}/approve-ktp', [UserController::class, 'approveKtpRequest'])->name('users.approve-ktp');
         Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');

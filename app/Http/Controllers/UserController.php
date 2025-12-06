@@ -318,13 +318,95 @@ class UserController extends Controller
         return view('users.ktp-requests', compact('users'));
     }
 
+    // ==========================================================
+    // LOGIKA APPROVE & REJECT FOTO PROFIL (Dengan Hapus File)
+    // ==========================================================
+
     public function approvePhotoRequest(User $user)
     {
-        if ($user->photo_request_status !== 'pending') {
-            return back()->with('error', 'Tidak ada permintaan ganti foto yang pending.');
+        // 1. Cek apakah ada file temp (pengajuan baru)
+        if (!$user->profile_photo_temp_path) {
+            return back()->with('error', 'Tidak ada file pengajuan foto baru.');
         }
-        $user->update(['photo_request_status' => 'approved']);
-        return back()->with('success', 'Izin ganti foto diberikan. User dapat mengupload foto baru sekarang.');
+
+        // 2. HAPUS FOTO LAMA (JIKA ADA) BIAR HEMAT STORAGE
+        if ($user->profile_photo_path) {
+            // Cek fisik file di storage, lalu hapus
+            if (Storage::disk('public')->exists($user->profile_photo_path)) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+        }
+
+        // 3. PINDAHKAN LOGIKA DB (Temp jadi Utama)
+        $user->update([
+            'profile_photo_path' => $user->profile_photo_temp_path, // Path foto utama mengambil dari temp
+            'profile_photo_temp_path' => null, // Kosongkan temp
+            'photo_request_status' => 'approved' // Set status
+        ]);
+
+        return back()->with('success', 'Izin ganti foto diberikan & foto lama dihapus.');
+    }
+
+    public function rejectPhotoRequest(User $user)
+    {
+        // 1. Hapus file yang baru diajukan (Temp) karena ditolak
+        if ($user->profile_photo_temp_path) {
+            if (Storage::disk('public')->exists($user->profile_photo_temp_path)) {
+                Storage::disk('public')->delete($user->profile_photo_temp_path);
+            }
+        }
+
+        // 2. Reset kolom temp dan update status
+        $user->update([
+            'profile_photo_temp_path' => null,
+            'photo_request_status' => 'rejected'
+        ]);
+        
+        return back()->with('success', 'Pengajuan foto ditolak. File pengajuan dihapus.');
+    }
+
+    // ==========================================================
+    // LOGIKA APPROVE & REJECT KTP (Dengan Hapus File)
+    // ==========================================================
+
+    public function approveKtpRequest(User $user)
+    {
+        if (!$user->ktp_photo_temp_path) {
+            return back()->with('error', 'Tidak ada file pengajuan KTP baru.');
+        }
+
+        // Hapus KTP Lama
+        if ($user->ktp_photo_path) {
+            if (Storage::disk('public')->exists($user->ktp_photo_path)) {
+                Storage::disk('public')->delete($user->ktp_photo_path);
+            }
+        }
+        
+        // Pindahkan Temp ke Utama
+        $user->update([
+            'ktp_photo_path' => $user->ktp_photo_temp_path,
+            'ktp_photo_temp_path' => null,
+            'ktp_request_status' => 'none' // atau approved
+        ]);
+
+        return back()->with('success', 'Permintaan ganti KTP disetujui & file lama dihapus.');
+    }
+
+    public function rejectKtpRequest(User $user)
+    {
+        // Hapus file temp KTP
+        if ($user->ktp_photo_temp_path) {
+            if (Storage::disk('public')->exists($user->ktp_photo_temp_path)) {
+                Storage::disk('public')->delete($user->ktp_photo_temp_path);
+            }
+        }
+
+        $user->update([
+            'ktp_photo_temp_path' => null,
+            'ktp_request_status' => 'rejected'
+        ]);
+
+        return back()->with('success', 'Permintaan ganti KTP ditolak.');
     }
 
     public function toggleStatus(User $user)
@@ -357,32 +439,6 @@ class UserController extends Controller
             'late_percentage' => 0,
             'current_month' => Carbon::now()->format('F Y')
         ];
-    }
-
-    public function approveKtpRequest(User $user)
-    {
-        if ($user->ktp_photo_path) {
-            Storage::disk('public')->delete($user->ktp_photo_path);
-        }
-        $newPath = $user->ktp_photo_temp_path;
-        $user->update([
-            'ktp_photo_path' => $newPath,
-            'ktp_photo_temp_path' => null,
-            'ktp_request_status' => 'none'
-        ]);
-        return back()->with('success', 'Permintaan ganti KTP disetujui.');
-    }
-
-    public function rejectKtpRequest(User $user)
-    {
-        if ($user->ktp_photo_temp_path) {
-            Storage::disk('public')->delete($user->ktp_photo_temp_path);
-        }
-        $user->update([
-            'ktp_photo_temp_path' => null,
-            'ktp_request_status' => 'rejected'
-        ]);
-        return back()->with('success', 'Permintaan ganti KTP ditolak.');
     }
 
     public function updateFcmToken(Request $request)
