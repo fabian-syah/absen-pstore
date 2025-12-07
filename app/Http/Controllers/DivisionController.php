@@ -8,11 +8,19 @@ use Illuminate\Http\Request;
 class DivisionController extends Controller
 {
     /**
-     * Menampilkan daftar semua divisi.
+     * Menampilkan daftar semua divisi (Dengan Fitur Search).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $divisions = Division::latest()->get(); // Mengambil data terbaru
+        $query = Division::query();
+
+        // LOGIKA SEARCH
+        if ($request->has('search') && $request->search != null) {
+            $query->where('name', 'LIKE', '%' . $request->search . '%');
+        }
+
+        $divisions = $query->latest()->get(); // Mengambil data terbaru (terfilter jika ada search)
+
         // Memanggil file view: resources/views/division/division_index.blade.php
         return view('division.division_index', compact('divisions'));
     }

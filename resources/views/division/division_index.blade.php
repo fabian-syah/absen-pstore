@@ -13,12 +13,32 @@
         <div class="col-12 grid-margin">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Daftar Divisi</h4>
+                    <h4 class="card-title mb-4">Daftar Divisi</h4>
 
-                    {{-- Tombol Tambah Data --}}
-                    <a href="{{ route('divisions.create') }}" class="btn btn-primary btn-sm mb-3">
-                        <i class="mdi mdi-plus"></i> Tambah Divisi Baru
-                    </a>
+                    {{-- Container Flex untuk Tombol Tambah & Search --}}
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        
+                        {{-- Tombol Tambah Data --}}
+                        <a href="{{ route('divisions.create') }}" class="btn btn-primary btn-sm">
+                            <i class="mdi mdi-plus"></i> Tambah Divisi Baru
+                        </a>
+
+                        {{-- Form Pencarian --}}
+                        <form action="{{ route('divisions.index') }}" method="GET" class="d-flex">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" placeholder="Cari nama divisi..." value="{{ request('search') }}">
+                                <button class="btn btn-outline-primary" type="submit">
+                                    <i class="mdi mdi-magnify"></i> Cari
+                                </button>
+                                @if(request('search'))
+                                    <a href="{{ route('divisions.index') }}" class="btn btn-outline-danger" title="Reset">
+                                        <i class="mdi mdi-close"></i>
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
+
+                    </div>
 
                     {{-- Notifikasi Sukses --}}
                     @if (session('success'))
@@ -79,7 +99,14 @@
                                 @empty
                                     {{-- Jika data kosong --}}
                                     <tr>
-                                        <td colspan="4" class="text-center">Belum ada data divisi.</td>
+                                        <td colspan="4" class="text-center py-4">
+                                            @if(request('search'))
+                                                <p class="text-muted mb-0">Divisi "{{ request('search') }}" tidak ditemukan.</p>
+                                                <a href="{{ route('divisions.index') }}">Reset Pencarian</a>
+                                            @else
+                                                <p class="text-muted mb-0">Belum ada data divisi.</p>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
