@@ -13,8 +13,9 @@ class JobTargetController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Target PRIBADI (Hanya Harian)
-        // User melihat target buatannya sendiri untuk hari ini
+        // -----------------------------------------------------------
+        // 1. DATA TARGET PRIBADI (Harian - Card Atas)
+        // -----------------------------------------------------------
         $myDailyTargets = JobTarget::where('user_id', $user->id)
             ->where('type', 'individual')
             ->where('period', 'daily')
@@ -22,7 +23,10 @@ class JobTargetController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // 2. Target TIM (Harian, Bulanan, Tahunan)
+        // -----------------------------------------------------------
+        // 2. DATA TARGET TIM / CABANG (Card Bawah)
+        // -----------------------------------------------------------
+        
         // Query Dasar
         $teamQuery = JobTarget::with(['user', 'creator'])->where('type', 'team');
 
@@ -43,10 +47,19 @@ class JobTargetController extends Controller
             $teamQuery->where('user_id', $user->id);
         }
 
-        // Pisahkan berdasarkan Periode
-        $teamDaily   = (clone $teamQuery)->where('period', 'daily')->whereDate('start_date', '<=', today())->whereDate('deadline', '>=', today())->get();
-        $teamMonthly = (clone $teamQuery)->where('period', 'monthly')->whereMonth('start_date', now()->month)->get();
-        $teamYearly  = (clone $teamQuery)->where('period', 'yearly')->whereYear('start_date', now()->year)->get();
+        // Pisahkan berdasarkan Periode untuk Tab di Card Bawah
+        $teamDaily   = (clone $teamQuery)->where('period', 'daily')
+                        ->whereDate('start_date', '<=', today())
+                        ->whereDate('deadline', '>=', today())
+                        ->orderBy('deadline', 'asc')->get();
+
+        $teamMonthly = (clone $teamQuery)->where('period', 'monthly')
+                        ->whereMonth('start_date', now()->month)
+                        ->orderBy('deadline', 'asc')->get();
+
+        $teamYearly  = (clone $teamQuery)->where('period', 'yearly')
+                        ->whereYear('start_date', now()->year)
+                        ->orderBy('deadline', 'asc')->get();
 
         // Data User untuk Dropdown (Hanya untuk Leader/Admin saat buat target tim)
         $teamMembers = [];
@@ -54,9 +67,9 @@ class JobTargetController extends Controller
             $memberQuery = User::where('is_active', true)->where('role', '!=', 'admin');
             
             if ($user->role == 'leader') {
-                $memberQuery->where('division_id', $user->division_id); // Hanya anggota divisinya
+                $memberQuery->where('division_id', $user->division_id); 
             }
-            // Jika admin/audit, logic filter cabang bisa ditambahkan di sini
+            // Logic filter cabang admin/audit bisa ditambahkan disini
             
             $teamMembers = $memberQuery->get();
         }
@@ -99,7 +112,7 @@ class JobTargetController extends Controller
             }
 
             $request->validate([
-                'user_id' => 'required|exists:users,id', // Ditugaskan ke siapa
+                'user_id' => 'required|exists:users,id', 
                 'period' => 'required|in:daily,monthly,yearly',
                 'deadline' => 'required|date',
             ]);
@@ -116,7 +129,7 @@ class JobTargetController extends Controller
                 'type' => 'team',
                 'period' => $request->period,
                 'status' => 'pending',
-                'start_date' => $request->start_date ?? today(), // Default hari ini jika kosong
+                'start_date' => $request->start_date ?? today(),
                 'deadline' => $request->deadline,
                 'priority' => $request->priority ?? 'medium',
             ]);
@@ -133,10 +146,9 @@ class JobTargetController extends Controller
 
         // CEK HAK AKSES
         if ($target->type == 'individual') {
-            // Pribadi: Hanya pemilik yang bisa toggle
             if ($target->user_id != $user->id) abort(403);
         } else {
-            // Tim: Hanya Leader/Admin/Creator yang bisa toggle (Bukan user biasa)
+            // Tim: Hanya Leader/Admin/Creator yang bisa toggle
             if (!in_array($user->role, ['admin', 'leader', 'audit']) && $target->creator_id != $user->id) {
                 return back()->with('error', 'Target tim hanya bisa diselesaikan oleh Leader/Admin.');
             }
@@ -167,7 +179,6 @@ class JobTargetController extends Controller
         if ($target->type == 'individual') {
             if ($target->user_id != $user->id) abort(403);
         } else {
-            // Tim: Hanya Leader/Admin
             if (!in_array($user->role, ['admin', 'leader', 'audit'])) abort(403);
         }
 
