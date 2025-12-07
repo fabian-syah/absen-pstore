@@ -72,7 +72,7 @@ class TeamController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        // 4. [BARU] AMBIL DATA AUDIT YANG MEMEGANG CABANG INI
+        // 4. AMBIL DATA AUDIT YANG MEMEGANG CABANG INI
         $assignedAudits = collect();
         if (!empty($myBranchIds)) {
             $assignedAudits = User::where('role', 'audit')
@@ -83,14 +83,40 @@ class TeamController extends Controller
                 ->get();
         }
 
-        return view('user_biasa.team', compact('myTeam', 'myBranchIds', 'controlledBranches', 'assignedAudits'));
+        // --- [BARU] LOGIKA STATISTIK SUMMARY ---
+        $stats = [
+            'total' => $myTeam->count(),
+            'hadir' => $myTeam->filter(function($member) {
+                // Logic: Dianggap hadir/online jika sudah absen masuk (dan belum pulang) ATAU sedang WFH
+                $att = $member->attendances->first();
+                $leave = $member->leaveRequests->first();
+                $isWfh = $leave && $leave->type == 'wfh';
+                
+                // Jika ingin menghitung yang "Sudah Pulang" juga sebagai hadir, hapus bagian (!$att->check_out_time)
+                // Disini saya set logicnya: Yang sedang aktif (Online) + Yang sudah pulang juga dihitung hadir hari ini
+                return ($att) || $isWfh; 
+            })->count(),
+            'izin_sakit' => $myTeam->filter(function($member) {
+                $leave = $member->leaveRequests->first();
+                // Hitung sakit/izin/cuti (kecuali WFH karena WFH dihitung kerja)
+                return $leave && in_array($leave->type, ['sakit', 'izin', 'cuti']);
+            })->count(),
+            'belum_hadir' => 0 // Inisialisasi
+        ];
+
+        // Hitung sisa yang belum hadir (Total - (Hadir + Izin/Sakit))
+        // Note: Logic ini asumsi sederhana, bisa disesuaikan jika ada kondisi alpha
+        $stats['belum_hadir'] = $stats['total'] - ($stats['hadir'] + $stats['izin_sakit']);
+        if($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0; // Prevent negative
+
+        return view('user_biasa.team', compact('myTeam', 'myBranchIds', 'controlledBranches', 'assignedAudits', 'stats'));
     }
 
     public function showBranch($id)
     {
         $user = Auth::user();
 
-        // Validasi Akses (Pastikan Audit/Admin berhak lihat cabang ini)
+        // Validasi Akses
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
             if (!in_array($id, $allowedBranches)) abort(403);
@@ -100,16 +126,14 @@ class TeamController extends Controller
 
         $branch = Branch::findOrFail($id);
 
-        // Ambil karyawan di cabang ini
         $employees = User::where('branch_id', $id)
-            ->where('role', '!=', 'admin') // Sembunyikan admin
+            ->where('role', '!=', 'admin')
             ->where('is_active', true)
             ->with(['division', 'attendances' => function ($q) {
                 $q->whereDate('check_in_time', today());
             }])
             ->get();
 
-        // LOGIKA BARU: Attach status Izin/Sakit hari ini ke setiap karyawan
         foreach ($employees as $emp) {
             $todayLeave = LeaveRequest::where('user_id', $emp->id)
                 ->where('status', 'approved')
@@ -126,7 +150,6 @@ class TeamController extends Controller
                 })
                 ->first();
 
-            // Simpan ke atribut sementara di object user
             $emp->today_leave = $todayLeave;
         }
 
@@ -137,14 +160,11 @@ class TeamController extends Controller
     {
         $user = Auth::user();
 
-        // Pastikan hanya audit yang bisa akses
         if ($user->role !== 'audit') {
             abort(403, 'Unauthorized action.');
         }
 
         $myId = $user->id;
-
-        // 1. KUMPULKAN ID CABANG MILIK USER
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
 
         if ($user->branch_id) {
@@ -153,7 +173,6 @@ class TeamController extends Controller
 
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
-        // 2. AMBIL DATA CABANG YANG DIKONTROL
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->withCount(['users' => function ($q) {
                 $q->where('is_active', true);
@@ -164,14 +183,10 @@ class TeamController extends Controller
         return view('user_biasa.my_branches', compact('controlledBranches'));
     }
 
-    /**
-     * Menampilkan riwayat absensi karyawan (UPDATE FIX)
-     */
     public function showEmployeeHistory(Request $request, $branchId, $employeeId)
     {
         $user = Auth::user();
 
-        // 1. Validasi Akses Cabang
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
             if (!in_array($branchId, $allowedBranches)) {
@@ -185,11 +200,9 @@ class TeamController extends Controller
 
         $employee = User::with(['division', 'branch'])->findOrFail($employeeId);
 
-        // 2. Filter Tanggal & Navigasi
         $selectedMonth = $request->get('month', date('m'));
         $selectedYear = $request->get('year', date('Y'));
 
-        // --- FIX: TAMBAHKAN LOGIKA NAVIGASI (Prev/Next) ---
         $currentDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1);
         $prevDate = $currentDate->copy()->subMonth();
         $nextDate = $currentDate->copy()->addMonth();
@@ -198,9 +211,7 @@ class TeamController extends Controller
         $prevYear  = $prevDate->year;
         $nextMonth = $nextDate->month;
         $nextYear  = $nextDate->year;
-        // --------------------------------------------------
 
-        // 3. Ambil Data (Menggunakan Private Helper agar Rapi & Konsisten)
         $data = $this->getHistoryData($employee, $selectedMonth, $selectedYear);
         $history = $data['history'];
         $summary = $data['summary'];
@@ -211,16 +222,13 @@ class TeamController extends Controller
             'selectedMonth',
             'selectedYear',
             'employee',
-            'prevMonth', 'prevYear', // <- Variable ini sekarang dikirim
-            'nextMonth', 'nextYear'  // <- Variable ini sekarang dikirim
+            'prevMonth', 'prevYear',
+            'nextMonth', 'nextYear'
         ));
     }
 
-    // --- HELPER PRIVATE (LOGIKA PENGGABUNGAN DATA & SUMMARY) ---
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        // A. AMBIL DATA ABSENSI REAL
-        // Eager load 'verifier' untuk mencegah N+1 Query di view
         $attendances = Attendance::with('verifier') 
             ->where('user_id', $user->id)
             ->whereYear('check_in_time', $selectedYear)
@@ -228,7 +236,6 @@ class TeamController extends Controller
             ->orderBy('check_in_time', 'desc')
             ->get();
 
-        // B. AMBIL DATA IZIN/CUTI (Approved)
         $leaves = LeaveRequest::where('user_id', $user->id)
             ->where('status', 'approved')
             ->where('is_active', true)
@@ -240,7 +247,6 @@ class TeamController extends Controller
             })
             ->get();
 
-        // C. MERGE DATA
         $historyCollection = $attendances;
 
         foreach ($leaves as $leave) {
@@ -251,7 +257,6 @@ class TeamController extends Controller
             foreach ($period as $date) {
                 if ($date->month == $selectedMonth && $date->year == $selectedYear) {
                     
-                    // Cek Conflict (Jika tanggal tsb sudah ada absen real, jangan timpa dengan izin)
                     $alreadyAttendance = $attendances->filter(function ($att) use ($date) {
                         return $att->check_in_time->isSameDay($date);
                     })->isNotEmpty();
@@ -277,7 +282,6 @@ class TeamController extends Controller
                         $fakeAtt->audit_photo_path = null;
                         $fakeAtt->audit_note = "Pengajuan: " . $leave->reason;
                         
-                        // Set relasi manual agar tidak error saat dipanggil di view ($att->leaveRequest)
                         $fakeAtt->setRelation('leaveRequest', $leave);
 
                         $historyCollection->push($fakeAtt);
@@ -288,7 +292,6 @@ class TeamController extends Controller
 
         $history = $historyCollection->sortByDesc('check_in_time');
 
-        // D. HITUNG SUMMARY
         $summary = [
             'total' => $history->count(),
             'hadir' => $history->filter(function($item) {

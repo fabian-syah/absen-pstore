@@ -157,6 +157,15 @@
             background: rgba(255, 255, 255, 0.25);
         }
 
+        /* Hover card statistik */
+        .stat-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+
         @media (max-width: 768px) {
             .team-header {
                 padding: 1.5rem;
@@ -196,6 +205,71 @@
 @endpush
 
 @section('content')
+
+    {{-- [BARU] PANEL STATISTIK RINGKASAN --}}
+    <div class="row g-3 mb-4">
+        {{-- Card 1: Total Tim --}}
+        <div class="col-6 col-md-3">
+            <div class="card stat-card border-0 shadow-sm overflow-hidden h-100" style="border-radius: 16px;">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase">Total Tim</p>
+                        <h4 class="mb-0 fw-bold text-dark">{{ $stats['total'] }}</h4>
+                    </div>
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 text-primary">
+                        <i class="mdi mdi-account-group fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        {{-- Card 2: Sudah Hadir --}}
+        <div class="col-6 col-md-3">
+            <div class="card stat-card border-0 shadow-sm overflow-hidden h-100" style="border-radius: 16px;">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase">Hadir / Online</p>
+                        <h4 class="mb-0 fw-bold text-success">{{ $stats['hadir'] }}</h4>
+                    </div>
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 text-success">
+                        <i class="mdi mdi-briefcase-check fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        {{-- Card 3: Izin / Sakit --}}
+        <div class="col-6 col-md-3">
+            <div class="card stat-card border-0 shadow-sm overflow-hidden h-100" style="border-radius: 16px;">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase">Izin / Sakit</p>
+                        <h4 class="mb-0 fw-bold text-warning">{{ $stats['izin_sakit'] }}</h4>
+                    </div>
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 text-warning">
+                        <i class="mdi mdi-medical-bag fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        {{-- Card 4: Belum Hadir --}}
+        <div class="col-6 col-md-3">
+            <div class="card stat-card border-0 shadow-sm overflow-hidden h-100" style="border-radius: 16px;">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase">Belum Absen</p>
+                        <h4 class="mb-0 fw-bold text-danger">{{ $stats['belum_hadir'] }}</h4>
+                    </div>
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3 text-danger">
+                        <i class="mdi mdi-account-off fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- [AKHIR] PANEL STATISTIK --}}
+
     <div class="row mb-5">
         <div class="col-12">
             <div class="card team-card">
@@ -219,7 +293,23 @@
                         </span>
                     </div>
 
-                    {{-- [BARU] Bagian Tampilan Audit Penanggung Jawab --}}
+                    {{-- [BARU] PROGRESS BAR KEHADIRAN --}}
+                    @php
+                        $percent = $stats['total'] > 0 ? round(($stats['hadir'] / $stats['total']) * 100) : 0;
+                    @endphp
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between text-white-50 small mb-1">
+                            <span>Tingkat Kehadiran Hari Ini</span>
+                            <span>{{ $percent }}%</span>
+                        </div>
+                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.2);">
+                            <div class="progress-bar bg-white" role="progressbar" 
+                                 style="width: {{ $percent }}%;" aria-valuenow="{{ $percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    {{-- [AKHIR] PROGRESS BAR --}}
+
+                    {{-- Bagian Tampilan Audit Penanggung Jawab --}}
                     @if(isset($assignedAudits) && $assignedAudits->count() > 0)
                         <div class="mt-3 pt-3 border-top border-white border-opacity-25">
                             <div class="d-flex flex-wrap align-items-center gap-2">
@@ -291,11 +381,6 @@
 
                                         <td class="py-3">
                                             <div class="d-flex align-items-center">
-                                                {{-- 
-                                                    LOGIKA CLASS:
-                                                    Jika $isOnline (Masuk/WFH) -> class '' (default css hijau)
-                                                    Jika tidak -> class 'offline' (css abu-abu)
-                                                --}}
                                                 <div class="avatar-wrapper me-3 flex-shrink-0 {{ $isOnline ? '' : 'offline' }}"
                                                     style="width: 55px; height: 55px; min-width: 55px;">
 
@@ -324,18 +409,29 @@
                                                                 title="Terverifikasi"></i>
                                                         @endif
                                                     </h6>
-                                                    <div class="d-flex flex-wrap gap-2">
+                                                    <div class="d-flex flex-wrap gap-2 align-items-center">
                                                         <span class="branch-badge badge" style="font-size: 0.75rem;">
-                                                            <i
-                                                                class="mdi mdi-map-marker me-1"></i>{{ $member->branch->name ?? 'No Branch' }}
+                                                            <i class="mdi mdi-map-marker me-1"></i>{{ $member->branch->name ?? 'No Branch' }}
                                                         </span>
                                                         @foreach ($member->divisions as $div)
                                                             <span class="division-badge badge" style="font-size: 0.75rem;">
-                                                                <i
-                                                                    class="mdi mdi-briefcase-outline me-1"></i>{{ $div->name }}
+                                                                <i class="mdi mdi-briefcase-outline me-1"></i>{{ $div->name }}
                                                             </span>
                                                         @break
                                                     @endforeach
+                                                    
+                                                    {{-- [BARU] TOMBOL WHATSAPP --}}
+                                                    {{-- Asumsi kolom di DB adalah 'phone' --}}
+                                                    @if(!empty($member->phone) && Auth::id() != $member->id)
+                                                        <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $member->phone)) }}" 
+                                                           target="_blank" 
+                                                           class="badge bg-success text-white text-decoration-none border-0"
+                                                           data-bs-toggle="tooltip" title="Chat WhatsApp">
+                                                            <i class="mdi mdi-whatsapp"></i> Hubungi
+                                                        </a>
+                                                    @endif
+                                                    {{-- [AKHIR] TOMBOL WHATSAPP --}}
+
                                                 </div>
                                             </div>
                                         </div>
