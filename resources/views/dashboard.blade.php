@@ -10,10 +10,7 @@
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
             <h3 class="fw-bold mb-0">{{ Auth::user()->name }}!</h3>
         </div>
-        <div class="text-end d-none d-md-block">
-            <h4 class="fw-bold mb-0 font-monospace" id="realtime-clock">--:--:--</h4>
-            <small class="text-muted">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</small>
-        </div>
+        {{-- JAM REALTIME TELAH DIPINDAHKAN KE BAGIAN CARD STATUS ABSENSI --}}
     </div>
 @endsection
 
@@ -27,8 +24,8 @@
         {{-- WIDGET ADMIN --}}
         <div class="row mb-4">
             <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                {{-- Data-tilt menambahkan efek 3D saat di hover --}}
-                <div class="card card-bank gradient-purple" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                {{-- Efek 3D Tilt dihapus, class card-bank tetap dipertahankan untuk styling --}}
+                <div class="card card-bank gradient-purple">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
@@ -43,7 +40,7 @@
                 </div>
             </div>
             <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card card-bank gradient-blue" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="card card-bank gradient-blue">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-sitemap"></i></div>
@@ -57,7 +54,7 @@
                 </div>
             </div>
             <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
-                <div class="card card-bank gradient-green" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="card card-bank gradient-green">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
@@ -71,7 +68,7 @@
                 </div>
             </div>
             <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.4s">
-                <div class="card card-bank gradient-orange" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="card card-bank gradient-orange">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
@@ -89,7 +86,7 @@
         {{-- WIDGET AUDIT --}}
         <div class="row mb-4">
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                <div class="card card-bank gradient-red" data-tilt data-tilt-max="10" data-tilt-speed="400">
+                <div class="card card-bank gradient-red">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
@@ -106,7 +103,7 @@
                 </div>
             </div>
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card card-bank gradient-blue" data-tilt data-tilt-max="10" data-tilt-speed="400">
+                <div class="card card-bank gradient-blue">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
@@ -120,7 +117,7 @@
                 </div>
             </div>
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
-                <div class="card card-bank gradient-green" data-tilt data-tilt-max="10" data-tilt-speed="400">
+                <div class="card card-bank gradient-green">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
@@ -152,7 +149,7 @@
                 </div>
             </div>
             <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card card-bank gradient-dark" data-tilt data-tilt-max="5" data-tilt-speed="400">
+                <div class="card card-bank gradient-dark">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-chart-bar"></i></div>
@@ -189,8 +186,8 @@
                 
                 {{-- ID CARD VISUAL --}}
                 <div class="col-12 mb-3">
-                    {{-- Tambahkan data-tilt disini agar ID Card bisa digerakkan 3D --}}
-                    <div class="card card-id gradient-dark" data-tilt data-tilt-full-page-listening data-tilt-speed="1000" data-tilt-max="15" data-tilt-glare data-tilt-max-glare="0.5">
+                    {{-- Efek 3D Tilt dihapus --}}
+                    <div class="card card-id gradient-dark">
                         <div class="card-body">
                             <div class="card-id-header">
                                 <div class="card-id-photo-wrapper">
@@ -225,7 +222,7 @@
                                 <div class="text-end">
                                     <p class="mb-0 text-white-50" style="font-size: 10px; letter-spacing: 1px;">NOMOR ID</p>
                                     <p class="card-id-card-number mb-0"
-                                        style="font-size: 22px; letter-spacing: 2px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                       style="font-size: 22px; letter-spacing: 2px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
                                         {{ $idCardNumber ?? '000000 000000' }}
                                     </p>
                                 </div>
@@ -256,14 +253,21 @@
         <div class="col-md-7 grid-margin stretch-card">
             <div class="card card-status hover-shadow-lg">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="card-title mb-0">
-                            <i class="mdi mdi-calendar-today me-2"></i>Status Absensi
-                        </h4>
-                        {{-- [BARU] MENAMPILKAN JAM KERJA / JADWAL --}}
-                        <span class="badge bg-light text-dark border shadow-sm">
-                            <i class="mdi mdi-clock-outline me-1"></i> Jadwal: {{ $todaySchedule }}
-                        </span>
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h4 class="card-title mb-1">
+                                <i class="mdi mdi-calendar-today me-2"></i>Status Absensi
+                            </h4>
+                            <span class="badge bg-light text-dark border shadow-sm mt-1">
+                                <i class="mdi mdi-clock-outline me-1"></i> Jadwal: {{ $todaySchedule }}
+                            </span>
+                        </div>
+                        
+                        {{-- JAM REALTIME DIPINDAHKAN KESINI --}}
+                        <div class="text-end">
+                             <h4 class="fw-bold mb-0 font-monospace text-primary" id="realtime-clock">--:--:--</h4>
+                             <small class="text-muted">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</small>
+                        </div>
                     </div>
 
                     @if (session('success'))
@@ -651,16 +655,10 @@
             overflow: hidden;
             border: none;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-            /* Transform style untuk efek 3D Vanilla Tilt */
-            transform-style: preserve-3d;
-            transform: perspective(1000px);
+            /* CSS 3D Tilt dihapus */
         }
 
-        /* Efek agar konten terlihat 'mengambang' dari kartu saat di tilt */
-        .card-bank-content, .card-bank-icon, .card-bank-chip {
-            transform: translateZ(20px);
-        }
-        
+        /* Transform removed */
         .card-bank .card-body {
             position: relative;
             z-index: 2;
@@ -741,16 +739,8 @@
             display: flex;
             flex-direction: column;
             font-family: 'Roboto', sans-serif;
-            transform-style: preserve-3d;
-            transform: perspective(1000px);
+            /* CSS 3D Tilt dihapus */
         }
-
-        /* Efek 3D untuk elemen dalam ID Card */
-        .card-id-header, .card-id-details, .card-id-footer {
-            transform: translateZ(30px);
-        }
-        
-        .card-id-photo-wrapper { transform: translateZ(40px); }
 
         .card-id .card-body {
             position: relative;
@@ -870,8 +860,7 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    {{-- [BARU] Vanilla Tilt JS untuk Efek 3D --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+    {{-- Vanilla Tilt REMOVED --}}
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
