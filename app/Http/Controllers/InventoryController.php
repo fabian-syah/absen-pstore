@@ -8,6 +8,7 @@ use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\InventoryReturn; // Tambahkan ini
 
 class InventoryController extends Controller
 {
@@ -92,11 +93,30 @@ class InventoryController extends Controller
 
     /**
      * Tampilkan List Barang AVAILABLE (Gudang)
+     * MODIFIKASI: User non-admin hanya lihat barang yang pernah mereka kembalikan.
      */
     public function available(Request $request)
     {
+        $user = Auth::user();
         $query = Inventory::whereNull('user_id'); 
 
+        // === FILTER HAK AKSES BARU ===
+        // Jika BUKAN Admin: Filter barang yang ID-nya ada di histori pengembalian oleh user ini.
+        if ($user->role !== 'admin') {
+            // Ambil semua inventory_id yang user ini pernah kembalikan (status approved)
+            $returnedInventoryIds = InventoryReturn::where('user_id', $user->id)
+                                                  ->where('status', 'approved')
+                                                  ->pluck('inventory_id')
+                                                  ->unique();
+            
+            // Filter hanya barang yang ada di gudang DAN pernah dikembalikan oleh user ini
+            $query->whereIn('id', $returnedInventoryIds);
+            $pageTitle = 'Gudang (Barang Saya yang Dikembalikan)';
+        } else {
+            $pageTitle = 'Daftar Inventaris Available (Gudang)';
+        }
+        
+        // === SEARCH ===
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -107,7 +127,8 @@ class InventoryController extends Controller
         }
 
         $inventories = $query->latest()->paginate(10)->withQueryString();
-        $pageTitle = 'Daftar Inventaris Available (Gudang)';
+        
+        // Judul disesuaikan di logika filter di atas.
         
         return view('inventory.index', compact('inventories', 'pageTitle'));
     }
@@ -197,7 +218,7 @@ class InventoryController extends Controller
                 // Pastikan user yang dipilih benar-benar ada di cabang target (Security Layer)
                 $targetUser = User::find($request->user_id);
                 if($targetUser->branch_id != $request->target_branch_id) {
-                      return back()->with('error', 'User tidak valid untuk cabang ini.');
+                     return back()->with('error', 'User tidak valid untuk cabang ini.');
                 }
                 $data['user_id'] = $request->user_id;
             }
@@ -241,9 +262,22 @@ class InventoryController extends Controller
         $inventory = Inventory::with('user')->findOrFail($id);
         $user = Auth::user();
 
-        // 1. Barang Gudang -> Semua boleh lihat
+        // 1. Barang Gudang -> Cek hak akses untuk gudang
         if ($inventory->user_id === null) {
-             return view('inventory.show', compact('inventory'));
+            if ($user->role === 'admin') {
+                return view('inventory.show', compact('inventory'));
+            } else {
+                // Untuk user non-admin, cek apakah dia pernah mengembalikan barang ini
+                $hasReturned = InventoryReturn::where('inventory_id', $inventory->id)
+                                              ->where('user_id', $user->id)
+                                              ->where('status', 'approved')
+                                              ->exists();
+                if ($hasReturned) {
+                    return view('inventory.show', compact('inventory'));
+                } else {
+                    abort(403, 'Anda tidak berhak melihat data ini di gudang.');
+                }
+            }
         }
 
         // 2. Barang Milik Sendiri -> Boleh
@@ -265,7 +299,7 @@ class InventoryController extends Controller
                 $allowedBranches = [$user->branch_id];
             }
 
-            if (in_array($inventory->user->branch_id, $allowedBranches)) {
+            if ($inventory->user && in_array($inventory->user->branch_id, $allowedBranches)) {
                 return view('inventory.show', compact('inventory'));
             }
         }

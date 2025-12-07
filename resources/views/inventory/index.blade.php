@@ -92,7 +92,7 @@
                                             @if($item->user_item_photo_path)
                                                 <img src="{{ asset('storage/'.$item->user_item_photo_path) }}" class="cursor-pointer" style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; border: 2px solid #57B657;" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-bs-img-src="{{ asset('storage/'.$item->user_item_photo_path) }}" data-bs-img-title="User: {{ $item->user->name ?? 'User' }}">
                                             @else
-                                                 <div class="bg-light d-flex align-items-center justify-content-center text-muted border" style="width: 45px; height: 45px; border-radius: 4px;"><i class="mdi mdi-account-off"></i></div>
+                                                   <div class="bg-light d-flex align-items-center justify-content-center text-muted border" style="width: 45px; height: 45px; border-radius: 4px;"><i class="mdi mdi-account-off"></i></div>
                                             @endif
                                             <div style="font-size: 9px;" class="text-success mt-1">User</div>
                                         </div>
