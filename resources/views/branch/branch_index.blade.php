@@ -22,12 +22,29 @@
                             <p class="text-muted small mb-0">Kelola semua cabang toko Anda</p>
                         </div>
                         
-                        {{-- Tombol Tambah: Hanya muncul untuk Super Admin --}}
-                        @if(auth()->user()->role == 'admin' && auth()->user()->branch_id == null)
-                            <a href="{{ route('branches.create') }}" class="btn btn-primary btn-sm px-3 shadow-sm">
-                                <i class="mdi mdi-plus-circle me-1"></i> Tambah Cabang
-                            </a>
-                        @endif
+                        <div class="d-flex align-items-center gap-2">
+                            {{-- Form Pencarian --}}
+                            <form action="{{ route('branches.index') }}" method="GET" class="d-flex">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" name="search" class="form-control" placeholder="Cari nama/alamat..." value="{{ request('search') }}">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="mdi mdi-magnify"></i>
+                                    </button>
+                                    @if(request('search'))
+                                        <a href="{{ route('branches.index') }}" class="btn btn-outline-danger" title="Reset">
+                                            <i class="mdi mdi-close"></i>
+                                        </a>
+                                    @endif
+                                </div>
+                            </form>
+
+                            {{-- Tombol Tambah: Hanya muncul untuk Super Admin --}}
+                            @if(auth()->user()->role == 'admin' && auth()->user()->branch_id == null)
+                                <a href="{{ route('branches.create') }}" class="btn btn-primary btn-sm px-3 shadow-sm">
+                                    <i class="mdi mdi-plus-circle me-1"></i> Tambah Cabang
+                                </a>
+                            @endif
+                        </div>
                     </div>
 
                     {{-- Notifikasi --}}
@@ -125,9 +142,15 @@
                                     <tr>
                                         <td colspan="4" class="text-center py-5">
                                             <div class="text-muted">
-                                                <i class="mdi mdi-office-building-marker-outline" style="font-size: 4rem; opacity: 0.3;"></i>
-                                                <p class="mt-3 mb-0">Belum ada data cabang</p>
-                                                <small>Klik tombol "Tambah Cabang" untuk menambahkan cabang baru</small>
+                                                @if(request('search'))
+                                                    <i class="mdi mdi-magnify-remove-outline" style="font-size: 4rem; opacity: 0.3;"></i>
+                                                    <p class="mt-3 mb-0">Cabang "{{ request('search') }}" tidak ditemukan.</p>
+                                                    <a href="{{ route('branches.index') }}" class="btn btn-link text-decoration-none">Reset Pencarian</a>
+                                                @else
+                                                    <i class="mdi mdi-office-building-marker-outline" style="font-size: 4rem; opacity: 0.3;"></i>
+                                                    <p class="mt-3 mb-0">Belum ada data cabang</p>
+                                                    <small>Klik tombol "Tambah Cabang" untuk menambahkan cabang baru</small>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -191,9 +214,15 @@
                             </div>
                         @empty
                             <div class="text-center py-5">
-                                <i class="mdi mdi-office-building-marker-outline text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
-                                <p class="text-muted mt-3 mb-0">Belum ada data cabang</p>
-                                <small class="text-muted">Klik tombol "Tambah Cabang" untuk menambahkan</small>
+                                @if(request('search'))
+                                    <i class="mdi mdi-magnify-remove-outline" style="font-size: 4rem; opacity: 0.3;"></i>
+                                    <p class="text-muted mt-3 mb-0">Pencarian tidak ditemukan.</p>
+                                    <a href="{{ route('branches.index') }}" class="btn btn-link text-decoration-none">Reset</a>
+                                @else
+                                    <i class="mdi mdi-office-building-marker-outline text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                                    <p class="text-muted mt-3 mb-0">Belum ada data cabang</p>
+                                    <small class="text-muted">Klik tombol "Tambah Cabang" untuk menambahkan</small>
+                                @endif
                             </div>
                         @endforelse
                     </div>

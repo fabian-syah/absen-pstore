@@ -23,25 +23,35 @@ class BranchController extends Controller
     }
 
     /**
-     * Menampilkan daftar cabang (Difilter sesuai Role).
+     * Menampilkan daftar cabang (Difilter sesuai Role + Search).
      */
-    public function index()
+    public function index(Request $request) // Update: Inject Request
     {
         $user = Auth::user();
         $query = Branch::query();
 
-        // 1. Jika Admin Cabang -> Hanya lihat cabangnya sendiri
+        // 1. FILTER ROLE (Logika Lama)
+        // Jika Admin Cabang -> Hanya lihat cabangnya sendiri
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('id', $user->branch_id);
         }
-        
-        // 2. Jika Audit -> Hanya lihat cabang wilayah auditnya (dari tabel pivot)
+        // Jika Audit -> Hanya lihat cabang wilayah auditnya (dari tabel pivot)
         elseif ($user->role == 'audit') {
             $auditBranchIds = $user->branches->pluck('id')->toArray();
             $query->whereIn('id', $auditBranchIds);
         }
-        
-        // 3. Jika Super Admin -> Melihat SEMUA (Tidak ada filter tambahan)
+        // Jika Super Admin -> Melihat SEMUA (Tidak ada filter role)
+
+        // 2. FITUR SEARCH (Logika Baru)
+        if ($request->has('search') && $request->search != null) {
+            $search = $request->search;
+            // Menggunakan closure function agar logika OR tidak merusak filter Role di atas
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('address', 'LIKE', "%{$search}%")
+                  ->orWhere('id', 'LIKE', "%{$search}%");
+            });
+        }
 
         $branches = $query->latest()->get();
         
@@ -49,7 +59,7 @@ class BranchController extends Controller
     }
 
     /**
-     * Menampilkan Detail Cabang & Daftar Karyawannya (Fungsi Baru)
+     * Menampilkan Detail Cabang & Daftar Karyawannya
      */
     public function show(Branch $branch)
     {
