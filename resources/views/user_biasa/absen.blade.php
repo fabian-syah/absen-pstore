@@ -20,13 +20,16 @@
                         </div>
                     </div>
 
-                    {{-- ========================================================= --}}
                     {{-- ALERT KHUSUS: LEMBUR / LINTAS HARI --}}
-                    {{-- ========================================================= --}}
                     @if ($mode == 'pulang' && isset($attendance))
                         @php
                             $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time);
                             $isNextDay = !$checkInDate->isToday();
+                            // Status Badge
+                            $statusLabel = $attendance->status;
+                            $statusClass = 'secondary';
+                            if($attendance->status == 'verified') $statusClass = 'success';
+                            if($attendance->status == 'pending_verification') $statusClass = 'warning';
                         @endphp
 
                         @if ($isNextDay)
@@ -35,20 +38,23 @@
                                     <i class="mdi mdi-weather-night display-4 me-3"></i>
                                     <div>
                                         <h5 class="fw-bold mb-1">Pulang Lintas Hari (Lembur)</h5>
-                                        <p class="mb-0 small">
-                                            Anda sedang melakukan absen <strong>PULANG</strong> untuk sesi kemarin.<br>
-                                            Waktu Masuk: <span class="badge bg-warning text-dark">{{ $checkInDate->translatedFormat('l, d F Y - H:i') }}</span>
+                                        <p class="mb-1 small">
+                                            Anda sedang menutup sesi masuk tanggal: 
+                                            <span class="fw-bold">{{ $checkInDate->translatedFormat('l, d F Y') }}</span>
+                                            (Pukul {{ $checkInDate->format('H:i') }})
                                         </p>
-                                        <p class="mb-0 small mt-1 text-muted">
-                                            <em>Setelah klik kirim, sesi ini akan ditutup. Anda bisa absen masuk lagi untuk hari ini setelahnya.</em>
-                                        </p>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <small>Status Absen Masuk:</small>
+                                            <span class="badge badge-{{ $statusClass }}">{{ strtoupper($attendance->status) }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         @else
                             <div class="alert alert-info border-0 shadow-sm mb-4">
-                                <i class="mdi mdi-clock-outline me-2"></i>
-                                Anda masuk pukul: <strong>{{ $attendance->check_in_time->format('H:i') }}</strong>
+                                <i class="mdi mdi-information-outline me-2"></i>
+                                Anda masuk pukul <strong>{{ $attendance->check_in_time->format('H:i') }}</strong>. 
+                                Status saat ini: <span class="fw-bold text-uppercase">{{ $attendance->status }}</span>.
                             </div>
                         @endif
                     @else
@@ -61,7 +67,6 @@
                         enctype="multipart/form-data" id="attendance-form">
                         @csrf
 
-                        {{-- ID ABSENSI (Wajib untuk Pulang) --}}
                         @if (isset($attendance) && $attendance)
                             <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
                         @endif
@@ -72,7 +77,7 @@
                                 <div class="form-group">
                                     <label class="fw-semibold mb-3">Foto Selfie <span class="text-danger">*</span></label>
                                     <div class="camera-container text-center">
-                                        {{-- Preview Foto --}}
+                                        {{-- Preview --}}
                                         <div id="camera-preview" class="camera-preview mb-3 d-none">
                                             <img id="preview-image" src="" alt="Preview Foto" class="img-fluid rounded shadow-sm">
                                             <div class="preview-overlay">
@@ -84,14 +89,12 @@
                                                 <i class="mdi mdi-camera-retake me-1"></i>Ambil Ulang
                                             </button>
                                         </div>
-
                                         {{-- Placeholder --}}
                                         <div id="camera-placeholder" class="camera-placeholder">
                                             <i class="mdi mdi-camera display-4 text-muted mb-3"></i>
-                                            <p class="text-muted mb-3">Klik tombol di bawah untuk ambil foto</p>
+                                            <p class="text-muted mb-3">Klik tombol untuk ambil foto</p>
                                         </div>
-
-                                        {{-- Tombol Trigger --}}
+                                        {{-- Tombol --}}
                                         <div class="d-flex gap-2 justify-content-center">
                                             <input type="file" name="photo" id="photo-input" class="d-none" accept="image/*" capture="user" required>
                                             <button type="button" id="capture-btn" class="btn btn-dark">
@@ -108,29 +111,22 @@
                                     <h6 class="fw-semibold mb-3">
                                         <i class="mdi mdi-map-marker-outline me-2"></i>Lokasi Anda
                                     </h6>
-
                                     <div id="location-status" class="alert alert-info mb-3">
                                         <div class="d-flex align-items-center">
                                             <i class="mdi mdi-loading mdi-spin me-2"></i>
                                             <span>Mencari GPS...</span>
                                         </div>
                                     </div>
-
                                     <div id="location-details" class="d-none">
-                                        <div class="mb-3">
+                                        <div class="mb-2">
                                             <small class="text-muted d-block">Koordinat</small>
                                             <span class="fw-bold font-monospace" id="coordinates-display">-</span>
                                         </div>
-                                        <div class="mb-3">
+                                        <div class="mb-2">
                                             <small class="text-muted d-block">Akurasi GPS</small>
                                             <span class="badge badge-outline-success" id="accuracy-display">-</span>
                                         </div>
-                                        <div>
-                                            <small class="text-muted d-block">Waktu Server</small>
-                                            <span class="fw-bold">{{ \Carbon\Carbon::now()->locale('id')->translatedFormat('H:i:s') }}</span>
-                                        </div>
                                     </div>
-
                                     <input type="hidden" id="latitude" name="latitude">
                                     <input type="hidden" id="longitude" name="longitude">
                                     <input type="hidden" id="accuracy" name="accuracy">
@@ -141,8 +137,7 @@
                         {{-- INPUT NOTES --}}
                         <div class="form-group mb-4">
                             <label class="fw-semibold mb-2">Catatan (Opsional)</label>
-                            <textarea name="notes" class="form-control" rows="3" 
-                                placeholder="Contoh: Lembur mengerjakan stok opname...">{{ old('notes') }}</textarea>
+                            <textarea name="notes" class="form-control" rows="3" placeholder="Contoh: Lembur..."></textarea>
                         </div>
 
                         {{-- TOMBOL SUBMIT --}}
@@ -152,7 +147,7 @@
                             </button>
                         </div>
                         <div class="text-center mt-3">
-                            <a href="{{ route('dashboard') }}" class="text-muted small text-decoration-none">Batal & Kembali</a>
+                            <a href="{{ route('dashboard') }}" class="text-muted small text-decoration-none">Batal</a>
                         </div>
                     </form>
                 </div>
@@ -184,13 +179,11 @@
             const locationStatus = document.getElementById('location-status');
             const locationDetails = document.getElementById('location-details');
             
-            // 1. Logic Kamera (Canvas Resize)
+            // 1. Kamera
             captureBtn.addEventListener('click', () => photoInput.click());
-            
             photoInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    // Preview sederhana pakai FileReader (Bisa ditambah logic compress canvas dari kode sebelumnya)
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         previewImage.src = e.target.result;
@@ -210,31 +203,25 @@
                 checkValidity();
             });
 
-            // 2. Logic Geolocation
+            // 2. Geolocation
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         document.getElementById('latitude').value = pos.coords.latitude;
                         document.getElementById('longitude').value = pos.coords.longitude;
                         document.getElementById('accuracy').value = pos.coords.accuracy;
-                        
                         document.getElementById('coordinates-display').innerText = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
                         document.getElementById('accuracy-display').innerText = `± ${Math.round(pos.coords.accuracy)} m`;
-                        
                         locationStatus.innerHTML = `<div class="text-success small"><i class="mdi mdi-check-circle me-1"></i>Lokasi Terkunci</div>`;
                         locationDetails.classList.remove('d-none');
                         checkValidity();
                     },
-                    (err) => {
-                        locationStatus.innerHTML = `<div class="text-danger small">Gagal: ${err.message}</div>`;
-                    },
+                    (err) => { locationStatus.innerHTML = `<div class="text-danger small">Gagal: ${err.message}</div>`; },
                     { enableHighAccuracy: true, timeout: 10000 }
                 );
-            } else {
-                locationStatus.innerHTML = "Browser tidak support GPS.";
-            }
+            } else { locationStatus.innerHTML = "Browser tidak support GPS."; }
 
-            // 3. Check Validity
+            // 3. Validasi
             function checkValidity() {
                 const hasPhoto = photoInput.files.length > 0;
                 const hasLoc = document.getElementById('latitude').value !== '';
