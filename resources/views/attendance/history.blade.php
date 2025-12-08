@@ -287,7 +287,7 @@
                                                 </div>
                                             </td>
 
-                                            {{-- FOTO MASUK --}}
+                                            {{-- FOTO MASUK + CATATAN --}}
                                             <td>
                                                 @php
                                                     $displayPhoto = null;
@@ -299,28 +299,35 @@
                                                     if ($att->leaveRequest) $labelMasuk = 'Izin/Sakit';
                                                     elseif ($att->presence_status) $labelMasuk = $att->presence_status;
                                                     
-                                                    if (!empty($att->notes)) {
-                                                        $cleanNote = $att->notes;
-                                                        if (str_contains($cleanNote, '| Pulang')) {
-                                                            $parts = explode('| Pulang', $cleanNote);
-                                                            $cleanNote = trim($parts[0]);
-                                                        }
-                                                        if (!empty($cleanNote)) $labelMasuk = $cleanNote;
-                                                    }
+                                                    // LOGIC AMBIL CATATAN MASUK (Sebelum karakter "|")
+                                                    $noteMasuk = \Illuminate\Support\Str::before($att->notes, '|');
+                                                    $noteMasuk = trim($noteMasuk);
+                                                    if ($noteMasuk == '-') $noteMasuk = '';
                                                 @endphp
 
-                                                @if ($displayPhoto)
-                                                    <img src="{{ $displayPhoto }}" alt="In"
-                                                        class="rounded-3 shadow-sm img-clickable border"
-                                                        style="width: 45px; height: 45px; object-fit: cover;"
-                                                        data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
-                                                        data-img-src="{{ $displayPhoto }}"
-                                                        data-img-title="Masuk: {{ \Illuminate\Support\Str::limit($labelMasuk, 40) }}">
-                                                @else
-                                                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted border" style="width: 45px; height: 45px;">
-                                                        <i class="mdi mdi-image-off"></i>
-                                                    </div>
-                                                @endif
+                                                <div class="d-flex flex-column align-items-start">
+                                                    @if ($displayPhoto)
+                                                        <img src="{{ $displayPhoto }}" alt="In"
+                                                            class="rounded-3 shadow-sm img-clickable border mb-1"
+                                                            style="width: 45px; height: 45px; object-fit: cover;"
+                                                            data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
+                                                            data-img-src="{{ $displayPhoto }}"
+                                                            data-img-title="Masuk: {{ \Illuminate\Support\Str::limit($labelMasuk, 40) }}">
+                                                    @else
+                                                        <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted border mb-1" style="width: 45px; height: 45px;">
+                                                            <i class="mdi mdi-image-off"></i>
+                                                        </div>
+                                                    @endif
+
+                                                    {{-- TAMPILKAN CATATAN MASUK --}}
+                                                    @if(!empty($noteMasuk))
+                                                        <div class="bg-light border rounded px-1 text-wrap" style="max-width: 100px;">
+                                                            <small class="text-muted fst-italic lh-1" style="font-size: 0.65rem;">
+                                                                <i class="mdi mdi-note-text-outline me-1"></i>{{ \Illuminate\Support\Str::limit($noteMasuk, 30) }}
+                                                            </small>
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </td>
 
                                             {{-- JAM PULANG --}}
@@ -342,7 +349,7 @@
                                                 @endif
                                             </td>
 
-                                            {{-- FOTO PULANG --}}
+                                            {{-- FOTO PULANG + CATATAN --}}
                                             <td class="bg-light bg-opacity-25">
                                                 @php
                                                     $labelPulang = 'Pulang';
@@ -350,20 +357,40 @@
                                                         $parts = explode('Pulang', $att->notes);
                                                         $labelPulang = 'Pulang ' . ltrim(trim(end($parts)), ': ');
                                                     }
+
+                                                    // LOGIC AMBIL CATATAN PULANG
+                                                    // Cari teks di antara "Catatan:" dan "|" berikutnya
+                                                    $notePulang = '';
+                                                    if (!empty($att->notes) && str_contains($att->notes, 'Catatan:')) {
+                                                        $temp = \Illuminate\Support\Str::after($att->notes, 'Catatan:');
+                                                        $notePulang = \Illuminate\Support\Str::before($temp, '|');
+                                                        $notePulang = trim($notePulang);
+                                                    }
                                                 @endphp
 
-                                                @if ($att->photo_out_path)
-                                                    <img src="{{ asset('storage/' . $att->photo_out_path) }}" alt="Out"
-                                                        class="rounded-3 shadow-sm img-clickable border"
-                                                        style="width: 45px; height: 45px; object-fit: cover;"
-                                                        data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
-                                                        data-img-src="{{ asset('storage/' . $att->photo_out_path) }}"
-                                                        data-img-title="{{ \Illuminate\Support\Str::limit($labelPulang, 40) }}">
-                                                @else
-                                                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted border" style="width: 45px; height: 45px;">
-                                                        <i class="mdi mdi-image-off"></i>
-                                                    </div>
-                                                @endif
+                                                <div class="d-flex flex-column align-items-start">
+                                                    @if ($att->photo_out_path)
+                                                        <img src="{{ asset('storage/' . $att->photo_out_path) }}" alt="Out"
+                                                            class="rounded-3 shadow-sm img-clickable border mb-1"
+                                                            style="width: 45px; height: 45px; object-fit: cover;"
+                                                            data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
+                                                            data-img-src="{{ asset('storage/' . $att->photo_out_path) }}"
+                                                            data-img-title="{{ \Illuminate\Support\Str::limit($labelPulang, 40) }}">
+                                                    @else
+                                                        <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted border mb-1" style="width: 45px; height: 45px;">
+                                                            <i class="mdi mdi-image-off"></i>
+                                                        </div>
+                                                    @endif
+
+                                                    {{-- TAMPILKAN CATATAN PULANG --}}
+                                                    @if(!empty($notePulang))
+                                                        <div class="bg-white border rounded px-1 text-wrap" style="max-width: 100px;">
+                                                            <small class="text-muted fst-italic lh-1" style="font-size: 0.65rem;">
+                                                                <i class="mdi mdi-note-text-outline me-1"></i>{{ \Illuminate\Support\Str::limit($notePulang, 30) }}
+                                                            </small>
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </td>
 
                                             {{-- STATUS KEHADIRAN --}}
