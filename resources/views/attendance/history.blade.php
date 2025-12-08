@@ -427,9 +427,9 @@
                                             <td>
                                                 <div class="d-flex flex-column gap-2">
                                                     
-                                                    {{-- 1. INFO PETUGAS MASUK --}}
+                                                    {{-- 1. INFO PETUGAS MASUK (SCANNED BY) --}}
                                                     <div class="d-flex align-items-center">
-                                                        @if ($att->attendance_type == 'scan' && $att->scanner)
+                                                        @if ($att->scanned_by_user_id && $att->scanner)
                                                             {{-- Jika Masuk via Scan Security --}}
                                                             <div class="badge bg-primary bg-opacity-10 text-primary border border-primary p-1 me-2 rounded">
                                                                 <i class="mdi mdi-qrcode-scan"></i> IN
@@ -452,7 +452,7 @@
                                                             <div class="badge bg-success bg-opacity-10 text-success border border-success p-1 me-2 rounded">
                                                                 <i class="mdi mdi-check"></i> IN
                                                             </div>
-                                                            <small class="text-muted" style="font-size: 10px;">Audit/System</small>
+                                                            <small class="text-muted" style="font-size: 10px;">System/Audit</small>
                                                         @else
                                                             {{-- Masih Pending --}}
                                                             <span class="badge bg-warning text-dark" style="font-size: 10px;">Menunggu Verifikasi</span>
@@ -460,17 +460,29 @@
                                                     </div>
 
                                                     {{-- 2. INFO PETUGAS PULANG (Hanya jika sudah pulang) --}}
-                                                    @if ($att->check_out_time && $att->verifier)
+                                                    @if ($att->check_out_time)
                                                         <div class="border-top my-1"></div> {{-- Garis pemisah --}}
                                                         
                                                         <div class="d-flex align-items-center">
-                                                            @if ($att->attendance_type == 'scan' || str_contains($att->notes, 'Security Scan'))
+                                                            @if (str_contains($att->notes, 'Pulang (Selfie)') || $att->attendance_type == 'self')
+                                                                {{-- Jika Pulang via Selfie (MANDIRI) --}}
+                                                                <div class="badge bg-info bg-opacity-10 text-info border border-info p-1 me-2 rounded">
+                                                                    <i class="mdi mdi-camera-front-variant"></i> OUT
+                                                                </div>
+                                                                <div>
+                                                                    <span class="d-block fw-bold text-dark" style="font-size: 11px;">Mandiri</span>
+                                                                    <small class="text-muted" style="font-size: 9px;">System Auto</small>
+                                                                </div>
+                                                            @elseif ($att->attendance_type == 'scan' || str_contains($att->notes, 'Security Scan'))
                                                                 {{-- Jika Pulang via Scan Security --}}
                                                                 <div class="badge bg-dark bg-opacity-10 text-dark border border-dark p-1 me-2 rounded">
                                                                     <i class="mdi mdi-logout"></i> OUT
                                                                 </div>
                                                                 <div>
-                                                                    <span class="d-block fw-bold text-dark" style="font-size: 11px;">{{ $att->verifier->name }}</span>
+                                                                    {{-- Tampilkan nama Security dari Verifier --}}
+                                                                    <span class="d-block fw-bold text-dark" style="font-size: 11px;">
+                                                                        {{ $att->verifier->name ?? 'Security' }}
+                                                                    </span>
                                                                     <small class="text-muted" style="font-size: 9px;">Security</small>
                                                                 </div>
                                                             @else
@@ -479,7 +491,9 @@
                                                                     <i class="mdi mdi-logout"></i> OUT
                                                                 </div>
                                                                 <div>
-                                                                    <span class="d-block fw-bold text-dark" style="font-size: 11px;">{{ $att->verifier->name }}</span>
+                                                                    <span class="d-block fw-bold text-dark" style="font-size: 11px;">
+                                                                        {{ $att->verifier->name ?? 'Audit/Admin' }}
+                                                                    </span>
                                                                     <small class="text-muted" style="font-size: 9px;">Verifikator</small>
                                                                 </div>
                                                             @endif
