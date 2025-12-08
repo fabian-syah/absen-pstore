@@ -25,6 +25,7 @@ use App\Http\Controllers\JobTargetController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\BranchInventoryController;
+use App\Http\Controllers\AdminMonitoringController; // <--- CONTROLLER BARU
 
 /*
 |--------------------------------------------------------------------------
@@ -184,6 +185,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // ==========================================================
+
+    // ==========================================================
+    //  RUTE MONITORING HARIAN (KHUSUS ADMIN) - BARU
+    // ==========================================================
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/monitoring/daily-attendance', [AdminMonitoringController::class, 'dailyAttendance'])
+            ->name('admin.monitoring.daily');
+    });
 
     // === RUTE ADMIN & AUDIT MANAGEMENT (Lainnya) ===
     Route::middleware(['role:admin,audit'])->group(function () {

@@ -23,7 +23,7 @@
         </li>
 
         {{-- =================================== --}}
-        {{--     MENU UMUM (SEMUA ROLE)          --}}
+        {{--    MENU UMUM (SEMUA ROLE)           --}}
         {{-- =================================== --}}
         <li class="nav-item nav-category">Menu Umum</li>
         <li class="nav-item">
@@ -46,7 +46,21 @@
         </li>
 
         {{-- =================================== --}}
-        {{--     MENU KHUSUS SUPER ADMIN         --}}
+        {{--    MONITORING HARIAN (ADMIN ONLY)   --}}
+        {{-- =================================== --}}
+        @if (auth()->user()->role == 'admin')
+            <li class="nav-item nav-category">Monitoring Harian</li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin.monitoring.daily') }}">
+                    <i class="menu-icon mdi mdi-monitor-dashboard"></i>
+                    <span class="menu-title">Siapa Sudah Absen?</span>
+                </a>
+            </li>
+        @endif
+
+        {{-- =================================== --}}
+        {{--    MENU KHUSUS SUPER ADMIN          --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Menu Cabang</li>
@@ -134,7 +148,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--        MENU SECURITY                --}}
+        {{--         MENU SECURITY               --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'security')
             <li class="nav-item nav-category">Menu Security</li>
