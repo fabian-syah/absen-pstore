@@ -260,7 +260,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/team/branch/{branchId}/employee/{employeeId}/history', [TeamController::class, 'showEmployeeHistory'])->name('team.branch.employee.history');
     });
 
-    Route::middleware(['role:audit'])->group(function () {
+    Route::middleware(['role:audit,leader'])->group(function () {
         Route::get('/cabang-saya', [TeamController::class, 'myBranches'])->name('team.my-branches');
     });
 

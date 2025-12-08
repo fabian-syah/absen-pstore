@@ -172,7 +172,7 @@
                 </a>
             </li>
 
-            @if (auth()->user()->role == 'audit')
+            @if (auth()->user()->role == 'audit' || auth()->user()->role == 'leader')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('team.my-branches') }}">
                         <i class="menu-icon mdi mdi-office-building-marker"></i>
