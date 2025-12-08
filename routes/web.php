@@ -209,10 +209,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Approval Requests
         Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
-        
+
         // --- ADDED THIS LINE (FIX ERROR) ---
         Route::delete('/users/{user}/reject-photo', [UserController::class, 'rejectPhotoRequest'])->name('users.reject-photo');
-        
+
         Route::get('/users/ktp-requests', [UserController::class, 'ktpRequests'])->name('users.ktp-requests');
         Route::patch('/users/{user}/approve-ktp', [UserController::class, 'approveKtpRequest'])->name('users.approve-ktp');
         Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');
@@ -242,11 +242,18 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // === RUTE SECURITY ===
-    Route::middleware(['role:security'])->prefix('security')->name('security.')->group(function () {
+    // Update middleware agar Admin juga bisa akses
+    Route::middleware(['role:security,admin'])->prefix('security')->name('security.')->group(function () {
+
         Route::get('/scan', [ScanController::class, 'index'])->name('scan');
         Route::post('/check-user', [ScanController::class, 'checkUser'])->name('check-user');
         Route::post('/store-attendance', [ScanController::class, 'storeAttendance'])->name('store-attendance');
         Route::get('/stats', [ScanController::class, 'getStats'])->name('stats');
+
+        // --- ROUTE BARU RIWAYAT SCAN ---
+        Route::get('/riwayat-scan', [ScanController::class, 'history'])->name('history');
+
+        // Route lama Anda (bisa dihapus jika digantikan history di atas)
         Route::get('/attendance-log', [ScanController::class, 'attendanceLog'])->name('attendance-log');
         Route::get('/today-attendance', [ScanController::class, 'todayAttendance'])->name('today-attendance');
     });

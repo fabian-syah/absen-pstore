@@ -250,4 +250,38 @@ class ScanController extends Controller
          ];
          return response()->json(['status' => 'success', 'data' => $stats]);
     }
+
+    // Tambahkan method ini di paling bawah class ScanController
+
+    public function history(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Eager load relasi yang dibutuhkan
+        $query = Attendance::with(['user.division', 'user.branch', 'branch', 'scanner', 'verifier']);
+
+        // Filter: Hanya ambil data yang dilakukan melalui scan (scanned_by ada isinya)
+        $query->whereNotNull('scanned_by_user_id');
+
+        // LOGIKA FILTER ROLE
+        if ($user->role !== 'admin') {
+            // Jika BUKAN admin (berarti Security), tampilkan jika:
+            // 1. Dia yang scan MASUK (scanned_by_user_id)
+            // 2. ATAU Dia yang scan PULANG (verified_by_user_id)
+            $query->where(function($q) use ($user) {
+                $q->where('scanned_by_user_id', $user->id)
+                  ->orWhere('verified_by_user_id', $user->id);
+            });
+        }
+
+        // Filter Tanggal (Opsional, default bulan ini)
+        if ($request->date) {
+            $query->whereDate('check_in_time', $request->date);
+        }
+
+        // Urutkan dari yang terbaru
+        $logs = $query->orderBy('updated_at', 'desc')->paginate(10);
+
+        return view('security.history', compact('logs'));
+    }
 }
