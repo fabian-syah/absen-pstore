@@ -46,6 +46,20 @@
             border: 1px solid #ced4da !important;
             font-weight: 600;
         }
+        
+        /* Note Box Style */
+        .note-box {
+            font-size: 0.65rem;
+            line-height: 1.2;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 4px;
+            margin-top: 4px;
+            max-width: 120px;
+            word-wrap: break-word;
+            color: #495057;
+        }
     </style>
 @endpush
 
@@ -223,7 +237,7 @@
                                         <th class="border-start">Jam Pulang</th>
                                         <th>Foto</th>
                                         <th class="text-center">Status</th>
-                                        <th class="text-center">Lokasi</th> {{-- ADDED LOCATION --}}
+                                        <th class="text-center">Lokasi</th> 
                                         <th>Verifikasi & Petugas</th>
                                         <th class="text-center">Metode</th>
                                         @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
@@ -294,37 +308,49 @@
                                                     if ($att->photo_path) $displayPhoto = asset('storage/' . $att->photo_path);
                                                     elseif ($att->leaveRequest && $att->leaveRequest->file_proof) $displayPhoto = asset('storage/' . $att->leaveRequest->file_proof);
                                                     
-                                                    // Label Masuk Logic
                                                     $labelMasuk = 'Masuk';
                                                     if ($att->leaveRequest) $labelMasuk = 'Izin/Sakit';
                                                     elseif ($att->presence_status) $labelMasuk = $att->presence_status;
                                                     
-                                                    // LOGIC AMBIL CATATAN MASUK (Sebelum karakter "|")
-                                                    $noteMasuk = \Illuminate\Support\Str::before($att->notes, '|');
-                                                    $noteMasuk = trim($noteMasuk);
-                                                    if ($noteMasuk == '-') $noteMasuk = '';
+                                                    // ---- LOGIKA BARU PARSING CATATAN MASUK ----
+                                                    $rawNotes = $att->notes ?? '';
+                                                    $noteMasukDisplay = '';
+                                                    
+                                                    // Pecah string berdasarkan separator ' | '
+                                                    $noteParts = explode(' | ', $rawNotes);
+                                                    
+                                                    // Bagian pertama diasumsikan sebagai catatan masuk (jika bukan string kosong/system)
+                                                    if (isset($noteParts[0])) {
+                                                        $firstPart = trim($noteParts[0]);
+                                                        // Filter kata kunci sistem agar tidak dianggap catatan user
+                                                        if (!empty($firstPart) && 
+                                                            !str_contains($firstPart, 'Catatan:') && 
+                                                            !str_contains($firstPart, 'Security Scan') && 
+                                                            !str_contains($firstPart, 'Pulang') &&
+                                                            $firstPart != '-') {
+                                                            $noteMasukDisplay = $firstPart;
+                                                        }
+                                                    }
                                                 @endphp
 
                                                 <div class="d-flex flex-column align-items-start">
                                                     @if ($displayPhoto)
                                                         <img src="{{ $displayPhoto }}" alt="In"
-                                                            class="rounded-3 shadow-sm img-clickable border mb-1"
+                                                            class="rounded-3 shadow-sm img-clickable border"
                                                             style="width: 45px; height: 45px; object-fit: cover;"
                                                             data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
                                                             data-img-src="{{ $displayPhoto }}"
                                                             data-img-title="Masuk: {{ \Illuminate\Support\Str::limit($labelMasuk, 40) }}">
                                                     @else
-                                                        <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted border mb-1" style="width: 45px; height: 45px;">
+                                                        <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted border" style="width: 45px; height: 45px;">
                                                             <i class="mdi mdi-image-off"></i>
                                                         </div>
                                                     @endif
 
-                                                    {{-- TAMPILKAN CATATAN MASUK --}}
-                                                    @if(!empty($noteMasuk))
-                                                        <div class="bg-light border rounded px-1 text-wrap" style="max-width: 100px;">
-                                                            <small class="text-muted fst-italic lh-1" style="font-size: 0.65rem;">
-                                                                <i class="mdi mdi-note-text-outline me-1"></i>{{ \Illuminate\Support\Str::limit($noteMasuk, 30) }}
-                                                            </small>
+                                                    {{-- TAMPILKAN CATATAN MASUK DI BAWAH FOTO --}}
+                                                    @if(!empty($noteMasukDisplay))
+                                                        <div class="note-box" title="{{ $noteMasukDisplay }}">
+                                                            <i class="mdi mdi-note-text-outline me-1"></i>{{ \Illuminate\Support\Str::limit($noteMasukDisplay, 25) }}
                                                         </div>
                                                     @endif
                                                 </div>
@@ -358,36 +384,38 @@
                                                         $labelPulang = 'Pulang ' . ltrim(trim(end($parts)), ': ');
                                                     }
 
-                                                    // LOGIC AMBIL CATATAN PULANG
-                                                    // Cari teks di antara "Catatan:" dan "|" berikutnya
-                                                    $notePulang = '';
-                                                    if (!empty($att->notes) && str_contains($att->notes, 'Catatan:')) {
-                                                        $temp = \Illuminate\Support\Str::after($att->notes, 'Catatan:');
-                                                        $notePulang = \Illuminate\Support\Str::before($temp, '|');
-                                                        $notePulang = trim($notePulang);
+                                                    // ---- LOGIKA BARU PARSING CATATAN PULANG ----
+                                                    $notePulangDisplay = '';
+                                                    $noteParts = explode(' | ', $att->notes ?? '');
+                                                    
+                                                    // Cari bagian yang mengandung "Catatan:"
+                                                    foreach ($noteParts as $part) {
+                                                        if (str_contains($part, 'Catatan:')) {
+                                                            // Hapus label "Catatan:" dan trim
+                                                            $notePulangDisplay = trim(str_replace('Catatan:', '', $part));
+                                                            break; 
+                                                        }
                                                     }
                                                 @endphp
 
                                                 <div class="d-flex flex-column align-items-start">
                                                     @if ($att->photo_out_path)
                                                         <img src="{{ asset('storage/' . $att->photo_out_path) }}" alt="Out"
-                                                            class="rounded-3 shadow-sm img-clickable border mb-1"
+                                                            class="rounded-3 shadow-sm img-clickable border"
                                                             style="width: 45px; height: 45px; object-fit: cover;"
                                                             data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
                                                             data-img-src="{{ asset('storage/' . $att->photo_out_path) }}"
                                                             data-img-title="{{ \Illuminate\Support\Str::limit($labelPulang, 40) }}">
                                                     @else
-                                                        <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted border mb-1" style="width: 45px; height: 45px;">
+                                                        <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted border" style="width: 45px; height: 45px;">
                                                             <i class="mdi mdi-image-off"></i>
                                                         </div>
                                                     @endif
 
-                                                    {{-- TAMPILKAN CATATAN PULANG --}}
-                                                    @if(!empty($notePulang))
-                                                        <div class="bg-white border rounded px-1 text-wrap" style="max-width: 100px;">
-                                                            <small class="text-muted fst-italic lh-1" style="font-size: 0.65rem;">
-                                                                <i class="mdi mdi-note-text-outline me-1"></i>{{ \Illuminate\Support\Str::limit($notePulang, 30) }}
-                                                            </small>
+                                                    {{-- TAMPILKAN CATATAN PULANG DI BAWAH FOTO --}}
+                                                    @if(!empty($notePulangDisplay))
+                                                        <div class="note-box bg-white" title="{{ $notePulangDisplay }}">
+                                                            <i class="mdi mdi-note-text-outline me-1"></i>{{ \Illuminate\Support\Str::limit($notePulangDisplay, 25) }}
                                                         </div>
                                                     @endif
                                                 </div>
@@ -416,10 +444,9 @@
                                                 @endif
                                             </td>
 
-                                            {{-- KOLOM LOKASI (BARU) --}}
+                                            {{-- LOKASI --}}
                                             <td class="text-center">
                                                 @if ($att->latitude && $att->longitude)
-                                                    {{-- Tombol Buka Maps --}}
                                                     <a href="https://www.google.com/maps/search/?api=1&query={{ $att->latitude }},{{ $att->longitude }}" target="_blank" 
                                                        class="btn btn-outline-info btn-sm btn-icon rounded-circle" title="Lihat di Maps">
                                                         <i class="mdi mdi-map-marker-radius"></i>
@@ -436,7 +463,7 @@
                                                 @endif
                                             </td>
 
-                                            {{-- VERIFIKASI & PETUGAS (DUAL VERIFIER + IZIN) --}}
+                                            {{-- VERIFIKASI & PETUGAS --}}
                                             <td>
                                                 <div class="d-flex flex-column gap-2">
                                                     
