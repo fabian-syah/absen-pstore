@@ -28,9 +28,12 @@
                             
                             // Visualisasi Status
                             $statusClass = 'secondary';
-                            if($attendance->status == 'verified') $statusClass = 'success';
+                            if($attendance->status == 'verified' || $attendance->status == 'present') $statusClass = 'success';
                             if($attendance->status == 'pending_verification') $statusClass = 'warning';
                             if($attendance->status == 'rejected') $statusClass = 'danger';
+
+                            // Deteksi Tipe Masuk
+                            $typeLabel = ($attendance->attendance_type == 'scan') ? 'Security Scan' : 'Selfie Mandiri';
                         @endphp
 
                         @if ($isNextDay)
@@ -43,14 +46,19 @@
                                             Anda menutup sesi tanggal: 
                                             <span class="fw-bold">{{ $checkInDate->translatedFormat('l, d F Y') }}</span>
                                         </p>
+                                        <span class="badge badge-outline-dark">Masuk via: {{ $typeLabel }}</span>
                                     </div>
                                 </div>
                             </div>
                         @else
                             <div class="alert alert-info border-0 shadow-sm mb-4">
-                                <i class="mdi mdi-information-outline me-2"></i>
-                                Anda masuk pukul <strong>{{ $checkInDate->format('H:i') }}</strong>. 
-                                Status: <span class="badge badge-{{ $statusClass }} ms-1">{{ strtoupper($attendance->status) }}</span>
+                                <div class="d-flex align-items-center">
+                                    <i class="mdi mdi-information-outline me-2 fs-4"></i>
+                                    <div>
+                                        Anda masuk pukul <strong>{{ $checkInDate->format('H:i') }}</strong> via <strong>{{ $typeLabel }}</strong>. <br>
+                                        Status saat ini: <span class="badge badge-{{ $statusClass }} ms-1">{{ strtoupper($attendance->status) }}</span>
+                                    </div>
+                                </div>
                             </div>
                         @endif
                     @else
@@ -63,7 +71,7 @@
                         enctype="multipart/form-data" id="attendance-form">
                         @csrf
 
-                        {{-- PENTING: ID Absen untuk mode Pulang --}}
+                        {{-- PENTING: ID Absen untuk mode Pulang (Hybrid Support) --}}
                         @if (isset($attendance) && $attendance)
                             <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
                         @endif

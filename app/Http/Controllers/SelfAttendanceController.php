@@ -36,16 +36,17 @@ class SelfAttendanceController extends Controller
             $hangingSession->update([
                 'check_out_time' => Carbon::parse($hangingSession->check_in_time)->endOfDay(),
                 'notes' => $hangingSession->notes . ' | Auto-closed (Expired)',
-                'status' => ($hangingSession->status == 'verified') ? 'verified' : 'pending_verification'
+                'status' => ($hangingSession->status == 'verified' || $hangingSession->status == 'present') ? $hangingSession->status : 'pending_verification'
             ]);
         }
 
-        // 2. CEK SESI AKTIF (Priority)
-        // Cari sesi yang belum check-out dalam rentang 24 jam terakhir
+        // 2. CEK SESI AKTIF (HYBRID CHECK)
+        // Cari sesi yang belum check-out dalam rentang 24 jam terakhir.
+        // TIDAK memfilter attendance_type, sehingga bisa mendeteksi 'scan' dari Security.
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', Carbon::now()->subHours(24)) 
-            ->where('status', '!=', 'alpha') // Jangan ambil yang status Alpha
+            ->where('status', '!=', 'alpha')
             ->latest('check_in_time')
             ->first();
 
@@ -112,16 +113,16 @@ class SelfAttendanceController extends Controller
         $branchName = $user->branch->name ?? '-';
 
         // =====================================================================
-        // 1. RESOLUSI TARGET ABSEN (FIX GANDA)
+        // 1. RESOLUSI TARGET ABSEN (HYBRID FIX)
         // =====================================================================
         $attendanceToUpdate = null;
 
-        // A. Jika ID dikirim dari Form (Skenario Ideal)
+        // A. Jika ID dikirim dari Form
         if ($request->filled('attendance_id')) {
             $attendanceToUpdate = Attendance::find($request->attendance_id);
         }
         
-        // B. Fallback: Jika ID hilang, cari manual sesi aktif user ini
+        // B. Fallback: Cari manual sesi aktif user ini (jika user switch device atau form ID hilang)
         if (!$attendanceToUpdate) {
              $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
@@ -177,7 +178,7 @@ class SelfAttendanceController extends Controller
             $finalNotes = $attendanceToUpdate->notes;
             if ($request->filled('notes')) {
                 $extraNote = (!$attendanceToUpdate->check_in_time->isSameDay($currentTime)) ? "[Lembur/Lintas Hari] " : "";
-                $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $extraNote . "Pulang: " . $request->notes;
+                $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $extraNote . "Pulang (Selfie): " . $request->notes;
             }
 
             // Handling Status Saat Pulang
@@ -188,9 +189,12 @@ class SelfAttendanceController extends Controller
             if (in_array($currentStatus, ['rejected', 'alpha'])) {
                 $newStatus = 'pending_verification';
             }
-            // OPSI: Jika ingin status Verified berubah jadi Pending saat pulang, uncomment baris ini:
-            // if ($currentStatus == 'verified') { $newStatus = 'pending_verification'; }
             
+            // HYBRID LOGIC: 
+            // Jika masuk via Security (Verified/Present) dan pulang via Selfie,
+            // Status tetap 'verified' atau 'present' (tidak didowngrade ke pending),
+            // kecuali ada kebijakan lain. Di sini kita biarkan status sesuai asalnya.
+
             // Update Data
             $attendanceToUpdate->update([
                 'check_out_time'    => $currentTime,
@@ -215,19 +219,14 @@ class SelfAttendanceController extends Controller
             // [FIX GANDA] Cek Keras: Apakah ADA sesi hari ini (Entah selesai atau belum)
             $existingSessionToday = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', $today)
-                ->where('status', '!=', 'alpha') // Abaikan alpha
+                ->where('status', '!=', 'alpha')
                 ->first();
 
-            // Jika sudah ada sesi...
             if ($existingSessionToday) {
-                // Jika sesi itu belum di-checkout (Masih aktif)
                 if ($existingSessionToday->check_out_time == null) {
                     // Berarti sistem gagal mendeteksi mode pulang (ID hilang/Fallback gagal).
-                    // JANGAN BUAT BARIS BARU. Redirect user untuk refresh agar dapat mode pulang.
                     return redirect()->route('dashboard')->with('warning', 'Terdeteksi sesi aktif hari ini. Silakan refresh halaman atau coba lagi untuk Absen Pulang.');
-                } 
-                // Jika sudah checkout (sudah selesai)
-                else {
+                } else {
                     return redirect()->route('dashboard')->with('error', 'Anda sudah menyelesaikan absensi hari ini.');
                 }
             }
@@ -248,7 +247,7 @@ class SelfAttendanceController extends Controller
                 'user_id'           => $user->id,
                 'branch_id'         => $user->branch_id,
                 'check_in_time'     => $currentTime,
-                'status'            => 'pending_verification', // Default selalu pending
+                'status'            => 'pending_verification', // Default selalu pending untuk selfie masuk
                 'presence_status'   => 'Masuk',
                 'attendance_type'   => 'self',
                 'photo_path'        => $path,
@@ -282,7 +281,9 @@ class SelfAttendanceController extends Controller
         $attendance = Attendance::where('id', $id)->where('user_id', $user->id)->whereNull('check_out_time')->first();
 
         if ($attendance) {
-            $status = ($attendance->status == 'verified') ? 'verified' : 'pending_verification';
+            // Pertahankan status jika verified
+            $status = ($attendance->status == 'verified' || $attendance->status == 'present') ? $attendance->status : 'pending_verification';
+            
             $attendance->update([
                 'check_out_time' => Carbon::parse($attendance->check_in_time)->endOfDay(),
                 'photo_out_path' => null,

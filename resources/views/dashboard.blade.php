@@ -10,7 +10,6 @@
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
             <h3 class="fw-bold mb-0">{{ Auth::user()->name }}!</h3>
         </div>
-        {{-- JAM REALTIME TELAH DIPINDAHKAN KE BAGIAN CARD STATUS ABSENSI --}}
     </div>
 @endsection
 
@@ -24,14 +23,12 @@
         {{-- WIDGET ADMIN --}}
         <div class="row mb-4">
             <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                {{-- Efek 3D Tilt dihapus, class card-bank tetap dipertahankan untuk styling --}}
                 <div class="card card-bank gradient-purple">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
                         <div class="card-bank-content">
                             <p class="card-bank-label">Total User</p>
-                            {{-- Class 'count-up' untuk animasi angka --}}
                             <h2 class="card-bank-value count-up" data-target="{{ $totalUsers }}">0</h2>
                             <p class="card-bank-desc">Karyawan Aktif</p>
                         </div>
@@ -186,7 +183,6 @@
                 
                 {{-- ID CARD VISUAL --}}
                 <div class="col-12 mb-3">
-                    {{-- Efek 3D Tilt dihapus --}}
                     <div class="card card-id gradient-dark">
                         <div class="card-body">
                             <div class="card-id-header">
@@ -231,7 +227,7 @@
                     </div>
                 </div>
 
-                {{-- [BARU] QR CODE CARD UNTUK SCAN SECURITY --}}
+                {{-- QR CODE CARD UNTUK SCAN SECURITY --}}
                 <div class="col-12">
                     <div class="card border-0 shadow-sm hover-float" style="background: white; border-radius: 16px;">
                         <div class="card-body d-flex align-items-center justify-content-between">
@@ -263,7 +259,6 @@
                             </span>
                         </div>
                         
-                        {{-- JAM REALTIME DIPINDAHKAN KESINI --}}
                         <div class="text-end">
                              <h4 class="fw-bold mb-0 font-monospace text-primary" id="realtime-clock">--:--:--</h4>
                              <small class="text-muted">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</small>
@@ -284,6 +279,13 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
+                    @if (session('warning'))
+                        <div class="alert alert-warning alert-dismissible fade show shadow-sm">
+                            <i class="mdi mdi-alert-outline me-2"></i>
+                            {{ session('warning') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
 
                     {{-- LOGIKA TAMPILAN STATUS --}}
                     @if ($myAttendanceToday)
@@ -292,6 +294,8 @@
                             if (!$myAttendanceToday->check_out_time) {
                                 $isCrossDay = $myAttendanceToday->check_in_time->format('Y-m-d') !== date('Y-m-d');
                             }
+                            // Label hybrid
+                            $sourceLabel = ($myAttendanceToday->attendance_type == 'scan') ? 'Security Scan' : 'Selfie Mandiri';
                         @endphp
 
                         {{-- SUDAH PULANG --}}
@@ -334,61 +338,55 @@
                                     <div class="flex-grow-1">
                                         @if ($isCrossDay)
                                             <h5 class="mb-1 fw-bold text-danger">Lembur Lintas Hari</h5>
-                                            <p class="mb-0 small text-dark">Masuk tanggal:
-                                                <strong>{{ $myAttendanceToday->check_in_time->format('d M Y, H:i') }}</strong>
-                                            </p>
+                                            <p class="mb-0 small text-dark">Masuk: <strong>{{ $myAttendanceToday->check_in_time->format('d M, H:i') }}</strong> via {{ $sourceLabel }}</p>
                                         @else
                                             <div class="d-flex align-items-center">
                                                 <h5 class="mb-1 fw-bold">Sedang Bekerja</h5>
                                                 <span class="live-indicator ms-2"></span>
                                             </div>
-                                            <p class="mb-0">Masuk Pukul:
-                                                <strong>{{ $myAttendanceToday->check_in_time->format('H:i') }}</strong>
-                                            </p>
+                                            <p class="mb-0">Masuk Pukul: <strong>{{ $myAttendanceToday->check_in_time->format('H:i') }}</strong> via {{ $sourceLabel }}</p>
                                         @endif
                                     </div>
                                 </div>
 
-                                {{-- TOMBOL AKSI --}}
-                                @if ($myAttendanceToday->attendance_type == 'self')
-                                    <div class="mt-3 pt-3 border-top position-relative z-index-1">
+                                {{-- TOMBOL AKSI PULANG (HYBRID: Muncul walau absen masuk via SCAN) --}}
+                                <div class="mt-3 pt-3 border-top position-relative z-index-1">
 
-                                        @if ($isCrossDay)
-                                            <p class="text-center text-muted mb-3 small">
-                                                Anda belum absen pulang kemarin. Pilih tindakan:
-                                            </p>
+                                    @if ($isCrossDay)
+                                        <p class="text-center text-muted mb-3 small">
+                                            Anda belum absen pulang kemarin. Pilih tindakan:
+                                        </p>
 
-                                            <div class="row g-2">
-                                                <div class="col-6">
-                                                    <a href="{{ route('self.attend.create') }}"
-                                                        class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 shadow-sm hover-scale">
-                                                        <i class="mdi mdi-camera-party-mode fs-4 mb-1"></i>
-                                                        <span>Pulang (Lembur)</span>
-                                                    </a>
-                                                </div>
-                                                <div class="col-6">
-                                                    <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
-                                                        method="POST" class="h-100">
-                                                        @csrf
-                                                        <button type="submit"
-                                                            class="btn btn-warning btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 text-dark shadow-sm hover-scale"
-                                                            onclick="return confirm('Pilih ini jika Anda KEMARIN LUPA absen pulang.\nSesi kemarin akan ditutup otomatis tanpa foto.\n\nLanjutkan?');">
-                                                            <i class="mdi mdi-skip-forward fs-4 mb-1"></i>
-                                                            <span>Lewati (Lupa)</span>
-                                                        </button>
-                                                    </form>
-                                                </div>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <a href="{{ route('self.attend.create') }}"
+                                                    class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 shadow-sm hover-scale">
+                                                    <i class="mdi mdi-camera-party-mode fs-4 mb-1"></i>
+                                                    <span>Pulang (Lembur)</span>
+                                                </a>
                                             </div>
-                                        @else
-                                            <a href="{{ route('self.attend.create') }}"
-                                                class="btn btn-danger btn-sm w-100 shadow hover-scale">
-                                                <i class="mdi mdi-logout me-1"></i>
-                                                Absen Pulang Mandiri
-                                            </a>
-                                        @endif
+                                            <div class="col-6">
+                                                <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
+                                                    method="POST" class="h-100">
+                                                    @csrf
+                                                    <button type="submit"
+                                                        class="btn btn-warning btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 text-dark shadow-sm hover-scale"
+                                                        onclick="return confirm('Pilih ini jika Anda KEMARIN LUPA absen pulang.\nSesi kemarin akan ditutup otomatis tanpa foto.\n\nLanjutkan?');">
+                                                        <i class="mdi mdi-skip-forward fs-4 mb-1"></i>
+                                                        <span>Lewati (Lupa)</span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <a href="{{ route('self.attend.create') }}"
+                                            class="btn btn-danger btn-sm w-100 shadow hover-scale">
+                                            <i class="mdi mdi-logout me-1"></i>
+                                            Absen Pulang Mandiri
+                                        </a>
+                                    @endif
 
-                                    </div>
-                                @endif
+                                </div>
                             </div>
                         @endif
 

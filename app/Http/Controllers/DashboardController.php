@@ -36,16 +36,14 @@ class DashboardController extends Controller
         $data['idCardNumber'] = "{$yyMasuk}{$mmMasuk}{$yyLahir} {$mmLahir}{$ddLahir}{$noUrut}";
 
         // =========================================================================
-        // 2. LOGIKA JADWAL KERJA (PERSONAL vs TEMPLATE)
+        // 2. LOGIKA JADWAL KERJA
         // =========================================================================
         $scheduleText = 'Fleksibel / Bebas';
         if ($user->check_in_start && $user->check_out_start) {
-            // Prioritas 1: Jadwal Personal
             $start = Carbon::parse($user->check_in_start)->format('H:i');
             $end   = Carbon::parse($user->check_out_start)->format('H:i');
             $scheduleText = "$start - $end";
         } elseif ($user->workSchedule) {
-            // Prioritas 2: Jadwal Template/Shift
             $start = Carbon::parse($user->workSchedule->start_time)->format('H:i');
             $end   = Carbon::parse($user->workSchedule->end_time)->format('H:i');
             $scheduleText = "$start - $end";
@@ -77,7 +75,26 @@ class DashboardController extends Controller
 
         // 4. DATA IZIN & SESI HARI INI
         $data['myLeaveToday'] = $this->getTodayLeaveRequest($user->id);
-        $data = $this->getCommonDataForAllRoles($user, $data);
+        
+        // HYBRID CHECK FOR DASHBOARD
+        // Pastikan Dashboard mendeteksi sesi aktif tanpa filter tipe
+        $activeSession = Attendance::where('user_id', $user->id)
+            ->whereNull('check_out_time')
+            ->where('check_in_time', '>=', Carbon::now()->subHours(24))
+            ->latest('check_in_time')
+            ->first();
+
+        if ($activeSession) {
+            $data['myAttendanceToday'] = $activeSession;
+        } else {
+            $finishedSession = Attendance::where('user_id', $user->id)
+                ->whereDate('check_in_time', today())
+                ->whereNotNull('check_out_time')
+                ->latest('check_in_time')
+                ->first();
+
+            $data['myAttendanceToday'] = $finishedSession;
+        }
 
         // 5. HITUNG DATA PERSONAL
         $data['myPendingCount'] = Attendance::where('user_id', $user->id)
@@ -90,7 +107,7 @@ class DashboardController extends Controller
 
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
-        // 6. LOGIKA DASHBOARD PEKERJAAN (ATAS)
+        // 6. LOGIKA DASHBOARD PEKERJAAN
         if ($user->role == 'admin') {
             $data['totalUsers'] = (clone $userQuery)->where('role', '!=', 'admin')->where('is_active', true)->count();
             $data['totalDivisions'] = (clone $divisionQuery)->count();
@@ -137,29 +154,6 @@ class DashboardController extends Controller
             ->first();
     }
 
-    private function getCommonDataForAllRoles($user, $data)
-    {
-        $activeSession = Attendance::where('user_id', $user->id)
-            ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', Carbon::now()->subHours(24))
-            ->latest('check_in_time')
-            ->first();
-
-        if ($activeSession) {
-            $data['myAttendanceToday'] = $activeSession;
-        } else {
-            $finishedSession = Attendance::where('user_id', $user->id)
-                ->whereDate('check_in_time', today())
-                ->whereNotNull('check_out_time')
-                ->latest('check_in_time')
-                ->first();
-
-            $data['myAttendanceToday'] = $finishedSession;
-        }
-
-        return $data;
-    }
-
     private function getAdminAttendanceStats($branch_id = null)
     {
         $query = Attendance::whereDate('check_in_time', today());
@@ -181,7 +175,7 @@ class DashboardController extends Controller
             'present' => $presentCount,
             'late' => $lateCount,
             'early' => $earlyCount,
-            'pending' => $pendingCount,
+            'pending' => $pending,
             'on_time' => $onTimeCount,
             'absent' => $absentCount,
             'present_percentage' => $totalUsers > 0 ? round(($presentCount / $totalUsers) * 100) : 0,

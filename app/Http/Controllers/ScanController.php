@@ -32,12 +32,12 @@ class ScanController extends Controller
         $today = today();
         
         // =========================================================================
-        // [FIX] PENCARIAN SESI UNTUK PREVIEW (LINTAS HARI)
+        // HYBRID PREVIEW: PENCARIAN SESI LINTAS METODE
         // =========================================================================
-        // Cari sesi aktif dalam 24 jam terakhir (abaikan tanggal check_in harus hari ini)
+        // Cari sesi aktif dalam 24 jam terakhir (abaikan tipe absen self/scan)
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', Carbon::now()->subHours(24)) // Lookback 24 jam
+            ->where('check_in_time', '>=', Carbon::now()->subHours(24))
             ->latest('check_in_time')
             ->first();
 
@@ -78,10 +78,11 @@ class ScanController extends Controller
                 'photo_url' => $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
                 'attendance_status' => $attendanceSession ? [
                     'has_checked_in' => !is_null($attendanceSession->check_in_time),
-                    'has_checked_out' => !is_null($attendanceSession->check_out_time), // Jika sesi aktif (belum checkout), ini false
+                    'has_checked_out' => !is_null($attendanceSession->check_out_time),
                     'check_in_time' => $attendanceSession->check_in_time?->format('H:i'),
                     'check_out_time' => $attendanceSession->check_out_time?->format('H:i'),
                     'is_late' => $attendanceSession->is_late_checkin,
+                    'type' => $attendanceSession->attendance_type // Tambahan info tipe
                 ] : null,
                 'work_schedule' => $workSchedule ? [
                     'check_in_start' => $workSchedule->check_in_start->format('H:i'),
@@ -155,7 +156,8 @@ class ScanController extends Controller
             }
 
             $isLate = false;
-            $status = 'present';
+            // Status jika discan security otomatis Verified / Present
+            $status = 'present'; 
             if ($workSchedule) {
                 if (Carbon::parse($currentTime)->gt(Carbon::parse($workSchedule->check_in_end))) {
                     $isLate = true;
@@ -179,11 +181,11 @@ class ScanController extends Controller
 
         } 
         // ============================
-        // LOGIC ABSEN PULANG
+        // LOGIC ABSEN PULANG (HYBRID)
         // ============================
         elseif ($request->type == 'pulang') {
             
-            // [FIX] Cari sesi aktif dalam 24 jam terakhir (Lintas Hari)
+            // [HYBRID FIX] Cari sesi aktif apa saja (Self atau Scan)
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', Carbon::now()->subHours(24))
@@ -196,7 +198,6 @@ class ScanController extends Controller
 
             $isEarlyCheckout = false;
             if ($workSchedule) {
-                 // Logic sederhana early checkout
                  $coTime = Carbon::parse($currentTime->format('H:i:s'));
                  $schedStart = Carbon::parse($workSchedule->check_out_start);
                  
@@ -204,15 +205,27 @@ class ScanController extends Controller
                  if (Carbon::parse($workSchedule->check_in_start)->lt($schedStart)) {
                      if ($coTime->lt($schedStart)) $isEarlyCheckout = true;
                  } else {
-                     // Shift malam (Lintas hari), dan absen pulang pagi tapi kepagian
+                     // Shift malam
                      if ($coTime->lt($schedStart) && $coTime->gt(Carbon::parse("00:00:00"))) $isEarlyCheckout = true;
                  }
+            }
+
+            // [HYBRID FEATURE]
+            // Jika absen pulang dilakukan oleh Security, maka status absen tersebut 
+            // otomatis menjadi VALID/PRESENT/VERIFIED, meskipun absen masuknya 'pending' (selfie).
+            // Hal ini karena security telah memvalidasi fisik karyawan saat pulang.
+            
+            $finalStatus = $attendance->status;
+            if ($finalStatus == 'pending_verification') {
+                $finalStatus = 'present'; // atau 'verified', sesuaikan dengan enum database Anda
             }
 
             $attendance->update([
                 'check_out_time' => $currentTime,
                 'photo_out_path' => $imageName, 
                 'is_early_checkout' => $isEarlyCheckout,
+                'status' => $finalStatus, // Auto-verify on security checkout
+                'notes' => $attendance->notes . ' | Pulang via Security Scan'
             ]);
 
             $msg = $isEarlyCheckout ? "Absen PULANG Berhasil (PULANG CEPAT)" : "Absen PULANG Berhasil";
@@ -242,12 +255,11 @@ class ScanController extends Controller
     {
          $securityUser = Auth::user(); $today = today();
          $stats = [
-            'total_scans_today' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('updated_at', $today)->count(), // Gunakan updated_at agar hitung pulang juga
+            'total_scans_today' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('updated_at', $today)->count(),
             'check_in_count' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('check_in_time', $today)->whereNotNull('check_in_time')->count(),
-            // Hitung checkout hari ini meskipun checkin kemarin
             'check_out_count' => Attendance::where(function($q) use ($securityUser, $today) {
-                $q->where('scanned_by_user_id', $securityUser->id) // Scan masuk oleh security ini (opsional tergantung rules)
-                  ->orWhere('user_id', '!=', 0); // Hacky way, better remove restriction or log who scanned check_out
+                // Hitung check out yang discan oleh user ini, atau check out pada record yang dibuat user ini
+                $q->where('scanned_by_user_id', $securityUser->id); 
             })->whereDate('check_out_time', $today)->whereNotNull('check_out_time')->count(),
             
             'late_count' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('check_in_time', $today)->where('is_late_checkin', true)->count(),
