@@ -50,7 +50,7 @@
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Monitoring Harian</li>
-            
+
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin.monitoring.daily') }}">
                     <i class="menu-icon mdi mdi-monitor-dashboard"></i>
@@ -150,12 +150,25 @@
         {{-- =================================== --}}
         {{--         MENU SECURITY               --}}
         {{-- =================================== --}}
-        @if (auth()->user()->role == 'security')
+        {{-- Ubah kondisi IF agar Admin juga bisa melihat menu ini --}}
+        @if (auth()->user()->role == 'security' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Menu Security</li>
+
+            {{-- Menu Scan (Hanya untuk Role Security, Admin biasanya tidak perlu scan) --}}
+            @if (auth()->user()->role == 'security')
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('security.scan') }}">
+                        <i class="menu-icon mdi mdi-qrcode-scan"></i>
+                        <span class="menu-title">Pindai Absensi</span>
+                    </a>
+                </li>
+            @endif
+
+            {{-- Menu Riwayat Scan (Security & Admin) --}}
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('security.scan') }}">
-                    <i class="menu-icon mdi mdi-qrcode-scan"></i>
-                    <span class="menu-title">Pindai Absensi</span>
+                <a class="nav-link" href="{{ route('security.history') }}">
+                    <i class="menu-icon mdi mdi-history"></i>
+                    <span class="menu-title">Riwayat Scan</span>
                 </a>
             </li>
         @endif
@@ -163,7 +176,10 @@
         {{-- =================================== --}}
         {{--    MENU TIM (USER, LEADER, AUDIT)   --}}
         {{-- =================================== --}}
-        @if (auth()->user()->role == 'user_biasa' || auth()->user()->role == 'leader' || auth()->user()->role == 'audit' || auth()->user()->role == 'security')
+        @if (auth()->user()->role == 'user_biasa' ||
+                auth()->user()->role == 'leader' ||
+                auth()->user()->role == 'audit' ||
+                auth()->user()->role == 'security')
             <li class="nav-item nav-category">Menu Pengguna</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('team.index') }}">
@@ -183,10 +199,9 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MONITORING (ADMIN, AUDIT, LEADER)--}}
+        {{--    MONITORING (ADMIN, AUDIT, LEADER) --}}
         {{-- =================================== --}}
         @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
-            
             <li class="nav-item nav-category">Monitoring Wilayah</li>
 
             {{-- MENU INVENTARIS CABANG --}}
