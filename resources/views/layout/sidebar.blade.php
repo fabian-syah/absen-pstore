@@ -109,6 +109,8 @@
         {{-- =================================== --}}
         @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Verifikasi</li>
+            
+            {{-- Menu yang BISA diakses Audit & Admin --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('audit.verify.list') }}">
                     <i class="menu-icon mdi mdi-checkbox-marked-outline"></i>
@@ -121,40 +123,43 @@
                     <span class="menu-title">Daftar Izin / Telat</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('users.photo-requests') }}">
-                    <i class="menu-icon mdi mdi-camera-retake-outline"></i>
-                    <span class="menu-title">Permintaan Ganti Foto</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('users.ktp-requests') }}">
-                    <i class="menu-icon mdi mdi-card-account-details-outline"></i>
-                    <span class="menu-title">Req. Ganti KTP</span>
-                    @php
-                        $ktpPendingCount = \App\Models\User::where('ktp_request_status', 'pending')->count();
-                    @endphp
-                    @if ($ktpPendingCount > 0)
-                        <span class="badge badge-danger ms-2">{{ $ktpPendingCount }}</span>
-                    @endif
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('inventory-returns.index') }}">
-                    <i class="menu-icon mdi mdi-package-variant-minus"></i>
-                    <span class="menu-title">History Pengembalian</span>
-                </a>
-            </li>
+
+            {{-- Menu KHUSUS ADMIN (Audit tidak bisa lihat) --}}
+            @if(auth()->user()->role == 'admin')
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('users.photo-requests') }}">
+                        <i class="menu-icon mdi mdi-camera-retake-outline"></i>
+                        <span class="menu-title">Permintaan Ganti Foto</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('users.ktp-requests') }}">
+                        <i class="menu-icon mdi mdi-card-account-details-outline"></i>
+                        <span class="menu-title">Req. Ganti KTP</span>
+                        @php
+                            $ktpPendingCount = \App\Models\User::where('ktp_request_status', 'pending')->count();
+                        @endphp
+                        @if ($ktpPendingCount > 0)
+                            <span class="badge badge-danger ms-2">{{ $ktpPendingCount }}</span>
+                        @endif
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('inventory-returns.index') }}">
+                        <i class="menu-icon mdi mdi-package-variant-minus"></i>
+                        <span class="menu-title">History Pengembalian</span>
+                    </a>
+                </li>
+            @endif
         @endif
 
         {{-- =================================== --}}
         {{--         MENU SECURITY               --}}
         {{-- =================================== --}}
-        {{-- Ubah kondisi IF agar Admin juga bisa melihat menu ini --}}
         @if (auth()->user()->role == 'security' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Menu Security</li>
 
-            {{-- Menu Scan (Hanya untuk Role Security, Admin biasanya tidak perlu scan) --}}
+            {{-- Menu Scan (Hanya untuk Role Security) --}}
             @if (auth()->user()->role == 'security')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('security.scan') }}">
