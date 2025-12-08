@@ -59,7 +59,7 @@
                                     <th> Profil Pengguna </th>
                                     <th> Kontak </th>
                                     <th> Role </th>
-                                    <th> Penempatan </th>
+                                    <th> Penempatan & Divisi </th> {{-- Header diperjelas --}}
                                     <th> Tanggal Join </th>
                                     <th> QR Code </th>
                                     <th> Aksi </th>
@@ -118,16 +118,28 @@
                                                 class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
                                         </td>
 
-                                        {{-- PENEMPATAN --}}
+                                        {{-- PENEMPATAN & DIVISI (MODIFIED) --}}
                                         <td>
-                                            @if ($user->role == 'audit')
-                                                <small>{{ $user->branches->pluck('name')->join(', ') ?: 'N/A' }}</small>
-                                            @elseif($user->role == 'leader')
-                                                <small>{{ $user->branch->name ?? 'N/A' }} (Div:
-                                                    {{ $user->divisions->pluck('name')->join(', ') }})</small>
-                                            @else
-                                                <small>{{ $user->branch->name ?? 'Semua' }}</small>
-                                            @endif
+                                            {{-- Baris 1: Tampilkan Cabang --}}
+                                            <div class="fw-bold mb-1" style="font-size: 0.9rem;">
+                                                @if ($user->role == 'audit')
+                                                    {{ $user->branches->pluck('name')->join(', ') ?: 'Semua Cabang' }}
+                                                @else
+                                                    {{ $user->branch->name ?? 'Semua Cabang' }}
+                                                @endif
+                                            </div>
+
+                                            {{-- Baris 2: Tampilkan Divisi (Multi) Dibawahnya --}}
+                                            <div class="text-muted">
+                                                @if ($user->divisions->isNotEmpty())
+                                                    <i class="mdi mdi-label-outline text-primary me-1" style="font-size: 10px;"></i>
+                                                    <span style="font-size: 0.8rem;">
+                                                        {{ $user->divisions->pluck('name')->join(', ') }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted fst-italic" style="font-size: 0.8rem;">-</span>
+                                                @endif
+                                            </div>
                                         </td>
 
                                         {{-- TANGGAL JOIN --}}
@@ -182,7 +194,6 @@
                                                 <form action="{{ route('users.toggle-status', $user->id) }}" method="POST"
                                                     class="d-inline">
                                                     @csrf
-                                                    {{-- Baris @method('PATCH') sudah dihapus, jadi form akan mengirim POST murni --}}
                                                     <button type="submit"
                                                         class="btn btn-icon btn-sm {{ $user->is_active ? 'btn-inverse-danger' : 'btn-inverse-success' }}"
                                                         title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
