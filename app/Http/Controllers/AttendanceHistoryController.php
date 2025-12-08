@@ -85,7 +85,7 @@ class AttendanceHistoryController extends Controller
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        // LOAD RELATION scanner AGAR BISA TAHU SIAPA SECURITY MASUK
+        // 1. DATA ABSENSI (Scan/Selfie)
         $attendances = Attendance::with(['verifier', 'scanner']) 
             ->where('user_id', $user->id)
             ->whereYear('check_in_time', $selectedYear)
@@ -93,7 +93,10 @@ class AttendanceHistoryController extends Controller
             ->orderBy('check_in_time', 'desc')
             ->get();
 
-        $leaves = LeaveRequest::where('user_id', $user->id)
+        // 2. DATA IZIN (Tambahkan with verifier untuk mengambil nama penyetuju)
+        // Pastikan di Model LeaveRequest ada relasi public function verifier() { return $this->belongsTo(User::class, 'approved_by'); } atau sejenisnya
+        $leaves = LeaveRequest::with('verifier') 
+            ->where('user_id', $user->id)
             ->where('status', 'approved')
             ->where('is_active', true)
             ->where(function ($q) use ($selectedMonth, $selectedYear) {
@@ -114,6 +117,7 @@ class AttendanceHistoryController extends Controller
             foreach ($period as $date) {
                 if ($date->month == $selectedMonth && $date->year == $selectedYear) {
                     
+                    // Cek Conflict tanggal
                     $alreadyAttendance = $attendances->filter(function ($att) use ($date) {
                         return $att->check_in_time->isSameDay($date);
                     })->isNotEmpty();
@@ -139,7 +143,11 @@ class AttendanceHistoryController extends Controller
                         $fakeAtt->audit_photo_path = null;
                         $fakeAtt->audit_note = "Pengajuan: " . $leave->reason;
                         
+                        // Set Relasi agar bisa dipanggil di View
                         $fakeAtt->setRelation('leaveRequest', $leave);
+                        
+                        // Mapping Verifier Izin ke Verifier Attendance agar logic view seragam
+                        $fakeAtt->setRelation('verifier', $leave->verifier); 
                         
                         $historyCollection->push($fakeAtt);
                     }
