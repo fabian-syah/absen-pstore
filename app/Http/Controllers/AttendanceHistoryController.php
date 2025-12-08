@@ -18,10 +18,9 @@ class AttendanceHistoryController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Tentukan User Target (Diri sendiri atau Karyawan lain jika Audit/Admin)
         if ($request->has('employeeId') && (Auth::user()->role == 'audit' || Auth::user()->role == 'admin')) {
             $targetUser = User::find($request->employeeId);
-            $employee = $targetUser; // Variabel untuk view
+            $employee = $targetUser; 
         } else {
             $targetUser = $user;
             $employee = null;
@@ -31,23 +30,18 @@ class AttendanceHistoryController extends Controller
             return back()->with('error', 'Karyawan tidak ditemukan');
         }
 
-        // 2. Ambil Filter Bulan & Tahun
         $selectedMonth = $request->get('month', date('m'));
         $selectedYear = $request->get('year', date('Y'));
 
-        // 3. Hitung Navigasi (Bulan Lalu & Bulan Depan)
         $currentDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1);
-        
         $prevDate = $currentDate->copy()->subMonth();
         $nextDate = $currentDate->copy()->addMonth();
 
         $prevMonth = $prevDate->month;
         $prevYear  = $prevDate->year;
-        
         $nextMonth = $nextDate->month;
         $nextYear  = $nextDate->year;
 
-        // 4. Ambil Data
         $data = $this->getHistoryData($targetUser, $selectedMonth, $selectedYear);
 
         $history = $data['history'];
@@ -89,11 +83,9 @@ class AttendanceHistoryController extends Controller
         return $pdf->download('Laporan_Absensi_' . $targetUser->name . '_' . $selectedMonth . '-' . $selectedYear . '.pdf');
     }
 
-    // --- HELPER PRIVATE ---
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        // 1. AMBIL DATA ABSENSI ASLI
-        // MODIFIKASI: Menambahkan 'scanner' ke relasi untuk melihat Security Masuk
+        // LOAD RELATION scanner AGAR BISA TAHU SIAPA SECURITY MASUK
         $attendances = Attendance::with(['verifier', 'scanner']) 
             ->where('user_id', $user->id)
             ->whereYear('check_in_time', $selectedYear)
@@ -101,7 +93,6 @@ class AttendanceHistoryController extends Controller
             ->orderBy('check_in_time', 'desc')
             ->get();
 
-        // 2. AMBIL DATA IZIN/CUTI (Approved)
         $leaves = LeaveRequest::where('user_id', $user->id)
             ->where('status', 'approved')
             ->where('is_active', true)
@@ -113,7 +104,6 @@ class AttendanceHistoryController extends Controller
             })
             ->get();
 
-        // 3. MERGE DATA
         $historyCollection = $attendances;
 
         foreach ($leaves as $leave) {
@@ -124,7 +114,6 @@ class AttendanceHistoryController extends Controller
             foreach ($period as $date) {
                 if ($date->month == $selectedMonth && $date->year == $selectedYear) {
                     
-                    // Cek Conflict
                     $alreadyAttendance = $attendances->filter(function ($att) use ($date) {
                         return $att->check_in_time->isSameDay($date);
                     })->isNotEmpty();
@@ -160,7 +149,6 @@ class AttendanceHistoryController extends Controller
 
         $history = $historyCollection->sortByDesc('check_in_time');
 
-        // 4. HITUNG SUMMARY
         $summary = [
             'total' => $history->count(),
             'hadir' => $history->filter(function($item) {

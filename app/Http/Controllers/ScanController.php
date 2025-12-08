@@ -31,9 +31,6 @@ class ScanController extends Controller
 
         $today = today();
         
-        // =========================================================================
-        // HYBRID PREVIEW: PENCARIAN SESI LINTAS METODE
-        // =========================================================================
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', Carbon::now()->subHours(24))
@@ -105,7 +102,6 @@ class ScanController extends Controller
         $currentTime = now();
         $today = today();
 
-        // --- PROSES BASE64 IMAGE ---
         $image = $request->image;
         $image = preg_replace('/^data:image\/(jpeg|png|jpg);base64,/', '', $image);
         $image = str_replace(' ', '+', $image);
@@ -114,14 +110,9 @@ class ScanController extends Controller
         $imageName = 'attendance/capture_' . $typeLabel . '_' . time() . '_' . $user->id . '.jpg';
         
         Storage::disk('public')->put($imageName, base64_decode($image));
-        // ----------------------------------------
 
-        // ============================
-        // LOGIC ABSEN MASUK
-        // ============================
         if ($request->type == 'masuk') {
             
-            // Validasi Cuti
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
                 ->where('status', 'approved')
                 ->where('type', '!=', 'telat')
@@ -133,13 +124,11 @@ class ScanController extends Controller
                  return response()->json(['status' => 'error', 'message' => 'Gagal: User sedang dalam status Cuti/Izin.'], 403);
             }
 
-            // Auto Reset Sesi Lama
             Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '<', $currentTime->copy()->subHours(20))
                 ->update(['check_out_time' => DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed by Security Scan (Expired)']);
 
-            // Cek Double Login
             if (Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', $currentTime->copy()->subHours(20))
@@ -147,7 +136,6 @@ class ScanController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini masih memiliki sesi aktif (Belum Pulang)!'], 409);
             }
             
-            // Cek Selesai Hari Ini
             if (Attendance::where('user_id', $user->id)->whereDate('check_in_time', $today)->whereNotNull('check_out_time')->exists()) {
                  return response()->json(['status' => 'error', 'message' => 'Karyawan ini sudah selesai absen (Masuk & Pulang) hari ini.'], 409);
             }
@@ -159,13 +147,12 @@ class ScanController extends Controller
                 }
             }
 
-            // [FIX STATUS: LANGSUNG VERIFIED & MASUK]
             Attendance::create([
                 'user_id' => $user->id,
                 'branch_id' => $user->branch_id,
                 'check_in_time' => $currentTime,
-                'status' => 'verified', // <--- Force Verified agar hijau
-                'presence_status' => 'Masuk', // <--- Force status 'Masuk' agar tidak 'Belum Diatur'
+                'status' => 'verified',
+                'presence_status' => 'Masuk',
                 'photo_path' => $imageName, 
                 'scanned_by_user_id' => $securityUser->id,
                 'verified_by_user_id' => $securityUser->id, 
@@ -176,11 +163,7 @@ class ScanController extends Controller
 
             $msg = $isLate ? "Absen MASUK Berhasil (TERLAMBAT)" : "Absen MASUK Berhasil";
 
-        } 
-        // ============================
-        // LOGIC ABSEN PULANG
-        // ============================
-        elseif ($request->type == 'pulang') {
+        } elseif ($request->type == 'pulang') {
             
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
@@ -204,12 +187,11 @@ class ScanController extends Controller
                  }
             }
 
-            // [FIX STATUS: LANGSUNG VERIFIED]
             $attendance->update([
                 'check_out_time' => $currentTime,
                 'photo_out_path' => $imageName, 
                 'is_early_checkout' => $isEarlyCheckout,
-                'status' => 'verified', // <--- Force Verified
+                'status' => 'verified',
                 'verified_by_user_id' => $securityUser->id,
                 'notes' => $attendance->notes . ' | Pulang via Security Scan'
             ]);
@@ -251,33 +233,25 @@ class ScanController extends Controller
          return response()->json(['status' => 'success', 'data' => $stats]);
     }
 
-    // --- FITUR BARU: RIWAYAT SCAN ---
     public function history(Request $request)
     {
         $user = Auth::user();
         
         $query = Attendance::with(['user.division', 'user.branch', 'branch', 'scanner', 'verifier']);
 
-        // Filter: Hanya ambil data yang dilakukan melalui scan (scanned_by ada isinya)
         $query->whereNotNull('scanned_by_user_id');
 
-        // LOGIKA FILTER ROLE
         if ($user->role !== 'admin') {
-            // Jika BUKAN admin (berarti Security), tampilkan jika:
-            // 1. Dia yang scan MASUK (scanned_by_user_id)
-            // 2. ATAU Dia yang scan PULANG (verified_by_user_id)
             $query->where(function($q) use ($user) {
                 $q->where('scanned_by_user_id', $user->id)
                   ->orWhere('verified_by_user_id', $user->id);
             });
         }
 
-        // Filter Tanggal
         if ($request->date) {
             $query->whereDate('check_in_time', $request->date);
         }
 
-        // Urutkan dari yang terbaru
         $logs = $query->orderBy('updated_at', 'desc')->paginate(10);
 
         return view('security.history', compact('logs'));

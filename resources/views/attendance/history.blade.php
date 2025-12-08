@@ -327,8 +327,9 @@
                                                     
                                                     if (!empty($att->notes)) {
                                                         $cleanNote = $att->notes;
-                                                        if (str_contains($cleanNote, '| Pulang:')) {
-                                                            $parts = explode('| Pulang:', $cleanNote);
+                                                        // FIX LABEL: Hapus bagian "| Pulang" dari caption masuk agar tidak membingungkan
+                                                        if (str_contains($cleanNote, '| Pulang')) {
+                                                            $parts = explode('| Pulang', $cleanNote);
                                                             $cleanNote = trim($parts[0]);
                                                         }
                                                         if (!empty($cleanNote)) {
@@ -376,9 +377,14 @@
                                             <td>
                                                 @php
                                                     $labelPulang = 'Pulang';
-                                                    if (!empty($att->notes) && str_contains($att->notes, 'Pulang:')) {
-                                                        $parts = explode('Pulang:', $att->notes);
+                                                    if (!empty($att->notes) && str_contains($att->notes, 'Pulang')) {
+                                                        // Cari kata kunci Pulang, bisa 'Pulang:' atau 'Pulang via'
+                                                        $parts = explode('Pulang', $att->notes);
+                                                        // Ambil bagian terakhir (setelah kata Pulang)
                                                         $labelPulang = trim(end($parts));
+                                                        // Bersihkan karakter aneh di awal (misal : atau via)
+                                                        $labelPulang = ltrim($labelPulang, ': ');
+                                                        $labelPulang = 'Pulang ' . $labelPulang;
                                                     }
                                                 @endphp
 
@@ -423,7 +429,7 @@
                                                 @endif
                                             </td>
 
-                                            {{-- KOLOM VERIFIKASI & PETUGAS (DUAL VERIFIER) --}}
+                                            {{-- KOLOM VERIFIKASI & PETUGAS (DUAL VERIFIER - FIX LOGIC) --}}
                                             <td>
                                                 <div class="d-flex flex-column gap-2">
                                                     
@@ -447,12 +453,20 @@
                                                                 <span class="d-block fw-bold text-dark" style="font-size: 11px;">Audit / Admin</span>
                                                                 <small class="text-muted" style="font-size: 9px;">Verifikator</small>
                                                             </div>
-                                                        @elseif($att->status == 'verified' && $att->attendance_type == 'self')
-                                                            {{-- Jika Selfie tapi sudah Verified --}}
+                                                        @elseif($att->attendance_type == 'self')
+                                                            {{-- Jika Masuk Mandiri (FIX: Tampilkan Mandiri, bukan System/Audit) --}}
+                                                            <div class="badge bg-success bg-opacity-10 text-success border border-success p-1 me-2 rounded">
+                                                                <i class="mdi mdi-camera-front-variant"></i> IN
+                                                            </div>
+                                                            <div>
+                                                                <span class="d-block fw-bold text-dark" style="font-size: 11px;">Mandiri</span>
+                                                                <small class="text-muted" style="font-size: 9px;">Selfie</small>
+                                                            </div>
+                                                        @elseif($att->status == 'verified')
                                                             <div class="badge bg-success bg-opacity-10 text-success border border-success p-1 me-2 rounded">
                                                                 <i class="mdi mdi-check"></i> IN
                                                             </div>
-                                                            <small class="text-muted" style="font-size: 10px;">System/Audit</small>
+                                                            <small class="text-muted" style="font-size: 10px;">System</small>
                                                         @else
                                                             {{-- Masih Pending --}}
                                                             <span class="badge bg-warning text-dark" style="font-size: 10px;">Menunggu Verifikasi</span>
@@ -464,17 +478,10 @@
                                                         <div class="border-top my-1"></div> {{-- Garis pemisah --}}
                                                         
                                                         <div class="d-flex align-items-center">
-                                                            @if (str_contains($att->notes, 'Pulang (Selfie)') || $att->attendance_type == 'self')
-                                                                {{-- Jika Pulang via Selfie (MANDIRI) --}}
-                                                                <div class="badge bg-info bg-opacity-10 text-info border border-info p-1 me-2 rounded">
-                                                                    <i class="mdi mdi-camera-front-variant"></i> OUT
-                                                                </div>
-                                                                <div>
-                                                                    <span class="d-block fw-bold text-dark" style="font-size: 11px;">Mandiri</span>
-                                                                    <small class="text-muted" style="font-size: 9px;">System Auto</small>
-                                                                </div>
-                                                            @elseif ($att->attendance_type == 'scan' || str_contains($att->notes, 'Security Scan'))
-                                                                {{-- Jika Pulang via Scan Security --}}
+                                                            
+                                                            {{-- LOGIKA FIX: Cek Notes Security Scan DULUAN sebelum cek Self --}}
+                                                            @if (str_contains($att->notes, 'Security Scan'))
+                                                                {{-- Jika Pulang via Scan Security (Ada catatan Security Scan) --}}
                                                                 <div class="badge bg-dark bg-opacity-10 text-dark border border-dark p-1 me-2 rounded">
                                                                     <i class="mdi mdi-logout"></i> OUT
                                                                 </div>
@@ -483,6 +490,26 @@
                                                                     <span class="d-block fw-bold text-dark" style="font-size: 11px;">
                                                                         {{ $att->verifier->name ?? 'Security' }}
                                                                     </span>
+                                                                    <small class="text-muted" style="font-size: 9px;">Security</small>
+                                                                </div>
+
+                                                            @elseif (str_contains($att->notes, 'Pulang (Selfie)') || ($att->attendance_type == 'self' && !str_contains($att->notes, 'Security Scan')))
+                                                                {{-- Jika Pulang via Selfie (MANDIRI) --}}
+                                                                <div class="badge bg-info bg-opacity-10 text-info border border-info p-1 me-2 rounded">
+                                                                    <i class="mdi mdi-camera-front-variant"></i> OUT
+                                                                </div>
+                                                                <div>
+                                                                    <span class="d-block fw-bold text-dark" style="font-size: 11px;">Mandiri</span>
+                                                                    <small class="text-muted" style="font-size: 9px;">Selfie</small>
+                                                                </div>
+
+                                                            @elseif ($att->attendance_type == 'scan')
+                                                                {{-- Fallback jika tipe Scan tapi notes bersih --}}
+                                                                <div class="badge bg-dark bg-opacity-10 text-dark border border-dark p-1 me-2 rounded">
+                                                                    <i class="mdi mdi-logout"></i> OUT
+                                                                </div>
+                                                                <div>
+                                                                    <span class="d-block fw-bold text-dark" style="font-size: 11px;">{{ $att->verifier->name ?? 'Security' }}</span>
                                                                     <small class="text-muted" style="font-size: 9px;">Security</small>
                                                                 </div>
                                                             @else
