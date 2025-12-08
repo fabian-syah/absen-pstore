@@ -19,30 +19,40 @@
                 <form action="{{ route('job-targets.store') }}" method="POST">
                     @csrf
                     
-                    {{-- SECTION 1: TIPE & ASSIGNMENT --}}
+                    {{-- SECTION 1: TIPE & CABANG --}}
                     <div class="bg-light rounded-4 p-4 mb-4">
-                        <label class="fw-bold text-dark mb-3"><i class="mdi mdi-bullseye-arrow me-1"></i> Tipe & Penerima</label>
+                        <label class="fw-bold text-dark mb-3"><i class="mdi mdi-bullseye-arrow me-1"></i> Tipe Target</label>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="small text-muted mb-1">Jenis Target</label>
-                                <select name="type" id="create_type" class="form-select form-select-lg border-0 shadow-sm" onchange="toggleTeamSelect()">
+                                <select name="type" id="create_type" class="form-select form-select-lg border-0 shadow-sm" onchange="toggleBranchSelect()">
                                     <option value="personal" selected>👤 Pribadi (Personal)</option>
                                     <option value="achievement">🏆 Pencapaian (Achievement)</option>
+                                    
                                     @if(in_array(auth()->user()->role, ['admin', 'leader', 'audit']))
-                                        <option value="team">🏢 Target Tim / Cabang</option>
+                                        <option value="team">🏢 Target Cabang / Tim</option>
                                     @endif
                                 </select>
                             </div>
 
+                            {{-- INPUT PILIH CABANG (Muncul jika Tipe = Team) --}}
                             @if(in_array(auth()->user()->role, ['admin', 'leader', 'audit']))
-                                <div class="col-md-6 d-none" id="team_user_select">
-                                    <label class="small text-muted mb-1">Ditugaskan Kepada</label>
-                                    <select name="user_id" class="form-select form-select-lg border-0 shadow-sm">
-                                        <option value="{{ auth()->user()->id }}">-- Diri Sendiri --</option>
-                                        @foreach($users as $u)
-                                            <option value="{{ $u->id }}">{{ $u->name }} - {{ $u->branch->name ?? '' }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="col-md-6 d-none" id="branch_select_container">
+                                    <label class="small text-muted mb-1">Target Untuk Cabang</label>
+                                    
+                                    @if(auth()->user()->role == 'leader')
+                                        {{-- KHUSUS LEADER: Cuma 1 Cabang (Readonly) --}}
+                                        <input type="text" class="form-control form-control-lg border-0 shadow-sm bg-white" value="{{ auth()->user()->branch->name ?? '-' }}" readonly>
+                                        <input type="hidden" name="branch_id" value="{{ auth()->user()->branch_id }}">
+                                        <small class="text-muted fst-italic">*Anda hanya dapat membuat target untuk cabang Anda sendiri.</small>
+                                    @else
+                                        {{-- ADMIN & AUDIT: Dropdown Pilih Cabang --}}
+                                        <select name="branch_id" class="form-select form-select-lg border-0 shadow-sm">
+                                            @foreach($branches as $branch)
+                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
                                 </div>
                             @endif
                         </div>
@@ -145,11 +155,16 @@
 </div>
 
 <script>
-    function toggleTeamSelect() {
+    function toggleBranchSelect() {
         let type = document.getElementById('create_type').value;
-        let teamSelect = document.getElementById('team_user_select');
-        if(teamSelect) {
-            type === 'team' ? teamSelect.classList.remove('d-none') : teamSelect.classList.add('d-none');
+        let branchContainer = document.getElementById('branch_select_container');
+        
+        if(branchContainer) {
+            if (type === 'team') {
+                branchContainer.classList.remove('d-none');
+            } else {
+                branchContainer.classList.add('d-none');
+            }
         }
     }
 

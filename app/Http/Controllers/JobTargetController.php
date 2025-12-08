@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\JobTarget;
 use App\Models\User;
+use App\Models\Branch; // Jangan lupa import ini
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -16,70 +17,68 @@ class JobTargetController extends Controller
         $user = Auth::user();
 
         // --- 1. TARGET CABANG (TEAM) ---
-        // Logic: Admin/Leader lihat semua/divisi, User biasa lihat yang ditugaskan ke dia tapi tipe team
-        $teamQuery = JobTarget::with(['user'])->where('type', 'team');
+        $teamQuery = JobTarget::with(['user', 'branch'])->where('type', 'team');
 
         if ($user->role == 'admin') {
-            // All
+            // Admin lihat semua
         } elseif ($user->role == 'audit') {
+            // Audit lihat cabang yang dipegang
             $teamQuery->whereIn('branch_id', $user->branches->pluck('id'));
         } elseif ($user->role == 'leader') {
+            // Leader lihat divisi dia atau yang dia buat
             $teamQuery->where(function($q) use ($user) {
                 $q->where('division_id', $user->division_id)
-                  ->orWhere('creator_id', $user->id);
+                  ->orWhere('creator_id', $user->id)
+                  ->orWhere('branch_id', $user->branch_id);
             });
         } else {
-            // User Biasa / Security
-            $teamQuery->where('user_id', $user->id);
+            // User Biasa: lihat yang di assign ke dia (jika ada logic assign user) 
+            // atau target di cabang dia
+            $teamQuery->where('branch_id', $user->branch_id);
         }
 
-        // Get Data & Sortir Status (Ongoing vs History/Completed)
         $teamTargets = $teamQuery->orderBy('deadline', 'asc')->get();
 
-        // --- 2. TARGET PRIBADI (PERSONAL) ---
-        // Hanya diri sendiri
+        // --- 2. TARGET PRIBADI ---
         $personalTargets = JobTarget::where('user_id', $user->id)
                             ->where('type', 'personal')
-                            ->orderBy('created_at', 'desc')
-                            ->get();
+                            ->orderBy('created_at', 'desc')->get();
 
-        // --- 3. PENCAPAIAN (ACHIEVEMENT) ---
-        // Bisa dilihat semua atau logic lain. Asumsi: Sama seperti Personal tapi kategori achievement
+        // --- 3. PENCAPAIAN ---
         $achievements = JobTarget::where('user_id', $user->id)
                             ->where('type', 'achievement')
-                            ->orderBy('created_at', 'desc')
-                            ->get();
+                            ->orderBy('created_at', 'desc')->get();
 
-        // Data User untuk Dropdown Create (Admin/Leader Only)
-        $users = [];
-        if (in_array($user->role, ['admin', 'leader', 'audit'])) {
-            $users = User::where('is_active', true)->where('role', '!=', 'admin')->get();
-        }
-
-        return view('job_targets.index', compact('teamTargets', 'personalTargets', 'achievements', 'users'));
+        return view('job_targets.index', compact('teamTargets', 'personalTargets', 'achievements'));
     }
 
-    // --- [BARU] METHOD CREATE UNTUK MENAMPILKAN FORM ---
+    // --- METHOD CREATE (DIPERBARUI) ---
     public function create()
     {
         $user = Auth::user();
-        $users = [];
+        $branches = [];
         
-        // Ambil list user untuk dropdown 'Ditugaskan Kepada' (Hanya Admin/Leader/Audit yang butuh)
-        if (in_array($user->role, ['admin', 'leader', 'audit'])) {
-            $users = User::where('is_active', true)
-                    ->where('role', '!=', 'admin')
-                    ->get();
+        // Logic ambil data Cabang
+        if ($user->role == 'admin') {
+            $branches = Branch::all();
+        } elseif ($user->role == 'audit') {
+            // Asumsi ada relasi $user->branches (Audit pegang banyak cabang)
+            $branches = $user->branches; 
+        } elseif ($user->role == 'leader') {
+            // Leader cuma punya 1 cabang
+            if($user->branch) {
+                $branches = [$user->branch];
+            }
         }
 
-        return view('job_targets.create', compact('users'));
+        return view('job_targets.create', compact('branches'));
     }
 
+    // --- METHOD STORE (DIPERBARUI) ---
     public function store(Request $request)
     {
         $user = Auth::user();
 
-        // Validasi
         $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|in:personal,team,achievement',
@@ -87,7 +86,7 @@ class JobTargetController extends Controller
             'description' => 'required',
         ]);
 
-        // Hitung Tanggal Start & Deadline berdasarkan input Period
+        // Hitung Tanggal
         $startDate = today();
         $deadline = today();
 
@@ -95,51 +94,52 @@ class JobTargetController extends Controller
             $startDate = $request->daily_start;
             $deadline = $request->daily_end;
         } elseif ($request->period_type == 'monthly') {
-            // Input format: YYYY-MM
             $startDate = $request->monthly_start . '-01'; 
             $deadline = \Carbon\Carbon::parse($request->monthly_end)->endOfMonth()->format('Y-m-d');
         } elseif ($request->period_type == 'yearly') {
-            // Input format: YYYY
             $startDate = $request->yearly_start . '-01-01';
             $deadline = $request->yearly_end . '-12-31';
         }
 
-        // Tentukan User ID Target
-        $targetUserId = $user->id; // Default diri sendiri (Personal/Achievement)
-        
-        // Jika Team, cek hak akses assign
+        // Default Data
+        $targetUserId = $user->id; // Default ke diri sendiri
+        $targetBranchId = $user->branch_id; // Default cabang sendiri
+
+        // LOGIC TARGET TIM / CABANG
         if ($request->type == 'team') {
             if (!in_array($user->role, ['admin', 'audit', 'leader'])) {
-                return back()->with('error', 'Anda tidak memiliki akses membuat target Cabang.');
+                return back()->with('error', 'Akses ditolak.');
             }
-            // Jika ada input user_id (assign ke orang lain)
-            if ($request->has('user_id') && $request->user_id) {
-                $targetUserId = $request->user_id;
-            }
-        }
 
-        $targetUser = User::find($targetUserId);
+            // Validasi Branch ID harus dipilih
+            $request->validate(['branch_id' => 'required|exists:branches,id']);
+            
+            // Set Target Cabang
+            $targetBranchId = $request->branch_id;
+            
+            // Untuk target cabang, user_id kita set ke Pembuatnya saja (Leader/Audit/Admin)
+            // Karena ini target 1 gedung, bukan 1 orang.
+            $targetUserId = $user->id; 
+        }
 
         JobTarget::create([
             'user_id' => $targetUserId,
             'creator_id' => $user->id,
-            'branch_id' => $targetUser->branch_id,
-            'division_id' => $targetUser->division_id,
+            'branch_id' => $targetBranchId,
+            'division_id' => $user->division_id, // Opsional: sesuaikan jika perlu
             'title' => $request->title,
             'description' => $request->description,
             'type' => $request->type,
-            'period' => $request->period_type, // daily, monthly, yearly
+            'period' => $request->period_type,
             'start_date' => $startDate,
             'deadline' => $deadline,
             'status' => 'pending',
             'progress' => 0
         ]);
 
-        // Redirect ke Index setelah berhasil
         return redirect()->route('job-targets.index')->with('success', 'Target berhasil dibuat.');
     }
 
-    // Fungsi Update Aksi (5 Tombol)
     public function updateOutcome(Request $request, $id)
     {
         $target = JobTarget::findOrFail($id);
@@ -147,35 +147,31 @@ class JobTargetController extends Controller
         $request->validate([
             'outcome' => 'required|in:exceeded,achieved,partial,failed,changed',
             'completion_description' => 'required|string',
-            'evidence_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // Max 5MB sebelum compress
+            'evidence_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         ]);
 
-        // Upload & Compress Foto (Native PHP)
         $photoPath = null;
         if ($request->hasFile('evidence_photo')) {
             $file = $request->file('evidence_photo');
             $filename = 'evidence_' . time() . '_' . Str::random(10) . '.jpg';
             
-            // Kompresi Manual
             $source = imagecreatefromstring(file_get_contents($file));
             ob_start();
-            imagejpeg($source, null, 60); // Quality 60%
+            imagejpeg($source, null, 60);
             $compressedImage = ob_get_clean();
             imagedestroy($source);
 
-            // Simpan ke Storage
             Storage::disk('public')->put('job_targets/' . $filename, $compressedImage);
             $photoPath = 'job_targets/' . $filename;
         }
 
-        // Update Data
         $target->update([
-            'status' => 'completed', // Status umum
+            'status' => 'completed',
             'outcome' => $request->outcome,
             'completion_description' => $request->completion_description,
             'evidence_photo' => $photoPath,
             'completed_at' => now(),
-            'progress' => ($request->outcome == 'failed') ? $target->progress : 100, // Jika gagal progress tetap, yg lain 100
+            'progress' => ($request->outcome == 'failed') ? $target->progress : 100,
         ]);
 
         return back()->with('success', 'Status target berhasil diperbarui.');
