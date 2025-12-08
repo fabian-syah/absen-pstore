@@ -97,7 +97,7 @@ class ScanController extends Controller
         ]);
 
         $user = User::find($request->user_id);
-        $securityUser = Auth::user();
+        $securityUser = Auth::user(); // Security yang melakukan scan
         $workSchedule = WorkSchedule::getScheduleForUser($user->id);
         $currentTime = now();
         $today = today();
@@ -111,6 +111,9 @@ class ScanController extends Controller
         
         Storage::disk('public')->put($imageName, base64_decode($image));
 
+        // ============================
+        // LOGIC ABSEN MASUK
+        // ============================
         if ($request->type == 'masuk') {
             
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
@@ -163,7 +166,11 @@ class ScanController extends Controller
 
             $msg = $isLate ? "Absen MASUK Berhasil (TERLAMBAT)" : "Absen MASUK Berhasil";
 
-        } elseif ($request->type == 'pulang') {
+        } 
+        // ============================
+        // LOGIC ABSEN PULANG
+        // ============================
+        elseif ($request->type == 'pulang') {
             
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
@@ -187,14 +194,25 @@ class ScanController extends Controller
                  }
             }
 
-            $attendance->update([
+            // === FIXING LOGIC HERE ===
+            $updateData = [
                 'check_out_time' => $currentTime,
                 'photo_out_path' => $imageName, 
                 'is_early_checkout' => $isEarlyCheckout,
-                'status' => 'verified',
-                'verified_by_user_id' => $securityUser->id,
-                'notes' => $attendance->notes . ' | Pulang via Security Scan'
-            ]);
+            ];
+
+            // PENTING: Jika status belum verified, baru update jadi verified & set ID security.
+            // Jika SUDAH verified (misal oleh Audit), JANGAN timpa ID verifikatornya.
+            if ($attendance->status != 'verified') {
+                $updateData['status'] = 'verified';
+                $updateData['verified_by_user_id'] = $securityUser->id;
+            }
+
+            // Simpan Nama Security di Notes (agar bisa ditampilkan di view meskipun ID verifikatornya Audit)
+            $securityNote = ' | Pulang via Security Scan by ' . $securityUser->name;
+            $updateData['notes'] = $attendance->notes . $securityNote;
+
+            $attendance->update($updateData);
 
             $msg = $isEarlyCheckout ? "Absen PULANG Berhasil (PULANG CEPAT)" : "Absen PULANG Berhasil";
         }
