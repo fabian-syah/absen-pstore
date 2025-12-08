@@ -6,18 +6,28 @@
 @section('content')
 
 {{-- ========================================================= --}}
+{{-- HEADER & TOMBOL UTAMA (SATU AJA)                          --}}
+{{-- ========================================================= --}}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="card-title mb-0">Overview Target</h4>
+        
+        {{-- INI SATU-SATUNYA TOMBOL BUAT TARGET --}}
+        <button type="button" class="btn btn-primary btn-lg text-white fw-bold" onclick="openCreateModal()">
+            <i class="mdi mdi-plus-circle me-1"></i> Buat Target Baru
+        </button>
+    </div>
+</div>
+
+{{-- ========================================================= --}}
 {{-- BAGIAN 1: TARGET TIM / CABANG (Tab: Harian, Bulanan, Tahunan) --}}
 {{-- ========================================================= --}}
 <div class="row mb-4">
     <div class="col-12">
         <div class="card card-rounded">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            {{-- Hapus tombol di sini, sisa Judul saja --}}
+            <div class="card-header bg-primary text-white">
                 <h5 class="mb-0 text-white"><i class="mdi mdi-domain me-2"></i>Target Cabang / Tim</h5>
-                
-                {{-- Tombol Tambah (Semua bisa tambah, tapi opsi "Tim" nanti di hidden via JS buat user biasa) --}}
-                <button type="button" class="btn btn-light btn-sm text-primary fw-bold" onclick="openCreateModal('team')">
-                    <i class="mdi mdi-plus"></i> Buat Target
-                </button>
             </div>
             <div class="card-body">
                 {{-- TABS PERIODE --}}
@@ -59,11 +69,9 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card card-rounded border-info">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            {{-- Hapus tombol di sini, sisa Judul saja --}}
+            <div class="card-header bg-info text-white">
                 <h5 class="mb-0 text-white"><i class="mdi mdi-account-lock me-2"></i>Target Pribadi (Private)</h5>
-                <button type="button" class="btn btn-light btn-sm text-info fw-bold" onclick="openCreateModal('personal')">
-                    <i class="mdi mdi-plus"></i> Tambah
-                </button>
             </div>
             <div class="card-body">
                 @if($personalTargets->count() > 0)
@@ -82,11 +90,9 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card card-rounded">
-            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            {{-- Hapus tombol di sini, sisa Judul saja --}}
+            <div class="card-header bg-success text-white">
                 <h5 class="mb-0 text-white"><i class="mdi mdi-trophy me-2"></i>Pencapaian (Achievements)</h5>
-                <button type="button" class="btn btn-light btn-sm text-success fw-bold" onclick="openCreateModal('achievement')">
-                    <i class="mdi mdi-plus"></i> Catat Pencapaian
-                </button>
             </div>
             <div class="card-body">
                  <ul class="nav nav-tabs" id="achieveTab" role="tablist">
@@ -121,11 +127,11 @@
             <form action="{{ route('job-targets.store') }}" method="POST">
                 @csrf
                 <div class="modal-body">
-                    {{-- 1. PILIH TIPE --}}
+                    {{-- 1. PILIH TIPE (Disini User milih mau buat Personal/Team/Achievement) --}}
                     <div class="form-group mb-3">
                         <label class="fw-bold">Tipe Target</label>
                         <select name="type" id="create_type" class="form-select" onchange="toggleTeamSelect()">
-                            <option value="personal">Pribadi (Khusus Diri Sendiri)</option>
+                            <option value="personal" selected>Pribadi (Khusus Diri Sendiri)</option>
                             <option value="achievement">Pencapaian (Achievement)</option>
                             
                             {{-- Hanya Admin/Audit/Leader yang bisa pilih Team --}}
@@ -135,7 +141,7 @@
                         </select>
                     </div>
 
-                    {{-- 2. ASSIGN TO (Hanya Muncul jika Team) --}}
+                    {{-- 2. ASSIGN TO (Hanya Muncul jika Team dipilih) --}}
                     @if(in_array(auth()->user()->role, ['admin', 'leader', 'audit']))
                         <div class="form-group mb-3 d-none" id="team_user_select">
                             <label>Tugaskan Kepada (Opsional - Default Diri Sendiri)</label>
@@ -261,13 +267,13 @@
 
 {{-- JAVASCRIPT LOGIC --}}
 <script>
-    // 1. Logic Modal Create
-    function openCreateModal(type) {
-        // Set dropdown value
+    // 1. Logic Modal Create (Default 'personal' atau sesuai parameter)
+    function openCreateModal(type = 'personal') {
+        // Set dropdown value (Default ke personal jika kosong)
         let select = document.getElementById('create_type');
         select.value = type;
         
-        // Trigger event change manual
+        // Trigger event change manual untuk menampilkan/sembunyikan tim select
         toggleTeamSelect();
         
         var myModal = new bootstrap.Modal(document.getElementById('createTargetModal'));
