@@ -71,7 +71,7 @@ class AuditController extends Controller
         // Cari data absensi berdasarkan ID
         $attendance = Attendance::findOrFail($id);
 
-        // Update status menjadi verified
+        //  status menjadi verified
         $attendance->update([
             'status' => 'verified',
             'verified_by_user_id' => Auth::id(),
@@ -374,13 +374,13 @@ class AuditController extends Controller
         $updateData = [
             'presence_status'     => $request->presence_status,
             'status'              => 'verified',
-            'verified_by_user_id' => Auth::id(),
+            'verified_by_user_id' => Auth::id(), // Simpan ID Audit yang memverifikasi
             'audit_note'          => $request->audit_note,
         ];
 
         // 4. Handle Upload Foto Audit (Jika ada)
         if ($request->hasFile('audit_photo')) {
-            // Hapus foto audit lama jika ada (opsional)
+            // Hapus foto audit lama jika ada agar tidak menumpuk sampah file
             if ($attendance->audit_photo_path && Storage::disk('public')->exists($attendance->audit_photo_path)) {
                 Storage::disk('public')->delete($attendance->audit_photo_path);
             }
@@ -399,7 +399,15 @@ class AuditController extends Controller
             $body  = "Absensi tanggal " . $attendance->check_in_time->format('d M Y') .
                 " telah diverifikasi menjadi: " . $request->presence_status;
 
-            $this->sendNotificationToUser($attendance->user, $title, $body);
+            // Pastikan method sendNotificationToUser ada di Trait SendFcmNotification Anda
+            // Jika menggunakan trait bawaan sebelumnya, mungkin perlu penyesuaian nama method
+            if (method_exists($this, 'sendNotificationToUser')) {
+                $this->sendNotificationToUser($attendance->user, $title, $body);
+            } else {
+                // Fallback jika menggunakan method generic (misal kirim ke token user langsung)
+                // $this->sendFCM($attendance->user->fcm_token, $title, $body);
+            }
+            
         } catch (\Exception $e) {
             // Abaikan error notifikasi agar tidak menggagalkan proses simpan
             Log::error("Gagal kirim notif audit: " . $e->getMessage());

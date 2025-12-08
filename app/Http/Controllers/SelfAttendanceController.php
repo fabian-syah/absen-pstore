@@ -41,7 +41,7 @@ class SelfAttendanceController extends Controller
             ]);
         }
 
-        // 2. CEK SESI AKTIF (HYBRID CHECK)
+        // 2. CEK SESI AKTIF
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', Carbon::now()->subHours(24)) 
@@ -111,9 +111,6 @@ class SelfAttendanceController extends Controller
         $today = today();
         $branchName = $user->branch->name ?? '-';
 
-        // =====================================================================
-        // 1. RESOLUSI TARGET ABSEN (HYBRID FIX)
-        // =====================================================================
         $attendanceToUpdate = null;
 
         // A. Jika ID dikirim dari Form
@@ -158,12 +155,10 @@ class SelfAttendanceController extends Controller
         // =====================================================================
         if ($attendanceToUpdate) {
             
-            // Validasi kepemilikan
             if($attendanceToUpdate->user_id != $user->id){
                  return redirect()->route('dashboard')->with('error', 'Sesi tidak valid.');
             }
 
-            // Early Checkout Check
             $isEarly = false;
             if ($workSchedule && $workSchedule->check_out_start) {
                  $scheduleStart = Carbon::parse($workSchedule->check_out_start);
@@ -173,24 +168,19 @@ class SelfAttendanceController extends Controller
                  }
             }
 
-            // Notes merging (PENTING: Tambahkan 'Selfie' agar terdeteksi di view)
+            // Tambahkan Label 'Pulang (Selfie)' ke notes agar terdeteksi di view
             $finalNotes = $attendanceToUpdate->notes;
             $extraNote = (!$attendanceToUpdate->check_in_time->isSameDay($currentTime)) ? "[Lembur/Lintas Hari] " : "";
-            
-            // Format Note: "Pulang (Selfie): Catatan User"
             $userNote = $request->notes ? ": " . $request->notes : "";
             $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $extraNote . "Pulang (Selfie)" . $userNote;
 
-            // Handling Status Saat Pulang
+            // Status Pulang: Jika sebelumnya Rejected/Alpha, ubah ke Pending agar dicek Audit
             $currentStatus = $attendanceToUpdate->status;
-            $newStatus = $currentStatus; // Default: pertahankan status lama
-
-            // Jika sebelumnya ditolak/alpha, reset ke pending
+            $newStatus = $currentStatus; 
             if (in_array($currentStatus, ['rejected', 'alpha'])) {
                 $newStatus = 'pending_verification';
             }
             
-            // Update Data
             $attendanceToUpdate->update([
                 'check_out_time'    => $currentTime,
                 'photo_out_path'    => $path,
@@ -224,7 +214,6 @@ class SelfAttendanceController extends Controller
                 }
             }
 
-            // Logic Telat
             $isLate = false;
             if ($workSchedule && $workSchedule->check_in_end) {
                 $scheduleEnd = Carbon::parse($workSchedule->check_in_end);
@@ -235,11 +224,12 @@ class SelfAttendanceController extends Controller
                 }
             }
 
+            // PENTING: Status 'pending_verification' dan verified_by = NULL
             Attendance::create([
                 'user_id'           => $user->id,
                 'branch_id'         => $user->branch_id,
                 'check_in_time'     => $currentTime,
-                'status'            => 'pending_verification',
+                'status'            => 'pending_verification', 
                 'presence_status'   => 'Masuk',
                 'attendance_type'   => 'self',
                 'photo_path'        => $path,
@@ -248,12 +238,13 @@ class SelfAttendanceController extends Controller
                 'work_schedule_id'  => $workSchedule?->id,
                 'is_late_checkin'   => $isLate,
                 'notes'             => $request->notes,
+                'verified_by_user_id' => null, // Pastikan NULL agar tidak dianggap verified
             ]);
 
-            $message = 'Berhasil absen masuk.';
+            $message = 'Berhasil absen masuk. Menunggu verifikasi.';
             $shouldSendNotif = true;
             $notifTitle = "Verifikasi Masuk";
-            $notifBody = "{$user->name} absen masuk di {$branchName}";
+            $notifBody = "{$user->name} absen masuk (Selfie) di {$branchName}";
         }
 
         if ($shouldSendNotif) {
