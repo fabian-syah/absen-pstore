@@ -159,12 +159,13 @@ class ScanController extends Controller
                 }
             }
 
+            // [FIX STATUS: LANGSUNG VERIFIED & MASUK]
             Attendance::create([
                 'user_id' => $user->id,
                 'branch_id' => $user->branch_id,
                 'check_in_time' => $currentTime,
-                'status' => 'verified', // AUTO VERIFIED
-                'presence_status' => 'Masuk', // AUTO MASUK
+                'status' => 'verified', // <--- Force Verified agar hijau
+                'presence_status' => 'Masuk', // <--- Force status 'Masuk' agar tidak 'Belum Diatur'
                 'photo_path' => $imageName, 
                 'scanned_by_user_id' => $securityUser->id,
                 'verified_by_user_id' => $securityUser->id, 
@@ -203,11 +204,12 @@ class ScanController extends Controller
                  }
             }
 
+            // [FIX STATUS: LANGSUNG VERIFIED]
             $attendance->update([
                 'check_out_time' => $currentTime,
                 'photo_out_path' => $imageName, 
                 'is_early_checkout' => $isEarlyCheckout,
-                'status' => 'verified', // AUTO VERIFIED
+                'status' => 'verified', // <--- Force Verified
                 'verified_by_user_id' => $securityUser->id,
                 'notes' => $attendance->notes . ' | Pulang via Security Scan'
             ]);

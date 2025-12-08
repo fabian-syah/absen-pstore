@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Security Scanner - AbsenPS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -92,7 +93,7 @@
         function startQRScanner() {
             document.getElementById('permissionBtn').style.display = 'none';
             
-            // Bersihkan instance lama jika ada (Penting untuk iOS)
+            // Bersihkan instance lama jika ada
             if (html5QrCode) {
                 html5QrCode.clear().catch(err => {}).finally(() => {
                     initScanner();
@@ -103,36 +104,33 @@
         }
 
         function initScanner() {
-            html5QrCode = new Html5Qrcode("reader");
+            // [FIX IOS: ENABLE NATIVE BARCODE DETECTOR]
+            // Opsi ini akan menggunakan kemampuan hardware iOS/Android untuk scan
+            // Jauh lebih cepat dan bisa membaca QR yang buram/kecil.
+            html5QrCode = new Html5Qrcode("reader", { 
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                verbose: false
+            });
             
             const qrConfig = { 
-                fps: 10, 
-                qrbox: { width: 250, height: 250 }
+                fps: 20, // Scan lebih sering (20 frame per detik)
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0,
+                // Hanya fokus ke QR Code agar tidak terdistraksi barcode lain
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] 
             };
 
-            // [FIX IOS KAMERA BELAKANG]
-            // Strategi 1: Coba paksa "exact environment" (Kamera Belakang Wajib)
-            // Ini akan memaksa iPhone menggunakan kamera belakang.
+            // Paksa Kamera Belakang (environment)
             html5QrCode.start(
-                { facingMode: { exact: "environment" } }, 
+                { facingMode: "environment" }, 
                 qrConfig, 
                 onScanSuccess, 
                 onScanFailure
             )
             .catch(err => {
-                console.log("Gagal akses exact environment, mencoba mode standard...", err);
-                
-                // Strategi 2: Fallback ke "environment" biasa (Untuk Android/Laptop)
-                html5QrCode.start(
-                    { facingMode: "environment" }, 
-                    qrConfig, 
-                    onScanSuccess, 
-                    onScanFailure
-                ).catch(err2 => {
-                    console.error("Gagal memulai kamera:", err2);
-                    document.getElementById('permissionBtn').style.display = 'block';
-                    alert("Gagal akses kamera: " + err2);
-                });
+                console.error("Gagal start scanner:", err);
+                document.getElementById('permissionBtn').style.display = 'block';
+                alert("Gagal akses kamera: " + err);
             });
         }
 
@@ -170,24 +168,24 @@
             document.getElementById('qrSection').style.display = 'none';
             document.getElementById('verifSection').style.display = 'flex';
             
-            // Beri jeda sedikit agar UI siap sebelum kamera bukti nyala
             setTimeout(startCameraStream, 300);
         }
 
         function startCameraStream() {
             const video = document.getElementById('camera-stream');
             
-            // Atribut Wajib iOS Safari untuk Autoplay
+            // Atribut Wajib iOS Safari
             video.setAttribute('autoplay', '');
             video.setAttribute('muted', '');
             video.setAttribute('playsinline', '');
             video.setAttribute('webkit-playsinline', '');
             
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                // Minta kamera belakang juga untuk bukti foto
+                // Kamera belakang untuk bukti
                 navigator.mediaDevices.getUserMedia({ 
                     video: { 
-                        facingMode: { exact: "environment" } // Coba paksa belakang dulu
+                        facingMode: "environment", 
+                        width: { ideal: 640 }
                     } 
                 })
                 .then(function (stream) { 
@@ -196,13 +194,8 @@
                     video.play();
                 })
                 .catch(function (error) { 
-                    // Fallback jika exact gagal (misal di laptop)
-                    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                    .then(function (stream) { 
-                        streamRef = stream; 
-                        video.srcObject = stream; 
-                        video.play();
-                    });
+                    console.error(error);
+                    alert("Gagal akses kamera bukti."); 
                 });
             }
         }
