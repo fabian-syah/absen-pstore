@@ -22,13 +22,21 @@
         .verification-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #121212; z-index: 50; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
         .profile-card { background: #1e1e1e; border-radius: 15px; padding: 20px; text-align: center; color: white; border: 1px solid #333; margin-bottom: 20px; }
         .profile-img-db { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #00aa13; object-fit: cover; }
+        
         .camera-preview-box { width: 100%; height: 350px; background: black; border-radius: 15px; overflow: hidden; position: relative; border: 2px solid #444; margin-bottom: 20px; }
-        #camera-stream { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        /* REVISI: Mirror dihapus (transform scaleX dibuang) */
+        #camera-stream { width: 100%; height: 100%; object-fit: cover; }
+        #camera-canvas { width: 100%; height: 100%; object-fit: cover; display: none; }
+
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .btn-absen { padding: 15px; font-weight: bold; border-radius: 12px; border: none; color: white; font-size: 1rem; transition: transform 0.1s; }
         .btn-absen:active { transform: scale(0.98); }
         .btn-masuk { background: linear-gradient(45deg, #00b09b, #96c93d); }
         .btn-pulang { background: linear-gradient(45deg, #ff5f6d, #ffc371); }
+        
+        .btn-capture { width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; background: white; color: black; border: none; }
+        .btn-retake { width: 100%; padding: 10px; border-radius: 12px; font-weight: bold; background: #333; color: white; border: 1px solid #555; margin-bottom: 10px; }
+
         .result-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; display: none; align-items: center; justify-content: center; text-align: center; color: white; }
     </style>
 </head>
@@ -62,14 +70,24 @@
             <p id="dbRole" class="text-muted small m-0">Jabatan</p>
             <span id="dbBranch" class="badge bg-primary mt-2">Cabang</span>
         </div>
+        
         <div class="text-white mb-2 fw-bold small text-uppercase"><i class="fas fa-camera me-1"></i> Ambil Foto Bukti (Wajib)</div>
+        
         <div class="camera-preview-box">
             <video id="camera-stream" autoplay playsinline muted></video>
-            <canvas id="camera-canvas" style="display:none;"></canvas>
+            <canvas id="camera-canvas"></canvas>
         </div>
-        <div class="action-buttons">
-            <button class="btn-absen btn-masuk" onclick="submitAttendance('masuk')"><i class="fas fa-sign-in-alt fa-lg mb-1 d-block"></i> MASUK</button>
-            <button class="btn-absen btn-pulang" onclick="submitAttendance('pulang')"><i class="fas fa-sign-out-alt fa-lg mb-1 d-block"></i> PULANG</button>
+
+        <div id="step-capture-btn">
+            <button class="btn-capture" onclick="capturePhoto()"><i class="fas fa-camera fa-lg me-2"></i> AMBIL FOTO</button>
+        </div>
+
+        <div id="step-confirm-btn" style="display: none;">
+            <button class="btn-retake" onclick="retakePhoto()"><i class="fas fa-redo me-2"></i> FOTO ULANG</button>
+            <div class="action-buttons">
+                <button class="btn-absen btn-masuk" onclick="submitAttendance('masuk')"><i class="fas fa-sign-in-alt fa-lg mb-1 d-block"></i> MASUK</button>
+                <button class="btn-absen btn-pulang" onclick="submitAttendance('pulang')"><i class="fas fa-sign-out-alt fa-lg mb-1 d-block"></i> PULANG</button>
+            </div>
         </div>
     </div>
 
@@ -89,44 +107,22 @@
         let html5QrCode = null;
         let currentUserId = null;
         let streamRef = null;
+        let capturedImageBase64 = null; // Variable untuk menyimpan foto sementara
 
         function startQRScanner() {
             document.getElementById('permissionBtn').style.display = 'none';
-            
-            // Bersihkan instance lama jika ada
             if (html5QrCode) {
-                html5QrCode.clear().catch(err => {}).finally(() => {
-                    initScanner();
-                });
+                html5QrCode.clear().catch(err => {}).finally(() => { initScanner(); });
             } else {
                 initScanner();
             }
         }
 
         function initScanner() {
-            // [FIX IOS: ENABLE NATIVE BARCODE DETECTOR]
-            // Opsi ini akan menggunakan kemampuan hardware iOS/Android untuk scan
-            // Jauh lebih cepat dan bisa membaca QR yang buram/kecil.
-            html5QrCode = new Html5Qrcode("reader", { 
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-                verbose: false
-            });
-            
-            const qrConfig = { 
-                fps: 20, // Scan lebih sering (20 frame per detik)
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0,
-                // Hanya fokus ke QR Code agar tidak terdistraksi barcode lain
-                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] 
-            };
+            html5QrCode = new Html5Qrcode("reader", { experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false });
+            const qrConfig = { fps: 20, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0, formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] };
 
-            // Paksa Kamera Belakang (environment)
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                qrConfig, 
-                onScanSuccess, 
-                onScanFailure
-            )
+            html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess, onScanFailure)
             .catch(err => {
                 console.error("Gagal start scanner:", err);
                 document.getElementById('permissionBtn').style.display = 'block';
@@ -141,9 +137,7 @@
             }).catch(err => console.error(err));
         }
 
-        function onScanFailure(error) {
-            // Kosongkan untuk menghindari spam console
-        }
+        function onScanFailure(error) { }
 
         function checkUser(qrCode) {
             fetch("{{ route('security.check-user') }}", {
@@ -165,6 +159,9 @@
             document.getElementById('dbBranch').innerText = user.branch;
             document.getElementById('dbPhoto').src = user.photo_url;
             
+            // Reset UI State
+            retakePhoto(); // Pastikan dalam mode ambil foto (bukan review)
+            
             document.getElementById('qrSection').style.display = 'none';
             document.getElementById('verifSection').style.display = 'flex';
             
@@ -173,20 +170,13 @@
 
         function startCameraStream() {
             const video = document.getElementById('camera-stream');
-            
-            // Atribut Wajib iOS Safari
             video.setAttribute('autoplay', '');
             video.setAttribute('muted', '');
             video.setAttribute('playsinline', '');
-            video.setAttribute('webkit-playsinline', '');
             
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                // Kamera belakang untuk bukti
                 navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: "environment", 
-                        width: { ideal: 640 }
-                    } 
+                    video: { facingMode: "environment", width: { ideal: 640 } } 
                 })
                 .then(function (stream) { 
                     streamRef = stream; 
@@ -200,39 +190,85 @@
             }
         }
 
-        function submitAttendance(type) {
+        // --- FUNGSI BARU: CAPTURE FOTO DULU ---
+        function capturePhoto() {
             const video = document.getElementById('camera-stream');
             const canvas = document.getElementById('camera-canvas');
             const context = canvas.getContext('2d');
             
             if (video.videoWidth === 0) { alert("Kamera belum siap."); return; }
 
+            // Hitung ukuran & Gambar ke Canvas
             const scaleFactor = 800 / video.videoWidth;
             const newWidth = 800;
             const newHeight = video.videoHeight * scaleFactor;
 
             canvas.width = newWidth;
             canvas.height = newHeight;
+            
+            // Draw image (Tanpa mirror karena CSS mirror sudah dihapus)
             context.drawImage(video, 0, 0, newWidth, newHeight);
 
-            const imageBase64 = canvas.toDataURL('image/jpeg', 0.6);
+            // Simpan data
+            capturedImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
+
+            // Ubah Tampilan: Sembunyikan Video, Tampilkan Canvas (Hasil Foto)
+            video.style.display = 'none';
+            canvas.style.display = 'block';
+
+            // Ganti Tombol
+            document.getElementById('step-capture-btn').style.display = 'none';
+            document.getElementById('step-confirm-btn').style.display = 'block';
+        }
+
+        // --- FUNGSI BARU: RETAKE (ULANGI) FOTO ---
+        function retakePhoto() {
+            const video = document.getElementById('camera-stream');
+            const canvas = document.getElementById('camera-canvas');
+            
+            capturedImageBase64 = null;
+
+            // Reset Tampilan: Tampilkan Video, Sembunyikan Canvas
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+
+            // Reset Tombol
+            document.getElementById('step-capture-btn').style.display = 'block';
+            document.getElementById('step-confirm-btn').style.display = 'none';
+        }
+
+        function submitAttendance(type) {
+            if (!capturedImageBase64) {
+                alert("Silakan ambil foto terlebih dahulu.");
+                return;
+            }
 
             const btn = document.querySelector(`.btn-${type}`);
             const originalContent = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Loading...';
-            document.querySelectorAll('.btn-absen').forEach(b => b.disabled = true);
+            
+            // Disable semua tombol agar tidak double click
+            document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => b.disabled = true);
 
             fetch("{{ route('security.store-attendance') }}", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
-                body: JSON.stringify({ user_id: currentUserId, type: type, image: imageBase64 })
+                body: JSON.stringify({ user_id: currentUserId, type: type, image: capturedImageBase64 })
             })
             .then(res => res.json())
             .then(data => {
                 if(data.status === 'success') { showResult('success', data.message, data.data.photo); } 
-                else { alert(data.message); btn.innerHTML = originalContent; document.querySelectorAll('.btn-absen').forEach(b => b.disabled = false); }
+                else { 
+                    alert(data.message); 
+                    btn.innerHTML = originalContent; 
+                    document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => b.disabled = false); 
+                }
             })
-            .catch(err => { alert("Error sistem."); btn.innerHTML = originalContent; document.querySelectorAll('.btn-absen').forEach(b => b.disabled = false); });
+            .catch(err => { 
+                alert("Error sistem."); 
+                btn.innerHTML = originalContent; 
+                document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => b.disabled = false); 
+            });
         }
 
         function showResult(status, message, photoUrl = null) {
@@ -265,7 +301,9 @@
             document.getElementById('verifSection').style.display = 'none';
             document.getElementById('resultOverlay').style.display = 'none';
             document.getElementById('qrSection').style.display = 'flex';
-            document.querySelectorAll('.btn-absen').forEach(b => b.disabled = false);
+            
+            // Reset Tombol State
+            document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => b.disabled = false);
             document.querySelector('.btn-masuk').innerHTML = '<i class="fas fa-sign-in-alt fa-lg mb-1 d-block"></i> MASUK';
             document.querySelector('.btn-pulang').innerHTML = '<i class="fas fa-sign-out-alt fa-lg mb-1 d-block"></i> PULANG';
             
