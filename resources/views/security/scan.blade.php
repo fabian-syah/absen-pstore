@@ -83,6 +83,12 @@
         </div>
 
         <div id="step-confirm-btn" style="display: none;">
+            {{-- FORM CATATAN BARU --}}
+            <div class="form-group mb-3 text-start">
+                <label for="scanNotes" class="text-white small fw-bold mb-1">Catatan (Opsional)</label>
+                <textarea id="scanNotes" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="Contoh: Lembur, Tugas Luar, dll..."></textarea>
+            </div>
+            
             <button class="btn-retake" onclick="retakePhoto()"><i class="fas fa-redo me-2"></i> FOTO ULANG</button>
             <div class="action-buttons">
                 <button class="btn-absen btn-masuk" onclick="submitAttendance('masuk')"><i class="fas fa-sign-in-alt fa-lg mb-1 d-block"></i> MASUK</button>
@@ -161,6 +167,7 @@
             
             // Reset UI State
             retakePhoto(); // Pastikan dalam mode ambil foto (bukan review)
+            document.getElementById('scanNotes').value = ''; // Reset catatan
             
             document.getElementById('qrSection').style.display = 'none';
             document.getElementById('verifSection').style.display = 'flex';
@@ -235,6 +242,7 @@
             // Reset Tombol
             document.getElementById('step-capture-btn').style.display = 'block';
             document.getElementById('step-confirm-btn').style.display = 'none';
+            document.getElementById('scanNotes').value = ''; // Reset catatan jika foto ulang
         }
 
         function submitAttendance(type) {
@@ -245,6 +253,8 @@
 
             const btn = document.querySelector(`.btn-${type}`);
             const originalContent = btn.innerHTML;
+            const notes = document.getElementById('scanNotes').value; // Ambil nilai catatan
+
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Loading...';
             
             // Disable semua tombol agar tidak double click
@@ -253,7 +263,12 @@
             fetch("{{ route('security.store-attendance') }}", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
-                body: JSON.stringify({ user_id: currentUserId, type: type, image: capturedImageBase64 })
+                body: JSON.stringify({ 
+                    user_id: currentUserId, 
+                    type: type, 
+                    image: capturedImageBase64,
+                    notes: notes // Kirim catatan ke server
+                })
             })
             .then(res => res.json())
             .then(data => {
@@ -306,6 +321,7 @@
             document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => b.disabled = false);
             document.querySelector('.btn-masuk').innerHTML = '<i class="fas fa-sign-in-alt fa-lg mb-1 d-block"></i> MASUK';
             document.querySelector('.btn-pulang').innerHTML = '<i class="fas fa-sign-out-alt fa-lg mb-1 d-block"></i> PULANG';
+            document.getElementById('scanNotes').value = ''; // Pastikan notes bersih
             
             startQRScanner();
         }

@@ -94,6 +94,7 @@ class ScanController extends Controller
             'user_id' => 'required|exists:users,id',
             'type' => 'required|in:masuk,pulang',
             'image' => 'required|string',
+            'notes' => 'nullable|string|max:255', // Validasi Notes ditambahkan
         ]);
 
         $user = User::find($request->user_id);
@@ -110,6 +111,9 @@ class ScanController extends Controller
         $imageName = 'attendance/capture_' . $typeLabel . '_' . time() . '_' . $user->id . '.jpg';
         
         Storage::disk('public')->put($imageName, base64_decode($image));
+
+        // Ambil catatan dari request
+        $manualNotes = $request->notes ? $request->notes : null;
 
         // ============================
         // LOGIC ABSEN MASUK
@@ -162,6 +166,7 @@ class ScanController extends Controller
                 'work_schedule_id' => $workSchedule?->id,
                 'is_late_checkin' => $isLate,
                 'attendance_type' => 'scan',
+                'notes' => $manualNotes, // Simpan catatan di sini
             ]);
 
             $msg = $isLate ? "Absen MASUK Berhasil (TERLAMBAT)" : "Absen MASUK Berhasil";
@@ -194,23 +199,22 @@ class ScanController extends Controller
                  }
             }
 
-            // === FIXING LOGIC HERE ===
             $updateData = [
                 'check_out_time' => $currentTime,
                 'photo_out_path' => $imageName, 
                 'is_early_checkout' => $isEarlyCheckout,
             ];
 
-            // PENTING: Jika status belum verified, baru update jadi verified & set ID security.
-            // Jika SUDAH verified (misal oleh Audit), JANGAN timpa ID verifikatornya.
             if ($attendance->status != 'verified') {
                 $updateData['status'] = 'verified';
                 $updateData['verified_by_user_id'] = $securityUser->id;
             }
 
-            // Simpan Nama Security di Notes (agar bisa ditampilkan di view meskipun ID verifikatornya Audit)
+            // Format Notes: [Note Lama] | [Note Baru dari Input] | Pulang via Security...
             $securityNote = ' | Pulang via Security Scan by ' . $securityUser->name;
-            $updateData['notes'] = $attendance->notes . $securityNote;
+            $userNoteString = $manualNotes ? " | Catatan: " . $manualNotes : "";
+            
+            $updateData['notes'] = $attendance->notes . $userNoteString . $securityNote;
 
             $attendance->update($updateData);
 
