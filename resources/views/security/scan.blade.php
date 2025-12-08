@@ -2,20 +2,24 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Security Scanner - AbsenPS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { background-color: #000; height: 100vh; overflow: hidden; font-family: 'Segoe UI', sans-serif; margin: 0; }
-        .scanner-wrapper { position: relative; width: 100%; height: 100%; background: black; display: flex; flex-direction: column; justify-content: center; }
-        #reader { width: 100%; max-height: 100vh; background: black; }
-        /* Fix video size on iOS */
-        #reader video { object-fit: cover; width: 100% !important; height: 100% !important; }
+        .scanner-wrapper { position: relative; width: 100%; height: 100%; background: black; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #reader { width: 100%; height: 100%; background: black; position: relative; overflow: hidden; }
+        /* Fix iOS Video Scaling */
+        #reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+        
         .scanner-header { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); color: white; z-index: 20; text-align: center; }
-        .scan-area { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 260px; z-index: 15; pointer-events: none; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 20px; }
-        .scan-laser { position: absolute; width: 100%; height: 2px; background: #00ff00; box-shadow: 0 0 4px #00ff00; top: 50%; opacity: 0.6; }
+        .scan-area { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 250px; z-index: 15; pointer-events: none; border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 20px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); }
+        .scan-laser { position: absolute; width: 100%; height: 2px; background: #00ff00; box-shadow: 0 0 4px #00ff00; top: 50%; animation: scan 2s infinite ease-in-out; }
+        @keyframes scan { 0%, 100% { top: 10%; opacity: 0; } 50% { top: 90%; opacity: 1; } }
+        
         .permission-btn-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 30; text-align: center; display: none; width: 80%; }
         
         .verification-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #121212; z-index: 50; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
@@ -46,7 +50,7 @@
             <i class="fas fa-camera-slash display-4 text-white mb-3"></i>
             <h5 class="text-white mb-3">Kamera Tidak Aktif</h5>
             <button class="btn btn-success rounded-pill px-4" onclick="startQRScanner()">Mulai Kamera</button>
-            <p class="text-white-50 mt-3 small">iOS memerlukan izin HTTPS atau Localhost</p>
+            <p class="text-white-50 mt-3 small">Pastikan Anda menggunakan HTTPS atau Localhost</p>
         </div>
     </div>
 
@@ -89,14 +93,13 @@
         let currentUserId = null;
         let streamRef = null;
 
+        // Fungsi Utama Mulai Scanner (iOS FIX)
         function startQRScanner() {
             document.getElementById('permissionBtn').style.display = 'none';
             
-            // Hancurkan instance lama jika ada (penting buat iOS refresh)
+            // Hapus instance lama jika ada
             if (html5QrCode) {
-                html5QrCode.clear().then(() => {
-                    initScanner();
-                }).catch(err => {
+                html5QrCode.clear().catch(err => {}).finally(() => {
                     initScanner();
                 });
             } else {
@@ -107,24 +110,57 @@
         function initScanner() {
             html5QrCode = new Html5Qrcode("reader");
             
-            // Konfigurasi Paling Basic untuk kompatibilitas iOS Maksimal
-            const config = { 
-                fps: 10, 
-                qrbox: { width: 250, height: 250 }
-                // JANGAN PAKAI aspectRatio di iOS
-            };
+            // 1. Dapatkan List Kamera Dulu (Penting untuk iOS)
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    let cameraId = devices[0].id;
+                    
+                    // 2. Cari Kamera Belakang (Environment/Back/Rear)
+                    for (let i = 0; i < devices.length; i++) {
+                        let label = devices[i].label.toLowerCase();
+                        if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
+                            cameraId = devices[i].id;
+                            break;
+                        }
+                    }
 
-            // Gunakan facingMode string, bukan object constraints
-            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
-            .catch(err => {
-                console.error("Error starting scanner:", err);
+                    const config = { 
+                        fps: 10, 
+                        qrbox: { width: 220, height: 220 },
+                        aspectRatio: 1.0, // Default aspect ratio
+                        videoConstraints: {
+                            focusMode: "continuous" 
+                        }
+                    };
+
+                    // 3. Start menggunakan Camera ID (Lebih stabil di iOS daripada facingMode)
+                    html5QrCode.start(
+                        cameraId, 
+                        config, 
+                        onScanSuccess, 
+                        onScanFailure
+                    ).catch(err => {
+                        console.error("Start Error:", err);
+                        // Fallback jika ID gagal, coba facingMode generic
+                        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+                        .catch(err2 => {
+                            document.getElementById('permissionBtn').style.display = 'block';
+                            alert("Kamera gagal dimulai: " + err2);
+                        });
+                    });
+
+                } else {
+                    alert("Tidak ada kamera ditemukan.");
+                    document.getElementById('permissionBtn').style.display = 'block';
+                }
+            }).catch(err => {
+                console.error("Permission Error:", err);
                 document.getElementById('permissionBtn').style.display = 'block';
-                alert("Gagal akses kamera: " + err);
+                alert("Izin kamera ditolak atau tidak support.");
             });
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // Stop scanning
             html5QrCode.stop().then(() => {
                 html5QrCode.clear();
                 checkUser(decodedText);
@@ -132,7 +168,7 @@
         }
 
         function onScanFailure(error) {
-            // Biarkan kosong agar console tidak penuh warning
+            // No logs to keep console clean
         }
 
         function checkUser(qrCode) {
@@ -158,26 +194,34 @@
             document.getElementById('qrSection').style.display = 'none';
             document.getElementById('verifSection').style.display = 'flex';
             
-            // Delay sedikit untuk memberi waktu DOM render sebelum kamera nyala
+            // Delay untuk render DOM kamera bukti
             setTimeout(startCameraStream, 300);
         }
 
         function startCameraStream() {
             const video = document.getElementById('camera-stream');
             
-            // Paksa atribut untuk iOS Safari
+            // ATRIBUT WAJIB IOS SAFARI
             video.setAttribute('autoplay', '');
             video.setAttribute('muted', '');
             video.setAttribute('playsinline', '');
+            video.setAttribute('webkit-playsinline', '');
             
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: "environment", // Kamera belakang untuk bukti
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    } 
+                })
                 .then(function (stream) { 
                     streamRef = stream; 
                     video.srcObject = stream; 
                     video.play();
                 })
                 .catch(function (error) { 
+                    console.error(error);
                     alert("Gagal akses kamera bukti."); 
                 });
             }
@@ -190,7 +234,7 @@
             
             if (video.videoWidth === 0) { alert("Kamera belum siap."); return; }
 
-            // Resize & Kompresi
+            // Resize Logic
             const scaleFactor = 800 / video.videoWidth;
             const newWidth = 800;
             const newHeight = video.videoHeight * scaleFactor;
@@ -256,7 +300,6 @@
             startQRScanner();
         }
 
-        // Mulai scanner saat halaman dimuat
         document.addEventListener('DOMContentLoaded', startQRScanner);
     </script>
 </body>

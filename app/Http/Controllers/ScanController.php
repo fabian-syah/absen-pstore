@@ -162,16 +162,17 @@ class ScanController extends Controller
                 }
             }
 
-            // [FIX STATUS] Langsung set 'verified' dan 'Masuk' karena Security yang scan
+            // [FIX UTAMA STATUS]
+            // Langsung set 'verified' dan 'Masuk' karena Security yang scan
             Attendance::create([
                 'user_id' => $user->id,
                 'branch_id' => $user->branch_id,
                 'check_in_time' => $currentTime,
-                'status' => 'verified', // <--- PENTING: Agar langsung hijau (Terverifikasi)
-                'presence_status' => 'Masuk', // <--- PENTING: Agar tidak "Belum Diatur"
+                'status' => 'verified', // <--- PENTING: Langsung VERIFIED
+                'presence_status' => 'Masuk', // <--- PENTING: Langsung MASUK
                 'photo_path' => $imageName, 
                 'scanned_by_user_id' => $securityUser->id,
-                'verified_by_user_id' => $securityUser->id, // Security otomatis jadi verifikator
+                'verified_by_user_id' => $securityUser->id, // Security tercatat sebagai verifikator
                 'work_schedule_id' => $workSchedule?->id,
                 'is_late_checkin' => $isLate,
                 'attendance_type' => 'scan',
@@ -207,12 +208,12 @@ class ScanController extends Controller
                  }
             }
 
-            // [FIX STATUS] Pastikan status verified saat pulang
+            // [FIX STATUS PULANG]
             $attendance->update([
                 'check_out_time' => $currentTime,
                 'photo_out_path' => $imageName, 
                 'is_early_checkout' => $isEarlyCheckout,
-                'status' => 'verified', // <--- Force Verified
+                'status' => 'verified', // <--- PENTING: Force Verified saat pulang by Security
                 'verified_by_user_id' => $securityUser->id,
                 'notes' => $attendance->notes . ' | Pulang via Security Scan'
             ]);
