@@ -141,6 +141,8 @@ class AttendanceHistoryController extends Controller
                         $fakeAtt->photo_out_path = null;
                         $fakeAtt->audit_photo_path = null;
                         $fakeAtt->audit_note = "Pengajuan: " . $leave->reason;
+                        $fakeAtt->latitude = null; // Tidak ada lokasi untuk izin
+                        $fakeAtt->longitude = null;
                         
                         // Set Relasi agar bisa dipanggil di View
                         $fakeAtt->setRelation('leaveRequest', $leave);

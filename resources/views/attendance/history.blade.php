@@ -35,9 +35,17 @@
         .img-clickable { cursor: pointer; transition: transform 0.2s ease-in-out; }
         .img-clickable:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .table thead th { font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; background-color: #f8f9fa; border-bottom: 2px solid #e9ecef; }
+        .table thead th { font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; background-color: #f8f9fa; border-bottom: 2px solid #e9ecef; white-space: nowrap; }
         .border-dashed-start { border-left: 2px dashed #dee2e6; padding-left: 10px; }
         .verifier-box { background: #f8f9fa; border-radius: 8px; padding: 6px 10px; border: 1px solid #e9ecef; }
+        
+        /* Fix Select Color */
+        .form-select-custom {
+            background-color: #fff !important;
+            color: #333 !important;
+            border: 1px solid #ced4da !important;
+            font-weight: 600;
+        }
     </style>
 @endpush
 
@@ -70,21 +78,21 @@
                                     $prevRoute = route('attendance.history', $prevParams);
                                 }
                             @endphp
-                            <a href="{{ $prevRoute }}" class="btn btn-light border btn-sm rounded-pill px-3 fw-bold" title="Bulan Sebelumnya">
-                                <i class="mdi mdi-chevron-left me-1"></i> Sebelumnya
+                            <a href="{{ $prevRoute }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold" title="Bulan Sebelumnya">
+                                <i class="mdi mdi-chevron-left me-1"></i> Prev
                             </a>
                         </div>
 
-                        {{-- FORM FILTER TENGAH --}}
+                        {{-- FORM FILTER TENGAH (FIXED UI) --}}
                         <div class="col-auto">
                             <form action="{{ isset($employee) ? route('team.branch.employee.history', ['branchId' => $employee->branch_id, 'employeeId' => $employee->id]) : route('attendance.history') }}"
                                 method="GET" class="row align-items-center gx-2">
                                 
                                 <div class="col-auto d-none d-md-block">
-                                    <label class="fw-bold mb-0 text-muted small text-uppercase"><i class="mdi mdi-calendar-month me-1"></i> Periode</label>
+                                    <label class="fw-bold mb-0 text-muted small text-uppercase"><i class="mdi mdi-calendar-month me-1"></i> Periode:</label>
                                 </div>
                                 <div class="col-auto">
-                                    <select name="month" class="form-select form-select-sm fw-bold border-0 bg-light rounded-pill px-3" onchange="this.form.submit()">
+                                    <select name="month" class="form-select form-select-sm form-select-custom rounded-pill px-3" onchange="this.form.submit()">
                                         @foreach (range(1, 12) as $m)
                                             <option value="{{ $m }}" {{ $selectedMonth == $m ? 'selected' : '' }}>
                                                 {{ date('F', mktime(0, 0, 0, $m, 1)) }}
@@ -93,7 +101,7 @@
                                     </select>
                                 </div>
                                 <div class="col-auto">
-                                    <select name="year" class="form-select form-select-sm fw-bold border-0 bg-light rounded-pill px-3" onchange="this.form.submit()">
+                                    <select name="year" class="form-select form-select-sm form-select-custom rounded-pill px-3" onchange="this.form.submit()">
                                         @php
                                             $startYear = 2025;
                                             $currentYear = date('Y');
@@ -119,8 +127,8 @@
                                     $nextRoute = route('attendance.history', $nextParams);
                                 }
                             @endphp
-                            <a href="{{ $nextRoute }}" class="btn btn-light border btn-sm rounded-pill px-3 fw-bold" title="Bulan Selanjutnya">
-                                Selanjutnya <i class="mdi mdi-chevron-right ms-1"></i>
+                            <a href="{{ $nextRoute }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold" title="Bulan Selanjutnya">
+                                Next <i class="mdi mdi-chevron-right ms-1"></i>
                             </a>
 
                             <a href="{{ route('attendance.export.pdf', ['month' => $selectedMonth, 'year' => $selectedYear, 'employeeId' => isset($employee) ? $employee->id : null]) }}" 
@@ -215,6 +223,7 @@
                                         <th class="border-start">Jam Pulang</th>
                                         <th>Foto</th>
                                         <th class="text-center">Status</th>
+                                        <th class="text-center">Lokasi</th> {{-- ADDED LOCATION --}}
                                         <th>Verifikasi & Petugas</th>
                                         <th class="text-center">Metode</th>
                                         @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
@@ -235,7 +244,6 @@
                                             <td>
                                                 <div class="d-flex flex-column">
                                                     @php
-                                                        // ... (Logic Jadwal & Telat sama seperti sebelumnya) ...
                                                         $scheduleTime = null;
                                                         $cutoffDate = \Carbon\Carbon::create(2025, 12, 1);
                                                         if ($att->check_in_time->gte($cutoffDate)) {
@@ -381,6 +389,26 @@
                                                 @endif
                                             </td>
 
+                                            {{-- KOLOM LOKASI (BARU) --}}
+                                            <td class="text-center">
+                                                @if ($att->latitude && $att->longitude)
+                                                    {{-- Tombol Buka Maps --}}
+                                                    <a href="https://www.google.com/maps/search/?api=1&query={{ $att->latitude }},{{ $att->longitude }}" target="_blank" 
+                                                       class="btn btn-outline-info btn-sm btn-icon rounded-circle" title="Lihat di Maps">
+                                                        <i class="mdi mdi-map-marker-radius"></i>
+                                                    </a>
+                                                    <div style="font-size: 0.65rem;" class="mt-1 text-muted">Maps</div>
+                                                @elseif(in_array($att->attendance_type, ['scan', 'manual']))
+                                                    <span class="badge bg-light text-dark border">
+                                                        <i class="mdi mdi-office-building"></i> Kantor
+                                                    </span>
+                                                @elseif($att->attendance_type == 'leave')
+                                                     <span class="text-muted small">-</span>
+                                                @else
+                                                    <span class="text-muted small"><i class="mdi mdi-map-marker-off"></i></span>
+                                                @endif
+                                            </td>
+
                                             {{-- VERIFIKASI & PETUGAS (DUAL VERIFIER + IZIN) --}}
                                             <td>
                                                 <div class="d-flex flex-column gap-2">
@@ -388,13 +416,11 @@
                                                     {{-- 1. INFO MASUK / IZIN --}}
                                                     <div class="verifier-box d-flex align-items-center">
                                                         @if ($att->attendance_type == 'leave')
-                                                            {{-- TAMPILAN KHUSUS IZIN --}}
                                                             <div class="badge bg-secondary text-white p-1 me-2 rounded-1" style="min-width: 35px;">IZIN</div>
                                                             <div class="lh-sm">
                                                                 <span class="d-block fw-bold text-dark small">{{ $att->verifier->name ?? 'System' }}</span>
                                                                 <small class="text-muted" style="font-size: 0.65rem;">Approved By</small>
                                                             </div>
-
                                                         @elseif ($att->scanned_by_user_id && $att->scanner)
                                                             <div class="badge bg-primary text-white p-1 me-2 rounded-1" style="min-width: 35px;">IN</div>
                                                             <div class="lh-sm">
