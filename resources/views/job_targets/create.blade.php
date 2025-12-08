@@ -1,68 +1,166 @@
 @extends('layout.master')
 
 @section('title', 'Buat Target Baru')
-@section('heading', 'Buat Job Desk / Target')
+@section('heading', 'Form Target Baru')
 
 @section('content')
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Form Target Baru</h4>
-                    <form action="{{ route('job-targets.store') }}" method="POST">
-                        @csrf
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        
+        {{-- Tombol Kembali --}}
+        <a href="{{ route('job-targets.index') }}" class="btn btn-light bg-white shadow-sm mb-3 border-0 rounded-3">
+            <i class="mdi mdi-arrow-left me-1"></i> Kembali
+        </a>
+
+        <div class="card card-rounded shadow-sm border-0">
+            <div class="card-body p-5">
+                <h4 class="card-title text-primary fw-bold mb-4">✨ Buat Target & Pencapaian</h4>
+
+                <form action="{{ route('job-targets.store') }}" method="POST">
+                    @csrf
+                    
+                    {{-- SECTION 1: TIPE & ASSIGNMENT --}}
+                    <div class="bg-light rounded-4 p-4 mb-4">
+                        <label class="fw-bold text-dark mb-3"><i class="mdi mdi-bullseye-arrow me-1"></i> Tipe & Penerima</label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="small text-muted mb-1">Jenis Target</label>
+                                <select name="type" id="create_type" class="form-select form-select-lg border-0 shadow-sm" onchange="toggleTeamSelect()">
+                                    <option value="personal" selected>👤 Pribadi (Personal)</option>
+                                    <option value="achievement">🏆 Pencapaian (Achievement)</option>
+                                    @if(in_array(auth()->user()->role, ['admin', 'leader', 'audit']))
+                                        <option value="team">🏢 Target Tim / Cabang</option>
+                                    @endif
+                                </select>
+                            </div>
+
+                            @if(in_array(auth()->user()->role, ['admin', 'leader', 'audit']))
+                                <div class="col-md-6 d-none" id="team_user_select">
+                                    <label class="small text-muted mb-1">Ditugaskan Kepada</label>
+                                    <select name="user_id" class="form-select form-select-lg border-0 shadow-sm">
+                                        <option value="{{ auth()->user()->id }}">-- Diri Sendiri --</option>
+                                        @foreach($users as $u)
+                                            <option value="{{ $u->id }}">{{ $u->name }} - {{ $u->branch->name ?? '' }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- SECTION 2: PERIODE WAKTU (Style Kartu Pilihan) --}}
+                    <div class="mb-4">
+                        <label class="fw-bold text-dark mb-3"><i class="mdi mdi-calendar-clock me-1"></i> Periode Waktu</label>
                         
-                        <div class="form-group mb-3">
-                            <label>Judul Pekerjaan / Target <span class="text-danger">*</span></label>
-                            <input type="text" name="title" class="form-control" required placeholder="Contoh: Penjualan 100 Unit">
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label>Ditugaskan Kepada <span class="text-danger">*</span></label>
-                            <select name="user_id" class="form-select select2" required>
-                                <option value="">-- Pilih Karyawan --</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">
-                                        {{ $user->name }} - {{ $user->division->name ?? 'N/A' }} ({{ $user->branch->name ?? 'N/A' }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label>Tanggal Mulai</label>
-                                    <input type="date" name="start_date" class="form-control" value="{{ date('Y-m-d') }}" required>
-                                </div>
+                        <div class="row g-3 mb-3">
+                            {{-- Radio Button Styled as Cards --}}
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="period_type" id="pt_daily" value="daily" checked onchange="togglePeriodInput()">
+                                <label class="btn btn-outline-light text-dark w-100 p-3 shadow-sm border text-start" for="pt_daily">
+                                    <i class="mdi mdi-calendar-today text-primary mb-1 d-block fs-4"></i>
+                                    <span class="fw-bold">Harian</span>
+                                </label>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label>Deadline <span class="text-danger">*</span></label>
-                                    <input type="date" name="deadline" class="form-control" required>
-                                </div>
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="period_type" id="pt_monthly" value="monthly" onchange="togglePeriodInput()">
+                                <label class="btn btn-outline-light text-dark w-100 p-3 shadow-sm border text-start" for="pt_monthly">
+                                    <i class="mdi mdi-calendar-month text-success mb-1 d-block fs-4"></i>
+                                    <span class="fw-bold">Bulanan</span>
+                                </label>
+                            </div>
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="period_type" id="pt_yearly" value="yearly" onchange="togglePeriodInput()">
+                                <label class="btn btn-outline-light text-dark w-100 p-3 shadow-sm border text-start" for="pt_yearly">
+                                    <i class="mdi mdi-calendar text-warning mb-1 d-block fs-4"></i>
+                                    <span class="fw-bold">Tahunan</span>
+                                </label>
                             </div>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label>Prioritas</label>
-                            <select name="priority" class="form-select">
-                                <option value="low">Rendah</option>
-                                <option value="medium" selected>Sedang</option>
-                                <option value="high">Tinggi</option>
-                            </select>
+                        {{-- INPUT TANGGAL DINAMIS --}}
+                        <div class="bg-light rounded-4 p-4">
+                            <div id="input_daily" class="period-input">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="small text-muted">Dari Tanggal</label>
+                                        <input type="date" name="daily_start" class="form-control border-0 shadow-sm" value="{{ date('Y-m-d') }}">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small text-muted">Sampai Tanggal</label>
+                                        <input type="date" name="daily_end" class="form-control border-0 shadow-sm" value="{{ date('Y-m-d') }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="input_monthly" class="period-input d-none">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="small text-muted">Dari Bulan</label>
+                                        <input type="month" name="monthly_start" class="form-control border-0 shadow-sm" value="{{ date('Y-m') }}">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small text-muted">Sampai Bulan</label>
+                                        <input type="month" name="monthly_end" class="form-control border-0 shadow-sm" value="{{ date('Y-m') }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="input_yearly" class="period-input d-none">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="small text-muted">Dari Tahun</label>
+                                        <input type="number" name="yearly_start" class="form-control border-0 shadow-sm" value="{{ date('Y') }}" min="2020">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small text-muted">Sampai Tahun</label>
+                                        <input type="number" name="yearly_end" class="form-control border-0 shadow-sm" value="{{ date('Y') }}" min="2020">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="form-group mb-3">
-                            <label>Deskripsi Detail</label>
-                            <textarea name="description" class="form-control" rows="4"></textarea>
+                    {{-- SECTION 3: DETAIL --}}
+                    <div class="mb-4">
+                        <label class="fw-bold text-dark mb-3"><i class="mdi mdi-file-document-edit me-1"></i> Detail Target</label>
+                        <div class="form-floating mb-3">
+                            <input type="text" name="title" class="form-control border-0 shadow-sm bg-light" id="floatingInput" placeholder="Judul" required>
+                            <label for="floatingInput">Judul Target (Contoh: Penjualan 100 Unit)</label>
                         </div>
+                        <div class="form-floating">
+                            <textarea name="description" class="form-control border-0 shadow-sm bg-light" placeholder="Deskripsi" id="floatingTextarea" style="height: 120px" required></textarea>
+                            <label for="floatingTextarea">Deskripsi Lengkap & KPI</label>
+                        </div>
+                    </div>
 
-                        <button type="submit" class="btn btn-primary me-2">Simpan Target</button>
-                        <a href="{{ route('job-targets.index') }}" class="btn btn-light">Batal</a>
-                    </form>
-                </div>
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ route('job-targets.index') }}" class="btn btn-light btn-lg px-4 rounded-3">Batal</a>
+                        <button type="submit" class="btn btn-primary btn-lg px-5 rounded-3 fw-bold shadow-sm">Simpan Target</button>
+                    </div>
+
+                </form>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+    function toggleTeamSelect() {
+        let type = document.getElementById('create_type').value;
+        let teamSelect = document.getElementById('team_user_select');
+        if(teamSelect) {
+            type === 'team' ? teamSelect.classList.remove('d-none') : teamSelect.classList.add('d-none');
+        }
+    }
+
+    function togglePeriodInput() {
+        document.getElementById('input_daily').classList.add('d-none');
+        document.getElementById('input_monthly').classList.add('d-none');
+        document.getElementById('input_yearly').classList.add('d-none');
+
+        if (document.getElementById('pt_daily').checked) document.getElementById('input_daily').classList.remove('d-none');
+        else if (document.getElementById('pt_monthly').checked) document.getElementById('input_monthly').classList.remove('d-none');
+        else if (document.getElementById('pt_yearly').checked) document.getElementById('input_yearly').classList.remove('d-none');
+    }
+</script>
 @endsection

@@ -59,6 +59,22 @@ class JobTargetController extends Controller
         return view('job_targets.index', compact('teamTargets', 'personalTargets', 'achievements', 'users'));
     }
 
+    // --- [BARU] METHOD CREATE UNTUK MENAMPILKAN FORM ---
+    public function create()
+    {
+        $user = Auth::user();
+        $users = [];
+        
+        // Ambil list user untuk dropdown 'Ditugaskan Kepada' (Hanya Admin/Leader/Audit yang butuh)
+        if (in_array($user->role, ['admin', 'leader', 'audit'])) {
+            $users = User::where('is_active', true)
+                    ->where('role', '!=', 'admin')
+                    ->get();
+        }
+
+        return view('job_targets.create', compact('users'));
+    }
+
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -119,7 +135,8 @@ class JobTargetController extends Controller
             'progress' => 0
         ]);
 
-        return back()->with('success', 'Target berhasil dibuat.');
+        // Redirect ke Index setelah berhasil
+        return redirect()->route('job-targets.index')->with('success', 'Target berhasil dibuat.');
     }
 
     // Fungsi Update Aksi (5 Tombol)
