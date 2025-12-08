@@ -134,7 +134,7 @@
     </div>
 </div>
 
-{{-- MODAL AKSI (UPDATE HASIL) - Tetap di sini karena pop-up --}}
+{{-- MODAL AKSI (UPDATE HASIL) --}}
 <div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -149,7 +149,7 @@
                     <p class="fw-bold fs-5 text-dark mb-4" id="actionTargetTitle">Judul Target...</p>
                     
                     <div class="form-floating mb-3">
-                        <select name="outcome" class="form-select border-0 bg-light shadow-sm fw-bold" id="outcomeSelect" required>
+                        <select name="outcome" class="form-select border shadow-sm fw-bold text-dark bg-white" id="outcomeSelect" required>
                             <option value="">-- Pilih Hasil Akhir --</option>
                             <option value="exceeded">🚀 Melebihi Target (Exceeded)</option>
                             <option value="achieved">✅ Target Tercapai (Achieved)</option>
@@ -161,17 +161,17 @@
                     </div>
 
                     <div class="form-floating mb-3">
-                        <textarea name="completion_description" class="form-control border-0 bg-light shadow-sm" style="height: 100px" id="descArea" required placeholder="Keterangan"></textarea>
+                        <textarea name="completion_description" class="form-control border shadow-sm bg-white text-dark" style="height: 100px" id="descArea" required placeholder="Keterangan"></textarea>
                         <label for="descArea">Keterangan / Evaluasi</label>
                     </div>
 
                     <div class="mb-2">
                         <label class="small fw-bold text-muted mb-2">Foto Bukti (Opsional)</label>
-                        <input type="file" name="evidence_photo" class="form-control border-0 bg-light shadow-sm" accept="image/*">
+                        <input type="file" name="evidence_photo" class="form-control border shadow-sm bg-white" accept="image/*">
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 pe-4 pb-4">
-                    <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 border" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-warning text-white fw-bold rounded-3 px-4 shadow-sm">Simpan Update</button>
                 </div>
             </form>
@@ -179,21 +179,45 @@
     </div>
 </div>
 
-{{-- CSS KHUSUS UNTUK TABS PILL AESTHETIC --}}
+{{-- CSS KHUSUS --}}
 <style>
+    /* Styling Tabs */
     .nav-pills-custom .nav-link {
         color: #6c757d;
         background-color: transparent;
         transition: all 0.3s ease;
     }
     .nav-pills-custom .nav-link.active {
-        background-color: #4b49ac; /* Warna Primary Template Anda */
+        background-color: #4b49ac; /* Warna Primary */
         color: #fff;
         box-shadow: 0 4px 6px rgba(75, 73, 172, 0.2);
     }
     .card-rounded {
         border-radius: 15px !important;
         overflow: hidden;
+    }
+
+    /* FIX KONTRAS WARNA (PENTING) */
+    .form-select option {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+    .form-control:disabled, 
+    .form-control[readonly] {
+        background-color: #e9ecef !important;
+        color: #212529 !important;
+        opacity: 1;
+        font-weight: 600;
+    }
+    
+    /* Fix warna teks di dropdown modal */
+    #outcomeSelect {
+        color: #212529 !important;
+    }
+    
+    /* Fix warna badge kuning agar teks hitam */
+    .badge.bg-warning {
+        color: #212529 !important;
     }
 </style>
 
