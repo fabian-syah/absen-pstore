@@ -8,7 +8,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* (Style sama persis dengan yang sebelumnya, saya ringkas biar tidak kepanjangan) */
         body { background-color: #000; height: 100vh; overflow: hidden; font-family: 'Segoe UI', sans-serif; margin: 0; }
         .scanner-wrapper { position: relative; width: 100%; height: 100%; background: black; }
         #reader { width: 100%; height: 100%; object-fit: cover; }
@@ -72,7 +71,7 @@
         </div>
         <div class="text-white mb-2 fw-bold small text-uppercase"><i class="fas fa-camera me-1"></i> Ambil Foto Bukti (Wajib)</div>
         <div class="camera-preview-box">
-            <video id="camera-stream" autoplay playsinline></video>
+            <video id="camera-stream" autoplay playsinline muted></video>
             <canvas id="camera-canvas" style="display:none;"></canvas>
         </div>
         <div class="action-buttons">
@@ -102,7 +101,18 @@
         function startQRScanner() {
             document.getElementById('permissionBtn').style.display = 'none';
             html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+            
+            // [FIX IOS] 
+            // 1. Hapus aspectRatio: 1.0 (Biarkan default agar tidak zoom di iPhone)
+            // 2. Gunakan videoConstraints yang spesifik
+            const config = { 
+                fps: 15, 
+                qrbox: { width: 250, height: 250 },
+                videoConstraints: {
+                    facingMode: "environment",
+                    focusMode: "continuous" // Bagus untuk Android, diabaikan iOS
+                }
+            };
 
             if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
                 alert('Peringatan: Kamera mungkin tidak berjalan di HTTP. Harap gunakan HTTPS atau Localhost.');
@@ -110,10 +120,12 @@
 
             html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
                 stopQRScanner(); checkUser(decodedText);
-            }, (errorMessage) => {}).catch((err) => {
+            }, (errorMessage) => {
+                // Ignore parsing error
+            }).catch((err) => {
                 console.error("Camera Error:", err);
                 document.getElementById('permissionBtn').style.display = 'block';
-                alert("Gagal akses kamera.");
+                alert("Gagal akses kamera: " + err);
             });
         }
 
@@ -147,14 +159,28 @@
 
         function startCameraStream() {
             const video = document.getElementById('camera-stream');
+            
+            // [FIX IOS] Pastikan atribut video diset manual agar autoplay jalan
+            video.setAttribute('autoplay', '');
+            video.setAttribute('muted', '');
+            video.setAttribute('playsinline', '');
+            
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 640 } } })
-                .then(function (stream) { streamRef = stream; video.srcObject = stream; video.play(); })
-                .catch(function (error) { alert("Gagal akses kamera bukti."); });
+                .then(function (stream) { 
+                    streamRef = stream; 
+                    video.srcObject = stream; 
+                    video.onloadedmetadata = function(e) {
+                        video.play();
+                    };
+                })
+                .catch(function (error) { 
+                    console.error(error);
+                    alert("Gagal akses kamera bukti. Pastikan izin kamera diberikan."); 
+                });
             }
         }
 
-        // --- INI BAGIAN PENTING: KOMPRESI DI SISI CLIENT ---
         function submitAttendance(type) {
             const video = document.getElementById('camera-stream');
             const canvas = document.getElementById('camera-canvas');
@@ -171,8 +197,7 @@
             canvas.height = newHeight;
             context.drawImage(video, 0, 0, newWidth, newHeight);
 
-            // 2. Convert to JPEG Quality 60% (Kompresi)
-            // Hasilnya imageBase64 jauh lebih kecil dari PNG
+            // 2. Convert to JPEG Quality 60%
             const imageBase64 = canvas.toDataURL('image/jpeg', 0.6);
 
             const btn = document.querySelector(`.btn-${type}`);
