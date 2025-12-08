@@ -17,10 +17,13 @@ class JobTarget extends Model
         'title',
         'description',
         'priority',
-        'status',       // pending, completed
-        'progress',     // 0 - 100
-        'type',         // individual, team
-        'period',       // daily, monthly, yearly
+        'status',          // pending, completed (secara umum)
+        'outcome',         // exceeded, achieved, partial, failed, changed
+        'completion_description',
+        'evidence_photo',
+        'progress',
+        'type',            // personal, team, achievement
+        'period',          // daily, monthly, yearly
         'start_date',
         'deadline',
         'completed_at'

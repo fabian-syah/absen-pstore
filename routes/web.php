@@ -65,7 +65,16 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // === RUTE JOB TARGETS ===
     Route::get('/job-targets', [JobTargetController::class, 'index'])->name('job-targets.index');
     Route::post('/job-targets', [JobTargetController::class, 'store'])->name('job-targets.store');
+
+    // [BARU] Route untuk Update Aksi (Hasil Target / 5 Tombol)
+    Route::patch('/job-targets/{id}/update-outcome', [JobTargetController::class, 'updateOutcome'])->name('job-targets.update-outcome');
+
+    // Route untuk edit biasa (jika diperlukan di masa depan)
+    Route::put('/job-targets/{id}', [JobTargetController::class, 'update'])->name('job-targets.update');
+
+    // Route Toggle lama (Boleh disimpan atau dihapus jika sudah tidak dipakai)
     Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
+
     Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
 
     // Rute Khusus Riwayat Pribadi
