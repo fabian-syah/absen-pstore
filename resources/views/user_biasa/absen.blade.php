@@ -20,16 +20,17 @@
                         </div>
                     </div>
 
-                    {{-- ALERT KHUSUS: LEMBUR / LINTAS HARI --}}
+                    {{-- ALERT STATUS --}}
                     @if ($mode == 'pulang' && isset($attendance))
                         @php
                             $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time);
                             $isNextDay = !$checkInDate->isToday();
-                            // Status Badge
-                            $statusLabel = $attendance->status;
+                            
+                            // Visualisasi Status
                             $statusClass = 'secondary';
                             if($attendance->status == 'verified') $statusClass = 'success';
                             if($attendance->status == 'pending_verification') $statusClass = 'warning';
+                            if($attendance->status == 'rejected') $statusClass = 'danger';
                         @endphp
 
                         @if ($isNextDay)
@@ -39,22 +40,17 @@
                                     <div>
                                         <h5 class="fw-bold mb-1">Pulang Lintas Hari (Lembur)</h5>
                                         <p class="mb-1 small">
-                                            Anda sedang menutup sesi masuk tanggal: 
+                                            Anda menutup sesi tanggal: 
                                             <span class="fw-bold">{{ $checkInDate->translatedFormat('l, d F Y') }}</span>
-                                            (Pukul {{ $checkInDate->format('H:i') }})
                                         </p>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <small>Status Absen Masuk:</small>
-                                            <span class="badge badge-{{ $statusClass }}">{{ strtoupper($attendance->status) }}</span>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
                         @else
                             <div class="alert alert-info border-0 shadow-sm mb-4">
                                 <i class="mdi mdi-information-outline me-2"></i>
-                                Anda masuk pukul <strong>{{ $attendance->check_in_time->format('H:i') }}</strong>. 
-                                Status saat ini: <span class="fw-bold text-uppercase">{{ $attendance->status }}</span>.
+                                Anda masuk pukul <strong>{{ $checkInDate->format('H:i') }}</strong>. 
+                                Status: <span class="badge badge-{{ $statusClass }} ms-1">{{ strtoupper($attendance->status) }}</span>
                             </div>
                         @endif
                     @else
@@ -67,6 +63,7 @@
                         enctype="multipart/form-data" id="attendance-form">
                         @csrf
 
+                        {{-- PENTING: ID Absen untuk mode Pulang --}}
                         @if (isset($attendance) && $attendance)
                             <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
                         @endif
