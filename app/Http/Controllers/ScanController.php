@@ -82,7 +82,7 @@ class ScanController extends Controller
                     'check_in_time' => $attendanceSession->check_in_time?->format('H:i'),
                     'check_out_time' => $attendanceSession->check_out_time?->format('H:i'),
                     'is_late' => $attendanceSession->is_late_checkin,
-                    'type' => $attendanceSession->attendance_type // Tambahan info tipe
+                    'type' => $attendanceSession->attendance_type
                 ] : null,
                 'work_schedule' => $workSchedule ? [
                     'check_in_start' => $workSchedule->check_in_start->format('H:i'),
@@ -142,7 +142,7 @@ class ScanController extends Controller
                 ->where('check_in_time', '<', $currentTime->copy()->subHours(20))
                 ->update(['check_out_time' => DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed by Security Scan (Expired)']);
 
-            // Cek apakah sudah absen masuk (Active Session < 20 Jam)
+            // Cek apakah sudah absen masuk
             if (Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', $currentTime->copy()->subHours(20))
@@ -156,22 +156,22 @@ class ScanController extends Controller
             }
 
             $isLate = false;
-            // Status jika discan security otomatis Verified / Present
-            $status = 'present'; 
             if ($workSchedule) {
                 if (Carbon::parse($currentTime)->gt(Carbon::parse($workSchedule->check_in_end))) {
                     $isLate = true;
-                    $status = 'late';
                 }
             }
 
+            // [FIX STATUS] Langsung set 'verified' dan 'Masuk' karena Security yang scan
             Attendance::create([
                 'user_id' => $user->id,
                 'branch_id' => $user->branch_id,
                 'check_in_time' => $currentTime,
-                'status' => $status,
+                'status' => 'verified', // <--- PENTING: Agar langsung hijau (Terverifikasi)
+                'presence_status' => 'Masuk', // <--- PENTING: Agar tidak "Belum Diatur"
                 'photo_path' => $imageName, 
                 'scanned_by_user_id' => $securityUser->id,
+                'verified_by_user_id' => $securityUser->id, // Security otomatis jadi verifikator
                 'work_schedule_id' => $workSchedule?->id,
                 'is_late_checkin' => $isLate,
                 'attendance_type' => 'scan',
@@ -181,11 +181,10 @@ class ScanController extends Controller
 
         } 
         // ============================
-        // LOGIC ABSEN PULANG (HYBRID)
+        // LOGIC ABSEN PULANG
         // ============================
         elseif ($request->type == 'pulang') {
             
-            // [HYBRID FIX] Cari sesi aktif apa saja (Self atau Scan)
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', Carbon::now()->subHours(24))
@@ -201,30 +200,20 @@ class ScanController extends Controller
                  $coTime = Carbon::parse($currentTime->format('H:i:s'));
                  $schedStart = Carbon::parse($workSchedule->check_out_start);
                  
-                 // Jika tidak lintas hari
                  if (Carbon::parse($workSchedule->check_in_start)->lt($schedStart)) {
                      if ($coTime->lt($schedStart)) $isEarlyCheckout = true;
                  } else {
-                     // Shift malam
                      if ($coTime->lt($schedStart) && $coTime->gt(Carbon::parse("00:00:00"))) $isEarlyCheckout = true;
                  }
             }
 
-            // [HYBRID FEATURE]
-            // Jika absen pulang dilakukan oleh Security, maka status absen tersebut 
-            // otomatis menjadi VALID/PRESENT/VERIFIED, meskipun absen masuknya 'pending' (selfie).
-            // Hal ini karena security telah memvalidasi fisik karyawan saat pulang.
-            
-            $finalStatus = $attendance->status;
-            if ($finalStatus == 'pending_verification') {
-                $finalStatus = 'present'; // atau 'verified', sesuaikan dengan enum database Anda
-            }
-
+            // [FIX STATUS] Pastikan status verified saat pulang
             $attendance->update([
                 'check_out_time' => $currentTime,
                 'photo_out_path' => $imageName, 
                 'is_early_checkout' => $isEarlyCheckout,
-                'status' => $finalStatus, // Auto-verify on security checkout
+                'status' => 'verified', // <--- Force Verified
+                'verified_by_user_id' => $securityUser->id,
                 'notes' => $attendance->notes . ' | Pulang via Security Scan'
             ]);
 
@@ -258,10 +247,8 @@ class ScanController extends Controller
             'total_scans_today' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('updated_at', $today)->count(),
             'check_in_count' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('check_in_time', $today)->whereNotNull('check_in_time')->count(),
             'check_out_count' => Attendance::where(function($q) use ($securityUser, $today) {
-                // Hitung check out yang discan oleh user ini, atau check out pada record yang dibuat user ini
                 $q->where('scanned_by_user_id', $securityUser->id); 
             })->whereDate('check_out_time', $today)->whereNotNull('check_out_time')->count(),
-            
             'late_count' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('check_in_time', $today)->where('is_late_checkin', true)->count(),
          ];
          return response()->json(['status' => 'success', 'data' => $stats]);
