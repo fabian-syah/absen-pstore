@@ -93,8 +93,8 @@ class AttendanceHistoryController extends Controller
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
         // 1. AMBIL DATA ABSENSI ASLI
-        // MODIFIKASI: Tambahkan eager loading 'verifier' agar tidak N+1 query di view
-        $attendances = Attendance::with('verifier') 
+        // MODIFIKASI: Menambahkan 'scanner' ke relasi untuk melihat Security Masuk
+        $attendances = Attendance::with(['verifier', 'scanner']) 
             ->where('user_id', $user->id)
             ->whereYear('check_in_time', $selectedYear)
             ->whereMonth('check_in_time', $selectedMonth)
@@ -151,8 +151,7 @@ class AttendanceHistoryController extends Controller
                         $fakeAtt->audit_note = "Pengajuan: " . $leave->reason;
                         
                         $fakeAtt->setRelation('leaveRequest', $leave);
-                        // Untuk leave, verifier biasanya null atau bisa di-set dummy jika perlu
-
+                        
                         $historyCollection->push($fakeAtt);
                     }
                 }
@@ -211,15 +210,12 @@ class AttendanceHistoryController extends Controller
         $workSchedule = WorkSchedule::getScheduleForUser($attendance->user_id);
         $isLate = $attendance->is_late_checkin;
         
-        // MODIFIKASI: Hanya hitung telat jika tanggal absensi >= 1 Desember 2025
         if ($newCheckIn->format('Y-m-d') >= '2025-12-01') {
             if ($workSchedule && $request->presence_status == 'Masuk') {
                 $scheduleStart = Carbon::parse($originalDate . ' ' . $workSchedule->check_in_end);
                 $isLate = $newCheckIn->gt($scheduleStart);
             }
         } else {
-            // Jika sebelum Desember 2025, anggap tidak telat (karena jadwal belum berlaku)
-            // Kecuali mau di-set manual, tapi defaultnya false agar aman.
             $isLate = false; 
         }
 

@@ -229,7 +229,7 @@
                                         <th>Jam Pulang</th>
                                         <th>Foto Pulang</th>
                                         <th>Status</th>
-                                        <th>Verifikasi</th>
+                                        <th>Verifikasi & Petugas</th>
                                         <th>Bukti Audit</th>
                                         <th>Metode</th>
                                         @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
@@ -246,17 +246,12 @@
                                                 <small class="text-muted">{{ $att->check_in_time->format('l') }}</small>
                                             </td>
 
-                                            {{-- JAM MASUK (MODIFIKASI DISINI) --}}
+                                            {{-- JAM MASUK --}}
                                             <td>
                                                 <div class="d-flex flex-column">
                                                     @php
                                                         $scheduleTime = null;
-                                                        
-                                                        // LOGIKA JADWAL: 
-                                                        // Hanya ambil jadwal jika tanggal >= 1 Desember 2025
-                                                        // Tanggal sebelum itu dianggap fleksibel (tidak hitung telat)
                                                         $cutoffDate = \Carbon\Carbon::create(2025, 12, 1);
-                                                        
                                                         if ($att->check_in_time->gte($cutoffDate)) {
                                                             if ($att->user && $att->user->check_in_start) {
                                                                 $scheduleTime = $att->user->check_in_start;
@@ -266,7 +261,7 @@
                                                         }
 
                                                         $isRealLate = false;
-                                                        $lateStr = ''; // String untuk tampilan jam/menit
+                                                        $lateStr = ''; 
 
                                                         if ($scheduleTime) {
                                                             $actualStr = $att->check_in_time->format('H:i');
@@ -278,14 +273,13 @@
                                                                 $scheduleCarbon = \Carbon\Carbon::parse($scheduleStr);
                                                                 $lateMinutes = $scheduleCarbon->diffInMinutes($actualCarbon);
                                                                 
-                                                                // LOGIKA DISPLAY JAM/MENIT
                                                                 $hours = floor($lateMinutes / 60);
                                                                 $mins = $lateMinutes % 60;
                                                                 
                                                                 if ($hours > 0) {
-                                                                    $lateStr = "{$hours}j {$mins}m"; // Contoh: 1j 30m
+                                                                    $lateStr = "{$hours}j {$mins}m";
                                                                 } else {
-                                                                    $lateStr = "{$mins}m"; // Contoh: 45m
+                                                                    $lateStr = "{$mins}m";
                                                                 }
                                                             }
                                                         }
@@ -309,7 +303,6 @@
                                                             Jadwal: {{ \Carbon\Carbon::parse($scheduleTime)->format('H:i') }}
                                                         </small>
                                                     @else
-                                                        {{-- Jika sebelum des 2025 atau tidak ada jadwal --}}
                                                         <small class="text-muted fst-italic" style="font-size: 11px;">- Fleksibel -</small>
                                                     @endif
                                                 </div>
@@ -332,7 +325,6 @@
                                                         $labelMasuk = $att->presence_status;
                                                     }
                                                     
-                                                    // Notes Logic
                                                     if (!empty($att->notes)) {
                                                         $cleanNote = $att->notes;
                                                         if (str_contains($cleanNote, '| Pulang:')) {
@@ -431,45 +423,70 @@
                                                 @endif
                                             </td>
 
-                                            {{-- KOLOM VERIFIKASI --}}
+                                            {{-- KOLOM VERIFIKASI & PETUGAS (DUAL VERIFIER) --}}
                                             <td>
-                                                @if ($att->status == 'verified')
-                                                    @if ($att->presence_status == 'Alpha')
-                                                        <div class="d-flex align-items-center">
-                                                            <i class="mdi mdi-robot text-danger me-1"></i>
-                                                            <span class="badge bg-danger verification-badge">System Auto</span>
-                                                        </div>
-                                                    @elseif($att->attendance_type == 'manual')
-                                                        <div class="d-flex align-items-center">
-                                                            <i class="mdi mdi-pencil-box-outline text-info me-1"></i>
-                                                            <span class="badge bg-info text-white verification-badge">Dikoreksi</span>
-                                                        </div>
-                                                        @if($att->verifier)
-                                                            <small class="d-block text-muted mt-1 fst-italic" style="font-size: 10px;">
-                                                                <i class="mdi mdi-account-check me-1"></i> {{ $att->verifier->name }}
-                                                            </small>
-                                                        @endif
-                                                    @else
-                                                        <div class="d-flex align-items-center">
-                                                            <i class="mdi mdi-check-circle verified-check me-1"></i>
-                                                            <span class="badge bg-success verification-badge">Terverifikasi</span>
-                                                        </div>
-                                                        @if($att->verifier)
-                                                            <small class="d-block text-muted mt-1 fst-italic" style="font-size: 10px;">
-                                                                <i class="mdi mdi-account-check-outline me-1"></i> {{ $att->verifier->name }}
-                                                            </small>
-                                                        @endif
-                                                    @endif
-                                                @elseif($att->status == 'pending_verification')
+                                                <div class="d-flex flex-column gap-2">
+                                                    
+                                                    {{-- 1. INFO PETUGAS MASUK --}}
                                                     <div class="d-flex align-items-center">
-                                                        <i class="mdi mdi-clock-outline pending-clock me-1"></i>
-                                                        <span class="badge bg-warning text-dark verification-badge">Menunggu</span>
+                                                        @if ($att->attendance_type == 'scan' && $att->scanner)
+                                                            {{-- Jika Masuk via Scan Security --}}
+                                                            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary p-1 me-2 rounded">
+                                                                <i class="mdi mdi-qrcode-scan"></i> IN
+                                                            </div>
+                                                            <div>
+                                                                <span class="d-block fw-bold text-dark" style="font-size: 11px;">{{ $att->scanner->name }}</span>
+                                                                <small class="text-muted" style="font-size: 9px;">Security</small>
+                                                            </div>
+                                                        @elseif($att->audit_photo_path || $att->attendance_type == 'manual')
+                                                            {{-- Jika Masuk via Audit (Koreksi) --}}
+                                                            <div class="badge bg-info bg-opacity-10 text-info border border-info p-1 me-2 rounded">
+                                                                <i class="mdi mdi-pencil"></i> IN
+                                                            </div>
+                                                            <div>
+                                                                <span class="d-block fw-bold text-dark" style="font-size: 11px;">Audit / Admin</span>
+                                                                <small class="text-muted" style="font-size: 9px;">Verifikator</small>
+                                                            </div>
+                                                        @elseif($att->status == 'verified' && $att->attendance_type == 'self')
+                                                            {{-- Jika Selfie tapi sudah Verified --}}
+                                                            <div class="badge bg-success bg-opacity-10 text-success border border-success p-1 me-2 rounded">
+                                                                <i class="mdi mdi-check"></i> IN
+                                                            </div>
+                                                            <small class="text-muted" style="font-size: 10px;">Audit/System</small>
+                                                        @else
+                                                            {{-- Masih Pending --}}
+                                                            <span class="badge bg-warning text-dark" style="font-size: 10px;">Menunggu Verifikasi</span>
+                                                        @endif
                                                     </div>
-                                                @elseif($att->status == 'rejected')
-                                                    <span class="badge bg-danger verification-badge">Ditolak</span>
-                                                @else
-                                                    <span class="badge bg-secondary verification-badge">Belum Verif</span>
-                                                @endif
+
+                                                    {{-- 2. INFO PETUGAS PULANG (Hanya jika sudah pulang) --}}
+                                                    @if ($att->check_out_time && $att->verifier)
+                                                        <div class="border-top my-1"></div> {{-- Garis pemisah --}}
+                                                        
+                                                        <div class="d-flex align-items-center">
+                                                            @if ($att->attendance_type == 'scan' || str_contains($att->notes, 'Security Scan'))
+                                                                {{-- Jika Pulang via Scan Security --}}
+                                                                <div class="badge bg-dark bg-opacity-10 text-dark border border-dark p-1 me-2 rounded">
+                                                                    <i class="mdi mdi-logout"></i> OUT
+                                                                </div>
+                                                                <div>
+                                                                    <span class="d-block fw-bold text-dark" style="font-size: 11px;">{{ $att->verifier->name }}</span>
+                                                                    <small class="text-muted" style="font-size: 9px;">Security</small>
+                                                                </div>
+                                                            @else
+                                                                {{-- Jika Pulang via Audit/System --}}
+                                                                <div class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary p-1 me-2 rounded">
+                                                                    <i class="mdi mdi-logout"></i> OUT
+                                                                </div>
+                                                                <div>
+                                                                    <span class="d-block fw-bold text-dark" style="font-size: 11px;">{{ $att->verifier->name }}</span>
+                                                                    <small class="text-muted" style="font-size: 9px;">Verifikator</small>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+
+                                                </div>
                                             </td>
 
                                             {{-- BUKTI AUDIT --}}

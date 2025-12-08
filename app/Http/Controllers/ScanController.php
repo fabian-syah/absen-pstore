@@ -251,13 +251,11 @@ class ScanController extends Controller
          return response()->json(['status' => 'success', 'data' => $stats]);
     }
 
-    // Tambahkan method ini di paling bawah class ScanController
-
+    // --- FITUR BARU: RIWAYAT SCAN ---
     public function history(Request $request)
     {
         $user = Auth::user();
         
-        // Eager load relasi yang dibutuhkan
         $query = Attendance::with(['user.division', 'user.branch', 'branch', 'scanner', 'verifier']);
 
         // Filter: Hanya ambil data yang dilakukan melalui scan (scanned_by ada isinya)
@@ -274,7 +272,7 @@ class ScanController extends Controller
             });
         }
 
-        // Filter Tanggal (Opsional, default bulan ini)
+        // Filter Tanggal
         if ($request->date) {
             $query->whereDate('check_in_time', $request->date);
         }
