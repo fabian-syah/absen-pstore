@@ -85,7 +85,7 @@ class AttendanceHistoryController extends Controller
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        // 1. DATA ABSENSI (Scan/Selfie)
+        // 1. AMBIL DATA ABSENSI ASLI
         $attendances = Attendance::with(['verifier', 'scanner']) 
             ->where('user_id', $user->id)
             ->whereYear('check_in_time', $selectedYear)
@@ -93,8 +93,7 @@ class AttendanceHistoryController extends Controller
             ->orderBy('check_in_time', 'desc')
             ->get();
 
-        // 2. DATA IZIN (Tambahkan with verifier untuk mengambil nama penyetuju)
-        // Pastikan di Model LeaveRequest ada relasi public function verifier() { return $this->belongsTo(User::class, 'approved_by'); } atau sejenisnya
+        // 2. DATA IZIN (Menggunakan relasi 'verifier' yang baru dibuat di Model)
         $leaves = LeaveRequest::with('verifier') 
             ->where('user_id', $user->id)
             ->where('status', 'approved')
@@ -146,7 +145,7 @@ class AttendanceHistoryController extends Controller
                         // Set Relasi agar bisa dipanggil di View
                         $fakeAtt->setRelation('leaveRequest', $leave);
                         
-                        // Mapping Verifier Izin ke Verifier Attendance agar logic view seragam
+                        // Mapping Verifier Izin ke Verifier Attendance
                         $fakeAtt->setRelation('verifier', $leave->verifier); 
                         
                         $historyCollection->push($fakeAtt);
