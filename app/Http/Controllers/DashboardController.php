@@ -175,7 +175,7 @@ class DashboardController extends Controller
             'present' => $presentCount,
             'late' => $lateCount,
             'early' => $earlyCount,
-            'pending' => $pending,
+            'pending' => $pendingCount, // <--- PERBAIKAN DI SINI (sebelumnya $pending)
             'on_time' => $onTimeCount,
             'absent' => $absentCount,
             'present_percentage' => $totalUsers > 0 ? round(($presentCount / $totalUsers) * 100) : 0,
