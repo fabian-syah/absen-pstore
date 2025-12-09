@@ -1,83 +1,96 @@
-@extends('layout.master')
+@extends('layouts.app')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-md-8">
+<div class="row">
+    {{-- DETAIL KASBON --}}
+    <div class="col-md-4 grid-margin stretch-card">
         <div class="card">
-            <div class="card-body" id="printableArea">
-                <div class="text-center mb-4">
-                    <h3>BUKTI KASBON / INVOICE</h3>
-                    <h5 class="text-muted">ID Transaksi: #KB-{{ str_pad($kasbon->id, 5, '0', STR_PAD_LEFT) }}</h5>
-                    
-                    @if($kasbon->status == 'paid')
-                        <h2 class="text-success mt-2" style="border: 2px solid green; display:inline-block; padding: 5px 20px; border-radius: 8px;">LUNAS</h2>
-                    @elseif($kasbon->status == 'approved')
-                         <h4 class="text-primary mt-2">BELUM LUNAS</h4>
-                    @elseif($kasbon->status == 'rejected')
-                         <h4 class="text-danger mt-2">DITOLAK</h4>
-                    @else
-                         <h4 class="text-warning mt-2">MENUNGGU KONFIRMASI</h4>
-                    @endif
+            <div class="card-body">
+                <h4 class="card-title">Detail Pinjaman</h4>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Peminjam</span> <strong>{{ $kasbon->user->name }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Total Pinjaman</span> <strong>Rp {{ number_format($kasbon->amount, 0) }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between bg-light">
+                        <span>Sudah Dibayar</span> <strong class="text-success">Rp {{ number_format($kasbon->total_paid, 0) }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Sisa Hutang</span> <strong class="text-danger">Rp {{ number_format($kasbon->remaining_amount, 0) }}</strong>
+                    </li>
+                    <li class="list-group-item">
+                        <span>Jatuh Tempo:</span> <br>
+                        <strong>{{ \Carbon\Carbon::parse($kasbon->due_date)->format('d F Y') }}</strong>
+                    </li>
+                    <li class="list-group-item">
+                        <span>Ket:</span> <br> {{ $kasbon->description_1 }}
+                    </li>
+                </ul>
+                <div class="mt-3">
+                    <p class="mb-1">Bukti Pengajuan:</p>
+                    <a href="{{ asset('storage/'.$kasbon->photo_1) }}" target="_blank">
+                        <img src="{{ asset('storage/'.$kasbon->photo_1) }}" class="img-thumbnail" style="width: 80px">
+                    </a>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <hr>
-
-                <div class="row">
-                    <div class="col-sm-6">
-                        <p><strong>Peminjam:</strong> {{ $kasbon->user->name }}</p>
-                        <p><strong>Divisi/Cabang:</strong> {{ $kasbon->user->division->name ?? '-' }} / {{ $kasbon->user->branch->name ?? '-' }}</p>
-                        <p><strong>Tanggal Pengajuan:</strong> {{ $kasbon->created_at->format('d M Y H:i') }}</p>
-                    </div>
-                    <div class="col-sm-6 text-end text-md-end text-sm-start">
-                        <p><strong>Total Nominal:</strong></p>
-                        <h3 class="text-primary">Rp {{ number_format($kasbon->amount, 0, ',', '.') }}</h3>
-                    </div>
-                </div>
-
-                <div class="mt-4">
-                    <h5>Rincian & Keterangan</h5>
-                    <table class="table table-bordered">
-                        <tr>
-                            <td width="30%">Keterangan 1</td>
-                            <td>{{ $kasbon->description_1 }}</td>
-                        </tr>
-                        <tr>
-                            <td>Keterangan 2</td>
-                            <td>{{ $kasbon->description_2 ?? '-' }}</td>
-                        </tr>
+    {{-- RIWAYAT CICILAN & APPROVAL --}}
+    <div class="col-md-8 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Riwayat Cicilan / Pembayaran</h4>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Tgl Bayar</th>
+                                <th>Nominal</th>
+                                <th>Bukti</th>
+                                <th>Status</th>
+                                @if(auth()->user()->role == 'admin') <th>Aksi Admin</th> @endif
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($kasbon->installments as $ins)
+                                <tr>
+                                    <td>{{ $ins->created_at->format('d/m/Y') }}</td>
+                                    <td>Rp {{ number_format($ins->amount_paid, 0) }}</td>
+                                    <td>
+                                        <a href="{{ asset('storage/'.$ins->payment_proof) }}" target="_blank">Lihat Foto</a>
+                                    </td>
+                                    <td>
+                                        @if($ins->status == 'pending') <span class="badge badge-warning">Menunggu Verifikasi</span>
+                                        @elseif($ins->status == 'approved') <span class="badge badge-success">Diterima</span>
+                                        @else <span class="badge badge-danger">Ditolak</span> @endif
+                                    </td>
+                                    
+                                    {{-- AKSI APPROVE CICILAN OLEH ADMIN --}}
+                                    @if(auth()->user()->role == 'admin' && $ins->status == 'pending')
+                                        <td>
+                                            <form action="{{ route('kasbon.installment.approve', $ins->id) }}" method="POST" class="d-inline">
+                                                @csrf 
+                                                <button class="btn btn-success btn-xs" onclick="return confirm('Terima pembayaran ini?')">Terima</button>
+                                            </form>
+                                            <form action="{{ route('kasbon.installment.reject', $ins->id) }}" method="POST" class="d-inline">
+                                                @csrf 
+                                                <button class="btn btn-danger btn-xs" onclick="return confirm('Tolak pembayaran ini?')">Tolak</button>
+                                            </form>
+                                        </td>
+                                    @elseif(auth()->user()->role == 'admin')
+                                        <td><small class="text-muted">Selesai</small></td>
+                                    @endif
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-center text-muted">Belum ada pembayaran cicilan.</td></tr>
+                            @endforelse
+                        </tbody>
                     </table>
                 </div>
-
-                <div class="mt-4">
-                    <h5>Dokumen Pendukung</h5>
-                    <div class="d-flex gap-2">
-                        @if($kasbon->photo_1)
-                            <a href="{{ asset('storage/'.$kasbon->photo_1) }}" target="_blank">
-                                <img src="{{ asset('storage/'.$kasbon->photo_1) }}" class="img-thumbnail" style="height: 100px;">
-                            </a>
-                        @endif
-                        @if($kasbon->photo_2)
-                            <a href="{{ asset('storage/'.$kasbon->photo_2) }}" target="_blank">
-                                <img src="{{ asset('storage/'.$kasbon->photo_2) }}" class="img-thumbnail" style="height: 100px;">
-                            </a>
-                        @endif
-                    </div>
-                </div>
-
-                @if($kasbon->status == 'paid' && $kasbon->repayment_proof)
-                    <div class="mt-4 p-3 bg-light border rounded">
-                        <h5>Bukti Pelunasan</h5>
-                        <p>Tanggal Bayar: {{ \Carbon\Carbon::parse($kasbon->repayment_date)->format('d M Y') }}</p>
-                        <a href="{{ asset('storage/'.$kasbon->repayment_proof) }}" target="_blank">
-                            <img src="{{ asset('storage/'.$kasbon->repayment_proof) }}" class="img-fluid rounded" style="max-height: 200px;">
-                        </a>
-                    </div>
-                @endif
-            </div>
-            
-            <div class="card-footer text-end">
-                <a href="{{ route('kasbon.index') }}" class="btn btn-secondary">Kembali</a>
-                <button onclick="window.print()" class="btn btn-primary"><i class="mdi mdi-printer"></i> Cetak</button>
             </div>
         </div>
     </div>

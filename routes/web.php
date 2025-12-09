@@ -86,20 +86,24 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::delete('/violations/{violation}', [App\Http\Controllers\ViolationController::class, 'destroy'])->name('violations.destroy');
     });
 
-    // === RUTE KASBON ===
+    // === RUTE KASBON (UPDATE) ===
     Route::middleware(['role:admin,audit,security,user_biasa'])->prefix('kasbon')->name('kasbon.')->group(function () {
         Route::get('/', [App\Http\Controllers\CashAdvanceController::class, 'index'])->name('index');
         Route::get('/create', [App\Http\Controllers\CashAdvanceController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\CashAdvanceController::class, 'store'])->name('store');
-        Route::get('/{id}/invoice', [App\Http\Controllers\CashAdvanceController::class, 'show'])->name('show');
+        Route::get('/{id}/detail', [App\Http\Controllers\CashAdvanceController::class, 'show'])->name('show');
         
+        // Rute Baru: User Bayar Cicilan
+        Route::post('/{id}/cicil', [App\Http\Controllers\CashAdvanceController::class, 'storeInstallment'])->name('installment.store');
+
         // Admin Only
         Route::middleware(['role:admin'])->group(function() {
-            Route::get('/{id}/edit', [App\Http\Controllers\CashAdvanceController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [App\Http\Controllers\CashAdvanceController::class, 'update'])->name('update');
             Route::delete('/{id}', [App\Http\Controllers\CashAdvanceController::class, 'destroy'])->name('destroy');
             Route::patch('/{id}/status', [App\Http\Controllers\CashAdvanceController::class, 'changeStatus'])->name('status');
-            Route::post('/{id}/pay', [App\Http\Controllers\CashAdvanceController::class, 'markAsPaid'])->name('pay');
+            
+            // Rute Baru: Admin Approve/Reject Cicilan
+            Route::post('/installment/{id}/approve', [App\Http\Controllers\CashAdvanceController::class, 'approveInstallment'])->name('installment.approve');
+            Route::post('/installment/{id}/reject', [App\Http\Controllers\CashAdvanceController::class, 'rejectInstallment'])->name('installment.reject');
         });
     });
 

@@ -13,6 +13,8 @@ class CashAdvance extends Model
         'user_id',
         'created_by',
         'amount',
+        'total_paid',   // BARU
+        'due_date',     // BARU
         'photo_1',
         'description_1',
         'photo_2',
@@ -20,19 +22,23 @@ class CashAdvance extends Model
         'status',
         'processed_by',
         'approved_date',
-        'repayment_date',
-        'repayment_proof'
+        'repayment_date', // Ini jadi tanggal LUNAS total
     ];
 
-    // Relasi ke User yang berhutang
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relasi ke Admin/User yang memproses
-    public function processor()
+    // Relasi ke Cicilan
+    public function installments()
     {
-        return $this->belongsTo(User::class, 'processed_by');
+        return $this->hasMany(CashAdvanceInstallment::class)->latest();
+    }
+
+    // Helper untuk cek sisa hutang
+    public function getRemainingAmountAttribute()
+    {
+        return $this->amount - $this->total_paid;
     }
 }
