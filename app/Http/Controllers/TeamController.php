@@ -30,6 +30,11 @@ class TeamController extends Controller
             $myBranchIds[] = $user->branch_id;
         }
 
+        // Jika ADMIN GLOBAL (tanpa cabang spesifik), dia bisa melihat SEMUA cabang
+        if ($user->role == 'admin' && $user->branch_id == null) {
+            $myBranchIds = Branch::pluck('id')->toArray();
+        }
+
         // Bersihkan array dari duplikat & nilai kosong
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
@@ -37,9 +42,13 @@ class TeamController extends Controller
         $query = User::where('users.is_active', true);
 
         if (empty($myBranchIds)) {
-            // Jika user tidak punya cabang, jangan tampilkan apa-apa (kecuali Admin Global mungkin)
-            // Di sini kita set ID 0 agar result kosong
-            $query->where('users.id', 0);
+            // Jika user biasa/security hanya melihat teman satu divisi
+            if (in_array($user->role, ['user_biasa', 'security'])) {
+                $query->where('division_id', $user->division_id)
+                      ->where('users.id', '!=', $user->id); // Exclude diri sendiri
+            } else {
+                $query->where('users.id', 0); // Kosongkan result
+            }
         } else {
             // Filter user yang branch_id-nya ada di list cabang kita
             // ATAU user yang punya akses ke cabang tersebut (via pivot)
@@ -68,10 +77,11 @@ class TeamController extends Controller
             'divisions',
             'branch'
         ])
-            ->join('branches', 'users.branch_id', '=', 'branches.id')
+            // Join untuk sorting berdasarkan nama cabang lalu nama user
+            ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
             ->orderBy('branches.name', 'asc')
             ->orderBy('users.name', 'asc')
-            ->select('users.*')
+            ->select('users.*') // Pastikan select users.* agar data join tidak menimpa model User
             ->get();
 
         // 3. AMBIL DATA DETAIL CABANG
@@ -121,13 +131,35 @@ class TeamController extends Controller
     }
 
     /**
+     * Menampilkan Detail Satu Karyawan (Untuk User/Leader melihat profil tim)
+     */
+    public function show(User $user)
+    {
+        // Detail user tim
+        return view('team.show', compact('user'));
+    }
+
+    /**
+     * Menampilkan Absensi Anggota Tim (Paginated)
+     */
+    public function attendance(User $user)
+    {
+        // History absensi anggota tim
+        $attendances = Attendance::where('user_id', $user->id)
+            ->latest()
+            ->paginate(10);
+            
+        return view('team.attendance', compact('user', 'attendances'));
+    }
+
+    /**
      * Menampilkan Detail Satu Cabang
      */
     public function showBranch($id)
     {
         $user = Auth::user();
 
-        // --- VALIDASI AKSES (Updated untuk Leader) ---
+        // --- VALIDASI AKSES (Updated untuk Leader & Admin) ---
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
             if (!in_array($id, $allowedBranches)) abort(403, 'Akses Ditolak: Bukan wilayah audit Anda.');
@@ -140,9 +172,10 @@ class TeamController extends Controller
                 if(!in_array($id, $pivotIds)) abort(403, 'Akses Ditolak: Bukan cabang Anda.');
             }
         }
-        elseif ($user->role == 'admin' && $user->branch_id) {
-            // Admin cabang
-            if ($user->branch_id != $id) abort(403);
+        elseif ($user->role == 'admin') {
+            // Admin Cabang
+            if ($user->branch_id && $user->branch_id != $id) abort(403);
+            // Super Admin lolos
         }
 
         $branch = Branch::findOrFail($id);
@@ -179,14 +212,14 @@ class TeamController extends Controller
 
     /**
      * Menampilkan Halaman "Cabang Saya" (List Cabang yang dikelola)
-     * Diakses oleh: Audit & Leader
+     * Diakses oleh: Admin, Audit & Leader
      */
     public function myBranches()
     {
         $user = Auth::user();
 
-        // [UPDATED] Izinkan Leader mengakses method ini
-        if (!in_array($user->role, ['audit', 'leader'])) {
+        // [UPDATED] Izinkan ADMIN mengakses method ini juga
+        if (!in_array($user->role, ['audit', 'leader', 'admin'])) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -195,9 +228,20 @@ class TeamController extends Controller
         // Ambil cabang dari Pivot (biasanya Audit)
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
 
-        // Ambil cabang dari ID sendiri (biasanya Leader)
+        // Ambil cabang dari ID sendiri (biasanya Leader/Admin Cabang)
         if ($user->branch_id) {
             $myBranchIds[] = $user->branch_id;
+        }
+
+        // KHUSUS SUPER ADMIN: Jika tidak punya branch_id, ambil SEMUA cabang
+        if ($user->role == 'admin' && $user->branch_id == null) {
+            $controlledBranches = Branch::withCount(['users' => function ($q) {
+                $q->where('is_active', true);
+            }])
+            ->orderBy('name', 'asc')
+            ->get();
+
+            return view('team.my_branches', compact('controlledBranches'));
         }
 
         $myBranchIds = array_filter(array_unique($myBranchIds));
@@ -210,7 +254,10 @@ class TeamController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        return view('user_biasa.my_branches', compact('controlledBranches'));
+        // Pastikan nama view ini sesuai dengan file blade Anda (misal: team.my_branches atau user_biasa.my_branches)
+        // Saya sesuaikan dengan kode yang Anda kirim terakhir (user_biasa.my_branches)
+        // Jika file blade Anda bernama team/my_branches.blade.php, ubah string di bawah ini.
+        return view('team.my_branches', compact('controlledBranches'));
     }
 
     /**
@@ -220,7 +267,7 @@ class TeamController extends Controller
     {
         $user = Auth::user();
 
-        // --- VALIDASI AKSES (Updated untuk Leader) ---
+        // --- VALIDASI AKSES (Updated untuk Leader & Admin) ---
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
             if (!in_array($branchId, $allowedBranches)) {
@@ -234,10 +281,9 @@ class TeamController extends Controller
                 if(!in_array($branchId, $pivotIds)) abort(403, 'Anda tidak memiliki akses ke cabang ini.');
             }
         }
-        elseif ($user->role == 'admin' && $user->branch_id) {
-            if ($user->branch_id != $branchId) {
-                abort(403);
-            }
+        elseif ($user->role == 'admin') {
+            // Admin Cabang
+            if ($user->branch_id && $user->branch_id != $branchId) abort(403);
         }
 
         $employee = User::with(['division', 'branch'])->findOrFail($employeeId);
