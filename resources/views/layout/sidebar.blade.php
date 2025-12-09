@@ -199,7 +199,7 @@
             {{-- [UPDATE] ADMIN ditambahkan ke sini agar bisa akses Cabang Saya --}}
             @if (auth()->user()->role == 'audit' || auth()->user()->role == 'leader' || auth()->user()->role == 'admin')
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('team.my-branches') }}">
+                    <a class="nav-link" href="{{ route('team.my_branches') }}">
                         <i class="menu-icon mdi mdi-office-building-marker"></i>
                         <span class="menu-title">Cabang Saya</span>
                     </a>

@@ -278,7 +278,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === [UPDATED] RUTE CABANG SAYA DITAMBAHKAN ADMIN ===
     Route::middleware(['role:admin,audit,leader'])->group(function () {
-        Route::get('/cabang-saya', [TeamController::class, 'myBranches'])->name('team.my-branches');
+        Route::get('/cabang-saya', [TeamController::class, 'myBranches'])->name('team.my_branches');
     });
 
     // === RUTE SELF ATTENDANCE ===
