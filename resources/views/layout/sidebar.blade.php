@@ -50,12 +50,14 @@
                 <span class="menu-title">Riwayat Pelanggaran</span>
             </a>
         </li>
+        @if(auth()->user()->role != 'leader')
         <li class="nav-item">
-            <a class="nav-link" href="#">
-                <i class="menu-icon"></i>
+            <a class="nav-link" href="{{ route('kasbon.index') }}">
+                <i class="menu-icon mdi mdi-cash-multiple"></i>
                 <span class="menu-title">Kasbon</span>
             </a>
         </li>
+        @endif
 
         {{-- =================================== --}}
         {{--    MONITORING HARIAN (ADMIN ONLY)   --}}
