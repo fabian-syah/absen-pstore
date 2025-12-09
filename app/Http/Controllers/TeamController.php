@@ -22,10 +22,8 @@ class TeamController extends Controller
         $user = Auth::user();
 
         // 1. KUMPULKAN SEMUA ID CABANG MILIK USER LOGIN
-        // Ambil dari pivot table (untuk Audit)
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
 
-        // Ambil dari branch_id user itu sendiri (untuk Leader/Admin)
         if ($user->branch_id) {
             $myBranchIds[] = $user->branch_id;
         }
@@ -35,23 +33,19 @@ class TeamController extends Controller
             $myBranchIds = Branch::pluck('id')->toArray();
         }
 
-        // Bersihkan array dari duplikat & nilai kosong
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
         // 2. QUERY USER (TIM)
         $query = User::where('users.is_active', true);
 
         if (empty($myBranchIds)) {
-            // Jika user biasa/security hanya melihat teman satu divisi
             if (in_array($user->role, ['user_biasa', 'security'])) {
                 $query->where('division_id', $user->division_id)
-                      ->where('users.id', '!=', $user->id); // Exclude diri sendiri
+                      ->where('users.id', '!=', $user->id);
             } else {
-                $query->where('users.id', 0); // Kosongkan result
+                $query->where('users.id', 0);
             }
         } else {
-            // Filter user yang branch_id-nya ada di list cabang kita
-            // ATAU user yang punya akses ke cabang tersebut (via pivot)
             $query->where(function ($q) use ($myBranchIds) {
                 $q->whereIn('users.branch_id', $myBranchIds)
                     ->orWhereHas('branches', function ($subQ) use ($myBranchIds) {
@@ -60,14 +54,11 @@ class TeamController extends Controller
             });
         }
 
-        // Ambil Data Tim dengan Relasi yang dibutuhkan
         $myTeam = $query->with([
             'workSchedule',
-            // Ambil absensi hari ini
             'attendances' => function ($q) {
                 $q->whereDate('check_in_time', today());
             },
-            // Ambil Izin/Sakit/Cuti yang Approved hari ini
             'leaveRequests' => function ($q) {
                 $q->where('status', 'approved')
                   ->whereDate('start_date', '<=', today())
@@ -77,11 +68,10 @@ class TeamController extends Controller
             'divisions',
             'branch'
         ])
-            // Join untuk sorting berdasarkan nama cabang lalu nama user
             ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
             ->orderBy('branches.name', 'asc')
             ->orderBy('users.name', 'asc')
-            ->select('users.*') // Pastikan select users.* agar data join tidak menimpa model User
+            ->select('users.*')
             ->get();
 
         // 3. AMBIL DATA DETAIL CABANG
@@ -107,44 +97,31 @@ class TeamController extends Controller
         $stats = [
             'total' => $myTeam->count(),
             'hadir' => $myTeam->filter(function($member) {
-                // Logic: Dianggap hadir/online jika sudah absen masuk ATAU sedang WFH
                 $att = $member->attendances->first();
                 $leave = $member->leaveRequests->first();
                 $isWfh = $leave && $leave->type == 'wfh';
-                
-                // Hadir = Ada data absen atau status WFH
                 return ($att) || $isWfh; 
             })->count(),
             'izin_sakit' => $myTeam->filter(function($member) {
                 $leave = $member->leaveRequests->first();
-                // Hitung sakit/izin/cuti (kecuali WFH karena WFH dihitung kerja/hadir)
                 return $leave && in_array($leave->type, ['sakit', 'izin', 'cuti']);
             })->count(),
-            'belum_hadir' => 0 // Inisialisasi
+            'belum_hadir' => 0
         ];
 
-        // Hitung sisa yang belum hadir (Total - (Hadir + Izin/Sakit))
         $stats['belum_hadir'] = $stats['total'] - ($stats['hadir'] + $stats['izin_sakit']);
-        if($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0; // Prevent negative
+        if($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0;
 
         return view('user_biasa.team', compact('myTeam', 'myBranchIds', 'controlledBranches', 'assignedAudits', 'stats'));
     }
 
-    /**
-     * Menampilkan Detail Satu Karyawan (Untuk User/Leader melihat profil tim)
-     */
     public function show(User $user)
     {
-        // Detail user tim
         return view('team.show', compact('user'));
     }
 
-    /**
-     * Menampilkan Absensi Anggota Tim (Paginated)
-     */
     public function attendance(User $user)
     {
-        // History absensi anggota tim
         $attendances = Attendance::where('user_id', $user->id)
             ->latest()
             ->paginate(10);
@@ -153,42 +130,51 @@ class TeamController extends Controller
     }
 
     /**
-     * Menampilkan Detail Satu Cabang
+     * Menampilkan Detail Satu Cabang (DENGAN STATISTIK ABSENSI LENGKAP)
      */
     public function showBranch($id)
     {
         $user = Auth::user();
 
-        // --- VALIDASI AKSES (Updated untuk Leader & Admin) ---
+        // --- VALIDASI AKSES ---
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
             if (!in_array($id, $allowedBranches)) abort(403, 'Akses Ditolak: Bukan wilayah audit Anda.');
         } 
         elseif ($user->role == 'leader') {
-            // Leader hanya boleh lihat cabangnya sendiri
             if ($user->branch_id != $id) {
-                // Cek juga pivot jika Leader memegang lebih dari 1 cabang (opsional)
                 $pivotIds = $user->branches->pluck('id')->toArray();
                 if(!in_array($id, $pivotIds)) abort(403, 'Akses Ditolak: Bukan cabang Anda.');
             }
         }
         elseif ($user->role == 'admin') {
-            // Admin Cabang
             if ($user->branch_id && $user->branch_id != $id) abort(403);
-            // Super Admin lolos
         }
 
         $branch = Branch::findOrFail($id);
 
+        // Ambil Karyawan di Cabang ini beserta data Absen Hari Ini
         $employees = User::where('branch_id', $id)
-            ->where('role', '!=', 'admin')
+            ->where('role', '!=', 'admin') // Exclude Admin
             ->where('is_active', true)
             ->with(['division', 'attendances' => function ($q) {
                 $q->whereDate('check_in_time', today());
             }])
             ->get();
 
+        // --- LOGIKA GROUPING STATUS KEHADIRAN ---
+        // Kita siapkan array untuk menampung siapa saja yang masuk kategori tertentu
+        $attendanceGroups = [
+            'Masuk' => [],
+            'Izin' => [],
+            'Sakit' => [],
+            'Cuti' => [],
+            'WFH / Dinas Luar' => [],
+            'Alpha / Belum Absen' => [],
+        ];
+
         foreach ($employees as $emp) {
+            // Cek Cuti/Izin/Sakit yang Approved hari ini
             $todayLeave = LeaveRequest::where('user_id', $emp->id)
                 ->where('status', 'approved')
                 ->where('is_active', true)
@@ -198,42 +184,72 @@ class TeamController extends Controller
                             ->whereDate('start_date', '<=', today())
                             ->whereDate('end_date', '>=', today());
                     })->orWhere(function ($sub) {
-                        $sub->where('type', 'telat')
+                        $sub->where('type', 'telat') // Izin telat dianggap Masuk tapi ada notes
                             ->whereDate('start_date', today());
                     });
                 })
                 ->first();
 
-            $emp->today_leave = $todayLeave;
+            $emp->today_leave = $todayLeave; // Simpan di object user untuk dipakai di view list bawah
+
+            // Cek Absensi Fisik (Scan/Self)
+            $attendance = $emp->attendances->first();
+
+            // LOGIKA PENENTUAN STATUS
+            if ($attendance) {
+                // Jika ada data absen, berarti MASUK
+                $attendanceGroups['Masuk'][] = $emp;
+            } elseif ($todayLeave) {
+                // Jika tidak absen tapi ada Izin Approved
+                if ($todayLeave->type == 'sakit') {
+                    $attendanceGroups['Sakit'][] = $emp;
+                } elseif ($todayLeave->type == 'izin') {
+                    $attendanceGroups['Izin'][] = $emp;
+                } elseif ($todayLeave->type == 'cuti') {
+                    $attendanceGroups['Cuti'][] = $emp;
+                } elseif ($todayLeave->type == 'wfh') {
+                    $attendanceGroups['WFH / Dinas Luar'][] = $emp;
+                } elseif ($todayLeave->type == 'telat') {
+                    // Izin telat biasanya nanti akan absen, sementara masukkan ke Alpha/Belum Absen atau kategori khusus
+                    $attendanceGroups['Alpha / Belum Absen'][] = $emp; 
+                }
+            } else {
+                // Tidak absen dan tidak izin = Alpha/Belum Absen
+                $attendanceGroups['Alpha / Belum Absen'][] = $emp;
+            }
         }
 
-        return view('user_biasa.branch_detail', compact('branch', 'employees'));
+        // Hitung total per kategori untuk sorting
+        $statsCounts = [
+            'Masuk' => count($attendanceGroups['Masuk']),
+            'Izin' => count($attendanceGroups['Izin']),
+            'Sakit' => count($attendanceGroups['Sakit']),
+            'Cuti' => count($attendanceGroups['Cuti']),
+            'WFH / Dinas Luar' => count($attendanceGroups['WFH / Dinas Luar']),
+            'Alpha / Belum Absen' => count($attendanceGroups['Alpha / Belum Absen']),
+        ];
+
+        // Sorting: Kategori dengan jumlah terbanyak tampil duluan (opsional)
+        // arsort($statsCounts); 
+
+        return view('user_biasa.branch_detail', compact('branch', 'employees', 'attendanceGroups', 'statsCounts'));
     }
 
-    /**
-     * Menampilkan Halaman "Cabang Saya" (List Cabang yang dikelola)
-     * Diakses oleh: Admin, Audit & Leader
-     */
     public function myBranches()
     {
         $user = Auth::user();
 
-        // [UPDATED] Izinkan ADMIN mengakses method ini juga
         if (!in_array($user->role, ['audit', 'leader', 'admin'])) {
             abort(403, 'Unauthorized action.');
         }
 
         $myId = $user->id;
-        
-        // Ambil cabang dari Pivot (biasanya Audit)
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
 
-        // Ambil cabang dari ID sendiri (biasanya Leader/Admin Cabang)
         if ($user->branch_id) {
             $myBranchIds[] = $user->branch_id;
         }
 
-        // KHUSUS SUPER ADMIN: Jika tidak punya branch_id, ambil SEMUA cabang
         if ($user->role == 'admin' && $user->branch_id == null) {
             $controlledBranches = Branch::withCount(['users' => function ($q) {
                 $q->where('is_active', true);
@@ -246,7 +262,6 @@ class TeamController extends Controller
 
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
-        // Ambil Data Cabang berdasarkan ID yang dikumpulkan
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->withCount(['users' => function ($q) {
                 $q->where('is_active', true);
@@ -254,20 +269,13 @@ class TeamController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        // Pastikan nama view ini sesuai dengan file blade Anda (misal: team.my_branches atau user_biasa.my_branches)
-        // Saya sesuaikan dengan kode yang Anda kirim terakhir (user_biasa.my_branches)
-        // Jika file blade Anda bernama team/my_branches.blade.php, ubah string di bawah ini.
         return view('team.my_branches', compact('controlledBranches'));
     }
 
-    /**
-     * Menampilkan History Karyawan Tertentu
-     */
     public function showEmployeeHistory(Request $request, $branchId, $employeeId)
     {
         $user = Auth::user();
 
-        // --- VALIDASI AKSES (Updated untuk Leader & Admin) ---
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
             if (!in_array($branchId, $allowedBranches)) {
@@ -275,20 +283,17 @@ class TeamController extends Controller
             }
         } 
         elseif ($user->role == 'leader') {
-             // Leader Validasi
              if ($user->branch_id != $branchId) {
                 $pivotIds = $user->branches->pluck('id')->toArray();
                 if(!in_array($branchId, $pivotIds)) abort(403, 'Anda tidak memiliki akses ke cabang ini.');
             }
         }
         elseif ($user->role == 'admin') {
-            // Admin Cabang
             if ($user->branch_id && $user->branch_id != $branchId) abort(403);
         }
 
         $employee = User::with(['division', 'branch'])->findOrFail($employeeId);
 
-        // Filter Tanggal
         $selectedMonth = $request->get('month', date('m'));
         $selectedYear = $request->get('year', date('Y'));
 
@@ -301,7 +306,6 @@ class TeamController extends Controller
         $nextMonth = $nextDate->month;
         $nextYear  = $nextDate->year;
 
-        // Ambil Data History
         $data = $this->getHistoryData($employee, $selectedMonth, $selectedYear);
         $history = $data['history'];
         $summary = $data['summary'];
@@ -317,12 +321,8 @@ class TeamController extends Controller
         ));
     }
 
-    /**
-     * Helper Function: Mengambil dan mengolah data absensi + cuti menjadi history timeline
-     */
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        // 1. Ambil data Absensi Real (Scan/Self/Manual)
         $attendances = Attendance::with('verifier') 
             ->where('user_id', $user->id)
             ->whereYear('check_in_time', $selectedYear)
@@ -330,12 +330,10 @@ class TeamController extends Controller
             ->orderBy('check_in_time', 'desc')
             ->get();
 
-        // 2. Ambil data Cuti/Izin Approved
         $leaves = LeaveRequest::where('user_id', $user->id)
             ->where('status', 'approved')
             ->where('is_active', true)
             ->where(function ($q) use ($selectedMonth, $selectedYear) {
-                // Cek overlap tanggal dengan bulan yang dipilih
                 $q->whereMonth('start_date', $selectedMonth)->whereYear('start_date', $selectedYear)
                   ->orWhere(function ($subQ) use ($selectedMonth, $selectedYear) {
                       $subQ->whereMonth('end_date', $selectedMonth)->whereYear('end_date', $selectedYear);
@@ -345,7 +343,6 @@ class TeamController extends Controller
 
         $historyCollection = $attendances;
 
-        // 3. Gabungkan Cuti ke dalam History
         foreach ($leaves as $leave) {
             $startDate = Carbon::parse($leave->start_date);
             $endDate = $leave->end_date ? Carbon::parse($leave->end_date) : $startDate;
@@ -353,13 +350,10 @@ class TeamController extends Controller
 
             foreach ($period as $date) {
                 if ($date->month == $selectedMonth && $date->year == $selectedYear) {
-                    
-                    // Cek apakah tanggal ini sudah ada data absensi?
                     $alreadyAttendance = $attendances->filter(function ($att) use ($date) {
                         return $att->check_in_time->isSameDay($date);
                     })->isNotEmpty();
 
-                    // Jika belum ada absen, buat object Absensi Palsu (Dummy) untuk tampilan history
                     if (!$alreadyAttendance) {
                         $fakeAtt = new Attendance();
                         $fakeAtt->id = 'leave_' . $leave->id . '_' . $date->timestamp; 
@@ -389,10 +383,8 @@ class TeamController extends Controller
             }
         }
 
-        // 4. Sortir ulang berdasarkan tanggal terbaru
         $history = $historyCollection->sortByDesc('check_in_time');
 
-        // 5. Hitung Summary
         $summary = [
             'total' => $history->count(),
             'hadir' => $history->filter(function($item) {
