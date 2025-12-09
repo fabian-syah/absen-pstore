@@ -9,7 +9,7 @@ use App\Models\LateNotification;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // TAMBAHAN: Untuk query raw leaderboard
+use Illuminate\Support\Facades\DB; // Wajib ada untuk query raw
 use Carbon\Carbon;
 use PDF;
 
@@ -78,7 +78,6 @@ class DashboardController extends Controller
         $data['myLeaveToday'] = $this->getTodayLeaveRequest($user->id);
         
         // HYBRID CHECK FOR DASHBOARD
-        // Pastikan Dashboard mendeteksi sesi aktif tanpa filter tipe
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', Carbon::now()->subHours(24))
@@ -109,31 +108,28 @@ class DashboardController extends Controller
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
-        // FITUR BARU: TOP 5 ON-TIME LEADERBOARD
+        // FITUR BARU: TOP 5 GLOBAL LEADERBOARD (FIXED)
         // =========================================================================
-        // Logika: Ambil 5 user dengan rata-rata jam masuk paling pagi di bulan ini
-        // Syarat: Tidak telat (is_late_checkin = 0) dan Role bukan Admin (biar fair)
+        // Logika: 
+        // 1. Paling Rajin (Absen Masuk DAN Pulang).
+        // 2. Global (Tidak difilter berdasarkan branch user yg login).
         
         $data['leaderboard'] = Attendance::select(
                 'user_id', 
-                DB::raw('count(*) as total_present'),
-                // Mengambil bagian JAM saja untuk dirata-rata (format Time)
+                DB::raw('count(*) as total_attendance'), // Hitung frekuensi kehadiran full
                 DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time')
             )
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
-            ->where('is_late_checkin', false) // Hanya menghitung hari dimana dia TIDAK telat
-            ->whereHas('user', function($q) use ($branch_id) {
+            ->whereNotNull('check_out_time') // Syarat: Harus sudah absen pulang (Full Cycle)
+            ->whereHas('user', function($q) {
+                // HAPUS filter branch_id disini agar GLOBAL/SEMUA SAMA
                 $q->where('is_active', true)
-                  ->whereNotIn('role', ['admin']); // Admin tidak ikut kompetisi
-                
-                if ($branch_id) {
-                    $q->where('branch_id', $branch_id);
-                }
+                  ->whereNotIn('role', ['admin']); // Admin tidak ikut
             })
             ->groupBy('user_id')
-            ->having('total_present', '>', 0) // Minimal pernah hadir
-            ->orderBy('avg_arrival_time', 'asc') // Urutkan dari jam paling pagi
+            ->orderBy('total_attendance', 'desc') // Paling sering masuk duluan
+            ->orderBy('avg_arrival_time', 'asc')  // Tiebreaker: Jam masuk rata-rata
             ->take(5)
             ->with('user')
             ->get();
@@ -206,7 +202,7 @@ class DashboardController extends Controller
             'present' => $presentCount,
             'late' => $lateCount,
             'early' => $earlyCount,
-            'pending' => $pendingCount, // <--- PERBAIKAN DI SINI (sebelumnya $pending)
+            'pending' => $pendingCount,
             'on_time' => $onTimeCount,
             'absent' => $absentCount,
             'present_percentage' => $totalUsers > 0 ? round(($presentCount / $totalUsers) * 100) : 0,

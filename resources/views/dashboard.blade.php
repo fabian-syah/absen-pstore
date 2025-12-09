@@ -200,7 +200,7 @@
                                     <h6 class="fw-bold mb-0 text-truncate">{{ $leaderboard[1]->user->name }}</h6>
                                     <small class="text-muted d-block" style="font-size: 11px;">{{ $leaderboard[1]->user->division->name ?? '-' }}</small>
                                     <span class="badge bg-secondary bg-opacity-10 text-secondary mt-1 border border-secondary border-opacity-25">
-                                        <i class="mdi mdi-clock-check me-1"></i>Avg: {{ \Carbon\Carbon::parse($leaderboard[1]->avg_arrival_time)->format('H:i') }}
+                                        <i class="mdi mdi-check-circle-outline me-1"></i>{{ $leaderboard[1]->total_attendance }} Hari
                                     </span>
                                 </div>
                             </div>
@@ -224,7 +224,7 @@
                                     <h5 class="fw-bold mb-0 text-truncate text-dark">{{ $leaderboard[0]->user->name }}</h5>
                                     <small class="text-muted d-block fw-semibold">{{ $leaderboard[0]->user->division->name ?? '-' }}</small>
                                     <span class="badge bg-warning text-dark mt-2 shadow-sm">
-                                        <i class="mdi mdi-star me-1"></i>Avg: {{ \Carbon\Carbon::parse($leaderboard[0]->avg_arrival_time)->format('H:i') }}
+                                        <i class="mdi mdi-star me-1"></i>{{ $leaderboard[0]->total_attendance }} Hari Full
                                     </span>
                                 </div>
                             </div>
@@ -247,7 +247,7 @@
                                     <h6 class="fw-bold mb-0 text-truncate">{{ $leaderboard[2]->user->name }}</h6>
                                     <small class="text-muted d-block" style="font-size: 11px;">{{ $leaderboard[2]->user->division->name ?? '-' }}</small>
                                     <span class="badge bg-warning bg-opacity-10 text-warning mt-1 border border-warning border-opacity-25" style="color: #A0522D !important;">
-                                        <i class="mdi mdi-clock-check me-1"></i>Avg: {{ \Carbon\Carbon::parse($leaderboard[2]->avg_arrival_time)->format('H:i') }}
+                                        <i class="mdi mdi-check-circle-outline me-1"></i>{{ $leaderboard[2]->total_attendance }} Hari
                                     </span>
                                 </div>
                             </div>
@@ -274,7 +274,9 @@
                                                 <small class="text-muted">{{ $winner->user->division->name ?? '-' }}</small>
                                             </div>
                                             <div class="text-end me-2">
-                                                <small class="fw-bold text-dark">{{ \Carbon\Carbon::parse($winner->avg_arrival_time)->format('H:i') }}</small>
+                                                <span class="badge bg-light text-dark border">
+                                                    {{ $winner->total_attendance }} Hari
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
