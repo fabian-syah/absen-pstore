@@ -44,6 +44,18 @@
                 <span class="menu-title">Riwayat Divisi / Cabang</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="menu-icon mdi mdi-history"></i>
+                <span class="menu-title">Riwayat Pelanggaran</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="menu-icon"></i>
+                <span class="menu-title">Kasbon</span>
+            </a>
+        </li>
 
         {{-- =================================== --}}
         {{--    MONITORING HARIAN (ADMIN ONLY)   --}}
