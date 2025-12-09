@@ -86,6 +86,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::delete('/violations/{violation}', [App\Http\Controllers\ViolationController::class, 'destroy'])->name('violations.destroy');
     });
 
+    // Route Toggle & Destroy (Opsional jika masih dipakai)
+    Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
+    Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
+
     // === RUTE KASBON (UPDATE) ===
     Route::middleware(['role:admin,audit,security,user_biasa'])->prefix('kasbon')->name('kasbon.')->group(function () {
         Route::get('/', [App\Http\Controllers\CashAdvanceController::class, 'index'])->name('index');
@@ -93,23 +97,27 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/', [App\Http\Controllers\CashAdvanceController::class, 'store'])->name('store');
         Route::get('/{id}/detail', [App\Http\Controllers\CashAdvanceController::class, 'show'])->name('show');
         
-        // Rute Baru: User Bayar Cicilan
+        // Rute User Bayar Cicilan
         Route::post('/{id}/cicil', [App\Http\Controllers\CashAdvanceController::class, 'storeInstallment'])->name('installment.store');
 
-        // Admin Only
+        // Admin Only Actions
         Route::middleware(['role:admin'])->group(function() {
             Route::delete('/{id}', [App\Http\Controllers\CashAdvanceController::class, 'destroy'])->name('destroy');
             Route::patch('/{id}/status', [App\Http\Controllers\CashAdvanceController::class, 'changeStatus'])->name('status');
             
-            // Rute Baru: Admin Approve/Reject Cicilan
+            // Approve/Reject Pembayaran
             Route::post('/installment/{id}/approve', [App\Http\Controllers\CashAdvanceController::class, 'approveInstallment'])->name('installment.approve');
             Route::post('/installment/{id}/reject', [App\Http\Controllers\CashAdvanceController::class, 'rejectInstallment'])->name('installment.reject');
+
+            // ========================================================
+            // [FIX] TAMBAHKAN 3 BARIS INI AGAR TIDAK ERROR SAAT KLIK MATA
+            // ========================================================
+            Route::get('/installment/{id}/edit', [App\Http\Controllers\CashAdvanceController::class, 'editInstallment'])->name('installment.edit');
+            Route::put('/installment/{id}', [App\Http\Controllers\CashAdvanceController::class, 'updateInstallment'])->name('installment.update');
+            Route::delete('/installment/{id}', [App\Http\Controllers\CashAdvanceController::class, 'destroyInstallment'])->name('installment.destroy');
+            // ========================================================
         });
     });
-
-    // Route Toggle & Destroy (Opsional jika masih dipakai)
-    Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
-    Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
 
     // Rute Khusus Riwayat Pribadi
     Route::get('/riwayat-izin-saya', [LeaveRequestController::class, 'personalHistory'])
