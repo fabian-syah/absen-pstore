@@ -11,7 +11,7 @@
         padding-left: 1.5rem;
         color: #1e293b;
         font-weight: 700;
-        margin-bottom: 0; /* Reset margin bottom karena pakai flex */
+        margin-bottom: 0;
     }
 
     .branch-section-title::before {
@@ -77,7 +77,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 6px 0;
+        padding: 8px 0;
         border-bottom: 1px dashed #e2e8f0;
         font-size: 0.85rem;
         color: #64748b;
@@ -153,11 +153,12 @@
 
                     {{-- List Kategori (Looping Data) --}}
                     <div class="mb-3">
-                        <h6 class="text-uppercase text-muted" style="font-size: 0.7rem; letter-spacing: 0.5px;">Rincian Aset:</h6>
+                        <h6 class="text-uppercase text-muted" style="font-size: 0.7rem; letter-spacing: 0.5px;">RINCIAN ASET (TERBANYAK):</h6>
                         
                         <ul class="inventory-list-group">
                             @php $countDisplay = 0; @endphp
                             
+                            {{-- Data sudah diurutkan dari Controller (sortDesc) --}}
                             @forelse($branch->inventory_summary as $category => $count)
                                 {{-- Tampilkan maksimal 4 kategori agar kartu tidak kepanjangan --}}
                                 @if($countDisplay < 4) 

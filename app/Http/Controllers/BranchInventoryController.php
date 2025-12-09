@@ -59,18 +59,20 @@ class BranchInventoryController extends Controller
             // Kita bisa filter barang di sini jika mau
         }])->latest()->get();
 
-        // --- 4. HITUNG RINGKASAN KATEGORI ---
+        // --- 4. HITUNG RINGKASAN KATEGORI & SORTING ---
         $branches->transform(function ($branch) {
             // Gabungkan semua inventaris dari semua user di cabang ini menjadi satu koleksi
             $allInventories = $branch->users->flatMap(function ($user) {
                 return $user->inventories;
             });
 
-            // Kelompokkan berdasarkan 'category' dan hitung jumlahnya
-            // Hasil: ['Laptop' => 5, 'Handphone' => 10, ...]
-            $branch->inventory_summary = $allInventories->groupBy('category')->map(function ($items) {
-                return $items->count();
-            });
+            // Kelompokkan berdasarkan 'category' -> hitung jumlahnya -> URUTKAN DARI TERBANYAK
+            // Hasil: ['Laptop' => 10, 'Handphone' => 5, ...] (Urut Terbanyak)
+            $branch->inventory_summary = $allInventories->groupBy('category')
+                ->map(function ($items) {
+                    return $items->count();
+                })
+                ->sortDesc(); // <--- [UPDATE] Logika Sorting ditambahkan di sini
 
             // Hitung total aset keseluruhan
             $branch->total_assets = $allInventories->count();
