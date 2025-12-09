@@ -9,7 +9,7 @@ use App\Models\LateNotification;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // Wajib import DB
+use Illuminate\Support\Facades\DB; // Wajib ada
 use Carbon\Carbon;
 use PDF;
 
@@ -52,7 +52,7 @@ class DashboardController extends Controller
         $data['todaySchedule'] = $scheduleText;
 
         // =========================================================================
-        // 3. QUERY DASAR (UNTUK WIDGET)
+        // 3. QUERY DASAR
         // =========================================================================
         $attendanceQuery = Attendance::query();
         $userQuery = User::query();
@@ -64,9 +64,9 @@ class DashboardController extends Controller
             $userQuery->whereIn('branch_id', $auditBranchIds);
             $divisionQuery->whereIn('branch_id', $auditBranchIds);
         } elseif ($user->role == 'admin' && $branch_id == null) {
-            // Super Admin melihat semua
+            // Super Admin
         } else {
-            // Admin Cabang / User Biasa / Security melihat sesuai cabang
+            // Admin Cabang / User Biasa / Security
             if ($branch_id) {
                 $attendanceQuery->where('branch_id', $branch_id);
                 $userQuery->where('branch_id', $branch_id);
@@ -108,12 +108,13 @@ class DashboardController extends Controller
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
-        // FITUR BARU: TOP 5 GLOBAL LEADERBOARD (FIXED & STRICT)
+        // FITUR BARU: TOP 5 GLOBAL LEADERBOARD (VERIFIED ONLY)
         // =========================================================================
-        // Logika: 
-        // 1. GLOBAL: Tidak mempedulikan $branch_id user yang login.
-        // 2. STRICT: Hanya menghitung 'Masuk' DAN 'Verified' DAN 'Sudah Pulang'.
-        // 3. Alpha, Sakit, Izin, Pending tidak dihitung.
+        // Logika Strict:
+        // 1. Check Out tidak boleh NULL (Harus full cycle).
+        // 2. Presence Status wajib 'Masuk' (Alpha/Izin/Sakit dibuang).
+        // 3. Status wajib 'verified' (Pending dibuang).
+        // 4. Tidak peduli branch user yg login (Global).
         
         $data['leaderboard'] = Attendance::select(
                 'user_id', 
@@ -122,19 +123,19 @@ class DashboardController extends Controller
             )
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
-            ->whereNotNull('check_out_time')      // Wajib sudah pulang (siklus lengkap)
-            ->where('presence_status', 'Masuk')   // Wajib status 'Masuk' (Bukan Alpha/Sakit)
-            ->where('status', 'verified')         // Wajib sudah Diverifikasi (Bukan Pending)
+            ->whereNotNull('check_out_time')        // Syarat 1: Sudah Pulang
+            ->where('presence_status', 'Masuk')     // Syarat 2: Hadir Fisik/WFH (Bukan Alpha/Sakit)
+            ->where('status', 'verified')           // Syarat 3: SUDAH DIVERIFIKASI (Ini yg bikin beda sama widget)
             ->whereHas('user', function($q) {
                 $q->where('is_active', true)
-                  ->whereNotIn('role', ['admin']); // Admin tidak ikut leaderboard
-                // PERHATIAN: Tidak ada filter branch_id disini agar Global.
+                  ->whereNotIn('role', ['admin']);  // Admin tidak ikut leaderboard
+                // Note: Tidak ada filter branch disini agar GLOBAL
             })
             ->groupBy('user_id')
-            ->orderBy('total_attendance', 'desc') // Poin utama: Jumlah kehadiran
-            ->orderBy('avg_arrival_time', 'asc')  // Poin kedua: Jam masuk rata-rata
+            ->orderBy('total_attendance', 'desc')
+            ->orderBy('avg_arrival_time', 'asc')
             ->take(5)
-            ->with(['user', 'user.division']) // Load relasi user & divisi
+            ->with('user')
             ->get();
 
         // 6. LOGIKA DASHBOARD PEKERJAAN
@@ -166,7 +167,6 @@ class DashboardController extends Controller
         return view('dashboard', $data);
     }
 
-    // --- HELPER FUNCTIONS TETAP SAMA ---
     private function getTodayLeaveRequest($user_id)
     {
         return LeaveRequest::where('user_id', $user_id)

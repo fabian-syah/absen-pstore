@@ -167,7 +167,7 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: TOP 5 ON-TIME LEADERBOARD (STRICT VERIFIED) --}}
+    {{-- BAGIAN BARU: TOP 5 ON-TIME LEADERBOARD --}}
     {{-- ======================================================================= --}}
     @if(isset($leaderboard) && count($leaderboard) > 0)
     <div class="row animate-enter mb-4" style="animation-delay: 0.45s">
@@ -200,7 +200,7 @@
                                     <h6 class="fw-bold mb-0 text-truncate">{{ $leaderboard[1]->user->name }}</h6>
                                     <small class="text-muted d-block" style="font-size: 11px;">{{ $leaderboard[1]->user->division->name ?? '-' }}</small>
                                     <span class="badge bg-secondary bg-opacity-10 text-secondary mt-1 border border-secondary border-opacity-25">
-                                        <i class="mdi mdi-check-circle-outline me-1"></i>{{ $leaderboard[1]->total_attendance }} Verified
+                                        <i class="mdi mdi-check-decagram me-1"></i>{{ $leaderboard[1]->total_attendance }} Verified
                                     </span>
                                 </div>
                             </div>
@@ -224,7 +224,7 @@
                                     <h5 class="fw-bold mb-0 text-truncate text-dark">{{ $leaderboard[0]->user->name }}</h5>
                                     <small class="text-muted d-block fw-semibold">{{ $leaderboard[0]->user->division->name ?? '-' }}</small>
                                     <span class="badge bg-warning text-dark mt-2 shadow-sm">
-                                        <i class="mdi mdi-star me-1"></i>{{ $leaderboard[0]->total_attendance }} Verified
+                                        <i class="mdi mdi-trophy me-1"></i>{{ $leaderboard[0]->total_attendance }} Verified
                                     </span>
                                 </div>
                             </div>
@@ -247,7 +247,7 @@
                                     <h6 class="fw-bold mb-0 text-truncate">{{ $leaderboard[2]->user->name }}</h6>
                                     <small class="text-muted d-block" style="font-size: 11px;">{{ $leaderboard[2]->user->division->name ?? '-' }}</small>
                                     <span class="badge bg-warning bg-opacity-10 text-warning mt-1 border border-warning border-opacity-25" style="color: #A0522D !important;">
-                                        <i class="mdi mdi-check-circle-outline me-1"></i>{{ $leaderboard[2]->total_attendance }} Verified
+                                        <i class="mdi mdi-check-decagram me-1"></i>{{ $leaderboard[2]->total_attendance }} Verified
                                     </span>
                                 </div>
                             </div>
