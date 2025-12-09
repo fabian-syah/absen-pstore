@@ -26,10 +26,11 @@ class SelfAttendanceController extends Controller
         $today = today();
         $now = now();
 
-        // 1. AUTO-CLOSE (Membersihkan sesi basi > 30 Jam)
+        // 1. AUTO-CLOSE (Membersihkan sesi basi > 32 Jam)
+        // Diperpanjang ke 32 jam agar tidak menutup sesi orang yang lembur
         $hangingSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '<', $now->subHours(30))
+            ->where('check_in_time', '<', $now->copy()->subHours(32))
             ->where('status', '!=', 'alpha')
             ->first();
 
@@ -41,15 +42,18 @@ class SelfAttendanceController extends Controller
             ]);
         }
 
-        // 2. CEK SESI AKTIF
+        // 2. CEK SESI AKTIF (REVISI PENTING)
+        // Cek mundur 32 jam. Ini kunci agar saat user buka halaman di jam 2 pagi, 
+        // sistem masih melihat dia check-in jam 8 malam kemarin.
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', Carbon::now()->subHours(24)) 
+            ->where('check_in_time', '>=', Carbon::now()->subHours(32)) 
             ->where('status', '!=', 'alpha')
             ->latest('check_in_time')
             ->first();
 
         if ($activeSession) {
+            // Jika ketemu, masuk MODE PULANG (Update sesi kemarin)
             $mode = 'pulang';
             $attendance = $activeSession;
         } 
@@ -118,11 +122,14 @@ class SelfAttendanceController extends Controller
             $attendanceToUpdate = Attendance::find($request->attendance_id);
         }
         
-        // B. Fallback: Cari manual sesi aktif user ini
+        // B. Fallback (REVISI PENTING): 
+        // Jika attendance_id kosong (kadang terjadi error di frontend),
+        // Kita paksa cari sesi aktif user dalam 32 jam terakhir.
+        // Ini mencegah sistem membuat ABSEN MASUK baru padahal user bermaksud pulang (selfie lembur).
         if (!$attendanceToUpdate) {
              $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', Carbon::now()->subHours(24))
+                ->where('check_in_time', '>=', Carbon::now()->subHours(32))
                 ->latest('check_in_time')
                 ->first();
         }
@@ -201,6 +208,17 @@ class SelfAttendanceController extends Controller
         // LOGIKA ABSEN MASUK (CREATE BARU)
         // =====================================================================
         else {
+            // DOUBLE CHECK: Pastikan benar-benar tidak ada sesi aktif sebelum create baru
+            // Kadang request lag, kita pastikan lagi di sini.
+            $checkAgain = Attendance::where('user_id', $user->id)
+                ->whereNull('check_out_time')
+                ->where('check_in_time', '>=', Carbon::now()->subHours(32))
+                ->first();
+            
+            if ($checkAgain) {
+                 return redirect()->route('dashboard')->with('error', 'Anda masih memiliki sesi aktif yang belum dipulangkan. Silakan refresh halaman.');
+            }
+
             $existingSessionToday = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', $today)
                 ->where('status', '!=', 'alpha')
@@ -224,7 +242,6 @@ class SelfAttendanceController extends Controller
                 }
             }
 
-            // PENTING: Status 'pending_verification' dan verified_by = NULL
             Attendance::create([
                 'user_id'           => $user->id,
                 'branch_id'         => $user->branch_id,
@@ -238,7 +255,7 @@ class SelfAttendanceController extends Controller
                 'work_schedule_id'  => $workSchedule?->id,
                 'is_late_checkin'   => $isLate,
                 'notes'             => $request->notes,
-                'verified_by_user_id' => null, // Pastikan NULL agar tidak dianggap verified
+                'verified_by_user_id' => null, 
             ]);
 
             $message = 'Berhasil absen masuk. Menunggu verifikasi.';
