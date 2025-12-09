@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CashAdvance;
 use App\Models\CashAdvanceInstallment;
+use App\Models\CashAdvancePlan; // Pastikan Model ini ada (dari step sebelumnya)
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -28,35 +29,32 @@ class CashAdvanceController extends Controller
         $user = auth()->user();
         $query = CashAdvance::with(['user', 'installments']);
 
-        // FILTER LOGIC
         if ($user->role === 'admin') {
             // Admin lihat semua
         } elseif ($user->role === 'audit') {
             $branchIds = $user->branches->pluck('id');
-            $query->where(function ($q) use ($branchIds, $user) {
+            $query->where(function($q) use ($branchIds, $user) {
                 $q->whereHas('user', function ($subQ) use ($branchIds) {
                     $subQ->whereIn('branch_id', $branchIds);
                 })
-                    ->orWhere('user_id', $user->id);
+                ->orWhere('user_id', $user->id);
             });
         } else {
-            // User biasa hanya lihat milik sendiri
             $query->where('user_id', $user->id);
         }
 
-        // Pisahkan Aktif & History
-        $activeLoans = (clone $query)->where(function ($q) {
+        $activeLoans = (clone $query)->where(function($q) {
             $q->where('status', 'pending')
-                ->orWhere(function ($sub) {
-                    $sub->where('status', 'approved')->whereColumn('total_paid', '<', 'amount');
-                });
+              ->orWhere(function($sub) {
+                  $sub->where('status', 'approved')->whereColumn('total_paid', '<', 'amount');
+              });
         })->latest()->get();
 
-        $historyLoans = (clone $query)->where(function ($q) {
-            $q->where('status', 'rejected')
-                ->orWhere(function ($sub) {
-                    $sub->where('status', 'paid');
-                });
+        $historyLoans = (clone $query)->where(function($q) {
+             $q->where('status', 'rejected')
+               ->orWhere(function($sub) {
+                   $sub->where('status', 'paid');
+               });
         })->latest()->get();
 
         return view('kasbon.index', compact('activeLoans', 'historyLoans'));
@@ -66,7 +64,7 @@ class CashAdvanceController extends Controller
     {
         $user = auth()->user();
 
-        // CEK OVERDUE (Blokir jika ada tunggakan lewat jatuh tempo)
+        // CEK OVERDUE (Blokir jika ada tunggakan)
         $overdueCount = CashAdvance::where('user_id', $user->id)
             ->where('status', 'approved')
             ->where('total_paid', '<', DB::raw('amount'))
@@ -78,15 +76,12 @@ class CashAdvanceController extends Controller
                 ->with('error', 'ANDA DIBLOKIR: Anda memiliki tagihan yang LEWAT JATUH TEMPO. Lunasi dulu.');
         }
 
-        // List User
         $users = collect();
         if ($user->role === 'admin') {
             $users = User::where('role', '!=', 'admin')->orderBy('name')->get();
         } elseif ($user->role === 'audit') {
             $branchIds = $user->branches->pluck('id');
-            $users = User::whereIn('branch_id', $branchIds)
-                ->orWhere('id', $user->id)
-                ->orderBy('name')->get();
+            $users = User::whereIn('branch_id', $branchIds)->orWhere('id', $user->id)->orderBy('name')->get();
         } else {
             $users = collect([$user]);
         }
@@ -96,32 +91,37 @@ class CashAdvanceController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Bersihkan Format Rupiah
+        // 1. BERSIHKAN TITIK RUPIAH
         if ($request->has('amount')) {
             $request->merge(['amount' => str_replace('.', '', $request->amount)]);
         }
 
-        // 2. Validasi (Ganti due_date jadi start_date agar lebih logis)
+        // 2. VALIDASI INPUT
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'title' => 'required|string|max:100',
-            'amount' => 'required|numeric|min:1000',
-            'tenor' => 'required|integer|min:1|max:24', // Maksimal 24 bulan misal
-            'start_date' => 'required|date|after:today', // Tanggal mulai cicil
+            
+            // [FIX ERROR DATABASE] Tambahkan MAX:1000000000 (1 Milyar)
+            'amount' => 'required|numeric|min:1000|max:1000000000', 
+            
+            'tenor' => 'required|integer|min:1|max:24',
+            'start_date' => 'required|date|after:today',
             'payment_method' => 'required|in:cash,transfer',
             'payment_details' => 'required_if:payment_method,transfer',
             'description_1' => 'required|string',
-            'photo_1' => 'required|image|max:2048',
+            
+            // [JAWABAN SOAL FOTO]
+            'photo_1' => 'required|image|max:2048', // Wajib (Bukti Utama)
+            'photo_2' => 'nullable|image|max:2048', // Boleh Kosong (Bukti Pendukung)
         ]);
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function() use ($request) {
             $data = $request->except(['photo_1', 'photo_2', 'start_date']);
             $data['created_by'] = auth()->id();
             $data['status'] = 'pending';
             $data['total_paid'] = 0;
-
-            // Hitung tanggal akhir otomatis berdasarkan tenor
-            // Jatuh tempo final = Tanggal mulai + (Tenor - 1) bulan
+            
+            // Hitung Due Date Final (Berdasarkan Tenor)
             $data['due_date'] = Carbon::parse($request->start_date)->addMonths($request->tenor - 1);
 
             if ($request->hasFile('photo_1')) {
@@ -131,17 +131,16 @@ class CashAdvanceController extends Controller
                 $data['photo_2'] = $request->file('photo_2')->store('kasbon', 'public');
             }
 
-            // A. Simpan Kasbon Utama
+            // Simpan Kasbon
             $kasbon = CashAdvance::create($data);
 
-            // B. [LOGIKA BARU] Generate Rencana Cicilan (Plans)
+            // Generate Rencana Cicilan (Plans)
             $amountPerMonth = $kasbon->amount / $kasbon->tenor;
-
+            
             for ($i = 0; $i < $kasbon->tenor; $i++) {
-                \App\Models\CashAdvancePlan::create([
+                CashAdvancePlan::create([
                     'cash_advance_id' => $kasbon->id,
                     'installment_order' => $i + 1,
-                    // Bulan 1 = start_date, Bulan 2 = start_date + 1 bulan, dst
                     'due_date' => Carbon::parse($request->start_date)->addMonths($i),
                     'amount' => $amountPerMonth,
                     'is_paid' => false
@@ -149,48 +148,31 @@ class CashAdvanceController extends Controller
             }
         });
 
-        return redirect()->route('kasbon.index')->with('success', 'Pengajuan kasbon dengan rencana cicilan berhasil dibuat.');
+        return redirect()->route('kasbon.index')->with('success', 'Pengajuan kasbon berhasil dibuat.');
     }
 
-    // Jangan lupa update show() untuk load relasi 'plans'
     public function show($id)
     {
-        $kasbon = CashAdvance::with(['user', 'installments', 'plans'])->findOrFail($id); // Load plans
-
-        if (auth()->user()->role != 'admin' && auth()->user()->id != $kasbon->user_id && auth()->user()->role != 'audit') {
-            abort(403);
+        $kasbon = CashAdvance::with(['user', 'installments', 'plans'])->findOrFail($id);
+        
+        if(auth()->user()->role != 'admin' && auth()->user()->id != $kasbon->user_id && auth()->user()->role != 'audit') {
+             abort(403);
         }
         return view('kasbon.show', compact('kasbon'));
     }
-    // public function show($id)
-    // {
-    //     $kasbon = CashAdvance::with(['user', 'installments' => function ($q) {
-    //         $q->latest();
-    //     }])->findOrFail($id);
 
-    //     // Cek Akses
-    //     if (auth()->user()->role != 'admin' && auth()->user()->id != $kasbon->user_id && auth()->user()->role != 'audit') {
-    //         abort(403);
-    //     }
-
-    //     return view('kasbon.show', compact('kasbon'));
-    // }
-
-    // --- FITUR CICILAN ---
-
+    // --- CICILAN ---
     public function storeInstallment(Request $request, $id)
     {
-        // BERSIHKAN RUPIAH (Hapus titik sebelum validasi)
         if ($request->has('amount_paid')) {
             $request->merge(['amount_paid' => str_replace('.', '', $request->amount_paid)]);
         }
 
         $kasbon = CashAdvance::findOrFail($id);
-
         $request->validate([
             'amount_paid' => 'required|numeric|min:1000|max:' . ($kasbon->amount - $kasbon->total_paid),
             'payment_proof' => 'required|image|max:2048',
-            'received_by' => 'required|string|max:100', // Wajib diisi
+            'received_by' => 'required|string|max:100',
         ]);
 
         $path = $request->file('payment_proof')->store('kasbon/installments', 'public');
@@ -204,21 +186,18 @@ class CashAdvanceController extends Controller
             'status' => 'pending'
         ]);
 
-        return back()->with('success', 'Pembayaran berhasil dikirim. Menunggu verifikasi Admin.');
+        return back()->with('success', 'Pembayaran cicilan dikirim.');
     }
 
-    // --- ADMIN ONLY ACTIONS ---
-
-    public function destroy($id)
-    {
+    // --- ADMIN ACTIONS ---
+    public function destroy($id) {
         if (auth()->user()->role !== 'admin') abort(403);
         $kasbon = CashAdvance::findOrFail($id);
         $kasbon->delete();
         return redirect()->route('kasbon.index')->with('success', 'Data dihapus.');
     }
 
-    public function changeStatus(Request $request, $id)
-    {
+    public function changeStatus(Request $request, $id) {
         if (auth()->user()->role !== 'admin') abort(403);
         $kasbon = CashAdvance::findOrFail($id);
         $kasbon->update([
@@ -229,74 +208,48 @@ class CashAdvanceController extends Controller
         return back()->with('success', 'Status diperbarui.');
     }
 
-    public function approveInstallment($installmentId)
-    {
+    public function approveInstallment($installmentId) {
         if (auth()->user()->role !== 'admin') abort(403);
-
-        DB::transaction(function () use ($installmentId) {
+        DB::transaction(function() use ($installmentId) {
             $installment = CashAdvanceInstallment::with('cashAdvance')->findOrFail($installmentId);
-
             if ($installment->status == 'approved') return;
-
             $installment->update(['status' => 'approved']);
-
             $parent = $installment->cashAdvance;
             $parent->total_paid += $installment->amount_paid;
-
             if ($parent->total_paid >= $parent->amount) {
                 $parent->status = 'paid';
                 $parent->repayment_date = now();
             }
             $parent->save();
         });
-
         return back()->with('success', 'Pembayaran diverifikasi.');
     }
 
-    public function rejectInstallment(Request $request, $installmentId)
-    {
+    public function rejectInstallment(Request $request, $installmentId) {
         if (auth()->user()->role !== 'admin') abort(403);
-
         $installment = CashAdvanceInstallment::findOrFail($installmentId);
-        $installment->update([
-            'status' => 'rejected',
-            'note' => $request->note ?? 'Ditolak Admin'
-        ]);
-
+        $installment->update(['status' => 'rejected', 'note' => $request->note ?? 'Ditolak Admin']);
         return back()->with('error', 'Pembayaran ditolak.');
     }
 
-    // Metode Edit & Update Installment (sama seperti sebelumnya)
-    public function editInstallment($id)
-    {
+    public function editInstallment($id) {
         if (auth()->user()->role !== 'admin') abort(403);
         $installment = CashAdvanceInstallment::with('cashAdvance.user')->findOrFail($id);
         return view('kasbon.edit_installment', compact('installment'));
     }
 
-    public function updateInstallment(Request $request, $id)
-    {
+    public function updateInstallment(Request $request, $id) {
         if (auth()->user()->role !== 'admin') abort(403);
-        // ... (Logika update yang menghitung ulang saldo, sama seperti sebelumnya)
-        $request->validate([
-            'amount_paid' => 'required|numeric|min:0',
-            'status' => 'required|in:pending,approved,rejected',
-            'note' => 'nullable|string'
-        ]);
-
-        DB::transaction(function () use ($request, $id) {
+        $request->validate(['amount_paid' => 'required|numeric|min:0', 'status' => 'required', 'note' => 'nullable']);
+        DB::transaction(function() use ($request, $id) {
             $installment = CashAdvanceInstallment::with('cashAdvance')->findOrFail($id);
             $parent = $installment->cashAdvance;
-            if ($installment->status == 'approved') {
-                $parent->total_paid -= $installment->amount_paid;
-            }
+            if ($installment->status == 'approved') $parent->total_paid -= $installment->amount_paid;
             $installment->amount_paid = $request->amount_paid;
             $installment->status = $request->status;
             $installment->note = $request->note;
             $installment->save();
-            if ($installment->status == 'approved') {
-                $parent->total_paid += $installment->amount_paid;
-            }
+            if ($installment->status == 'approved') $parent->total_paid += $installment->amount_paid;
             if ($parent->total_paid >= $parent->amount) {
                 $parent->status = 'paid';
                 $parent->repayment_date = $parent->repayment_date ?? now();
@@ -306,13 +259,12 @@ class CashAdvanceController extends Controller
             }
             $parent->save();
         });
-        return redirect()->route('kasbon.show', CashAdvanceInstallment::find($id)->cash_advance_id)->with('success', 'Data cicilan diperbarui.');
+        return redirect()->route('kasbon.show', CashAdvanceInstallment::find($id)->cash_advance_id)->with('success', 'Data diperbarui.');
     }
 
-    public function destroyInstallment($id)
-    {
+    public function destroyInstallment($id) {
         if (auth()->user()->role !== 'admin') abort(403);
-        DB::transaction(function () use ($id) {
+        DB::transaction(function() use ($id) {
             $installment = CashAdvanceInstallment::with('cashAdvance')->findOrFail($id);
             $parent = $installment->cashAdvance;
             if ($installment->status == 'approved') {
@@ -323,9 +275,9 @@ class CashAdvanceController extends Controller
                 }
                 $parent->save();
             }
-            if ($installment->payment_proof) Storage::disk('public')->delete($installment->payment_proof);
+            if($installment->payment_proof) Storage::disk('public')->delete($installment->payment_proof);
             $installment->delete();
         });
-        return back()->with('success', 'Data cicilan dihapus.');
+        return back()->with('success', 'Data dihapus.');
     }
 }
