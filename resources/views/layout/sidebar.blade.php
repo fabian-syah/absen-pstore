@@ -44,9 +44,9 @@
                 <span class="menu-title">Riwayat Divisi / Cabang</span>
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#">
-                <i class="menu-icon mdi mdi-history"></i>
+       <li class="nav-item">
+            <a class="nav-link" href="{{ route('violations.index') }}">
+                <i class="menu-icon mdi mdi-alert-circle-outline"></i>
                 <span class="menu-title">Riwayat Pelanggaran</span>
             </a>
         </li>

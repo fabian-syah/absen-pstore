@@ -73,6 +73,19 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // Route Update Hasil (Aksi)
     Route::patch('/job-targets/{id}/update-outcome', [JobTargetController::class, 'updateOutcome'])->name('job-targets.update-outcome');
 
+    // === RUTE RIWAYAT PELANGGARAN ===
+    // Semua user login bisa lihat index (tapi difilter di controller)
+    Route::get('/violations', [App\Http\Controllers\ViolationController::class, 'index'])->name('violations.index');
+
+    // Hanya Admin & Audit yang bisa Create/Store/Edit/Update/Delete
+    Route::middleware(['role:admin,audit'])->group(function () {
+        Route::get('/violations/create', [App\Http\Controllers\ViolationController::class, 'create'])->name('violations.create');
+        Route::post('/violations', [App\Http\Controllers\ViolationController::class, 'store'])->name('violations.store');
+        Route::get('/violations/{violation}/edit', [App\Http\Controllers\ViolationController::class, 'edit'])->name('violations.edit');
+        Route::put('/violations/{violation}', [App\Http\Controllers\ViolationController::class, 'update'])->name('violations.update');
+        Route::delete('/violations/{violation}', [App\Http\Controllers\ViolationController::class, 'destroy'])->name('violations.destroy');
+    });
+
     // Route Toggle & Destroy (Opsional jika masih dipakai)
     Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
     Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
