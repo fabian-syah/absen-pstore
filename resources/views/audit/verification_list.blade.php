@@ -56,12 +56,27 @@
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-3">
-                                                    <span class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fw-bold">
-                                                        {{ substr($att->user->name ?? 'U', 0, 1) }}
-                                                    </span>
+                                                    {{-- LINK KE SHOW PROFILE (AVATAR) --}}
+                                                    @if($att->user)
+                                                        <a href="{{ route('users.show', $att->user->id) }}" class="text-decoration-none">
+                                                            <span class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fw-bold hover-scale">
+                                                                {{ substr($att->user->name, 0, 1) }}
+                                                            </span>
+                                                        </a>
+                                                    @else
+                                                        <span class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fw-bold">U</span>
+                                                    @endif
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-0 text-dark fw-bold">{{ $att->user->name ?? 'User Dihapus' }}</h6>
+                                                    {{-- LINK KE SHOW PROFILE (NAMA) --}}
+                                                    @if($att->user)
+                                                        <a href="{{ route('users.show', $att->user->id) }}" class="text-dark text-decoration-none">
+                                                            <h6 class="mb-0 fw-bold hover-text-primary">{{ $att->user->name }}</h6>
+                                                        </a>
+                                                    @else
+                                                        <h6 class="mb-0 text-dark fw-bold">User Dihapus</h6>
+                                                    @endif
+                                                    
                                                     <div class="small text-muted mt-1">
                                                         <span class="badge badge-soft-secondary me-1">{{ $att->user->division->name ?? 'N/A' }}</span>
                                                         <span class="text-xs">
@@ -127,22 +142,36 @@
                 @foreach ($pendingAttendances as $att)
                     <div class="card shadow-sm mb-3 border-0 attendance-card">
                         <div class="card-body">
-                            {{-- Header Card: User Info --}}
+                            {{-- Header Card: User Info (LINK ADDED HERE) --}}
                             <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-sm me-3">
-                                        <span class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fw-bold">
-                                            {{ substr($att->user->name ?? 'U', 0, 1) }}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-bold text-dark">{{ $att->user->name ?? 'User Dihapus' }}</h6>
-                                        <div class="small text-muted">
-                                            {{ $att->user->division->name ?? 'N/A' }}
+                                {{-- Kita bungkus bagian Avatar dan Nama dengan anchor tag agar bisa diklik --}}
+                                @if($att->user)
+                                    <a href="{{ route('users.show', $att->user->id) }}" class="d-flex align-items-center text-decoration-none text-dark flex-grow-1">
+                                        <div class="avatar-sm me-3">
+                                            <span class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fw-bold">
+                                                {{ substr($att->user->name, 0, 1) }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-primary">{{ $att->user->name }} <i class="mdi mdi-chevron-right small text-muted"></i></h6>
+                                            <div class="small text-muted">
+                                                {{ $att->user->division->name ?? 'N/A' }}
+                                            </div>
+                                        </div>
+                                    </a>
+                                @else
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3">
+                                            <span class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fw-bold">U</span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-dark">User Dihapus</h6>
+                                            <div class="small text-muted">N/A</div>
                                         </div>
                                     </div>
-                                </div>
-                                <span class="badge bg-light text-dark border">
+                                @endif
+
+                                <span class="badge bg-light text-dark border ms-2">
                                     {{ $att->check_in_time->format('H:i') }}
                                 </span>
                             </div>
@@ -270,6 +299,10 @@
             opacity: 0; transition: opacity 0.2s;
         }
         .image-popup:hover .overlay-icon { opacity: 1; }
+
+        /* Hover Effect untuk Nama User */
+        .hover-text-primary:hover { color: #3b82f6 !important; transition: color 0.2s; }
+        .hover-scale:hover { transform: scale(1.1); transition: transform 0.2s; }
 
         /* Typography */
         .font-size-11 { font-size: 11px; letter-spacing: 0.5px; }
