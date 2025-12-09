@@ -1,4 +1,4 @@
-@extends('layout.master')
+@extends('layouts.app')
 
 @section('content')
 <div class="row">
@@ -7,6 +7,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="card-title">Riwayat Pelanggaran</h4>
+                    {{-- Admin & Audit Masih Boleh Tambah --}}
                     @if(in_array(auth()->user()->role, ['admin', 'audit']))
                         <a href="{{ route('violations.create') }}" class="btn btn-primary btn-sm text-white">
                             <i class="mdi mdi-plus"></i> Tambah Pelanggaran
@@ -25,7 +26,8 @@
                                 <th>Bukti Foto</th>
                                 <th>Pelapor</th>
                                 <th>Tanggal</th>
-                                @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                                {{-- HANYA ADMIN YANG LIHAT KOLOM AKSI --}}
+                                @if(auth()->user()->role == 'admin')
                                     <th>Aksi</th>
                                 @endif
                             </tr>
@@ -60,7 +62,8 @@
                                     <td>{{ $v->reporter->name ?? 'Sistem' }}</td>
                                     <td>{{ $v->created_at->format('d M Y') }}</td>
                                     
-                                    @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                                    {{-- HANYA ADMIN YANG BISA EDIT/HAPUS --}}
+                                    @if(auth()->user()->role == 'admin')
                                         <td>
                                             <a href="{{ route('violations.edit', $v->id) }}" class="btn btn-warning btn-sm icon-btn">
                                                 <i class="mdi mdi-pencil"></i>
