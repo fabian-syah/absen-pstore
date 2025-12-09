@@ -1,4 +1,4 @@
-@extends('layout.master')
+@extends('layouts.app')
 
 @section('content')
 <div class="row justify-content-center">
@@ -6,6 +6,20 @@
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Form Pengajuan Kasbon</h4>
+
+                {{-- ==================================================== --}}
+                {{-- [FIX] MENAMPILKAN ERROR JIKA VALIDASI GAGAL --}}
+                {{-- ==================================================== --}}
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                {{-- ==================================================== --}}
                 
                 <form action="{{ route('kasbon.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -14,7 +28,7 @@
                         <label>Nama Peminjam</label>
                         <select name="user_id" class="form-control select2" required>
                             @foreach($users as $u)
-                                <option value="{{ $u->id }}" {{ $u->id == auth()->id() ? 'selected' : '' }}>
+                                <option value="{{ $u->id }}" {{ (old('user_id') == $u->id || $u->id == auth()->id()) ? 'selected' : '' }}>
                                     {{ $u->name }}
                                 </option>
                             @endforeach
@@ -24,7 +38,8 @@
                     {{-- JUDUL KASBON --}}
                     <div class="form-group">
                         <label>Judul Kasbon (Singkat)</label>
-                        <input type="text" name="title" class="form-control" placeholder="Contoh: Biaya Rumah Sakit / Service Motor" required maxlength="100">
+                        {{-- Tambahkan value="{{ old('title') }}" agar teks tidak hilang saat error --}}
+                        <input type="text" name="title" class="form-control" placeholder="Contoh: Biaya Rumah Sakit / Service Motor" required maxlength="100" value="{{ old('title') }}">
                     </div>
 
                     <div class="row">
@@ -34,7 +49,7 @@
                                 <label>Total Uang (Nominal)</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="text" name="amount" id="rupiah" class="form-control" placeholder="0" required>
+                                    <input type="text" name="amount" id="rupiah" class="form-control" placeholder="0" required value="{{ old('amount') }}">
                                 </div>
                                 <small class="text-muted">Ketik angka saja, otomatis diformat.</small>
                             </div>
@@ -42,7 +57,9 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Jatuh Tempo (Batas Akhir)</label>
-                                <input type="date" name="due_date" class="form-control" required>
+                                {{-- Pastikan memilih tanggal SETELAH hari ini (Besok/Lusa) --}}
+                                <input type="date" name="due_date" class="form-control" required value="{{ old('due_date') }}">
+                                <small class="text-info">Minimal H+1 dari hari ini.</small>
                             </div>
                         </div>
                     </div>
@@ -53,29 +70,29 @@
                         <div class="d-flex gap-4">
                             <div class="form-check">
                                 <label class="form-check-label">
-                                    <input type="radio" class="form-check-input" name="payment_method" value="cash" checked onclick="toggleBank(false)">
+                                    <input type="radio" class="form-check-input" name="payment_method" value="cash" onclick="toggleBank(false)" {{ old('payment_method', 'cash') == 'cash' ? 'checked' : '' }}>
                                     Tunai (Cash)
                                 </label>
                             </div>
                             <div class="form-check ms-3">
                                 <label class="form-check-label">
-                                    <input type="radio" class="form-check-input" name="payment_method" value="transfer" onclick="toggleBank(true)">
+                                    <input type="radio" class="form-check-input" name="payment_method" value="transfer" onclick="toggleBank(true)" {{ old('payment_method') == 'transfer' ? 'checked' : '' }}>
                                     Transfer Bank
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    {{-- INPUT REKENING (Hidden by default) --}}
-                    <div class="form-group" id="bankDetails" style="display: none;">
+                    {{-- INPUT REKENING (Hidden by default, unless old input was transfer) --}}
+                    <div class="form-group" id="bankDetails" style="display: {{ old('payment_method') == 'transfer' ? 'block' : 'none' }};">
                         <label>Nama Bank & Nomor Rekening</label>
-                        <input type="text" name="payment_details" class="form-control" placeholder="Contoh: BCA - 1234567890 a.n Fabian">
+                        <input type="text" name="payment_details" class="form-control" placeholder="Contoh: BCA - 1234567890 a.n Fabian" value="{{ old('payment_details') }}">
                         <small class="text-info">Pastikan nama pemilik rekening sesuai.</small>
                     </div>
 
                     <div class="form-group">
                         <label>Keterangan Lengkap (Alasan)</label>
-                        <textarea name="description_1" class="form-control" rows="3" placeholder="Jelaskan secara rinci kenapa butuh kasbon ini..." required></textarea>
+                        <textarea name="description_1" class="form-control" rows="3" placeholder="Jelaskan secara rinci kenapa butuh kasbon ini..." required>{{ old('description_1') }}</textarea>
                     </div>
 
                     <div class="row">
@@ -83,6 +100,7 @@
                             <div class="form-group">
                                 <label>Foto Dokumen 1 (Wajib)</label>
                                 <input type="file" name="photo_1" class="form-control" required>
+                                <small class="text-muted">Max: 2MB (JPG/PNG)</small>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -126,13 +144,15 @@
     // SCRIPT TOGGLE BANK
     function toggleBank(isTransfer) {
         const bankInput = document.getElementById('bankDetails');
+        const detailInput = document.querySelector('input[name="payment_details"]');
+        
         if (isTransfer) {
             bankInput.style.display = 'block';
-            document.querySelector('input[name="payment_details"]').required = true;
+            detailInput.required = true;
         } else {
             bankInput.style.display = 'none';
-            document.querySelector('input[name="payment_details"]').required = false;
-            document.querySelector('input[name="payment_details"]').value = '';
+            detailInput.required = false;
+            detailInput.value = '';
         }
     }
 </script>
