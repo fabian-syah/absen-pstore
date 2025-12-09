@@ -126,15 +126,13 @@ class DashboardController extends Controller
                 $q->where('is_active', true)
                   ->whereNotIn('role', ['admin']); // Admin tidak ikut leaderboard
 
-                // --- LOGIKA FILTER CABANG ---
+                // --- LOGIKA FILTER CABANG (UPDATED) ---
                 if ($user->role === 'admin') {
                     // ADMIN: GLOBAL (Tidak ada filter branch, lihat semua)
-                } elseif ($user->role === 'audit') {
-                    // AUDIT: Lihat cabang yang diaudit saja (Bisa banyak)
-                    $auditBranchIds = $user->branches->pluck('id')->toArray();
-                    $q->whereIn('branch_id', $auditBranchIds);
                 } else {
-                    // USER BIASA, SECURITY, LEADER: Lihat cabang sendiri
+                    // AUDIT, USER BIASA, SECURITY, LEADER: 
+                    // Sekarang Audit ikut logika cabang utama (lokasi kerja), 
+                    // jadi dia bersaing dengan orang di kantor fisiknya, bukan cabang yang diaudit.
                     $q->where('branch_id', $user->branch_id);
                 }
             })
