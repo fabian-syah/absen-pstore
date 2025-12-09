@@ -10,11 +10,11 @@
                 @csrf
                 <div class="modal-body">
                     
-                    {{-- [BARU] Nama Peminjam (Penerima Kasbon) --}}
+                    {{-- Info User --}}
                     <div class="mb-3 p-3 bg-light rounded border">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">Nama Peminjam:</span>
-                            <span class="font-weight-bold text-dark">{{ $loan->user->name }}</span>
+                            <span class="text-muted">Peminjam:</span>
+                            <span class="font-weight-bold">{{ $loan->user->name }}</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span class="text-muted">Sisa Kewajiban:</span>
@@ -22,12 +22,22 @@
                         </div>
                     </div>
 
-                    {{-- Input Nominal dengan Format Rupiah --}}
+                    {{-- [BARU] Input Diserahkan Kepada Siapa --}}
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold">Dana Diserahkan / Ditransfer Kepada?</label>
+                        <input type="text" 
+                               name="received_by" 
+                               class="form-control" 
+                               placeholder="Contoh: Pak Budi / Admin Finance" 
+                               required>
+                        <small class="text-muted">Tulis nama orang yang menerima uang atau rekening tujuan.</small>
+                    </div>
+
+                    {{-- Input Nominal (Format Rupiah) --}}
                     <div class="form-group mb-3">
                         <label class="font-weight-bold">Nominal Pembayaran (Rp)</label>
                         <div class="input-group">
                             <span class="input-group-text font-weight-bold">Rp</span>
-                            {{-- Script 'formatRupiahModal' dipanggil langsung di sini --}}
                             <input type="text" 
                                    name="amount_paid" 
                                    class="form-control form-control-lg font-weight-bold text-primary" 
@@ -36,12 +46,11 @@
                                    autocomplete="off"
                                    onkeyup="formatRupiahModal(this)">
                         </div>
-                        <small class="text-muted">Ketik angka saja (cth: 200000), otomatis menjadi 200.000</small>
                     </div>
 
                     {{-- Input Bukti --}}
                     <div class="form-group mb-3">
-                        <label class="font-weight-bold">Bukti Pembayaran (Transfer/Struk)</label>
+                        <label class="font-weight-bold">Bukti Pembayaran (Foto/Struk)</label>
                         <input type="file" name="payment_proof" class="form-control" required>
                         <small class="text-info">Format: JPG, PNG, PDF. Max 2MB.</small>
                     </div>
@@ -50,7 +59,7 @@
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="mdi mdi-send"></i> Kirim Pembayaran
+                        <i class="mdi mdi-send"></i> Kirim & Konfirmasi
                     </button>
                 </div>
             </form>

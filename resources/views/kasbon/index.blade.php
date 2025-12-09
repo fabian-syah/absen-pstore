@@ -18,6 +18,13 @@
             </div>
         </div>
     @endif
+    @if(session('success'))
+        <div class="col-12 mb-3">
+            <div class="alert alert-success font-weight-bold">
+                <i class="mdi mdi-check"></i> {{ session('success') }}
+            </div>
+        </div>
+    @endif
 
     <div class="col-12">
         <div class="card">
@@ -35,7 +42,7 @@
                                 <thead>
                                     <tr>
                                         <th>Nama & Judul</th>
-                                        <th>Penerima Dana</th>
+                                        <th>Metode Penerimaan</th>
                                         <th>Jatuh Tempo</th>
                                         <th>Sisa Hutang</th>
                                         <th>Status</th>
@@ -44,7 +51,6 @@
                                 </thead>
                                 <tbody>
                                     @forelse($activeLoans as $loan)
-                                        {{-- LOGIKA BARIS MERAH JIKA OVERDUE --}}
                                         <tr class="{{ $loan->is_overdue ? 'table-danger' : '' }}">
                                             <td>
                                                 <strong>{{ $loan->user->name }}</strong><br>
@@ -74,32 +80,74 @@
                                             </td>
                                             <td>
                                                 <a href="{{ route('kasbon.show', $loan->id) }}" class="btn btn-inverse-info btn-sm icon-btn"><i class="mdi mdi-eye"></i></a>
-                                                {{-- Tombol Bayar / Approve (sama seperti sebelumnya) --}}
+                                                
+                                                {{-- Tombol Bayar untuk User --}}
                                                 @if($loan->status == 'approved' && auth()->id() == $loan->user_id)
-                                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#payModal{{ $loan->id }}">Bayar</button>
+                                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#payModal{{ $loan->id }}">
+                                                        Bayar
+                                                    </button>
                                                 @endif
+
+                                                {{-- Tombol Approve untuk Admin --}}
                                                 @if(auth()->user()->role == 'admin' && $loan->status == 'pending')
-                                                    {{-- Form Approve/Reject --}}
                                                     <form action="{{ route('kasbon.status', $loan->id) }}" method="POST" class="d-inline">
                                                         @csrf @method('PATCH') <input type="hidden" name="status" value="approved">
                                                         <button class="btn btn-success btn-sm icon-btn"><i class="mdi mdi-check"></i></button>
                                                     </form>
+                                                    <form action="{{ route('kasbon.status', $loan->id) }}" method="POST" class="d-inline">
+                                                        @csrf @method('PATCH') <input type="hidden" name="status" value="rejected">
+                                                        <button class="btn btn-danger btn-sm icon-btn"><i class="mdi mdi-close"></i></button>
+                                                    </form>
+                                                    <form action="{{ route('kasbon.destroy', $loan->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus?')">
+                                                        @csrf @method('DELETE')
+                                                        <button class="btn btn-danger btn-sm icon-btn"><i class="mdi mdi-delete"></i></button>
+                                                    </form>
                                                 @endif
                                             </td>
                                         </tr>
-                                        {{-- MODAL BAYAR (Sama, tambahkan script Rupiah jika mau input cicilan auto format juga) --}}
-                                        @include('kasbon.partials.pay_modal', ['loan' => $loan]) 
+                                        {{-- INCLUDE MODAL --}}
+                                        @include('kasbon.partials.pay_modal', ['loan' => $loan])
                                     @empty
-                                        <tr><td colspan="6" class="text-center">Tidak ada data.</td></tr>
+                                        <tr><td colspan="6" class="text-center">Tidak ada tagihan aktif.</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
                         </div>
                     </div>
                     
-                    {{-- TAB HISTORY (Sederhana) --}}
+                    {{-- TAB HISTORY --}}
                     <div class="tab-pane fade" id="history">
-                         {{-- Table history here --}}
+                         <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nama</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Tgl Selesai</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($historyLoans as $loan)
+                                        <tr>
+                                            <td>{{ $loan->user->name }}</td>
+                                            <td>Rp {{ number_format($loan->amount, 0, ',', '.') }}</td>
+                                            <td>
+                                                @if($loan->status == 'paid') <span class="badge badge-success">LUNAS</span>
+                                                @else <span class="badge badge-danger">DITOLAK</span> @endif
+                                            </td>
+                                            <td>{{ $loan->repayment_date ?? '-' }}</td>
+                                            <td>
+                                                <a href="{{ route('kasbon.show', $loan->id) }}" class="btn btn-info btn-sm">Detail</a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="5" class="text-center">Kosong.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -108,25 +156,19 @@
 </div>
 
 <script>
-    // Fungsi format rupiah khusus untuk Modal
     function formatRupiahModal(input) {
-        // Hapus karakter selain angka
         var angka = input.value.replace(/[^,\d]/g, '').toString();
-        
-        // Format ke ribuan
-        var split   = angka.split(',');
-        var sisa    = split[0].length % 3;
-        var rupiah  = split[0].substr(0, sisa);
-        var ribuan  = split[0].substr(sisa).match(/\d{3}/gi);
+        var split = angka.split(',');
+        var sisa = split[0].length % 3;
+        var rupiah = split[0].substr(0, sisa);
+        var ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
-        if(ribuan){
+        if (ribuan) {
             separator = sisa ? '.' : '';
             rupiah += separator + ribuan.join('.');
         }
 
         rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-        
-        // Kembalikan nilai yang sudah diformat ke input
         input.value = rupiah;
     }
 </script>

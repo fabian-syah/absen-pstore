@@ -6,10 +6,7 @@
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Form Pengajuan Kasbon</h4>
-
-                {{-- ==================================================== --}}
-                {{-- [FIX] MENAMPILKAN ERROR JIKA VALIDASI GAGAL --}}
-                {{-- ==================================================== --}}
+                
                 @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul class="mb-0">
@@ -19,99 +16,66 @@
                         </ul>
                     </div>
                 @endif
-                {{-- ==================================================== --}}
-                
+
                 <form action="{{ route('kasbon.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     
                     <div class="form-group">
                         <label>Nama Peminjam</label>
-                        <select name="user_id" class="form-control select2" required>
+                        <select name="user_id" class="form-control select2">
                             @foreach($users as $u)
-                                <option value="{{ $u->id }}" {{ (old('user_id') == $u->id || $u->id == auth()->id()) ? 'selected' : '' }}>
-                                    {{ $u->name }}
-                                </option>
+                                <option value="{{ $u->id }}" {{ (old('user_id') == $u->id || $u->id == auth()->id()) ? 'selected' : '' }}>{{ $u->name }}</option>
                             @endforeach
                         </select>
                     </div>
 
-                    {{-- JUDUL KASBON --}}
                     <div class="form-group">
-                        <label>Judul Kasbon (Singkat)</label>
-                        {{-- Tambahkan value="{{ old('title') }}" agar teks tidak hilang saat error --}}
-                        <input type="text" name="title" class="form-control" placeholder="Contoh: Biaya Rumah Sakit / Service Motor" required maxlength="100" value="{{ old('title') }}">
+                        <label>Judul Kasbon</label>
+                        <input type="text" name="title" class="form-control" value="{{ old('title') }}" required>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
-                            {{-- NOMINAL AUTO FORMAT RP --}}
                             <div class="form-group">
-                                <label>Total Uang (Nominal)</label>
+                                <label>Total Uang (Rp)</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="text" name="amount" id="rupiah" class="form-control" placeholder="0" required value="{{ old('amount') }}">
+                                    <input type="text" name="amount" id="rupiah" class="form-control" value="{{ old('amount') }}" required>
                                 </div>
-                                <small class="text-muted">Ketik angka saja, otomatis diformat.</small>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Jatuh Tempo (Batas Akhir)</label>
-                                {{-- Pastikan memilih tanggal SETELAH hari ini (Besok/Lusa) --}}
-                                <input type="date" name="due_date" class="form-control" required value="{{ old('due_date') }}">
-                                <small class="text-info">Minimal H+1 dari hari ini.</small>
+                                <label>Jatuh Tempo</label>
+                                <input type="date" name="due_date" class="form-control" value="{{ old('due_date') }}" required>
                             </div>
                         </div>
-                    </div>
-
-                    {{-- METODE PENERIMAAN --}}
-                    <div class="form-group">
-                        <label>Metode Penerimaan Uang</label>
-                        <div class="d-flex gap-4">
-                            <div class="form-check">
-                                <label class="form-check-label">
-                                    <input type="radio" class="form-check-input" name="payment_method" value="cash" onclick="toggleBank(false)" {{ old('payment_method', 'cash') == 'cash' ? 'checked' : '' }}>
-                                    Tunai (Cash)
-                                </label>
-                            </div>
-                            <div class="form-check ms-3">
-                                <label class="form-check-label">
-                                    <input type="radio" class="form-check-input" name="payment_method" value="transfer" onclick="toggleBank(true)" {{ old('payment_method') == 'transfer' ? 'checked' : '' }}>
-                                    Transfer Bank
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- INPUT REKENING (Hidden by default, unless old input was transfer) --}}
-                    <div class="form-group" id="bankDetails" style="display: {{ old('payment_method') == 'transfer' ? 'block' : 'none' }};">
-                        <label>Nama Bank & Nomor Rekening</label>
-                        <input type="text" name="payment_details" class="form-control" placeholder="Contoh: BCA - 1234567890 a.n Fabian" value="{{ old('payment_details') }}">
-                        <small class="text-info">Pastikan nama pemilik rekening sesuai.</small>
                     </div>
 
                     <div class="form-group">
-                        <label>Keterangan Lengkap (Alasan)</label>
-                        <textarea name="description_1" class="form-control" rows="3" placeholder="Jelaskan secara rinci kenapa butuh kasbon ini..." required>{{ old('description_1') }}</textarea>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Foto Dokumen 1 (Wajib)</label>
-                                <input type="file" name="photo_1" class="form-control" required>
-                                <small class="text-muted">Max: 2MB (JPG/PNG)</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Foto Dokumen 2 (Opsional)</label>
-                                <input type="file" name="photo_2" class="form-control">
-                            </div>
+                        <label>Metode Penerimaan</label>
+                        <div>
+                            <input type="radio" name="payment_method" value="cash" onclick="toggleBank(false)" checked> Tunai
+                            <input type="radio" name="payment_method" value="transfer" onclick="toggleBank(true)" class="ms-3"> Transfer
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary me-2">Ajukan Kasbon</button>
+                    <div class="form-group" id="bankDetails" style="display:none">
+                        <label>Info Rekening</label>
+                        <input type="text" name="payment_details" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Keterangan</label>
+                        <textarea name="description_1" class="form-control" required>{{ old('description_1') }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bukti Foto (Wajib)</label>
+                        <input type="file" name="photo_1" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Ajukan</button>
                     <a href="{{ route('kasbon.index') }}" class="btn btn-light">Batal</a>
                 </form>
             </div>
@@ -120,7 +84,6 @@
 </div>
 
 <script>
-    // SCRIPT AUTO FORMAT RUPIAH
     const rupiah = document.getElementById('rupiah');
     rupiah.addEventListener('keyup', function(e){
         rupiah.value = formatRupiah(this.value);
@@ -141,19 +104,9 @@
         return rupiah;
     }
 
-    // SCRIPT TOGGLE BANK
     function toggleBank(isTransfer) {
-        const bankInput = document.getElementById('bankDetails');
-        const detailInput = document.querySelector('input[name="payment_details"]');
-        
-        if (isTransfer) {
-            bankInput.style.display = 'block';
-            detailInput.required = true;
-        } else {
-            bankInput.style.display = 'none';
-            detailInput.required = false;
-            detailInput.value = '';
-        }
+        document.getElementById('bankDetails').style.display = isTransfer ? 'block' : 'none';
+        document.querySelector('input[name="payment_details"]').required = isTransfer;
     }
 </script>
 @endsection

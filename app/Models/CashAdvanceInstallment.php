@@ -13,6 +13,7 @@ class CashAdvanceInstallment extends Model
         'cash_advance_id',
         'user_id',
         'amount_paid',
+        'received_by', // <--- TAMBAHAN BARU
         'payment_proof',
         'status',
         'note'
