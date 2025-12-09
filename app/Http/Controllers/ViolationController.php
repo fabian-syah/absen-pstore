@@ -20,20 +20,26 @@ class ViolationController extends Controller
 
         // LOGIKA FILTER VIEW
         if ($user->role === 'admin') {
-            // Admin lihat semua
+            // Admin lihat semua, tidak ada filter
         } elseif ($user->role === 'audit') {
-            // Audit hanya lihat user di cabang yang dia pegang
+            // FIX: Audit melihat user di cabang yang dipegang ATAU pelanggaran dirinya sendiri
             $branchIds = $user->branches->pluck('id');
-            $query->whereHas('user', function ($q) use ($branchIds) {
-                $q->whereIn('branch_id', $branchIds);
+            
+            $query->where(function($q) use ($branchIds, $user) {
+                // 1. User yang ada di cabang yang dipegang audit
+                $q->whereHas('user', function ($subQ) use ($branchIds) {
+                    $subQ->whereIn('branch_id', $branchIds);
+                })
+                // 2. ATAU pelanggaran milik diri sendiri (Audit juga bisa kena pelanggaran)
+                ->orWhere('user_id', $user->id);
             });
+
         } else {
             // User Biasa, Security, Leader hanya lihat punya sendiri
             $query->where('user_id', $user->id);
         }
 
         // LOGIKA SORTING (Berat -> Sedang -> Ringan)
-        // Menggunakan FIELD() MySQL untuk custom order
         $violations = $query->orderByRaw("FIELD(category, 'berat', 'sedang', 'ringan')")
                             ->orderBy('created_at', 'desc')
                             ->get();
