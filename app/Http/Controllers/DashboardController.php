@@ -9,7 +9,7 @@ use App\Models\LateNotification;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // Wajib ada
+use Illuminate\Support\Facades\DB; // Wajib import DB
 use Carbon\Carbon;
 use PDF;
 
@@ -52,7 +52,7 @@ class DashboardController extends Controller
         $data['todaySchedule'] = $scheduleText;
 
         // =========================================================================
-        // 3. QUERY DASAR
+        // 3. QUERY DASAR (UNTUK WIDGET ATAS)
         // =========================================================================
         $attendanceQuery = Attendance::query();
         $userQuery = User::query();
@@ -64,9 +64,9 @@ class DashboardController extends Controller
             $userQuery->whereIn('branch_id', $auditBranchIds);
             $divisionQuery->whereIn('branch_id', $auditBranchIds);
         } elseif ($user->role == 'admin' && $branch_id == null) {
-            // Super Admin
+            // Super Admin melihat semua
         } else {
-            // Admin Cabang / User Biasa / Security
+            // Admin Cabang / User Biasa / Security melihat sesuai cabang
             if ($branch_id) {
                 $attendanceQuery->where('branch_id', $branch_id);
                 $userQuery->where('branch_id', $branch_id);
@@ -108,13 +108,8 @@ class DashboardController extends Controller
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
-        // FITUR BARU: TOP 5 GLOBAL LEADERBOARD (MASUK + WFH & VERIFIED)
+        // FITUR BARU: TOP 5 LEADERBOARD (GLOBAL ADMIN, LOCAL OTHERS)
         // =========================================================================
-        // Logika: 
-        // 1. Check Out tidak boleh NULL.
-        // 2. Presence Status: 'Masuk' ATAU 'WFH' ATAU 'WFH / Dinas Luar'.
-        // 3. Status Verifikasi: 'verified'.
-        // 4. Global (Tanpa filter branch).
         
         $data['leaderboard'] = Attendance::select(
                 'user_id', 
@@ -124,17 +119,30 @@ class DashboardController extends Controller
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
             ->whereNotNull('check_out_time') // Wajib sudah pulang
-            ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar']) // <--- UPDATED: Masuk OR WFH
+            ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar']) // Masuk & WFH
             ->where('status', 'verified') // Wajib Verified
-            ->whereHas('user', function($q) {
+            ->whereHas('user', function($q) use ($user) {
+                // Syarat Dasar User
                 $q->where('is_active', true)
-                  ->whereNotIn('role', ['admin']); // Admin skip
+                  ->whereNotIn('role', ['admin']); // Admin tidak ikut leaderboard
+
+                // --- LOGIKA FILTER CABANG ---
+                if ($user->role === 'admin') {
+                    // ADMIN: GLOBAL (Tidak ada filter branch, lihat semua)
+                } elseif ($user->role === 'audit') {
+                    // AUDIT: Lihat cabang yang diaudit saja (Bisa banyak)
+                    $auditBranchIds = $user->branches->pluck('id')->toArray();
+                    $q->whereIn('branch_id', $auditBranchIds);
+                } else {
+                    // USER BIASA, SECURITY, LEADER: Lihat cabang sendiri
+                    $q->where('branch_id', $user->branch_id);
+                }
             })
             ->groupBy('user_id')
             ->orderBy('total_attendance', 'desc')
             ->orderBy('avg_arrival_time', 'asc')
             ->take(5)
-            ->with('user')
+            ->with(['user', 'user.division'])
             ->get();
 
         // 6. LOGIKA DASHBOARD PEKERJAAN
@@ -165,6 +173,8 @@ class DashboardController extends Controller
 
         return view('dashboard', $data);
     }
+
+    // --- PRIVATE FUNCTIONS ---
 
     private function getTodayLeaveRequest($user_id)
     {
