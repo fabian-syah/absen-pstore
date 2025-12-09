@@ -27,7 +27,6 @@ class SelfAttendanceController extends Controller
         $now = now();
 
         // 1. AUTO-CLOSE (Membersihkan sesi basi > 32 Jam)
-        // Diperpanjang ke 32 jam agar tidak menutup sesi orang yang lembur
         $hangingSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '<', $now->copy()->subHours(32))
@@ -38,13 +37,12 @@ class SelfAttendanceController extends Controller
             $hangingSession->update([
                 'check_out_time' => Carbon::parse($hangingSession->check_in_time)->endOfDay(),
                 'notes' => $hangingSession->notes . ' | Auto-closed (Expired)',
+                // Pertahankan status Verified jika sudah Verified
                 'status' => ($hangingSession->status == 'verified' || $hangingSession->status == 'present') ? $hangingSession->status : 'pending_verification'
             ]);
         }
 
-        // 2. CEK SESI AKTIF (REVISI PENTING)
-        // Cek mundur 32 jam. Ini kunci agar saat user buka halaman di jam 2 pagi, 
-        // sistem masih melihat dia check-in jam 8 malam kemarin.
+        // 2. CEK SESI AKTIF (Mundur 32 Jam untuk cover Lembur)
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', Carbon::now()->subHours(32)) 
@@ -53,7 +51,6 @@ class SelfAttendanceController extends Controller
             ->first();
 
         if ($activeSession) {
-            // Jika ketemu, masuk MODE PULANG (Update sesi kemarin)
             $mode = 'pulang';
             $attendance = $activeSession;
         } 
@@ -72,7 +69,7 @@ class SelfAttendanceController extends Controller
                 return redirect()->route('dashboard')->with('error', "Anda sedang status " . strtoupper($isOnLeave->type) . " hari ini.");
             }
 
-            // Cek sudah selesai hari ini?
+            // Cek sudah selesai hari ini
             $finishedToday = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', $today)
                 ->whereNotNull('check_out_time')
@@ -117,15 +114,12 @@ class SelfAttendanceController extends Controller
 
         $attendanceToUpdate = null;
 
-        // A. Jika ID dikirim dari Form
+        // A. Cek ID dari Form
         if ($request->filled('attendance_id')) {
             $attendanceToUpdate = Attendance::find($request->attendance_id);
         }
         
-        // B. Fallback (REVISI PENTING): 
-        // Jika attendance_id kosong (kadang terjadi error di frontend),
-        // Kita paksa cari sesi aktif user dalam 32 jam terakhir.
-        // Ini mencegah sistem membuat ABSEN MASUK baru padahal user bermaksud pulang (selfie lembur).
+        // B. Fallback: Cari manual sesi aktif 32 jam terakhir
         if (!$attendanceToUpdate) {
              $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
@@ -134,7 +128,7 @@ class SelfAttendanceController extends Controller
                 ->first();
         }
 
-        // 2. PROCESS IMAGE
+        // PROCESS IMAGE
         $path = null;
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
@@ -175,15 +169,20 @@ class SelfAttendanceController extends Controller
                  }
             }
 
-            // Tambahkan Label 'Pulang (Selfie)' ke notes agar terdeteksi di view
+            // Notes
             $finalNotes = $attendanceToUpdate->notes;
             $extraNote = (!$attendanceToUpdate->check_in_time->isSameDay($currentTime)) ? "[Lembur/Lintas Hari] " : "";
             $userNote = $request->notes ? ": " . $request->notes : "";
             $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $extraNote . "Pulang (Selfie)" . $userNote;
 
-            // Status Pulang: Jika sebelumnya Rejected/Alpha, ubah ke Pending agar dicek Audit
+            // === LOGIC STATUS PULANG (REVISI) ===
+            // 1. Ambil status saat ini
             $currentStatus = $attendanceToUpdate->status;
+            
+            // 2. Default: Status BARU = Status LAMA (Agar Verified tetap Verified)
             $newStatus = $currentStatus; 
+
+            // 3. PENGECUALIAN: Hanya jika status lama adalah 'rejected' atau 'alpha', ubah ke 'pending'
             if (in_array($currentStatus, ['rejected', 'alpha'])) {
                 $newStatus = 'pending_verification';
             }
@@ -192,11 +191,12 @@ class SelfAttendanceController extends Controller
                 'check_out_time'    => $currentTime,
                 'photo_out_path'    => $path,
                 'is_early_checkout' => $isEarly,
-                'status'            => $newStatus, 
+                'status'            => $newStatus, // Menggunakan logika penguncian status
                 'notes'             => $finalNotes,
             ]);
 
             $message = "Berhasil absen pulang.";
+            // Notif hanya dikirim jika status berubah jadi pending (butuh verifikasi ulang)
             if ($newStatus == 'pending_verification') {
                 $shouldSendNotif = true;
                 $notifTitle = "Verifikasi Pulang";
@@ -208,8 +208,7 @@ class SelfAttendanceController extends Controller
         // LOGIKA ABSEN MASUK (CREATE BARU)
         // =====================================================================
         else {
-            // DOUBLE CHECK: Pastikan benar-benar tidak ada sesi aktif sebelum create baru
-            // Kadang request lag, kita pastikan lagi di sini.
+            // Cek ulang sesi aktif
             $checkAgain = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', Carbon::now()->subHours(32))
@@ -219,6 +218,7 @@ class SelfAttendanceController extends Controller
                  return redirect()->route('dashboard')->with('error', 'Anda masih memiliki sesi aktif yang belum dipulangkan. Silakan refresh halaman.');
             }
 
+            // Cek Absen Harian
             $existingSessionToday = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', $today)
                 ->where('status', '!=', 'alpha')
@@ -246,7 +246,7 @@ class SelfAttendanceController extends Controller
                 'user_id'           => $user->id,
                 'branch_id'         => $user->branch_id,
                 'check_in_time'     => $currentTime,
-                'status'            => 'pending_verification', 
+                'status'            => 'pending_verification', // Masuk Selfie PASTI Pending
                 'presence_status'   => 'Masuk',
                 'attendance_type'   => 'self',
                 'photo_path'        => $path,
@@ -281,12 +281,17 @@ class SelfAttendanceController extends Controller
         $attendance = Attendance::where('id', $id)->where('user_id', $user->id)->whereNull('check_out_time')->first();
 
         if ($attendance) {
-            $status = ($attendance->status == 'verified' || $attendance->status == 'present') ? $attendance->status : 'pending_verification';
+            // === LOGIC SKIP PULANG ===
+            // Jika Verified/Present -> TETAP Verified/Present.
+            // Jika Pending/Rejected/Alpha -> Set ke Pending Verification.
+            $status = ($attendance->status == 'verified' || $attendance->status == 'present') 
+                        ? $attendance->status 
+                        : 'pending_verification';
             
             $attendance->update([
                 'check_out_time' => Carbon::parse($attendance->check_in_time)->endOfDay(),
                 'photo_out_path' => null,
-                'status'         => $status, 
+                'status'         => $status, // Gunakan status hasil logika di atas
                 'notes'          => $attendance->notes . ' | User lupa absen pulang (Skip)',
             ]);
             return redirect()->route('dashboard')->with('success', 'Sesi ditutup.');

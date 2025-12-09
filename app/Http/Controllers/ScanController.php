@@ -31,15 +31,13 @@ class ScanController extends Controller
 
         $today = today();
         
-        // REVISI LOGIC: Cari sesi aktif dalam 32 jam terakhir (untuk cover lembur lintas hari)
-        // Jangan pakai whereDate($today) untuk cek sesi aktif, karena kalau lewat jam 00:00 akan null.
+        // Cari sesi aktif 32 jam terakhir (Lembur Coverage)
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', Carbon::now()->subHours(32)) 
             ->latest('check_in_time')
             ->first();
 
-        // Jika tidak ada sesi aktif (artinya mau absen masuk), baru cek Cuti & Absen hari ini
         if (!$attendanceSession) {
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
                 ->where('status', 'approved')
@@ -56,8 +54,6 @@ class ScanController extends Controller
                 ], 403);
             }
             
-            // Cek apakah hari ini SUDAH selesai (Masuk & Pulang done)
-            // Ini tetap pakai $today karena untuk mencegah absen masuk 2x di hari yang sama
             $attendanceSession = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', $today)
                 ->latest('check_in_time')
@@ -119,9 +115,6 @@ class ScanController extends Controller
 
         $manualNotes = $request->notes ? $request->notes : null;
 
-        // ============================
-        // LOGIC ABSEN MASUK
-        // ============================
         if ($request->type == 'masuk') {
             
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
@@ -135,23 +128,21 @@ class ScanController extends Controller
                  return response()->json(['status' => 'error', 'message' => 'Gagal: User sedang dalam status Cuti/Izin.'], 403);
             }
 
-            // Bersihkan sesi yang SANGAT lama (lebih dari 32 jam) -> Auto close
+            // Auto-Close sesi > 32 Jam
             Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '<', $currentTime->copy()->subHours(32))
                 ->update(['check_out_time' => DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed by Security Scan (Expired)']);
 
-            // Cek Sesi Aktif dalam 32 Jam terakhir (Untuk mencegah double login saat lembur)
             if (Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', $currentTime->copy()->subHours(32))
                 ->exists()) {
-                return response()->json(['status' => 'error', 'message' => 'Karyawan ini masih memiliki sesi aktif (Belum Pulang)! Silakan pilih tombol PULANG.'], 409);
+                return response()->json(['status' => 'error', 'message' => 'Karyawan ini masih memiliki sesi aktif (Belum Pulang)!'], 409);
             }
             
-            // Cek apakah hari ini sudah selesai
             if (Attendance::where('user_id', $user->id)->whereDate('check_in_time', $today)->whereNotNull('check_out_time')->exists()) {
-                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini sudah selesai absen (Masuk & Pulang) hari ini.'], 409);
+                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini sudah selesai absen hari ini.'], 409);
             }
 
             $isLate = false;
@@ -179,12 +170,9 @@ class ScanController extends Controller
             $msg = $isLate ? "Absen MASUK Berhasil (TERLAMBAT)" : "Absen MASUK Berhasil";
 
         } 
-        // ============================
-        // LOGIC ABSEN PULANG
-        // ============================
         elseif ($request->type == 'pulang') {
             
-            // REVISI: Lookback diperluas ke 32 Jam agar cover lembur parah
+            // Lookback 32 Jam
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', Carbon::now()->subHours(32))
@@ -192,7 +180,7 @@ class ScanController extends Controller
                 ->first();
 
             if (!$attendance) {
-                return response()->json(['status' => 'error', 'message' => 'Karyawan ini belum absen masuk atau sesi sudah expired!'], 404);
+                return response()->json(['status' => 'error', 'message' => 'Sesi tidak ditemukan atau expired.'], 404);
             }
 
             $isEarlyCheckout = false;
@@ -200,11 +188,9 @@ class ScanController extends Controller
                  $coTime = Carbon::parse($currentTime->format('H:i:s'));
                  $schedStart = Carbon::parse($workSchedule->check_out_start);
                  
-                 // Logic cek pulang cepat
                  if (Carbon::parse($workSchedule->check_in_start)->lt($schedStart)) {
                      if ($coTime->lt($schedStart)) $isEarlyCheckout = true;
                  } else {
-                     // Shift malam (lintas hari)
                      if ($coTime->lt($schedStart) && $coTime->gt(Carbon::parse("00:00:00"))) $isEarlyCheckout = true;
                  }
             }
@@ -215,6 +201,8 @@ class ScanController extends Controller
                 'is_early_checkout' => $isEarlyCheckout,
             ];
 
+            // SECURITY FORCE VERIFIED
+            // Jika status sebelumnya Pending/Rejected/Verified -> Semua jadi Verified karena Security terpercaya.
             if ($attendance->status != 'verified') {
                 $updateData['status'] = 'verified';
                 $updateData['verified_by_user_id'] = $securityUser->id;
@@ -267,9 +255,7 @@ class ScanController extends Controller
     public function history(Request $request)
     {
         $user = Auth::user();
-        
         $query = Attendance::with(['user.division', 'user.branch', 'branch', 'scanner', 'verifier']);
-
         $query->whereNotNull('scanned_by_user_id');
 
         if ($user->role !== 'admin') {
@@ -278,13 +264,10 @@ class ScanController extends Controller
                   ->orWhere('verified_by_user_id', $user->id);
             });
         }
-
         if ($request->date) {
             $query->whereDate('check_in_time', $request->date);
         }
-
         $logs = $query->orderBy('updated_at', 'desc')->paginate(10);
-
         return view('security.history', compact('logs'));
     }
 }
