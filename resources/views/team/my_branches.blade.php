@@ -31,7 +31,8 @@
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
         border: 1px solid #f1f5f9;
-        overflow: hidden;
+        display: flex;
+        flex-direction: column;
         height: 100%;
     }
 
@@ -42,38 +43,52 @@
     }
 
     .branch-icon-box {
-        width: 50px;
-        height: 50px;
+        width: 45px;
+        height: 45px;
         background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-        border-radius: 12px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: #667eea;
-        font-size: 24px;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
+        font-size: 20px;
     }
 
-    .branch-card-item:hover .branch-icon-box {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .branch-stat {
-        background: #f8fafc;
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
+    /* Styling untuk Statistik dalam Card */
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
         font-size: 0.85rem;
-        color: #64748b;
-        font-weight: 500;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
     }
 
-    .branch-stat strong {
-        display: block;
-        font-size: 1.1rem;
-        color: #1e293b;
-        margin-bottom: 0.1rem;
+    .stat-badge {
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        min-width: 30px;
+        text-align: center;
+    }
+
+    .bg-soft-success { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .bg-soft-warning { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .bg-soft-danger { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .bg-soft-info { background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+    .branch-footer {
+        margin-top: auto; /* Push footer to bottom */
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 </style>
 @endpush
@@ -85,11 +100,12 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
         @forelse ($controlledBranches as $branch)
-            <div class="col-xl-3 col-md-6 mb-4">
+            <div class="col-xl-3 col-md-6">
                 <div class="branch-card-item p-4">
-                    <div class="d-flex justify-content-between align-items-start">
+                    {{-- Header Card --}}
+                    <div class="d-flex justify-content-between align-items-start mb-3">
                         <div class="branch-icon-box">
                             <i class="mdi mdi-storefront-outline"></i>
                         </div>
@@ -98,20 +114,39 @@
                         </span>
                     </div>
 
-                    <h5 class="fw-bold mb-2">{{ $branch->name }}</h5>
-                    <p class="text-muted small mb-3" style="min-height: 40px;">
+                    {{-- Nama Cabang --}}
+                    <h5 class="fw-bold text-dark mb-1">{{ Str::limit($branch->name, 20) }}</h5>
+                    <p class="text-muted small mb-3">
                         <i class="mdi mdi-map-marker-outline me-1"></i>
-                        {{ Str::limit($branch->address ?? 'Alamat belum diatur', 50) }}
+                        {{ Str::limit($branch->address ?? 'Alamat belum diatur', 40) }}
                     </p>
 
-                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                        <div class="branch-stat">
-                            <strong>{{ $branch->users_count }}</strong>
-                            Karyawan
+                    {{-- Statistik Hari Ini --}}
+                    <div class="bg-light rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small"><i class="mdi mdi-account-check text-success me-1"></i>Hadir</span>
+                            <span class="fw-bold text-dark">{{ $branch->stats_today['hadir'] }}</span>
                         </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small"><i class="mdi mdi-hospital-box text-info me-1"></i>Sakit</span>
+                            <span class="fw-bold text-dark">{{ $branch->stats_today['sakit'] }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small"><i class="mdi mdi-file-document text-warning me-1"></i>Izin/Cuti</span>
+                            <span class="fw-bold text-dark">{{ $branch->stats_today['izin'] }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small"><i class="mdi mdi-account-alert text-danger me-1"></i>Alpha</span>
+                            <span class="fw-bold text-dark">{{ $branch->stats_today['alpha'] }}</span>
+                        </div>
+                    </div>
 
-                        <a href="{{ route('team.branch.detail', $branch->id) }}"
-                            class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                    {{-- Footer Card --}}
+                    <div class="branch-footer">
+                        <div class="small text-muted">
+                            Total: <strong>{{ $branch->users_count }}</strong> User
+                        </div>
+                        <a href="{{ route('team.branch.detail', $branch->id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                             Detail <i class="mdi mdi-arrow-right ms-1"></i>
                         </a>
                     </div>
