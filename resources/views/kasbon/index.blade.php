@@ -107,8 +107,27 @@
     </div>
 </div>
 
-{{-- Script Rupiah untuk Modal Cicilan (Global) --}}
 <script>
-    // Copy function formatRupiah here or put in layout
+    // Fungsi format rupiah khusus untuk Modal
+    function formatRupiahModal(input) {
+        // Hapus karakter selain angka
+        var angka = input.value.replace(/[^,\d]/g, '').toString();
+        
+        // Format ke ribuan
+        var split   = angka.split(',');
+        var sisa    = split[0].length % 3;
+        var rupiah  = split[0].substr(0, sisa);
+        var ribuan  = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if(ribuan){
+            separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+        
+        // Kembalikan nilai yang sudah diformat ke input
+        input.value = rupiah;
+    }
 </script>
 @endsection
