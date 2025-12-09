@@ -93,9 +93,20 @@ class TeamController extends Controller
 
     public function showBranch($id) {
         $user = Auth::user();
+
+        // --- PERBAIKAN DI SINI ---
         if ($user->role == 'audit') {
+            // 1. Ambil cabang dari Multi Select (Pivot)
             $allowedBranches = $user->branches->pluck('id')->toArray();
-            if (!in_array($id, $allowedBranches)) abort(403, 'Akses Ditolak.');
+            
+            // 2. JANGAN LUPA tambahkan Cabang Utama (Lokasi Kerja) user tersebut
+            if ($user->branch_id) {
+                $allowedBranches[] = $user->branch_id;
+            }
+
+            // 3. Cek apakah ID yang dituju ada di salah satu daftar tersebut
+            if (!in_array($id, $allowedBranches)) abort(403, 'Akses Ditolak. Anda tidak memiliki akses ke cabang ini.');
+        
         } elseif ($user->role == 'leader') {
             if ($user->branch_id != $id) {
                 $pivotIds = $user->branches->pluck('id')->toArray();
@@ -106,6 +117,8 @@ class TeamController extends Controller
         }
 
         $branch = Branch::findOrFail($id);
+        
+        // ... sisa kode ke bawah tetap sama ...
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)
             ->with(['division', 'attendances' => function ($q) { $q->whereDate('check_in_time', today()); }])->get();
 
