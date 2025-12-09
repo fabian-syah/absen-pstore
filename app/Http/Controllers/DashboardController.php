@@ -108,13 +108,13 @@ class DashboardController extends Controller
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
-        // FITUR BARU: TOP 5 GLOBAL LEADERBOARD (VERIFIED ONLY)
+        // FITUR BARU: TOP 5 GLOBAL LEADERBOARD (MASUK + WFH & VERIFIED)
         // =========================================================================
-        // Logika Strict:
-        // 1. Check Out tidak boleh NULL (Harus full cycle).
-        // 2. Presence Status wajib 'Masuk' (Alpha/Izin/Sakit dibuang).
-        // 3. Status wajib 'verified' (Pending dibuang).
-        // 4. Tidak peduli branch user yg login (Global).
+        // Logika: 
+        // 1. Check Out tidak boleh NULL.
+        // 2. Presence Status: 'Masuk' ATAU 'WFH' ATAU 'WFH / Dinas Luar'.
+        // 3. Status Verifikasi: 'verified'.
+        // 4. Global (Tanpa filter branch).
         
         $data['leaderboard'] = Attendance::select(
                 'user_id', 
@@ -123,13 +123,12 @@ class DashboardController extends Controller
             )
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
-            ->whereNotNull('check_out_time')        // Syarat 1: Sudah Pulang
-            ->where('presence_status', 'Masuk')     // Syarat 2: Hadir Fisik/WFH (Bukan Alpha/Sakit)
-            ->where('status', 'verified')           // Syarat 3: SUDAH DIVERIFIKASI (Ini yg bikin beda sama widget)
+            ->whereNotNull('check_out_time') // Wajib sudah pulang
+            ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar']) // <--- UPDATED: Masuk OR WFH
+            ->where('status', 'verified') // Wajib Verified
             ->whereHas('user', function($q) {
                 $q->where('is_active', true)
-                  ->whereNotIn('role', ['admin']);  // Admin tidak ikut leaderboard
-                // Note: Tidak ada filter branch disini agar GLOBAL
+                  ->whereNotIn('role', ['admin']); // Admin skip
             })
             ->groupBy('user_id')
             ->orderBy('total_attendance', 'desc')
