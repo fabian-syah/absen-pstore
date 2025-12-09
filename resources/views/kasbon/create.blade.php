@@ -21,18 +21,25 @@
                         </select>
                     </div>
 
+                    {{-- JUDUL KASBON --}}
+                    <div class="form-group">
+                        <label>Judul Kasbon (Singkat)</label>
+                        <input type="text" name="title" class="form-control" placeholder="Contoh: Biaya Rumah Sakit / Service Motor" required maxlength="100">
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6">
+                            {{-- NOMINAL AUTO FORMAT RP --}}
                             <div class="form-group">
                                 <label>Total Uang (Nominal)</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" name="amount" class="form-control" placeholder="0" min="1000" required>
+                                    <input type="text" name="amount" id="rupiah" class="form-control" placeholder="0" required>
                                 </div>
+                                <small class="text-muted">Ketik angka saja, otomatis diformat.</small>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            {{-- KOLOM JATUH TEMPO --}}
                             <div class="form-group">
                                 <label>Jatuh Tempo (Batas Akhir)</label>
                                 <input type="date" name="due_date" class="form-control" required>
@@ -40,9 +47,35 @@
                         </div>
                     </div>
 
+                    {{-- METODE PENERIMAAN --}}
                     <div class="form-group">
-                        <label>Keterangan Penggunaan</label>
-                        <textarea name="description_1" class="form-control" rows="3" required></textarea>
+                        <label>Metode Penerimaan Uang</label>
+                        <div class="d-flex gap-4">
+                            <div class="form-check">
+                                <label class="form-check-label">
+                                    <input type="radio" class="form-check-input" name="payment_method" value="cash" checked onclick="toggleBank(false)">
+                                    Tunai (Cash)
+                                </label>
+                            </div>
+                            <div class="form-check ms-3">
+                                <label class="form-check-label">
+                                    <input type="radio" class="form-check-input" name="payment_method" value="transfer" onclick="toggleBank(true)">
+                                    Transfer Bank
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- INPUT REKENING (Hidden by default) --}}
+                    <div class="form-group" id="bankDetails" style="display: none;">
+                        <label>Nama Bank & Nomor Rekening</label>
+                        <input type="text" name="payment_details" class="form-control" placeholder="Contoh: BCA - 1234567890 a.n Fabian">
+                        <small class="text-info">Pastikan nama pemilik rekening sesuai.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Keterangan Lengkap (Alasan)</label>
+                        <textarea name="description_1" class="form-control" rows="3" placeholder="Jelaskan secara rinci kenapa butuh kasbon ini..." required></textarea>
                     </div>
 
                     <div class="row">
@@ -67,4 +100,40 @@
         </div>
     </div>
 </div>
+
+<script>
+    // SCRIPT AUTO FORMAT RUPIAH
+    const rupiah = document.getElementById('rupiah');
+    rupiah.addEventListener('keyup', function(e){
+        rupiah.value = formatRupiah(this.value);
+    });
+
+    function formatRupiah(angka, prefix){
+        var number_string = angka.replace(/[^,\d]/g, '').toString(),
+        split   = number_string.split(','),
+        sisa    = split[0].length % 3,
+        rupiah  = split[0].substr(0, sisa),
+        ribuan  = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if(ribuan){
+            separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+        rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+        return rupiah;
+    }
+
+    // SCRIPT TOGGLE BANK
+    function toggleBank(isTransfer) {
+        const bankInput = document.getElementById('bankDetails');
+        if (isTransfer) {
+            bankInput.style.display = 'block';
+            document.querySelector('input[name="payment_details"]').required = true;
+        } else {
+            bankInput.style.display = 'none';
+            document.querySelector('input[name="payment_details"]').required = false;
+            document.querySelector('input[name="payment_details"]').value = '';
+        }
+    }
+</script>
 @endsection
