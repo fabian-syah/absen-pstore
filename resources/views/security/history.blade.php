@@ -21,8 +21,8 @@
                                 <th>Karyawan</th>
                                 <th>Lokasi</th>
                                 <th>Status Scan</th>
-                                <th>Bukti Foto & Catatan</th> {{-- Updated Header --}}
-                                 <th>Petugas Scanner</th> 
+                                <th>Bukti Foto & Catatan</th>
+                                <th>Petugas Scanner</th> 
                             </tr>
                         </thead>
                         <tbody>
@@ -67,7 +67,7 @@
                                     @if($log->check_out_time && $log->is_early_checkout) <span class="badge bg-warning text-dark mt-1" style="font-size: 10px;">Pulang Cepat</span> @endif
                                 </td>
 
-                                {{-- 5. BUKTI FOTO & CATATAN (MODIFIED) --}}
+                                {{-- 5. BUKTI FOTO & CATATAN --}}
                                 <td>
                                     @php
                                         // PARSING CATATAN MASUK
@@ -123,15 +123,18 @@
                                     </div>
                                 </td>
                                 
-                                {{-- 6. PETUGAS (ADMIN ONLY) --}}
-                                {{-- @if(auth()->user()->role == 'admin') --}}
+                                {{-- 6. PETUGAS --}}
                                 <td>
                                     <div class="d-flex flex-column gap-1">
                                         {{-- MASUK --}}
                                         <div class="d-flex align-items-center">
                                             <span class="badge bg-success bg-opacity-10 text-success p-1 me-1" style="font-size: 9px;">IN</span>
                                             <small class="fw-bold text-dark" style="font-size: 11px;">
-                                                {{ $log->scanner->name ?? ($log->attendance_type == 'self' ? 'Selfie' : '-') }}
+                                                @if($log->scanner)
+                                                    {{ $log->scanner->name }}
+                                                @else
+                                                    <span class="text-muted fst-italic">Mandiri/Selfie</span>
+                                                @endif
                                             </small>
                                         </div>
 
@@ -142,20 +145,20 @@
                                                 <small class="fw-bold text-dark" style="font-size: 11px;">
                                                     @if (str_contains($log->notes, 'Security Scan by'))
                                                         {{ Str::after($log->notes, 'Security Scan by ') }}
-                                                    @elseif($log->verifier)
-                                                        {{ $log->verifier->name }}
+                                                    @elseif($log->verified_by_user_id && !$log->scanned_by_user_id) 
+                                                        {{-- Jika verified by ada tapi scanned by kosong, kemungkinan verified saat pulang --}}
+                                                        {{ $log->verifier->name ?? 'System' }}
                                                     @else
-                                                        -
+                                                        <span class="text-muted fst-italic">Mandiri/System</span>
                                                     @endif
                                                 </small>
                                             </div>
                                         @endif
                                     </div>
                                 </td>
-                                {{-- @endif --}}
                             </tr>
                             @empty
-                            <tr><td colspan="{{ auth()->user()->role == 'admin' ? 6 : 5 }}" class="text-center py-4 text-muted">Belum ada riwayat scan.</td></tr>
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Belum ada riwayat scan.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

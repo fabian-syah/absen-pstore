@@ -202,12 +202,12 @@ class ScanController extends Controller
             ];
 
             // SECURITY FORCE VERIFIED
-            // Jika status sebelumnya Pending/Rejected/Verified -> Semua jadi Verified karena Security terpercaya.
             if ($attendance->status != 'verified') {
                 $updateData['status'] = 'verified';
                 $updateData['verified_by_user_id'] = $securityUser->id;
             }
 
+            // PERHATIAN: Text ini penting untuk deteksi history di Controller history()
             $securityNote = ' | Pulang via Security Scan by ' . $securityUser->name;
             $userNoteString = $manualNotes ? " | Catatan: " . $manualNotes : "";
             
@@ -252,21 +252,35 @@ class ScanController extends Controller
          return response()->json(['status' => 'success', 'data' => $stats]);
     }
 
+    // --- REVISI LOGIC HISTORY ---
     public function history(Request $request)
     {
         $user = Auth::user();
         $query = Attendance::with(['user.division', 'user.branch', 'branch', 'scanner', 'verifier']);
-        $query->whereNotNull('scanned_by_user_id');
 
-        if ($user->role !== 'admin') {
+        // LOGIKA BARU:
+        // Tampilkan jika:
+        // 1. Scanned IN oleh Security (scanned_by_user_id tidak null)
+        // 2. ATAU Scanned OUT oleh Security (deteksi dari notes 'Security Scan by...')
+        
+        if ($user->role == 'admin') {
+            // Admin melihat semua transaksi yang melibatkan security manapun
+            $query->where(function($q) {
+                $q->whereNotNull('scanned_by_user_id')
+                  ->orWhere('notes', 'LIKE', '%Security Scan by%');
+            });
+        } else {
+            // Security hanya melihat transaksi yang DIA lakukan (Masuk scan dia ATAU Pulang scan dia)
             $query->where(function($q) use ($user) {
-                $q->where('scanned_by_user_id', $user->id)
-                  ->orWhere('verified_by_user_id', $user->id);
+                $q->where('scanned_by_user_id', $user->id) // Dia scan masuk
+                  ->orWhere('notes', 'LIKE', '%Security Scan by ' . $user->name . '%'); // Dia scan pulang
             });
         }
+
         if ($request->date) {
             $query->whereDate('check_in_time', $request->date);
         }
+
         $logs = $query->orderBy('updated_at', 'desc')->paginate(10);
         return view('security.history', compact('logs'));
     }
