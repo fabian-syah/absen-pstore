@@ -179,9 +179,9 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MENU TIM (USER, LEADER, AUDIT)   --}}
+        {{--    MENU TIM (ADMIN, LEADER, AUDIT, DLL) --}}
         {{-- =================================== --}}
-        {{-- [UPDATE] ADMIN ditambahkan ke sini agar bisa melihat section ini --}}
+        {{-- UPDATE: ADMIN ditambahkan di kondisi utama ini agar section muncul --}}
         @if (auth()->user()->role == 'user_biasa' ||
                 auth()->user()->role == 'leader' ||
                 auth()->user()->role == 'audit' ||
@@ -189,6 +189,7 @@
                 auth()->user()->role == 'admin') 
 
             <li class="nav-item nav-category">Menu Pengguna</li>
+            
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('team.index') }}">
                     <i class="menu-icon mdi mdi-account-multiple-outline"></i>
@@ -196,10 +197,10 @@
                 </a>
             </li>
 
-            {{-- [UPDATE] ADMIN ditambahkan ke sini agar bisa akses Cabang Saya --}}
+            {{-- UPDATE: ADMIN ditambahkan ke sini agar bisa akses Cabang Saya --}}
             @if (auth()->user()->role == 'audit' || auth()->user()->role == 'leader' || auth()->user()->role == 'admin')
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('team.my_branches') }}">
+                    <a class="nav-link" href="{{ route('team.my-branches') }}">
                         <i class="menu-icon mdi mdi-office-building-marker"></i>
                         <span class="menu-title">Cabang Saya</span>
                     </a>
