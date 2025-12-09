@@ -22,7 +22,7 @@
                                 <th>Lokasi</th>
                                 <th>Status Scan</th>
                                 <th>Bukti Foto & Catatan</th> {{-- Updated Header --}}
-                                @if(auth()->user()->role == 'admin') <th>Petugas Scanner</th> @endif
+                                 <th>Petugas Scanner</th> 
                             </tr>
                         </thead>
                         <tbody>
@@ -124,7 +124,7 @@
                                 </td>
                                 
                                 {{-- 6. PETUGAS (ADMIN ONLY) --}}
-                                @if(auth()->user()->role == 'admin')
+                                {{-- @if(auth()->user()->role == 'admin') --}}
                                 <td>
                                     <div class="d-flex flex-column gap-1">
                                         {{-- MASUK --}}
@@ -152,7 +152,7 @@
                                         @endif
                                     </div>
                                 </td>
-                                @endif
+                                {{-- @endif --}}
                             </tr>
                             @empty
                             <tr><td colspan="{{ auth()->user()->role == 'admin' ? 6 : 5 }}" class="text-center py-4 text-muted">Belum ada riwayat scan.</td></tr>
