@@ -10,9 +10,7 @@
                 @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
+                            @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
                         </ul>
                     </div>
                 @endif
@@ -31,23 +29,34 @@
 
                     <div class="form-group">
                         <label>Judul Kasbon</label>
-                        <input type="text" name="title" class="form-control" value="{{ old('title') }}" required>
+                        <input type="text" name="title" class="form-control" value="{{ old('title') }}" placeholder="Keperluan..." required>
                     </div>
 
+                    <div class="form-group">
+                        <label>Total Pinjaman (Rp)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Rp</span>
+                            <input type="text" name="amount" id="rupiah" class="form-control" value="{{ old('amount') }}" placeholder="0" required>
+                        </div>
+                    </div>
+
+                    {{-- [BARU] INPUT TENOR & START DATE --}}
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Total Uang (Rp)</label>
+                                <label>Tenor (Kali Cicil)</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text" name="amount" id="rupiah" class="form-control" value="{{ old('amount') }}" required>
+                                    <input type="number" name="tenor" class="form-control" value="{{ old('tenor', 1) }}" min="1" max="24" required>
+                                    <span class="input-group-text">Bulan/Kali</span>
                                 </div>
+                                <small class="text-muted">Contoh: 3 Bulan</small>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Jatuh Tempo</label>
-                                <input type="date" name="due_date" class="form-control" value="{{ old('due_date') }}" required>
+                                <label>Mulai Cicil Tanggal</label>
+                                <input type="date" name="start_date" class="form-control" value="{{ old('start_date') }}" required>
+                                <small class="text-info">Tanggal tagihan pertama.</small>
                             </div>
                         </div>
                     </div>
@@ -75,7 +84,7 @@
                         <input type="file" name="photo_1" class="form-control" required>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Ajukan</button>
+                    <button type="submit" class="btn btn-primary">Ajukan & Buat Rencana</button>
                     <a href="{{ route('kasbon.index') }}" class="btn btn-light">Batal</a>
                 </form>
             </div>
@@ -85,25 +94,12 @@
 
 <script>
     const rupiah = document.getElementById('rupiah');
-    rupiah.addEventListener('keyup', function(e){
-        rupiah.value = formatRupiah(this.value);
-    });
-
-    function formatRupiah(angka, prefix){
-        var number_string = angka.replace(/[^,\d]/g, '').toString(),
-        split   = number_string.split(','),
-        sisa    = split[0].length % 3,
-        rupiah  = split[0].substr(0, sisa),
-        ribuan  = split[0].substr(sisa).match(/\d{3}/gi);
-
-        if(ribuan){
-            separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-        rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-        return rupiah;
+    rupiah.addEventListener('keyup', function(e){ rupiah.value = formatRupiah(this.value); });
+    function formatRupiah(angka){
+        var number_string = angka.replace(/[^,\d]/g, '').toString(), split = number_string.split(','), sisa = split[0].length % 3, rupiah = split[0].substr(0, sisa), ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+        if(ribuan){ separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
+        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
     }
-
     function toggleBank(isTransfer) {
         document.getElementById('bankDetails').style.display = isTransfer ? 'block' : 'none';
         document.querySelector('input[name="payment_details"]').required = isTransfer;

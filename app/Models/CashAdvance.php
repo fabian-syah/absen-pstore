@@ -11,43 +11,32 @@ class CashAdvance extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'created_by',
-        'title',            // BARU
-        'amount',
-        'total_paid',
-        'payment_method',   // BARU
-        'payment_details',  // BARU
-        'due_date',
-        'photo_1',
-        'description_1',
-        'photo_2',
-        'description_2',
-        'status',
-        'processed_by',
-        'approved_date',
-        'repayment_date',
+        'user_id', 'created_by', 'title', 'amount', 'total_paid', 
+        'tenor', // BARU
+        'payment_method', 'payment_details', 'due_date',
+        'photo_1', 'description_1', 'photo_2', 'description_2',
+        'status', 'processed_by', 'approved_date', 'repayment_date',
     ];
 
-    public function user()
-    {
+    public function user() {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function installments()
-    {
+    // Relasi ke Histori Pembayaran (Uang Masuk)
+    public function installments() {
         return $this->hasMany(CashAdvanceInstallment::class)->latest();
     }
 
-    public function getRemainingAmountAttribute()
-    {
+    // [BARU] Relasi ke Jadwal Rencana
+    public function plans() {
+        return $this->hasMany(CashAdvancePlan::class)->orderBy('installment_order', 'asc');
+    }
+
+    public function getRemainingAmountAttribute() {
         return $this->amount - $this->total_paid;
     }
 
-    // Helper: Cek apakah Lewat Jatuh Tempo?
-    public function getIsOverdueAttribute()
-    {
-        // Jika belum lunas DAN hari ini > tanggal jatuh tempo
+    public function getIsOverdueAttribute() {
         return $this->status != 'paid' && 
                $this->status != 'rejected' && 
                Carbon::now()->startOfDay()->gt(Carbon::parse($this->due_date)->startOfDay());
