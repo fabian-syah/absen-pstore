@@ -268,7 +268,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // === RUTE TEAM MANAGEMENT ===
-    Route::middleware(['role:user_biasa,leader,audit,security'])->group(function () {
+    Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
         Route::get('/tim-saya', [TeamController::class, 'index'])->name('team.index');
         Route::get('/tim-saya/{user}', [TeamController::class, 'show'])->name('my.team.show');
         Route::get('/tim-saya/attendance/{user}', [TeamController::class, 'attendance'])->name('my.team.attendance');
