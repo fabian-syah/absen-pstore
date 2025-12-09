@@ -167,6 +167,131 @@
     @endif
 
     {{-- ======================================================================= --}}
+    {{-- BAGIAN BARU: TOP 5 ON-TIME LEADERBOARD --}}
+    {{-- ======================================================================= --}}
+    @if(isset($leaderboard) && count($leaderboard) > 0)
+    <div class="row animate-enter mb-4" style="animation-delay: 0.45s">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(to right, #ffffff, #f8f9fa);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">
+                            <i class="mdi mdi-trophy-variant text-warning me-2"></i>Top 5 Paling Rajin (Bulan Ini)
+                        </h4>
+                        <span class="badge bg-light text-dark border">
+                            <i class="mdi mdi-calendar-month me-1"></i> {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                        </span>
+                    </div>
+
+                    <div class="row align-items-end justify-content-center text-center podium-container">
+                        {{-- JUARA 2 (SILVER) --}}
+                        @if(isset($leaderboard[1]))
+                        <div class="col-4 col-md-3 order-1 order-md-1 podium-item">
+                            <div class="podium-rank rank-2">
+                                <div class="avatar-wrapper silver">
+                                    <span class="rank-badge">2</span>
+                                    @if($leaderboard[1]->user->profile_photo_path)
+                                        <img src="{{ Storage::url($leaderboard[1]->user->profile_photo_path) }}" alt="Profile" class="podium-avatar">
+                                    @else
+                                        <div class="podium-avatar-placeholder">{{ substr($leaderboard[1]->user->name, 0, 1) }}</div>
+                                    @endif
+                                </div>
+                                <div class="podium-info mt-2">
+                                    <h6 class="fw-bold mb-0 text-truncate">{{ $leaderboard[1]->user->name }}</h6>
+                                    <small class="text-muted d-block" style="font-size: 11px;">{{ $leaderboard[1]->user->division->name ?? '-' }}</small>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary mt-1 border border-secondary border-opacity-25">
+                                        <i class="mdi mdi-clock-check me-1"></i>Avg: {{ \Carbon\Carbon::parse($leaderboard[1]->avg_arrival_time)->format('H:i') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- JUARA 1 (GOLD) --}}
+                        @if(isset($leaderboard[0]))
+                        <div class="col-4 col-md-4 order-2 order-md-2 podium-item">
+                            <div class="podium-rank rank-1 mb-3">
+                                <div class="crown-icon animate-bounce"><i class="mdi mdi-crown text-warning"></i></div>
+                                <div class="avatar-wrapper gold">
+                                    <span class="rank-badge">1</span>
+                                    @if($leaderboard[0]->user->profile_photo_path)
+                                        <img src="{{ Storage::url($leaderboard[0]->user->profile_photo_path) }}" alt="Profile" class="podium-avatar">
+                                    @else
+                                        <div class="podium-avatar-placeholder">{{ substr($leaderboard[0]->user->name, 0, 1) }}</div>
+                                    @endif
+                                </div>
+                                <div class="podium-info mt-2">
+                                    <h5 class="fw-bold mb-0 text-truncate text-dark">{{ $leaderboard[0]->user->name }}</h5>
+                                    <small class="text-muted d-block fw-semibold">{{ $leaderboard[0]->user->division->name ?? '-' }}</small>
+                                    <span class="badge bg-warning text-dark mt-2 shadow-sm">
+                                        <i class="mdi mdi-star me-1"></i>Avg: {{ \Carbon\Carbon::parse($leaderboard[0]->avg_arrival_time)->format('H:i') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- JUARA 3 (BRONZE) --}}
+                        @if(isset($leaderboard[2]))
+                        <div class="col-4 col-md-3 order-3 order-md-3 podium-item">
+                            <div class="podium-rank rank-3">
+                                <div class="avatar-wrapper bronze">
+                                    <span class="rank-badge">3</span>
+                                    @if($leaderboard[2]->user->profile_photo_path)
+                                        <img src="{{ Storage::url($leaderboard[2]->user->profile_photo_path) }}" alt="Profile" class="podium-avatar">
+                                    @else
+                                        <div class="podium-avatar-placeholder">{{ substr($leaderboard[2]->user->name, 0, 1) }}</div>
+                                    @endif
+                                </div>
+                                <div class="podium-info mt-2">
+                                    <h6 class="fw-bold mb-0 text-truncate">{{ $leaderboard[2]->user->name }}</h6>
+                                    <small class="text-muted d-block" style="font-size: 11px;">{{ $leaderboard[2]->user->division->name ?? '-' }}</small>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning mt-1 border border-warning border-opacity-25" style="color: #A0522D !important;">
+                                        <i class="mdi mdi-clock-check me-1"></i>Avg: {{ \Carbon\Carbon::parse($leaderboard[2]->avg_arrival_time)->format('H:i') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    
+                    {{-- LIST JUARA 4 & 5 --}}
+                    @if(count($leaderboard) > 3)
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="row justify-content-center">
+                             @foreach($leaderboard as $index => $winner)
+                                @if($index > 2)
+                                    <div class="col-md-6 mb-2">
+                                        <div class="d-flex align-items-center p-2 rounded bg-light border hover-scale">
+                                            <span class="fw-bold text-muted me-3 ms-2" style="width: 20px;">#{{ $index + 1 }}</span>
+                                            @if($winner->user->profile_photo_path)
+                                                <img src="{{ Storage::url($winner->user->profile_photo_path) }}" class="rounded-circle me-3" width="35" height="35" style="object-fit: cover;">
+                                            @else
+                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-3" style="width: 35px; height: 35px; font-size: 12px;">{{ substr($winner->user->name, 0, 1) }}</div>
+                                            @endif
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-0 fs-6">{{ $winner->user->name }}</h6>
+                                                <small class="text-muted">{{ $winner->user->division->name ?? '-' }}</small>
+                                            </div>
+                                            <div class="text-end me-2">
+                                                <small class="fw-bold text-dark">{{ \Carbon\Carbon::parse($winner->avg_arrival_time)->format('H:i') }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                             @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+
+    {{-- ======================================================================= --}}
     {{-- BAGIAN 2: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI) --}}
     {{-- ======================================================================= --}}
 
@@ -558,6 +683,124 @@
 
 @push('styles')
     <style>
+        /* === LEADERBOARD STYLES (NEW) === */
+        .podium-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            height: 250px;
+        }
+
+        .podium-item {
+            display: flex;
+            justify-content: center;
+        }
+
+        .podium-rank {
+            position: relative;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .podium-rank:hover {
+            transform: translateY(-5px);
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 50%;
+            padding: 4px;
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Gold Ring */
+        .avatar-wrapper.gold {
+            background: linear-gradient(135deg, #FFD700, #FDB931);
+            width: 100px;
+            height: 100px;
+        }
+        .avatar-wrapper.gold .podium-avatar, .avatar-wrapper.gold .podium-avatar-placeholder {
+            width: 92px; height: 92px; border: 3px solid white;
+        }
+
+        /* Silver Ring */
+        .avatar-wrapper.silver {
+            background: linear-gradient(135deg, #E0E0E0, #BDBDBD);
+            width: 80px;
+            height: 80px;
+        }
+        .avatar-wrapper.silver .podium-avatar, .avatar-wrapper.silver .podium-avatar-placeholder {
+            width: 72px; height: 72px; border: 3px solid white;
+        }
+
+        /* Bronze Ring */
+        .avatar-wrapper.bronze {
+            background: linear-gradient(135deg, #CD7F32, #A0522D);
+            width: 80px;
+            height: 80px;
+        }
+        .avatar-wrapper.bronze .podium-avatar, .avatar-wrapper.bronze .podium-avatar-placeholder {
+            width: 72px; height: 72px; border: 3px solid white;
+        }
+
+        .podium-avatar {
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .podium-avatar-placeholder {
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            color: #888;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .rank-badge {
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a1a;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid white;
+            z-index: 2;
+        }
+
+        .crown-icon {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-10deg);
+            font-size: 28px;
+            z-index: 3;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .animate-bounce {
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0) rotate(-10deg);}
+            40% {transform: translateX(-50%) translateY(-10px) rotate(-10deg);}
+            60% {transform: translateX(-50%) translateY(-5px) rotate(-10deg);}
+        }
+
+
         /* === NEW ANIMATIONS & INTERACTIVE STYLES === */
         
         /* 1. Entrance Animation (Slide Up Fade) */

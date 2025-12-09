@@ -9,6 +9,7 @@ use App\Models\LateNotification;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // TAMBAHAN: Untuk query raw leaderboard
 use Carbon\Carbon;
 use PDF;
 
@@ -106,6 +107,36 @@ class DashboardController extends Controller
             ->count();
 
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
+
+        // =========================================================================
+        // FITUR BARU: TOP 5 ON-TIME LEADERBOARD
+        // =========================================================================
+        // Logika: Ambil 5 user dengan rata-rata jam masuk paling pagi di bulan ini
+        // Syarat: Tidak telat (is_late_checkin = 0) dan Role bukan Admin (biar fair)
+        
+        $data['leaderboard'] = Attendance::select(
+                'user_id', 
+                DB::raw('count(*) as total_present'),
+                // Mengambil bagian JAM saja untuk dirata-rata (format Time)
+                DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time')
+            )
+            ->whereMonth('check_in_time', Carbon::now()->month)
+            ->whereYear('check_in_time', Carbon::now()->year)
+            ->where('is_late_checkin', false) // Hanya menghitung hari dimana dia TIDAK telat
+            ->whereHas('user', function($q) use ($branch_id) {
+                $q->where('is_active', true)
+                  ->whereNotIn('role', ['admin']); // Admin tidak ikut kompetisi
+                
+                if ($branch_id) {
+                    $q->where('branch_id', $branch_id);
+                }
+            })
+            ->groupBy('user_id')
+            ->having('total_present', '>', 0) // Minimal pernah hadir
+            ->orderBy('avg_arrival_time', 'asc') // Urutkan dari jam paling pagi
+            ->take(5)
+            ->with('user')
+            ->get();
 
         // 6. LOGIKA DASHBOARD PEKERJAAN
         if ($user->role == 'admin') {
