@@ -237,12 +237,22 @@ class TeamController extends Controller
 
     // ... (method showEmployeeHistory & getHistoryData TETAP SAMA) ...
     
-    public function showEmployeeHistory(Request $request, $branchId, $employeeId) {
-        // ... (Kode sama persis seperti sebelumnya) ...
+   public function showEmployeeHistory(Request $request, $branchId, $employeeId) {
         $user = Auth::user();
+
+        // --- PERBAIKAN LOGIKA AKSES ---
         if ($user->role == 'audit') {
+            // 1. Ambil cabang dari Multi Select
             $allowedBranches = $user->branches->pluck('id')->toArray();
+            
+            // 2. JANGAN LUPA tambahkan Cabang Utama user tersebut
+            if ($user->branch_id) {
+                $allowedBranches[] = $user->branch_id;
+            }
+
+            // 3. Cek apakah cabang yang diminta ada dalam daftar akses
             if (!in_array($branchId, $allowedBranches)) abort(403, 'Akses Ditolak.');
+        
         } elseif ($user->role == 'leader') {
              if ($user->branch_id != $branchId) {
                 $pivotIds = $user->branches->pluck('id')->toArray();
@@ -251,6 +261,7 @@ class TeamController extends Controller
         } elseif ($user->role == 'admin') {
             if ($user->branch_id && $user->branch_id != $branchId) abort(403);
         }
+        // -----------------------------
 
         $employee = User::with(['division', 'branch'])->findOrFail($employeeId);
         $selectedMonth = $request->get('month', date('m'));
