@@ -181,10 +181,13 @@
         {{-- =================================== --}}
         {{--    MENU TIM (USER, LEADER, AUDIT)   --}}
         {{-- =================================== --}}
+        {{-- [UPDATE] ADMIN ditambahkan ke sini agar bisa melihat section ini --}}
         @if (auth()->user()->role == 'user_biasa' ||
                 auth()->user()->role == 'leader' ||
                 auth()->user()->role == 'audit' ||
-                auth()->user()->role == 'security')
+                auth()->user()->role == 'security' ||
+                auth()->user()->role == 'admin') 
+
             <li class="nav-item nav-category">Menu Pengguna</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('team.index') }}">
@@ -193,6 +196,7 @@
                 </a>
             </li>
 
+            {{-- [UPDATE] ADMIN ditambahkan ke sini agar bisa akses Cabang Saya --}}
             @if (auth()->user()->role == 'audit' || auth()->user()->role == 'leader' || auth()->user()->role == 'admin')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('team.my-branches') }}">
