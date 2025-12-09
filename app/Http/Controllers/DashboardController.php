@@ -108,28 +108,31 @@ class DashboardController extends Controller
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
-        // FITUR BARU: TOP 5 GLOBAL LEADERBOARD (FIXED)
+        // FITUR BARU: TOP 5 GLOBAL LEADERBOARD (STRICT FILTER)
         // =========================================================================
-        // Logika: 
-        // 1. Paling Rajin (Absen Masuk DAN Pulang).
-        // 2. Global (Tidak difilter berdasarkan branch user yg login).
+        // Logika Update: 
+        // 1. Paling Rajin (Frekuensi terbanyak).
+        // 2. Global (Tanpa filter branch).
+        // 3. STRICT: Harus 'Masuk' dan 'Verified' (No Alpha, No Rejected, No Pending).
         
         $data['leaderboard'] = Attendance::select(
                 'user_id', 
-                DB::raw('count(*) as total_attendance'), // Hitung frekuensi kehadiran full
+                DB::raw('count(*) as total_attendance'), 
                 DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time')
             )
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
-            ->whereNotNull('check_out_time') // Syarat: Harus sudah absen pulang (Full Cycle)
+            ->whereNotNull('check_out_time')      // Syarat 1: Full Cycle (Masuk & Pulang)
+            ->where('presence_status', 'Masuk')   // Syarat 2: Status Kehadiran = Masuk (Bukan Alpha/Izin)
+            ->where('status', 'verified')         // Syarat 3: Status Verifikasi = Verified (Bukan Pending/Rejected)
             ->whereHas('user', function($q) {
-                // HAPUS filter branch_id disini agar GLOBAL/SEMUA SAMA
+                // Global: Tidak ada filter branch_id disini
                 $q->where('is_active', true)
                   ->whereNotIn('role', ['admin']); // Admin tidak ikut
             })
             ->groupBy('user_id')
-            ->orderBy('total_attendance', 'desc') // Paling sering masuk duluan
-            ->orderBy('avg_arrival_time', 'asc')  // Tiebreaker: Jam masuk rata-rata
+            ->orderBy('total_attendance', 'desc') // Paling sering verified
+            ->orderBy('avg_arrival_time', 'asc')  // Tiebreaker
             ->take(5)
             ->with('user')
             ->get();
