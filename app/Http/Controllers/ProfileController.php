@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LeaderboardHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,11 +19,18 @@ class ProfileController extends Controller
      */
     public function edit()
     {
-        $user = Auth::user()->fresh(); // Refresh data user
+        $user = Auth::user()->fresh();
         $workHistories = $user->workHistories;
         $inventories = $user->inventories()->latest()->get();
 
-        return view('profile.edit', compact('user', 'workHistories', 'inventories'));
+        // AMBIL DATA PENGHARGAAN (Dikelompokkan berdasarkan Tahun biar rapi)
+        $achievements = LeaderboardHistory::where('user_id', $user->id)
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get()
+            ->groupBy('year');
+
+        return view('profile.edit', compact('user', 'workHistories', 'inventories', 'achievements'));
     }
 
     /**
@@ -45,13 +53,13 @@ class ProfileController extends Controller
         ]);
 
         $data = $request->only([
-            'name', 
-            'birth_date', 
-            'email', 
-            'whatsapp', 
-            'instagram', 
-            'tiktok', 
-            'facebook', 
+            'name',
+            'birth_date',
+            'email',
+            'whatsapp',
+            'instagram',
+            'tiktok',
+            'facebook',
         ]);
 
         if ($request->filled('password')) {
@@ -91,7 +99,6 @@ class ProfileController extends Controller
 
             return redirect()->route('profile.edit')
                 ->with('success', 'Foto profil berhasil diupload.');
-
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal upload: ' . $e->getMessage());
         }
@@ -130,7 +137,6 @@ class ProfileController extends Controller
             ]);
 
             return back()->with('success', 'Foto baru berhasil diupload. Mohon tunggu persetujuan Admin untuk penerapannya.');
-
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal upload request: ' . $e->getMessage());
         }
@@ -144,11 +150,11 @@ class ProfileController extends Controller
         // Fitur ini biasanya dimatikan jika sistem mewajibkan approval ketat
         // Namun jika diaktifkan, pastikan menghapus path dan temp path
         $user = Auth::user();
-        
+
         if ($user->profile_photo_path) {
             Storage::disk('public')->delete($user->profile_photo_path);
         }
-        
+
         $user->update([
             'profile_photo_path' => null,
             'photo_request_status' => 'none'
@@ -162,16 +168,16 @@ class ProfileController extends Controller
     public function requestKtpChange(Request $request)
     {
         $request->validate(['ktp_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120']);
-        
+
         $user = Auth::user();
-        
+
         // Hapus temp lama jika ada
         if ($user->ktp_photo_temp_path) {
             Storage::disk('public')->delete($user->ktp_photo_temp_path);
         }
 
         $path = $request->file('ktp_photo')->store('ktp_photos/temp', 'public');
-        
+
         $user->update([
             'ktp_photo_temp_path' => $path,
             'ktp_request_status' => 'pending'
@@ -184,14 +190,14 @@ class ProfileController extends Controller
     {
         $request->validate(['ktp_photo' => 'required|image|max:5120']);
         $user = Auth::user();
-        
+
         if ($user->ktp_photo_path) {
             return back()->with('error', 'KTP sudah ada, gunakan tombol Ganti KTP.');
         }
 
         $path = $request->file('ktp_photo')->store('ktp_photos', 'public');
         $user->update(['ktp_photo_path' => $path]);
-        
+
         return back()->with('success', 'KTP berhasil diupload.');
     }
 
@@ -226,19 +232,22 @@ class ProfileController extends Controller
         }
     }
 
-    public function destroyInventory(Inventory $inventory) {
+    public function destroyInventory(Inventory $inventory)
+    {
         if ($inventory->user_id !== Auth::id()) abort(403);
         $inventory->delete();
         return back()->with('success', 'Inventaris dihapus.');
     }
 
-    public function storeWorkHistory(Request $request) {
-        $request->validate([ 'position' => 'required', 'department' => 'required', 'start_date' => 'required|date' ]);
+    public function storeWorkHistory(Request $request)
+    {
+        $request->validate(['position' => 'required', 'department' => 'required', 'start_date' => 'required|date']);
         WorkHistory::create(array_merge($request->all(), ['user_id' => Auth::id()]));
         return back()->with('success', 'Riwayat pekerjaan ditambahkan.');
     }
 
-    public function destroyWorkHistory($id) {
+    public function destroyWorkHistory($id)
+    {
         WorkHistory::where('id', $id)->where('user_id', Auth::id())->delete();
         return back()->with('success', 'Dihapus.');
     }

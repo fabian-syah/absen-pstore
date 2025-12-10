@@ -183,4 +183,9 @@ class User extends Authenticatable
             !empty($this->whatsapp) &&
             !empty($this->email);
     }
+
+    public function achievements()
+    {
+        return $this->hasMany(LeaderboardHistory::class)->orderBy('year', 'desc')->orderBy('month', 'desc');
+    }
 }
