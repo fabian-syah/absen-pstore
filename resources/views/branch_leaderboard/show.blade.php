@@ -137,6 +137,7 @@
                             @foreach($others as $index => $row)
                             <tr>
                                 <td class="ps-4">
+                                    {{-- PERBAIKAN LOGIKA RANK: Dimulai dari 4 --}}
                                     <div class="rank-circle text-muted fw-bold">#{{ $index + 4 }}</div>
                                 </td>
                                 <td>

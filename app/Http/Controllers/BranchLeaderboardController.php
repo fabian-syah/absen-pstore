@@ -12,15 +12,13 @@ use Carbon\Carbon;
 
 class BranchLeaderboardController extends Controller
 {
-    /**
-     * Display a list of branches the user manages.
-     */
+    // ... method index() biarkan saja (sudah benar) ...
     public function index()
     {
+        // (Isi sama seperti sebelumnya)
         $user = Auth::user();
         $branches = collect();
 
-        // 1. Ambil Daftar Cabang Sesuai Role
         if ($user->role === 'admin') {
             $branches = Branch::orderBy('name')->get();
         } elseif ($user->role === 'audit') {
@@ -35,31 +33,26 @@ class BranchLeaderboardController extends Controller
             }
         }
 
-        // 2. Loop setiap cabang untuk ambil data tambahan & TOP 3 LEADERBOARD
         foreach ($branches as $branch) {
-            // Hitung Total Karyawan
             $branch->total_employees = User::where('branch_id', $branch->id)
                 ->where('is_active', true)
                 ->whereNotIn('role', ['admin'])
                 ->count();
 
-            // === LOGIKA TOP 3 LEADERBOARD (Untuk Preview di Kartu) ===
-            $top3 = Attendance::select(
-                    'user_id',
-                    DB::raw('count(*) as total_attendance')
-                )
+            // Preview Top 3 untuk Index
+            $top3 = Attendance::select('user_id', DB::raw('count(*) as total_attendance'))
                 ->whereMonth('check_in_time', Carbon::now()->month)
                 ->whereYear('check_in_time', Carbon::now()->year)
                 ->whereNotNull('check_out_time')
                 ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])
                 ->where('status', 'verified')
-                ->where('branch_id', $branch->id) // Filter per cabang
+                ->where('branch_id', $branch->id)
                 ->whereHas('user', function($q) {
                     $q->where('is_active', true)->whereNotIn('role', ['admin']);
                 })
                 ->groupBy('user_id')
                 ->orderBy('total_attendance', 'desc')
-                ->take(3) // Ambil Top 3 Saja
+                ->take(3)
                 ->with('user')
                 ->get();
 
@@ -84,7 +77,9 @@ class BranchLeaderboardController extends Controller
              if ($user->branch_id != $id) abort(403, 'Unauthorized action.');
         }
 
-        // Detail Leaderboard Logic (Full Data)
+        // --- LEADERBOARD LOGIC (FIXED) ---
+        // Ambil SEMUA data leaderboard yang memenuhi syarat (tanpa limit dulu)
+        // Agar kita bisa memisahkan Top 3 dan sisanya secara akurat.
         $leaderboard = Attendance::select(
                 'user_id',
                 DB::raw('count(*) as total_attendance'),
@@ -97,16 +92,21 @@ class BranchLeaderboardController extends Controller
             ->where('status', 'verified')
             ->where('branch_id', $id)
             ->whereHas('user', function($q) {
-                $q->where('is_active', true)->whereNotIn('role', ['admin']);
+                $q->where('is_active', true)
+                  ->whereNotIn('role', ['admin']);
             })
             ->groupBy('user_id')
-            ->orderBy('total_attendance', 'desc')
-            ->orderBy('avg_arrival_time', 'asc')
+            ->orderBy('total_attendance', 'desc')     // Urutkan berdasarkan total hadir terbanyak
+            ->orderBy('avg_arrival_time', 'asc')      // Jika sama, urutkan yang datang lebih pagi
             ->with(['user', 'user.division'])
-            ->get();
+            ->get(); // Ambil Collection, bukan Query Builder
 
+        // Pisahkan Top 3
         $top3 = $leaderboard->take(3);
-        $others = $leaderboard->slice(3);
+        
+        // Sisanya (mulai dari indeks ke-3, yaitu Rank 4 dst)
+        // Values() digunakan untuk me-reset key array agar foreach di view mulai dari 0 lagi (opsional tapi aman)
+        $others = $leaderboard->slice(3)->values(); 
 
         return view('branch_leaderboard.show', compact('branch', 'top3', 'others'));
     }
