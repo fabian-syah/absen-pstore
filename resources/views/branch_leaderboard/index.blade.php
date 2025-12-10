@@ -162,5 +162,28 @@
         border-radius: 50%; font-size: 9px; display: flex; align-items: center; justify-content: center;
         border: 1px solid white; font-weight: bold;
     }
+
+    /* PERBAIKAN DI SINI: Styling Text Score agar Jelas */
+    .mini-score {
+        font-size: 0.65rem;
+        margin-top: 2px;
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+    }
+
+    /* Score Default (Silver & Bronze) */
+    .text-muted.mini-score {
+        color: #6c757d !important; 
+        background: #f8f9fa; /* Background abu tipis */
+    }
+
+    /* Score Rank 1 (Gold) - Dibuat Gelap & Jelas */
+    .text-warning.mini-score {
+        color: #856404 !important; /* Coklat tua gelap */
+        background-color: #fff3cd !important; /* Kuning muda terang */
+        border: 1px solid #ffeeba;
+        font-weight: 800 !important; /* Lebih tebal */
+    }
 </style>
 @endpush
