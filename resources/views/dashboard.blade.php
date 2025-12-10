@@ -16,6 +16,35 @@
 @section('content')
 
     {{-- ======================================================================= --}}
+    {{-- BAGIAN BARU: ATTENDANCE WRAPPED BANNER --}}
+    {{-- ======================================================================= --}}
+    <div class="row mb-4 animate-enter">
+        <div class="col-12">
+            <div class="card bg-gradient-warning text-white shadow-lg" 
+                 style="background: linear-gradient(135deg, #111 0%, #333 100%); border: 1px solid #FFD700; overflow: hidden; position: relative;">
+                
+                {{-- Efek Kilau Background (Opsional) --}}
+                <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%); animation: rotateGlow 20s linear infinite; pointer-events: none;"></div>
+
+                <div class="card-body d-flex justify-content-between align-items-center position-relative z-index-1">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3 d-none d-sm-block">
+                            <i class="mdi mdi-sparkles text-warning display-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold text-warning mb-1">✨ Your 2025 Wrapped is Here!</h4>
+                            <p class="mb-0 text-white-50">Lihat rangkuman perjalanan karirmu selama setahun ini.</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('attendance.recap') }}" class="btn btn-light rounded-pill fw-bold shadow-sm hover-scale">
+                        <i class="mdi mdi-play-circle-outline me-1"></i> Putar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ======================================================================= --}}
     {{-- BAGIAN 1: DASHBOARD PEKERJAAN (KHUSUS ADMIN, AUDIT, SECURITY) --}}
     {{-- ======================================================================= --}}
 
