@@ -25,6 +25,8 @@ class Attendance extends Model
         'verified_by_user_id',
         'latitude',
         'longitude',
+        'latitude_out', // Added for Checkout Location
+        'longitude_out', // Added for Checkout Location
         'work_schedule_id',
         'is_late_checkin',
         'is_early_checkout',
@@ -344,7 +346,7 @@ class Attendance extends Model
             'Cuti' => 'secondary',
             'Alpha' => 'danger',
             'Telat' => 'danger',
-            default => 'dark',
+            'default' => 'dark',
         };
     }
 
@@ -374,7 +376,7 @@ class Attendance extends Model
         return match($this->verification_status) {
             'verified' => 'success',
             'pending' => 'warning',
-            default => 'secondary'
+            'default' => 'secondary'
         };
     }
 
@@ -386,7 +388,7 @@ class Attendance extends Model
         return match($this->verification_status) {
             'verified' => 'mdi-check-circle',
             'pending' => 'mdi-clock-outline',
-            default => 'mdi-alert-circle'
+            'default' => 'mdi-alert-circle'
         };
     }
 

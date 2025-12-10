@@ -237,7 +237,7 @@
                                         <th class="border-start">Jam Pulang</th>
                                         <th>Foto</th>
                                         <th class="text-center">Status</th>
-                                        <th class="text-center">Lokasi</th> 
+                                        <th class="text-center">Lokasi (In/Out)</th> 
                                         <th>Verifikasi & Petugas</th>
                                         <th class="text-center">Metode</th>
                                         @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
@@ -444,23 +444,49 @@
                                                 @endif
                                             </td>
 
-                                            {{-- LOKASI --}}
+                                            {{-- LOKASI (MASUK & PULANG) --}}
                                             <td class="text-center">
-                                                @if ($att->latitude && $att->longitude)
-                                                    <a href="https://www.google.com/maps/search/?api=1&query={{ $att->latitude }},{{ $att->longitude }}" target="_blank" 
-                                                       class="btn btn-outline-info btn-sm btn-icon rounded-circle" title="Lihat di Maps">
-                                                        <i class="mdi mdi-map-marker-radius"></i>
-                                                    </a>
-                                                    <div style="font-size: 0.65rem;" class="mt-1 text-muted">Maps</div>
-                                                @elseif(in_array($att->attendance_type, ['scan', 'manual']))
-                                                    <span class="badge bg-light text-dark border">
-                                                        <i class="mdi mdi-office-building"></i> Kantor
-                                                    </span>
-                                                @elseif($att->attendance_type == 'leave')
-                                                     <span class="text-muted small">-</span>
-                                                @else
-                                                    <span class="text-muted small"><i class="mdi mdi-map-marker-off"></i></span>
-                                                @endif
+                                                <div class="d-flex flex-column gap-2">
+                                                    
+                                                    {{-- LOKASI MASUK --}}
+                                                    <div class="d-flex flex-column align-items-center">
+                                                        <small class="text-muted fw-bold mb-1" style="font-size: 0.6rem;">MASUK</small>
+                                                        @if ($att->latitude && $att->longitude)
+                                                            <a href="https://www.google.com/maps/search/?api=1&query={{ $att->latitude }},{{ $att->longitude }}" target="_blank" 
+                                                               class="btn btn-outline-info btn-sm btn-icon rounded-circle" title="Lokasi Masuk">
+                                                                <i class="mdi mdi-map-marker-radius"></i>
+                                                            </a>
+                                                        @elseif(in_array($att->attendance_type, ['scan', 'manual']))
+                                                            <span class="badge bg-light text-dark border">
+                                                                <i class="mdi mdi-office-building"></i> Kantor
+                                                            </span>
+                                                        @elseif($att->attendance_type == 'leave')
+                                                             <span class="text-muted small">-</span>
+                                                        @else
+                                                            <span class="text-muted small"><i class="mdi mdi-map-marker-off"></i></span>
+                                                        @endif
+                                                    </div>
+
+                                                    {{-- LOKASI PULANG (JIKA ADA) --}}
+                                                    @if($att->check_out_time)
+                                                        <div class="border-top w-100 my-1"></div>
+                                                        <div class="d-flex flex-column align-items-center">
+                                                            <small class="text-muted fw-bold mb-1" style="font-size: 0.6rem;">PULANG</small>
+                                                            @if ($att->latitude_out && $att->longitude_out)
+                                                                <a href="https://www.google.com/maps/search/?api=1&query={{ $att->latitude_out }},{{ $att->longitude_out }}" target="_blank" 
+                                                                   class="btn btn-outline-danger btn-sm btn-icon rounded-circle" title="Lokasi Pulang">
+                                                                    <i class="mdi mdi-map-marker-radius"></i>
+                                                                </a>
+                                                            @elseif(in_array($att->attendance_type, ['scan', 'manual']))
+                                                                <span class="badge bg-light text-dark border">
+                                                                    <i class="mdi mdi-office-building"></i> Kantor
+                                                                </span>
+                                                            @else
+                                                                <span class="text-muted small"><i class="mdi mdi-map-marker-off"></i></span>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </td>
 
                                             {{-- VERIFIKASI & PETUGAS --}}
