@@ -167,41 +167,54 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: TOP 5 ON-TIME LEADERBOARD --}}
+    {{-- BAGIAN BARU: TOP 5 LUXURY LEADERBOARD --}}
     {{-- ======================================================================= --}}
     @if(isset($leaderboard) && count($leaderboard) > 0)
-    <div class="row animate-enter mb-4" style="animation-delay: 0.45s">
+    <div class="row animate-enter mb-5" style="animation-delay: 0.45s">
         <div class="col-12">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(to right, #ffffff, #f8f9fa);">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="card-title mb-0">
-                            <i class="mdi mdi-trophy-variant text-warning me-2"></i>Top 5 Paling Rajin (Bulan Ini)
-                        </h4>
-                        <span class="badge bg-light text-dark border">
-                            <i class="mdi mdi-calendar-month me-1"></i> {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
-                        </span>
+            <div class="card border-0 shadow-lg luxury-card" style="border-radius: 24px; overflow: hidden; background: #fff;">
+                <div class="luxury-bg-glow"></div>
+                <div class="luxury-bg-pattern"></div>
+
+                <div class="card-body p-4 position-relative z-index-1">
+                    <div class="d-flex justify-content-between align-items-center mb-5">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box-luxury me-3">
+                                <i class="mdi mdi-trophy-variant-outline text-warning"></i>
+                            </div>
+                            <div>
+                                <h4 class="fw-bold mb-0 text-dark">Top Performance</h4>
+                                <small class="text-muted">Karyawan paling rajin bulan ini</small>
+                            </div>
+                        </div>
+                        <div class="glass-badge">
+                            <i class="mdi mdi-calendar-star me-2"></i>
+                            {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                        </div>
                     </div>
 
-                    <div class="row align-items-end justify-content-center text-center podium-container">
+                    <div class="row align-items-end justify-content-center text-center podium-luxury-container pb-4">
+                        
                         {{-- JUARA 2 (SILVER) --}}
                         @if(isset($leaderboard[1]))
-                        <div class="col-4 col-md-3 order-1 order-md-1 podium-item">
-                            <div class="podium-rank rank-2">
-                                <div class="avatar-wrapper silver">
-                                    <span class="rank-badge">2</span>
-                                    @if($leaderboard[1]->user->profile_photo_path)
-                                        <img src="{{ Storage::url($leaderboard[1]->user->profile_photo_path) }}" alt="Profile" class="podium-avatar">
-                                    @else
-                                        <div class="podium-avatar-placeholder">{{ substr($leaderboard[1]->user->name, 0, 1) }}</div>
-                                    @endif
-                                </div>
-                                <div class="podium-info mt-2">
-                                    <h6 class="fw-bold mb-0 text-truncate">{{ $leaderboard[1]->user->name }}</h6>
-                                    <small class="text-muted d-block" style="font-size: 11px;">{{ $leaderboard[1]->user->division->name ?? '-' }}</small>
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary mt-1 border border-secondary border-opacity-25">
-                                        <i class="mdi mdi-check-decagram me-1"></i>{{ $leaderboard[1]->total_attendance }} Verified
-                                    </span>
+                        <div class="col-4 col-md-3 order-1 podium-step-container">
+                            <div class="podium-avatar-wrapper silver-glow delay-200">
+                                <div class="rank-circle silver">2</div>
+                                @if($leaderboard[1]->user->profile_photo_path)
+                                    <img src="{{ Storage::url($leaderboard[1]->user->profile_photo_path) }}" class="luxury-avatar">
+                                @else
+                                    <div class="luxury-avatar-placeholder silver-gradient">{{ substr($leaderboard[1]->user->name, 0, 1) }}</div>
+                                @endif
+                                <div class="sparkle s1"></div>
+                            </div>
+                            
+                            <div class="podium-block silver-block">
+                                <div class="podium-content">
+                                    <h6 class="fw-bold text-truncate w-100 mb-0">{{ explode(' ', $leaderboard[1]->user->name)[0] }}</h6>
+                                    <small class="text-muted d-block small-font">{{ $leaderboard[1]->user->division->name ?? '-' }}</small>
+                                    <div class="stat-pill mt-2">
+                                        <i class="mdi mdi-check-circle text-success me-1"></i>{{ $leaderboard[1]->total_attendance }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -209,23 +222,28 @@
 
                         {{-- JUARA 1 (GOLD) --}}
                         @if(isset($leaderboard[0]))
-                        <div class="col-4 col-md-4 order-2 order-md-2 podium-item">
-                            <div class="podium-rank rank-1 mb-3">
-                                <div class="crown-icon animate-bounce"><i class="mdi mdi-crown text-warning"></i></div>
-                                <div class="avatar-wrapper gold">
-                                    <span class="rank-badge">1</span>
-                                    @if($leaderboard[0]->user->profile_photo_path)
-                                        <img src="{{ Storage::url($leaderboard[0]->user->profile_photo_path) }}" alt="Profile" class="podium-avatar">
-                                    @else
-                                        <div class="podium-avatar-placeholder">{{ substr($leaderboard[0]->user->name, 0, 1) }}</div>
-                                    @endif
-                                </div>
-                                <div class="podium-info mt-2">
-                                    <h5 class="fw-bold mb-0 text-truncate text-dark">{{ $leaderboard[0]->user->name }}</h5>
-                                    <small class="text-muted d-block fw-semibold">{{ $leaderboard[0]->user->division->name ?? '-' }}</small>
-                                    <span class="badge bg-warning text-dark mt-2 shadow-sm">
-                                        <i class="mdi mdi-trophy me-1"></i>{{ $leaderboard[0]->total_attendance }} Verified
-                                    </span>
+                        <div class="col-4 col-md-4 order-2 podium-step-container main-winner">
+                            <div class="crown-floating">
+                                <img src="https://cdn-icons-png.flaticon.com/512/2545/2545603.png" width="50" alt="Crown">
+                            </div>
+                            <div class="podium-avatar-wrapper gold-glow">
+                                <div class="rank-circle gold">1</div>
+                                @if($leaderboard[0]->user->profile_photo_path)
+                                    <img src="{{ Storage::url($leaderboard[0]->user->profile_photo_path) }}" class="luxury-avatar">
+                                @else
+                                    <div class="luxury-avatar-placeholder gold-gradient">{{ substr($leaderboard[0]->user->name, 0, 1) }}</div>
+                                @endif
+                                <div class="sparkle s2"></div>
+                                <div class="sparkle s3"></div>
+                            </div>
+
+                            <div class="podium-block gold-block">
+                                <div class="podium-content">
+                                    <h5 class="fw-bolder text-dark text-truncate w-100 mb-0">{{ $leaderboard[0]->user->name }}</h5>
+                                    <small class="text-dark opacity-75 d-block fw-semibold">{{ $leaderboard[0]->user->division->name ?? '-' }}</small>
+                                    <div class="stat-pill gold mt-2">
+                                        <i class="mdi mdi-trophy me-1"></i>{{ $leaderboard[0]->total_attendance }} Hadir
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -233,55 +251,60 @@
 
                         {{-- JUARA 3 (BRONZE) --}}
                         @if(isset($leaderboard[2]))
-                        <div class="col-4 col-md-3 order-3 order-md-3 podium-item">
-                            <div class="podium-rank rank-3">
-                                <div class="avatar-wrapper bronze">
-                                    <span class="rank-badge">3</span>
-                                    @if($leaderboard[2]->user->profile_photo_path)
-                                        <img src="{{ Storage::url($leaderboard[2]->user->profile_photo_path) }}" alt="Profile" class="podium-avatar">
-                                    @else
-                                        <div class="podium-avatar-placeholder">{{ substr($leaderboard[2]->user->name, 0, 1) }}</div>
-                                    @endif
-                                </div>
-                                <div class="podium-info mt-2">
-                                    <h6 class="fw-bold mb-0 text-truncate">{{ $leaderboard[2]->user->name }}</h6>
-                                    <small class="text-muted d-block" style="font-size: 11px;">{{ $leaderboard[2]->user->division->name ?? '-' }}</small>
-                                    <span class="badge bg-warning bg-opacity-10 text-warning mt-1 border border-warning border-opacity-25" style="color: #A0522D !important;">
-                                        <i class="mdi mdi-check-decagram me-1"></i>{{ $leaderboard[2]->total_attendance }} Verified
-                                    </span>
+                        <div class="col-4 col-md-3 order-3 podium-step-container">
+                            <div class="podium-avatar-wrapper bronze-glow delay-400">
+                                <div class="rank-circle bronze">3</div>
+                                @if($leaderboard[2]->user->profile_photo_path)
+                                    <img src="{{ Storage::url($leaderboard[2]->user->profile_photo_path) }}" class="luxury-avatar">
+                                @else
+                                    <div class="luxury-avatar-placeholder bronze-gradient">{{ substr($leaderboard[2]->user->name, 0, 1) }}</div>
+                                @endif
+                            </div>
+
+                            <div class="podium-block bronze-block">
+                                <div class="podium-content">
+                                    <h6 class="fw-bold text-truncate w-100 mb-0">{{ explode(' ', $leaderboard[2]->user->name)[0] }}</h6>
+                                    <small class="text-muted d-block small-font">{{ $leaderboard[2]->user->division->name ?? '-' }}</small>
+                                    <div class="stat-pill mt-2">
+                                        <i class="mdi mdi-check-circle text-success me-1"></i>{{ $leaderboard[2]->total_attendance }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         @endif
+
                     </div>
-                    
-                    {{-- LIST JUARA 4 & 5 --}}
+
                     @if(count($leaderboard) > 3)
-                    <div class="mt-4 pt-3 border-top">
-                        <div class="row justify-content-center">
-                             @foreach($leaderboard as $index => $winner)
-                                @if($index > 2)
-                                    <div class="col-md-6 mb-2">
-                                        <div class="d-flex align-items-center p-2 rounded bg-light border hover-scale">
-                                            <span class="fw-bold text-muted me-3 ms-2" style="width: 20px;">#{{ $index + 1 }}</span>
-                                            @if($winner->user->profile_photo_path)
-                                                <img src="{{ Storage::url($winner->user->profile_photo_path) }}" class="rounded-circle me-3" width="35" height="35" style="object-fit: cover;">
-                                            @else
-                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-3" style="width: 35px; height: 35px; font-size: 12px;">{{ substr($winner->user->name, 0, 1) }}</div>
-                                            @endif
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-0 fs-6">{{ $winner->user->name }}</h6>
-                                                <small class="text-muted">{{ $winner->user->division->name ?? '-' }}</small>
-                                            </div>
-                                            <div class="text-end me-2">
-                                                <span class="badge bg-light text-dark border">
-                                                    {{ $winner->total_attendance }} Verified
-                                                </span>
+                    <div class="row justify-content-center mt-3">
+                        <div class="col-lg-10">
+                            <div class="runner-up-container">
+                                @foreach($leaderboard as $index => $winner)
+                                    @if($index > 2)
+                                        <div class="runner-up-item hover-scale">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rank-number">#{{ $index + 1 }}</div>
+                                                <div class="ms-3 me-3">
+                                                    @if($winner->user->profile_photo_path)
+                                                        <img src="{{ Storage::url($winner->user->profile_photo_path) }}" class="rounded-circle runner-avatar shadow-sm">
+                                                    @else
+                                                        <div class="rounded-circle runner-avatar-placeholder">{{ substr($winner->user->name, 0, 1) }}</div>
+                                                    @endif
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-0 fw-bold text-dark">{{ $winner->user->name }}</h6>
+                                                    <small class="text-muted">{{ $winner->user->division->name ?? '-' }}</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge rounded-pill bg-light text-dark border">
+                                                        {{ $winner->total_attendance }} Verified
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                @endif
-                             @endforeach
+                                    @endif
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                     @endif
@@ -487,18 +510,18 @@
                                         <div class="row g-2">
                                             <div class="col-6">
                                                 <a href="{{ route('self.attend.create') }}"
-                                                    class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 shadow-sm hover-scale">
+                                                   class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 shadow-sm hover-scale">
                                                     <i class="mdi mdi-camera-party-mode fs-4 mb-1"></i>
                                                     <span>Pulang (Lembur)</span>
                                                 </a>
                                             </div>
                                             <div class="col-6">
                                                 <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
-                                                    method="POST" class="h-100">
+                                                      method="POST" class="h-100">
                                                     @csrf
                                                     <button type="submit"
-                                                        class="btn btn-warning btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 text-dark shadow-sm hover-scale"
-                                                        onclick="return confirm('Pilih ini jika Anda KEMARIN LUPA absen pulang.\nSesi kemarin akan ditutup otomatis tanpa foto.\n\nLanjutkan?');">
+                                                            class="btn btn-warning btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 text-dark shadow-sm hover-scale"
+                                                            onclick="return confirm('Pilih ini jika Anda KEMARIN LUPA absen pulang.\nSesi kemarin akan ditutup otomatis tanpa foto.\n\nLanjutkan?');">
                                                         <i class="mdi mdi-skip-forward fs-4 mb-1"></i>
                                                         <span>Lewati (Lupa)</span>
                                                     </button>
@@ -507,7 +530,7 @@
                                         </div>
                                     @else
                                         <a href="{{ route('self.attend.create') }}"
-                                            class="btn btn-danger btn-sm w-100 shadow hover-scale">
+                                           class="btn btn-danger btn-sm w-100 shadow hover-scale">
                                             <i class="mdi mdi-logout me-1"></i>
                                             Absen Pulang Mandiri
                                         </a>
@@ -554,7 +577,7 @@
                                     @if($myLeaveToday->type == 'wfh' && $myLeaveToday->file_proof)
                                         <div class="mt-2">
                                             <button type="button" class="btn btn-sm btn-light border shadow-sm" 
-                                                onclick="window.open('{{ Storage::url($myLeaveToday->file_proof) }}', '_blank')">
+                                                    onclick="window.open('{{ Storage::url($myLeaveToday->file_proof) }}', '_blank')">
                                                 <i class="mdi mdi-image-area me-1"></i>Lihat Bukti WFH
                                             </button>
                                         </div>
@@ -566,11 +589,11 @@
                                 <div class="mt-3 pt-3 border-top text-center">
                                     <p class="small text-muted mb-2">Sudah kembali bekerja di kantor?</p>
                                     <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}"
-                                        method="POST">
+                                          method="POST">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" class="btn btn-primary btn-sm w-100 shadow-sm hover-scale"
-                                            onclick="return confirm('Apakah Anda yakin ingin mengakhiri status ini?');">
+                                                onclick="return confirm('Apakah Anda yakin ingin mengakhiri status ini?');">
                                             <i class="mdi mdi-briefcase-check me-2"></i>Saya Masuk Kantor Sekarang
                                         </button>
                                     </form>
@@ -580,7 +603,7 @@
                             @if ($myLeaveToday->type == 'telat' && $myLeaveToday->status == 'approved')
                                 <div class="mt-3 pt-3 border-top text-center">
                                     <form action="{{ route('leave-requests.cancel', $myLeaveToday->id) }}" method="POST"
-                                        class="d-inline">
+                                          class="d-inline">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="btn btn-dark btn-sm w-100 shadow-sm hover-scale">
                                             <i class="mdi mdi-fingerprint me-2"></i>Absen Sekarang
@@ -685,125 +708,301 @@
 
 @push('styles')
     <style>
-        /* === LEADERBOARD STYLES (NEW) === */
-        .podium-container {
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            height: 250px;
-        }
-
-        .podium-item {
-            display: flex;
-            justify-content: center;
-        }
-
-        .podium-rank {
+        /* === LUXURY LEADERBOARD STYLES (NEW) === */
+        
+        /* 1. Card Container & Background */
+        .luxury-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
             position: relative;
-            text-align: center;
-            transition: transform 0.3s ease;
+            transition: all 0.4s ease;
         }
 
-        .podium-rank:hover {
-            transform: translateY(-5px);
+        .luxury-bg-glow {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 223, 0, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+            animation: rotateGlow 20s linear infinite;
+            z-index: 0;
+            pointer-events: none;
         }
 
-        .avatar-wrapper {
-            position: relative;
-            display: inline-block;
-            border-radius: 50%;
-            padding: 4px;
-            background: #fff;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        .luxury-bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(#E1E1E1 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+            z-index: 0;
         }
 
-        /* Gold Ring */
-        .avatar-wrapper.gold {
-            background: linear-gradient(135deg, #FFD700, #FDB931);
-            width: 100px;
-            height: 100px;
-        }
-        .avatar-wrapper.gold .podium-avatar, .avatar-wrapper.gold .podium-avatar-placeholder {
-            width: 92px; height: 92px; border: 3px solid white;
+        @keyframes rotateGlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        /* Silver Ring */
-        .avatar-wrapper.silver {
-            background: linear-gradient(135deg, #E0E0E0, #BDBDBD);
-            width: 80px;
-            height: 80px;
-        }
-        .avatar-wrapper.silver .podium-avatar, .avatar-wrapper.silver .podium-avatar-placeholder {
-            width: 72px; height: 72px; border: 3px solid white;
-        }
-
-        /* Bronze Ring */
-        .avatar-wrapper.bronze {
-            background: linear-gradient(135deg, #CD7F32, #A0522D);
-            width: 80px;
-            height: 80px;
-        }
-        .avatar-wrapper.bronze .podium-avatar, .avatar-wrapper.bronze .podium-avatar-placeholder {
-            width: 72px; height: 72px; border: 3px solid white;
-        }
-
-        .podium-avatar {
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .podium-avatar-placeholder {
-            border-radius: 50%;
-            background-color: #f0f0f0;
-            color: #888;
-            font-weight: bold;
+        .icon-box-luxury {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #FFF8E1, #FFF3C4);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.15);
         }
 
-        .rank-badge {
+        .glass-badge {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #444;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+
+        /* 2. Podium Layout */
+        .podium-luxury-container {
+            min-height: 280px;
+            margin-bottom: -30px; /* Overlap with block below */
+        }
+
+        .podium-step-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 3. Avatars & Glows */
+        .podium-avatar-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .podium-avatar-wrapper:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .luxury-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .luxury-avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Winner Specifics */
+        .main-winner {
+            z-index: 10;
+        }
+        .main-winner .luxury-avatar, .main-winner .luxury-avatar-placeholder {
+            width: 110px;
+            height: 110px;
+            border-width: 5px;
+        }
+
+        .crown-floating {
+            position: absolute;
+            top: -55px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-5deg);
+            animation: floatCrown 3s ease-in-out infinite;
+            z-index: 20;
+            filter: drop-shadow(0 5px 15px rgba(255, 215, 0, 0.4));
+        }
+
+        @keyframes floatCrown {
+            0%, 100% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+            50% { transform: translateX(-50%) translateY(-10px) rotate(0deg); }
+        }
+
+        /* Glow Effects */
+        .gold-glow::before {
+            content: '';
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+            z-index: -1;
+            animation: pulseGlow 2s infinite;
+        }
+
+        /* Gradients */
+        .gold-gradient { background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); }
+        .silver-gradient { background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%); }
+        .bronze-gradient { background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%); }
+
+        /* Rank Circles */
+        .rank-circle {
             position: absolute;
             bottom: -5px;
             left: 50%;
             transform: translateX(-50%);
-            background: #1a1a1a;
-            color: white;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 800;
+            font-size: 14px;
+            color: white;
             border: 2px solid white;
-            z-index: 2;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 5;
+        }
+        .rank-circle.gold { background: #FDB931; }
+        .rank-circle.silver { background: #A9A9A9; }
+        .rank-circle.bronze { background: #A0522D; }
+
+        /* 4. Podium Blocks (The Steps) */
+        .podium-block {
+            width: 100%;
+            border-radius: 16px 16px 0 0;
+            padding: 20px 10px;
+            position: relative;
+            margin: 0 5px;
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%); /* Tapered shape */
+            backdrop-filter: blur(5px);
         }
 
-        .crown-icon {
+        .gold-block {
+            height: 160px;
+            background: linear-gradient(180deg, rgba(255, 236, 179, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-top: 4px solid #FFD700;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);
+        }
+        
+        .silver-block {
+            height: 120px;
+            background: linear-gradient(180deg, rgba(245, 245, 245, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-top: 4px solid #C0C0C0;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .bronze-block {
+            height: 100px;
+            background: linear-gradient(180deg, rgba(239, 219, 207, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-top: 4px solid #CD7F32;
+            box-shadow: 0 10px 20px rgba(160, 82, 45, 0.05);
+        }
+
+        .podium-content {
+            transform: translateY(10px);
+        }
+
+        .stat-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #fff;
+            color: #555;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .stat-pill.gold {
+            background: linear-gradient(45deg, #FFD700, #FDB931);
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+        }
+
+        /* 5. Runner Up List */
+        .runner-up-container {
+            background: #fff;
+            border-radius: 16px;
+            padding: 10px;
+            /* border: 1px solid #f0f0f0; */
+        }
+
+        .runner-up-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #f1f3f5;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .runner-up-item:hover {
+            border-color: #FFD700;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transform: translateX(5px);
+        }
+
+        .rank-number {
+            font-family: 'Consolas', monospace;
+            font-weight: 900;
+            font-size: 18px;
+            color: #d1d1d1;
+            width: 30px;
+        }
+
+        .runner-avatar {
+            width: 40px; height: 40px; object-fit: cover;
+        }
+        
+        .runner-avatar-placeholder {
+            width: 40px; height: 40px;
+            background: #eee; color: #888;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+        }
+
+        /* 6. Sparkles */
+        .sparkle {
             position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%) rotate(-10deg);
-            font-size: 28px;
-            z-index: 3;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+            z-index: 20;
+            box-shadow: 0 0 5px #fff, 0 0 10px #FFD700;
+        }
+        .s1 { width: 4px; height: 4px; top: 0; left: 10%; animation-delay: 0.5s; }
+        .s2 { width: 6px; height: 6px; top: 10%; right: 0; animation-delay: 1s; }
+        .s3 { width: 3px; height: 3px; bottom: 10px; left: -5px; animation-delay: 1.5s; }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
 
-        .animate-bounce {
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0) rotate(-10deg);}
-            40% {transform: translateX(-50%) translateY(-10px) rotate(-10deg);}
-            60% {transform: translateX(-50%) translateY(-5px) rotate(-10deg);}
-        }
+        /* Small utilities */
+        .small-font { font-size: 11px; }
 
 
-        /* === NEW ANIMATIONS & INTERACTIVE STYLES === */
+        /* === EXISTING STYLES === */
         
         /* 1. Entrance Animation (Slide Up Fade) */
         @keyframes fadeInUp {
@@ -867,7 +1066,7 @@
             transition: transform 0.2s ease;
         }
         .hover-scale:hover {
-            transform: scale(1.05);
+            transform: scale(1.02);
         }
         
         .scale-on-hover:hover {
@@ -889,8 +1088,7 @@
             border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
-        /* === EXISTING & REFINED STYLES === */
-        
+        /* 6. Card Bank Styles */
         .card-bank {
             position: relative;
             min-height: 200px;
@@ -898,10 +1096,8 @@
             overflow: hidden;
             border: none;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-            /* CSS 3D Tilt dihapus */
         }
 
-        /* Transform removed */
         .card-bank .card-body {
             position: relative;
             z-index: 2;
@@ -982,7 +1178,6 @@
             display: flex;
             flex-direction: column;
             font-family: 'Roboto', sans-serif;
-            /* CSS 3D Tilt dihapus */
         }
 
         .card-id .card-body {
@@ -994,7 +1189,7 @@
             justify-content: space-between;
             flex-grow: 1;
             gap: 15px;
-            background: rgba(255,255,255,0.05); /* Sedikit tekstur */
+            background: rgba(255,255,255,0.05);
         }
 
         .card-id-header {
@@ -1076,7 +1271,6 @@
 
         .badge { border-radius: 8px; font-weight: 600; padding: 6px 12px; }
         
-        /* Buttons Redesign */
         .btn { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .btn:active { transform: scale(0.95); }
 
@@ -1094,6 +1288,13 @@
             .id-card-img, .id-card-img-placeholder { width: 50px; height: 60px; }
             #greeting-text { font-size: 0.8rem; }
             h3.fw-bold { font-size: 1.5rem; }
+            
+            /* Responsive Podium */
+            .luxury-avatar, .luxury-avatar-placeholder { width: 60px; height: 60px; font-size: 20px; }
+            .main-winner .luxury-avatar, .main-winner .luxury-avatar-placeholder { width: 80px; height: 80px; }
+            .crown-floating { top: -45px; }
+            .crown-floating img { width: 40px; }
+            .podium-block { height: auto; min-height: 80px; }
         }
     </style>
 @endpush
@@ -1103,8 +1304,6 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    {{-- Vanilla Tilt REMOVED --}}
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             
