@@ -248,12 +248,12 @@
                                 <tbody>
                                     @foreach ($history as $att)
                                         @php
-                                            // --- LOGIKA SNAPSHOT VS CURRENT SCHEDULE ---
-                                            // 1. Coba ambil dari History (Snapshot) jika kolom ada
+                                            // --- [UPDATE LOGIC] SNAPSHOT JADWAL VS PROFILE SEKARANG ---
+                                            // 1. Coba ambil dari History (Snapshot) jika ada di database
                                             $fixedScheduleIn  = $att->scheduled_check_in ?? null;
                                             $fixedScheduleOut = $att->scheduled_check_out ?? null;
                                             
-                                            // 2. Jika Snapshot kosong, ambil dari User Profile (Current)
+                                            // 2. Jika Snapshot NULL (Data Lama), ambil dari User Profile (Current)
                                             if (!$fixedScheduleIn && $att->user) {
                                                 $fixedScheduleIn = $att->user->check_in_start;
                                             }
@@ -273,7 +273,7 @@
                                             $isRealLate = false;
                                             $lateStr = ''; 
 
-                                            // Hanya hitung jika bukan izin/leave
+                                            // Hanya hitung jika bukan izin/leave dan ada jadwal
                                             if ($fixedScheduleIn && $att->attendance_type != 'leave') {
                                                 $actualStr = $att->check_in_time->format('H:i');
                                                 $scheduleStr = \Carbon\Carbon::parse($fixedScheduleIn)->format('H:i');
@@ -296,7 +296,7 @@
                                                 <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">{{ $att->check_in_time->format('l') }}</small>
                                             </td>
 
-                                            {{-- JAM MASUK (MODIFIED) --}}
+                                            {{-- JAM MASUK (MODIFIED DENGAN JADWAL) --}}
                                             <td>
                                                 <div class="d-flex flex-column">
                                                     <div class="d-flex align-items-center">
@@ -361,7 +361,7 @@
                                                 </div>
                                             </td>
 
-                                            {{-- JAM PULANG (MODIFIED) --}}
+                                            {{-- JAM PULANG (MODIFIED DENGAN JADWAL) --}}
                                             <td class="border-start bg-light bg-opacity-25">
                                                 <div class="d-flex flex-column">
                                                     @if ($att->check_out_time)

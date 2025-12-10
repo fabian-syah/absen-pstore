@@ -86,7 +86,7 @@ class AttendanceHistoryController extends Controller
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
         // 1. AMBIL DATA ABSENSI ASLI
-        // UPDATE: Tambahkan 'user' di with() agar bisa diakses di Blade untuk fallback jadwal
+        // [UPDATE PENTING]: Tambahkan 'user' di with() agar bisa diakses di Blade untuk fallback jadwal jika snapshot NULL
         $attendances = Attendance::with(['verifier', 'scanner', 'user']) 
             ->where('user_id', $user->id)
             ->whereYear('check_in_time', $selectedYear)
@@ -94,7 +94,7 @@ class AttendanceHistoryController extends Controller
             ->orderBy('check_in_time', 'desc')
             ->get();
 
-        // 2. DATA IZIN (Menggunakan relasi 'verifier' yang baru dibuat di Model)
+        // 2. DATA IZIN
         $leaves = LeaveRequest::with('verifier') 
             ->where('user_id', $user->id)
             ->where('status', 'approved')
@@ -142,16 +142,14 @@ class AttendanceHistoryController extends Controller
                         $fakeAtt->photo_out_path = null;
                         $fakeAtt->audit_photo_path = null;
                         $fakeAtt->audit_note = "Pengajuan: " . $leave->reason;
-                        $fakeAtt->latitude = null; // Tidak ada lokasi untuk izin
+                        $fakeAtt->latitude = null; 
                         $fakeAtt->longitude = null;
                         
-                        // Set Relasi agar bisa dipanggil di View
+                        // Set Relasi
                         $fakeAtt->setRelation('leaveRequest', $leave);
-                        
-                        // Mapping Verifier Izin ke Verifier Attendance
                         $fakeAtt->setRelation('verifier', $leave->verifier); 
                         
-                        // Set Relasi User (Penting untuk fallback jadwal)
+                        // [UPDATE PENTING] Set Relasi User agar Blade tidak error saat cek jadwal
                         $fakeAtt->setRelation('user', $user);
 
                         $historyCollection->push($fakeAtt);
@@ -211,6 +209,7 @@ class AttendanceHistoryController extends Controller
         $workSchedule = WorkSchedule::getScheduleForUser($attendance->user_id);
         $isLate = $attendance->is_late_checkin;
         
+        // Logika hitung telat manual saat audit update
         if ($newCheckIn->format('Y-m-d') >= '2025-12-01') {
             if ($workSchedule && $request->presence_status == 'Masuk') {
                 $scheduleStart = Carbon::parse($originalDate . ' ' . $workSchedule->check_in_end);
