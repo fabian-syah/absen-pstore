@@ -130,9 +130,7 @@ class DashboardController extends Controller
                 if ($user->role === 'admin') {
                     // ADMIN: GLOBAL (Tidak ada filter branch, lihat semua)
                 } else {
-                    // AUDIT, USER BIASA, SECURITY, LEADER: 
-                    // Sekarang Audit ikut logika cabang utama (lokasi kerja), 
-                    // jadi dia bersaing dengan orang di kantor fisiknya, bukan cabang yang diaudit.
+                    // AUDIT, USER BIASA, SECURITY, LEADER
                     $q->where('branch_id', $user->branch_id);
                 }
             })
@@ -142,6 +140,12 @@ class DashboardController extends Controller
             ->take(5)
             ->with(['user', 'user.division'])
             ->get();
+
+        // =========================================================================
+        // [NEW] GAMIFICATION BADGES LOGIC
+        // =========================================================================
+        $data['badges'] = $this->calculateBadges($user->id);
+
 
         // 6. LOGIKA DASHBOARD PEKERJAAN
         if ($user->role == 'admin') {
@@ -173,6 +177,93 @@ class DashboardController extends Controller
     }
 
     // --- PRIVATE FUNCTIONS ---
+
+    // [NEW] FUNCTION HITUNG BADGES
+    private function calculateBadges($userId)
+    {
+        $badges = [];
+
+        // 1. EARLY BIRD (Absen sebelum 09:15 sebanyak 10x)
+        $earlyBirdCount = Attendance::where('user_id', $userId)
+            ->whereTime('check_in_time', '<=', '09:15:00')
+            ->count();
+        $badges['early_bird'] = [
+            'name' => 'Early Bird',
+            'desc' => 'Absen sebelum 09:15 (10x)',
+            'icon' => 'mdi-weather-sunset',
+            'color' => 'bg-gradient-success',
+            'achieved' => $earlyBirdCount >= 10,
+            'progress' => min($earlyBirdCount, 10),
+            'target' => 10
+        ];
+
+        // 2. NIGHT OWL (Lembur di atas jam 22:00/10:00PM sebanyak 5x)
+        $nightOwlCount = Attendance::where('user_id', $userId)
+            ->whereNotNull('check_out_time')
+            ->whereTime('check_out_time', '>=', '22:00:00') // Format 24 Jam
+            ->count();
+        $badges['night_owl'] = [
+            'name' => 'Night Owl',
+            'desc' => 'Pulang setelah 22:00 (5x)',
+            'icon' => 'mdi-weather-night',
+            'color' => 'bg-gradient-primary', // atau warna gelap
+            'achieved' => $nightOwlCount >= 5,
+            'progress' => min($nightOwlCount, 5),
+            'target' => 5
+        ];
+
+        // 3. WEEKEND WARRIOR (Masuk di hari Sabtu/Minggu)
+        // Carbon dayOfWeek: 0 (Sunday) - 6 (Saturday)
+        $weekendCount = Attendance::where('user_id', $userId)
+            ->where(function($q) {
+                $q->whereRaw('DAYOFWEEK(check_in_time) = 1') // Minggu
+                  ->orWhereRaw('DAYOFWEEK(check_in_time) = 7'); // Sabtu
+            })
+            ->count();
+        $badges['weekend_warrior'] = [
+            'name' => 'Weekend Warrior',
+            'desc' => 'Lembur Weekend (3x)',
+            'icon' => 'mdi-sword-cross',
+            'color' => 'bg-gradient-danger',
+            'achieved' => $weekendCount >= 3,
+            'progress' => min($weekendCount, 3),
+            'target' => 3
+        ];
+
+        // 4. PERFECT MONTH (Bulan ini tidak pernah telat & tidak ada izin)
+        // Kita cek bulan ini saja
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $endOfMonth = Carbon::now()->endOfMonth();
+        
+        $totalAttendanceThisMonth = Attendance::where('user_id', $userId)
+            ->whereBetween('check_in_time', [$startOfMonth, $endOfMonth])
+            ->count();
+        
+        $latesThisMonth = Attendance::where('user_id', $userId)
+            ->whereBetween('check_in_time', [$startOfMonth, $endOfMonth])
+            ->where('is_late_checkin', true)
+            ->exists();
+
+        $leavesThisMonth = LeaveRequest::where('user_id', $userId)
+            ->where('status', 'approved')
+            ->whereMonth('start_date', Carbon::now()->month)
+            ->exists();
+
+        // Asumsi minimal 20 hari kerja untuk dapat badge
+        $isPerfect = ($totalAttendanceThisMonth >= 5) && !$latesThisMonth && !$leavesThisMonth;
+
+        $badges['perfect_month'] = [
+            'name' => 'Perfect Month',
+            'desc' => '1 Bulan Full Tanpa Telat/Izin',
+            'icon' => 'mdi-star-face',
+            'color' => 'bg-gradient-warning', // Gold
+            'achieved' => $isPerfect,
+            'progress' => $totalAttendanceThisMonth, // Visual saja
+            'target' => 'Full'
+        ];
+
+        return $badges;
+    }
 
     private function getTodayLeaveRequest($user_id)
     {

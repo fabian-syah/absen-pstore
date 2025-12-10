@@ -348,6 +348,51 @@
     </div>
     @endif
 
+    {{-- ======================================================================= --}}
+    {{-- BAGIAN 1.5: GAMIFICATION / BADGES (INSERTED HERE)                       --}}
+    {{-- ======================================================================= --}}
+    @if(isset($badges))
+    <div class="row mb-4 animate-enter" style="animation-delay: 0.5s">
+        <div class="col-12">
+            <h5 class="fw-bold mb-3 d-flex align-items-center">
+                <i class="mdi mdi-medal-outline me-2 text-warning display-6"></i>
+                <span class="text-dark">Achievements</span>
+            </h5>
+            <div class="scrolling-wrapper d-flex flex-nowrap gap-3 overflow-auto pb-3" style="scroll-behavior: smooth;">
+                
+                @foreach($badges as $key => $badge)
+                    <div class="card card-badge {{ $badge['achieved'] ? 'active ' . ($key == 'perfect_month' ? 'gold-border' : '') : 'locked' }}" style="min-width: 160px; max-width: 160px;">
+                        <div class="card-body text-center p-3 d-flex flex-column h-100 justify-content-center">
+                            <div class="badge-icon {{ $badge['achieved'] ? $badge['color'] : 'bg-secondary' }} mb-2 position-relative">
+                                <i class="mdi {{ $badge['icon'] }} {{ $badge['achieved'] ? 'text-white' : 'text-white-50' }} fs-3"></i>
+                                @if(!$badge['achieved'])
+                                    <i class="mdi mdi-lock position-absolute top-0 end-0 text-dark p-1 bg-light rounded-circle shadow-sm" style="font-size: 10px;"></i>
+                                @endif
+                            </div>
+                            <h6 class="fw-bold mb-1 {{ $badge['achieved'] ? 'text-dark' : 'text-muted' }}" style="font-size: 12px;">{{ $badge['name'] }}</h6>
+                            <small class="text-muted d-block text-truncate" style="font-size: 10px;">{{ $badge['desc'] }}</small>
+                            
+                            {{-- Progress Bar Small --}}
+                            <div class="progress mt-2" style="height: 4px;">
+                                @php 
+                                    $percent = ($badge['target'] != 'Full' && $badge['target'] > 0) 
+                                                ? ($badge['progress'] / $badge['target']) * 100 
+                                                : ($badge['achieved'] ? 100 : 0);
+                                @endphp
+                                <div class="progress-bar {{ $badge['achieved'] ? 'bg-success' : 'bg-secondary' }}" role="progressbar" style="width: {{ $percent }}%"></div>
+                            </div>
+                            <small class="mt-1 d-block text-muted" style="font-size: 9px;">
+                                {{ $badge['progress'] }} / {{ $badge['target'] }}
+                            </small>
+                        </div>
+                    </div>
+                @endforeach
+
+            </div>
+        </div>
+    </div>
+    @endif
+
 
     {{-- ======================================================================= --}}
     {{-- BAGIAN 2: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI)                  --}}
@@ -741,6 +786,51 @@
 
 @push('styles')
     <style>
+        /* === GAMIFICATION BADGES CSS (NEW) === */
+        .card-badge { 
+            border-radius: 16px; 
+            border: 1px solid #f0f0f0; 
+            transition: transform 0.2s; 
+            background: #fff;
+        }
+        .card-badge.active:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+            border-color: #10b981; 
+        }
+        .card-badge.locked { 
+            opacity: 0.6; 
+            background: #f8f9fa; 
+            filter: grayscale(100%);
+        }
+        .badge-icon { 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 auto; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+        .bg-gradient-success { background: linear-gradient(135deg, #4ade80, #22c55e); }
+        .bg-gradient-warning { background: linear-gradient(135deg, #fcd34d, #f59e0b); }
+        .bg-gradient-primary { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .bg-gradient-danger  { background: linear-gradient(135deg, #f87171, #dc2626); }
+        
+        .gold-border { 
+            border: 2px solid #fcd34d; 
+            background: linear-gradient(180deg, #fff, #fffbeb); 
+        }
+
+        .scrolling-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+        .scrolling-wrapper::-webkit-scrollbar-thumb {
+            background-color: #ddd;
+            border-radius: 10px;
+        }
+
         /* === LUXURY LEADERBOARD STYLES (NEW) === */
         
         /* 1. Card Container & Background */
