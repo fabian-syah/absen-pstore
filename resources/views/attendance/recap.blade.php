@@ -58,6 +58,7 @@
             z-index: 1;
             background-size: cover;
             background-position: center;
+            pointer-events: none; /* Biar klik tembus ke navigasi */
         }
 
         .slide.active { opacity: 1; transform: scale(1); z-index: 10; }
@@ -97,18 +98,30 @@
         .progress-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; }
         .progress-fill { height: 100%; background: white; width: 0%; transition: width 0.1s linear; }
 
+        /* Navigasi Tap Area */
         .tap-area { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 15; cursor: pointer; }
         .left { left: 0; }
         .right { right: 0; }
 
+        /* FIXED: Tombol Share sekarang punya z-index lebih tinggi dari tap area */
         .action-btn {
-            position: absolute; bottom: 40px; z-index: 30;
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+            z-index: 100; /* Pastikan di atas tap area */
             background: var(--gold-gradient); color: black;
             border: none; padding: 15px 30px; border-radius: 50px;
             font-weight: bold; font-size: 1rem; cursor: pointer;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
             display: none; text-decoration: none;
             display: flex; align-items: center; gap: 10px;
+            pointer-events: auto; /* Pastikan bisa diklik */
+            white-space: nowrap;
+        }
+
+        .back-link {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            color: white; opacity: 0.5; text-decoration: none; font-size: 0.9rem;
+            z-index: 100; /* Pastikan di atas tap area */
+            pointer-events: auto;
         }
 
         .sparkle {
@@ -141,6 +154,14 @@
 
         <div class="tap-area left" onclick="prevSlide()"></div>
         <div class="tap-area right" onclick="nextSlide()"></div>
+
+        <button class="action-btn" onclick="downloadImage()" id="shareBtn">
+            <i class="mdi mdi-share-variant"></i> Simpan / Share
+        </button>
+        
+        <a href="{{ route('dashboard') }}" class="back-link">
+            Kembali ke Dashboard
+        </a>
 
         <div class="slide active bg-gradient-1" id="slide1">
             <div style="font-size: 5rem;">👋</div>
@@ -207,14 +228,6 @@
                     PSTORE ATTENDANCE WRAPPED
                 </div>
             </div>
-            
-            <button class="action-btn" onclick="downloadImage()" id="shareBtn" style="bottom: 80px;">
-                <i class="mdi mdi-share-variant"></i> Simpan / Share
-            </button>
-            
-            <a href="{{ route('dashboard') }}" style="position:absolute; bottom: 30px; color: white; opacity: 0.5; text-decoration: none; font-size: 0.9rem; z-index: 40;">
-                Kembali ke Dashboard
-            </a>
         </div>
     </div>
 
@@ -236,11 +249,16 @@
                 else fill.style.width = '0%';
             });
             
+            // Show share button only on last slide
             const shareBtn = document.getElementById('shareBtn');
+            const backLink = document.querySelector('.back-link');
+            
             if(index === totalSlides - 1) {
                 shareBtn.style.display = 'flex';
+                backLink.style.display = 'block';
             } else {
                 shareBtn.style.display = 'none';
+                backLink.style.display = 'none';
             }
         }
 
@@ -277,7 +295,12 @@
             const element = document.getElementById('capture-area');
             const btn = document.getElementById('shareBtn');
             btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Memproses...';
-            html2canvas(element, { scale: 2, backgroundColor: null, useCORS: true }).then(canvas => {
+            
+            html2canvas(element, { 
+                scale: 2, 
+                backgroundColor: null, 
+                useCORS: true 
+            }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = 'My-Work-Wrapped-2025.png';
                 link.href = canvas.toDataURL('image/png');
