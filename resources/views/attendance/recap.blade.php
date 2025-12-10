@@ -163,7 +163,7 @@
 <body>
 
     <audio id="bgMusic" loop>
-        <source src="{{ asset('music/song.mp3') }}" type="audio/mpeg">
+        <source src="{{ asset('public/music/song.mp3') }}" type="audio/mpeg">
     </audio>
 
     <div id="story-container">
