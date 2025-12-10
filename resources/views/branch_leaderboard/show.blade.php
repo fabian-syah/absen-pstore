@@ -177,43 +177,136 @@
 
 @push('styles')
 <style>
-    /* ANIMATIONS */
+    /* ================= ANIMATIONS ================= */
     .animate-enter { animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
     .animate-bounce { animation: bounce 2s infinite; }
-    @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0) rotate(-10deg);} 40% {transform: translateX(-50%) translateY(-10px) rotate(-10deg);} 60% {transform: translateX(-50%) translateY(-5px) rotate(-10deg);} }
+    @keyframes bounce { 
+        0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0) rotate(-10deg);} 
+        40% {transform: translateX(-50%) translateY(-10px) rotate(-10deg);} 
+        60% {transform: translateX(-50%) translateY(-5px) rotate(-10deg);} 
+    }
 
-    /* PODIUM LAYOUT */
-    .podium-container { display: flex; align-items: flex-end; justify-content: center; gap: 15px; padding-bottom: 20px; }
+    /* ================= PODIUM LAYOUT ================= */
+    .podium-container { 
+        display: flex; 
+        align-items: flex-end; 
+        justify-content: center; 
+        gap: 15px; 
+        padding-bottom: 20px; 
+    }
     .podium-col { width: 30%; max-width: 250px; display: flex; justify-content: center; }
     .podium-user { width: 100%; display: flex; flex-direction: column; align-items: center; position: relative; }
 
-    /* AVATAR RINGS */
-    .avatar-ring { position: relative; border-radius: 50%; padding: 5px; display: inline-block; box-shadow: 0 10px 20px rgba(0,0,0,0.15); transition: transform 0.3s; }
+    /* ================= AVATAR RINGS (UPDATED FOR CENTERING) ================= */
+    .avatar-ring { 
+        position: relative; 
+        border-radius: 50%; 
+        display: flex;              /* KUNCI: Flexbox agar gambar pas di tengah */
+        justify-content: center;    /* Center Horizontal */
+        align-items: center;        /* Center Vertical */
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15); 
+        transition: transform 0.3s; 
+        aspect-ratio: 1 / 1;        /* Menjaga bentuk agar selalu bulat sempurna */
+    }
+    
     .podium-user:hover .avatar-ring { transform: scale(1.05); }
-    .user-img, .user-placeholder { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 4px solid white; }
-    .user-placeholder { background: #eee; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: #888; }
 
-    /* SPECIFIC COLORS */
+    /* Gambar mengikuti ukuran Ring dikurangi padding */
+    .user-img, .user-placeholder { 
+        width: 100% !important;     /* Responsive mengikuti induk */
+        height: 100% !important;    /* Responsive mengikuti induk */
+        border-radius: 50%; 
+        object-fit: cover; 
+        border: 4px solid #ffffff;  /* Border putih pemisah gambar dan ring */
+        background-color: #fff;     /* Mencegah transparansi jika loading */
+    }
+
+    .user-placeholder { 
+        background: #eee; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 24px; 
+        font-weight: bold; 
+        color: #888; 
+    }
+
+    /* ================= COLORS ================= */
     .gold { background: linear-gradient(135deg, #FFD700, #FDB931); }
     .silver { background: linear-gradient(135deg, #E0E0E0, #BDBDBD); }
     .bronze { background: linear-gradient(135deg, #CD7F32, #A0522D); }
 
-    /* SIZES */
-    .rank-1 .avatar-ring { width: 110px; height: 110px; padding: 6px; }
-    .rank-1 .user-img, .rank-1 .user-placeholder { width: 98px; height: 98px; }
-    .rank-2 .avatar-ring, .rank-3 .avatar-ring { width: 90px; height: 90px; }
-
-    /* BADGES & ICONS */
-    .rank-badge { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); width: 28px; height: 28px; background: #222; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid white; z-index: 5; }
-    .crown-icon { position: absolute; top: -35px; left: 50%; transform: translateX(-50%) rotate(-10deg); font-size: 32px; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    /* ================= SIZES (RESPONSIVE) ================= */
+    /* Padding di sini menentukan ketebalan cincin gradasi */
     
-    /* === PERBAIKAN FINAL STAT BADGE === */
+    /* Rank 1 (Gold) */
+    .rank-1 .avatar-ring { 
+        width: 120px;   /* Ukuran total lingkaran */
+        height: 120px; 
+        padding: 6px;   /* Ketebalan ring emas */
+    }
+
+    /* Rank 2 & 3 (Silver & Bronze) */
+    .rank-2 .avatar-ring, 
+    .rank-3 .avatar-ring { 
+        width: 95px; 
+        height: 95px; 
+        padding: 5px;   /* Ketebalan ring silver/bronze */
+    }
+
+    /* ================= MOBILE RESPONSIVE ================= */
+    @media (max-width: 768px) {
+        .podium-container { gap: 5px; }
+        
+        /* Perkecil ukuran saat di HP */
+        .rank-1 .avatar-ring { width: 90px; height: 90px; padding: 4px; }
+        .rank-2 .avatar-ring, 
+        .rank-3 .avatar-ring { width: 70px; height: 70px; padding: 3px; }
+
+        .crown-icon { font-size: 24px; top: -25px; }
+        .winner-label { display: none; } /* Hide label champion di HP agar rapi */
+        .stat-badge { font-size: 10px; padding: 4px 10px; }
+        .user-info h5 { font-size: 14px; }
+        .user-info h6 { font-size: 12px; }
+    }
+
+    /* ================= BADGES & ICONS ================= */
+    .rank-badge { 
+        position: absolute; 
+        bottom: -5px; 
+        left: 50%; 
+        transform: translateX(-50%); 
+        width: 28px; 
+        height: 28px; 
+        background: #222; 
+        color: white; 
+        border-radius: 50%; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-weight: bold; 
+        font-size: 14px; 
+        border: 2px solid white; 
+        z-index: 5; 
+    }
+    .crown-icon { 
+        position: absolute; 
+        top: -35px; 
+        left: 50%; 
+        transform: translateX(-50%) rotate(-10deg); 
+        font-size: 32px; 
+        z-index: 10; 
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); 
+    }
+    
+    /* ================= STAT BADGES ================= */
     .stat-badge { 
         display: inline-block; 
-        padding: 8px 16px;
+        padding: 6px 14px;
         border-radius: 20px; 
-        font-size: 12px; 
+        font-size: 11px; 
         font-weight: 800 !important;
         margin-top: 8px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -221,51 +314,32 @@
         letter-spacing: 0.5px;
         position: relative;
         z-index: 10;
-        text-shadow: none !important;
     }
 
-    /* Rank 1 (Gold): Background Emas, Teks Gelap */
     .stat-badge.bg-warning {
         background: #FFD700 !important;
-        background-color: #FFD700 !important;
         color: #000000 !important;
         border: 2px solid #daa520;
-        text-shadow: 0 1px 2px rgba(255,255,255,0.5) !important;
     }
-
-    /* Rank 2 (Silver): Background Abu Gelap, Teks Putih */
     .stat-badge.bg-secondary {
         background: #495057 !important;
-        background-color: #495057 !important;
         color: #ffffff !important;
         border: 2px solid #6c757d;
     }
-
-    /* Rank 3 (Bronze): Background Coklat, Teks Putih */
     .stat-badge.border-warning {
         background: #a0522d !important;
-        background-color: #a0522d !important;
         color: #ffffff !important;
         border: 2px solid #cd853f !important;
     }
 
-    /* PODIUM BLOCKS */
+    /* ================= PODIUM BLOCKS ================= */
     .podium-block { width: 100%; border-radius: 12px 12px 0 0; margin-top: 15px; position: relative; }
     .gold-block { height: 140px; background: linear-gradient(to bottom, #FFD700, #ffec8b); box-shadow: inset 0 -20px 40px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; }
     .silver-block { height: 100px; background: linear-gradient(to bottom, #E0E0E0, #f5f5f5); }
     .bronze-block { height: 70px; background: linear-gradient(to bottom, #CD7F32, #eabc94); }
-    
     .winner-label { color: #8a6d00; font-weight: 900; letter-spacing: 2px; font-size: 18px; opacity: 0.5; transform: rotate(-90deg); position: absolute; bottom: 40px; }
 
-    /* TABLE */
+    /* ================= TABLE ================= */
     .rank-circle { width: 30px; height: 30px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-
-    @media (max-width: 768px) {
-        .podium-container { gap: 5px; }
-        .user-img, .user-placeholder { width: 60px; height: 60px; }
-        .rank-1 .user-img { width: 70px; height: 70px; }
-        .rank-1 .avatar-ring { width: 82px; height: 82px; }
-        .avatar-ring { width: 72px; height: 72px; }
-    }
 </style>
 @endpush
