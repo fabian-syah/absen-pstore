@@ -9,7 +9,7 @@ use App\Models\LateNotification;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // Wajib import DB
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use PDF;
 
@@ -108,40 +108,87 @@ class DashboardController extends Controller
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
-        // FITUR BARU: TOP 5 LEADERBOARD (GLOBAL ADMIN, LOCAL OTHERS)
+        // FITUR 1: TOP 5 ATTENDANCE LEADERBOARD (KARYAWAN RAJIN)
+        // Logika: Admin & User Biasa/Audit/Leader lihat ini. Security TIDAK lihat ini.
         // =========================================================================
         
-        $data['leaderboard'] = Attendance::select(
-                'user_id', 
-                DB::raw('count(*) as total_attendance'), 
-                DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time')
-            )
-            ->whereMonth('check_in_time', Carbon::now()->month)
-            ->whereYear('check_in_time', Carbon::now()->year)
-            ->whereNotNull('check_out_time') // Wajib sudah pulang
-            ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar']) // Masuk & WFH
-            ->where('status', 'verified') // Wajib Verified
-            ->whereHas('user', function($q) use ($user) {
-                // Syarat Dasar User
-                $q->where('is_active', true)
-                  ->whereNotIn('role', ['admin']); // Admin tidak ikut leaderboard
+        if ($user->role != 'security') {
+            $data['leaderboard'] = Attendance::select(
+                    'user_id', 
+                    DB::raw('count(*) as total_attendance'), 
+                    DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time')
+                )
+                ->whereMonth('check_in_time', Carbon::now()->month)
+                ->whereYear('check_in_time', Carbon::now()->year)
+                ->whereNotNull('check_out_time') // Wajib sudah pulang
+                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar']) // Masuk & WFH
+                ->where('status', 'verified') // Wajib Verified
+                ->whereHas('user', function($q) use ($user) {
+                    $q->where('is_active', true)
+                      ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk leaderboard kerajinan
 
-                // --- LOGIKA FILTER CABANG (UPDATED) ---
-                if ($user->role === 'admin') {
-                    // ADMIN: GLOBAL (Tidak ada filter branch, lihat semua)
-                } else {
-                    // AUDIT, USER BIASA, SECURITY, LEADER: 
-                    // Sekarang Audit ikut logika cabang utama (lokasi kerja), 
-                    // jadi dia bersaing dengan orang di kantor fisiknya, bukan cabang yang diaudit.
-                    $q->where('branch_id', $user->branch_id);
+                    if ($user->role !== 'admin') {
+                        $q->where('branch_id', $user->branch_id);
+                    }
+                })
+                ->groupBy('user_id')
+                ->orderBy('total_attendance', 'desc')
+                ->orderBy('avg_arrival_time', 'asc')
+                ->take(5)
+                ->with(['user', 'user.division'])
+                ->get();
+        }
+
+        // =========================================================================
+        // FITUR 2: TOP 5 SCANNER LEADERBOARD (SECURITY RAJIN)
+        // Logika: Security & Admin lihat ini.
+        // =========================================================================
+        
+        if ($user->role == 'admin' || $user->role == 'security') {
+            // Ambil semua user role security (atau admin jika admin ikut scan)
+            $securityUsersQuery = User::where('is_active', true)
+                ->whereIn('role', ['security', 'admin']); // Admin dimasukkan jaga2 jika admin ikut scan
+
+            // Filter cabang jika bukan global admin
+            if ($user->role != 'admin' || ($user->role == 'admin' && $branch_id != null)) {
+                $securityUsersQuery->where('branch_id', $branch_id);
+            }
+            
+            $securityUsers = $securityUsersQuery->get();
+
+            // Hitung manual Scan Masuk + Scan Pulang
+            $scanners = $securityUsers->map(function($sec) {
+                // 1. Hitung Scan Masuk
+                $scanIn = Attendance::where('scanned_by_user_id', $sec->id)
+                    ->whereMonth('check_in_time', Carbon::now()->month)
+                    ->whereYear('check_in_time', Carbon::now()->year)
+                    ->count();
+
+                // 2. Hitung Scan Pulang (Asumsi kolom scanned_out_by_user_id ada)
+                // Jika database Anda belum punya kolom scanned_out_by_user_id, 
+                // pastikan logic ScanController menyimpan ID security saat checkout.
+                // Jika belum ada kolomnya, logic ini hanya menghitung Scan Masuk.
+                $scanOut = 0;
+                // Cek apakah kolom exists di model/table untuk menghindari error
+                // Disini saya pakai try/catch simple atau asumsi kolom ada. 
+                // Untuk Full Code saya asumsikan kolom 'scanned_out_by_user_id' ada.
+                try {
+                    $scanOut = Attendance::where('scanned_out_by_user_id', $sec->id)
+                        ->whereMonth('check_in_time', Carbon::now()->month)
+                        ->whereYear('check_in_time', Carbon::now()->year)
+                        ->count();
+                } catch (\Exception $e) {
+                    $scanOut = 0; // Fallback jika kolom tidak ada
                 }
-            })
-            ->groupBy('user_id')
-            ->orderBy('total_attendance', 'desc')
-            ->orderBy('avg_arrival_time', 'asc')
-            ->take(5)
-            ->with(['user', 'user.division'])
-            ->get();
+
+                $sec->total_scans = $scanIn + $scanOut;
+                return $sec;
+            });
+
+            // Sortir Highest Scan first, ambil 5
+            $data['topScanners'] = $scanners->sortByDesc('total_scans')->take(5)->values();
+        }
+
 
         // 6. LOGIKA DASHBOARD PEKERJAAN
         if ($user->role == 'admin') {

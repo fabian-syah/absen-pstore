@@ -17,7 +17,6 @@
 
     {{-- ======================================================================= --}}
     {{-- BAGIAN BARU: ATTENDANCE WRAPPED BANNER                                  --}}
-    {{-- LOGIKA: Hanya muncul jika bulan saat ini adalah DESEMBER (12)             --}}
     {{-- ======================================================================= --}}
     
     @if(\Carbon\Carbon::now()->month == 12) 
@@ -26,7 +25,6 @@
                 <div class="card bg-gradient-warning text-white shadow-lg" 
                      style="background: linear-gradient(135deg, #111 0%, #333 100%); border: 1px solid #FFD700; overflow: hidden; position: relative;">
                     
-                    {{-- Efek Kilau Background (Opsional) --}}
                     <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%); animation: rotateGlow 20s linear infinite; pointer-events: none;"></div>
 
                     <div class="card-body d-flex justify-content-between align-items-center position-relative z-index-1">
@@ -200,9 +198,12 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: TOP 5 LUXURY LEADERBOARD                                   --}}
+    {{-- BAGIAN BARU: LEADERBOARDS --}}
     {{-- ======================================================================= --}}
-    @if(isset($leaderboard) && count($leaderboard) > 0)
+    
+    {{-- 1. ATTENDANCE LEADERBOARD (Top Performance Karyawan) --}}
+    {{-- Visible for: Admin, Audit, Leader, User Biasa (NOT Security) --}}
+    @if(auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
     <div class="row animate-enter mb-5" style="animation-delay: 0.45s">
         <div class="col-12">
             <div class="card border-0 shadow-lg luxury-card" style="border-radius: 24px; overflow: hidden; background: #fff;">
@@ -331,6 +332,148 @@
                                                 <div class="text-end">
                                                     <span class="badge rounded-pill bg-light text-dark border">
                                                         {{ $winner->total_attendance }} Verified
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- 2. SECURITY SCANNER LEADERBOARD (Top Rajin Scan) --}}
+    {{-- Visible for: Admin & Security ONLY --}}
+    @if((auth()->user()->role == 'admin' || auth()->user()->role == 'security') && isset($topScanners) && count($topScanners) > 0)
+    <div class="row animate-enter mb-5" style="animation-delay: 0.5s">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg luxury-card" style="border-radius: 24px; overflow: hidden; background: #fff;">
+                <div class="luxury-bg-glow" style="background: radial-gradient(circle, rgba(0, 0, 0, 0.05) 0%, rgba(255, 255, 255, 0) 70%);"></div>
+                <div class="luxury-bg-pattern"></div>
+
+                <div class="card-body p-4 position-relative z-index-1">
+                    <div class="d-flex justify-content-between align-items-center mb-5">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box-luxury me-3" style="background: linear-gradient(135deg, #e0e0e0, #f5f5f5);">
+                                <i class="mdi mdi-qrcode-scan text-dark"></i>
+                            </div>
+                            <div>
+                                <h4 class="fw-bold mb-0 text-dark">Top Security</h4>
+                                <small class="text-muted">Paling rajin memindai bulan ini</small>
+                            </div>
+                        </div>
+                        <div class="glass-badge">
+                            <i class="mdi mdi-shield-account me-2"></i>
+                            Security Team
+                        </div>
+                    </div>
+
+                    <div class="row align-items-end justify-content-center text-center podium-luxury-container pb-4">
+                        
+                        {{-- JUARA 2 --}}
+                        @if(isset($topScanners[1]))
+                        <div class="col-4 col-md-3 order-1 podium-step-container">
+                            <div class="podium-avatar-wrapper silver-glow delay-200">
+                                <div class="rank-circle silver">2</div>
+                                @if($topScanners[1]->profile_photo_path)
+                                    <img src="{{ Storage::url($topScanners[1]->profile_photo_path) }}" class="luxury-avatar">
+                                @else
+                                    <div class="luxury-avatar-placeholder silver-gradient">{{ substr($topScanners[1]->name, 0, 1) }}</div>
+                                @endif
+                            </div>
+                            
+                            <div class="podium-block silver-block">
+                                <div class="podium-content">
+                                    <h6 class="fw-bold text-truncate w-100 mb-0">{{ explode(' ', $topScanners[1]->name)[0] }}</h6>
+                                    <div class="stat-pill mt-2">
+                                        <i class="mdi mdi-qrcode me-1"></i>{{ $topScanners[1]->total_scans }} Scan
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- JUARA 1 --}}
+                        @if(isset($topScanners[0]))
+                        <div class="col-4 col-md-4 order-2 podium-step-container main-winner">
+                            <div class="crown-floating">
+                                <img src="https://cdn-icons-png.flaticon.com/512/2545/2545603.png" width="50" alt="Crown">
+                            </div>
+                            <div class="podium-avatar-wrapper gold-glow">
+                                <div class="rank-circle gold">1</div>
+                                @if($topScanners[0]->profile_photo_path)
+                                    <img src="{{ Storage::url($topScanners[0]->profile_photo_path) }}" class="luxury-avatar">
+                                @else
+                                    <div class="luxury-avatar-placeholder gold-gradient">{{ substr($topScanners[0]->name, 0, 1) }}</div>
+                                @endif
+                                <div class="sparkle s2"></div>
+                            </div>
+
+                            <div class="podium-block gold-block">
+                                <div class="podium-content">
+                                    <h5 class="fw-bolder text-dark text-truncate w-100 mb-0">{{ $topScanners[0]->name }}</h5>
+                                    <div class="stat-pill gold mt-2">
+                                        <i class="mdi mdi-qrcode-scan me-1"></i>{{ $topScanners[0]->total_scans }} Scan
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- JUARA 3 --}}
+                        @if(isset($topScanners[2]))
+                        <div class="col-4 col-md-3 order-3 podium-step-container">
+                            <div class="podium-avatar-wrapper bronze-glow delay-400">
+                                <div class="rank-circle bronze">3</div>
+                                @if($topScanners[2]->profile_photo_path)
+                                    <img src="{{ Storage::url($topScanners[2]->profile_photo_path) }}" class="luxury-avatar">
+                                @else
+                                    <div class="luxury-avatar-placeholder bronze-gradient">{{ substr($topScanners[2]->name, 0, 1) }}</div>
+                                @endif
+                            </div>
+
+                            <div class="podium-block bronze-block">
+                                <div class="podium-content">
+                                    <h6 class="fw-bold text-truncate w-100 mb-0">{{ explode(' ', $topScanners[2]->name)[0] }}</h6>
+                                    <div class="stat-pill mt-2">
+                                        <i class="mdi mdi-qrcode me-1"></i>{{ $topScanners[2]->total_scans }} Scan
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+
+                    {{-- Runner Ups Security --}}
+                    @if(count($topScanners) > 3)
+                    <div class="row justify-content-center mt-3">
+                        <div class="col-lg-10">
+                            <div class="runner-up-container">
+                                @foreach($topScanners as $index => $scanner)
+                                    @if($index > 2)
+                                        <div class="runner-up-item hover-scale">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rank-number">#{{ $index + 1 }}</div>
+                                                <div class="ms-3 me-3">
+                                                    @if($scanner->profile_photo_path)
+                                                        <img src="{{ Storage::url($scanner->profile_photo_path) }}" class="rounded-circle runner-avatar shadow-sm">
+                                                    @else
+                                                        <div class="rounded-circle runner-avatar-placeholder">{{ substr($scanner->name, 0, 1) }}</div>
+                                                    @endif
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-0 fw-bold text-dark">{{ $scanner->name }}</h6>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge rounded-pill bg-dark text-white border">
+                                                        {{ $scanner->total_scans }} Total Scan
                                                     </span>
                                                 </div>
                                             </div>
