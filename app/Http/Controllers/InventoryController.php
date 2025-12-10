@@ -8,27 +8,48 @@ use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use App\Models\InventoryReturn; // Tambahkan ini
+use App\Models\InventoryReturn;
 
 class InventoryController extends Controller
 {
     /**
      * Tampilkan List Barang AKTIF (Sedang Dipakai)
-     * PERUBAHAN: Audit, Leader, Security, User Biasa hanya lihat milik sendiri.
+     * UPDATE: Menambahkan filter 'user_id' untuk shortcut dari User Detail
      */
     public function index(Request $request)
     {
         $user = Auth::user();
         $query = Inventory::with('user')->whereNotNull('user_id');
+        $pageTitle = '';
 
-        // === FILTER HAK AKSES ===
-        // Jika Admin: Bisa lihat semua barang yang sedang dipakai orang lain.
-        // Jika BUKAN Admin (Audit, Leader, Security, User Biasa): HANYA milik sendiri.
-        if ($user->role !== 'admin') {
+        // === 1. LOGIKA FILTER USER ID (SHORTCUT DARI PROFIL) ===
+        // Jika ada parameter ?user_id=123 DAN User yang login adalah Admin/Audit
+        if ($request->has('user_id') && ($user->role == 'admin' || $user->role == 'audit')) {
+            $query->where('user_id', $request->user_id);
+            
+            // Ambil nama user target untuk judul halaman
+            $targetUser = User::find($request->user_id);
+            $pageTitle = 'Inventaris Milik: ' . ($targetUser ? $targetUser->name : 'User Tidak Ditemukan');
+        }
+        
+        // === 2. LOGIKA DEFAULT (HAK AKSES) ===
+        // Jika BUKAN Admin (Audit, Leader, Security, User Biasa) DAN TIDAK sedang memfilter user lain (untuk Audit)
+        elseif ($user->role !== 'admin') {
+            // Audit boleh lihat semua jika tidak ada filter spesifik? 
+            // Atau defaultnya Audit hanya lihat punya sendiri dulu kecuali klik link shortcut?
+            // Di sini kita buat default: Audit/Leader/User Biasa hanya lihat milik sendiri
+            // KECUALI Audit tadi sudah masuk ke if pertama (klik shortcut).
+            
             $query->where('user_id', $user->id);
+            $pageTitle = 'Inventaris Saya';
+        }
+        
+        // === 3. ADMIN DEFAULT (TANPA PARAMETER) ===
+        else {
+            $pageTitle = 'Daftar Barang Aktif (Semua User)';
         }
 
-        // === SEARCH ===
+        // === SEARCH GLOBAL ===
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -43,19 +64,11 @@ class InventoryController extends Controller
 
         $inventories = $query->latest()->paginate(10)->withQueryString();
         
-        // Judul dinamis
-        if ($user->role == 'admin') {
-            $pageTitle = 'Daftar Barang Aktif (Semua User)';
-        } else {
-            $pageTitle = 'Inventaris Saya';
-        }
-        
         return view('inventory.index', compact('inventories', 'pageTitle'));
     }
 
     /**
      * Tampilkan SEMUA DATA (KHUSUS ADMIN)
-     * Menampilkan semua barang (baik yang dipakai maupun di gudang) tanpa filter user.
      */
     public function adminIndex(Request $request)
     {
@@ -93,7 +106,6 @@ class InventoryController extends Controller
 
     /**
      * Tampilkan List Barang AVAILABLE (Gudang)
-     * MODIFIKASI: User non-admin hanya lihat barang yang pernah mereka kembalikan.
      */
     public function available(Request $request)
     {
@@ -127,8 +139,6 @@ class InventoryController extends Controller
         }
 
         $inventories = $query->latest()->paginate(10)->withQueryString();
-        
-        // Judul disesuaikan di logika filter di atas.
         
         return view('inventory.index', compact('inventories', 'pageTitle'));
     }
@@ -218,7 +228,7 @@ class InventoryController extends Controller
                 // Pastikan user yang dipilih benar-benar ada di cabang target (Security Layer)
                 $targetUser = User::find($request->user_id);
                 if($targetUser->branch_id != $request->target_branch_id) {
-                     return back()->with('error', 'User tidak valid untuk cabang ini.');
+                      return back()->with('error', 'User tidak valid untuk cabang ini.');
                 }
                 $data['user_id'] = $request->user_id;
             }

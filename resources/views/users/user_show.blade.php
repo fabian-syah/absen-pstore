@@ -62,12 +62,20 @@
                     @endif
                 </div>
 
-                {{-- Menu Navigasi --}}
+               {{-- Menu Navigasi --}}
                 <div class="text-start mb-4 mt-4">
                     <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">MENU & RIWAYAT</h6>
                     <div class="list-group list-group-flush">
+                        {{-- 1. HISTORY ABSEN --}}
                         <a href="{{ route('attendance.history', ['employeeId' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-calendar-clock text-primary me-2"></i> History Absen Full</span>
+                            <i class="mdi mdi-chevron-right text-muted"></i>
+                        </a>
+
+                        {{-- 2. HISTORY INVENTARIS (BARU DITAMBAHKAN) --}}
+                        {{-- Mengirim parameter user_id agar InventoryController bisa memfilter data --}}
+                        <a href="{{ route('inventory.index', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                            <span><i class="mdi mdi-package-variant text-success me-2"></i> History Inventaris</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
                         </a>
                     </div>
