@@ -85,9 +85,10 @@
                             <label class="fw-bold text-primary">Gaji Pokok</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
-                                <input type="number" class="form-control" name="gaji" placeholder="Contoh: 3000000" value="{{ old('gaji') }}">
+                                {{-- GANTI TIPE KE TEXT DAN TAMBAH EVENT LISTENER --}}
+                                <input type="text" class="form-control" id="gaji" name="gaji" placeholder="Contoh: 3.000.000" value="{{ old('gaji') }}">
                             </div>
-                            <small class="text-muted">Masukkan angka tanpa titik/koma (Contoh: 3000000)</small>
+                            <small class="text-muted">Masukkan angka, otomatis terformat.</small>
                         </div>
                         @endif
 
@@ -247,6 +248,30 @@
                 if (role === 'audit') { $('#multi-branch-group').removeClass('d-none'); } else { $('#multi-branch-group').addClass('d-none'); }
             };
             toggleInputs();
+
+            // --- FUNGSI FORMAT RUPIAH ---
+            var gaji = document.getElementById('gaji');
+            if(gaji){
+                gaji.addEventListener('keyup', function(e){
+                    gaji.value = formatRupiah(this.value, '');
+                });
+            }
+
+            function formatRupiah(angka, prefix){
+                var number_string = angka.replace(/[^,\d]/g, '').toString(),
+                split   		= number_string.split(','),
+                sisa     		= split[0].length % 3,
+                rupiah     		= split[0].substr(0, sisa),
+                ribuan     		= split[0].substr(sisa).match(/\d{3}/gi);
+    
+                if(ribuan){
+                    separator = sisa ? '.' : '';
+                    rupiah += separator + ribuan.join('.');
+                }
+    
+                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+                return prefix == undefined ? rupiah : (rupiah ? rupiah : '');
+            }
         });
     </script>
 @endpush

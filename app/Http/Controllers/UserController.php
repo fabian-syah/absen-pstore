@@ -19,10 +19,8 @@ class UserController extends Controller
     public function __construct()
     {
         // Middleware: Hanya Admin, Admin Gaji, dan Audit yang boleh akses manajemen user
-        // Perlu disesuaikan jika admin_gaji punya akses terbatas, tapi di sini kita izinkan akses controller
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
-            // Tambahkan admin_gaji ke array izin akses controller
             if (!in_array($user->role, ['admin', 'audit', 'admin_gaji'])) {
                 abort(403, 'Akses ditolak. Anda tidak memiliki hak akses.');
             }
@@ -82,6 +80,16 @@ class UserController extends Controller
     {
         $user = Auth::user();
 
+        // --- PEMBERSIHAN FORMAT RUPIAH ---
+        // Jika ada input gaji, kita hapus titiknya dulu biar jadi angka murni (cth: "3.000.000" jadi "3000000")
+        // Ini dilakukan SEBELUM validasi agar 'numeric' pass.
+        if ($request->has('gaji')) {
+            $request->merge([
+                'gaji' => str_replace('.', '', $request->gaji)
+            ]);
+        }
+        // ---------------------------------
+
         $request->validate([
             'name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
@@ -97,7 +105,7 @@ class UserController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
-            'gaji' => 'nullable|numeric', // Validasi Gaji
+            'gaji' => 'nullable|numeric', // Validasi Gaji (Setelah titik dihapus)
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
@@ -168,6 +176,15 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        // --- PEMBERSIHAN FORMAT RUPIAH ---
+        // Hapus titik sebelum validasi
+        if ($request->has('gaji')) {
+            $request->merge([
+                'gaji' => str_replace('.', '', $request->gaji)
+            ]);
+        }
+        // ---------------------------------
+
         $request->validate([
             'name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
