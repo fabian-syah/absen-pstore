@@ -5,14 +5,31 @@
     <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="card-title">Riwayat Pelanggaran</h4>
-                    {{-- Admin & Audit Masih Boleh Tambah --}}
-                    @if(in_array(auth()->user()->role, ['admin', 'audit']))
-                        <a href="{{ route('violations.create') }}" class="btn btn-primary btn-sm text-white">
-                            <i class="mdi mdi-plus"></i> Tambah Pelanggaran
-                        </a>
-                    @endif
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="card-title mb-0">Riwayat Pelanggaran</h4>
+                    
+                    <div class="d-flex align-items-center">
+                        {{-- [UPDATED] Filter Tahun --}}
+                        <form action="{{ route('violations.index') }}" method="GET" class="d-flex align-items-center mr-3">
+                            <label class="mr-2 mb-0 text-muted">Tahun:</label>
+                            <select name="year" class="form-control form-control-sm" style="width: 100px;" onchange="this.form.submit()">
+                                @php
+                                    $currentYear = date('Y');
+                                    $startYear = 2023; // Tahun mulai sistem
+                                @endphp
+                                @for($y = $currentYear; $y >= $startYear; $y--)
+                                    <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                @endfor
+                            </select>
+                        </form>
+
+                        {{-- Admin & Audit Masih Boleh Tambah --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                            <a href="{{ route('violations.create') }}" class="btn btn-primary btn-sm text-white">
+                                <i class="mdi mdi-plus"></i> Tambah
+                            </a>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="table-responsive">
@@ -26,7 +43,6 @@
                                 <th>Bukti Foto</th>
                                 <th>Pelapor</th>
                                 <th>Tanggal</th>
-                                {{-- HANYA ADMIN YANG LIHAT KOLOM AKSI --}}
                                 @if(auth()->user()->role == 'admin')
                                     <th>Aksi</th>
                                 @endif
@@ -47,14 +63,17 @@
                                     <td class="font-weight-bold">{{ $v->user->name ?? 'User Terhapus' }}</td>
                                     <td>{{ $v->title }}</td>
                                     <td>
-                                        <p class="mb-1">{{ Str::limit($v->description, 50) }}</p>
+                                        <p class="mb-1" style="font-size: 0.9rem; line-height: 1.2;">{{ Str::limit($v->description, 50) }}</p>
                                         <small class="text-muted">Ket: {{ $v->notes ?? '-' }}</small>
                                     </td>
                                     <td>
+                                        {{-- [UPDATED] Ubah link jadi trigger Modal --}}
                                         @if($v->photo_path)
-                                            <a href="{{ asset('storage/' . $v->photo_path) }}" target="_blank">
-                                                <img src="{{ asset('storage/' . $v->photo_path) }}" alt="Bukti" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
-                                            </a>
+                                            <img src="{{ asset('storage/' . $v->photo_path) }}" 
+                                                 alt="Bukti" 
+                                                 class="img-thumbnail" 
+                                                 style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
+                                                 onclick="showImageModal('{{ asset('storage/' . $v->photo_path) }}', '{{ $v->title }}')">
                                         @else
                                             <span class="text-muted text-small">Tidak ada foto</span>
                                         @endif
@@ -62,16 +81,15 @@
                                     <td>{{ $v->reporter->name ?? 'Sistem' }}</td>
                                     <td>{{ $v->created_at->format('d M Y') }}</td>
                                     
-                                    {{-- HANYA ADMIN YANG BISA EDIT/HAPUS --}}
                                     @if(auth()->user()->role == 'admin')
                                         <td>
-                                            <a href="{{ route('violations.edit', $v->id) }}" class="btn btn-warning btn-sm icon-btn">
+                                            <a href="{{ route('violations.edit', $v->id) }}" class="btn btn-warning btn-sm icon-btn p-2">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
                                             <form action="{{ route('violations.destroy', $v->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data ini?')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm icon-btn">
+                                                <button type="submit" class="btn btn-danger btn-sm icon-btn p-2">
                                                     <i class="mdi mdi-delete"></i>
                                                 </button>
                                             </form>
@@ -80,7 +98,12 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">Tidak ada data pelanggaran.</td>
+                                    <td colspan="8" class="text-center py-4">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <i class="mdi mdi-file-find text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">Tidak ada data pelanggaran di tahun {{ $selectedYear }}.</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -90,4 +113,36 @@
         </div>
     </div>
 </div>
+
+{{-- [UPDATED] Modal Preview Gambar --}}
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="imagePreviewLabel">Bukti Pelanggaran</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="$('#imagePreviewModal').modal('hide')">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="previewImageSrc" src="" class="img-fluid rounded" style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
+
+@push('scripts')
+<script>
+    // [UPDATED] Script untuk menampilkan Modal
+    function showImageModal(src, title) {
+        // Set gambar
+        document.getElementById('previewImageSrc').src = src;
+        // Set judul modal (opsional)
+        document.getElementById('imagePreviewLabel').innerText = 'Bukti: ' + title;
+        // Tampilkan modal (menggunakan jQuery bawaan template biasanya)
+        $('#imagePreviewModal').modal('show');
+    }
+</script>
+@endpush
