@@ -228,6 +228,14 @@
         @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
             <li class="nav-item nav-category">Monitoring Wilayah</li>
 
+            {{-- MENU TOP ABSENSI CABANG (LEADERBOARD) --}}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('branch-leaderboard.index') }}">
+                    <i class="menu-icon mdi mdi-trophy-award"></i>
+                    <span class="menu-title">Top Absensi Cabang</span>
+                </a>
+            </li>
+
             {{-- MENU INVENTARIS CABANG --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('inventory.branches') }}">

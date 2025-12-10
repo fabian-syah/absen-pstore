@@ -25,7 +25,8 @@ use App\Http\Controllers\JobTargetController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\BranchInventoryController;
-use App\Http\Controllers\AdminMonitoringController; // <--- CONTROLLER BARU
+use App\Http\Controllers\AdminMonitoringController;
+use App\Http\Controllers\BranchLeaderboardController; // <--- PASTIKAN IMPORT INI ADA
 
 /*
 |--------------------------------------------------------------------------
@@ -339,7 +340,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
             Route::post('/store', [LeaveRequestController::class, 'store'])->name('store');
             Route::patch('/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
-            Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finishEarly'])->name('finish-early');
+            Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finish-early'])->name('finish-early');
         });
     });
 
@@ -352,17 +353,24 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // ==========================================================
-    //  [BARU] RUTE MONITORING WILAYAH (INVENTARIS CABANG)
+    //  [BARU] RUTE MONITORING WILAYAH (INVENTARIS CABANG & LEADERBOARD)
     //  Akses: Admin, Audit, Leader
     // ==========================================================
     Route::middleware(['role:admin,audit,leader'])->group(function () {
-        // Halaman List Cabang
+        // Halaman List Cabang Inventaris
         Route::get('/inventaris-cabang', [BranchInventoryController::class, 'index'])
             ->name('inventory.branches');
 
-        // Halaman Detail Cabang
+        // Halaman Detail Cabang Inventaris
         Route::get('/inventaris-cabang/{id}', [BranchInventoryController::class, 'show'])
             ->name('inventory.branch.detail');
+
+        // === [BARU] RUTE TOP ABSENSI CABANG (LEADERBOARD) ===
+        Route::get('/top-absensi-cabang', [BranchLeaderboardController::class, 'index'])
+            ->name('branch-leaderboard.index');
+            
+        Route::get('/top-absensi-cabang/{id}', [BranchLeaderboardController::class, 'show'])
+            ->name('branch-leaderboard.show');
     });
 
     // === RUTE API ===
