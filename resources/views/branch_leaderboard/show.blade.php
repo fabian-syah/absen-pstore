@@ -48,7 +48,7 @@
                                     <div class="user-info mt-3 text-center">
                                         <h6 class="fw-bold text-dark mb-0">{{ $top3[1]->user->name }}</h6>
                                         <small class="text-muted d-block">{{ $top3[1]->user->division->name ?? '-' }}</small>
-                                        <div class="stat-badge bg-secondary bg-opacity-10 text-secondary mt-2">
+                                        <div class="stat-badge bg-secondary text-white mt-2">
                                             <i class="mdi mdi-check-decagram"></i> {{ $top3[1]->total_attendance }} Verified
                                         </div>
                                     </div>
@@ -99,7 +99,7 @@
                                     <div class="user-info mt-3 text-center">
                                         <h6 class="fw-bold text-dark mb-0">{{ $top3[2]->user->name }}</h6>
                                         <small class="text-muted d-block">{{ $top3[2]->user->division->name ?? '-' }}</small>
-                                        <div class="stat-badge bg-warning bg-opacity-10 text-warning mt-2 border-warning" style="color: #A0522D !important; border-color: #A0522D !important;">
+                                        <div class="stat-badge border-warning text-white mt-2" style="background-color: #A0522D !important;">
                                             <i class="mdi mdi-check-decagram"></i> {{ $top3[2]->total_attendance }} Verified
                                         </div>
                                     </div>
@@ -137,7 +137,6 @@
                             @foreach($others as $index => $row)
                             <tr>
                                 <td class="ps-4">
-                                    {{-- PERBAIKAN LOGIKA RANK: Dimulai dari 4 --}}
                                     <div class="rank-circle text-muted fw-bold">#{{ $index + 4 }}</div>
                                 </td>
                                 <td>
@@ -156,8 +155,8 @@
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
-                                        {{ $row->total_attendance }} Verified
+                                    <span class="badge bg-success text-white fw-bold px-3 py-2 border-0">
+                                        <i class="mdi mdi-check-decagram me-1"></i>{{ $row->total_attendance }} Verified
                                     </span>
                                 </td>
                                 <td class="text-center text-muted font-monospace">
@@ -212,31 +211,31 @@
     /* === PERBAIKAN FINAL STAT BADGE === */
     .stat-badge { 
         display: inline-block; 
-        padding: 8px 16px; /* Padding diperbesar sedikit */
+        padding: 8px 16px;
         border-radius: 20px; 
         font-size: 12px; 
-        font-weight: 800 !important; /* Extra Bold Wajib */
+        font-weight: 800 !important;
         margin-top: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Tambah shadow agar pop-out */
-        text-transform: uppercase; /* Agar lebih tegas */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        text-transform: uppercase;
         letter-spacing: 0.5px;
-        position: relative; /* Pastikan z-index bekerja */
+        position: relative;
         z-index: 10;
-        text-shadow: none !important; /* Reset text shadow default */
+        text-shadow: none !important;
     }
 
-    /* Rank 1 (Gold): Background Emas Gelap, Teks Putih */
+    /* Rank 1 (Gold): Background Emas, Teks Gelap */
     .stat-badge.bg-warning {
-        background: #b8860b !important; /* Dark Goldenrod (Lebih gelap dari kuning biasa) */
-        background-color: #b8860b !important;
-        color: #ffffff !important; /* Putih mutlak */
-        border: 2px solid #daa520; /* Border sedikit lebih terang */
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important; /* Shadow teks agar terbaca */
+        background: #FFD700 !important;
+        background-color: #FFD700 !important;
+        color: #000000 !important;
+        border: 2px solid #daa520;
+        text-shadow: 0 1px 2px rgba(255,255,255,0.5) !important;
     }
 
     /* Rank 2 (Silver): Background Abu Gelap, Teks Putih */
     .stat-badge.bg-secondary {
-        background: #495057 !important; /* Abu gelap bootstrap */
+        background: #495057 !important;
         background-color: #495057 !important;
         color: #ffffff !important;
         border: 2px solid #6c757d;
@@ -244,7 +243,7 @@
 
     /* Rank 3 (Bronze): Background Coklat, Teks Putih */
     .stat-badge.border-warning {
-        background: #a0522d !important; /* Sienna (Coklat Kemerahan) */
+        background: #a0522d !important;
         background-color: #a0522d !important;
         color: #ffffff !important;
         border: 2px solid #cd853f !important;
