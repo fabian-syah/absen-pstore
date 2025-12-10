@@ -129,6 +129,33 @@
             pointer-events: auto;
         }
 
+        /* Music Toggle Button (New) */
+        .music-toggle {
+            position: absolute; top: 30px; right: 20px;
+            z-index: 100;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            animation: pulse-music 2s infinite;
+        }
+        
+        .music-toggle.muted .mdi-music { display: none; }
+        .music-toggle.muted .mdi-music-off { display: block; }
+        .music-toggle:not(.muted) .mdi-music { display: block; }
+        .music-toggle:not(.muted) .mdi-music-off { display: none; }
+
+        @keyframes pulse-music {
+            0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
+
         /* Animation */
         .sparkle {
             position: absolute; background: white; border-radius: 50%;
@@ -153,12 +180,22 @@
 </head>
 <body>
 
+    <audio id="bgMusic" loop>
+        <source src="{{ asset('music/song.mp3') }}" type="audio/mpeg">
+        Browser Anda tidak mendukung audio element.
+    </audio>
+
     <div id="story-container">
         <div class="progress-container">
             <div class="progress-bar"><div class="progress-fill" id="p1"></div></div>
             <div class="progress-bar"><div class="progress-fill" id="p2"></div></div>
             <div class="progress-bar"><div class="progress-fill" id="p3"></div></div>
             <div class="progress-bar"><div class="progress-fill" id="p4"></div></div>
+        </div>
+
+        <div class="music-toggle muted" id="musicBtn" onclick="toggleMusic()">
+            <i class="mdi mdi-music" style="font-size: 20px;"></i>
+            <i class="mdi mdi-music-off" style="font-size: 20px;"></i>
         </div>
 
         <div class="tap-area left" onclick="prevSlide()"></div>
@@ -176,7 +213,9 @@
             <div style="font-size: 5rem;">👋</div>
             <h1>Halo,<br>{{ explode(' ', $user->name)[0] }}!</h1>
             <p>2025 sudah berlalu.<br>Ini rekap performa kerjamu yang <b>Terverifikasi</b>.</p>
-            <p style="margin-top: 50px; font-size: 0.9rem; opacity: 0.5;">Ketuk kanan untuk lanjut &rarr;</p>
+            <p style="margin-top: 50px; font-size: 0.9rem; opacity: 0.5;">
+                <i class="mdi mdi-gesture-tap"></i> Ketuk untuk mulai
+            </p>
         </div>
 
         <div class="slide bg-gradient-2" id="slide2">
@@ -245,7 +284,34 @@
         const slides = document.querySelectorAll('.slide');
         const progressFills = document.querySelectorAll('.progress-fill');
         const totalSlides = slides.length;
+        const audio = document.getElementById('bgMusic');
+        const musicBtn = document.getElementById('musicBtn');
+        let musicStarted = false;
 
+        // --- MUSIC CONTROL LOGIC ---
+        function toggleMusic() {
+            if (audio.paused) {
+                audio.play().then(() => {
+                    musicBtn.classList.remove('muted');
+                    musicStarted = true;
+                }).catch(err => console.log("Audio play blocked:", err));
+            } else {
+                audio.pause();
+                musicBtn.classList.add('muted');
+            }
+        }
+
+        // Try to play music on first interaction (Click/Tap Anywhere)
+        document.body.addEventListener('click', function() {
+            if (!musicStarted) {
+                audio.play().then(() => {
+                    musicBtn.classList.remove('muted');
+                    musicStarted = true;
+                }).catch(e => console.log("Autoplay prevented until user interacts"));
+            }
+        }, { once: true });
+
+        // --- SLIDER LOGIC ---
         function showSlide(index) {
             slides.forEach((slide, i) => {
                 slide.classList.remove('active');
@@ -258,7 +324,6 @@
                 else fill.style.width = '0%';
             });
             
-            // Show share button only on last slide
             const shareBtn = document.getElementById('shareBtn');
             const backLink = document.querySelector('.back-link');
             
@@ -285,6 +350,7 @@
             }
         }
 
+        // --- VISUAL EFFECTS ---
         function createSparkles() {
             const container = document.getElementById('slide4');
             for(let i=0; i<20; i++) {
@@ -300,15 +366,15 @@
         }
         createSparkles();
 
-        // === FITUR DOWNLOAD GAMBAR (DIPERBAIKI) ===
+        // --- DOWNLOAD FEATURE ---
         function downloadImage() {
             const element = document.getElementById('capture-area');
             const btn = document.getElementById('shareBtn');
             btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Memproses...';
             
             html2canvas(element, { 
-                scale: 3, // Resolusi lebih tinggi agar tajam di IG Story
-                // backgroundColor: null,  <-- BARIS INI WAJIB DIHAPUS agar background ikut ter-render
+                scale: 3, 
+                // backgroundColor: null,  // WAJIB DIHAPUS agar background ikut ter-render
                 useCORS: true // Penting agar foto profil user (cross-origin) ikut terdownload
             }).then(canvas => {
                 const link = document.createElement('a');

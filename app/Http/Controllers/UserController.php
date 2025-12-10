@@ -82,7 +82,6 @@ class UserController extends Controller
 
         // --- PEMBERSIHAN FORMAT RUPIAH ---
         // Jika ada input gaji, kita hapus titiknya dulu biar jadi angka murni (cth: "3.000.000" jadi "3000000")
-        // Ini dilakukan SEBELUM validasi agar 'numeric' pass.
         if ($request->has('gaji')) {
             $request->merge([
                 'gaji' => str_replace('.', '', $request->gaji)
@@ -98,14 +97,15 @@ class UserController extends Controller
             'login_id' => 'required|string|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|string|in:admin,admin_gaji,audit,leader,security,user_biasa',
-            'branch_id' => 'required_unless:role,admin|nullable|exists:branches,id',
+            // UPDATE: Validasi branch tidak required jika role admin ATAU admin_gaji
+            'branch_id' => 'required_unless:role,admin,admin_gaji|nullable|exists:branches,id',
             'multi_divisions' => 'nullable|array',
             'multi_branches' => 'nullable|array',
             'profile_photo_path' => 'nullable|image|max:2048',
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
-            'gaji' => 'nullable|numeric', // Validasi Gaji (Setelah titik dihapus)
+            'gaji' => 'nullable|numeric',
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
@@ -125,7 +125,9 @@ class UserController extends Controller
         if ($user->role == 'admin' && $user->branch_id != null) {
             $data['branch_id'] = $user->branch_id;
         }
-        if ($request->role == 'admin') {
+        
+        // UPDATE: Jika role ADMIN atau ADMIN_GAJI, set branch & division jadi NULL (Global Access)
+        if (in_array($request->role, ['admin', 'admin_gaji'])) {
             $data['branch_id'] = null;
             $data['division_id'] = null;
         }
@@ -177,7 +179,6 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         // --- PEMBERSIHAN FORMAT RUPIAH ---
-        // Hapus titik sebelum validasi
         if ($request->has('gaji')) {
             $request->merge([
                 'gaji' => str_replace('.', '', $request->gaji)
@@ -193,17 +194,17 @@ class UserController extends Controller
             'login_id' => ['required', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|string|in:admin,admin_gaji,audit,leader,security,user_biasa',
+            // UPDATE: Validasi branch tidak required jika role admin ATAU admin_gaji
             'branch_id' => 'nullable|exists:branches,id',
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
-            'gaji' => 'nullable|numeric', // Validasi Gaji
+            'gaji' => 'nullable|numeric',
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
         // Pastikan hanya admin/admin_gaji yang bisa update gaji
-        // Jika user yg login BUKAN admin/admin_gaji, hapus field gaji dari data update agar tidak berubah/hilang
         if (!in_array(Auth::user()->role, ['admin', 'admin_gaji'])) {
             unset($data['gaji']);
         }
@@ -223,15 +224,24 @@ class UserController extends Controller
             $data['profile_photo_path'] = $request->file('profile_photo_path')->store('profile-photos', 'public');
         }
 
+        // UPDATE: Jika role diubah jadi ADMIN atau ADMIN_GAJI, set branch & division NULL
+        if (in_array($request->role, ['admin', 'admin_gaji'])) {
+            $data['branch_id'] = null;
+            $data['division_id'] = null;
+        }
+
         $user->update($data);
 
         if ($request->role == 'audit') {
             $user->branches()->sync($request->multi_branches ?? []);
         } else {
             $user->divisions()->sync($request->multi_divisions ?? []);
-            if ($request->has('multi_divisions') && count($request->multi_divisions) > 0) {
-                $user->division_id = $request->multi_divisions[0];
-                $user->save();
+            // Logika tambahan jika bukan admin/admin_gaji
+            if (!in_array($request->role, ['admin', 'admin_gaji'])) {
+                if ($request->has('multi_divisions') && count($request->multi_divisions) > 0) {
+                    $user->division_id = $request->multi_divisions[0];
+                    $user->save();
+                }
             }
         }
 
@@ -356,24 +366,20 @@ class UserController extends Controller
 
     public function approvePhotoRequest(User $user)
     {
-        // 1. Cek apakah ada file temp (pengajuan baru)
         if (!$user->profile_photo_temp_path) {
             return back()->with('error', 'Tidak ada file pengajuan foto baru.');
         }
 
-        // 2. HAPUS FOTO LAMA (JIKA ADA) BIAR HEMAT STORAGE
         if ($user->profile_photo_path) {
-            // Cek fisik file di storage, lalu hapus
             if (Storage::disk('public')->exists($user->profile_photo_path)) {
                 Storage::disk('public')->delete($user->profile_photo_path);
             }
         }
 
-        // 3. PINDAHKAN LOGIKA DB (Temp jadi Utama)
         $user->update([
-            'profile_photo_path' => $user->profile_photo_temp_path, // Path foto utama mengambil dari temp
-            'profile_photo_temp_path' => null, // Kosongkan temp
-            'photo_request_status' => 'approved' // Set status
+            'profile_photo_path' => $user->profile_photo_temp_path,
+            'profile_photo_temp_path' => null,
+            'photo_request_status' => 'approved'
         ]);
 
         return back()->with('success', 'Izin ganti foto diberikan & foto lama dihapus.');
@@ -381,14 +387,12 @@ class UserController extends Controller
 
     public function rejectPhotoRequest(User $user)
     {
-        // 1. Hapus file yang baru diajukan (Temp) karena ditolak
         if ($user->profile_photo_temp_path) {
             if (Storage::disk('public')->exists($user->profile_photo_temp_path)) {
                 Storage::disk('public')->delete($user->profile_photo_temp_path);
             }
         }
 
-        // 2. Reset kolom temp dan update status
         $user->update([
             'profile_photo_temp_path' => null,
             'photo_request_status' => 'rejected'
@@ -407,18 +411,16 @@ class UserController extends Controller
             return back()->with('error', 'Tidak ada file pengajuan KTP baru.');
         }
 
-        // Hapus KTP Lama
         if ($user->ktp_photo_path) {
             if (Storage::disk('public')->exists($user->ktp_photo_path)) {
                 Storage::disk('public')->delete($user->ktp_photo_path);
             }
         }
         
-        // Pindahkan Temp ke Utama
         $user->update([
             'ktp_photo_path' => $user->ktp_photo_temp_path,
             'ktp_photo_temp_path' => null,
-            'ktp_request_status' => 'none' // atau approved
+            'ktp_request_status' => 'none'
         ]);
 
         return back()->with('success', 'Permintaan ganti KTP disetujui & file lama dihapus.');
@@ -426,7 +428,6 @@ class UserController extends Controller
 
     public function rejectKtpRequest(User $user)
     {
-        // Hapus file temp KTP
         if ($user->ktp_photo_temp_path) {
             if (Storage::disk('public')->exists($user->ktp_photo_temp_path)) {
                 Storage::disk('public')->delete($user->ktp_photo_temp_path);
