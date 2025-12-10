@@ -62,13 +62,15 @@ class UserController extends Controller
 
         if ($user->role == 'admin' && $user->branch_id != null) {
             $branches = Branch::where('id', $user->branch_id)->get();
+            // Admin Cabang mungkin tidak bisa buat admin gaji, tapi jika perlu silakan tambahkan
             $allowedRoles = ['leader', 'security', 'user_biasa'];
         } elseif ($user->role == 'audit') {
             $branches = $user->branches; 
             $allowedRoles = ['audit', 'leader', 'security', 'user_biasa'];
         } else {
             $branches = Branch::all();
-            $allowedRoles = ['admin', 'audit', 'leader', 'security', 'user_biasa'];
+            // TAMBAHAN: Role admin_gaji ditambahkan di sini
+            $allowedRoles = ['admin', 'admin_gaji', 'audit', 'leader', 'security', 'user_biasa'];
         }
 
         $divisions = Division::all();
@@ -80,6 +82,7 @@ class UserController extends Controller
     {
         $user = Auth::user();
 
+        // TAMBAHAN: Role admin_gaji ditambahkan di validasi 'in'
         $request->validate([
             'name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
@@ -87,7 +90,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'login_id' => 'required|string|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|string|in:admin,audit,leader,security,user_biasa',
+            'role' => 'required|string|in:admin,admin_gaji,audit,leader,security,user_biasa',
             'branch_id' => 'required_unless:role,admin|nullable|exists:branches,id',
             'multi_divisions' => 'nullable|array',
             'multi_branches' => 'nullable|array',
@@ -153,13 +156,15 @@ class UserController extends Controller
 
         $branches = Branch::all();
         $divisions = Division::all();
-        $allowedRoles = ['admin', 'audit', 'leader', 'security', 'user_biasa'];
+        // TAMBAHAN: Role admin_gaji ditambahkan di sini
+        $allowedRoles = ['admin', 'admin_gaji', 'audit', 'leader', 'security', 'user_biasa'];
 
         return view('users.user_edit', compact('user', 'divisions', 'branches', 'allowedRoles'));
     }
 
     public function update(Request $request, User $user)
     {
+        // TAMBAHAN: Role admin_gaji ditambahkan di validasi 'in'
         $request->validate([
             'name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
@@ -167,7 +172,7 @@ class UserController extends Controller
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'login_id' => ['required', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required|string|in:admin,audit,leader,security,user_biasa',
+            'role' => 'required|string|in:admin,admin_gaji,audit,leader,security,user_biasa',
             'branch_id' => 'nullable|exists:branches,id',
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
