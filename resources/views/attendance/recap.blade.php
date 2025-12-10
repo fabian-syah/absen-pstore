@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Work Wrapped {{ $year }}</title>
+    
     <link rel="stylesheet" href="{{ asset('vendors/mdi/css/materialdesignicons.min.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -23,21 +24,15 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             color: white;
             overflow: hidden; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100dvh; /* Dynamic Height untuk Mobile Browser */
+            display: flex; justify-content: center; align-items: center;
+            height: 100dvh; /* Pakai dvh biar pas di HP */
             width: 100vw;
         }
 
         #story-container {
-            width: 100%;
-            max-width: 480px; /* Sedikit diperlebar untuk HP modern */
-            height: 100%;
-            position: relative;
-            background: #111;
-            overflow: hidden;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.1);
+            width: 100%; max-width: 480px; height: 100%;
+            position: relative; background: #111;
+            overflow: hidden; box-shadow: 0 0 50px rgba(255, 215, 0, 0.1);
         }
 
         /* --- SLIDES --- */
@@ -59,19 +54,13 @@
         .bg-gradient-3 { background: radial-gradient(circle, #4B0000, #000); }
         .bg-final { background: linear-gradient(135deg, #1c1c1c 0%, #000000 100%); }
 
-        /* Typography Responsive */
+        /* Typography */
         h1 { font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 15px; text-transform: uppercase; }
         h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; color: var(--gold); }
         p { font-size: 1rem; opacity: 0.9; line-height: 1.6; margin-bottom: 20px; }
-        
-        .big-number { 
-            font-size: 4rem; font-weight: 800; 
-            background: var(--gold-gradient); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-            margin: 10px 0; 
-        }
+        .big-number { font-size: 4rem; font-weight: 800; background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 10px 0; }
 
-        /* Avatar */
+        /* Components */
         .avatar-glow {
             width: 100px; height: 100px; border-radius: 50%;
             border: 3px solid var(--gold);
@@ -79,15 +68,10 @@
             object-fit: cover; margin-bottom: 20px;
         }
 
-        /* Persona Badge */
         .persona-badge {
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid var(--gold);
-            padding: 15px 20px;
-            border-radius: 16px;
-            margin-top: 20px;
-            backdrop-filter: blur(10px);
-            width: 100%;
+            background: rgba(255, 215, 0, 0.1); border: 1px solid var(--gold);
+            padding: 15px 20px; border-radius: 16px; margin-top: 20px;
+            backdrop-filter: blur(10px); width: 100%;
         }
 
         /* Progress Bar */
@@ -98,27 +82,25 @@
         .progress-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; }
         .progress-fill { height: 100%; background: white; width: 0%; transition: width 0.1s linear; }
 
-        /* Navigation Tap Areas */
+        /* Navigation Areas */
         .tap-area { position: absolute; top: 0; bottom: 0; width: 40%; z-index: 20; }
         .tap-area.left { left: 0; }
         .tap-area.right { right: 0; }
 
-        /* Tombol Start (Slide 1) */
+        /* Tombol Start (Pemicu Audio) */
         .start-btn {
             background: var(--gold-gradient); color: #000;
             border: none; padding: 15px 40px; border-radius: 50px;
             font-weight: 800; font-size: 1.1rem; cursor: pointer;
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-            animation: pulse-btn 2s infinite;
-            z-index: 100; position: relative;
-            margin-top: 30px;
+            animation: pulse-btn 2s infinite; z-index: 100; position: relative;
+            margin-top: 20px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
         }
 
-        /* Tombol Share (Floating) */
+        /* Tombol Share */
         .action-btn {
             position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
-            z-index: 100; 
-            background: var(--gold-gradient); color: black;
+            z-index: 100; background: var(--gold-gradient); color: black;
             border: none; padding: 14px 28px; border-radius: 50px;
             font-weight: bold; font-size: 0.95rem; cursor: pointer;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
@@ -134,13 +116,10 @@
 
         /* Music Toggle */
         .music-toggle {
-            position: absolute; top: 25px; right: 15px;
-            z-index: 100;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(4px);
+            position: absolute; top: 25px; right: 15px; z-index: 100;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
             border: 1px solid rgba(255,255,255,0.2);
-            color: white; width: 36px; height: 36px;
-            border-radius: 50%;
+            color: white; width: 36px; height: 36px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; pointer-events: auto;
         }
@@ -170,11 +149,10 @@
             width: 100%; height: 100%; display: flex;
             flex-direction: column; justify-content: center; align-items: center;
             background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
-            background-color: #111;
-            padding: 30px;
+            background-color: #111; padding: 30px;
         }
 
-        /* Responsive Text for Mobile */
+        /* Mobile Tweaks */
         @media (max-height: 700px) {
             h1 { font-size: 2rem; }
             .big-number { font-size: 3rem; }
@@ -216,12 +194,12 @@
         <div class="slide active bg-gradient-1" id="slide1" style="pointer-events: auto;">
             <div style="font-size: 4rem; margin-bottom: 10px;">👋</div>
             <h1>Halo,<br>{{ explode(' ', $user->name)[0] }}!</h1>
-            <p>Siap melihat perjalanan karirmu<br>di tahun 2025?</p>
+            <p>Siap melihat rekap performa<br>kerja terverifikasimu di 2025?</p>
             
             <button class="start-btn" onclick="startExperience()">
                 <i class="mdi mdi-play"></i> LIHAT REKAP
             </button>
-            <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.6;">(Nyalakan volume suara)</p>
+            <p style="margin-top: 15px; font-size: 0.75rem; opacity: 0.6;">(Nyalakan volume suara)</p>
         </div>
 
         <div class="slide bg-gradient-2" id="slide2">
@@ -293,24 +271,28 @@
         const musicBtn = document.getElementById('musicBtn');
         let musicStarted = false;
 
-        // === FUNGSI UTAMA: Start Experience ===
-        // Dipanggil saat tombol "LIHAT REKAP" ditekan
+        // === 1. FUNGSI UTAMA: Start Experience ===
+        // Audio HANYA dipanggil disini saat user klik tombol
         function startExperience() {
-            // 1. Coba play musik (User Interaction Triggered)
+            // Coba play audio
             audio.volume = 0.8;
-            audio.play().then(() => {
-                musicBtn.classList.remove('muted');
-                musicStarted = true;
-            }).catch(e => {
-                console.log("Audio play failed:", e);
-                alert("Silakan tap layar sekali lagi untuk memutar musik.");
-            });
+            var playPromise = audio.play();
 
-            // 2. Pindah ke slide berikutnya
+            if (playPromise !== undefined) {
+                playPromise.then(_ => {
+                    musicBtn.classList.remove('muted');
+                    musicStarted = true;
+                })
+                .catch(error => {
+                    console.log("Audio play blocked by browser:", error);
+                });
+            }
+
+            // Pindah slide
             nextSlide();
         }
 
-        // Toggle musik manual
+        // === 2. Toggle Musik Manual ===
         function toggleMusic() {
             if (audio.paused) {
                 audio.play();
@@ -321,6 +303,7 @@
             }
         }
 
+        // === 3. Slider Logic ===
         function showSlide(index) {
             slides.forEach((slide, i) => {
                 slide.classList.remove('active');
@@ -336,7 +319,6 @@
             const shareBtn = document.getElementById('shareBtn');
             const backLink = document.querySelector('.back-link');
             
-            // Tampilkan tombol share hanya di slide terakhir
             if(index === totalSlides - 1) {
                 shareBtn.style.display = 'flex';
                 backLink.style.display = 'block';
@@ -354,15 +336,15 @@
         }
 
         function prevSlide() {
-            if (currentSlide > 0 && currentSlide < totalSlides - 1) { // Slide 1 tidak bisa di-back
+            if (currentSlide > 0 && currentSlide < totalSlides - 1) { // Slide 1 ga bisa diback
                 currentSlide--;
                 showSlide(currentSlide);
             }
         }
 
-        // Efek Bintang/Sparkles
+        // === 4. Visual Effects ===
         function createSparkles() {
-            const container = document.getElementById('capture-area'); // Target capture area
+            const container = document.getElementById('capture-area');
             for(let i=0; i<15; i++) {
                 let sparkle = document.createElement('div');
                 sparkle.className = 'sparkle';
@@ -376,7 +358,7 @@
         }
         createSparkles();
 
-        // Download Gambar
+        // === 5. Download Image ===
         function downloadImage() {
             const element = document.getElementById('capture-area');
             const btn = document.getElementById('shareBtn');
@@ -384,11 +366,10 @@
             
             btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
             
-            // Gunakan sedikit timeout agar rendering stabil
             setTimeout(() => {
                 html2canvas(element, { 
-                    scale: 3, // Kualitas tinggi
-                    useCORS: true // Wajib untuk foto profil
+                    scale: 3, 
+                    useCORS: true 
                 }).then(canvas => {
                     const link = document.createElement('a');
                     link.download = 'My-Work-Wrapped-2025.png';
