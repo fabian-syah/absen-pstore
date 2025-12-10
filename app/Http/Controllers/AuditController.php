@@ -405,7 +405,6 @@ class AuditController extends Controller
                 // Fallback jika menggunakan method generic (misal kirim ke token user langsung)
                 // $this->sendFCM($attendance->user->fcm_token, $title, $body);
             }
-            
         } catch (\Exception $e) {
             // Abaikan error notifikasi agar tidak menggagalkan proses simpan
             Log::error("Gagal kirim notif audit: " . $e->getMessage());
@@ -435,10 +434,10 @@ class AuditController extends Controller
 
         // 1. Atur Jam Masuk & Pulang (Gabungkan Tanggal Asli + Jam Baru)
         $originalDate = $attendance->check_in_time->format('Y-m-d');
-        
+
         // Parse jam baru dari input form
         $newCheckIn  = Carbon::parse($originalDate . ' ' . $request->check_in_time);
-        
+
         $newCheckOut = null;
         if ($request->check_out_time) {
             $newCheckOut = Carbon::parse($originalDate . ' ' . $request->check_out_time);
@@ -471,5 +470,31 @@ class AuditController extends Controller
         $attendance->update($updateData);
 
         return back()->with('success', 'Data absensi berhasil dikoreksi.');
+    }
+
+    /**
+     * Helper method untuk mengirim notifikasi ke satu user.
+     * Mencegah error jika user tidak memiliki token FCM.
+     */
+    private function sendNotificationToUser($user, $title, $body)
+    {
+        // 1. Cek apakah user ada dan punya token
+        if (!$user || !$user->fcm_token) {
+            Log::info("Skip notifikasi: User tidak ditemukan atau tidak punya token FCM.");
+            return;
+        }
+
+        // 2. Panggil method pengiriman dari Trait SendFcmNotification
+        // Pastikan nama method di Trait kamu adalah 'sendNotification'
+        // Jika di Trait namanya 'sendFCM' atau 'sendMessage', sesuaikan baris di bawah ini.
+        try {
+            if (method_exists($this, 'sendNotification')) {
+                $this->sendNotification($user->fcm_token, $title, $body);
+            } else {
+                Log::warning("Method 'sendNotification' tidak ditemukan di Trait SendFcmNotification.");
+            }
+        } catch (\Exception $e) {
+            Log::error("Gagal mengirim notifikasi ke user " . $user->name . ": " . $e->getMessage());
+        }
     }
 }
