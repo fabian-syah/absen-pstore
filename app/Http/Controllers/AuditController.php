@@ -17,8 +17,6 @@ class AuditController extends Controller
 {
     use SendFcmNotification;
 
-    // ... method lainnya ...
-
     /**
      * Menampilkan daftar izin telat (HANYA PENDING - Status: pending)
      */
@@ -415,5 +413,63 @@ class AuditController extends Controller
 
         // 7. Redirect kembali
         return back()->with('success', 'Absensi berhasil diverifikasi.');
+    }
+
+    /**
+     * Mengupdate/Mengoreksi Data Absensi (Dari Modal Koreksi/Edit)
+     * Route: audit.update.attendance
+     * Method baru untuk menangani edit data termasuk Izin dan Libur
+     */
+    public function updateAttendance(Request $request, $id)
+    {
+        $request->validate([
+            'check_in_time'   => 'required', // Jam masuk wajib ada
+            'check_out_time'  => 'nullable',
+            'presence_status' => 'required|string',
+            'status'          => 'required|string',
+            'audit_note'      => 'nullable|string',
+            'audit_photo'     => 'nullable|image|max:2048'
+        ]);
+
+        $attendance = Attendance::findOrFail($id);
+
+        // 1. Atur Jam Masuk & Pulang (Gabungkan Tanggal Asli + Jam Baru)
+        $originalDate = $attendance->check_in_time->format('Y-m-d');
+        
+        // Parse jam baru dari input form
+        $newCheckIn  = Carbon::parse($originalDate . ' ' . $request->check_in_time);
+        
+        $newCheckOut = null;
+        if ($request->check_out_time) {
+            $newCheckOut = Carbon::parse($originalDate . ' ' . $request->check_out_time);
+            // Jika jam pulang lebih kecil dari jam masuk, asumsikan lewat tengah malam (tambah 1 hari)
+            if ($newCheckOut->lt($newCheckIn)) {
+                $newCheckOut->addDay();
+            }
+        }
+
+        // 2. Siapkan Data Update
+        $updateData = [
+            'check_in_time'       => $newCheckIn,
+            'check_out_time'      => $newCheckOut,
+            'presence_status'     => $request->presence_status, // Izin, Libur, Masuk, dll
+            'status'              => $request->status, // verified, pending, rejected
+            'audit_note'          => $request->audit_note . ' (Dikoreksi: ' . Auth::user()->name . ')',
+            'verified_by_user_id' => Auth::id(),
+        ];
+
+        // 3. Handle Foto Bukti (Jika ada upload baru saat koreksi)
+        if ($request->hasFile('audit_photo')) {
+            if ($attendance->audit_photo_path && Storage::disk('public')->exists($attendance->audit_photo_path)) {
+                Storage::disk('public')->delete($attendance->audit_photo_path);
+            }
+            $path = $request->file('audit_photo')->store('attendance/audit', 'public');
+            $updateData['audit_photo_path'] = $path;
+        }
+
+        // 4. Simpan Perubahan
+        $attendance->update($updateData);
+
+        return back()->with('success', 'Data absensi berhasil dikoreksi.');
     }
 }

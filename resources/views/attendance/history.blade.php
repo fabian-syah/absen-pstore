@@ -432,6 +432,7 @@
                                                             str_contains($statusLower, 'telat') => 'bg-warning text-dark',
                                                             $statusLower == 'sakit' => 'bg-primary',
                                                             in_array($statusLower, ['cuti', 'izin']) => 'bg-secondary',
+                                                            in_array($statusLower, ['libur', 'off day']) => 'bg-dark', // Styling untuk Libur
                                                             $statusLower == 'alpha' => 'bg-danger',
                                                             default => 'bg-dark',
                                                         };
@@ -683,6 +684,10 @@
                                     <select name="presence_status" class="form-select form-select-lg" required>
                                         <option value="Masuk" {{ $att->presence_status == 'Masuk' ? 'selected' : '' }}>✅ Masuk</option>
                                         <option value="Sakit" {{ $att->presence_status == 'Sakit' ? 'selected' : '' }}>🤒 Sakit</option>
+                                        {{-- TAMBAHAN DI VERIFIKASI JUGA --}}
+                                        <option value="Izin" {{ $att->presence_status == 'Izin' ? 'selected' : '' }}>📝 Izin</option>
+                                        <option value="Libur" {{ $att->presence_status == 'Libur' ? 'selected' : '' }}>😎 Libur (Off Day)</option>
+                                        {{-- AKHIR TAMBAHAN --}}
                                         <option value="Cuti" {{ $att->presence_status == 'Cuti' ? 'selected' : '' }}>🏖️ Cuti</option>
                                         <option value="Alpha" {{ $att->presence_status == 'Alpha' ? 'selected' : '' }}>❌ Alpha</option>
                                         <option value="Telat" {{ $att->presence_status == 'Telat' ? 'selected' : '' }}>⏰ Telat</option>
@@ -739,6 +744,12 @@
                                         <select name="presence_status" class="form-select" required>
                                             <option value="Masuk" {{ $att->presence_status == 'Masuk' ? 'selected' : '' }}>✅ Masuk</option>
                                             <option value="Sakit" {{ $att->presence_status == 'Sakit' ? 'selected' : '' }}>🤒 Sakit</option>
+                                            
+                                            {{-- TAMBAHAN: IZIN DAN LIBUR --}}
+                                            <option value="Izin" {{ $att->presence_status == 'Izin' ? 'selected' : '' }}>📝 Izin</option>
+                                            <option value="Libur" {{ $att->presence_status == 'Libur' ? 'selected' : '' }}>😎 Libur (Off Day)</option>
+                                            {{-- AKHIR TAMBAHAN --}}
+
                                             <option value="Cuti" {{ $att->presence_status == 'Cuti' ? 'selected' : '' }}>🏖️ Cuti</option>
                                             <option value="Alpha" {{ $att->presence_status == 'Alpha' ? 'selected' : '' }}>❌ Alpha</option>
                                             <option value="Telat" {{ $att->presence_status == 'Telat' ? 'selected' : '' }}>⏰ Telat</option>
