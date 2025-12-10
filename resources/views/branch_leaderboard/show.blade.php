@@ -209,7 +209,7 @@
     .rank-badge { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); width: 28px; height: 28px; background: #222; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid white; z-index: 5; }
     .crown-icon { position: absolute; top: -35px; left: 50%; transform: translateX(-50%) rotate(-10deg); font-size: 32px; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
     
-    /* === PERBAIKAN STAT BADGE UTAMA === */
+    /* === PERBAIKAN FINAL STAT BADGE === */
     .stat-badge { 
         display: inline-block; 
         padding: 8px 16px; /* Padding diperbesar sedikit */
@@ -222,6 +222,7 @@
         letter-spacing: 0.5px;
         position: relative; /* Pastikan z-index bekerja */
         z-index: 10;
+        text-shadow: none !important; /* Reset text shadow default */
     }
 
     /* Rank 1 (Gold): Background Emas Gelap, Teks Putih */
@@ -230,7 +231,7 @@
         background-color: #b8860b !important;
         color: #ffffff !important; /* Putih mutlak */
         border: 2px solid #daa520; /* Border sedikit lebih terang */
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5); /* Shadow teks agar terbaca di warna apapun */
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important; /* Shadow teks agar terbaca */
     }
 
     /* Rank 2 (Silver): Background Abu Gelap, Teks Putih */
