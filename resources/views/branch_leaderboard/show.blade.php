@@ -49,7 +49,7 @@
                                         <h6 class="fw-bold text-dark mb-0">{{ $top3[1]->user->name }}</h6>
                                         <small class="text-muted d-block">{{ $top3[1]->user->division->name ?? '-' }}</small>
                                         <div class="stat-badge bg-secondary bg-opacity-10 text-secondary mt-2">
-                                            <i class="mdi mdi-check-decagram"></i> {{ $top3[1]->total_attendance }} Hadir
+                                            <i class="mdi mdi-check-decagram"></i> {{ $top3[1]->total_attendance }} Verified
                                         </div>
                                     </div>
                                     <div class="podium-block silver-block"></div>
@@ -74,7 +74,7 @@
                                         <h5 class="fw-bold text-dark mb-0">{{ $top3[0]->user->name }}</h5>
                                         <small class="text-muted d-block fw-semibold">{{ $top3[0]->user->division->name ?? '-' }}</small>
                                         <div class="stat-badge bg-warning text-dark mt-2 shadow-sm">
-                                            <i class="mdi mdi-trophy"></i> {{ $top3[0]->total_attendance }} Hadir
+                                            <i class="mdi mdi-trophy"></i> {{ $top3[0]->total_attendance }} Verified
                                         </div>
                                     </div>
                                     <div class="podium-block gold-block">
@@ -100,7 +100,7 @@
                                         <h6 class="fw-bold text-dark mb-0">{{ $top3[2]->user->name }}</h6>
                                         <small class="text-muted d-block">{{ $top3[2]->user->division->name ?? '-' }}</small>
                                         <div class="stat-badge bg-warning bg-opacity-10 text-warning mt-2 border-warning" style="color: #A0522D !important; border-color: #A0522D !important;">
-                                            <i class="mdi mdi-check-decagram"></i> {{ $top3[2]->total_attendance }} Hadir
+                                            <i class="mdi mdi-check-decagram"></i> {{ $top3[2]->total_attendance }} Verified
                                         </div>
                                     </div>
                                     <div class="podium-block bronze-block"></div>
@@ -156,7 +156,7 @@
                                 </td>
                                 <td class="text-center">
                                     <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
-                                        {{ $row->total_attendance }} Hari
+                                        {{ $row->total_attendance }} Verified
                                     </span>
                                 </td>
                                 <td class="text-center text-muted font-monospace">
