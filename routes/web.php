@@ -26,7 +26,7 @@ use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\BranchInventoryController;
 use App\Http\Controllers\AdminMonitoringController;
-use App\Http\Controllers\BranchLeaderboardController; // <--- PASTIKAN IMPORT INI ADA
+use App\Http\Controllers\BranchLeaderboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,20 +65,12 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE JOB TARGETS ===
     Route::get('/job-targets', [JobTargetController::class, 'index'])->name('job-targets.index');
-
-    // [PENTING] Tambahkan baris ini untuk halaman Create baru
     Route::get('/job-targets/create', [JobTargetController::class, 'create'])->name('job-targets.create');
-
     Route::post('/job-targets', [JobTargetController::class, 'store'])->name('job-targets.store');
-
-    // Route Update Hasil (Aksi)
     Route::patch('/job-targets/{id}/update-outcome', [JobTargetController::class, 'updateOutcome'])->name('job-targets.update-outcome');
 
     // === RUTE RIWAYAT PELANGGARAN ===
-    // Semua user login bisa lihat index (tapi difilter di controller)
     Route::get('/violations', [App\Http\Controllers\ViolationController::class, 'index'])->name('violations.index');
-
-    // Hanya Admin & Audit yang bisa Create/Store/Edit/Update/Delete
     Route::middleware(['role:admin,audit'])->group(function () {
         Route::get('/violations/create', [App\Http\Controllers\ViolationController::class, 'create'])->name('violations.create');
         Route::post('/violations', [App\Http\Controllers\ViolationController::class, 'store'])->name('violations.store');
@@ -87,36 +79,25 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::delete('/violations/{violation}', [App\Http\Controllers\ViolationController::class, 'destroy'])->name('violations.destroy');
     });
 
-    // Route Toggle & Destroy (Opsional jika masih dipakai)
     Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
     Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
 
-    // === RUTE KASBON (UPDATE) ===
+    // === RUTE KASBON ===
     Route::middleware(['role:admin,audit,security,user_biasa'])->prefix('kasbon')->name('kasbon.')->group(function () {
         Route::get('/', [App\Http\Controllers\CashAdvanceController::class, 'index'])->name('index');
         Route::get('/create', [App\Http\Controllers\CashAdvanceController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\CashAdvanceController::class, 'store'])->name('store');
         Route::get('/{id}/detail', [App\Http\Controllers\CashAdvanceController::class, 'show'])->name('show');
-        
-        // Rute User Bayar Cicilan
         Route::post('/{id}/cicil', [App\Http\Controllers\CashAdvanceController::class, 'storeInstallment'])->name('installment.store');
 
-        // Admin Only Actions
         Route::middleware(['role:admin'])->group(function() {
             Route::delete('/{id}', [App\Http\Controllers\CashAdvanceController::class, 'destroy'])->name('destroy');
             Route::patch('/{id}/status', [App\Http\Controllers\CashAdvanceController::class, 'changeStatus'])->name('status');
-            
-            // Approve/Reject Pembayaran
             Route::post('/installment/{id}/approve', [App\Http\Controllers\CashAdvanceController::class, 'approveInstallment'])->name('installment.approve');
             Route::post('/installment/{id}/reject', [App\Http\Controllers\CashAdvanceController::class, 'rejectInstallment'])->name('installment.reject');
-
-            // ========================================================
-            // [FIX] TAMBAHKAN 3 BARIS INI AGAR TIDAK ERROR SAAT KLIK MATA
-            // ========================================================
             Route::get('/installment/{id}/edit', [App\Http\Controllers\CashAdvanceController::class, 'editInstallment'])->name('installment.edit');
             Route::put('/installment/{id}', [App\Http\Controllers\CashAdvanceController::class, 'updateInstallment'])->name('installment.update');
             Route::delete('/installment/{id}', [App\Http\Controllers\CashAdvanceController::class, 'destroyInstallment'])->name('installment.destroy');
-            // ========================================================
         });
     });
 
@@ -129,7 +110,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         $sender = new class {
             use SendFcmNotification;
         };
-        $branchId = 2; // Sesuaikan ID Cabang
+        $branchId = 2; 
         try {
             $sender->sendNotificationToBranchRoles(['audit'], $branchId, "Tes Notifikasi", "Pesan tes server.");
             return "Perintah kirim dijalankan.";
@@ -169,7 +150,6 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
 
-        // Foto & KTP
         Route::delete('/photo', [ProfileController::class, 'deleteProfilePhoto'])->name('photo.delete');
         Route::put('/photo', [ProfileController::class, 'updatePhoto'])->name('photo.update');
         Route::post('/photo/request', [ProfileController::class, 'requestPhotoChange'])->name('photo.request');
@@ -178,11 +158,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/ktp/request', [ProfileController::class, 'requestKtpChange'])->name('ktp.request');
         Route::get('/ktp/{user}', [ProfileController::class, 'getKtpPhoto'])->name('ktp.get');
 
-        // Work History
         Route::post('/work-history', [WorkHistoryController::class, 'store'])->name('work-history.store');
         Route::delete('/work-history/{history}', [WorkHistoryController::class, 'destroy'])->name('work-history.destroy');
 
-        // Inventory (Profile Source)
         Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store');
         Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
         Route::get('/inventory', [InventoryController::class, 'showInventory'])->name('inventory.index');
@@ -193,32 +171,22 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // ==========================================================
 
     Route::prefix('inventory')->name('inventory.')->group(function () {
-
-        // 1. LIST BARANG AKTIF (Dipinjamkan) - Semua Role (Terfilter di Controller)
         Route::get('/', [InventoryController::class, 'index'])->name('index');
 
-        // 2. LIST BARANG AVAILABLE (Gudang) - SEMUA ROLE BISA LIHAT
         Route::get('/available', [InventoryController::class, 'available'])
             ->name('available')
             ->middleware('role:admin,audit,leader,security,user_biasa');
 
-        // 3. DETAIL - Semua Role (Terfilter di Controller)
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
 
-        // 4. CREATE & STORE - Semua Role (Admin, Audit, Leader, Security, User Biasa)
         Route::middleware(['role:admin,audit,leader,security,user_biasa'])->group(function () {
             Route::get('/create', [InventoryController::class, 'create'])->name('create');
             Route::post('/', [InventoryController::class, 'store'])->name('store');
-
-            // AKSI KEMBALIKAN (Return Request)
             Route::post('/{id}/return', [InventoryReturnController::class, 'store'])->name('process-return');
         });
 
-        // 5. EDIT & DELETE & ALL DATA - ADMIN ONLY
         Route::middleware(['role:admin'])->group(function () {
-            // [BARU] Master Data (Admin View - Semua Data)
             Route::get('/all-data', [InventoryController::class, 'adminIndex'])->name('admin.all');
-
             Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
             Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
             Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
@@ -226,28 +194,25 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // ================= RIWAYAT PENGEMBALIAN (Inventory Returns) =================
-    // Ini halaman khusus untuk melihat riwayat barang yang dikembalikan & Approval
     Route::middleware(['role:admin,audit'])->group(function () {
         Route::get('/inventory-returns', [InventoryReturnController::class, 'index'])->name('inventory-returns.index');
-        // Route Approve (Sudah ada)
         Route::post('/inventory-returns/{id}/approve', [InventoryReturnController::class, 'approve'])->name('inventory-returns.approve');
-
-        // Route Reject (WAJIB DITAMBAHKAN)
         Route::post('/inventory-returns/{id}/reject', [InventoryReturnController::class, 'reject'])->name('inventory-returns.reject');
     });
 
     // ==========================================================
-
-    // ==========================================================
-    //  RUTE MONITORING HARIAN (KHUSUS ADMIN) - BARU
+    //  RUTE MONITORING HARIAN (KHUSUS ADMIN)
     // ==========================================================
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/monitoring/daily-attendance', [AdminMonitoringController::class, 'dailyAttendance'])
             ->name('admin.monitoring.daily');
     });
 
-    // === RUTE ADMIN & AUDIT MANAGEMENT (Lainnya) ===
-    Route::middleware(['role:admin,audit'])->group(function () {
+    // ==========================================================
+    //  RUTE ADMIN, AUDIT, & ADMIN GAJI MANAGEMENT
+    // ==========================================================
+    // UPDATE: Menambahkan admin_gaji ke middleware di bawah ini
+    Route::middleware(['role:admin,audit,admin_gaji'])->group(function () {
         Route::get('/all-attendance', [AdminAttendanceController::class, 'index'])->name('admin.attendance.all');
         Route::put('/audit/verify-attendance/{id}', [App\Http\Controllers\AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
         Route::put('/attendance/{id}/audit-update', [AttendanceHistoryController::class, 'updateByAudit'])->name('audit.update.attendance');
@@ -261,15 +226,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Approval Requests
         Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
-
-        // --- ADDED THIS LINE (FIX ERROR) ---
         Route::delete('/users/{user}/reject-photo', [UserController::class, 'rejectPhotoRequest'])->name('users.reject-photo');
 
         Route::get('/users/ktp-requests', [UserController::class, 'ktpRequests'])->name('users.ktp-requests');
         Route::patch('/users/{user}/approve-ktp', [UserController::class, 'approveKtpRequest'])->name('users.approve-ktp');
         Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');
 
-        // USER MANAGEMENT
+        // USER MANAGEMENT (Sekarang Admin Gaji Bisa Akses Ini)
         Route::resource('users', UserController::class);
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
@@ -294,18 +257,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // === RUTE SECURITY ===
-    // Update middleware agar Admin juga bisa akses
     Route::middleware(['role:security,admin'])->prefix('security')->name('security.')->group(function () {
 
         Route::get('/scan', [ScanController::class, 'index'])->name('scan');
         Route::post('/check-user', [ScanController::class, 'checkUser'])->name('check-user');
         Route::post('/store-attendance', [ScanController::class, 'storeAttendance'])->name('store-attendance');
         Route::get('/stats', [ScanController::class, 'getStats'])->name('stats');
-
-        // --- ROUTE BARU RIWAYAT SCAN ---
         Route::get('/riwayat-scan', [ScanController::class, 'history'])->name('history');
 
-        // Route lama Anda (bisa dihapus jika digantikan history di atas)
         Route::get('/attendance-log', [ScanController::class, 'attendanceLog'])->name('attendance-log');
         Route::get('/today-attendance', [ScanController::class, 'todayAttendance'])->name('today-attendance');
     });
@@ -319,7 +278,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/team/branch/{branchId}/employee/{employeeId}/history', [TeamController::class, 'showEmployeeHistory'])->name('team.branch.employee.history');
     });
 
-    // === [UPDATED] RUTE CABANG SAYA DITAMBAHKAN ADMIN ===
+    // === RUTE CABANG SAYA ===
     Route::middleware(['role:admin,audit,leader'])->group(function () {
         Route::get('/cabang-saya', [TeamController::class, 'myBranches'])->name('team.my-branches');
     });
@@ -353,19 +312,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // ==========================================================
-    //  [BARU] RUTE MONITORING WILAYAH (INVENTARIS CABANG & LEADERBOARD)
-    //  Akses: Admin, Audit, Leader
+    //  RUTE MONITORING WILAYAH (INVENTARIS CABANG & LEADERBOARD)
     // ==========================================================
     Route::middleware(['role:admin,audit,leader'])->group(function () {
-        // Halaman List Cabang Inventaris
         Route::get('/inventaris-cabang', [BranchInventoryController::class, 'index'])
             ->name('inventory.branches');
 
-        // Halaman Detail Cabang Inventaris
         Route::get('/inventaris-cabang/{id}', [BranchInventoryController::class, 'show'])
             ->name('inventory.branch.detail');
 
-        // === [BARU] RUTE TOP ABSENSI CABANG (LEADERBOARD) ===
         Route::get('/top-absensi-cabang', [BranchLeaderboardController::class, 'index'])
             ->name('branch-leaderboard.index');
             

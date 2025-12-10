@@ -18,10 +18,12 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        // Middleware: Hanya Admin dan Audit yang boleh akses manajemen user
+        // Middleware: Hanya Admin, Admin Gaji, dan Audit yang boleh akses manajemen user
+        // Perlu disesuaikan jika admin_gaji punya akses terbatas, tapi di sini kita izinkan akses controller
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
-            if (!in_array($user->role, ['admin', 'audit'])) {
+            // Tambahkan admin_gaji ke array izin akses controller
+            if (!in_array($user->role, ['admin', 'audit', 'admin_gaji'])) {
                 abort(403, 'Akses ditolak. Anda tidak memiliki hak akses.');
             }
             return $next($request);
@@ -62,14 +64,12 @@ class UserController extends Controller
 
         if ($user->role == 'admin' && $user->branch_id != null) {
             $branches = Branch::where('id', $user->branch_id)->get();
-            // Admin Cabang mungkin tidak bisa buat admin gaji, tapi jika perlu silakan tambahkan
             $allowedRoles = ['leader', 'security', 'user_biasa'];
         } elseif ($user->role == 'audit') {
             $branches = $user->branches; 
             $allowedRoles = ['audit', 'leader', 'security', 'user_biasa'];
         } else {
             $branches = Branch::all();
-            // TAMBAHAN: Role admin_gaji ditambahkan di sini
             $allowedRoles = ['admin', 'admin_gaji', 'audit', 'leader', 'security', 'user_biasa'];
         }
 
@@ -82,7 +82,6 @@ class UserController extends Controller
     {
         $user = Auth::user();
 
-        // TAMBAHAN: Role admin_gaji ditambahkan di validasi 'in'
         $request->validate([
             'name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
@@ -98,6 +97,7 @@ class UserController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
+            'gaji' => 'nullable|numeric', // Validasi Gaji
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
@@ -106,6 +106,11 @@ class UserController extends Controller
         $data['check_out_start'] = $request->check_out_start ?: null;
         $data['check_in_end']    = null;
         $data['check_out_end']   = null;
+
+        // Pastikan hanya admin/admin_gaji yang bisa input gaji
+        if (!in_array($user->role, ['admin', 'admin_gaji'])) {
+            unset($data['gaji']);
+        }
 
         $data['division_id'] = ($request->has('multi_divisions') && count($request->multi_divisions) > 0) ? $request->multi_divisions[0] : null;
 
@@ -156,7 +161,6 @@ class UserController extends Controller
 
         $branches = Branch::all();
         $divisions = Division::all();
-        // TAMBAHAN: Role admin_gaji ditambahkan di sini
         $allowedRoles = ['admin', 'admin_gaji', 'audit', 'leader', 'security', 'user_biasa'];
 
         return view('users.user_edit', compact('user', 'divisions', 'branches', 'allowedRoles'));
@@ -164,7 +168,6 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        // TAMBAHAN: Role admin_gaji ditambahkan di validasi 'in'
         $request->validate([
             'name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
@@ -177,9 +180,16 @@ class UserController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
+            'gaji' => 'nullable|numeric', // Validasi Gaji
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
+
+        // Pastikan hanya admin/admin_gaji yang bisa update gaji
+        // Jika user yg login BUKAN admin/admin_gaji, hapus field gaji dari data update agar tidak berubah/hilang
+        if (!in_array(Auth::user()->role, ['admin', 'admin_gaji'])) {
+            unset($data['gaji']);
+        }
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);

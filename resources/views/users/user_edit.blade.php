@@ -79,6 +79,19 @@
                                 <input type="hidden" name="role" value="{{ $user->role }}">
                             @endif
                         </div>
+
+                        {{-- INPUT GAJI: HANYA MUNCUL JIKA USER LOGIN ADALAH ADMIN ATAU ADMIN GAJI --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                        <div class="form-group mb-3">
+                            <label class="fw-bold text-primary">Gaji Pokok</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="number" class="form-control" name="gaji" placeholder="Contoh: 3000000" value="{{ old('gaji', $user->gaji ? (int)$user->gaji : '') }}">
+                            </div>
+                            <small class="text-muted">Masukkan angka tanpa titik/koma (Contoh: 3000000)</small>
+                        </div>
+                        @endif
+
                         <div class="form-group mb-3">
                             <label>awal masuk pstore ( opsional )</label>
                             <input type="date" class="form-control" name="hire_date"

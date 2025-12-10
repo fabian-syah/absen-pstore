@@ -149,6 +149,20 @@
                         <p class="h6">{{ $user->whatsapp ?? '-' }}</p>
                     </div>
 
+                    {{-- DETAIL GAJI: HANYA DILIHAT ADMIN & ADMIN_GAJI --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold text-primary small">Gaji Pokok</label>
+                        <p class="h6 fw-bold">
+                            @if($user->gaji)
+                                Rp {{ number_format($user->gaji, 0, ',', '.') }}
+                            @else
+                                <span class="text-danger">Belum input gaji</span>
+                            @endif
+                        </p>
+                    </div>
+                    @endif
+
                     {{-- TANGGAL LAHIR & SOSMED --}}
                     <div class="col-md-6 mb-3">
                         <label class="fw-bold text-muted small">Tanggal Lahir</label>

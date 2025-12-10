@@ -59,7 +59,11 @@
                                     <th> Profil Pengguna </th>
                                     <th> Kontak </th>
                                     <th> Role </th>
-                                    <th> Penempatan & Divisi </th> {{-- Header diperjelas --}}
+                                    {{-- HANYA ADMIN & ADMIN_GAJI YANG BISA LIHAT KOLOM INI --}}
+                                    @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                                        <th> Gaji </th>
+                                    @endif
+                                    <th> Penempatan & Divisi </th>
                                     <th> Tanggal Join </th>
                                     <th> QR Code </th>
                                     <th> Aksi </th>
@@ -118,9 +122,21 @@
                                                 class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
                                         </td>
 
-                                        {{-- PENEMPATAN & DIVISI (MODIFIED) --}}
+                                        {{-- KOLOM GAJI (RESTRICTED) --}}
+                                        @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                                            <td>
+                                                @if($user->gaji)
+                                                    <span class="text-success fw-bold">
+                                                        Rp {{ number_format($user->gaji, 0, ',', '.') }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted small text-danger">Belum input gaji</span>
+                                                @endif
+                                            </td>
+                                        @endif
+
+                                        {{-- PENEMPATAN & DIVISI --}}
                                         <td>
-                                            {{-- Baris 1: Tampilkan Cabang --}}
                                             <div class="fw-bold mb-1" style="font-size: 0.9rem;">
                                                 @if ($user->role == 'audit')
                                                     {{ $user->branches->pluck('name')->join(', ') ?: 'Semua Cabang' }}
@@ -129,7 +145,6 @@
                                                 @endif
                                             </div>
 
-                                            {{-- Baris 2: Tampilkan Divisi (Multi) Dibawahnya --}}
                                             <div class="text-muted">
                                                 @if ($user->divisions->isNotEmpty())
                                                     <i class="mdi mdi-label-outline text-primary me-1" style="font-size: 10px;"></i>
@@ -206,7 +221,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4">
+                                        <td colspan="9" class="text-center py-4">
                                             <div class="text-muted">Tidak ada data user yang ditemukan.</div>
                                         </td>
                                     </tr>

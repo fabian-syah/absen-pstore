@@ -60,20 +60,6 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MONITORING HARIAN (ADMIN ONLY)   --}}
-        {{-- =================================== --}}
-        {{-- @if (auth()->user()->role == 'admin')
-            <li class="nav-item nav-category">Monitoring Harian</li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('admin.monitoring.daily') }}">
-                    <i class="menu-icon mdi mdi-monitor-dashboard"></i>
-                    <span class="menu-title">Siapa Sudah Absen?</span>
-                </a>
-            </li>
-        @endif --}}
-
-        {{-- =================================== --}}
         {{--    MENU KHUSUS SUPER ADMIN          --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
@@ -87,16 +73,23 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MANAJEMEN TIM (ADMIN ONLY)       --}}
+        {{--    MANAJEMEN TIM (ADMIN & GAJI)     --}}
         {{-- =================================== --}}
-        @if (auth()->user()->role == 'admin')
+        {{-- UPDATE: Menambahkan admin_gaji di sini --}}
+        @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
             <li class="nav-item nav-category">Manajemen Tim</li>
+            
+            {{-- Hanya Admin yang bisa lihat Divisi (Opsional, jika admin gaji butuh, hapus if nya) --}}
+            @if(auth()->user()->role == 'admin')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('divisions.index') }}">
                     <i class="menu-icon mdi mdi-sitemap"></i>
                     <span class="menu-title">Data Divisi</span>
                 </a>
             </li>
+            @endif
+
+            {{-- Admin Gaji BISA lihat Data User --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('users.index') }}">
                     <i class="menu-icon mdi mdi-account-group"></i>
@@ -124,7 +117,6 @@
         @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Verifikasi</li>
             
-            {{-- Menu yang BISA diakses Audit & Admin --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('audit.verify.list') }}">
                     <i class="menu-icon mdi mdi-checkbox-marked-outline"></i>
@@ -193,9 +185,8 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MENU TIM (ADMIN, LEADER, AUDIT, DLL) --}}
+        {{--    MENU TIM (ADMIN, LEADER, DLL)    --}}
         {{-- =================================== --}}
-        {{-- UPDATE: ADMIN ditambahkan di kondisi utama ini agar section muncul --}}
         @if (auth()->user()->role == 'user_biasa' ||
                 auth()->user()->role == 'leader' ||
                 auth()->user()->role == 'audit' ||
@@ -211,7 +202,6 @@
                 </a>
             </li>
 
-            {{-- UPDATE: ADMIN ditambahkan ke sini agar bisa akses Cabang Saya --}}
             @if (auth()->user()->role == 'audit' || auth()->user()->role == 'leader' || auth()->user()->role == 'admin')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('team.my-branches') }}">
@@ -223,12 +213,11 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MONITORING (ADMIN, AUDIT, LEADER) --}}
+        {{--    MONITORING (ADMIN, AUDIT, LEADER)--}}
         {{-- =================================== --}}
         @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
             <li class="nav-item nav-category">Monitoring Wilayah</li>
 
-            {{-- MENU TOP ABSENSI CABANG (LEADERBOARD) --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('branch-leaderboard.index') }}">
                     <i class="menu-icon mdi mdi-trophy-award"></i>
@@ -236,7 +225,6 @@
                 </a>
             </li>
 
-            {{-- MENU INVENTARIS CABANG --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('inventory.branches') }}">
                     <i class="menu-icon mdi mdi-package-variant-closed"></i>
@@ -244,7 +232,6 @@
                 </a>
             </li>
 
-            {{-- MENU TARGET CABANG --}}
             <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="menu-icon mdi mdi-target"></i>
