@@ -208,7 +208,37 @@
     /* BADGES & ICONS */
     .rank-badge { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); width: 28px; height: 28px; background: #222; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid white; z-index: 5; }
     .crown-icon { position: absolute; top: -35px; left: 50%; transform: translateX(-50%) rotate(-10deg); font-size: 32px; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-    .stat-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    
+    /* PERBAIKAN STAT BADGE (Total Kehadiran) */
+    .stat-badge { 
+        display: inline-block; 
+        padding: 6px 14px; 
+        border-radius: 20px; 
+        font-size: 12px; 
+        font-weight: 700; /* Bold */
+        margin-top: 8px;
+    }
+
+    /* Rank 1 (Gold) Badge Style */
+    .stat-badge.bg-warning {
+        background-color: #fff3cd !important; /* Kuning muda terang */
+        color: #856404 !important; /* Coklat tua gelap */
+        border: 1px solid #ffeeba;
+    }
+
+    /* Rank 2 (Silver) Badge Style */
+    .stat-badge.bg-secondary {
+        background-color: #e2e3e5 !important;
+        color: #383d41 !important;
+        border: 1px solid #d6d8db;
+    }
+
+    /* Rank 3 (Bronze) Badge Style */
+    .stat-badge.border-warning {
+        background-color: #ffe5d0 !important; /* Oranye muda */
+        color: #A0522D !important; /* Coklat bata */
+        border: 1px solid #ffccaa !important;
+    }
 
     /* PODIUM BLOCKS */
     .podium-block { width: 100%; border-radius: 12px 12px 0 0; margin-top: 15px; position: relative; }
