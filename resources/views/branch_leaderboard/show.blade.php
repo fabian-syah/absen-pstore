@@ -209,40 +209,44 @@
     .rank-badge { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); width: 28px; height: 28px; background: #222; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid white; z-index: 5; }
     .crown-icon { position: absolute; top: -35px; left: 50%; transform: translateX(-50%) rotate(-10deg); font-size: 32px; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
     
-    /* PERBAIKAN UTAMA: STAT BADGE AGAR KONTRAST */
+    /* === PERBAIKAN STAT BADGE UTAMA === */
     .stat-badge { 
         display: inline-block; 
-        padding: 6px 14px; 
+        padding: 8px 16px; /* Padding diperbesar sedikit */
         border-radius: 20px; 
         font-size: 12px; 
-        font-weight: 800; /* Extra Bold */
+        font-weight: 800 !important; /* Extra Bold Wajib */
         margin-top: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Tambah shadow agar pop-out */
+        text-transform: uppercase; /* Agar lebih tegas */
+        letter-spacing: 0.5px;
+        position: relative; /* Pastikan z-index bekerja */
+        z-index: 10;
     }
 
     /* Rank 1 (Gold): Background Emas Gelap, Teks Putih */
     .stat-badge.bg-warning {
-        background: #d4af37 !important; /* Emas Metalik */
-        background-color: #d4af37 !important;
-        color: #ffffff !important; /* Putih */
-        border: 1px solid #b8860b;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        background: #b8860b !important; /* Dark Goldenrod (Lebih gelap dari kuning biasa) */
+        background-color: #b8860b !important;
+        color: #ffffff !important; /* Putih mutlak */
+        border: 2px solid #daa520; /* Border sedikit lebih terang */
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5); /* Shadow teks agar terbaca di warna apapun */
     }
 
     /* Rank 2 (Silver): Background Abu Gelap, Teks Putih */
     .stat-badge.bg-secondary {
-        background: #6c757d !important;
-        background-color: #6c757d !important;
+        background: #495057 !important; /* Abu gelap bootstrap */
+        background-color: #495057 !important;
         color: #ffffff !important;
-        border: 1px solid #545b62;
+        border: 2px solid #6c757d;
     }
 
     /* Rank 3 (Bronze): Background Coklat, Teks Putih */
     .stat-badge.border-warning {
-        background: #cd7f32 !important; /* Bronze Color */
-        background-color: #cd7f32 !important;
+        background: #a0522d !important; /* Sienna (Coklat Kemerahan) */
+        background-color: #a0522d !important;
         color: #ffffff !important;
-        border: 1px solid #a0522d !important;
+        border: 2px solid #cd853f !important;
     }
 
     /* PODIUM BLOCKS */
