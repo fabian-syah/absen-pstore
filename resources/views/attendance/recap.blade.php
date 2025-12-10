@@ -129,7 +129,7 @@
             pointer-events: auto;
         }
 
-        /* Music Toggle Button (New) */
+        /* Music Toggle Button */
         .music-toggle {
             position: absolute; top: 30px; right: 20px;
             z-index: 100;
@@ -180,7 +180,7 @@
 </head>
 <body>
 
-    <audio id="bgMusic" loop>
+    <audio id="bgMusic" loop autoplay>
         <source src="{{ asset('music/song.mp3') }}" type="audio/mpeg">
         Browser Anda tidak mendukung audio element.
     </audio>
@@ -193,7 +193,7 @@
             <div class="progress-bar"><div class="progress-fill" id="p4"></div></div>
         </div>
 
-        <div class="music-toggle muted" id="musicBtn" onclick="toggleMusic()">
+        <div class="music-toggle muted" id="musicBtn" onclick="manualToggleMusic()">
             <i class="mdi mdi-music" style="font-size: 20px;"></i>
             <i class="mdi mdi-music-off" style="font-size: 20px;"></i>
         </div>
@@ -288,28 +288,52 @@
         const musicBtn = document.getElementById('musicBtn');
         let musicStarted = false;
 
-        // --- MUSIC CONTROL LOGIC ---
-        function toggleMusic() {
+        // === LOGIKA BARU UNTUK MUSIK (AUTO & FALLBACK) ===
+        
+        // 1. Coba Auto Play saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            tryPlayMusic();
+        });
+
+        // 2. Fungsi Attempt Play
+        function tryPlayMusic() {
+            if (!musicStarted) {
+                audio.volume = 0.7; // Set volume 70%
+                var playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        // Autoplay berhasil!
+                        musicBtn.classList.remove('muted');
+                        musicStarted = true;
+                        console.log("Audio started automatically.");
+                    })
+                    .catch(error => {
+                        // Autoplay diblokir browser, tunggu interaksi user
+                        console.log("Autoplay blocked. Waiting for interaction.");
+                    });
+                }
+            }
+        }
+
+        // 3. Fallback: Mainkan musik saat user pertama kali klik/tap dimana saja di layar
+        document.body.addEventListener('click', function() {
+            if (!musicStarted) {
+                tryPlayMusic();
+            }
+        }, { once: true }); // Hanya jalankan sekali
+
+        // 4. Tombol Mute/Unmute Manual
+        function manualToggleMusic() {
             if (audio.paused) {
-                audio.play().then(() => {
-                    musicBtn.classList.remove('muted');
-                    musicStarted = true;
-                }).catch(err => console.log("Audio play blocked:", err));
+                audio.play();
+                musicBtn.classList.remove('muted');
+                musicStarted = true;
             } else {
                 audio.pause();
                 musicBtn.classList.add('muted');
             }
         }
-
-        // Try to play music on first interaction (Click/Tap Anywhere)
-        document.body.addEventListener('click', function() {
-            if (!musicStarted) {
-                audio.play().then(() => {
-                    musicBtn.classList.remove('muted');
-                    musicStarted = true;
-                }).catch(e => console.log("Autoplay prevented until user interacts"));
-            }
-        }, { once: true });
 
         // --- SLIDER LOGIC ---
         function showSlide(index) {
@@ -375,7 +399,7 @@
             html2canvas(element, { 
                 scale: 3, 
                 // backgroundColor: null,  // WAJIB DIHAPUS agar background ikut ter-render
-                useCORS: true // Penting agar foto profil user (cross-origin) ikut terdownload
+                useCORS: true 
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = 'My-Work-Wrapped-2025.png';
