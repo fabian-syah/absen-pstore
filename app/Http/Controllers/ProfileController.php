@@ -23,7 +23,7 @@ class ProfileController extends Controller
         $workHistories = $user->workHistories;
         $inventories = $user->inventories()->latest()->get();
 
-        // AMBIL DATA PENGHARGAAN (Dikelompokkan berdasarkan Tahun biar rapi)
+        // AMBIL DATA PENGHARGAAN (TIDAK DIHAPUS)
         $achievements = LeaderboardHistory::where('user_id', $user->id)
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
@@ -34,7 +34,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update data TEKS (Nama, Tanggal Lahir, Email, Sosmed, Password).
+     * Update data (Nama, Tanggal Lahir, Email, Sosmed, Password).
      */
     public function update(Request $request)
     {
@@ -43,10 +43,10 @@ class ProfileController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'birth_date' => 'nullable|date', // VALIDASI TANGGAL LAHIR
+            'birth_date' => 'nullable|date', // Validasi Tanggal Lahir
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
-            // VALIDASI SOSMED
+            // Validasi Sosmed
             'whatsapp' => 'nullable|string|max:20',
             'instagram' => 'nullable|string|max:100',
             'tiktok' => 'nullable|string|max:100',
@@ -55,7 +55,7 @@ class ProfileController extends Controller
 
         $data = $request->only([
             'name',
-            'birth_date', // UPDATE TANGGAL LAHIR
+            'birth_date', // Simpan Tanggal Lahir
             'email',
             'whatsapp',
             'instagram',
@@ -85,9 +85,8 @@ class ProfileController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // Jika user SUDAH punya foto, tidak boleh pakai fungsi ini (harus lewat request)
         if ($user->profile_photo_path) {
-            return back()->with('error', 'Anda sudah memiliki foto profil. Gunakan fitur "Ganti Foto" untuk mengajukan perubahan.');
+            return back()->with('error', 'Anda sudah memiliki foto profil. Gunakan fitur "Ganti Foto".');
         }
 
         try {
@@ -95,11 +94,10 @@ class ProfileController extends Controller
 
             $user->update([
                 'profile_photo_path' => $path,
-                'photo_request_status' => 'none' // Reset status
+                'photo_request_status' => 'none'
             ]);
 
-            return redirect()->route('profile.edit')
-                ->with('success', 'Foto profil berhasil diupload.');
+            return redirect()->route('profile.edit')->with('success', 'Foto profil berhasil diupload.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal upload: ' . $e->getMessage());
         }
@@ -107,72 +105,54 @@ class ProfileController extends Controller
 
     /**
      * REQUEST Ganti Foto (Upload ke Temp Path & Set Pending)
-     * Ini digunakan jika user SUDAH punya foto sebelumnya.
      */
     public function requestPhotoChange(Request $request)
     {
-        $request->validate([
-            'profile_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120',
-        ]);
-
+        $request->validate(['profile_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120']);
         $user = Auth::user();
 
-        // Cek jika sedang pending
         if ($user->photo_request_status === 'pending') {
             return back()->with('error', 'Pengajuan sebelumnya masih diproses.');
         }
 
         try {
-            // Hapus temp foto lama jika ada
             if ($user->profile_photo_temp_path) {
                 Storage::disk('public')->delete($user->profile_photo_temp_path);
             }
 
-            // Simpan ke folder TEMP
             $path = $request->file('profile_photo')->store('profile_photos/temp', 'public');
 
-            // Update database: simpan path temp & ubah status jadi pending
             $user->update([
                 'profile_photo_temp_path' => $path,
                 'photo_request_status' => 'pending'
             ]);
 
-            return back()->with('success', 'Foto baru berhasil diupload. Mohon tunggu persetujuan Admin untuk penerapannya.');
+            return back()->with('success', 'Foto baru berhasil diajukan. Menunggu persetujuan Admin.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal upload request: ' . $e->getMessage());
         }
     }
 
     /**
-     * Hapus Foto Profil (Opsional, jika diizinkan)
+     * Hapus Foto Profil
      */
     public function deleteProfilePhoto()
     {
-        // Fitur ini biasanya dimatikan jika sistem mewajibkan approval ketat
-        // Namun jika diaktifkan, pastikan menghapus path dan temp path
         $user = Auth::user();
-
         if ($user->profile_photo_path) {
             Storage::disk('public')->delete($user->profile_photo_path);
         }
-
-        $user->update([
-            'profile_photo_path' => null,
-            'photo_request_status' => 'none'
-        ]);
-
+        $user->update(['profile_photo_path' => null, 'photo_request_status' => 'none']);
         return back()->with('success', 'Foto profil dihapus.');
     }
 
-    // --- LOGIKA KTP (SAMA SEPERTI REQUEST FOTO) ---
+    // --- LOGIKA KTP ---
 
     public function requestKtpChange(Request $request)
     {
         $request->validate(['ktp_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120']);
-
         $user = Auth::user();
 
-        // Hapus temp lama jika ada
         if ($user->ktp_photo_temp_path) {
             Storage::disk('public')->delete($user->ktp_photo_temp_path);
         }

@@ -103,7 +103,7 @@
                     </div>
                 </div>
                 
-                {{-- C. HALL OF FAME (PENGHARGAAN) --}}
+                {{-- C. HALL OF FAME (PENGHARGAAN - TIDAK DIHAPUS) --}}
                 @if(isset($achievements) && $achievements->count() > 0)
                 <div class="text-start mb-4">
                     <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
