@@ -60,9 +60,9 @@
                                     <th> Kontak </th>
                                     <th> Role </th>
                                     {{-- HANYA ADMIN & ADMIN_GAJI YANG BISA LIHAT KOLOM INI --}}
-                                    @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
-                                        <th> Gaji </th>
-                                    @endif
+                                    {{-- @if(in_array(auth()->user()->role, ['admin', 'admin_gaji'])) --}}
+                                        {{-- <th> Gaji </th> --}}
+                                    {{-- @endif --}}
                                     <th> Penempatan & Divisi </th>
                                     <th> Tanggal Join </th>
                                     <th> QR Code </th>
@@ -122,7 +122,8 @@
                                                 class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
                                         </td>
 
-                                        {{-- KOLOM GAJI (RESTRICTED) --}}
+                                        {{-- KOLOM GAJI (RESTRICTED - COMMENTED OUT) --}}
+                                        {{-- 
                                         @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
                                             <td>
                                                 @if($user->gaji)
@@ -134,6 +135,7 @@
                                                 @endif
                                             </td>
                                         @endif
+                                        --}}
 
                                         {{-- PENEMPATAN & DIVISI --}}
                                         <td>

@@ -149,7 +149,8 @@
                         <p class="h6">{{ $user->whatsapp ?? '-' }}</p>
                     </div>
 
-                    {{-- DETAIL GAJI: HANYA DILIHAT ADMIN & ADMIN_GAJI --}}
+                    {{-- DETAIL GAJI (DICOMMENT SEMENTARA) --}}
+                    {{-- 
                     @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
                     <div class="col-md-6 mb-3">
                         <label class="fw-bold text-primary small">Gaji Pokok</label>
@@ -162,6 +163,7 @@
                         </p>
                     </div>
                     @endif
+                    --}}
 
                     {{-- TANGGAL LAHIR & SOSMED --}}
                     <div class="col-md-6 mb-3">

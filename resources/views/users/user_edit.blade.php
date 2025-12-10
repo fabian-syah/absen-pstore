@@ -80,7 +80,8 @@
                             @endif
                         </div>
 
-                        {{-- INPUT GAJI --}}
+                        {{-- INPUT GAJI (DICOMMENT SEMENTARA) --}}
+                        {{-- 
                         @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
                         <div class="form-group mb-3">
                             <label class="fw-bold text-primary">Gaji Pokok</label>
@@ -92,6 +93,7 @@
                             <small class="text-muted">Masukkan angka, otomatis terformat.</small>
                         </div>
                         @endif
+                        --}}
 
                         <div class="form-group mb-3">
                             <label>awal masuk pstore ( opsional )</label>
@@ -240,7 +242,6 @@
                 $('input[name="check_out_start"]').val('');
             }
 
-            // UPDATE: Jika role admin ATAU admin_gaji, hide single branch group
             window.toggleInputs = function() {
                 const role = $('#role').val();
                 if (role === 'admin' || role === 'admin_gaji') { 
@@ -257,6 +258,8 @@
             };
             toggleInputs();
 
+            // --- FUNGSI FORMAT RUPIAH (DICOMMENT SEMENTARA) ---
+            /*
             var gaji = document.getElementById('gaji');
             if(gaji){
                 gaji.addEventListener('keyup', function(e){
@@ -279,6 +282,7 @@
                 rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
                 return prefix == undefined ? rupiah : (rupiah ? rupiah : '');
             }
+            */
         });
     </script>
 @endpush

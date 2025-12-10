@@ -79,7 +79,8 @@
                             </select>
                         </div>
 
-                        {{-- INPUT GAJI --}}
+                        {{-- INPUT GAJI (DICOMMENT SEMENTARA) --}}
+                        {{-- 
                         @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
                         <div class="form-group mb-3">
                             <label class="fw-bold text-primary">Gaji Pokok</label>
@@ -90,6 +91,7 @@
                             <small class="text-muted">Masukkan angka, otomatis terformat.</small>
                         </div>
                         @endif
+                        --}}
 
                         <div class="form-group mb-3">
                             <label>awal masuk pstore ( opsional )</label>
@@ -176,23 +178,29 @@
                             <strong>Biarkan kosong jika jam kerja Fleksibel/Bebas.</strong>
                         </p>
                         
+                        {{-- SATU KARTU UNTUK KEDUANYA --}}
                         <div class="card border" style="border-color: #009688;">
                             <div class="card-header text-white" style="background-color: #009688;">
                                 <h6 class="mb-0"><i class="mdi mdi-clock-outline me-2"></i>Pengaturan Jam Kerja</h6>
                             </div>
                             <div class="card-body py-4">
                                 <div class="row">
+                                    {{-- INPUT KIRI: JAM MASUK --}}
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Jam Masuk (Check In)</label>
                                         <input type="time" class="form-control" name="check_in_start" value="{{ old('check_in_start') }}">
                                         <small class="text-muted">Waktu mulai absen masuk</small>
                                     </div>
+
+                                    {{-- INPUT KANAN: JAM PULANG --}}
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Jam Pulang (Check Out)</label>
                                         <input type="time" class="form-control" name="check_out_start" value="{{ old('check_out_start') }}">
                                         <small class="text-muted">Waktu mulai absen pulang</small>
                                     </div>
                                 </div>
+
+                                {{-- TOMBOL HAPUS JAM (RESET) --}}
                                 <div class="mt-2">
                                     <a href="javascript:void(0)" onclick="clearWorkHours()" class="text-danger small" style="text-decoration: none;">
                                         <i class="mdi mdi-close-circle me-1"></i>Hapus / Reset ke Fleksibel
@@ -229,20 +237,21 @@
             window.selectAll = function(selector) { $(selector).find('option').prop('selected', true); $(selector).trigger('change'); }
             window.clearAll = function(selector) { $(selector).val(null).trigger('change'); }
 
+            // FUNGSI BARU: RESET JAM KERJA
             window.clearWorkHours = function() {
                 $('input[name="check_in_start"]').val('');
                 $('input[name="check_out_start"]').val('');
             }
 
-            // UPDATE: Jika role admin ATAU admin_gaji, hide single branch group
             window.toggleInputs = function() {
                 const role = $('#role').val();
+                // UPDATE: Jika role admin ATAU admin_gaji, hide single branch group
                 if (role === 'admin' || role === 'admin_gaji') { 
                     $('#single-branch-group').addClass('d-none'); 
                 } else { 
                     $('#single-branch-group').removeClass('d-none'); 
                 }
-                
+
                 if (role === 'audit') { 
                     $('#multi-branch-group').removeClass('d-none'); 
                 } else { 
@@ -251,6 +260,8 @@
             };
             toggleInputs();
 
+            // --- FUNGSI FORMAT RUPIAH (DICOMMENT SEMENTARA) ---
+            /*
             var gaji = document.getElementById('gaji');
             if(gaji){
                 gaji.addEventListener('keyup', function(e){
@@ -273,6 +284,7 @@
                 rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
                 return prefix == undefined ? rupiah : (rupiah ? rupiah : '');
             }
+            */
         });
     </script>
 @endpush

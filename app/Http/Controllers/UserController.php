@@ -80,13 +80,12 @@ class UserController extends Controller
     {
         $user = Auth::user();
 
-        // --- PEMBERSIHAN FORMAT RUPIAH ---
-        // Jika ada input gaji, kita hapus titiknya dulu biar jadi angka murni (cth: "3.000.000" jadi "3000000")
-        if ($request->has('gaji')) {
-            $request->merge([
-                'gaji' => str_replace('.', '', $request->gaji)
-            ]);
-        }
+        // --- PEMBERSIHAN FORMAT RUPIAH (DICOMMENT SEMENTARA) ---
+        // if ($request->has('gaji')) {
+        //     $request->merge([
+        //         'gaji' => str_replace('.', '', $request->gaji)
+        //     ]);
+        // }
         // ---------------------------------
 
         $request->validate([
@@ -105,7 +104,7 @@ class UserController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
-            'gaji' => 'nullable|numeric',
+            // 'gaji' => 'nullable|numeric', // DICOMMENT SEMENTARA
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
@@ -115,10 +114,10 @@ class UserController extends Controller
         $data['check_in_end']    = null;
         $data['check_out_end']   = null;
 
-        // Pastikan hanya admin/admin_gaji yang bisa input gaji
-        if (!in_array($user->role, ['admin', 'admin_gaji'])) {
-            unset($data['gaji']);
-        }
+        // Pastikan hanya admin/admin_gaji yang bisa input gaji (DICOMMENT SEMENTARA)
+        // if (!in_array($user->role, ['admin', 'admin_gaji'])) {
+        //     unset($data['gaji']);
+        // }
 
         $data['division_id'] = ($request->has('multi_divisions') && count($request->multi_divisions) > 0) ? $request->multi_divisions[0] : null;
 
@@ -178,12 +177,12 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        // --- PEMBERSIHAN FORMAT RUPIAH ---
-        if ($request->has('gaji')) {
-            $request->merge([
-                'gaji' => str_replace('.', '', $request->gaji)
-            ]);
-        }
+        // --- PEMBERSIHAN FORMAT RUPIAH (DICOMMENT SEMENTARA) ---
+        // if ($request->has('gaji')) {
+        //     $request->merge([
+        //         'gaji' => str_replace('.', '', $request->gaji)
+        //     ]);
+        // }
         // ---------------------------------
 
         $request->validate([
@@ -199,15 +198,15 @@ class UserController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
-            'gaji' => 'nullable|numeric',
+            // 'gaji' => 'nullable|numeric', // DICOMMENT SEMENTARA
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
-        // Pastikan hanya admin/admin_gaji yang bisa update gaji
-        if (!in_array(Auth::user()->role, ['admin', 'admin_gaji'])) {
-            unset($data['gaji']);
-        }
+        // Pastikan hanya admin/admin_gaji yang bisa update gaji (DICOMMENT SEMENTARA)
+        // if (!in_array(Auth::user()->role, ['admin', 'admin_gaji'])) {
+        //     unset($data['gaji']);
+        // }
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
