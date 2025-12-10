@@ -16,55 +16,48 @@ class AttendanceRecapController extends Controller
         $year = 2025; // Tahun target
         
         // ==========================================================
-        // LOGIKA FILTER DIPERKETAT DI SINI
+        // LOGIKA FILTER (HANYA YANG MASUK, PULANG, & VERIFIED)
         // ==========================================================
         $attendances = Attendance::where('user_id', $user->id)
             ->whereYear('check_in_time', $year)
-            ->whereNotNull('check_in_time')   // Wajib sudah absen masuk
-            ->whereNotNull('check_out_time')  // Wajib sudah absen pulang (Selesai kerja)
-            ->where('status', 'verified')     // WAJIB TERVERIFIKASI (Kunci utamanya)
-            // Filter tambahan untuk memastikan bukan Alpha/Izin yang terinput tidak sengaja
+            ->whereNotNull('check_in_time')   // Wajib ada jam masuk
+            ->whereNotNull('check_out_time')  // Wajib ada jam pulang
+            ->where('status', 'verified')     // Wajib Verified
             ->where(function($q) {
                 $q->where('presence_status', 'Masuk')
-                  ->orWhere('presence_status', 'like', '%WFH%') // Hitung WFH jika ada
-                  ->orWhere('presence_status', 'like', '%Dinas%'); // Hitung Dinas Luar
+                  ->orWhere('presence_status', 'like', '%WFH%')
+                  ->orWhere('presence_status', 'like', '%Dinas%');
             })
             ->get();
 
-        // Jika tidak ada data yang valid (Hanya Alpha/Belum Verified semua)
         if ($attendances->isEmpty()) {
-            return redirect()->route('dashboard')->with('warning', 'Belum ada data absensi valid (Masuk, Pulang & Terverifikasi) di tahun ini.');
+            return redirect()->route('dashboard')->with('warning', 'Belum ada data absensi valid (Lengkap & Terverifikasi) di tahun ini.');
         }
 
-        // 1. Total Kehadiran (Hanya hari yang valid)
+        // 1. Total Kehadiran
         $totalPresent = $attendances->count();
 
-        // 2. Total Jam Kerja (Real Durasi)
+        // 2. Total Jam Kerja
         $totalSeconds = 0;
         foreach ($attendances as $att) {
             $start = Carbon::parse($att->check_in_time);
             $end = Carbon::parse($att->check_out_time);
-            
-            // Hitung selisih detik
             $totalSeconds += $end->diffInSeconds($start);
         }
         $totalHours = $totalSeconds > 0 ? round($totalSeconds / 3600) : 0;
 
-        // 3. Rekor Paling Pagi (Dari data yang valid saja)
+        // 3. Rekor Paling Pagi
         $earliestCheckIn = $attendances->sortBy(function($att) {
             return Carbon::parse($att->check_in_time)->format('H:i:s');
         })->first();
             
-        // 4. Statistik Telat (Dari data yang valid)
+        // 4. Statistik Telat
         $totalLate = $attendances->where('is_late_checkin', true)->count();
-        
-        // Hitung persentase (Cegah division by zero)
-        $onTimePercentage = $totalPresent > 0 
-            ? round((($totalPresent - $totalLate) / $totalPresent) * 100) 
-            : 100;
+        $onTimePercentage = $totalPresent > 0 ? round((($totalPresent - $totalLate) / $totalPresent) * 100) : 100;
 
         // 5. Tentukan "Persona" Karyawan
-        $persona = $this->determinePersona($totalPresent, $totalLate, $earliestCheckIn);
+        // [FIX] Tambahkan $totalHours ke dalam parameter function ini
+        $persona = $this->determinePersona($totalPresent, $totalLate, $earliestCheckIn, $totalHours);
 
         return view('attendance.recap', compact(
             'user', 
@@ -77,7 +70,8 @@ class AttendanceRecapController extends Controller
         ));
     }
 
-    private function determinePersona($total, $late, $earliest)
+    // [FIX] Tambahkan $totalHours di sini agar variabelnya dikenali
+    private function determinePersona($total, $late, $earliest, $totalHours)
     {
         $earliestTime = $earliest ? Carbon::parse($earliest->check_in_time)->format('H:i') : '08:00';
 
@@ -93,13 +87,13 @@ class AttendanceRecapController extends Controller
                 'desc' => 'Kamu menyapa matahari sebelum ayam berkokok. Rajin luar biasa!',
                 'icon' => 'mdi-weather-sunset'
             ];
-        } elseif ($late > 15) { // Sedikit toleransi
+        } elseif ($late > 15) {
             return [
                 'title' => 'The Flash Sprinter',
                 'desc' => 'Mungkin sering mepet waktu, tapi pekerjaanmu selalu tuntas!',
                 'icon' => 'mdi-run-fast'
             ];
-        } elseif ($totalHours > 2000) { // Jika jam kerja sangat tinggi
+        } elseif ($totalHours > 2000) { // Error sebelumnya terjadi di sini karena $totalHours tidak dikenal
             return [
                 'title' => 'The Workaholic',
                 'desc' => 'Dedikasi tanpa batas. Kantor adalah rumah keduamu.',
