@@ -63,6 +63,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE RIWAYAT ABSENSI ===
     Route::get('/riwayat-absensi', [AttendanceHistoryController::class, 'index'])->name('attendance.history');
+    // === RUTE RINGKASAN TAHUNAN (PENGGANTI RECAP) ===
+    Route::get('/ringkasan-tahunan', [App\Http\Controllers\AttendanceSummaryController::class, 'index'])
+        ->name('attendance.summary');
     Route::get('/attendance/export-pdf', [AttendanceHistoryController::class, 'exportPdf'])->name('attendance.export.pdf');
 
     // === RUTE JOB TARGETS ===
@@ -92,7 +95,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/{id}/detail', [App\Http\Controllers\CashAdvanceController::class, 'show'])->name('show');
         Route::post('/{id}/cicil', [App\Http\Controllers\CashAdvanceController::class, 'storeInstallment'])->name('installment.store');
 
-        Route::middleware(['role:admin'])->group(function() {
+        Route::middleware(['role:admin'])->group(function () {
             Route::delete('/{id}', [App\Http\Controllers\CashAdvanceController::class, 'destroy'])->name('destroy');
             Route::patch('/{id}/status', [App\Http\Controllers\CashAdvanceController::class, 'changeStatus'])->name('status');
             Route::post('/installment/{id}/approve', [App\Http\Controllers\CashAdvanceController::class, 'approveInstallment'])->name('installment.approve');
@@ -112,7 +115,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         $sender = new class {
             use SendFcmNotification;
         };
-        $branchId = 2; 
+        $branchId = 2;
         try {
             $sender->sendNotificationToBranchRoles(['audit'], $branchId, "Tes Notifikasi", "Pesan tes server.");
             return "Perintah kirim dijalankan.";
@@ -325,7 +328,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         Route::get('/top-absensi-cabang', [BranchLeaderboardController::class, 'index'])
             ->name('branch-leaderboard.index');
-            
+
         Route::get('/top-absensi-cabang/{id}', [BranchLeaderboardController::class, 'show'])
             ->name('branch-leaderboard.show');
     });

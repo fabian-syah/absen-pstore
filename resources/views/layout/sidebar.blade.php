@@ -16,6 +16,12 @@
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link" href="{{ route('attendance.summary') }}">
+                <i class="mdi mdi-text-box-multiple-outline menu-icon"></i>
+                <span class="menu-title">Ringkasan Tahunan</span>
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link" href="{{ route('leave-requests.personal-history') }}">
                 <i class="mdi mdi-history menu-icon"></i>
                 <span class="menu-title">Riwayat Izin</span>
@@ -44,19 +50,19 @@
                 <span class="menu-title">Riwayat Divisi / Cabang</span>
             </a>
         </li>
-       <li class="nav-item">
+        <li class="nav-item">
             <a class="nav-link" href="{{ route('violations.index') }}">
                 <i class="menu-icon mdi mdi-alert-circle-outline"></i>
                 <span class="menu-title">Riwayat Pelanggaran</span>
             </a>
         </li>
-        @if(auth()->user()->role != 'leader')
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('kasbon.index') }}">
-                <i class="menu-icon mdi mdi-cash-multiple"></i>
-                <span class="menu-title">Kasbon</span>
-            </a>
-        </li>
+        @if (auth()->user()->role != 'leader')
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('kasbon.index') }}">
+                    <i class="menu-icon mdi mdi-cash-multiple"></i>
+                    <span class="menu-title">Kasbon</span>
+                </a>
+            </li>
         @endif
 
         {{-- =================================== --}}
@@ -78,15 +84,15 @@
         {{-- UPDATE: Menambahkan admin_gaji di sini --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
             <li class="nav-item nav-category">Manajemen Tim</li>
-            
+
             {{-- Hanya Admin yang bisa lihat Divisi (Opsional, jika admin gaji butuh, hapus if nya) --}}
-            @if(auth()->user()->role == 'admin')
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('divisions.index') }}">
-                    <i class="menu-icon mdi mdi-sitemap"></i>
-                    <span class="menu-title">Data Divisi</span>
-                </a>
-            </li>
+            @if (auth()->user()->role == 'admin')
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('divisions.index') }}">
+                        <i class="menu-icon mdi mdi-sitemap"></i>
+                        <span class="menu-title">Data Divisi</span>
+                    </a>
+                </li>
             @endif
 
             {{-- Admin Gaji BISA lihat Data User --}}
@@ -116,7 +122,7 @@
         {{-- =================================== --}}
         @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Verifikasi</li>
-            
+
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('audit.verify.list') }}">
                     <i class="menu-icon mdi mdi-checkbox-marked-outline"></i>
@@ -131,7 +137,7 @@
             </li>
 
             {{-- Menu KHUSUS ADMIN (Audit tidak bisa lihat) --}}
-            @if(auth()->user()->role == 'admin')
+            @if (auth()->user()->role == 'admin')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('users.photo-requests') }}">
                         <i class="menu-icon mdi mdi-camera-retake-outline"></i>
@@ -191,10 +197,10 @@
                 auth()->user()->role == 'leader' ||
                 auth()->user()->role == 'audit' ||
                 auth()->user()->role == 'security' ||
-                auth()->user()->role == 'admin') 
+                auth()->user()->role == 'admin')
 
             <li class="nav-item nav-category">Menu Pengguna</li>
-            
+
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('team.index') }}">
                     <i class="menu-icon mdi mdi-account-multiple-outline"></i>
@@ -213,7 +219,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MONITORING (ADMIN, AUDIT, LEADER)--}}
+        {{--    MONITORING (ADMIN, AUDIT, LEADER) --}}
         {{-- =================================== --}}
         @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
             <li class="nav-item nav-category">Monitoring Wilayah</li>
