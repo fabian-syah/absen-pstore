@@ -62,7 +62,7 @@
         {{-- =================================== --}}
         {{--    MONITORING HARIAN (ADMIN ONLY)   --}}
         {{-- =================================== --}}
-        @if (auth()->user()->role == 'admin')
+        {{-- @if (auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Monitoring Harian</li>
 
             <li class="nav-item">
@@ -71,7 +71,7 @@
                     <span class="menu-title">Siapa Sudah Absen?</span>
                 </a>
             </li>
-        @endif
+        @endif --}}
 
         {{-- =================================== --}}
         {{--    MENU KHUSUS SUPER ADMIN          --}}
