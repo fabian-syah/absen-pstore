@@ -43,9 +43,10 @@ class ProfileController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'birth_date' => 'nullable|date',
+            'birth_date' => 'nullable|date', // VALIDASI TANGGAL LAHIR
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
+            // VALIDASI SOSMED
             'whatsapp' => 'nullable|string|max:20',
             'instagram' => 'nullable|string|max:100',
             'tiktok' => 'nullable|string|max:100',
@@ -54,7 +55,7 @@ class ProfileController extends Controller
 
         $data = $request->only([
             'name',
-            'birth_date',
+            'birth_date', // UPDATE TANGGAL LAHIR
             'email',
             'whatsapp',
             'instagram',
