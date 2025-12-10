@@ -13,7 +13,9 @@ class AttendanceRecapController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $year = 2025; // Tahun target
+        
+        // [UPDATE] Gunakan tahun sekarang secara dinamis (bukan hardcode 2025)
+        $year = now()->year; 
         
         // ==========================================================
         // LOGIKA FILTER (HANYA YANG MASUK, PULANG, & VERIFIED)
@@ -53,10 +55,11 @@ class AttendanceRecapController extends Controller
             
         // 4. Statistik Telat
         $totalLate = $attendances->where('is_late_checkin', true)->count();
+        // Hitung persentase (cegah division by zero)
         $onTimePercentage = $totalPresent > 0 ? round((($totalPresent - $totalLate) / $totalPresent) * 100) : 100;
 
         // 5. Tentukan "Persona" Karyawan
-        // [FIX] Tambahkan $totalHours ke dalam parameter function ini
+        // Variable $totalHours dikirim ke fungsi ini
         $persona = $this->determinePersona($totalPresent, $totalLate, $earliestCheckIn, $totalHours);
 
         return view('attendance.recap', compact(
@@ -70,7 +73,6 @@ class AttendanceRecapController extends Controller
         ));
     }
 
-    // [FIX] Tambahkan $totalHours di sini agar variabelnya dikenali
     private function determinePersona($total, $late, $earliest, $totalHours)
     {
         $earliestTime = $earliest ? Carbon::parse($earliest->check_in_time)->format('H:i') : '08:00';
@@ -93,7 +95,7 @@ class AttendanceRecapController extends Controller
                 'desc' => 'Mungkin sering mepet waktu, tapi pekerjaanmu selalu tuntas!',
                 'icon' => 'mdi-run-fast'
             ];
-        } elseif ($totalHours > 2000) { // Error sebelumnya terjadi di sini karena $totalHours tidak dikenal
+        } elseif ($totalHours > 2000) { 
             return [
                 'title' => 'The Workaholic',
                 'desc' => 'Dedikasi tanpa batas. Kantor adalah rumah keduamu.',
