@@ -182,15 +182,14 @@ class SelfAttendanceController extends Controller
                 $newStatus = 'pending_verification';
             }
             
-            // PERBAIKAN UTAMA ADA DI SINI: MENAMBAHKAN LATITUDE_OUT DAN LONGITUDE_OUT
             $attendanceToUpdate->update([
                 'check_out_time'    => $currentTime,
                 'photo_out_path'    => $path,
                 'is_early_checkout' => $isEarly,
                 'status'            => $newStatus,
                 'notes'             => $finalNotes,
-                'latitude_out'      => $request->latitude,  // <--- TAMBAHKAN INI
-                'longitude_out'     => $request->longitude, // <--- TAMBAHKAN INI
+                'latitude_out'      => $request->latitude,
+                'longitude_out'     => $request->longitude,
             ]);
 
             $message = "Berhasil absen pulang.";
@@ -205,7 +204,6 @@ class SelfAttendanceController extends Controller
         // LOGIKA ABSEN MASUK (CREATE BARU)
         // =====================================================================
         else {
-            // ... (kode bagian masuk tidak berubah) ...
             
             // Cek ulang sesi aktif
             $checkAgain = Attendance::where('user_id', $user->id)
@@ -274,7 +272,6 @@ class SelfAttendanceController extends Controller
         return redirect()->route('dashboard')->with('success', $message);
     }
     
-    // ... (sisa fungsi lainnya tidak berubah) ...
     public function skipCheckOut($id)
     {
         $user = Auth::user();

@@ -145,12 +145,17 @@
                             <textarea name="notes" class="form-control" rows="3" placeholder="Contoh: Lembur..."></textarea>
                         </div>
 
-                        {{-- TOMBOL SUBMIT --}}
-                        <div class="d-flex gap-2">
-                            <button type="submit" id="submit-button" class="btn btn-dark btn-lg w-100" disabled>
-                                <i class="mdi mdi-send me-2"></i>Kirim Absen {{ ucfirst($mode) }}
-                            </button>
+                        {{-- SLIDE TO SUBMIT --}}
+                        <div class="slide-submit-container mt-4">
+                            <div class="slide-track disabled" id="slide-track">
+                                <div class="slide-text" id="slide-text">Geser untuk {{ ucfirst($mode) }} <i class="mdi mdi-chevron-double-right"></i></div>
+                                <div class="slide-thumb" id="slide-thumb">
+                                    <i class="mdi mdi-arrow-right"></i>
+                                </div>
+                            </div>
+                            <small class="text-muted text-center d-block mt-2" id="slide-hint">Ambil foto & lokasi untuk membuka kunci</small>
                         </div>
+
                         <div class="text-center mt-3">
                             <a href="{{ route('dashboard') }}" class="text-muted small text-decoration-none">Batal</a>
                         </div>
@@ -168,6 +173,84 @@
         .preview-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); padding: 8px; }
         .watermark-timestamp { color: #fff; font-size: 0.75rem; text-align: center; }
         #preview-image { width: 100%; height: auto; object-fit: cover; }
+
+        /* SLIDE TO SUBMIT CSS */
+        .slide-submit-container {
+            position: relative;
+            user-select: none;
+            width: 100%;
+            height: 60px;
+        }
+
+        .slide-track {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #e2e8f0;
+            border-radius: 30px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* State ketika disabled (Belum ada foto/lokasi) */
+        .slide-track.disabled {
+            opacity: 0.6;
+            pointer-events: none;
+            background-color: #f1f5f9;
+        }
+
+        /* State ketika sukses (Submitted) */
+        .slide-track.submitted {
+            background-color: #10b981; /* Green Success */
+        }
+
+        .slide-thumb {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 52px;
+            height: 52px;
+            background-color: #1e293b; /* Dark Color */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: grab;
+            z-index: 2;
+            transition: left 0.1s linear, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .slide-thumb:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .slide-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 1px;
+            z-index: 1;
+            padding-left: 20px; /* Offset text agar tidak tertutup thumb di awal */
+        }
+
+        .slide-track.submitted .slide-text {
+            color: white;
+            padding-left: 0;
+        }
     </style>
 @endpush
 
@@ -180,11 +263,25 @@
             const cameraPreview = document.getElementById('camera-preview');
             const cameraPlaceholder = document.getElementById('camera-placeholder');
             const retakeBtn = document.getElementById('retake-btn');
-            const submitButton = document.getElementById('submit-button');
             const locationStatus = document.getElementById('location-status');
             const locationDetails = document.getElementById('location-details');
+            const form = document.getElementById('attendance-form');
+
+            // Slide Elements
+            const slideTrack = document.getElementById('slide-track');
+            const slideThumb = document.getElementById('slide-thumb');
+            const slideText = document.getElementById('slide-text');
+            const slideHint = document.getElementById('slide-hint');
             
-            // 1. Kamera
+            let isDragging = false;
+            let startX = 0;
+            let currentX = 0;
+            let trackWidth = 0;
+            let thumbWidth = 0;
+            let maxSlide = 0;
+            let isSubmitted = false;
+
+            // 1. Kamera Logic
             captureBtn.addEventListener('click', () => photoInput.click());
             photoInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
@@ -208,7 +305,7 @@
                 checkValidity();
             });
 
-            // 2. Geolocation
+            // 2. Geolocation Logic
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
@@ -226,12 +323,95 @@
                 );
             } else { locationStatus.innerHTML = "Browser tidak support GPS."; }
 
-            // 3. Validasi
+            // 3. Validasi & Unlock Slider
             function checkValidity() {
                 const hasPhoto = photoInput.files.length > 0;
                 const hasLoc = document.getElementById('latitude').value !== '';
-                submitButton.disabled = !(hasPhoto && hasLoc);
+                
+                if (hasPhoto && hasLoc) {
+                    slideTrack.classList.remove('disabled');
+                    slideHint.textContent = "Geser tombol ke kanan untuk konfirmasi";
+                    slideHint.classList.remove('text-muted');
+                    slideHint.classList.add('text-dark');
+                } else {
+                    slideTrack.classList.add('disabled');
+                    slideHint.textContent = "Ambil foto & lokasi untuk membuka kunci";
+                    slideHint.classList.add('text-muted');
+                }
             }
+
+            // 4. Slider Logic (Touch & Mouse)
+            function initSlider() {
+                trackWidth = slideTrack.offsetWidth;
+                thumbWidth = slideThumb.offsetWidth;
+                maxSlide = trackWidth - thumbWidth - 8; // 8px margin safety
+            }
+
+            // Update on resize
+            window.addEventListener('resize', initSlider);
+            // Init immediately
+            initSlider();
+
+            function startDrag(e) {
+                if (slideTrack.classList.contains('disabled') || isSubmitted) return;
+                isDragging = true;
+                startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
+                slideThumb.style.transition = 'none'; // Disable transition for direct follow
+            }
+
+            function onDrag(e) {
+                if (!isDragging || isSubmitted) return;
+                
+                const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
+                let moveX = clientX - startX;
+
+                // Batas gerak
+                if (moveX < 0) moveX = 0;
+                if (moveX > maxSlide) moveX = maxSlide;
+
+                currentX = moveX;
+                slideThumb.style.left = (4 + moveX) + 'px'; // 4px is initial offset
+
+                // Opacity text effect
+                const progress = moveX / maxSlide;
+                slideText.style.opacity = 1 - progress;
+            }
+
+            function endDrag() {
+                if (!isDragging || isSubmitted) return;
+                isDragging = false;
+
+                // Threshold 90%
+                if (currentX >= maxSlide * 0.9) {
+                    // Success!
+                    isSubmitted = true;
+                    slideThumb.style.left = (4 + maxSlide) + 'px';
+                    slideTrack.classList.add('submitted');
+                    slideThumb.innerHTML = '<i class="mdi mdi-check"></i>';
+                    slideThumb.style.backgroundColor = '#fff';
+                    slideThumb.style.color = '#10b981';
+                    slideText.style.opacity = 1;
+                    slideText.innerHTML = "MEMPROSES DATA...";
+                    
+                    // Submit Form
+                    form.submit();
+                } else {
+                    // Snap back
+                    slideThumb.style.transition = 'left 0.3s ease';
+                    slideThumb.style.left = '4px';
+                    slideText.style.opacity = 1;
+                }
+            }
+
+            // Mouse Events
+            slideThumb.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', endDrag);
+
+            // Touch Events (Mobile)
+            slideThumb.addEventListener('touchstart', startDrag);
+            document.addEventListener('touchmove', onDrag);
+            document.addEventListener('touchend', endDrag);
         });
     </script>
 @endpush
