@@ -25,7 +25,7 @@
             color: white;
             overflow: hidden; 
             display: flex; justify-content: center; align-items: center;
-            height: 100dvh; /* Pakai dvh biar pas di HP */
+            height: 100dvh; 
             width: 100vw;
         }
 
@@ -58,9 +58,15 @@
         h1 { font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 15px; text-transform: uppercase; }
         h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; color: var(--gold); }
         p { font-size: 1rem; opacity: 0.9; line-height: 1.6; margin-bottom: 20px; }
-        .big-number { font-size: 4rem; font-weight: 800; background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 10px 0; }
+        
+        .big-number { 
+            font-size: 4rem; font-weight: 800; 
+            background: var(--gold-gradient); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            margin: 10px 0; 
+        }
 
-        /* Components */
+        /* Avatar */
         .avatar-glow {
             width: 100px; height: 100px; border-radius: 50%;
             border: 3px solid var(--gold);
@@ -68,6 +74,7 @@
             object-fit: cover; margin-bottom: 20px;
         }
 
+        /* Persona Badge */
         .persona-badge {
             background: rgba(255, 215, 0, 0.1); border: 1px solid var(--gold);
             padding: 15px 20px; border-radius: 16px; margin-top: 20px;
@@ -87,17 +94,17 @@
         .tap-area.left { left: 0; }
         .tap-area.right { right: 0; }
 
-        /* Tombol Start (Pemicu Audio) */
+        /* Start Button */
         .start-btn {
             background: var(--gold-gradient); color: #000;
             border: none; padding: 15px 40px; border-radius: 50px;
             font-weight: 800; font-size: 1.1rem; cursor: pointer;
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
             animation: pulse-btn 2s infinite; z-index: 100; position: relative;
-            margin-top: 20px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+            margin-top: 20px; display: inline-flex; align-items: center; gap: 8px;
         }
 
-        /* Tombol Share */
+        /* Share Button */
         .action-btn {
             position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
             z-index: 100; background: var(--gold-gradient); color: black;
@@ -132,17 +139,6 @@
             0% { transform: scale(1); }
             50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 215, 0, 0.6); }
             100% { transform: scale(1); }
-        }
-
-        /* Sparkles */
-        .sparkle {
-            position: absolute; background: white; border-radius: 50%;
-            animation: float 3s infinite ease-in-out; opacity: 0; pointer-events: none;
-        }
-        @keyframes float {
-            0% { transform: translateY(0) scale(0); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
         }
 
         #capture-area {
@@ -269,41 +265,53 @@
         const totalSlides = slides.length;
         const audio = document.getElementById('bgMusic');
         const musicBtn = document.getElementById('musicBtn');
-        let musicStarted = false;
+        let audioLocked = false; // Flag untuk mencegah "tabrakan" perintah
 
-        // === 1. FUNGSI UTAMA: Start Experience ===
-        // Audio HANYA dipanggil disini saat user klik tombol
-        function startExperience() {
-            // Coba play audio
-            audio.volume = 0.8;
-            var playPromise = audio.play();
-
-            if (playPromise !== undefined) {
-                playPromise.then(_ => {
-                    musicBtn.classList.remove('muted');
-                    musicStarted = true;
-                })
-                .catch(error => {
-                    console.log("Audio play blocked by browser:", error);
-                });
+        // === FUNGSI AUDIO AMAN (SAFE PLAY) ===
+        // Menggunakan async/await untuk memastikan play() selesai sebelum perintah lain masuk
+        async function playAudio() {
+            if(audioLocked) return; // Jika sedang proses, abaikan klik
+            audioLocked = true;
+            try {
+                audio.volume = 0.8;
+                await audio.play();
+                musicBtn.classList.remove('muted');
+            } catch (err) {
+                console.log("Audio play prevented:", err);
+            } finally {
+                audioLocked = false;
             }
-
-            // Pindah slide
-            nextSlide();
         }
 
-        // === 2. Toggle Musik Manual ===
-        function toggleMusic() {
-            if (audio.paused) {
-                audio.play();
-                musicBtn.classList.remove('muted');
-            } else {
+        async function pauseAudio() {
+            if(audioLocked) return;
+            audioLocked = true;
+            try {
                 audio.pause();
                 musicBtn.classList.add('muted');
+            } catch (err) {
+                console.log("Audio pause error:", err);
+            } finally {
+                audioLocked = false;
             }
         }
 
-        // === 3. Slider Logic ===
+        // Toggle Wrapper
+        function toggleMusic() {
+            if (audio.paused) {
+                playAudio();
+            } else {
+                pauseAudio();
+            }
+        }
+
+        // Fungsi Utama START (Dipanggil Tombol)
+        function startExperience() {
+            playAudio(); // Fire and forget
+            nextSlide(); // Langsung pindah slide agar user tidak menunggu
+        }
+
+        // --- SLIDER LOGIC ---
         function showSlide(index) {
             slides.forEach((slide, i) => {
                 slide.classList.remove('active');
@@ -336,14 +344,15 @@
         }
 
         function prevSlide() {
-            if (currentSlide > 0 && currentSlide < totalSlides - 1) { // Slide 1 ga bisa diback
+            if (currentSlide > 0 && currentSlide < totalSlides - 1) { 
                 currentSlide--;
                 showSlide(currentSlide);
             }
         }
 
-        // === 4. Visual Effects ===
+        // --- VISUAL EFFECTS ---
         function createSparkles() {
+            // Efek di slide 4 (capture area)
             const container = document.getElementById('capture-area');
             for(let i=0; i<15; i++) {
                 let sparkle = document.createElement('div');
@@ -358,7 +367,7 @@
         }
         createSparkles();
 
-        // === 5. Download Image ===
+        // --- DOWNLOAD FEATURE ---
         function downloadImage() {
             const element = document.getElementById('capture-area');
             const btn = document.getElementById('shareBtn');
@@ -369,7 +378,7 @@
             setTimeout(() => {
                 html2canvas(element, { 
                     scale: 3, 
-                    useCORS: true 
+                    useCORS: true // Wajib untuk foto profil
                 }).then(canvas => {
                     const link = document.createElement('a');
                     link.download = 'My-Work-Wrapped-2025.png';
