@@ -86,7 +86,8 @@ class AttendanceHistoryController extends Controller
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
         // 1. AMBIL DATA ABSENSI ASLI
-        $attendances = Attendance::with(['verifier', 'scanner']) 
+        // UPDATE: Tambahkan 'user' di with() agar bisa diakses di Blade untuk fallback jadwal
+        $attendances = Attendance::with(['verifier', 'scanner', 'user']) 
             ->where('user_id', $user->id)
             ->whereYear('check_in_time', $selectedYear)
             ->whereMonth('check_in_time', $selectedMonth)
@@ -150,6 +151,9 @@ class AttendanceHistoryController extends Controller
                         // Mapping Verifier Izin ke Verifier Attendance
                         $fakeAtt->setRelation('verifier', $leave->verifier); 
                         
+                        // Set Relasi User (Penting untuk fallback jadwal)
+                        $fakeAtt->setRelation('user', $user);
+
                         $historyCollection->push($fakeAtt);
                     }
                 }

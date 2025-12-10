@@ -239,6 +239,19 @@ class SelfAttendanceController extends Controller
                 }
             }
 
+            // === [SNAPSHOT LOGIC START] ===
+            // Simpan jadwal saat ini agar history tidak berubah jika user ganti jadwal nanti
+            $snapIn = $user->check_in_start;
+            if (!$snapIn && $workSchedule) {
+                $snapIn = $workSchedule->check_in_start;
+            }
+
+            $snapOut = $user->check_out_start;
+            if (!$snapOut && $workSchedule) {
+                $snapOut = $workSchedule->check_out_start;
+            }
+            // === [SNAPSHOT LOGIC END] ===
+
             Attendance::create([
                 'user_id'           => $user->id,
                 'branch_id'         => $user->branch_id,
@@ -253,6 +266,10 @@ class SelfAttendanceController extends Controller
                 'is_late_checkin'   => $isLate,
                 'notes'             => $request->notes,
                 'verified_by_user_id' => null, 
+                
+                // Fields Baru (Snapshot)
+                'scheduled_check_in' => $snapIn,
+                'scheduled_check_out' => $snapOut,
             ]);
 
             $message = 'Berhasil absen masuk. Menunggu verifikasi.';

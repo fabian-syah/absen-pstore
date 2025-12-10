@@ -152,6 +152,19 @@ class ScanController extends Controller
                 }
             }
 
+            // === [SNAPSHOT LOGIC START] ===
+            // Simpan jadwal saat ini agar history tidak berubah jika user ganti jadwal nanti
+            $snapIn = $user->check_in_start;
+            if (!$snapIn && $workSchedule) {
+                $snapIn = $workSchedule->check_in_start;
+            }
+
+            $snapOut = $user->check_out_start;
+            if (!$snapOut && $workSchedule) {
+                $snapOut = $workSchedule->check_out_start;
+            }
+            // === [SNAPSHOT LOGIC END] ===
+
             Attendance::create([
                 'user_id' => $user->id,
                 'branch_id' => $user->branch_id,
@@ -165,6 +178,10 @@ class ScanController extends Controller
                 'is_late_checkin' => $isLate,
                 'attendance_type' => 'scan',
                 'notes' => $manualNotes, 
+                
+                // Fields Baru (Snapshot)
+                'scheduled_check_in' => $snapIn,
+                'scheduled_check_out' => $snapOut,
             ]);
 
             $msg = $isLate ? "Absen MASUK Berhasil (TERLAMBAT)" : "Absen MASUK Berhasil";

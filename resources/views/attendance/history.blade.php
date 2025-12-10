@@ -247,6 +247,48 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($history as $att)
+                                        @php
+                                            // --- LOGIKA SNAPSHOT VS CURRENT SCHEDULE ---
+                                            // 1. Coba ambil dari History (Snapshot) jika kolom ada
+                                            $fixedScheduleIn  = $att->scheduled_check_in ?? null;
+                                            $fixedScheduleOut = $att->scheduled_check_out ?? null;
+                                            
+                                            // 2. Jika Snapshot kosong, ambil dari User Profile (Current)
+                                            if (!$fixedScheduleIn && $att->user) {
+                                                $fixedScheduleIn = $att->user->check_in_start;
+                                            }
+                                            if (!$fixedScheduleOut && $att->user) {
+                                                $fixedScheduleOut = $att->user->check_out_start;
+                                            }
+
+                                            // 3. Fallback ke WorkSchedule (Shift) jika user schedule juga kosong
+                                            if (!$fixedScheduleIn && $att->user && $att->user->workSchedule) {
+                                                 $fixedScheduleIn = $att->user->workSchedule->start_time;
+                                            }
+                                            if (!$fixedScheduleOut && $att->user && $att->user->workSchedule) {
+                                                 $fixedScheduleOut = $att->user->workSchedule->end_time;
+                                            }
+
+                                            // --- HITUNG KETERLAMBATAN (Jam Masuk) untuk Tampilan ---
+                                            $isRealLate = false;
+                                            $lateStr = ''; 
+
+                                            // Hanya hitung jika bukan izin/leave
+                                            if ($fixedScheduleIn && $att->attendance_type != 'leave') {
+                                                $actualStr = $att->check_in_time->format('H:i');
+                                                $scheduleStr = \Carbon\Carbon::parse($fixedScheduleIn)->format('H:i');
+                                                
+                                                if ($actualStr > $scheduleStr) {
+                                                    $isRealLate = true;
+                                                    $actualCarbon = \Carbon\Carbon::parse($actualStr);
+                                                    $scheduleCarbon = \Carbon\Carbon::parse($scheduleStr);
+                                                    $lateMinutes = $scheduleCarbon->diffInMinutes($actualCarbon);
+                                                    $hours = floor($lateMinutes / 60);
+                                                    $mins = $lateMinutes % 60;
+                                                    $lateStr = ($hours > 0) ? "{$hours}j {$mins}m" : "{$mins}m";
+                                                }
+                                            }
+                                        @endphp
                                         <tr>
                                             {{-- TANGGAL --}}
                                             <td class="ps-4 py-3">
@@ -254,36 +296,9 @@
                                                 <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">{{ $att->check_in_time->format('l') }}</small>
                                             </td>
 
-                                            {{-- JAM MASUK --}}
+                                            {{-- JAM MASUK (MODIFIED) --}}
                                             <td>
                                                 <div class="d-flex flex-column">
-                                                    @php
-                                                        $scheduleTime = null;
-                                                        $cutoffDate = \Carbon\Carbon::create(2025, 12, 1);
-                                                        if ($att->check_in_time->gte($cutoffDate)) {
-                                                            if ($att->user && $att->user->check_in_start) {
-                                                                $scheduleTime = $att->user->check_in_start;
-                                                            } elseif ($att->user && $att->user->workSchedule) {
-                                                                $scheduleTime = $att->user->workSchedule->start_time;
-                                                            }
-                                                        }
-                                                        $isRealLate = false;
-                                                        $lateStr = ''; 
-                                                        if ($scheduleTime) {
-                                                            $actualStr = $att->check_in_time->format('H:i');
-                                                            $scheduleStr = \Carbon\Carbon::parse($scheduleTime)->format('H:i');
-                                                            if ($actualStr > $scheduleStr) {
-                                                                $isRealLate = true;
-                                                                $actualCarbon = \Carbon\Carbon::parse($actualStr);
-                                                                $scheduleCarbon = \Carbon\Carbon::parse($scheduleStr);
-                                                                $lateMinutes = $scheduleCarbon->diffInMinutes($actualCarbon);
-                                                                $hours = floor($lateMinutes / 60);
-                                                                $mins = $lateMinutes % 60;
-                                                                $lateStr = ($hours > 0) ? "{$hours}j {$mins}m" : "{$mins}m";
-                                                            }
-                                                        }
-                                                    @endphp
-
                                                     <div class="d-flex align-items-center">
                                                         <i class="mdi mdi-login-variant {{ $isRealLate ? 'text-danger' : 'text-success' }} me-2 fs-5"></i>
                                                         <div>
@@ -295,8 +310,9 @@
                                                             @endif
                                                         </div>
                                                     </div>
+                                                    {{-- TAMPILKAN JADWAL MASUK (SNAPSHOT/CURRENT) --}}
                                                     <small class="text-muted ps-4" style="font-size: 0.7rem;">
-                                                        {{ $scheduleTime ? 'Jadwal: '.\Carbon\Carbon::parse($scheduleTime)->format('H:i') : '- Fleksibel -' }}
+                                                        {{ $fixedScheduleIn ? 'Jadwal: '.\Carbon\Carbon::parse($fixedScheduleIn)->format('H:i') : '- Fleksibel -' }}
                                                     </small>
                                                 </div>
                                             </td>
@@ -312,22 +328,12 @@
                                                     if ($att->leaveRequest) $labelMasuk = 'Izin/Sakit';
                                                     elseif ($att->presence_status) $labelMasuk = $att->presence_status;
                                                     
-                                                    // ---- LOGIKA BARU PARSING CATATAN MASUK ----
                                                     $rawNotes = $att->notes ?? '';
                                                     $noteMasukDisplay = '';
-                                                    
-                                                    // Pecah string berdasarkan separator ' | '
                                                     $noteParts = explode(' | ', $rawNotes);
-                                                    
-                                                    // Bagian pertama diasumsikan sebagai catatan masuk (jika bukan string kosong/system)
                                                     if (isset($noteParts[0])) {
                                                         $firstPart = trim($noteParts[0]);
-                                                        // Filter kata kunci sistem agar tidak dianggap catatan user
-                                                        if (!empty($firstPart) && 
-                                                            !str_contains($firstPart, 'Catatan:') && 
-                                                            !str_contains($firstPart, 'Security Scan') && 
-                                                            !str_contains($firstPart, 'Pulang') &&
-                                                            $firstPart != '-') {
+                                                        if (!empty($firstPart) && !str_contains($firstPart, 'Catatan:') && !str_contains($firstPart, 'Security Scan') && !str_contains($firstPart, 'Pulang') && $firstPart != '-') {
                                                             $noteMasukDisplay = $firstPart;
                                                         }
                                                     }
@@ -347,7 +353,6 @@
                                                         </div>
                                                     @endif
 
-                                                    {{-- TAMPILKAN CATATAN MASUK DI BAWAH FOTO --}}
                                                     @if(!empty($noteMasukDisplay))
                                                         <div class="note-box" title="{{ $noteMasukDisplay }}">
                                                             <i class="mdi mdi-note-text-outline me-1"></i>{{ \Illuminate\Support\Str::limit($noteMasukDisplay, 25) }}
@@ -356,23 +361,30 @@
                                                 </div>
                                             </td>
 
-                                            {{-- JAM PULANG --}}
+                                            {{-- JAM PULANG (MODIFIED) --}}
                                             <td class="border-start bg-light bg-opacity-25">
-                                                @if ($att->check_out_time)
-                                                    <div class="d-flex align-items-center">
-                                                        <i class="mdi mdi-logout-variant text-primary me-2 fs-5"></i>
-                                                        <div>
-                                                            <span class="fw-bold fs-6 {{ $att->is_early_checkout ? 'text-warning' : 'text-dark' }}">
-                                                                {{ $att->check_out_time->format('H:i') }}
-                                                            </span>
-                                                            @if ($att->is_early_checkout)
-                                                                <span class="badge bg-warning text-dark rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">Cepat</span>
-                                                            @endif
+                                                <div class="d-flex flex-column">
+                                                    @if ($att->check_out_time)
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="mdi mdi-logout-variant text-primary me-2 fs-5"></i>
+                                                            <div>
+                                                                <span class="fw-bold fs-6 {{ $att->is_early_checkout ? 'text-warning' : 'text-dark' }}">
+                                                                    {{ $att->check_out_time->format('H:i') }}
+                                                                </span>
+                                                                @if ($att->is_early_checkout)
+                                                                    <span class="badge bg-warning text-dark rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">Cepat</span>
+                                                                @endif
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                @else
-                                                    <span class="badge bg-light text-secondary border">Belum Pulang</span>
-                                                @endif
+                                                    @else
+                                                        <span class="badge bg-light text-secondary border">Belum Pulang</span>
+                                                    @endif
+
+                                                    {{-- TAMPILKAN JADWAL PULANG (SNAPSHOT/CURRENT) --}}
+                                                    <small class="text-muted ps-4" style="font-size: 0.7rem;">
+                                                        {{ $fixedScheduleOut ? 'Jadwal: '.\Carbon\Carbon::parse($fixedScheduleOut)->format('H:i') : '- Fleksibel -' }}
+                                                    </small>
+                                                </div>
                                             </td>
 
                                             {{-- FOTO PULANG + CATATAN --}}
@@ -384,14 +396,10 @@
                                                         $labelPulang = 'Pulang ' . ltrim(trim(end($parts)), ': ');
                                                     }
 
-                                                    // ---- LOGIKA BARU PARSING CATATAN PULANG ----
                                                     $notePulangDisplay = '';
                                                     $noteParts = explode(' | ', $att->notes ?? '');
-                                                    
-                                                    // Cari bagian yang mengandung "Catatan:"
                                                     foreach ($noteParts as $part) {
                                                         if (str_contains($part, 'Catatan:')) {
-                                                            // Hapus label "Catatan:" dan trim
                                                             $notePulangDisplay = trim(str_replace('Catatan:', '', $part));
                                                             break; 
                                                         }
@@ -412,7 +420,6 @@
                                                         </div>
                                                     @endif
 
-                                                    {{-- TAMPILKAN CATATAN PULANG DI BAWAH FOTO --}}
                                                     @if(!empty($notePulangDisplay))
                                                         <div class="note-box bg-white" title="{{ $notePulangDisplay }}">
                                                             <i class="mdi mdi-note-text-outline me-1"></i>{{ \Illuminate\Support\Str::limit($notePulangDisplay, 25) }}
@@ -432,7 +439,7 @@
                                                             str_contains($statusLower, 'telat') => 'bg-warning text-dark',
                                                             $statusLower == 'sakit' => 'bg-primary',
                                                             in_array($statusLower, ['cuti', 'izin']) => 'bg-secondary',
-                                                            in_array($statusLower, ['libur', 'off day']) => 'bg-dark', // Styling untuk Libur
+                                                            in_array($statusLower, ['libur', 'off day']) => 'bg-dark', 
                                                             $statusLower == 'alpha' => 'bg-danger',
                                                             default => 'bg-dark',
                                                         };
@@ -684,10 +691,8 @@
                                     <select name="presence_status" class="form-select form-select-lg" required>
                                         <option value="Masuk" {{ $att->presence_status == 'Masuk' ? 'selected' : '' }}>✅ Masuk</option>
                                         <option value="Sakit" {{ $att->presence_status == 'Sakit' ? 'selected' : '' }}>🤒 Sakit</option>
-                                        {{-- TAMBAHAN DI VERIFIKASI JUGA --}}
                                         <option value="Izin" {{ $att->presence_status == 'Izin' ? 'selected' : '' }}>📝 Izin</option>
                                         <option value="Libur" {{ $att->presence_status == 'Libur' ? 'selected' : '' }}>😎 Libur (Off Day)</option>
-                                        {{-- AKHIR TAMBAHAN --}}
                                         <option value="Cuti" {{ $att->presence_status == 'Cuti' ? 'selected' : '' }}>🏖️ Cuti</option>
                                         <option value="Alpha" {{ $att->presence_status == 'Alpha' ? 'selected' : '' }}>❌ Alpha</option>
                                         <option value="Telat" {{ $att->presence_status == 'Telat' ? 'selected' : '' }}>⏰ Telat</option>
@@ -744,12 +749,8 @@
                                         <select name="presence_status" class="form-select" required>
                                             <option value="Masuk" {{ $att->presence_status == 'Masuk' ? 'selected' : '' }}>✅ Masuk</option>
                                             <option value="Sakit" {{ $att->presence_status == 'Sakit' ? 'selected' : '' }}>🤒 Sakit</option>
-                                            
-                                            {{-- TAMBAHAN: IZIN DAN LIBUR --}}
                                             <option value="Izin" {{ $att->presence_status == 'Izin' ? 'selected' : '' }}>📝 Izin</option>
                                             <option value="Libur" {{ $att->presence_status == 'Libur' ? 'selected' : '' }}>😎 Libur (Off Day)</option>
-                                            {{-- AKHIR TAMBAHAN --}}
-
                                             <option value="Cuti" {{ $att->presence_status == 'Cuti' ? 'selected' : '' }}>🏖️ Cuti</option>
                                             <option value="Alpha" {{ $att->presence_status == 'Alpha' ? 'selected' : '' }}>❌ Alpha</option>
                                             <option value="Telat" {{ $att->presence_status == 'Telat' ? 'selected' : '' }}>⏰ Telat</option>

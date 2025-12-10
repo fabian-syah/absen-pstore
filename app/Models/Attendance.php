@@ -15,6 +15,8 @@ class Attendance extends Model
         'branch_id',
         'check_in_time',
         'check_out_time',
+        'scheduled_check_in',  // <--- TAMBAHKAN INI
+        'scheduled_check_out', // <--- TAMBAHKAN INI
         'status', // Berfungsi sebagai Verification Status (pending, verified, rejected, late, present, dll)
         'presence_status', // KOLOM BARU: Status Kehadiran Spesifik (Masuk, Sakit, Cuti, dll)
         'photo_path',
