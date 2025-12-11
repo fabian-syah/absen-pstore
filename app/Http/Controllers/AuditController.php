@@ -69,7 +69,12 @@ class AuditController extends Controller
         // Cari data absensi berdasarkan ID
         $attendance = Attendance::findOrFail($id);
 
-        //  status menjadi verified
+        // [VALIDASI] Mencegah Audit/User memverifikasi diri sendiri
+        if ($attendance->user_id == Auth::id()) {
+            return back()->with('error', 'Anda tidak dapat memverifikasi absensi Anda sendiri.');
+        }
+
+        // status menjadi verified
         $attendance->update([
             'status' => 'verified',
             'verified_by_user_id' => Auth::id(),
@@ -97,6 +102,11 @@ class AuditController extends Controller
         // Cari data absensi
         $attendance = Attendance::findOrFail($id);
 
+        // [VALIDASI] Mencegah Audit/User menolak data diri sendiri (opsional, tapi konsisten)
+        if ($attendance->user_id == Auth::id()) {
+            return back()->with('error', 'Anda tidak dapat memproses absensi Anda sendiri.');
+        }
+
         // Hapus file foto dari storage agar tidak menuh-menuhin server
         if ($attendance->photo_path && Storage::disk('public')->exists($attendance->photo_path)) {
             Storage::disk('public')->delete($attendance->photo_path);
@@ -108,9 +118,6 @@ class AuditController extends Controller
 
         // Hapus data dari database (Karena tombolnya "Tolak/Hapus")
         $attendance->delete();
-
-        // OPSI: Jika tidak ingin dihapus tapi cuma diganti status, pakai ini:
-        // $attendance->update(['status' => 'rejected', 'verified_by_user_id' => Auth::id()]);
 
         return back()->with('success', 'Data absensi berhasil ditolak dan dihapus.');
     }
@@ -124,11 +131,12 @@ class AuditController extends Controller
 
         // 1. Query Dasar: Ambil data Attendance
         $query = Attendance::with(['user.division', 'user.branch'])
-            // UBAH BARIS DI BAWAH INI:
-            // Dari ->where('status', 'pending') 
-            // Menjadi:
             ->where('status', 'pending_verification')
             ->whereNotNull('photo_path');
+
+        // [PENTING] FILTER: JANGAN TAMPILKAN DATA DIRI SENDIRI
+        // Audit tidak boleh melihat absensinya sendiri di list verifikasi
+        $query->where('user_id', '!=', $user->id);
 
         // 2. Logika Hak Akses (Copy dari method showLatePermissions)
         $isUniversalAccess = in_array($user->role, ['admin']);
@@ -150,9 +158,6 @@ class AuditController extends Controller
 
         $pendingAttendances = $query->latest()->get();
 
-        // 3. Return View
-        // Pastikan file blade yang kamu paste tadi disimpan di folder:
-        // resources/views/audit/verification_list.blade.php (atau sesuaikan namanya)
         return view('audit.verification_list', compact('pendingAttendances'));
     }
 
@@ -189,7 +194,7 @@ class AuditController extends Controller
     }
 
     /**
-     * Approve izin telat - DIUBAH untuk menggunakan kolom 'approved_by'
+     * Approve izin telat
      */
     public function approveLatePermission($id)
     {
@@ -213,10 +218,9 @@ class AuditController extends Controller
             return back()->with('error', 'Izin ini sudah diproses sebelumnya (Status: ' . $leaveRequest->status . ').');
         }
 
-        // PERBAIKAN: Gunakan kolom 'approved_by' bukan 'approved_by_user_id'
         $leaveRequest->update([
             'status' => 'approved',
-            'approved_by' => $approver->id, // <- INI YANG DIPERBAIKI
+            'approved_by' => $approver->id,
             'is_active' => true,
         ]);
 
@@ -236,7 +240,7 @@ class AuditController extends Controller
     }
 
     /**
-     * Reject izin telat - DIUBAH untuk menggunakan kolom 'approved_by'
+     * Reject izin telat
      */
     public function rejectLatePermission(Request $request, $id)
     {
@@ -264,10 +268,9 @@ class AuditController extends Controller
             return back()->with('error', 'Izin ini sudah diproses sebelumnya (Status: ' . $leaveRequest->status . ').');
         }
 
-        // PERBAIKAN: Gunakan kolom 'approved_by' bukan 'approved_by_user_id'
         $leaveRequest->update([
             'status' => 'rejected',
-            'approved_by' => $approver->id, // <- INI YANG DIPERBAIKI
+            'approved_by' => $approver->id,
             'is_active' => false,
             'rejection_reason' => $request->rejection_reason,
         ]);
@@ -368,6 +371,11 @@ class AuditController extends Controller
         // 2. Cari Data Absensi
         $attendance = Attendance::findOrFail($id);
 
+        // [VALIDASI] Mencegah Audit verifikasi diri sendiri
+        if ($attendance->user_id == Auth::id()) {
+            return back()->with('error', 'Anda tidak dapat memverifikasi absensi Anda sendiri.');
+        }
+
         // 3. Siapkan Data Update
         $updateData = [
             'presence_status'     => $request->presence_status,
@@ -397,13 +405,8 @@ class AuditController extends Controller
             $body  = "Absensi tanggal " . $attendance->check_in_time->format('d M Y') .
                 " telah diverifikasi menjadi: " . $request->presence_status;
 
-            // Pastikan method sendNotificationToUser ada di Trait SendFcmNotification Anda
-            // Jika menggunakan trait bawaan sebelumnya, mungkin perlu penyesuaian nama method
             if (method_exists($this, 'sendNotificationToUser')) {
                 $this->sendNotificationToUser($attendance->user, $title, $body);
-            } else {
-                // Fallback jika menggunakan method generic (misal kirim ke token user langsung)
-                // $this->sendFCM($attendance->user->fcm_token, $title, $body);
             }
         } catch (\Exception $e) {
             // Abaikan error notifikasi agar tidak menggagalkan proses simpan
@@ -417,7 +420,6 @@ class AuditController extends Controller
     /**
      * Mengupdate/Mengoreksi Data Absensi (Dari Modal Koreksi/Edit)
      * Route: audit.update.attendance
-     * Method baru untuk menangani edit data termasuk Izin dan Libur
      */
     public function updateAttendance(Request $request, $id)
     {
@@ -474,7 +476,6 @@ class AuditController extends Controller
 
     /**
      * Helper method untuk mengirim notifikasi ke satu user.
-     * Mencegah error jika user tidak memiliki token FCM.
      */
     private function sendNotificationToUser($user, $title, $body)
     {
@@ -484,9 +485,6 @@ class AuditController extends Controller
             return;
         }
 
-        // 2. Panggil method pengiriman dari Trait SendFcmNotification
-        // Pastikan nama method di Trait kamu adalah 'sendNotification'
-        // Jika di Trait namanya 'sendFCM' atau 'sendMessage', sesuaikan baris di bawah ini.
         try {
             if (method_exists($this, 'sendNotification')) {
                 $this->sendNotification($user->fcm_token, $title, $body);
