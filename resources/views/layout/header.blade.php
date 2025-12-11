@@ -35,13 +35,14 @@
                 </a>
             </li>
 
-            {{-- Search - Untuk Admin DAN Audit --}}
-            @if (in_array(auth()->user()->role, ['admin', 'audit']))
+            {{-- Search - Untuk Admin, Audit, DAN LEADER --}}
+            {{-- [UPDATE] Leader ditambahkan di sini --}}
+            @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
                 <li class="nav-item">
                     <div class="search-form position-relative">
                         <i class="icon-search position-absolute search-icon"></i>
                         <input type="search" class="form-control search-input" id="globalSearch"
-                            data-url="{{ route('search') }}" placeholder="Search users, broadcasts..."
+                            data-url="{{ route('search') }}" placeholder="Cari user..."
                             autocomplete="off">
                         <div class="search-results dropdown-menu" id="searchResults"></div>
                     </div>
@@ -118,7 +119,7 @@
                             @else
                                 <div class="profile-initial-dropdown"
                                      style="border: {{ Auth::user()->is_verified ? '3px solid #0d6efd' : '3px solid white' }};">
-                                     {{ getInitials(Auth::user()->name) }}
+                                    {{ getInitials(Auth::user()->name) }}
                                 </div>
                             @endif
 
@@ -173,7 +174,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // ==========================================
-        // 1. GLOBAL SEARCH LOGIC (ADMIN & AUDIT)
+        // 1. GLOBAL SEARCH LOGIC (ADMIN, AUDIT, LEADER)
         // ==========================================
         const searchInput = document.getElementById('globalSearch');
         const searchResults = document.getElementById('searchResults');
