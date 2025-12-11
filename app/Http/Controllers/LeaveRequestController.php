@@ -67,7 +67,7 @@ class LeaveRequestController extends Controller
 
         $requests = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
             ->where('user_id', $user->id)
-            ->latest()
+            ->oldest()
             ->paginate(10);
 
         // GUNAKAN VIEW YANG SUDAH ADA
