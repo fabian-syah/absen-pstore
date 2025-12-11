@@ -125,11 +125,17 @@
                                         </div>
                                     @endif
 
+                                    {{-- [MODIFIKASI] TOMBOL POPUP LAMPIRAN --}}
                                     @if($history->attachment)
                                         <div class="mt-2">
-                                            <a href="{{ asset('storage/' . $history->attachment) }}" target="_blank" class="badge badge-info text-white text-decoration-none">
+                                            <button type="button" 
+                                                    class="badge badge-info text-white border-0 text-decoration-none" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#attachmentModal"
+                                                    data-src="{{ asset('storage/' . $history->attachment) }}"
+                                                    style="cursor: pointer;">
                                                 <i class="mdi mdi-attachment"></i> Lihat Lampiran
-                                            </a>
+                                            </button>
                                         </div>
                                     @endif
                                 </div>
@@ -141,4 +147,46 @@
         </div>
     </div>
 </div>
+
+{{-- MODAL POPUP LAMPIRAN --}}
+<div class="modal fade" id="attachmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Lampiran Dokumen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center bg-light p-4 rounded m-3">
+                <img id="modalImageSrc" src="" class="img-fluid rounded shadow-sm" alt="Lampiran" style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Logika untuk menampilkan gambar di modal secara dinamis
+        var attachmentModal = document.getElementById('attachmentModal');
+        
+        attachmentModal.addEventListener('show.bs.modal', function(event) {
+            // Tombol yang diklik
+            var button = event.relatedTarget;
+            // Ambil data-src dari tombol
+            var src = button.getAttribute('data-src');
+            
+            // Update src gambar di dalam modal
+            var modalImg = document.getElementById('modalImageSrc');
+            modalImg.src = src;
+        });
+        
+        // Reset src saat modal ditutup (opsional, untuk membersihkan cache visual)
+        attachmentModal.addEventListener('hidden.bs.modal', function() {
+            var modalImg = document.getElementById('modalImageSrc');
+            modalImg.src = '';
+        });
+    });
+</script>
+@endpush
