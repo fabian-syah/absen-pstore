@@ -36,7 +36,7 @@
                     <div class="card-body p-3">
                         <h6 class="text-muted text-uppercase small fw-bold mb-1">Total Hadir</h6>
                         <h2 class="mb-0 fw-bold text-success">{{ $grandTotal['masuk'] }}</h2>
-                        <small class="text-muted" style="font-size: 0.7rem;">(Termasuk {{ $grandTotal['wfh'] }} WFH)</small>
+                        <small class="text-muted" style="font-size: 0.7rem;">(Termasuk {{ $grandTotal['wfh'] }} WFH/Dinas Luar)</small>
                     </div>
                 </div>
             </div>
@@ -45,7 +45,7 @@
             <div class="col-6 col-md-3">
                 <div class="card border-0 shadow-sm rounded-3 h-100" style="border-left: 5px solid #0dcaf0 !important;">
                     <div class="card-body p-3">
-                        <h6 class="text-muted text-uppercase small fw-bold mb-1">Sakit & Izin</h6>
+                        <h6 class="text-muted text-uppercase small fw-bold mb-1">Sakit & Izin ( Offday )</h6>
                         <h2 class="mb-0 fw-bold text-info">{{ $grandTotal['sakit'] + $grandTotal['izin'] }}</h2>
                         <small class="text-muted" style="font-size: 0.7rem;">{{ $grandTotal['sakit'] }} Sakit, {{ $grandTotal['izin'] }} Izin</small>
                     </div>
@@ -91,7 +91,7 @@
                                 <th class="ps-4 py-3 text-uppercase">Bulan</th>
                                 <th class="text-center text-uppercase">Total Hari</th>
                                 <th class="text-center text-uppercase text-success">Masuk</th>
-                                <th class="text-center text-uppercase text-info">WFH</th>
+                                <th class="text-center text-uppercase text-info">WFH / Dinas Luar</th>
                                 <th class="text-center text-uppercase text-primary">Sakit</th>
                                 <th class="text-center text-uppercase text-secondary">Izin/Lbr</th>
                                 <th class="text-center text-uppercase text-dark">Cuti</th>

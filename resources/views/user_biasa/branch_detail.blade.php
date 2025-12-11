@@ -54,18 +54,25 @@
                                     $att = $emp->attendances->first();
                                 @endphp
                                 <tr>
-                                    {{-- NAMA & FOTO --}}
+                                    {{-- NAMA & FOTO (KLIK UNTUK KE PROFIL) --}}
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            @if($emp->profile_photo_path)
-                                                <img src="{{ asset('storage/'.$emp->profile_photo_path) }}" class="rounded-circle me-3" width="40" height="40" style="object-fit: cover">
-                                            @else
-                                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-weight: bold;">
-                                                    {{ substr($emp->name, 0, 1) }}
-                                                </div>
-                                            @endif
+                                            {{-- Link pada Foto --}}
+                                            <a href="{{ route('users.show', $emp->id) }}" class="text-decoration-none">
+                                                @if($emp->profile_photo_path)
+                                                    <img src="{{ asset('storage/'.$emp->profile_photo_path) }}" class="rounded-circle me-3" width="40" height="40" style="object-fit: cover">
+                                                @else
+                                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-weight: bold;">
+                                                        {{ substr($emp->name, 0, 1) }}
+                                                    </div>
+                                                @endif
+                                            </a>
+
                                             <div>
-                                                <div class="fw-bold">{{ $emp->name }}</div>
+                                                {{-- Link pada Nama --}}
+                                                <a href="{{ route('users.show', $emp->id) }}" class="text-decoration-none text-dark">
+                                                    <div class="fw-bold hover-text-primary">{{ $emp->name }}</div>
+                                                </a>
                                                 <small class="text-muted">{{ $emp->email }}</small>
                                             </div>
                                         </div>
@@ -78,9 +85,8 @@
                                         </span>
                                     </td>
 
-                                    {{-- STATUS HARI INI (LOGIKA BARU) --}}
+                                    {{-- STATUS HARI INI --}}
                                     <td>
-                                        {{-- Prioritas 1: Cek Absensi Real (Scan/Selfie) --}}
                                         @if($att)
                                             @if($att->check_out_time)
                                                 <span class="badge bg-primary">Pulang</span>
@@ -88,15 +94,14 @@
                                                 <span class="badge bg-success">Hadir (Online)</span>
                                             @endif
                                         
-                                        {{-- Prioritas 2: Cek Izin/Sakit/Cuti/WFH (Dari Controller) --}}
                                         @elseif($emp->today_leave)
                                             @php
                                                 $leaveType = $emp->today_leave->type;
                                                 $badgeClass = match($leaveType) {
-                                                    'sakit' => 'bg-info', // Biru muda
-                                                    'izin' => 'bg-warning text-dark', // Kuning
-                                                    'cuti' => 'bg-secondary', // Abu-abu
-                                                    'wfh' => 'bg-success', // Hijau (Anggap kerja)
+                                                    'sakit' => 'bg-info', 
+                                                    'izin' => 'bg-warning text-dark', 
+                                                    'cuti' => 'bg-secondary', 
+                                                    'wfh' => 'bg-success', 
                                                     'telat' => 'bg-warning text-dark',
                                                     default => 'bg-secondary'
                                                 };
@@ -109,7 +114,6 @@
                                                 {{ $label }}
                                             </span>
 
-                                        {{-- Prioritas 3: Sisanya Alpha --}}
                                         @else
                                             <span class="badge bg-danger">Belum Hadir / Alpha</span>
                                         @endif
@@ -148,4 +152,12 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Efek hover agar nama user berubah warna saat disorot */
+    .hover-text-primary:hover {
+        color: #0d6efd !important; /* Warna biru Bootstrap */
+        transition: color 0.2s ease-in-out;
+    }
+</style>
 @endsection
