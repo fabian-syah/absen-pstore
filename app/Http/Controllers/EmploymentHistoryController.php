@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Division;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class EmploymentHistoryController extends Controller
@@ -74,7 +75,6 @@ class EmploymentHistoryController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi Dasar
         $request->validate([
             'type' => 'required',
             'event_date' => 'required|date',
@@ -83,96 +83,86 @@ class EmploymentHistoryController extends Controller
             'user_id' => 'nullable|exists:users,id',
         ]);
 
-        // Tentukan User Target
         $targetUserId = $request->user_id ?? auth()->id();
-        $targetUser = User::with('branches')->findOrFail($targetUserId); // Load relasi branches untuk audit
+        $targetUser = User::with('branches')->findOrFail($targetUserId);
 
-        // Cek Hak Akses (Sama seperti sebelumnya)
-        if (auth()->user()->role === 'audit') {
-            // ... Validasi user cabang audit ... (Kode sama seperti sebelumnya)
-        }
+        // ... validasi hak akses audit (tidak berubah) ...
 
-        $data = $request->only(['type', 'event_date', 'description', 'division_id']);
-        $data['user_id'] = $targetUser->id;
+        DB::beginTransaction(); // Pakai transaction biar aman
+        try {
+            $data = $request->only(['type', 'event_date', 'description', 'division_id']);
+            $data['user_id'] = $targetUser->id;
 
-        // Upload Foto
-        if ($request->hasFile('attachment')) {
-            $data['attachment'] = $request->file('attachment')->store('employment_attachments', 'public');
-        }
+            if ($request->hasFile('attachment')) {
+                $data['attachment'] = $request->file('attachment')->store('employment_attachments', 'public');
+            }
 
-        // =========================================================
-        // LOGIKA KHUSUS: PINDAH CABANG (AUDIT VS NON-AUDIT)
-        // =========================================================
+            // === LOGIKA UTAMA ===
+            if ($request->type == 'transfer_branch') {
 
-        if ($request->type == 'transfer_branch') {
+                // 1. KHUSUS AUDIT (MULTI BRANCH)
+                if ($targetUser->role == 'audit') {
+                    $request->validate(['audit_branch_ids' => 'required|array']);
 
-            // 1. JIKA TARGET ADALAH AUDIT (MULTI BRANCH)
-            if ($targetUser->role == 'audit') {
-                $request->validate(['audit_branch_ids' => 'required|array']);
+                    // a. Ambil nama-nama cabang SEBELUM update (Existing)
+                    $oldBranchNames = $targetUser->branches->pluck('name')->toArray();
 
-                // a. Simpan Snapshot Cabang Lama (Nama-namanya)
-                $oldBranchNames = $targetUser->branches->pluck('name')->toArray();
+                    // b. Ambil nama-nama cabang BARU (Selected)
+                    $newBranches = Branch::whereIn('id', $request->audit_branch_ids)->get();
+                    $newBranchNames = $newBranches->pluck('name')->toArray();
 
-                // b. Ambil Nama Cabang Baru
-                $newBranches = Branch::whereIn('id', $request->audit_branch_ids)->get();
-                $newBranchNames = $newBranches->pluck('name')->toArray();
+                    // c. Simpan Snapshot "Dari A,B ke C,D"
+                    $data['audit_branch_snapshot'] = [
+                        'from' => $oldBranchNames,
+                        'to'   => $newBranchNames
+                    ];
 
-                // c. Simpan ke Kolom JSON
-                $data['audit_branch_snapshot'] = [
-                    'from' => $oldBranchNames,
-                    'to'   => $newBranchNames
-                ];
+                    $data['branch_id'] = null;
+                    $data['previous_branch_id'] = null;
 
-                // d. Null kan single branch ID
+                    // d. Sync ke tabel pivot user
+                    $targetUser->branches()->sync($request->audit_branch_ids);
+                }
+
+                // 2. USER LAIN (SINGLE BRANCH)
+                else {
+                    $request->validate(['branch_id' => 'required|exists:branches,id']);
+                    $data['previous_branch_id'] = $targetUser->branch_id;
+                    $data['branch_id'] = $request->branch_id;
+                    $targetUser->branch_id = $request->branch_id;
+                    $targetUser->save();
+                }
+            }
+            // Logika Join / Rejoin
+            elseif ($request->type == 'join' || $request->type == 'rejoin') {
+                if ($targetUser->role == 'audit') {
+                    // Jika baru masuk/rejoin sebagai audit, simpan cabang awalnya
+                    if ($request->audit_branch_ids) {
+                        $targetUser->branches()->sync($request->audit_branch_ids);
+                    }
+                } else {
+                    $data['branch_id'] = $request->branch_id;
+                    $targetUser->branch_id = $request->branch_id;
+                    $targetUser->save();
+                }
+            } elseif ($request->type == 'transfer_division') {
+                $data['branch_id'] = $targetUser->branch_id;
+                $targetUser->division_id = $request->division_id;
+                $targetUser->save();
+            } elseif ($request->type == 'resign') {
                 $data['branch_id'] = null;
-                $data['previous_branch_id'] = null;
-
-                // e. UPDATE DATA USER SEKARANG (Sync Pivot Table)
-                // Fitur ini otomatis mengubah hak akses user audit tsb
-                $targetUser->branches()->sync($request->audit_branch_ids);
+                $data['division_id'] = null;
+                // Opsional: $targetUser->is_active = false; $targetUser->save();
             }
 
-            // 2. JIKA USER BIASA / LEADER / SECURITY (SINGLE BRANCH)
-            else {
-                $request->validate(['branch_id' => 'required|exists:branches,id']);
+            EmploymentHistory::create($data);
+            DB::commit();
 
-                // a. Simpan ID Cabang Lama
-                $data['previous_branch_id'] = $targetUser->branch_id;
-
-                // b. Simpan ID Cabang Baru
-                $data['branch_id'] = $request->branch_id;
-
-                // c. UPDATE DATA USER SEKARANG
-                $targetUser->branch_id = $request->branch_id;
-                $targetUser->save();
-            }
+            return redirect()->back()->with('success', 'Riwayat berhasil disimpan & Data User diperbarui.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-        // Logika Kategori Lain (Awal Masuk, Resign, dll)
-        elseif ($request->type == 'join' || $request->type == 'rejoin') {
-            // Jika audit masuk, bisa set multi branch juga di sini jika mau
-            // Untuk simpelnya, kita asumsikan 'join' set single branch dulu atau sesuaikan logika
-            if ($targetUser->role != 'audit') {
-                $data['branch_id'] = $request->branch_id;
-                $targetUser->branch_id = $request->branch_id;
-                $targetUser->save();
-            }
-        } elseif ($request->type == 'transfer_division') {
-            // Logic pindah divisi (branch tetap)
-            $data['branch_id'] = $targetUser->branch_id;
-            // Update Divisi User
-            $targetUser->division_id = $request->division_id;
-            $targetUser->save();
-        } elseif ($request->type == 'resign') {
-            $data['branch_id'] = null;
-            $data['division_id'] = null;
-            // Opsional: Set user jadi inactive
-            $targetUser->is_active = false;
-            $targetUser->save();
-        }
-
-        EmploymentHistory::create($data);
-
-        return redirect()->back()->with('success', 'Riwayat berhasil disimpan & Data User diperbarui.');
     }
 
     public function destroy($id)
