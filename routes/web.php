@@ -219,9 +219,16 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // ==========================================================
+    //  RUTE SHOW USER (Leader, Admin, Audit, Admin Gaji) - [NEW]
+    // ==========================================================
+    Route::middleware(['role:admin,audit,admin_gaji,leader'])->group(function () {
+        // Leader sekarang diizinkan mengakses halaman detail user (show)
+        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+    });
+
+    // ==========================================================
     //  RUTE ADMIN, AUDIT, & ADMIN GAJI MANAGEMENT
     // ==========================================================
-    // UPDATE: Menambahkan admin_gaji ke middleware di bawah ini
     Route::middleware(['role:admin,audit,admin_gaji'])->group(function () {
         Route::get('/all-attendance', [AdminAttendanceController::class, 'index'])->name('admin.attendance.all');
         Route::put('/audit/verify-attendance/{id}', [App\Http\Controllers\AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
@@ -242,8 +249,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::patch('/users/{user}/approve-ktp', [UserController::class, 'approveKtpRequest'])->name('users.approve-ktp');
         Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');
 
-        // USER MANAGEMENT (Sekarang Admin Gaji Bisa Akses Ini)
-        Route::resource('users', UserController::class);
+        // USER MANAGEMENT (Resource tanpa show, karena show sudah di-define di atas untuk leader)
+        Route::resource('users', UserController::class)->except(['show']);
+        
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
         Route::patch('/users/{user}/verify', [UserController::class, 'verifyUser'])->name('users.verify');
