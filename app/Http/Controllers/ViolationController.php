@@ -16,28 +16,9 @@ class ViolationController extends Controller
         // Query Dasar
         $query = Violation::with(['user', 'reporter']);
 
-        // [LOGIKA BARU] Filter Otomatis Berdasarkan Masa Berlaku Kategori
-        $query->where(function($q) {
-            // Kondisi 1: BERAT (Tampil jika dibuat dalam 1 tahun terakhir)
-            $q->where(function($sub) {
-                $sub->where('category', 'berat')
-                    ->where('created_at', '>=', now()->subYear());
-            })
-            // Kondisi 2: SEDANG (Tampil jika dibuat dalam 6 bulan terakhir)
-            ->orWhere(function($sub) {
-                $sub->where('category', 'sedang')
-                    ->where('created_at', '>=', now()->subMonths(6));
-            })
-            // Kondisi 3: RINGAN (Tampil jika dibuat dalam 1 bulan terakhir)
-            ->orWhere(function($sub) {
-                $sub->where('category', 'ringan')
-                    ->where('created_at', '>=', now()->subMonth());
-            });
-        });
-
-        // [LOGIKA LAMA] Filter Hak Akses (Tetap Dipertahankan)
+        // Filter Hak Akses
         if ($user->role === 'admin') {
-            // Admin lihat semua yang lolos filter tanggal di atas
+            // Admin lihat semua
         } elseif ($user->role === 'audit') {
             $branchIds = $user->branches->pluck('id');
             $query->where(function($q) use ($branchIds, $user) {
@@ -51,10 +32,8 @@ class ViolationController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        // Sorting: Berat -> Sedang -> Ringan, lalu tanggal terbaru
-        $violations = $query->orderByRaw("FIELD(category, 'berat', 'sedang', 'ringan')")
-                            ->orderBy('created_at', 'desc')
-                            ->get();
+        // Sorting: Terbaru paling atas
+        $violations = $query->orderBy('created_at', 'desc')->get();
 
         return view('violations.index', compact('violations'));
     }
@@ -99,6 +78,20 @@ class ViolationController extends Controller
         $data = $request->except(['photo']);
         $data['reported_by'] = auth()->id();
 
+        // [LOGIKA BARU] Hitung Tanggal Habis Masa (Expires At) otomatis
+        $createdAt = now();
+        
+        if ($request->category == 'berat') {
+            // Berat: 1 Tahun
+            $data['expires_at'] = $createdAt->copy()->addYear(); 
+        } elseif ($request->category == 'sedang') {
+            // Sedang: 6 Bulan
+            $data['expires_at'] = $createdAt->copy()->addMonths(6); 
+        } else {
+            // Ringan: 1 Bulan
+            $data['expires_at'] = $createdAt->copy()->addMonth(); 
+        }
+
         if ($request->hasFile('photo')) {
             $data['photo_path'] = $request->file('photo')->store('violation-photos', 'public');
         }
@@ -132,6 +125,9 @@ class ViolationController extends Controller
         ]);
 
         $data = $request->except(['photo']);
+
+        // OPSI: Jika ingin update kategori mengubah masa berlaku juga, bisa tambahkan logika di sini.
+        // Untuk saat ini dibiarkan manual atau sesuai input awal agar tidak merubah history tanggal.
 
         if ($request->hasFile('photo')) {
             if ($violation->photo_path) {

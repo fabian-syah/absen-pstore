@@ -17,6 +17,12 @@ class Violation extends Model
         'category',
         'notes',
         'photo_path',
+        'expires_at', // <--- TAMBAHKAN INI
+    ];
+
+    // Tambahkan casts agar otomatis jadi object Carbon (Date)
+    protected $casts = [
+        'expires_at' => 'date',
     ];
 
     // Relasi ke User (Pelaku)
