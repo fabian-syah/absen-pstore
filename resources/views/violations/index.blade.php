@@ -6,22 +6,18 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="card-title mb-0">Riwayat Pelanggaran</h4>
+                    <div>
+                        <h4 class="card-title mb-1">Riwayat Pelanggaran</h4>
+                        <p class="text-muted small mb-0">
+                            Data difilter otomatis: 
+                            <span class="badge badge-outline-danger" style="font-size: 10px;">Berat (1 Thn)</span>
+                            <span class="badge badge-outline-warning" style="font-size: 10px;">Sedang (6 Bln)</span>
+                            <span class="badge badge-outline-info" style="font-size: 10px;">Ringan (1 Bln)</span>
+                        </p>
+                    </div>
                     
                     <div class="d-flex align-items-center">
-                        {{-- [UPDATED] Filter Tahun --}}
-                        <form action="{{ route('violations.index') }}" method="GET" class="d-flex align-items-center mr-3">
-                            <label class="mr-2 mb-0 text-muted">Tahun:</label>
-                            <select name="year" class="form-control form-control-sm" style="width: 100px;" onchange="this.form.submit()">
-                                @php
-                                    $currentYear = date('Y');
-                                    $startYear = 2023; // Tahun mulai sistem
-                                @endphp
-                                @for($y = $currentYear; $y >= $startYear; $y--)
-                                    <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>{{ $y }}</option>
-                                @endfor
-                            </select>
-                        </form>
+                        {{-- Filter Tahun DIHAPUS --}}
 
                         {{-- Admin & Audit Masih Boleh Tambah --}}
                         @if(in_array(auth()->user()->role, ['admin', 'audit']))
@@ -67,7 +63,6 @@
                                         <small class="text-muted">Ket: {{ $v->notes ?? '-' }}</small>
                                     </td>
                                     <td>
-                                        {{-- [UPDATED] Ubah link jadi trigger Modal --}}
                                         @if($v->photo_path)
                                             <img src="{{ asset('storage/' . $v->photo_path) }}" 
                                                  alt="Bukti" 
@@ -100,8 +95,8 @@
                                 <tr>
                                     <td colspan="8" class="text-center py-4">
                                         <div class="d-flex flex-column align-items-center">
-                                            <i class="mdi mdi-file-find text-muted" style="font-size: 3rem;"></i>
-                                            <p class="text-muted mt-2">Tidak ada data pelanggaran di tahun {{ $selectedYear }}.</p>
+                                            <i class="mdi mdi-check-circle-outline text-success" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">Tidak ada pelanggaran aktif saat ini.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -114,7 +109,7 @@
     </div>
 </div>
 
-{{-- [UPDATED] Modal Preview Gambar --}}
+{{-- Modal Preview Gambar --}}
 <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
@@ -135,13 +130,9 @@
 
 @push('scripts')
 <script>
-    // [UPDATED] Script untuk menampilkan Modal
     function showImageModal(src, title) {
-        // Set gambar
         document.getElementById('previewImageSrc').src = src;
-        // Set judul modal (opsional)
         document.getElementById('imagePreviewLabel').innerText = 'Bukti: ' + title;
-        // Tampilkan modal (menggunakan jQuery bawaan template biasanya)
         $('#imagePreviewModal').modal('show');
     }
 </script>

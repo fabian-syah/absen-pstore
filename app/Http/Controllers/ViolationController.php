@@ -9,19 +9,35 @@ use Illuminate\Support\Facades\Storage;
 
 class ViolationController extends Controller
 {
-    public function index(Request $request) // [UPDATED] Tambah Request
+    public function index(Request $request)
     {
         $user = auth()->user();
         
-        // [UPDATED] Logika Filter Tahun
-        // Ambil tahun dari request, jika tidak ada pakai tahun sekarang
-        $selectedYear = $request->get('year', date('Y')); 
+        // Query Dasar
+        $query = Violation::with(['user', 'reporter']);
 
-        $query = Violation::with(['user', 'reporter'])
-            ->whereYear('created_at', $selectedYear); // [UPDATED] Filter Query
+        // [LOGIKA BARU] Filter Otomatis Berdasarkan Masa Berlaku Kategori
+        $query->where(function($q) {
+            // Kondisi 1: BERAT (Tampil jika dibuat dalam 1 tahun terakhir)
+            $q->where(function($sub) {
+                $sub->where('category', 'berat')
+                    ->where('created_at', '>=', now()->subYear());
+            })
+            // Kondisi 2: SEDANG (Tampil jika dibuat dalam 6 bulan terakhir)
+            ->orWhere(function($sub) {
+                $sub->where('category', 'sedang')
+                    ->where('created_at', '>=', now()->subMonths(6));
+            })
+            // Kondisi 3: RINGAN (Tampil jika dibuat dalam 1 bulan terakhir)
+            ->orWhere(function($sub) {
+                $sub->where('category', 'ringan')
+                    ->where('created_at', '>=', now()->subMonth());
+            });
+        });
 
+        // [LOGIKA LAMA] Filter Hak Akses (Tetap Dipertahankan)
         if ($user->role === 'admin') {
-            // Admin lihat semua (sudah terfilter tahun di atas)
+            // Admin lihat semua yang lolos filter tanggal di atas
         } elseif ($user->role === 'audit') {
             $branchIds = $user->branches->pluck('id');
             $query->where(function($q) use ($branchIds, $user) {
@@ -31,22 +47,20 @@ class ViolationController extends Controller
                 ->orWhere('user_id', $user->id);
             });
         } else {
+            // User biasa hanya lihat punya sendiri
             $query->where('user_id', $user->id);
         }
 
+        // Sorting: Berat -> Sedang -> Ringan, lalu tanggal terbaru
         $violations = $query->orderByRaw("FIELD(category, 'berat', 'sedang', 'ringan')")
                             ->orderBy('created_at', 'desc')
                             ->get();
 
-        // [UPDATED] Kirim $selectedYear ke view
-        return view('violations.index', compact('violations', 'selectedYear'));
+        return view('violations.index', compact('violations'));
     }
 
-    // ... (Method create, store, edit, update, destroy TETAP SAMA seperti sebelumnya) ...
-    // Copy paste sisa method create sampai destroy dari kode lama Anda di sini
     public function create()
     {
-        // ... kode create Anda ...
         if (!in_array(auth()->user()->role, ['admin', 'audit'])) {
             abort(403);
         }
@@ -69,7 +83,6 @@ class ViolationController extends Controller
 
     public function store(Request $request)
     {
-        // ... kode store Anda ...
         if (!in_array(auth()->user()->role, ['admin', 'audit'])) {
             abort(403);
         }
