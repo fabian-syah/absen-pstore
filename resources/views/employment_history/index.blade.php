@@ -57,9 +57,10 @@
                         <span class="badge badge-outline-primary">{{ strtoupper($targetUser->role) }}</span>
                     </div>
                     
-                    {{-- TOMBOL TAMBAH DATA --}}
-                    {{-- Hanya muncul jika $canEdit bernilai TRUE (Akses dari tombol Profile) --}}
-                    @if($canEdit)
+                    {{-- TOMBOL TAMBAH DATA (SESUAI LOGIKA SIDEBAR LEADER) --}}
+                    {{-- Jika Admin/Audit/Leader sedang melihat target yg valid, boleh nambah --}}
+                    {{-- Atau jika User melihat diri sendiri --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']) || auth()->id() == $targetUser->id)
                         <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn btn-primary btn-icon-text">
                             <i class="mdi mdi-plus-circle-outline btn-icon-prepend"></i> Tambah Riwayat
                         </a>
@@ -72,9 +73,7 @@
                             <i class="mdi mdi-timeline-text-outline text-muted" style="font-size: 4rem;"></i>
                         </div>
                         <h5 class="text-muted">Belum ada riwayat tercatat.</h5>
-                        @if($canEdit)
-                            <p class="text-muted small">Klik tombol tambah untuk membuat catatan baru.</p>
-                        @endif
+                        <p class="text-muted small">Klik tombol tambah untuk membuat catatan baru.</p>
                     </div>
                 @else
                     <ul class="bullet-line-list">
