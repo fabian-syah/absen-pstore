@@ -57,9 +57,7 @@
                         <span class="badge badge-outline-primary">{{ strtoupper($targetUser->role) }}</span>
                     </div>
                     
-                    {{-- TOMBOL TAMBAH DATA (SESUAI LOGIKA SIDEBAR LEADER) --}}
-                    {{-- Jika Admin/Audit/Leader sedang melihat target yg valid, boleh nambah --}}
-                    {{-- Atau jika User melihat diri sendiri --}}
+                    {{-- TOMBOL TAMBAH DATA --}}
                     @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']) || auth()->id() == $targetUser->id)
                         <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn btn-primary btn-icon-text">
                             <i class="mdi mdi-plus-circle-outline btn-icon-prepend"></i> Tambah Riwayat
@@ -73,7 +71,9 @@
                             <i class="mdi mdi-timeline-text-outline text-muted" style="font-size: 4rem;"></i>
                         </div>
                         <h5 class="text-muted">Belum ada riwayat tercatat.</h5>
-                        <p class="text-muted small">Klik tombol tambah untuk membuat catatan baru.</p>
+                        @if($canEdit)
+                            <p class="text-muted small">Klik tombol tambah untuk membuat catatan baru.</p>
+                        @endif
                     </div>
                 @else
                     <ul class="bullet-line-list">
@@ -92,7 +92,6 @@
                                     </div>
                                     
                                     {{-- TOMBOL EDIT --}}
-                                    {{-- Hanya muncul jika $canEdit bernilai TRUE --}}
                                     @if($canEdit)
                                         <a href="{{ route('employment-history.edit', $history->id) }}" class="btn btn-inverse-warning btn-sm p-2" title="Edit Data">
                                             <i class="mdi mdi-pencil"></i> Edit
@@ -100,64 +99,73 @@
                                     @endif
                                 </div>
                                 
-                                {{-- DETAIL CONTENT --}}
+                                {{-- DETAIL CONTENT (LAYOUT: FOTO KIRI - TEKS KANAN) --}}
                                 <div class="p-3 bg-light rounded mt-2 border-start border-{{ $history->type_color }}" style="border-left: 4px solid;">
-                                    
-                                    {{-- 1. Mutasi Cabang Audit --}}
-                                    @if($targetUser->role == 'audit' && $history->type == 'transfer_branch')
-                                        <div class="mb-2">
-                                            <strong class="d-block text-dark small mb-1">Catatan Wilayah Audit:</strong>
-                                            <span class="text-muted small">{!! $history->audit_change_text !!}</span>
-                                        </div>
-
-                                    {{-- 2. Mutasi Cabang User Biasa --}}
-                                    @elseif($history->type == 'transfer_branch')
-                                        <div class="row mb-2 align-items-center">
-                                            <div class="col-md-5">
-                                                <small class="text-muted d-block">Dari:</small>
-                                                <span class="text-danger text-decoration-line-through">
-                                                    {{ $history->previousBranch->name ?? '?' }}
-                                                </span>
+                                    <div class="row">
+                                        {{-- KOLOM KIRI: FOTO (Jika Ada) --}}
+                                        @if($history->attachment)
+                                            <div class="col-md-3 mb-3 mb-md-0">
+                                                <div class="position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#attachmentModal" data-src="{{ asset('storage/' . $history->attachment) }}">
+                                                    <img src="{{ asset('storage/' . $history->attachment) }}" 
+                                                         class="img-fluid rounded shadow-sm w-100" 
+                                                         style="object-fit: cover; height: 150px; min-height: 100%; border: 1px solid #dee2e6;"
+                                                         alt="Lampiran">
+                                                    
+                                                    {{-- Overlay Icon Zoom --}}
+                                                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 hover-opacity-100 transition-all rounded">
+                                                        <i class="mdi mdi-magnify-plus text-white display-4"></i>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted text-center d-block mt-1" style="font-size: 10px;">Klik untuk memperbesar</small>
                                             </div>
-                                            <div class="col-md-1 text-center"><i class="mdi mdi-arrow-right"></i></div>
-                                            <div class="col-md-5">
-                                                <small class="text-muted d-block">Ke:</small>
-                                                <span class="text-success font-weight-bold">
-                                                    {{ $history->branch->name ?? '-' }}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                    {{-- 3. Tipe Lain (Join/Resign/Divisi) --}}
-                                    @elseif($history->type != 'resign')
-                                        @if($history->branch)
-                                            <small class="d-block text-dark"><i class="mdi mdi-map-marker me-1"></i> Cabang: <strong>{{ $history->branch->name }}</strong></small>
                                         @endif
-                                        @if($history->division)
-                                            <small class="d-block text-dark"><i class="mdi mdi-briefcase me-1"></i> Divisi: <strong>{{ $history->division->name }}</strong></small>
-                                        @endif
-                                    @endif
 
-                                    {{-- DESKRIPSI --}}
-                                    @if($history->description)
-                                        <div class="mt-2 pt-2 border-top">
-                                            <p class="mb-0 small text-muted font-italic">"{{ $history->description }}"</p>
-                                        </div>
-                                    @endif
+                                        {{-- KOLOM KANAN: TEKS HISTORY --}}
+                                        <div class="{{ $history->attachment ? 'col-md-9' : 'col-12' }}">
+                                            
+                                            {{-- 1. Mutasi Cabang Audit --}}
+                                            @if($targetUser->role == 'audit' && $history->type == 'transfer_branch')
+                                                <div class="mb-2">
+                                                    <strong class="d-block text-dark small mb-1">Catatan Wilayah Audit:</strong>
+                                                    <span class="text-muted small">{!! $history->audit_change_text !!}</span>
+                                                </div>
 
-                                    {{-- TOMBOL POPUP LAMPIRAN --}}
-                                    @if($history->attachment)
-                                        <div class="mt-2">
-                                            <button type="button" 
-                                                    class="badge badge-info text-white border-0 text-decoration-none" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#attachmentModal"
-                                                    data-src="{{ asset('storage/' . $history->attachment) }}"
-                                                    style="cursor: pointer;">
-                                                <i class="mdi mdi-attachment"></i> Lihat Lampiran
-                                            </button>
+                                            {{-- 2. Mutasi Cabang User Biasa --}}
+                                            @elseif($history->type == 'transfer_branch')
+                                                <div class="row mb-2 align-items-center">
+                                                    <div class="col-md-5">
+                                                        <small class="text-muted d-block">Dari:</small>
+                                                        <span class="text-danger text-decoration-line-through">
+                                                            {{ $history->previousBranch->name ?? '?' }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="col-md-1 text-center"><i class="mdi mdi-arrow-right"></i></div>
+                                                    <div class="col-md-5">
+                                                        <small class="text-muted d-block">Ke:</small>
+                                                        <span class="text-success font-weight-bold">
+                                                            {{ $history->branch->name ?? '-' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                            {{-- 3. Tipe Lain (Join/Resign/Divisi) --}}
+                                            @elseif($history->type != 'resign')
+                                                @if($history->branch)
+                                                    <small class="d-block text-dark mb-1"><i class="mdi mdi-map-marker me-1"></i> Cabang: <strong>{{ $history->branch->name }}</strong></small>
+                                                @endif
+                                                @if($history->division)
+                                                    <small class="d-block text-dark"><i class="mdi mdi-briefcase me-1"></i> Divisi: <strong>{{ $history->division->name }}</strong></small>
+                                                @endif
+                                            @endif
+
+                                            {{-- DESKRIPSI --}}
+                                            @if($history->description)
+                                                <div class="mt-2 pt-2 border-top">
+                                                    <p class="mb-0 small text-muted font-italic">"{{ $history->description }}"</p>
+                                                </div>
+                                            @endif
                                         </div>
-                                    @endif
+                                    </div>
                                 </div>
                             </li>
                         @endforeach
@@ -183,6 +191,16 @@
     </div>
 </div>
 
+{{-- Style Tambahan untuk Hover Effect --}}
+<style>
+    .hover-opacity-100:hover {
+        opacity: 1 !important;
+    }
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+</style>
+
 @endsection
 
 @push('scripts')
@@ -190,8 +208,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         var attachmentModal = document.getElementById('attachmentModal');
         attachmentModal.addEventListener('show.bs.modal', function(event) {
-            var button = event.relatedTarget;
-            var src = button.getAttribute('data-src');
+            var div = event.relatedTarget; // Element div pembungkus gambar yang diklik
+            var src = div.getAttribute('data-src');
             var modalImg = document.getElementById('modalImageSrc');
             modalImg.src = src;
         });
