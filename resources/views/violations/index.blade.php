@@ -9,17 +9,14 @@
                     <div>
                         <h4 class="card-title mb-1">Riwayat Pelanggaran</h4>
                         <p class="text-muted small mb-0">
-                            Data difilter otomatis: 
-                            <span class="badge badge-outline-danger" style="font-size: 10px;">Berat (1 Thn)</span>
-                            <span class="badge badge-outline-warning" style="font-size: 10px;">Sedang (6 Bln)</span>
-                            <span class="badge badge-outline-info" style="font-size: 10px;">Ringan (1 Bln)</span>
+                            Masa Berlaku: 
+                            <span class="text-danger fw-bold">Berat (1 Thn)</span>, 
+                            <span class="text-warning fw-bold">Sedang (6 Bln)</span>, 
+                            <span class="text-info fw-bold">Ringan (1 Bln)</span>.
                         </p>
                     </div>
                     
                     <div class="d-flex align-items-center">
-                        {{-- Filter Tahun DIHAPUS --}}
-
-                        {{-- Admin & Audit Masih Boleh Tambah --}}
                         @if(in_array(auth()->user()->role, ['admin', 'audit']))
                             <a href="{{ route('violations.create') }}" class="btn btn-primary btn-sm text-white">
                                 <i class="mdi mdi-plus"></i> Tambah
@@ -38,7 +35,8 @@
                                 <th>Deskripsi & Ket</th>
                                 <th>Bukti Foto</th>
                                 <th>Pelapor</th>
-                                <th>Tanggal</th>
+                                <th>Tanggal Input</th>
+                                <th>Masa Berlaku</th> {{-- KOLOM BARU --}}
                                 @if(auth()->user()->role == 'admin')
                                     <th>Aksi</th>
                                 @endif
@@ -76,6 +74,23 @@
                                     <td>{{ $v->reporter->name ?? 'Sistem' }}</td>
                                     <td>{{ $v->created_at->format('d M Y') }}</td>
                                     
+                                    {{-- KOLOM MASA BERLAKU --}}
+                                    <td>
+                                        @if($v->expires_at)
+                                            @if($v->expires_at->isPast())
+                                                <span class="badge badge-success">Sudah Berakhir</span>
+                                                <br>
+                                                <small class="text-muted">{{ $v->expires_at->format('d M Y') }}</small>
+                                            @else
+                                                <span class="fw-bold text-danger">{{ $v->expires_at->format('d M Y') }}</span>
+                                                <br>
+                                                <small class="text-muted">({{ now()->diffInDays($v->expires_at) }} hari lagi)</small>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+
                                     @if(auth()->user()->role == 'admin')
                                         <td>
                                             <a href="{{ route('violations.edit', $v->id) }}" class="btn btn-warning btn-sm icon-btn p-2">
@@ -93,10 +108,10 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-4">
+                                    <td colspan="9" class="text-center py-4">
                                         <div class="d-flex flex-column align-items-center">
                                             <i class="mdi mdi-check-circle-outline text-success" style="font-size: 3rem;"></i>
-                                            <p class="text-muted mt-2">Tidak ada pelanggaran aktif saat ini.</p>
+                                            <p class="text-muted mt-2">Tidak ada data pelanggaran.</p>
                                         </div>
                                     </td>
                                 </tr>
