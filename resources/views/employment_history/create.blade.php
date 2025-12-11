@@ -46,7 +46,7 @@
                         <input type="date" name="event_date" class="form-control" required value="{{ date('Y-m-d') }}">
                     </div>
 
-                    {{-- Form Dinamis Berdasarkan Role --}}
+                    {{-- Form Dinamis Berdasarkan Role Target User --}}
                     @if($targetUser->role == 'audit')
                         {{-- Audit Multi Branch --}}
                         <div id="auditBranchContainer" class="d-none bg-light p-3 rounded mb-3 border">
@@ -114,15 +114,17 @@
         const divContainer = $('#divisionContainer');
         const isAudit = "{{ $targetUser->role == 'audit' }}"; 
 
-        auditContainer.addClass('d-none');
-        singleContainer.addClass('d-none');
+        // Reset semua ke hidden
+        if(auditContainer.length) auditContainer.addClass('d-none');
+        if(singleContainer.length) singleContainer.addClass('d-none');
         divContainer.removeClass('d-none');
 
+        // Logic
         if (type === 'transfer_branch' || type === 'join' || type === 'rejoin') {
             if (isAudit) {
-                auditContainer.removeClass('d-none');
+                if(auditContainer.length) auditContainer.removeClass('d-none');
             } else {
-                singleContainer.removeClass('d-none');
+                if(singleContainer.length) singleContainer.removeClass('d-none');
             }
         } else if (type === 'resign') {
             divContainer.addClass('d-none');

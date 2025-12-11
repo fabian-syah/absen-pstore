@@ -5,7 +5,7 @@
 @section('content')
 <div class="row">
     
-    {{-- FILTER USER (ADMIN & AUDIT) --}}
+    {{-- FILTER USER (HANYA MUNCUL UNTUK ADMIN & AUDIT) --}}
     @if(in_array(auth()->user()->role, ['admin', 'audit']))
     <div class="col-12 mb-4">
         <div class="card">
@@ -17,11 +17,19 @@
                 
                 <form action="{{ route('employment-history.index') }}" method="GET" class="d-flex align-items-center w-50 justify-content-end">
                     <select name="user_id" class="form-control w-75" onchange="this.form.submit()" style="border-radius: 8px;">
-                        <option value="{{ auth()->user()->id }}">-- Saya Sendiri --</option>
+                        {{-- Opsi Saya Sendiri --}}
+                        <option value="{{ auth()->user()->id }}" {{ isset($targetUser) && $targetUser->id == auth()->id() ? 'selected' : '' }}>
+                            -- Saya Sendiri ({{ auth()->user()->name }}) --
+                        </option>
+
+                        {{-- Loop User Lain --}}
                         @foreach($selectableUsers as $u)
-                            <option value="{{ $u->id }}" {{ isset($targetUser) && $targetUser->id == $u->id ? 'selected' : '' }}>
-                                {{ $u->name }} ({{ ucfirst($u->role) }})
-                            </option>
+                            {{-- Hindari duplikasi "Saya Sendiri" di list --}}
+                            @if($u->id != auth()->id())
+                                <option value="{{ $u->id }}" {{ isset($targetUser) && $targetUser->id == $u->id ? 'selected' : '' }}>
+                                    {{ $u->name }} ({{ ucfirst($u->role) }})
+                                </option>
+                            @endif
                         @endforeach
                     </select>
                 </form>
@@ -40,8 +48,10 @@
                         <span class="badge badge-outline-primary">{{ strtoupper($targetUser->role) }}</span>
                     </div>
                     
-                    {{-- TOMBOL TAMBAH DATA --}}
-                    @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                    {{-- TOMBOL TAMBAH DATA (SEMUA ROLE BISA, SESUAI KONTEKS) --}}
+                    {{-- Admin/Audit: Bisa tambah untuk siapa saja yg dipilih --}}
+                    {{-- Leader/Security/User: Hanya bisa tambah jika targetnya diri sendiri --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'audit']) || auth()->id() == $targetUser->id)
                         <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn btn-primary btn-icon-text">
                             <i class="mdi mdi-plus-circle-outline btn-icon-prepend"></i> Tambah Riwayat
                         </a>
@@ -73,7 +83,8 @@
                                     </div>
                                     
                                     {{-- TOMBOL EDIT --}}
-                                    @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                                    {{-- Muncul jika Admin/Audit ATAU Milik Sendiri --}}
+                                    @if(in_array(auth()->user()->role, ['admin', 'audit']) || auth()->id() == $history->user_id)
                                         <a href="{{ route('employment-history.edit', $history->id) }}" class="btn btn-inverse-warning btn-sm p-2" title="Edit Data">
                                             <i class="mdi mdi-pencil"></i> Edit
                                         </a>
@@ -118,14 +129,14 @@
                                         @endif
                                     @endif
 
-                                    {{-- DESKRIPSI & LAMPIRAN --}}
+                                    {{-- DESKRIPSI --}}
                                     @if($history->description)
                                         <div class="mt-2 pt-2 border-top">
                                             <p class="mb-0 small text-muted font-italic">"{{ $history->description }}"</p>
                                         </div>
                                     @endif
 
-                                    {{-- [MODIFIKASI] TOMBOL POPUP LAMPIRAN --}}
+                                    {{-- TOMBOL POPUP LAMPIRAN --}}
                                     @if($history->attachment)
                                         <div class="mt-2">
                                             <button type="button" 
@@ -168,21 +179,14 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Logika untuk menampilkan gambar di modal secara dinamis
         var attachmentModal = document.getElementById('attachmentModal');
-        
         attachmentModal.addEventListener('show.bs.modal', function(event) {
-            // Tombol yang diklik
             var button = event.relatedTarget;
-            // Ambil data-src dari tombol
             var src = button.getAttribute('data-src');
-            
-            // Update src gambar di dalam modal
             var modalImg = document.getElementById('modalImageSrc');
             modalImg.src = src;
         });
         
-        // Reset src saat modal ditutup (opsional, untuk membersihkan cache visual)
         attachmentModal.addEventListener('hidden.bs.modal', function() {
             var modalImg = document.getElementById('modalImageSrc');
             modalImg.src = '';

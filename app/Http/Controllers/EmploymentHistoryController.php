@@ -20,44 +20,55 @@ class EmploymentHistoryController extends Controller
         $targetUser = null;
         $selectableUsers = collect([]);
 
-        // 1. LOGIKA PEMILIHAN USER (FILTER)
+        // --- 1. LOGIKA LIST USER (DROPDOWN) ---
         if ($currentUser->role === 'admin') {
+            // Admin: Semua User
             $selectableUsers = User::orderBy('name')->get();
         } elseif ($currentUser->role === 'audit') {
+            // Audit: User Cabang + Diri Sendiri
             $branchIds = $currentUser->branches->pluck('id')->toArray();
             $selectableUsers = User::whereIn('branch_id', $branchIds)
                 ->orWhere('id', $currentUser->id)
                 ->orderBy('name')
                 ->get();
         } else {
-            // User Biasa/Leader/Security hanya lihat diri sendiri
+            // Leader, Security, User Biasa: Hanya Diri Sendiri
+            $selectableUsers = User::where('id', $currentUser->id)->get();
+        }
+
+        // --- 2. LOGIKA TARGET USER (SIAPA YG DITAMPILKAN) ---
+        
+        // Cek jika ada request 'user_id' dari dropdown
+        if ($request->has('user_id')) {
+            $requestedId = $request->user_id;
+
+            // Validasi Hak Akses Melihat Orang Lain
+            if ($requestedId != $currentUser->id) {
+                // Jika bukan admin & bukan audit, tolak akses lihat orang lain
+                if (!in_array($currentUser->role, ['admin', 'audit'])) {
+                    abort(403, 'Anda hanya boleh melihat data diri sendiri.');
+                }
+
+                // Jika Audit, pastikan target ada di wilayahnya
+                if ($currentUser->role === 'audit') {
+                    $targetCheck = User::find($requestedId);
+                    $allowedBranches = $currentUser->branches->pluck('id')->toArray();
+                    if ($targetCheck && !in_array($targetCheck->branch_id, $allowedBranches)) {
+                        abort(403, 'User ini di luar wilayah audit Anda.');
+                    }
+                }
+            }
+            $targetUser = User::find($requestedId);
+        } else {
+            // Default: Tampilkan Diri Sendiri
             $targetUser = $currentUser;
         }
 
-        // 2. TENTUKAN SIAPA YANG DITAMPILKAN
-        if ($currentUser->role === 'admin' || $currentUser->role === 'audit') {
-            if ($request->has('user_id')) {
-                $requestedUser = User::find($request->user_id);
-                
-                // Validasi Audit
-                if ($currentUser->role === 'audit') {
-                    $allowedBranches = $currentUser->branches->pluck('id')->toArray();
-                    if (!in_array($requestedUser->branch_id, $allowedBranches) && $requestedUser->id !== $currentUser->id) {
-                        abort(403, 'Akses Ditolak.');
-                    }
-                }
-                $targetUser = $requestedUser;
-            } else {
-                // Default tampilkan diri sendiri jika belum pilih
-                $targetUser = $currentUser;
-            }
-        }
-
-        // 3. AMBIL DATA HISTORI
+        // --- 3. AMBIL DATA HISTORI ---
         $histories = collect([]);
         if ($targetUser) {
             $histories = EmploymentHistory::where('user_id', $targetUser->id)
-                ->with(['branch', 'division', 'previousBranch']) // Eager load
+                ->with(['branch', 'division', 'previousBranch']) 
                 ->orderBy('event_date', 'desc')
                 ->get();
         }
@@ -70,14 +81,25 @@ class EmploymentHistoryController extends Controller
      */
     public function create(Request $request)
     {
-        // Pastikan ada user_id yang dituju (dari parameter URL/Request)
-        // Jika tidak ada, default ke diri sendiri (atau redirect error jika admin lupa pilih)
-        $targetId = $request->get('user_id', auth()->id());
+        $currentUser = auth()->user();
+        
+        // Ambil target ID dari URL, default ke diri sendiri
+        $targetId = $request->get('user_id', $currentUser->id);
         $targetUser = User::findOrFail($targetId);
 
-        // Validasi Akses (Cegah user biasa ngisi punya orang lain)
-        if(auth()->user()->role != 'admin' && auth()->user()->role != 'audit' && auth()->id() != $targetId) {
-            abort(403);
+        // --- VALIDASI AKSES CREATE ---
+        // Jika user biasa mencoba membuatkan data untuk orang lain -> TOLAK
+        if ($targetId != $currentUser->id) {
+            if (!in_array($currentUser->role, ['admin', 'audit'])) {
+                abort(403, 'Anda hanya bisa menambah data untuk diri sendiri.');
+            }
+            // Validasi Audit
+            if ($currentUser->role === 'audit') {
+                $allowedBranches = $currentUser->branches->pluck('id')->toArray();
+                if (!in_array($targetUser->branch_id, $allowedBranches) && $targetUser->id !== $currentUser->id) {
+                    abort(403, 'User ini di luar wilayah audit Anda.');
+                }
+            }
         }
 
         $branches = Branch::all();
@@ -87,10 +109,12 @@ class EmploymentHistoryController extends Controller
     }
 
     /**
-     * SIMPAN DATA (HANYA RECORD TIMELINE, TIDAK UPDATE USER)
+     * SIMPAN DATA
      */
     public function store(Request $request)
     {
+        $currentUser = auth()->user();
+
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'type' => 'required',
@@ -99,14 +123,19 @@ class EmploymentHistoryController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        // --- KEAMANAN DATA ---
+        // Jika bukan Admin/Audit, Paksa user_id menjadi diri sendiri (Anti Injeksi)
+        if (!in_array($currentUser->role, ['admin', 'audit'])) {
+            $request->merge(['user_id' => $currentUser->id]);
+        }
+
         $data = $request->only(['user_id', 'type', 'event_date', 'description', 'division_id', 'branch_id']);
 
-        // Set Previous Branch (Opsional, manual input atau ambil dari current user sebagai referensi snapshot)
-        // Karena requirementnya "timeline doang", kita snapshot kondisi user SAAT INI sebagai "Previous"
+        // Snapshot Previous Branch
         $targetUser = User::find($request->user_id);
         $data['previous_branch_id'] = $targetUser->branch_id; 
 
-        // Handle Audit Multi Branch Snapshot (Jika User Audit)
+        // Handle Audit Multi Branch Snapshot
         if ($targetUser->role == 'audit' && $request->has('audit_branch_ids')) {
             $oldBranchNames = $targetUser->branches->pluck('name')->toArray();
             $newBranches = Branch::whereIn('id', $request->audit_branch_ids)->get();
@@ -116,7 +145,6 @@ class EmploymentHistoryController extends Controller
                 'from' => $oldBranchNames,
                 'to'   => $newBranchNames
             ];
-            // Catatan: Kita TIDAK men-sync data user asli, hanya mencatat snapshotnya.
         }
 
         // Upload File
@@ -126,7 +154,7 @@ class EmploymentHistoryController extends Controller
 
         EmploymentHistory::create($data);
 
-        return redirect()->route('employment-history.index', ['user_id' => $request->user_id])
+        return redirect()->route('employment-history.index', ['user_id' => $data['user_id']])
             ->with('success', 'Riwayat berhasil dicatat (Timeline Only).');
     }
 
@@ -136,10 +164,24 @@ class EmploymentHistoryController extends Controller
     public function edit($id)
     {
         $history = EmploymentHistory::findOrFail($id);
-        
-        // Validasi akses edit (Admin/Audit only)
-        if (!in_array(auth()->user()->role, ['admin', 'audit'])) {
-            abort(403, 'Hanya Admin/Audit yang boleh mengedit riwayat.');
+        $currentUser = auth()->user();
+
+        // --- VALIDASI AKSES EDIT ---
+        // Boleh edit jika: Admin/Audit ATAU Data Milik Sendiri
+        $isOwner = ($history->user_id == $currentUser->id);
+        $isAdminOrAudit = in_array($currentUser->role, ['admin', 'audit']);
+
+        if (!$isOwner && !$isAdminOrAudit) {
+            abort(403, 'Anda tidak berhak mengedit data ini.');
+        }
+
+        // Jika Audit mengedit orang lain, pastikan wilayahnya benar
+        if ($currentUser->role === 'audit' && !$isOwner) {
+            $targetUser = $history->user;
+            $allowedBranches = $currentUser->branches->pluck('id')->toArray();
+            if (!in_array($targetUser->branch_id, $allowedBranches)) {
+                abort(403, 'User ini di luar wilayah audit Anda.');
+            }
         }
 
         $branches = Branch::all();
@@ -155,6 +197,15 @@ class EmploymentHistoryController extends Controller
     public function update(Request $request, $id)
     {
         $history = EmploymentHistory::findOrFail($id);
+        $currentUser = auth()->user();
+
+        // --- VALIDASI AKSES UPDATE ---
+        $isOwner = ($history->user_id == $currentUser->id);
+        $isAdminOrAudit = in_array($currentUser->role, ['admin', 'audit']);
+
+        if (!$isOwner && !$isAdminOrAudit) {
+            abort(403, 'Anda tidak berhak mengedit data ini.');
+        }
 
         $request->validate([
             'type' => 'required',
@@ -164,23 +215,18 @@ class EmploymentHistoryController extends Controller
 
         $data = $request->only(['type', 'event_date', 'description', 'division_id', 'branch_id']);
 
-        // Handle File Update
         if ($request->hasFile('attachment')) {
-            // Hapus file lama jika ada
             if ($history->attachment) {
                 Storage::disk('public')->delete($history->attachment);
             }
             $data['attachment'] = $request->file('attachment')->store('employment_attachments', 'public');
         }
 
-        // Handle Audit Snapshot Update (Jika ada perubahan manual di array snapshot)
+        // Handle Audit Snapshot Update
         if ($history->user->role == 'audit' && $request->has('audit_branch_ids')) {
-             // Logic snapshot ulang jika perlu, atau biarkan statis sesuai saat create
-             // Disini saya update jika ada input baru
              $newBranches = Branch::whereIn('id', $request->audit_branch_ids)->get();
              $newBranchNames = $newBranches->pluck('name')->toArray();
              
-             // Ambil 'from' yang lama, update 'to' nya
              $currentSnapshot = $history->audit_branch_snapshot ?? ['from' => [], 'to' => []];
              $data['audit_branch_snapshot'] = [
                  'from' => $currentSnapshot['from'] ?? [], 

@@ -43,8 +43,6 @@
                             <label class="fw-bold mb-2">Update Snapshot Wilayah Audit</label>
                             <select name="audit_branch_ids[]" class="form-select select2-multi" multiple="multiple" style="width:100%">
                                 @php 
-                                    // Logic simple: jika ada snapshot 'to', kita coba map kembali ke ID (jika nama match)
-                                    // Atau biarkan kosong user pilih ulang manual karena ini edit
                                     $selectedNames = $history->audit_branch_snapshot['to'] ?? [];
                                 @endphp
                                 @foreach($branches as $branch)
@@ -118,15 +116,15 @@
         const divContainer = $('#divisionContainer');
         const isAudit = "{{ $targetUser->role == 'audit' }}"; 
 
-        auditContainer.addClass('d-none');
-        singleContainer.addClass('d-none');
+        if(auditContainer.length) auditContainer.addClass('d-none');
+        if(singleContainer.length) singleContainer.addClass('d-none');
         divContainer.removeClass('d-none');
 
         if (type === 'transfer_branch' || type === 'join' || type === 'rejoin') {
             if (isAudit) {
-                auditContainer.removeClass('d-none');
+                if(auditContainer.length) auditContainer.removeClass('d-none');
             } else {
-                singleContainer.removeClass('d-none');
+                if(singleContainer.length) singleContainer.removeClass('d-none');
             }
         } else if (type === 'resign') {
             divContainer.addClass('d-none');
