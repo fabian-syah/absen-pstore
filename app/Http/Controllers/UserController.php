@@ -80,14 +80,6 @@ class UserController extends Controller
     {
         $user = Auth::user();
 
-        // --- PEMBERSIHAN FORMAT RUPIAH (DICOMMENT SEMENTARA) ---
-        // if ($request->has('gaji')) {
-        //     $request->merge([
-        //         'gaji' => str_replace('.', '', $request->gaji)
-        //     ]);
-        // }
-        // ---------------------------------
-
         $request->validate([
             'name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
@@ -96,7 +88,6 @@ class UserController extends Controller
             'login_id' => 'required|string|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|string|in:admin,admin_gaji,audit,leader,security,user_biasa',
-            // UPDATE: Validasi branch tidak required jika role admin ATAU admin_gaji
             'branch_id' => 'required_unless:role,admin,admin_gaji|nullable|exists:branches,id',
             'multi_divisions' => 'nullable|array',
             'multi_branches' => 'nullable|array',
@@ -104,7 +95,6 @@ class UserController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
-            // 'gaji' => 'nullable|numeric', // DICOMMENT SEMENTARA
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
@@ -114,18 +104,13 @@ class UserController extends Controller
         $data['check_in_end']    = null;
         $data['check_out_end']   = null;
 
-        // Pastikan hanya admin/admin_gaji yang bisa input gaji (DICOMMENT SEMENTARA)
-        // if (!in_array($user->role, ['admin', 'admin_gaji'])) {
-        //     unset($data['gaji']);
-        // }
-
         $data['division_id'] = ($request->has('multi_divisions') && count($request->multi_divisions) > 0) ? $request->multi_divisions[0] : null;
 
         if ($user->role == 'admin' && $user->branch_id != null) {
             $data['branch_id'] = $user->branch_id;
         }
         
-        // UPDATE: Jika role ADMIN atau ADMIN_GAJI, set branch & division jadi NULL (Global Access)
+        // Jika role ADMIN atau ADMIN_GAJI, set branch & division jadi NULL (Global Access)
         if (in_array($request->role, ['admin', 'admin_gaji'])) {
             $data['branch_id'] = null;
             $data['division_id'] = null;
@@ -157,18 +142,34 @@ class UserController extends Controller
         $user->load(['branches', 'divisions']);
         $auth_user = Auth::user();
 
+        // 1. Validasi Akses Audit: Pastikan User yang diedit ada di wilayah Audit
         if ($auth_user->role == 'audit') {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
+            // Jika user punya cabang, dan cabangnya tidak ada di list audit -> Tolak
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
             }
         }
         
+        // 2. Validasi Akses Admin Cabang
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
 
-        $branches = Branch::all();
+        // ==========================================================
+        // LOGIC PENGAMBILAN DATA CABANG ($branches)
+        // ==========================================================
+        if ($auth_user->role == 'audit') {
+            // Audit hanya boleh melihat/memilih cabang yang dia pegang
+            $branches = $auth_user->branches; 
+        } elseif ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
+            // Admin Cabang hanya melihat cabangnya sendiri
+            $branches = Branch::where('id', $auth_user->branch_id)->get();
+        } else {
+            // Super Admin / Admin Gaji melihat semua cabang
+            $branches = Branch::all();
+        }
+
         $divisions = Division::all();
         $allowedRoles = ['admin', 'admin_gaji', 'audit', 'leader', 'security', 'user_biasa'];
 
@@ -177,14 +178,6 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        // --- PEMBERSIHAN FORMAT RUPIAH (DICOMMENT SEMENTARA) ---
-        // if ($request->has('gaji')) {
-        //     $request->merge([
-        //         'gaji' => str_replace('.', '', $request->gaji)
-        //     ]);
-        // }
-        // ---------------------------------
-
         $request->validate([
             'name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
@@ -193,20 +186,25 @@ class UserController extends Controller
             'login_id' => ['required', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|string|in:admin,admin_gaji,audit,leader,security,user_biasa',
-            // UPDATE: Validasi branch tidak required jika role admin ATAU admin_gaji
             'branch_id' => 'nullable|exists:branches,id',
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
-            // 'gaji' => 'nullable|numeric', // DICOMMENT SEMENTARA
         ]);
 
-        $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
+        // ==========================================================
+        // KEAMANAN UNTUK AUDIT (Mencegah Inspect Element)
+        // ==========================================================
+        if (Auth::user()->role == 'audit' && $request->filled('branch_id')) {
+            $auditBranchIds = Auth::user()->branches()->pluck('branches.id')->toArray();
+            
+            // Jika Audit mencoba memindah user ke cabang yang TIDAK dia pegang -> Error
+            if (!in_array($request->branch_id, $auditBranchIds)) {
+                return back()->with('error', 'Anda tidak memiliki akses untuk memindahkan user ke cabang tersebut.');
+            }
+        }
 
-        // Pastikan hanya admin/admin_gaji yang bisa update gaji (DICOMMENT SEMENTARA)
-        // if (!in_array(Auth::user()->role, ['admin', 'admin_gaji'])) {
-        //     unset($data['gaji']);
-        // }
+        $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
@@ -216,14 +214,14 @@ class UserController extends Controller
         $data['check_out_start'] = $request->check_out_start ?: null;
         $data['check_in_end']    = null;
         $data['check_out_end']   = null;
-        $data['hire_date'] = $request->hire_date ?? null;
+        $data['hire_date']       = $request->hire_date ?? null;
 
         if ($request->hasFile('profile_photo_path')) {
             if ($user->profile_photo_path) Storage::disk('public')->delete($user->profile_photo_path);
             $data['profile_photo_path'] = $request->file('profile_photo_path')->store('profile-photos', 'public');
         }
 
-        // UPDATE: Jika role diubah jadi ADMIN atau ADMIN_GAJI, set branch & division NULL
+        // Jika role diubah jadi ADMIN atau ADMIN_GAJI, set branch & division NULL
         if (in_array($request->role, ['admin', 'admin_gaji'])) {
             $data['branch_id'] = null;
             $data['division_id'] = null;
@@ -231,10 +229,12 @@ class UserController extends Controller
 
         $user->update($data);
 
+        // Sync Relasi
         if ($request->role == 'audit') {
             $user->branches()->sync($request->multi_branches ?? []);
         } else {
             $user->divisions()->sync($request->multi_divisions ?? []);
+            
             // Logika tambahan jika bukan admin/admin_gaji
             if (!in_array($request->role, ['admin', 'admin_gaji'])) {
                 if ($request->has('multi_divisions') && count($request->multi_divisions) > 0) {
@@ -303,13 +303,9 @@ class UserController extends Controller
         return view('users.user_show', compact('user', 'stats', 'recentAttendance'));
     }
 
-    // =========================================================================
-    // UPDATE: VERIFIKASI USER WAJIB ADA FOTO PROFIL & KTP
-    // =========================================================================
     public function verifyUser(User $user)
     {
         if (!$user->is_verified) {
-            // SYARAT: Foto Profil DAN Foto KTP Wajib Ada
             if (empty($user->profile_photo_path) || empty($user->ktp_photo_path)) {
                 return back()->with('error', 'Gagal Verifikasi: User harus mengunggah Foto Profil DAN Foto KTP terlebih dahulu!');
             }
@@ -359,10 +355,6 @@ class UserController extends Controller
         return view('users.ktp-requests', compact('users'));
     }
 
-    // ==========================================================
-    // LOGIKA APPROVE & REJECT FOTO PROFIL (Dengan Hapus File)
-    // ==========================================================
-
     public function approvePhotoRequest(User $user)
     {
         if (!$user->profile_photo_temp_path) {
@@ -399,10 +391,6 @@ class UserController extends Controller
         
         return back()->with('success', 'Pengajuan foto ditolak. File pengajuan dihapus.');
     }
-
-    // ==========================================================
-    // LOGIKA APPROVE & REJECT KTP (Dengan Hapus File)
-    // ==========================================================
 
     public function approveKtpRequest(User $user)
     {

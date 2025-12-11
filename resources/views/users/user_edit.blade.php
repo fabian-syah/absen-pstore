@@ -40,8 +40,21 @@
 
         @php
             $currentUser = Auth::user();
+            
+            // Cek Super Admin (Admin Pusat)
             $isSuperAdmin = $currentUser->role == 'admin' && $currentUser->branch_id == null;
-            $disabledAttr = $isSuperAdmin ? '' : 'disabled';
+            // Cek Admin Gaji
+            $isAdminGaji  = $currentUser->role == 'admin_gaji';
+            // Cek Audit
+            $isAudit      = $currentUser->role == 'audit';
+
+            // [UPDATE LOGIC]
+            // Input Cabang dibuka jika: Super Admin OR Admin Gaji OR Audit
+            $canEditBranch = $isSuperAdmin || $isAdminGaji || $isAudit;
+
+            // Logic Disable Umum (untuk role input dll) - biarkan default Admin saja yang leluasa
+            // Namun atribut disabled spesifik untuk select box cabang kita atur manual di bawah
+            $globalDisabled = $isSuperAdmin || $isAdminGaji ? '' : 'disabled';
         @endphp
 
         <div class="row">
@@ -68,32 +81,19 @@
                         </div>
                         <div class="form-group mb-3">
                             <label>Role</label>
-                            <select class="form-select" id="role" name="role" onchange="toggleInputs()" required {{ $disabledAttr }}>
+                            {{-- Role hanya bisa diganti oleh Admin/Admin Gaji --}}
+                            <select class="form-select" id="role" name="role" onchange="toggleInputs()" required {{ $globalDisabled }}>
                                 @foreach ($allowedRoles as $roleOption)
                                     <option value="{{ $roleOption }}" {{ old('role', $user->role) == $roleOption ? 'selected' : '' }}>
                                         {{ strtoupper(str_replace('_', ' ', $roleOption)) }}
                                     </option>
                                 @endforeach
                             </select>
-                            @if (!$isSuperAdmin)
+                            {{-- Hidden input role jika disabled --}}
+                            @if ($globalDisabled == 'disabled')
                                 <input type="hidden" name="role" value="{{ $user->role }}">
                             @endif
                         </div>
-
-                        {{-- INPUT GAJI (DICOMMENT SEMENTARA) --}}
-                        {{-- 
-                        @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
-                        <div class="form-group mb-3">
-                            <label class="fw-bold text-primary">Gaji Pokok</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                <input type="text" class="form-control" id="gaji" name="gaji" placeholder="Contoh: 3.000.000" 
-                                    value="{{ old('gaji', $user->gaji ? number_format($user->gaji, 0, ',', '.') : '') }}">
-                            </div>
-                            <small class="text-muted">Masukkan angka, otomatis terformat.</small>
-                        </div>
-                        @endif
-                        --}}
 
                         <div class="form-group mb-3">
                             <label>awal masuk pstore ( opsional )</label>
@@ -119,9 +119,14 @@
                     <div class="card-body">
                         <h4 class="card-title">Penempatan & Kontak</h4>
 
+                        {{-- [UPDATE BAGIAN INI] --}}
                         <div class="form-group mb-3" id="single-branch-group">
                             <label>Cabang Utama (Lokasi Kerja)</label>
-                            <select class="form-select select2-single" name="branch_id" data-placeholder="Pilih Cabang" {{ $disabledAttr }}>
+                            
+                            {{-- Disabled atribut tergantung $canEditBranch --}}
+                            <select class="form-select select2-single" name="branch_id" data-placeholder="Pilih Cabang" 
+                                {{ $canEditBranch ? '' : 'disabled' }}>
+                                
                                 <option></option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}" {{ old('branch_id', $user->branch_id) == $branch->id ? 'selected' : '' }}>
@@ -129,14 +134,17 @@
                                     </option>
                                 @endforeach
                             </select>
-                            @if (!$isSuperAdmin && $user->branch_id)
+
+                            {{-- Jika user tidak punya akses edit cabang, buat input hidden agar nilai lama terkirim (opsional, krn select disabled tidak kirim value) --}}
+                            @if (!$canEditBranch && $user->branch_id)
                                 <input type="hidden" name="branch_id" value="{{ $user->branch_id }}">
                             @endif
                         </div>
 
+                        {{-- MULTI BRANCH (Hanya Muncul jika User yg diedit Role Audit) --}}
                         <div class="form-group mb-3 d-none" id="multi-branch-group">
                             <label class="text-primary fw-bold">Akses Wilayah Audit (Multi)</label>
-                            <select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%" {{ $disabledAttr }}>
+                            <select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%" {{ $globalDisabled }}>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}" {{ in_array($branch->id, old('multi_branches', $user->branches->pluck('id')->toArray())) ? 'selected' : '' }}>
                                         {{ $branch->name }}
@@ -175,7 +183,7 @@
             </div>
         </div>
 
-        {{-- ROW BARU: SETTING JAM KERJA PERSONAL (DIGABUNG) --}}
+        {{-- ROW BARU: SETTING JAM KERJA PERSONAL --}}
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
@@ -244,12 +252,15 @@
 
             window.toggleInputs = function() {
                 const role = $('#role').val();
+                
+                // Logic tampilan Single Branch
                 if (role === 'admin' || role === 'admin_gaji') { 
                     $('#single-branch-group').addClass('d-none'); 
                 } else { 
                     $('#single-branch-group').removeClass('d-none'); 
                 }
 
+                // Logic tampilan Multi Branch (Audit)
                 if (role === 'audit') { 
                     $('#multi-branch-group').removeClass('d-none'); 
                 } else { 
@@ -257,32 +268,6 @@
                 }
             };
             toggleInputs();
-
-            // --- FUNGSI FORMAT RUPIAH (DICOMMENT SEMENTARA) ---
-            /*
-            var gaji = document.getElementById('gaji');
-            if(gaji){
-                gaji.addEventListener('keyup', function(e){
-                    gaji.value = formatRupiah(this.value, '');
-                });
-            }
-
-            function formatRupiah(angka, prefix){
-                var number_string = angka.replace(/[^,\d]/g, '').toString(),
-                split   		= number_string.split(','),
-                sisa     		= split[0].length % 3,
-                rupiah     		= split[0].substr(0, sisa),
-                ribuan     		= split[0].substr(sisa).match(/\d{3}/gi);
-    
-                if(ribuan){
-                    separator = sisa ? '.' : '';
-                    rupiah += separator + ribuan.join('.');
-                }
-    
-                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-                return prefix == undefined ? rupiah : (rupiah ? rupiah : '');
-            }
-            */
         });
     </script>
 @endpush
