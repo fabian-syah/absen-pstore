@@ -8,6 +8,48 @@
     Detail Cabang
 @endsection
 
+@push('styles')
+    <style>
+        /* Style untuk Pill Audit (Mirip Team Blade) */
+        .audit-pill {
+            background: rgba(13, 110, 253, 0.1); /* Warna Soft Primary */
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            border-radius: 50px;
+            padding: 4px 12px;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            margin-bottom: 6px;
+            margin-right: 4px;
+        }
+        .audit-pill:hover {
+            background: rgba(13, 110, 253, 0.2);
+            transform: translateY(-2px);
+        }
+        .audit-pill img, .audit-pill .audit-initial {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 8px;
+        }
+        .audit-initial {
+            background: #0d6efd;
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .audit-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #0d6efd;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="row">
         {{-- INFO CABANG --}}
@@ -25,10 +67,31 @@
                             <span class="fw-bold text-muted">Alamat</span>
                             <span class="text-dark text-end" style="max-width: 200px;">{{ $branch->address ?? '-' }}</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center py-2">
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                             <span class="fw-bold text-muted">Total Karyawan</span>
                             <span class="badge bg-primary fs-6">{{ $totalEmployees }}</span>
                         </div>
+
+                        {{-- [BARU] SECTION AUDIT PENANGGUNG JAWAB --}}
+                        <div class="py-3">
+                            <span class="fw-bold text-muted d-block mb-2">Audit Penanggung Jawab</span>
+                            <div class="d-flex flex-wrap">
+                                @forelse($assignedAudits as $audit)
+                                    <div class="audit-pill" title="{{ $audit->name }}">
+                                        @if($audit->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $audit->profile_photo_path) }}" alt="audit">
+                                        @else
+                                            <div class="audit-initial">{{ substr($audit->name, 0, 1) }}</div>
+                                        @endif
+                                        <span class="audit-name">{{ Str::limit($audit->name, 15) }}</span>
+                                    </div>
+                                @empty
+                                    <span class="text-muted small fst-italic">Belum ada audit ditugaskan.</span>
+                                @endforelse
+                            </div>
+                        </div>
+                        {{-- [AKHIR] SECTION AUDIT --}}
+
                     </div>
 
                     <div class="mt-4 d-grid gap-2">

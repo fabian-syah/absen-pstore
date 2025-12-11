@@ -25,7 +25,7 @@ class BranchController extends Controller
     /**
      * Menampilkan daftar cabang (Difilter sesuai Role + Search).
      */
-    public function index(Request $request) // Update: Inject Request
+    public function index(Request $request)
     {
         $user = Auth::user();
         $query = Branch::query();
@@ -84,7 +84,16 @@ class BranchController extends Controller
         // 3. Hitung Statistik Ringan
         $totalEmployees = User::where('branch_id', $branch->id)->count();
 
-        return view('branch.branch_show', compact('branch', 'users', 'totalEmployees'));
+        // [BARU] 4. Ambil Audit Penanggung Jawab Cabang Ini
+        // Menggunakan whereHas untuk mengecek relasi many-to-many (pivot table)
+        $assignedAudits = User::where('role', 'audit')
+            ->where('is_active', true)
+            ->whereHas('branches', function($q) use ($branch) {
+                $q->where('branches.id', $branch->id);
+            })
+            ->get();
+
+        return view('branch.branch_show', compact('branch', 'users', 'totalEmployees', 'assignedAudits'));
     }
 
     /**
