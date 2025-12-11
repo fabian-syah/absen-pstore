@@ -18,12 +18,27 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        // Middleware: Hanya Admin, Admin Gaji, dan Audit yang boleh akses manajemen user
+        // [PERBAIKAN] Middleware Konstruktor
+        // Aturan Default: Hanya Admin, Audit, Admin Gaji yang boleh akses Controller ini.
+        // KECUALI method 'show', Leader juga boleh masuk.
+        
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
-            if (!in_array($user->role, ['admin', 'audit', 'admin_gaji'])) {
-                abort(403, 'Akses ditolak. Anda tidak memiliki hak akses.');
+            $routeAction = $request->route()->getActionMethod(); // Ambil nama method (index, create, show, dll)
+
+            // Jika method-nya 'show', izinkan Leader juga
+            if ($routeAction === 'show') {
+                if (!in_array($user->role, ['admin', 'audit', 'admin_gaji', 'leader'])) {
+                    abort(403, 'Akses ditolak. Anda tidak memiliki hak akses.');
+                }
+            } 
+            // Untuk method selain 'show' (create, store, edit, update, destroy, index), Leader DILARANG
+            else {
+                if (!in_array($user->role, ['admin', 'audit', 'admin_gaji'])) {
+                    abort(403, 'Akses ditolak. Anda tidak memiliki hak akses.');
+                }
             }
+
             return $next($request);
         });
     }
@@ -274,13 +289,26 @@ class UserController extends Controller
     {
         $auth_user = Auth::user();
 
+        // 1. Validasi Admin Cabang
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
+        // 2. Validasi Audit (Sesuai Wilayah)
         if ($auth_user->role == 'audit') {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di luar wilayah cabang Anda.');
+            }
+        }
+        // 3. [PERBAIKAN] Validasi Leader (Hanya Cabang Sendiri)
+        if ($auth_user->role == 'leader') {
+            // Leader hanya boleh lihat user yang satu cabang dengannya (kecuali Super Admin/Audit yang branch_id nya null)
+            if ($user->branch_id != $auth_user->branch_id) {
+                // Kecuali jika si Leader punya akses multi branch (kasus jarang, tapi jaga2)
+                $leaderPivotIds = $auth_user->branches()->pluck('branches.id')->toArray();
+                if (!in_array($user->branch_id, $leaderPivotIds)) {
+                    abort(403, 'Akses Ditolak: Anda hanya boleh melihat karyawan di cabang Anda sendiri.');
+                }
             }
         }
 
@@ -303,6 +331,8 @@ class UserController extends Controller
         return view('users.user_show', compact('user', 'stats', 'recentAttendance'));
     }
 
+    // ... (method verifyUser, photoRequests, ktpRequests, approvePhoto, rejectPhoto, dll SAMA) ...
+    
     public function verifyUser(User $user)
     {
         if (!$user->is_verified) {
