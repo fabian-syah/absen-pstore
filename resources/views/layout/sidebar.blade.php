@@ -45,6 +45,7 @@
             </a>
         </li>
         <li class="nav-item">
+            {{-- Link ini membuka halaman history TANPA parameter 'edit_mode', jadi tombol Edit akan hilang --}}
             <a class="nav-link" href="{{ route('employment-history.index') }}">
                 <i class="menu-icon mdi mdi-history"></i>
                 <span class="menu-title">Riwayat Divisi / Cabang</span>

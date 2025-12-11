@@ -5,17 +5,27 @@
 @section('content')
 <div class="row">
     
-    {{-- FILTER USER (HANYA MUNCUL UNTUK ADMIN & AUDIT) --}}
-    @if(in_array(auth()->user()->role, ['admin', 'audit']))
+    {{-- FILTER USER (HANYA MUNCUL UNTUK ADMIN, AUDIT, LEADER) --}}
+    @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
     <div class="col-12 mb-4">
         <div class="card">
             <div class="card-body py-3 d-flex align-items-center justify-content-between">
                 <div>
                     <h4 class="card-title mb-1">Daftar Riwayat Karir</h4>
-                    <p class="text-muted mb-0 small">Pilih pegawai untuk melihat timeline mereka.</p>
+                    <p class="text-muted mb-0 small">
+                        @if($canEdit)
+                            <span class="text-success fw-bold"><i class="mdi mdi-pencil"></i> MODE EDIT AKTIF</span> - 
+                        @endif
+                        Pilih pegawai untuk melihat timeline.
+                    </p>
                 </div>
                 
                 <form action="{{ route('employment-history.index') }}" method="GET" class="d-flex align-items-center w-50 justify-content-end">
+                    {{-- Jika sedang mode edit, pertahankan mode edit saat ganti user --}}
+                    @if($canEdit)
+                        <input type="hidden" name="mode" value="edit">
+                    @endif
+
                     <select name="user_id" class="form-control w-75" onchange="this.form.submit()" style="border-radius: 8px;">
                         {{-- Opsi Saya Sendiri --}}
                         <option value="{{ auth()->user()->id }}" {{ isset($targetUser) && $targetUser->id == auth()->id() ? 'selected' : '' }}>
@@ -24,7 +34,6 @@
 
                         {{-- Loop User Lain --}}
                         @foreach($selectableUsers as $u)
-                            {{-- Hindari duplikasi "Saya Sendiri" di list --}}
                             @if($u->id != auth()->id())
                                 <option value="{{ $u->id }}" {{ isset($targetUser) && $targetUser->id == $u->id ? 'selected' : '' }}>
                                     {{ $u->name }} ({{ ucfirst($u->role) }})
@@ -48,10 +57,9 @@
                         <span class="badge badge-outline-primary">{{ strtoupper($targetUser->role) }}</span>
                     </div>
                     
-                    {{-- TOMBOL TAMBAH DATA (SEMUA ROLE BISA, SESUAI KONTEKS) --}}
-                    {{-- Admin/Audit: Bisa tambah untuk siapa saja yg dipilih --}}
-                    {{-- Leader/Security/User: Hanya bisa tambah jika targetnya diri sendiri --}}
-                    @if(in_array(auth()->user()->role, ['admin', 'audit']) || auth()->id() == $targetUser->id)
+                    {{-- TOMBOL TAMBAH DATA --}}
+                    {{-- Hanya muncul jika $canEdit bernilai TRUE (Akses dari tombol Profile) --}}
+                    @if($canEdit)
                         <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn btn-primary btn-icon-text">
                             <i class="mdi mdi-plus-circle-outline btn-icon-prepend"></i> Tambah Riwayat
                         </a>
@@ -64,7 +72,9 @@
                             <i class="mdi mdi-timeline-text-outline text-muted" style="font-size: 4rem;"></i>
                         </div>
                         <h5 class="text-muted">Belum ada riwayat tercatat.</h5>
-                        <p class="text-muted small">Klik tombol tambah untuk membuat catatan baru.</p>
+                        @if($canEdit)
+                            <p class="text-muted small">Klik tombol tambah untuk membuat catatan baru.</p>
+                        @endif
                     </div>
                 @else
                     <ul class="bullet-line-list">
@@ -83,8 +93,8 @@
                                     </div>
                                     
                                     {{-- TOMBOL EDIT --}}
-                                    {{-- Muncul jika Admin/Audit ATAU Milik Sendiri --}}
-                                    @if(in_array(auth()->user()->role, ['admin', 'audit']) || auth()->id() == $history->user_id)
+                                    {{-- Hanya muncul jika $canEdit bernilai TRUE --}}
+                                    @if($canEdit)
                                         <a href="{{ route('employment-history.edit', $history->id) }}" class="btn btn-inverse-warning btn-sm p-2" title="Edit Data">
                                             <i class="mdi mdi-pencil"></i> Edit
                                         </a>
