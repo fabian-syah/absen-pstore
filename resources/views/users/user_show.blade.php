@@ -33,7 +33,7 @@
                                  style="width: 150px; height: 150px; object-fit: cover; border: {{ $user->is_verified ? '5px solid #0d6efd' : '3px solid #e3e3e3' }}">
                         @else
                             <div class="mx-auto rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                                style="background-color: #007bff; width: 150px; height: 150px; font-size: 40px;">
+                                 style="background-color: #007bff; width: 150px; height: 150px; font-size: 40px;">
                                 {{ substr($user->name, 0, 1) }}
                             </div>
                         @endif
@@ -74,10 +74,12 @@
 
                         {{-- [NEW] 2. HISTORY TAHUNAN --}}
                         {{-- (Jika ada routenya, biarkan. Jika tidak, bisa dikomen) --}}
+                        {{-- 
                         <a href="{{ route('attendance.summary.user', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-chart-bar text-warning me-2"></i> History Tahunan</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
-                        </a>
+                        </a> 
+                        --}}
 
                         {{-- 3. HISTORY INVENTARIS --}}
                         <a href="{{ route('inventory.index', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
@@ -169,7 +171,7 @@
                         @endif
                     </div>
 
-                    {{-- TANGGAL LAHIR & SOSMED --}}
+                    {{-- TANGGAL LAHIR --}}
                     <div class="col-md-6 mb-3">
                         <label class="fw-bold text-muted small">Tanggal Lahir</label>
                         <p class="h6">
@@ -178,6 +180,7 @@
                         </p>
                     </div>
 
+                    {{-- SOSMED --}}
                     <div class="col-md-6 mb-3">
                         <label class="fw-bold text-muted small">Media Sosial</label>
                         <div class="d-flex align-items-center gap-3 mt-1">
@@ -201,6 +204,29 @@
                             @endif
                         </div>
                     </div>
+
+                    {{-- [BARU] JAM KERJA PERSONAL --}}
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold text-muted small">Jam Kerja Personal</label>
+                        @if($user->check_in_start || $user->check_out_start)
+                            <div class="d-flex align-items-center mt-1">
+                                <span class="badge bg-primary text-white border border-primary me-2">
+                                    <i class="mdi mdi-login-variant me-1"></i>
+                                    {{ $user->check_in_start ? \Carbon\Carbon::parse($user->check_in_start)->format('H:i') : '?' }}
+                                </span>
+                                <span class="text-muted mx-1 fw-bold">-</span>
+                                <span class="badge bg-danger text-white border border-danger ms-2">
+                                    <i class="mdi mdi-logout-variant me-1"></i>
+                                    {{ $user->check_out_start ? \Carbon\Carbon::parse($user->check_out_start)->format('H:i') : '?' }}
+                                </span>
+                            </div>
+                        @else
+                            <p class="h6 text-muted mt-1">
+                                <i class="mdi mdi-calendar-clock"></i> Mengikuti Shift / Fleksibel
+                            </p>
+                        @endif
+                    </div>
+
                 </div>
 
                 {{-- TABEL 5 AKTIVITAS TERAKHIR --}}
