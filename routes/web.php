@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EmploymentHistoryController;
 use App\Models\User;
 use App\Traits\SendFcmNotification;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +61,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/search', [GlobalSearchController::class, 'search'])->name('search');
 
     Route::get('/my-wrapped-2025', [App\Http\Controllers\AttendanceRecapController::class, 'index'])->name('attendance.recap');
+
+    Route::get('/riwayat-divisi-cabang', [EmploymentHistoryController::class, 'index'])->name('employment-history.index');
+    Route::post('/riwayat-divisi-cabang', [EmploymentHistoryController::class, 'store'])->name('employment-history.store');
+    Route::delete('/riwayat-divisi-cabang/{id}', [EmploymentHistoryController::class, 'destroy'])->name('employment-history.destroy');
 
     // === RUTE RIWAYAT ABSENSI ===
     Route::get('/riwayat-absensi', [AttendanceHistoryController::class, 'index'])->name('attendance.history');

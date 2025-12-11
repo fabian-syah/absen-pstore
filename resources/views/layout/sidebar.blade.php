@@ -45,7 +45,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="{{ route('employment-history.index') }}">
                 <i class="menu-icon mdi mdi-history"></i>
                 <span class="menu-title">Riwayat Divisi / Cabang</span>
             </a>
