@@ -206,7 +206,7 @@
                         </div>
                         <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Tanggal Lahir</label>
-                            <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date', $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('Y-m-d') : '') }}">
+                            <input type="date" class="form-control bg-light" name="birth_date" value="{{ old('birth_date', $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('Y-m-d') : '') }}" readonly>
                         </div>
                          <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Email Login</label>
