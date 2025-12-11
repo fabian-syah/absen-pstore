@@ -3,25 +3,13 @@
 @section('title', 'Tambah Riwayat')
 
 @section('content')
-{{-- Load CSS Select2 --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
-{{-- Custom Style Select2 Multi agar mirip User Create --}}
+{{-- Custom Style Select2 --}}
 <style>
-    .select2-container ul, .select2-container li, .select2-selection__rendered, span.select2-selection__choice {
-        list-style: none !important; padding-left: 0 !important; margin-left: 0 !important;
-    }
-    .select2-container--bootstrap-5 .select2-selection--multiple {
-        background-color: #fff !important; border: 1px solid #ced4da !important;
-        padding: 4px !important; display: flex !important; flex-wrap: wrap !important; align-items: center !important;
-    }
     .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
-        background-color: #e9ecef !important; border-radius: 20px !important; padding: 2px 10px !important;
-        margin: 2px 4px !important; font-size: 0.85rem !important; color: #333 !important;
-    }
-    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice .select2-selection__choice__remove {
-        border: none !important; background: transparent !important; margin-right: 5px !important; color: #999 !important;
+        background-color: #e9ecef !important; color: #333 !important;
     }
 </style>
 
@@ -39,8 +27,6 @@
                 <div class="alert alert-info">
                     <i class="mdi mdi-information-outline me-1"></i>
                     Menambahkan catatan untuk: <strong>{{ $targetUser->name }}</strong>. 
-                    <br>
-                    <small>Data ini hanya akan masuk ke <strong>Timeline</strong> dan tidak mengubah data akun/login user secara otomatis.</small>
                 </div>
 
                 <form action="{{ route('employment-history.store') }}" method="POST" enctype="multipart/form-data">
@@ -52,7 +38,7 @@
                         <select name="type" id="typeSelect" class="form-select select2-single" required onchange="handleTypeChange()">
                             <option value="" disabled selected>-- Pilih Jenis --</option>
                             <option value="join">Awal Masuk</option>
-                            <option value="transfer_branch">Pindah Cabang</option>
+                            <option value="transfer_branch">Pindah Cabang (Divisi Dihilangkan)</option>
                             <option value="transfer_division">Pindah Divisi</option>
                             <option value="resign">Resign / Keluar</option>
                             <option value="rejoin">Masuk Kembali</option>
@@ -66,9 +52,9 @@
 
                     {{-- Form Dinamis Berdasarkan Role Target User --}}
                     @if($targetUser->role == 'audit')
-                        {{-- Audit Multi Branch (Tampilan disamakan dengan input lain, background putih) --}}
+                        {{-- Audit Multi Branch --}}
                         <div class="form-group mb-3 d-none" id="auditBranchContainer">
-                            <label>Wilayah Audit Baru (Snapshot)</label>
+                            <label>Wilayah Audit Baru (Multi Select)</label>
                             <select name="audit_branch_ids[]" class="form-select select2-multi" multiple="multiple" style="width:100%">
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -78,7 +64,7 @@
                     @else 
                         {{-- User Biasa Single Branch --}}
                         <div class="form-group mb-3 d-none" id="singleBranchContainer">
-                            <label>Cabang Tujuan (Tercatat di History)</label>
+                            <label>Cabang Tujuan</label>
                             <select name="branch_id" class="form-select select2-single">
                                 <option value="">-- Pilih Cabang --</option>
                                 @foreach($branches as $branch)
@@ -89,7 +75,7 @@
                     @endif
 
                     <div class="form-group mb-3" id="divisionContainer">
-                        <label>Divisi / Jabatan (Tercatat di History)</label>
+                        <label>Divisi / Jabatan</label>
                         <select name="division_id" id="divisionSelect" class="form-select select2-single">
                             <option value="">-- Pilih Divisi --</option>
                             @foreach($divisions as $division)
@@ -132,23 +118,20 @@
         const divContainer = $('#divisionContainer');
         const isAudit = "{{ $targetUser->role == 'audit' }}"; 
 
-        // Reset semua ke hidden dulu
         if(auditContainer.length) auditContainer.addClass('d-none');
         if(singleContainer.length) singleContainer.addClass('d-none');
         divContainer.removeClass('d-none'); // Default muncul
 
         if (type === 'transfer_branch') {
-            // Jika Pindah Cabang: Tampilkan Input Cabang, SEMBUNYIKAN Divisi
             if (isAudit) {
                 if(auditContainer.length) auditContainer.removeClass('d-none');
             } else {
                 if(singleContainer.length) singleContainer.removeClass('d-none');
             }
             divContainer.addClass('d-none'); // Hilangkan divisi
-            $('#divisionSelect').val(null).trigger('change'); // Reset value divisi
+            $('#divisionSelect').val(null).trigger('change');
 
         } else if (type === 'join' || type === 'rejoin') {
-            // Jika Join: Tampilkan Cabang DAN Divisi
             if (isAudit) {
                 if(auditContainer.length) auditContainer.removeClass('d-none');
             } else {
@@ -157,11 +140,8 @@
             divContainer.removeClass('d-none');
 
         } else if (type === 'transfer_division') {
-            // Jika Pindah Divisi: Sembunyikan Cabang, Tampilkan Divisi
             divContainer.removeClass('d-none');
-
         } else if (type === 'resign') {
-            // Jika Resign: Sembunyikan Semua
             divContainer.addClass('d-none');
         }
     }

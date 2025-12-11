@@ -3,25 +3,12 @@
 @section('title', 'Edit Riwayat')
 
 @section('content')
-{{-- Load CSS Select2 --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
-{{-- Custom Style Select2 Multi --}}
 <style>
-    .select2-container ul, .select2-container li, .select2-selection__rendered, span.select2-selection__choice {
-        list-style: none !important; padding-left: 0 !important; margin-left: 0 !important;
-    }
-    .select2-container--bootstrap-5 .select2-selection--multiple {
-        background-color: #fff !important; border: 1px solid #ced4da !important;
-        padding: 4px !important; display: flex !important; flex-wrap: wrap !important; align-items: center !important;
-    }
     .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
-        background-color: #e9ecef !important; border-radius: 20px !important; padding: 2px 10px !important;
-        margin: 2px 4px !important; font-size: 0.85rem !important; color: #333 !important;
-    }
-    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice .select2-selection__choice__remove {
-        border: none !important; background: transparent !important; margin-right: 5px !important; color: #999 !important;
+        background-color: #e9ecef !important; color: #333 !important;
     }
 </style>
 
@@ -43,7 +30,7 @@
                         <label>Jenis Kejadian</label>
                         <select name="type" id="typeSelect" class="form-select select2-single" required onchange="handleTypeChange()">
                             <option value="join" {{ $history->type == 'join' ? 'selected' : '' }}>Awal Masuk</option>
-                            <option value="transfer_branch" {{ $history->type == 'transfer_branch' ? 'selected' : '' }}>Pindah Cabang</option>
+                            <option value="transfer_branch" {{ $history->type == 'transfer_branch' ? 'selected' : '' }}>Pindah Cabang (Divisi Dihilangkan)</option>
                             <option value="transfer_division" {{ $history->type == 'transfer_division' ? 'selected' : '' }}>Pindah Divisi</option>
                             <option value="resign" {{ $history->type == 'resign' ? 'selected' : '' }}>Resign</option>
                             <option value="rejoin" {{ $history->type == 'rejoin' ? 'selected' : '' }}>Masuk Kembali</option>
@@ -55,10 +42,9 @@
                         <input type="date" name="event_date" class="form-control" required value="{{ $history->event_date->format('Y-m-d') }}">
                     </div>
 
-                    {{-- Form Audit Multi (Tampilan disamakan, background putih) --}}
                     @if($targetUser->role == 'audit')
                         <div class="form-group mb-3 d-none" id="auditBranchContainer">
-                            <label>Update Snapshot Wilayah Audit</label>
+                            <label>Update Wilayah Audit</label>
                             <select name="audit_branch_ids[]" class="form-select select2-multi" multiple="multiple" style="width:100%">
                                 @php 
                                     $selectedNames = $history->audit_branch_snapshot['to'] ?? [];
@@ -71,7 +57,6 @@
                             </select>
                         </div>
                     @else
-                        {{-- User Biasa --}}
                         <div class="form-group mb-3 d-none" id="singleBranchContainer">
                             <label>Cabang</label>
                             <select name="branch_id" class="form-select select2-single">
@@ -103,7 +88,7 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Update Lampiran (Biarkan kosong jika tidak ubah)</label>
+                        <label>Update Lampiran</label>
                         <input type="file" name="attachment" class="form-control">
                         @if($history->attachment)
                             <small class="text-muted d-block mt-1">File saat ini: <a href="{{ asset('storage/'.$history->attachment) }}" target="_blank">Lihat</a></small>
@@ -144,7 +129,7 @@
             } else {
                 if(singleContainer.length) singleContainer.removeClass('d-none');
             }
-            divContainer.addClass('d-none'); // Hilangkan divisi
+            divContainer.addClass('d-none'); 
             $('#divisionSelect').val(null).trigger('change');
 
         } else if (type === 'join' || type === 'rejoin') {
@@ -157,7 +142,6 @@
 
         } else if (type === 'transfer_division') {
             divContainer.removeClass('d-none');
-
         } else if (type === 'resign') {
             divContainer.addClass('d-none');
         }
