@@ -74,10 +74,10 @@
 
                         {{-- [NEW] 2. HISTORY TAHUNAN --}}
                         {{-- (Jika ada routenya, biarkan. Jika tidak, bisa dikomen) --}}
-                        {{-- <a href="{{ route('attendance.summary.user', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                        <a href="{{ route('attendance.summary.user', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-chart-bar text-warning me-2"></i> History Tahunan</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
-                        </a> --}}
+                        </a>
 
                         {{-- 3. HISTORY INVENTARIS --}}
                         <a href="{{ route('inventory.index', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
