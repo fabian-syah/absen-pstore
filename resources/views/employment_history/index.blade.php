@@ -13,7 +13,7 @@
                 <div>
                     <h4 class="card-title mb-1">Daftar Riwayat Karir</h4>
                     <p class="text-muted mb-0 small">
-                        @if($canEdit)
+                        @if($canEdit && in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
                             <span class="text-success fw-bold"><i class="mdi mdi-pencil"></i> MODE EDIT AKTIF</span> - 
                         @endif
                         Pilih pegawai untuk melihat timeline.
@@ -21,7 +21,7 @@
                 </div>
                 
                 <form action="{{ route('employment-history.index') }}" method="GET" class="d-flex align-items-center w-50 justify-content-end">
-                    {{-- Jika sedang mode edit (dari User Show), pertahankan saat filter --}}
+                    {{-- Jika sedang mode edit, pertahankan mode edit saat ganti user --}}
                     @if(request()->get('mode') == 'edit')
                         <input type="hidden" name="mode" value="edit">
                     @endif
@@ -58,8 +58,8 @@
                     </div>
                     
                     {{-- TOMBOL TAMBAH DATA --}}
-                    {{-- Muncul jika $canEdit bernilai TRUE (Untuk User Biasa/Security otomatis TRUE) --}}
-                    @if($canEdit)
+                    {{-- Dikontrol oleh variable $canCreate dari Controller --}}
+                    @if($canCreate)
                         <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn btn-primary btn-icon-text">
                             <i class="mdi mdi-plus-circle-outline btn-icon-prepend"></i> Tambah Riwayat
                         </a>
@@ -72,7 +72,7 @@
                             <i class="mdi mdi-timeline-text-outline text-muted" style="font-size: 4rem;"></i>
                         </div>
                         <h5 class="text-muted">Belum ada riwayat tercatat.</h5>
-                        @if($canEdit)
+                        @if($canCreate)
                             <p class="text-muted small">Klik tombol tambah untuk membuat catatan baru.</p>
                         @endif
                     </div>
@@ -93,6 +93,7 @@
                                     </div>
                                     
                                     {{-- TOMBOL EDIT --}}
+                                    {{-- Dikontrol oleh variable $canEdit dari Controller --}}
                                     @if($canEdit)
                                         <a href="{{ route('employment-history.edit', $history->id) }}" class="btn btn-inverse-warning btn-sm p-2" title="Edit Data">
                                             <i class="mdi mdi-pencil"></i> Edit

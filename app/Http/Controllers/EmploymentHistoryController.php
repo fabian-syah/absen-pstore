@@ -22,37 +22,31 @@ class EmploymentHistoryController extends Controller
 
         // --- 1. LOGIKA LIST USER (DROPDOWN) ---
         if ($currentUser->role === 'admin') {
-            // Admin: Semua User
             $selectableUsers = User::orderBy('name')->get();
         } elseif ($currentUser->role === 'audit') {
-            // Audit: User Cabang + Diri Sendiri
             $branchIds = $currentUser->branches->pluck('id')->toArray();
             $selectableUsers = User::whereIn('branch_id', $branchIds)
                 ->orWhere('id', $currentUser->id)
                 ->orderBy('name')
                 ->get();
         } elseif ($currentUser->role === 'leader') {
-            // Leader: User di Cabang yang sama + Diri Sendiri
             $selectableUsers = User::where('branch_id', $currentUser->branch_id)
                 ->orWhere('id', $currentUser->id)
                 ->orderBy('name')
                 ->get();
         } else {
-            // Security / User Biasa: Hanya Diri Sendiri
             $selectableUsers = User::where('id', $currentUser->id)->get();
         }
 
-        // --- 2. LOGIKA TARGET USER (SIAPA YG DITAMPILKAN) ---
+        // --- 2. LOGIKA TARGET USER ---
         if ($request->has('user_id')) {
             $requestedId = $request->user_id;
-
+            
             // Validasi Hak Akses Melihat Orang Lain
             if ($requestedId != $currentUser->id) {
-                // User biasa/Security tidak boleh lihat orang lain
                 if (!in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
                     abort(403, 'Anda hanya boleh melihat data diri sendiri.');
                 }
-
                 $targetCheck = User::find($requestedId);
                 
                 // Validasi Audit
@@ -62,7 +56,6 @@ class EmploymentHistoryController extends Controller
                         abort(403, 'User ini di luar wilayah audit Anda.');
                     }
                 }
-                
                 // Validasi Leader
                 if ($currentUser->role === 'leader') {
                     if ($targetCheck && $targetCheck->branch_id != $currentUser->branch_id) {
@@ -72,28 +65,24 @@ class EmploymentHistoryController extends Controller
             }
             $targetUser = User::find($requestedId);
         } else {
-            // Default: Tampilkan Diri Sendiri
             $targetUser = $currentUser;
         }
 
-        // --- 3. LOGIKA HAK AKSES EDIT ---
-        $canEdit = false;
+        // --- 3. LOGIKA TOMBOL (SESUAI REQUEST) ---
+        $isOwner = ($targetUser->id == $currentUser->id);
+        $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
+        $isRegular = in_array($currentUser->role, ['user_biasa', 'security']);
+        $isModeEdit = ($request->get('mode') === 'edit');
 
-        // A. Admin/Audit/Leader: Harus kirim parameter '?mode=edit' atau edit diri sendiri
-        if (in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
-            if ($request->get('mode') === 'edit') {
-                $canEdit = true;
-            }
-            // Opsional: Jika ingin Admin/Leader otomatis bisa edit diri sendiri tanpa parameter, uncomment ini:
-            // if ($targetUser->id == $currentUser->id) $canEdit = true; 
-        } 
-        
-        // B. [BARU] User Biasa / Security: Otomatis BISA edit jika melihat diri sendiri
-        elseif (in_array($currentUser->role, ['user_biasa', 'security'])) {
-            if ($targetUser->id == $currentUser->id) {
-                $canEdit = true;
-            }
-        }
+        // A. SIAPA YANG BISA CREATE (TAMBAH)?
+        // 1. Semua orang bisa tambah untuk diri sendiri (akses sidebar)
+        // 2. Management bisa tambah untuk orang lain jika dalam mode edit
+        $canCreate = $isOwner || ($isManagement && $isModeEdit);
+
+        // B. SIAPA YANG BISA EDIT (TOMBOL PENSIL)?
+        // 1. User Biasa & Security: BISA edit diri sendiri langsung (dari sidebar)
+        // 2. Admin/Audit/Leader: HANYA bisa edit jika ?mode=edit aktif (lewat profil)
+        $canEdit = ($isRegular && $isOwner) || ($isManagement && $isModeEdit);
 
         // --- 4. AMBIL DATA HISTORI ---
         $histories = collect([]);
@@ -104,7 +93,7 @@ class EmploymentHistoryController extends Controller
                 ->get();
         }
 
-        return view('employment_history.index', compact('histories', 'selectableUsers', 'targetUser', 'canEdit'));
+        return view('employment_history.index', compact('histories', 'selectableUsers', 'targetUser', 'canEdit', 'canCreate'));
     }
 
     /**
@@ -117,7 +106,7 @@ class EmploymentHistoryController extends Controller
         $targetUser = User::findOrFail($targetId);
 
         // --- VALIDASI AKSES CREATE ---
-        // 1. Jika User Biasa/Security mencoba create untuk ORANG LAIN -> Tolak
+        // 1. Cek apakah user biasa mencoba akses data orang lain
         if (!in_array($currentUser->role, ['admin', 'audit', 'leader']) && $targetId != $currentUser->id) {
              abort(403, 'Akses ditolak.');
         }
@@ -189,8 +178,9 @@ class EmploymentHistoryController extends Controller
 
         EmploymentHistory::create($data);
 
-        // Redirect logika: Jika user biasa/security, tidak perlu ?mode=edit karena otomatis aktif di index
+        // Redirect logika
         $redirectParams = ['user_id' => $data['user_id']];
+        // Jika Admin/Audit/Leader, kembalikan ke mode edit agar tetap bisa kelola
         if (in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
             $redirectParams['mode'] = 'edit';
         }
@@ -207,13 +197,15 @@ class EmploymentHistoryController extends Controller
         $history = EmploymentHistory::findOrFail($id);
         $currentUser = auth()->user();
 
-        // Validasi Akses: Boleh edit jika Admin/Audit/Leader ATAU Milik Sendiri
+        // --- VALIDASI AKSES EDIT ---
+        // 1. User Biasa/Security: Boleh jika punya sendiri
+        // 2. Admin/Audit/Leader: Boleh (untuk semua/sesuai scope)
         $isOwner = ($history->user_id == $currentUser->id);
         $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
+        $isRegular = in_array($currentUser->role, ['user_biasa', 'security']);
 
-        if (!$isManagement && !$isOwner) {
-            abort(403, 'Akses ditolak.');
-        }
+        if ($isRegular && !$isOwner) abort(403, 'Akses ditolak.');
+        if (!$isManagement && !$isRegular) abort(403);
 
         // Validasi Wilayah (Jika Manajemen mengedit orang lain)
         $targetUser = $history->user;
@@ -245,10 +237,10 @@ class EmploymentHistoryController extends Controller
         // Validasi Akses (Sama seperti Edit)
         $isOwner = ($history->user_id == $currentUser->id);
         $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
+        $isRegular = in_array($currentUser->role, ['user_biasa', 'security']);
 
-        if (!$isManagement && !$isOwner) {
-            abort(403, 'Akses ditolak.');
-        }
+        if ($isRegular && !$isOwner) abort(403);
+        if (!$isManagement && !$isRegular) abort(403);
 
         $request->validate([
             'type' => 'required',
