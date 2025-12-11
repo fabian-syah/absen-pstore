@@ -32,7 +32,8 @@
                     <div class="alert alert-info mb-3">
                         <strong>Informasi:</strong><br>
                         • Total data pending: <strong>{{ $requests->total() }}</strong><br>
-                        • Klik tombol mata (<i class="mdi mdi-eye"></i>) untuk melihat bukti foto.
+                        • Klik tombol mata (<i class="mdi mdi-eye"></i>) untuk melihat bukti foto.<br>
+                        • Data diurutkan dari yang <strong>paling lama</strong> diajukan (Prioritas Lama).
                     </div>
 
                     {{-- Notifikasi Sukses/Error --}}
