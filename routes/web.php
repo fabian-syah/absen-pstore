@@ -28,6 +28,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\BranchInventoryController;
 use App\Http\Controllers\AdminMonitoringController;
 use App\Http\Controllers\BranchLeaderboardController;
+use App\Http\Controllers\AttendanceSummaryController; // Pastikan di-use
 
 /*
 |--------------------------------------------------------------------------
@@ -68,9 +69,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE RIWAYAT ABSENSI ===
     Route::get('/riwayat-absensi', [AttendanceHistoryController::class, 'index'])->name('attendance.history');
+    
     // === RUTE RINGKASAN TAHUNAN (PENGGANTI RECAP) ===
-    Route::get('/ringkasan-tahunan', [App\Http\Controllers\AttendanceSummaryController::class, 'index'])
-        ->name('attendance.summary');
+    // 1. Versi Saya Sendiri (Tanpa ID)
+    Route::get('/ringkasan-tahunan', [AttendanceSummaryController::class, 'index'])->name('attendance.summary');
+    // 2. Versi Lihat Orang Lain (Dengan ID) - [NEW]
+    Route::get('/ringkasan-tahunan/{user_id}', [AttendanceSummaryController::class, 'index'])->name('attendance.summary.user')
+        ->middleware('role:admin,audit,leader,admin_gaji');
+
     Route::get('/attendance/export-pdf', [AttendanceHistoryController::class, 'exportPdf'])->name('attendance.export.pdf');
 
     // === RUTE JOB TARGETS ===
@@ -219,7 +225,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // ==========================================================
-    //  RUTE SHOW USER (Leader, Admin, Audit, Admin Gaji) - [NEW]
+    //  RUTE SHOW USER (Leader, Admin, Audit, Admin Gaji)
     // ==========================================================
     Route::middleware(['role:admin,audit,admin_gaji,leader'])->group(function () {
         // Leader sekarang diizinkan mengakses halaman detail user (show)
@@ -249,7 +255,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::patch('/users/{user}/approve-ktp', [UserController::class, 'approveKtpRequest'])->name('users.approve-ktp');
         Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');
 
-        // USER MANAGEMENT (Resource tanpa show, karena show sudah di-define di atas untuk leader)
+        // USER MANAGEMENT (Resource tanpa show)
         Route::resource('users', UserController::class)->except(['show']);
         
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');

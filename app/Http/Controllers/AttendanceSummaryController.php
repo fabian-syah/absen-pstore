@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -11,21 +12,36 @@ use Carbon\CarbonPeriod;
 
 class AttendanceSummaryController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $userId = null)
     {
-        // 1. Pastikan Data Terisolasi (Hanya User yang Login)
-        $user = Auth::user();
+        $currentUser = Auth::user();
+        
+        // 1. Tentukan Target User
+        if ($userId) {
+            // Cek Hak Akses: Hanya Admin, Audit, Leader, Admin Gaji yang boleh intip orang lain
+            if (!in_array($currentUser->role, ['admin', 'audit', 'leader', 'admin_gaji'])) {
+                abort(403, 'Akses Ditolak.');
+            }
+
+            // Validasi Tambahan (Optional): Pastikan Leader/Audit hanya lihat bawahan/wilayahnya
+            // (Bisa ditambahkan jika perlu strict access control seperti di UserController)
+            
+            $targetUser = User::findOrFail($userId);
+        } else {
+            // Jika tidak ada ID, berarti lihat punya sendiri
+            $targetUser = $currentUser;
+        }
 
         // 2. Ambil Filter Tahun (Default Tahun Ini)
         $selectedYear = $request->get('year', date('Y'));
 
         // 3. Ambil Data Kehadiran Real (Masuk, WFH Scan, Telat, Alpha, Dinas)
-        $attendances = Attendance::where('user_id', $user->id)
+        $attendances = Attendance::where('user_id', $targetUser->id)
             ->whereYear('check_in_time', $selectedYear)
             ->get();
 
         // 4. Ambil Data Izin/Cuti/Sakit/WFH Request yang sudah disetujui
-        $leaves = LeaveRequest::where('user_id', $user->id)
+        $leaves = LeaveRequest::where('user_id', $targetUser->id)
             ->where('status', 'approved')
             ->where(function($q) use ($selectedYear) {
                 $q->whereYear('start_date', $selectedYear)
@@ -57,7 +73,7 @@ class AttendanceSummaryController extends Controller
                 $status = strtolower($row->presence_status ?? '');
                 // Hitung masuk jika statusnya WFH, Masuk, Dinas, dll
                 return in_array($status, ['masuk', 'wfh', 'dinas', 'izin telat']) 
-                       || (in_array($row->attendance_type, ['scan', 'self', 'manual']) && !in_array($status, ['sakit', 'izin', 'cuti', 'alpha']));
+                        || (in_array($row->attendance_type, ['scan', 'self', 'manual']) && !in_array($status, ['sakit', 'izin', 'cuti', 'alpha']));
             })->count();
 
             // Hitung WFH yang berasal dari Absen Mandiri/Scan (bukan dari request izin)
@@ -84,7 +100,6 @@ class AttendanceSummaryController extends Controller
                     if ($date->month == $m && $date->year == $selectedYear) {
                         
                         // Cek apakah tanggal ini SUDAH ada di tabel Attendance (scan)?
-                        // Jika sudah ada (misal dia request WFH tapi admin generate attendance juga), jangan dihitung 2x
                         $alreadyInAttendance = $monthAtt->filter(fn($att) => $att->check_in_time->isSameDay($date))->isNotEmpty();
 
                         if ($leave->type == 'cuti') {
@@ -92,14 +107,10 @@ class AttendanceSummaryController extends Controller
                         } elseif ($leave->type == 'sakit') {
                             $sakitCount++;
                         } elseif (strtolower($leave->type) == 'wfh') {
-                            // [PERBAIKAN DISINI]
-                            // Jika tipenya WFH, masukkan ke WFH Count & Masuk Count
-                            // Tapi hanya jika belum terhitung di tabel Attendance
                             if (!$alreadyInAttendance) {
                                 $wfhFromLeaveCount++;
                             }
                         } else {
-                            // Tipe lain (Izin biasa, Libur, dll)
                             $izinCount++;
                         }
                     }
@@ -110,7 +121,6 @@ class AttendanceSummaryController extends Controller
             $totalWfhBulanIni = $wfhCount + $wfhFromLeaveCount;
             
             // Update Masuk Count (Masuk Scan + WFH dari Leave)
-            // Note: $masukCount sebelumnya sudah menghitung WFH dari Scan, jadi kita cuma tambah yang dari Leave
             $totalMasukBulanIni = $masukCount + $wfhFromLeaveCount;
 
             // -- C. Total Hari Aktif --
@@ -142,6 +152,11 @@ class AttendanceSummaryController extends Controller
             $grandTotal['pulang_cepat'] += $pulangCepatCount;
         }
 
-        return view('attendance.summary', compact('user', 'selectedYear', 'monthsData', 'grandTotal'));
+        return view('attendance.summary', [
+            'user' => $targetUser, // Kirim data user yang sedang dilihat
+            'selectedYear' => $selectedYear,
+            'monthsData' => $monthsData,
+            'grandTotal' => $grandTotal
+        ]);
     }
 }

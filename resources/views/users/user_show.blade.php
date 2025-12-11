@@ -49,7 +49,7 @@
                 <h4 class="fw-bold mt-2">{{ $user->name }}</h4>
                 <p class="text-muted mb-1">{{ strtoupper(str_replace('_', ' ', $user->role)) }}</p>
 
-                {{-- STATUS AKTIF / NON-AKTIF (BARU DITAMBAHKAN) --}}
+                {{-- STATUS AKTIF / NON-AKTIF --}}
                 <div class="mb-3">
                     @if($user->is_active)
                         <span class="badge rounded-pill bg-success px-3 py-2">
@@ -72,8 +72,13 @@
                             <i class="mdi mdi-chevron-right text-muted"></i>
                         </a>
 
-                        {{-- 2. HISTORY INVENTARIS (BARU DITAMBAHKAN) --}}
-                        {{-- Mengirim parameter user_id agar InventoryController bisa memfilter data --}}
+                        {{-- [NEW] 2. HISTORY TAHUNAN --}}
+                        <a href="{{ route('attendance.summary.user', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                            <span><i class="mdi mdi-chart-bar text-warning me-2"></i> History Tahunan</span>
+                            <i class="mdi mdi-chevron-right text-muted"></i>
+                        </a>
+
+                        {{-- 3. HISTORY INVENTARIS --}}
                         <a href="{{ route('inventory.index', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-package-variant text-success me-2"></i> History Inventaris</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
