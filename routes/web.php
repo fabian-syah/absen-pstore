@@ -28,7 +28,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\BranchInventoryController;
 use App\Http\Controllers\AdminMonitoringController;
 use App\Http\Controllers\BranchLeaderboardController;
-use App\Http\Controllers\AttendanceSummaryController; // Pastikan di-use
+use App\Http\Controllers\AttendanceSummaryController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -224,17 +224,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             ->name('admin.monitoring.daily');
     });
 
-    // ==========================================================
-    //  RUTE SHOW USER (Leader, Admin, Audit, Admin Gaji)
-    // ==========================================================
-    Route::middleware(['role:admin,audit,admin_gaji,leader'])->group(function () {
-        // Leader sekarang diizinkan mengakses halaman detail user (show)
-        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
-    });
-
-    // ==========================================================
-    //  RUTE ADMIN, AUDIT, & ADMIN GAJI MANAGEMENT
-    // ==========================================================
+    // ====================================================================================================
+    //  [PERBAIKAN] GRUP 1: ADMIN, AUDIT, & ADMIN GAJI MANAGEMENT (PINDAHKAN KE ATAS!)
+    //  Agar route seperti /users/create dibaca LEBIH DULU daripada /users/{user}
+    // ====================================================================================================
     Route::middleware(['role:admin,audit,admin_gaji'])->group(function () {
         Route::get('/all-attendance', [AdminAttendanceController::class, 'index'])->name('admin.attendance.all');
         Route::put('/audit/verify-attendance/{id}', [App\Http\Controllers\AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
@@ -246,7 +239,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::resource('divisions', DivisionController::class);
         Route::post('/divisions/{division}/toggle-status', [DivisionController::class, 'toggleStatus'])->name('divisions.toggle-status');
 
-        // Approval Requests
+        // Approval Requests (Pastikan ini juga di atas Resource User)
         Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
         Route::delete('/users/{user}/reject-photo', [UserController::class, 'rejectPhotoRequest'])->name('users.reject-photo');
@@ -256,6 +249,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');
 
         // USER MANAGEMENT (Resource tanpa show)
+        // INI AKAN MEMBUAT ROUTE: GET /users/create
         Route::resource('users', UserController::class)->except(['show']);
         
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
@@ -278,6 +272,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         Route::get('/audit/missed-checkouts', [AuditController::class, 'showMissedCheckouts'])->name('audit.missed-checkout.list');
         Route::put('/audit/missed-checkouts/{id}', [AuditController::class, 'updateMissedCheckout'])->name('audit.missed-checkout.update');
+    });
+
+    // ====================================================================================================
+    //  [PERBAIKAN] GRUP 2: SHOW USER (WILDCARD /users/{user}) (PINDAHKAN KE BAWAH!)
+    //  Ini menangkap semua URL /users/something. Jadi harus paling bawah.
+    // ====================================================================================================
+    Route::middleware(['role:admin,audit,admin_gaji,leader'])->group(function () {
+        // Leader sekarang diizinkan mengakses halaman detail user (show)
+        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
     });
 
     // === RUTE SECURITY ===
