@@ -22,10 +22,12 @@
         .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice .select2-selection__choice__remove {
             border: none !important; background: transparent !important; margin-right: 5px !important; color: #999 !important;
         }
+        .form-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .card-header-custom { background-color: #f8f9fa; border-bottom: 1px solid #e9ecef; padding: 15px 20px; }
     </style>
 
     @if ($errors->any())
-        <div class="alert alert-danger">
+        <div class="alert alert-danger shadow-sm border-0">
             <ul class="mb-0">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -40,84 +42,99 @@
 
         @php
             $currentUser = Auth::user();
-            
-            // Cek Super Admin (Admin Pusat)
             $isSuperAdmin = $currentUser->role == 'admin' && $currentUser->branch_id == null;
-            // Cek Admin Gaji
             $isAdminGaji  = $currentUser->role == 'admin_gaji';
-            // Cek Audit
             $isAudit      = $currentUser->role == 'audit';
-
-            // [UPDATE LOGIC]
-            // Input Cabang dibuka jika: Super Admin OR Admin Gaji OR Audit
             $canEditBranch = $isSuperAdmin || $isAdminGaji || $isAudit;
-
-            // Logic Disable Umum (untuk role input dll) - biarkan default Admin saja yang leluasa
-            // Namun atribut disabled spesifik untuk select box cabang kita atur manual di bawah
             $globalDisabled = $isSuperAdmin || $isAdminGaji ? '' : 'disabled';
         @endphp
 
         <div class="row">
             {{-- KOLOM KIRI --}}
             <div class="col-md-6 grid-margin stretch-card">
-                <div class="card">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0 text-primary"><i class="mdi mdi-account-edit me-2"></i>Edit Data Akun</h5>
+                    </div>
                     <div class="card-body">
-                        <h4 class="card-title">Data Login & Role</h4>
-
-                        <div class="form-group mb-3">
-                            <label>Nama Lengkap ( Sesuai KTP )</label>
-                            <input type="text" class="form-control" name="name"
-                                value="{{ old('name', $user->name) }}" required>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>Tanggal Lahir (Opsional)</label>
-                            <input type="date" class="form-control" name="birth_date"
-                                value="{{ old('birth_date', $user->birth_date) }}">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>ID Login *</label>
-                            <input type="text" class="form-control" name="login_id"
-                                value="{{ old('login_id', $user->login_id) }}" required>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>Role</label>
-                            {{-- Role hanya bisa diganti oleh Admin/Admin Gaji --}}
-                            <select class="form-select" id="role" name="role" onchange="toggleInputs()" required {{ $globalDisabled }}>
-                                @foreach ($allowedRoles as $roleOption)
-                                    <option value="{{ $roleOption }}" {{ old('role', $user->role) == $roleOption ? 'selected' : '' }}>
-                                        {{ strtoupper(str_replace('_', ' ', $roleOption)) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            {{-- Hidden input role jika disabled --}}
-                            @if ($globalDisabled == 'disabled')
-                                <input type="hidden" name="role" value="{{ $user->role }}">
-                            @endif
+                        
+                        {{-- Data Pribadi --}}
+                        <div class="mb-4">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Nama Lengkap (Sesuai KTP)</label>
+                                <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Tanggal Lahir</label>
+                                        <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date', $user->birth_date) }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Tanggal Masuk</label>
+                                        <input type="date" class="form-control" name="hire_date" value="{{ old('hire_date', $user->hire_date ? $user->hire_date->format('Y-m-d') : '') }}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- [TAMBAHAN BARU] CHECKBOX ONLY SECURITY SCAN --}}
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="only_security_scan" name="only_security_scan" value="1" 
-                                {{ old('only_security_scan', $user->only_security_scan) ? 'checked' : '' }}>
-                            <label class="form-check-label fw-bold text-danger" for="only_security_scan">
-                                <i class="mdi mdi-lock-alert me-1"></i> Wajib Absen via Security (Scan Only)
-                            </label>
-                            <small class="d-block text-muted">Jika diaktifkan, user ini TIDAK BISA absen mandiri.</small>
-                        </div>
+                        <hr class="my-4">
 
-                        <div class="form-group mb-3">
-                            <label>awal masuk pstore ( opsional )</label>
-                            <input type="date" class="form-control" name="hire_date"
-                                value="{{ old('hire_date', $user->hire_date ? $user->hire_date->format('Y-m-d') : '') }}">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>Password Baru</label>
-                            <input type="password" class="form-control" name="password" placeholder="********">
-                            <small class="text-muted">Kosongkan jika tidak ingin mengubah.</small>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>Konfirmasi Password</label>
-                            <input type="password" class="form-control" name="password_confirmation" placeholder="********">
+                        {{-- Kredensial --}}
+                        <div class="mb-2">
+                            <div class="form-group mb-3">
+                                <label class="form-label">ID Login <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="mdi mdi-account-key"></i></span>
+                                    <input type="text" class="form-control" name="login_id" value="{{ old('login_id', $user->login_id) }}" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Role Pengguna</label>
+                                <select class="form-select" id="role" name="role" onchange="toggleInputs()" required {{ $globalDisabled }}>
+                                    @foreach ($allowedRoles as $roleOption)
+                                        <option value="{{ $roleOption }}" {{ old('role', $user->role) == $roleOption ? 'selected' : '' }}>
+                                            {{ strtoupper(str_replace('_', ' ', $roleOption)) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if ($globalDisabled == 'disabled')
+                                    <input type="hidden" name="role" value="{{ $user->role }}">
+                                @endif
+                            </div>
+
+                            {{-- [TOGGLE SCAN ONLY] --}}
+                            <div class="p-3 bg-light rounded border mt-3">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="only_security_scan" name="only_security_scan" value="1" 
+                                        {{ old('only_security_scan', $user->only_security_scan) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold text-danger d-flex align-items-center" for="only_security_scan">
+                                        <i class="mdi mdi-lock-alert me-2 fs-5"></i> Wajib Absen via Security (Scan Only)
+                                    </label>
+                                </div>
+                                <small class="text-muted ms-4 d-block mt-1">Jika aktif, user ini <b>TIDAK BISA</b> absen mandiri/selfie.</small>
+                            </div>
+
+                            <div class="mt-4">
+                                <h6 class="text-muted text-uppercase small fw-bold mb-2">Ubah Password (Opsional)</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <input type="password" class="form-control" name="password" placeholder="Password Baru">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <input type="password" class="form-control" name="password_confirmation" placeholder="Konfirmasi">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -125,68 +142,75 @@
 
             {{-- KOLOM KANAN --}}
             <div class="col-md-6 grid-margin stretch-card">
-                <div class="card">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0 text-success"><i class="mdi mdi-map-marker-radius me-2"></i>Penempatan & Kontak</h5>
+                    </div>
                     <div class="card-body">
-                        <h4 class="card-title">Penempatan & Kontak</h4>
+                        
+                        <div class="mb-4">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3">Lokasi Kerja</h6>
 
-                        {{-- [UPDATE BAGIAN INI] --}}
-                        <div class="form-group mb-3" id="single-branch-group">
-                            <label>Cabang Utama (Lokasi Kerja)</label>
-                            
-                            {{-- Disabled atribut tergantung $canEditBranch --}}
-                            <select class="form-select select2-single" name="branch_id" data-placeholder="Pilih Cabang" 
-                                {{ $canEditBranch ? '' : 'disabled' }}>
-                                
-                                <option></option>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}" {{ old('branch_id', $user->branch_id) == $branch->id ? 'selected' : '' }}>
-                                        {{ $branch->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="form-group mb-3" id="single-branch-group">
+                                <label class="form-label">Cabang Utama</label>
+                                <select class="form-select select2-single" name="branch_id" data-placeholder="Pilih Cabang" {{ $canEditBranch ? '' : 'disabled' }}>
+                                    <option></option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ old('branch_id', $user->branch_id) == $branch->id ? 'selected' : '' }}>
+                                            {{ $branch->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if (!$canEditBranch && $user->branch_id)
+                                    <input type="hidden" name="branch_id" value="{{ $user->branch_id }}">
+                                @endif
+                            </div>
 
-                            {{-- Jika user tidak punya akses edit cabang, buat input hidden agar nilai lama terkirim (opsional, krn select disabled tidak kirim value) --}}
-                            @if (!$canEditBranch && $user->branch_id)
-                                <input type="hidden" name="branch_id" value="{{ $user->branch_id }}">
-                            @endif
-                        </div>
+                            <div class="form-group mb-3 d-none" id="multi-branch-group">
+                                <label class="form-label text-primary">Akses Wilayah Audit (Multi)</label>
+                                <select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%" {{ $globalDisabled }}>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ in_array($branch->id, old('multi_branches', $user->branches->pluck('id')->toArray())) ? 'selected' : '' }}>
+                                            {{ $branch->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                        {{-- MULTI BRANCH (Hanya Muncul jika User yg diedit Role Audit) --}}
-                        <div class="form-group mb-3 d-none" id="multi-branch-group">
-                            <label class="text-primary fw-bold">Akses Wilayah Audit (Multi)</label>
-                            <select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%" {{ $globalDisabled }}>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}" {{ in_array($branch->id, old('multi_branches', $user->branches->pluck('id')->toArray())) ? 'selected' : '' }}>
-                                        {{ $branch->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="form-group mb-3" id="multi-division-group">
-                            <label class="text-success fw-bold">Divisi (Multi Select)</label>
-                            <select class="form-select select2-multi" name="multi_divisions[]" multiple="multiple" style="width: 100%">
-                                @foreach ($divisions as $division)
-                                    <option value="{{ $division->id }}" {{ in_array($division->id, old('multi_divisions', $user->divisions->pluck('id')->toArray())) ? 'selected' : '' }}>
-                                        {{ $division->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="mt-2">
-                                <a href="javascript:void(0)" onclick="selectAll('#multi-division-group .select2-multi')">Pilih Semua</a> | 
-                                <a href="javascript:void(0)" onclick="clearAll('#multi-division-group .select2-multi')" class="text-danger">Hapus</a>
+                            <div class="form-group mb-3" id="multi-division-group">
+                                <label class="form-label">Divisi (Multi Select)</label>
+                                <select class="form-select select2-multi" name="multi_divisions[]" multiple="multiple" style="width: 100%">
+                                    @foreach ($divisions as $division)
+                                        <option value="{{ $division->id }}" {{ in_array($division->id, old('multi_divisions', $user->divisions->pluck('id')->toArray())) ? 'selected' : '' }}>
+                                            {{ $division->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="mt-2 small">
+                                    <a href="javascript:void(0)" onclick="selectAll('#multi-division-group .select2-multi')">Pilih Semua</a> | 
+                                    <a href="javascript:void(0)" onclick="clearAll('#multi-division-group .select2-multi')" class="text-danger">Hapus</a>
+                                </div>
                             </div>
                         </div>
 
-                        <hr>
+                        <hr class="my-4">
 
-                        <div class="form-group mb-3">
-                            <label>Email</label>
-                            <input type="email" class="form-control" name="email" value="{{ old('email', $user->email) }}">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>WhatsApp</label>
-                            <input type="text" class="form-control" name="whatsapp" value="{{ old('whatsapp', $user->whatsapp) }}">
+                        <div class="mb-2">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3">Kontak</h6>
+                            <div class="form-group mb-3">
+                                <label class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">@</span>
+                                    <input type="email" class="form-control" name="email" value="{{ old('email', $user->email) }}">
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="form-label">WhatsApp</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="mdi mdi-whatsapp"></i></span>
+                                    <input type="text" class="form-control" name="whatsapp" value="{{ old('whatsapp', $user->whatsapp) }}">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -196,50 +220,46 @@
         {{-- ROW BARU: SETTING JAM KERJA PERSONAL --}}
         <div class="row mt-4">
             <div class="col-12">
-                <div class="card">
+                <div class="card shadow-sm border-0 border-top border-3" style="border-top-color: #009688 !important;">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 text-teal"><i class="mdi mdi-clock-outline me-2" style="color: #009688;"></i>Atur Jam Kerja Personal</h5>
+                    </div>
                     <div class="card-body">
-                        <h4 class="card-title">Atur Jam Kerja Personal</h4>
-                        <p class="card-description text-muted">
-                            Update jam di bawah ini untuk mengubah jadwal spesifik user ini. <br>
-                            <strong>Biarkan kosong jika jam kerja Fleksibel/Bebas.</strong>
+                        <p class="text-muted small mb-4">
+                            <i class="mdi mdi-information-outline me-1"></i>
+                            Update jam di bawah ini untuk mengubah jadwal spesifik user ini. Biarkan kosong jika fleksibel.
                         </p>
                         
-                        <div class="card border" style="border-color: #009688;">
-                            <div class="card-header text-white" style="background-color: #009688;">
-                                <h6 class="mb-0"><i class="mdi mdi-clock-outline me-2"></i>Pengaturan Jam Kerja</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Jam Masuk (Check In)</label>
+                                <input type="time" class="form-control form-control-lg" name="check_in_start" 
+                                    value="{{ old('check_in_start', $user->check_in_start ? date('H:i', strtotime($user->check_in_start)) : '') }}">
+                                <small class="text-muted">Batas awal mulai absen masuk</small>
                             </div>
-                            <div class="card-body py-4">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">Jam Masuk (Check In)</label>
-                                        <input type="time" class="form-control" name="check_in_start" 
-                                            value="{{ old('check_in_start', $user->check_in_start ? date('H:i', strtotime($user->check_in_start)) : '') }}">
-                                        <small class="text-muted">Waktu mulai absen masuk</small>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">Jam Pulang (Check Out)</label>
-                                        <input type="time" class="form-control" name="check_out_start" 
-                                            value="{{ old('check_out_start', $user->check_out_start ? date('H:i', strtotime($user->check_out_start)) : '') }}">
-                                        <small class="text-muted">Waktu mulai absen pulang</small>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <a href="javascript:void(0)" onclick="clearWorkHours()" class="text-danger small" style="text-decoration: none;">
-                                        <i class="mdi mdi-close-circle me-1"></i>Hapus / Reset ke Fleksibel
-                                    </a>
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Jam Pulang (Check Out)</label>
+                                <input type="time" class="form-control form-control-lg" name="check_out_start" 
+                                    value="{{ old('check_out_start', $user->check_out_start ? date('H:i', strtotime($user->check_out_start)) : '') }}">
+                                <small class="text-muted">Batas awal mulai absen pulang</small>
                             </div>
                         </div>
-
+                        <div class="mt-2 text-end">
+                            <button type="button" onclick="clearWorkHours()" class="btn btn-outline-danger btn-sm">
+                                <i class="mdi mdi-eraser me-1"></i> Reset Jam ke Kosong
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row mt-4">
+        <div class="row mt-4 mb-5">
             <div class="col-12 text-center">
-                <button type="submit" class="btn btn-primary btn-lg me-3">Update User</button>
-                <a href="{{ route('users.index') }}" class="btn btn-light btn-lg">Batal</a>
+                <a href="{{ route('users.index') }}" class="btn btn-light btn-lg me-3 px-4">Batal</a>
+                <button type="submit" class="btn btn-primary btn-lg px-5 shadow">
+                    <i class="mdi mdi-content-save-edit me-2"></i>Update Data User
+                </button>
             </div>
         </div>
     </form>
