@@ -81,7 +81,12 @@
                                                     {{-- LINK KE SHOW PROFILE (NAMA) --}}
                                                     @if($att->user)
                                                         <a href="{{ route('users.show', $att->user->id) }}" class="text-dark text-decoration-none">
-                                                            <h6 class="mb-0 fw-bold hover-text-primary">{{ $att->user->name }}</h6>
+                                                            <h6 class="mb-0 fw-bold hover-text-primary">
+                                                                {{ $att->user->name }}
+                                                                @if($att->user_id == Auth::id())
+                                                                    <span class="badge bg-info ms-1" style="font-size: 0.6rem;">ANDA</span>
+                                                                @endif
+                                                            </h6>
                                                         </a>
                                                     @else
                                                         <h6 class="mb-0 text-dark fw-bold">User Dihapus</h6>
@@ -163,7 +168,13 @@
                                             </span>
                                         </div>
                                         <div>
-                                            <h6 class="mb-0 fw-bold text-primary">{{ $att->user->name }} <i class="mdi mdi-chevron-right small text-muted"></i></h6>
+                                            <h6 class="mb-0 fw-bold text-primary">
+                                                {{ $att->user->name }} 
+                                                @if($att->user_id == Auth::id())
+                                                    <span class="badge bg-info ms-1" style="font-size: 0.6rem;">ANDA</span>
+                                                @endif
+                                                <i class="mdi mdi-chevron-right small text-muted"></i>
+                                            </h6>
                                             <div class="small text-muted">
                                                 {{ $att->user->division->name ?? 'N/A' }}
                                             </div>

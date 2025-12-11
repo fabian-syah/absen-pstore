@@ -66,19 +66,25 @@ class AuditController extends Controller
      */
     public function approve($id)
     {
+        $user = Auth::user();
         // Cari data absensi berdasarkan ID
         $attendance = Attendance::findOrFail($id);
 
-        // [VALIDASI] Mencegah Audit/User memverifikasi diri sendiri
-        if ($attendance->user_id == Auth::id()) {
+        // [LOGIKA BARU] Cek apakah dia Leader Audit
+        // Syarat: Role Audit DAN Nama Divisi mengandung kata 'Leader'
+        $isLeaderAudit = $user->role == 'audit' && stripos($user->division->name ?? '', 'leader') !== false;
+
+        // [VALIDASI] 
+        // Jika absen milik sendiri DAN dia BUKAN Leader Audit, tolak akses.
+        if ($attendance->user_id == $user->id && !$isLeaderAudit) {
             return back()->with('error', 'Anda tidak dapat memverifikasi absensi Anda sendiri.');
         }
 
         // status menjadi verified
         $attendance->update([
             'status' => 'verified',
-            'verified_by_user_id' => Auth::id(),
-            'audit_note' => 'Verified by ' . Auth::user()->name
+            'verified_by_user_id' => $user->id,
+            'audit_note' => 'Verified by ' . $user->name
         ]);
 
         // Kirim notifikasi ke user bahwa absennya diterima
@@ -99,11 +105,15 @@ class AuditController extends Controller
      */
     public function reject($id)
     {
+        $user = Auth::user();
         // Cari data absensi
         $attendance = Attendance::findOrFail($id);
 
-        // [VALIDASI] Mencegah Audit/User menolak data diri sendiri (opsional, tapi konsisten)
-        if ($attendance->user_id == Auth::id()) {
+        // [LOGIKA BARU] Cek Leader Audit
+        $isLeaderAudit = $user->role == 'audit' && stripos($user->division->name ?? '', 'leader') !== false;
+
+        // [VALIDASI] Mencegah Audit biasa menolak data diri sendiri
+        if ($attendance->user_id == $user->id && !$isLeaderAudit) {
             return back()->with('error', 'Anda tidak dapat memproses absensi Anda sendiri.');
         }
 
@@ -134,9 +144,16 @@ class AuditController extends Controller
             ->where('status', 'pending_verification')
             ->whereNotNull('photo_path');
 
-        // [PENTING] FILTER: JANGAN TAMPILKAN DATA DIRI SENDIRI
-        // Audit tidak boleh melihat absensinya sendiri di list verifikasi
-        $query->where('user_id', '!=', $user->id);
+        // [LOGIKA BARU] Cek apakah dia Leader Audit
+        // Syarat: Role Audit DAN Nama Divisi mengandung kata 'Leader'
+        $isLeaderAudit = $user->role == 'audit' && stripos($user->division->name ?? '', 'leader') !== false;
+
+        // [PENTING] FILTER:
+        // Jika dia BUKAN Leader Audit, sembunyikan data diri sendiri.
+        // Jika dia Leader Audit, biarkan data diri sendiri muncul.
+        if (!$isLeaderAudit) {
+            $query->where('user_id', '!=', $user->id);
+        }
 
         // 2. Logika Hak Akses (Copy dari method showLatePermissions)
         $isUniversalAccess = in_array($user->role, ['admin']);
@@ -361,6 +378,7 @@ class AuditController extends Controller
      */
     public function verifyAttendance(Request $request, $id)
     {
+        $user = Auth::user();
         // 1. Validasi Input
         $request->validate([
             'presence_status' => 'required|string',
@@ -371,8 +389,11 @@ class AuditController extends Controller
         // 2. Cari Data Absensi
         $attendance = Attendance::findOrFail($id);
 
-        // [VALIDASI] Mencegah Audit verifikasi diri sendiri
-        if ($attendance->user_id == Auth::id()) {
+        // [LOGIKA BARU] Cek Leader Audit
+        $isLeaderAudit = $user->role == 'audit' && stripos($user->division->name ?? '', 'leader') !== false;
+
+        // [VALIDASI] Mencegah Audit verifikasi diri sendiri KECUALI Leader
+        if ($attendance->user_id == $user->id && !$isLeaderAudit) {
             return back()->with('error', 'Anda tidak dapat memverifikasi absensi Anda sendiri.');
         }
 
@@ -380,7 +401,7 @@ class AuditController extends Controller
         $updateData = [
             'presence_status'     => $request->presence_status,
             'status'              => 'verified',
-            'verified_by_user_id' => Auth::id(), // Simpan ID Audit yang memverifikasi
+            'verified_by_user_id' => $user->id, // Simpan ID Audit yang memverifikasi
             'audit_note'          => $request->audit_note,
         ];
 
