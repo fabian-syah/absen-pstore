@@ -43,7 +43,7 @@
                         <label>Jenis Kejadian</label>
                         <select name="type" id="typeSelect" class="form-select select2-single" required onchange="handleTypeChange()">
                             <option value="join" {{ $history->type == 'join' ? 'selected' : '' }}>Awal Masuk</option>
-                            <option value="transfer_branch" {{ $history->type == 'transfer_branch' ? 'selected' : '' }}>Pindah Cabang (Divisi Dihilangkan)</option>
+                            <option value="transfer_branch" {{ $history->type == 'transfer_branch' ? 'selected' : '' }}>Pindah Cabang</option>
                             <option value="transfer_division" {{ $history->type == 'transfer_division' ? 'selected' : '' }}>Pindah Divisi</option>
                             <option value="resign" {{ $history->type == 'resign' ? 'selected' : '' }}>Resign</option>
                             <option value="rejoin" {{ $history->type == 'rejoin' ? 'selected' : '' }}>Masuk Kembali</option>
