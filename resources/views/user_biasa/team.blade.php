@@ -80,10 +80,21 @@
         .division-badge { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca; border: none; font-weight: 500; }
         .branch-badge { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-weight: 500; }
         
-        .photo-preview { width: 40px; height: 40px; border-radius: 10px; overflow: hidden; border: 2px solid #e2e8f0; transition: all 0.3s ease; cursor: pointer; }
-        .photo-preview:hover { transform: scale(1.1); border-color: #667eea; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
-        .view-photo-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; padding: 0.5rem 1rem; border-radius: 10px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; }
-        .view-photo-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); color: white; }
+        /* UPDATED: Photo Preview Styles for Multiple Buttons */
+        .photo-preview { width: 30px; height: 30px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.5); }
+        
+        .view-photo-btn { 
+            border: none; 
+            padding: 0.4rem 0.8rem; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            transition: all 0.2s ease; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            font-size: 0.75rem;
+        }
+        .view-photo-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
         .late-message { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 8px; font-style: italic; color: #92400e; max-width: 250px; }
         .empty-state { padding: 4rem 2rem; text-align: center; }
@@ -340,21 +351,37 @@
                                         @endif
                                     </td>
                                     <td class="py-3">
-                                        @if ($attendance && $attendance->photo_path)
-                                            <button type="button" class="view-photo-btn btn btn-sm" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_out_path ?? $attendance->photo_path) }}">
-                                                <div class="photo-preview"><img src="{{ Storage::url($attendance->photo_out_path ?? $attendance->photo_path) }}" style="width: 100%; height: 100%; object-fit: cover;"></div> <span>Lihat Foto</span>
-                                            </button>
-                                        @elseif ($leave && $leave->type == 'wfh' && $leave->file_proof)
-                                            <button type="button" class="view-photo-btn btn btn-sm" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($leave->file_proof) }}">
-                                                <div class="photo-preview"><img src="{{ Storage::url($leave->file_proof) }}" style="width: 100%; height: 100%; object-fit: cover;"></div> <span>Lihat Bukti</span>
-                                            </button>
-                                        @elseif ($leave)
-                                            <div class="text-muted small fst-italic"><i class="mdi mdi-information-outline me-1"></i> {{ ucfirst($leave->type) }} Approved</div>
-                                        @elseif ($member->activeLateStatus)
-                                            <div class="late-message"><i class="mdi mdi-message-text me-1"></i> "{{ \Illuminate\Support\Str::limit($member->activeLateStatus->message, 30) }}"</div>
-                                        @else
-                                            <span class="text-muted small"><i class="mdi mdi-minus-circle me-1"></i>-</span>
-                                        @endif
+                                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                                            @if ($attendance)
+                                                {{-- 1. FOTO MASUK --}}
+                                                @if($attendance->photo_path)
+                                                    <button type="button" class="view-photo-btn bg-success text-white" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}">
+                                                        <div class="photo-preview"><img src="{{ Storage::url($attendance->photo_path) }}" style="width: 100%; height: 100%; object-fit: cover;"></div> 
+                                                        <span>Masuk</span>
+                                                    </button>
+                                                @endif
+                                                
+                                                {{-- 2. FOTO PULANG (NEW) --}}
+                                                @if($attendance->photo_out_path)
+                                                    <button type="button" class="view-photo-btn bg-primary text-white" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_out_path) }}">
+                                                        <div class="photo-preview"><img src="{{ Storage::url($attendance->photo_out_path) }}" style="width: 100%; height: 100%; object-fit: cover;"></div> 
+                                                        <span>Pulang</span>
+                                                    </button>
+                                                @endif
+
+                                            @elseif ($leave && $leave->type == 'wfh' && $leave->file_proof)
+                                                <button type="button" class="view-photo-btn bg-info text-white" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($leave->file_proof) }}">
+                                                    <div class="photo-preview"><img src="{{ Storage::url($leave->file_proof) }}" style="width: 100%; height: 100%; object-fit: cover;"></div> 
+                                                    <span>Bukti WFH</span>
+                                                </button>
+                                            @elseif ($leave)
+                                                <div class="text-muted small fst-italic"><i class="mdi mdi-information-outline me-1"></i> {{ ucfirst($leave->type) }} Approved</div>
+                                            @elseif ($member->activeLateStatus)
+                                                <div class="late-message"><i class="mdi mdi-message-text me-1"></i> "{{ \Illuminate\Support\Str::limit($member->activeLateStatus->message, 30) }}"</div>
+                                            @else
+                                                <span class="text-muted small"><i class="mdi mdi-minus-circle me-1"></i>-</span>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

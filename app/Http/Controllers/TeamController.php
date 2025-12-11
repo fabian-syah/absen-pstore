@@ -14,8 +14,6 @@ use Illuminate\Support\Facades\Auth;
 
 class TeamController extends Controller
 {
-    // ... (method index, show, attendance TETAP SAMA, tidak saya hapus) ...
-    
     public function index()
     {
         $user = Auth::user();
@@ -94,17 +92,11 @@ class TeamController extends Controller
     public function showBranch($id) {
         $user = Auth::user();
 
-        // --- PERBAIKAN DI SINI ---
         if ($user->role == 'audit') {
-            // 1. Ambil cabang dari Multi Select (Pivot)
             $allowedBranches = $user->branches->pluck('id')->toArray();
-            
-            // 2. JANGAN LUPA tambahkan Cabang Utama (Lokasi Kerja) user tersebut
             if ($user->branch_id) {
                 $allowedBranches[] = $user->branch_id;
             }
-
-            // 3. Cek apakah ID yang dituju ada di salah satu daftar tersebut
             if (!in_array($id, $allowedBranches)) abort(403, 'Akses Ditolak. Anda tidak memiliki akses ke cabang ini.');
         
         } elseif ($user->role == 'leader') {
@@ -118,7 +110,6 @@ class TeamController extends Controller
 
         $branch = Branch::findOrFail($id);
         
-        // ... sisa kode ke bawah tetap sama ...
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)
             ->with(['division', 'attendances' => function ($q) { $q->whereDate('check_in_time', today()); }])->get();
 
@@ -155,9 +146,6 @@ class TeamController extends Controller
         return view('user_biasa.branch_detail', compact('branch', 'employees', 'attendanceGroups', 'statsCounts'));
     }
 
-    /**
-     * LOGIKA BARU UNTUK CABANG SAYA (Menghitung Statistik Per Cabang)
-     */
     public function myBranches()
     {
         $user = Auth::user();
@@ -166,29 +154,26 @@ class TeamController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // 1. Ambil ID Cabang yang dikelola
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
         if ($user->branch_id) {
             $myBranchIds[] = $user->branch_id;
         }
         if ($user->role == 'admin' && $user->branch_id == null) {
-            $myBranchIds = Branch::pluck('id')->toArray(); // Super Admin ambil semua
+            $myBranchIds = Branch::pluck('id')->toArray(); 
         }
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
-        // 2. Ambil Data Cabang BESERTA User dan Absensi Hari Ini
-        // Menggunakan Eager Loading agar tidak lemot (N+1 Problem solved)
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->with(['users' => function($q) {
                 $q->where('is_active', true)
-                  ->select('id', 'branch_id', 'name') // Optimasi select
+                  ->select('id', 'branch_id', 'name') 
                   ->with(['attendances' => function($q2) {
                       $q2->whereDate('check_in_time', today())->select('user_id', 'check_in_time');
                   }, 'leaveRequests' => function($q3) {
                       $q3->where('status', 'approved')
-                         ->whereDate('start_date', '<=', today())
-                         ->whereDate('end_date', '>=', today())
-                         ->select('user_id', 'type');
+                          ->whereDate('start_date', '<=', today())
+                          ->whereDate('end_date', '>=', today())
+                          ->select('user_id', 'type');
                   }]);
             }])
             ->withCount(['users' => function ($q) {
@@ -197,11 +182,10 @@ class TeamController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        // 3. Proses Hitung Statistik Per Cabang (Looping di PHP lebih fleksibel daripada raw SQL yang rumit)
         foreach ($controlledBranches as $branch) {
             $hadir = 0;
             $sakit = 0;
-            $izin_cuti = 0; // Gabung Izin & Cuti
+            $izin_cuti = 0; 
             $alpha = 0;
 
             foreach ($branch->users as $user) {
@@ -214,16 +198,15 @@ class TeamController extends Controller
                     if ($leave->type == 'sakit') {
                         $sakit++;
                     } elseif ($leave->type == 'wfh') {
-                        $hadir++; // WFH dihitung Hadir
+                        $hadir++; 
                     } else {
-                        $izin_cuti++; // Izin / Cuti
+                        $izin_cuti++; 
                     }
                 } else {
-                    $alpha++; // Belum absen dan tidak ada izin
+                    $alpha++; 
                 }
             }
 
-            // Simpan statistik ke object branch (temporary attribute)
             $branch->stats_today = [
                 'hadir' => $hadir,
                 'sakit' => $sakit,
@@ -235,22 +218,14 @@ class TeamController extends Controller
         return view('team.my_branches', compact('controlledBranches'));
     }
 
-    // ... (method showEmployeeHistory & getHistoryData TETAP SAMA) ...
-    
-   public function showEmployeeHistory(Request $request, $branchId, $employeeId) {
+    public function showEmployeeHistory(Request $request, $branchId, $employeeId) {
         $user = Auth::user();
 
-        // --- PERBAIKAN LOGIKA AKSES ---
         if ($user->role == 'audit') {
-            // 1. Ambil cabang dari Multi Select
             $allowedBranches = $user->branches->pluck('id')->toArray();
-            
-            // 2. JANGAN LUPA tambahkan Cabang Utama user tersebut
             if ($user->branch_id) {
                 $allowedBranches[] = $user->branch_id;
             }
-
-            // 3. Cek apakah cabang yang diminta ada dalam daftar akses
             if (!in_array($branchId, $allowedBranches)) abort(403, 'Akses Ditolak.');
         
         } elseif ($user->role == 'leader') {
@@ -261,13 +236,11 @@ class TeamController extends Controller
         } elseif ($user->role == 'admin') {
             if ($user->branch_id && $user->branch_id != $branchId) abort(403);
         }
-        // -----------------------------
 
         $employee = User::with(['division', 'branch'])->findOrFail($employeeId);
         $selectedMonth = $request->get('month', date('m'));
         $selectedYear = $request->get('year', date('Y'));
         
-        // Helper date vars
         $currentDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1);
         $prevDate = $currentDate->copy()->subMonth();
         $nextDate = $currentDate->copy()->addMonth();
@@ -282,7 +255,6 @@ class TeamController extends Controller
     }
 
     private function getHistoryData($user, $selectedMonth, $selectedYear) {
-        // ... (Kode sama persis seperti sebelumnya) ...
         $attendances = Attendance::with('verifier')->where('user_id', $user->id)->whereYear('check_in_time', $selectedYear)->whereMonth('check_in_time', $selectedMonth)->orderBy('check_in_time', 'desc')->get();
         $leaves = LeaveRequest::where('user_id', $user->id)->where('status', 'approved')->where('is_active', true)
             ->where(function ($q) use ($selectedMonth, $selectedYear) {
