@@ -55,10 +55,10 @@
                         <input type="date" name="event_date" class="form-control" required value="{{ $history->event_date->format('Y-m-d') }}">
                     </div>
 
-                    {{-- Form Audit Multi --}}
+                    {{-- Form Audit Multi (Tampilan disamakan, background putih) --}}
                     @if($targetUser->role == 'audit')
-                        <div id="auditBranchContainer" class="d-none bg-light p-3 rounded mb-3 border">
-                            <label class="fw-bold mb-2">Update Snapshot Wilayah Audit</label>
+                        <div class="form-group mb-3 d-none" id="auditBranchContainer">
+                            <label>Update Snapshot Wilayah Audit</label>
                             <select name="audit_branch_ids[]" class="form-select select2-multi" multiple="multiple" style="width:100%">
                                 @php 
                                     $selectedNames = $history->audit_branch_snapshot['to'] ?? [];

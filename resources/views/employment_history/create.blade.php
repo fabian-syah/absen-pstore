@@ -66,15 +66,14 @@
 
                     {{-- Form Dinamis Berdasarkan Role Target User --}}
                     @if($targetUser->role == 'audit')
-                        {{-- Audit Multi Branch --}}
-                        <div id="auditBranchContainer" class="d-none bg-light p-3 rounded mb-3 border">
-                            <label class="fw-bold mb-2">Wilayah Audit Baru (Snapshot)</label>
+                        {{-- Audit Multi Branch (Tampilan disamakan dengan input lain, background putih) --}}
+                        <div class="form-group mb-3 d-none" id="auditBranchContainer">
+                            <label>Wilayah Audit Baru (Snapshot)</label>
                             <select name="audit_branch_ids[]" class="form-select select2-multi" multiple="multiple" style="width:100%">
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                 @endforeach
                             </select>
-                            <small class="text-muted d-block mt-1">Pilih satu atau lebih cabang wilayah audit.</small>
                         </div>
                     @else 
                         {{-- User Biasa Single Branch --}}
@@ -159,7 +158,6 @@
 
         } else if (type === 'transfer_division') {
             // Jika Pindah Divisi: Sembunyikan Cabang, Tampilkan Divisi
-            // (Cabang container sudah hidden di reset di atas)
             divContainer.removeClass('d-none');
 
         } else if (type === 'resign') {
