@@ -51,7 +51,7 @@ class AuditController extends Controller
             }
         }
 
-        $requests = $query->latest()->paginate(10);
+        $requests = $query->oldest()->paginate(10);
 
         Log::info('Data pending ditemukan di showLatePermissions', [
             'total' => $requests->total()
