@@ -86,7 +86,7 @@ class EmploymentHistoryController extends Controller
         $targetUserId = $request->user_id ?? auth()->id();
         $targetUser = User::with('branches')->findOrFail($targetUserId);
 
-        // ... validasi hak akses audit (tidak berubah) ...
+        // ... validasi hak akses audit (bisa ditambahkan jika perlu) ...
 
         DB::beginTransaction(); // Pakai transaction biar aman
         try {
@@ -97,10 +97,12 @@ class EmploymentHistoryController extends Controller
                 $data['attachment'] = $request->file('attachment')->store('employment_attachments', 'public');
             }
 
-            // === LOGIKA UTAMA ===
+            // === LOGIKA UTAMA PERUBAHAN DATA USER & CABANG ===
+            
+            // 1. PINDAH CABANG
             if ($request->type == 'transfer_branch') {
 
-                // 1. KHUSUS AUDIT (MULTI BRANCH)
+                // A. KHUSUS AUDIT (MULTI BRANCH)
                 if ($targetUser->role == 'audit') {
                     $request->validate(['audit_branch_ids' => 'required|array']);
 
@@ -117,45 +119,83 @@ class EmploymentHistoryController extends Controller
                         'to'   => $newBranchNames
                     ];
 
-                    $data['branch_id'] = null;
+                    $data['branch_id'] = null; // Audit biasanya branch_id utamanya null/optional
                     $data['previous_branch_id'] = null;
 
-                    // d. Sync ke tabel pivot user
+                    // d. Sync ke tabel pivot user (Ubah Akses Audit)
                     $targetUser->branches()->sync($request->audit_branch_ids);
                 }
 
-                // 2. USER LAIN (SINGLE BRANCH)
+                // B. USER LAIN (SINGLE BRANCH)
                 else {
                     $request->validate(['branch_id' => 'required|exists:branches,id']);
+                    
                     $data['previous_branch_id'] = $targetUser->branch_id;
                     $data['branch_id'] = $request->branch_id;
+                    
+                    // UPDATE USER
                     $targetUser->branch_id = $request->branch_id;
                     $targetUser->save();
                 }
             }
-            // Logika Join / Rejoin
+
+            // 2. JOIN / AWAL MASUK / REJOIN (MASUK LAGI)
             elseif ($request->type == 'join' || $request->type == 'rejoin') {
+                
+                // Pastikan user aktif kembali
+                $targetUser->is_active = true;
+
                 if ($targetUser->role == 'audit') {
                     // Jika baru masuk/rejoin sebagai audit, simpan cabang awalnya
                     if ($request->audit_branch_ids) {
                         $targetUser->branches()->sync($request->audit_branch_ids);
                     }
                 } else {
+                    // Update Cabang Baru
                     $data['branch_id'] = $request->branch_id;
                     $targetUser->branch_id = $request->branch_id;
-                    $targetUser->save();
                 }
-            } elseif ($request->type == 'transfer_division') {
-                $data['branch_id'] = $targetUser->branch_id;
+                
+                $targetUser->save();
+            } 
+            
+            // 3. PINDAH DIVISI
+            elseif ($request->type == 'transfer_division') {
+                $data['branch_id'] = $targetUser->branch_id; // Cabang tetap sama
+                
+                // UPDATE USER
                 $targetUser->division_id = $request->division_id;
                 $targetUser->save();
-            } elseif ($request->type == 'resign') {
-                $data['branch_id'] = null;
-                $data['division_id'] = null;
-                // Opsional: $targetUser->is_active = false; $targetUser->save();
+            } 
+            
+            // 4. RESIGN / DIRUMAHKAN
+            elseif ($request->type == 'resign') {
+                // a. Cari atau Buat Cabang "Ex Karyawan"
+                $exBranch = Branch::firstOrCreate(
+                    ['name' => 'Ex Karyawan'],
+                    ['address' => '-'] // Isi default jika baru dibuat
+                );
+
+                // b. Simpan data history seolah pindah ke cabang Ex Karyawan
+                $data['branch_id'] = $exBranch->id;
+                $data['division_id'] = null; // Kosongkan divisi di history
+
+                // c. UPDATE USER
+                $targetUser->branch_id = $exBranch->id; // Pindah ke Ex Karyawan
+                $targetUser->division_id = null;        // Hapus Divisi
+                $targetUser->is_active = false;         // NONAKTIFKAN AKUN
+                
+                // Hapus akses audit jika ada
+                if($targetUser->role == 'audit'){
+                    $targetUser->branches()->detach();
+                }
+
+                $targetUser->save();
             }
 
+            // Simpan Data History
             EmploymentHistory::create($data);
+            
             DB::commit();
 
             return redirect()->back()->with('success', 'Riwayat berhasil disimpan & Data User diperbarui.');
