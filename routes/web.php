@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\EmploymentHistoryController;
 use App\Models\User;
+use App\Traits\SendFcmNotification;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DashboardController;
@@ -27,8 +29,6 @@ use App\Http\Controllers\BranchInventoryController;
 use App\Http\Controllers\AdminMonitoringController;
 use App\Http\Controllers\BranchLeaderboardController;
 use App\Http\Controllers\AttendanceSummaryController;
-// Import Controller Riwayat Karir
-use App\Http\Controllers\EmploymentHistoryController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -61,27 +61,30 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // --- Rute Search Global ---
     Route::get('/search', [GlobalSearchController::class, 'search'])->name('search');
 
+    Route::get('/my-wrapped-2025', [App\Http\Controllers\AttendanceRecapController::class, 'index'])->name('attendance.recap');
+
     // === RUTE RIWAYAT KARIR & MUTASI (Full Resource kecuali show) ===
     // Akses role (Admin, Audit, Leader, User Biasa, Security) sudah diatur di dalam Controller
     Route::resource('employment-history', EmploymentHistoryController::class)
-        ->except(['show']); 
+        ->except(['show']);
 
     // === RUTE RIWAYAT ABSENSI ===
     Route::get('/riwayat-absensi', [AttendanceHistoryController::class, 'index'])->name('attendance.history');
-    Route::get('/attendance/export-pdf', [AttendanceHistoryController::class, 'exportPdf'])->name('attendance.export.pdf');
 
-    // === RUTE RINGKASAN TAHUNAN ===
+    // === RUTE RINGKASAN TAHUNAN (PENGGANTI RECAP) ===
+    // 1. Versi Saya Sendiri (Tanpa ID)
     Route::get('/ringkasan-tahunan', [AttendanceSummaryController::class, 'index'])->name('attendance.summary');
+    // 2. Versi Lihat Orang Lain (Dengan ID) - [NEW]
     Route::get('/ringkasan-tahunan/{user_id}', [AttendanceSummaryController::class, 'index'])->name('attendance.summary.user')
         ->middleware('role:admin,audit,leader,admin_gaji');
+
+    Route::get('/attendance/export-pdf', [AttendanceHistoryController::class, 'exportPdf'])->name('attendance.export.pdf');
 
     // === RUTE JOB TARGETS ===
     Route::get('/job-targets', [JobTargetController::class, 'index'])->name('job-targets.index');
     Route::get('/job-targets/create', [JobTargetController::class, 'create'])->name('job-targets.create');
     Route::post('/job-targets', [JobTargetController::class, 'store'])->name('job-targets.store');
     Route::patch('/job-targets/{id}/update-outcome', [JobTargetController::class, 'updateOutcome'])->name('job-targets.update-outcome');
-    Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
-    Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
 
     // === RUTE RIWAYAT PELANGGARAN ===
     Route::get('/violations', [App\Http\Controllers\ViolationController::class, 'index'])->name('violations.index');
@@ -92,6 +95,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::put('/violations/{violation}', [App\Http\Controllers\ViolationController::class, 'update'])->name('violations.update');
         Route::delete('/violations/{violation}', [App\Http\Controllers\ViolationController::class, 'destroy'])->name('violations.destroy');
     });
+
+    Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
+    Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
 
     // === RUTE KASBON ===
     Route::middleware(['role:admin,audit,security,user_biasa'])->prefix('kasbon')->name('kasbon.')->group(function () {
@@ -112,9 +118,23 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         });
     });
 
-    // Rute Khusus Riwayat Pribadi (Izin)
+    // Rute Khusus Riwayat Pribadi
     Route::get('/riwayat-izin-saya', [LeaveRequestController::class, 'personalHistory'])
         ->name('leave-requests.personal-history');
+
+    // Test FCM Route
+    Route::get('/test-fcm', function () {
+        $sender = new class {
+            use SendFcmNotification;
+        };
+        $branchId = 2;
+        try {
+            $sender->sendNotificationToBranchRoles(['audit'], $branchId, "Tes Notifikasi", "Pesan tes server.");
+            return "Perintah kirim dijalankan.";
+        } catch (\Exception $e) {
+            return "Error: " . $e->getMessage();
+        }
+    });
 
     // === RUTE BROADCAST ===
     Route::prefix('broadcast')->name('broadcast.')->group(function () {
@@ -146,11 +166,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
+
         Route::delete('/photo', [ProfileController::class, 'deleteProfilePhoto'])->name('photo.delete');
         Route::put('/photo', [ProfileController::class, 'updatePhoto'])->name('photo.update');
         Route::post('/photo/request', [ProfileController::class, 'requestPhotoChange'])->name('photo.request');
+        Route::get('/photo/{user}', [ProfileController::class, 'getProfilePhoto'])->name('photo.get');
         Route::put('/ktp', [ProfileController::class, 'updateKtp'])->name('ktp.update');
         Route::post('/ktp/request', [ProfileController::class, 'requestKtpChange'])->name('ktp.request');
+        Route::get('/ktp/{user}', [ProfileController::class, 'getKtpPhoto'])->name('ktp.get');
 
         Route::post('/work-history', [WorkHistoryController::class, 'store'])->name('work-history.store');
         Route::delete('/work-history/{history}', [WorkHistoryController::class, 'destroy'])->name('work-history.destroy');
@@ -160,12 +183,17 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/inventory', [InventoryController::class, 'showInventory'])->name('inventory.index');
     });
 
-    // === RUTE INVENTARIS ===
+    // ==========================================================
+    //  RUTE INVENTARIS
+    // ==========================================================
+
     Route::prefix('inventory')->name('inventory.')->group(function () {
         Route::get('/', [InventoryController::class, 'index'])->name('index');
+
         Route::get('/available', [InventoryController::class, 'available'])
             ->name('available')
             ->middleware('role:admin,audit,leader,security,user_biasa');
+
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
 
         Route::middleware(['role:admin,audit,leader,security,user_biasa'])->group(function () {
@@ -182,20 +210,25 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         });
     });
 
-    // === RIWAYAT PENGEMBALIAN INVENTARIS ===
+    // ================= RIWAYAT PENGEMBALIAN (Inventory Returns) =================
     Route::middleware(['role:admin,audit'])->group(function () {
         Route::get('/inventory-returns', [InventoryReturnController::class, 'index'])->name('inventory-returns.index');
         Route::post('/inventory-returns/{id}/approve', [InventoryReturnController::class, 'approve'])->name('inventory-returns.approve');
         Route::post('/inventory-returns/{id}/reject', [InventoryReturnController::class, 'reject'])->name('inventory-returns.reject');
     });
 
-    // === MONITORING HARIAN (ADMIN ONLY) ===
+    // ==========================================================
+    //  RUTE MONITORING HARIAN (KHUSUS ADMIN)
+    // ==========================================================
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/monitoring/daily-attendance', [AdminMonitoringController::class, 'dailyAttendance'])
             ->name('admin.monitoring.daily');
     });
 
-    // === ADMIN, AUDIT, & ADMIN GAJI MANAGEMENT ===
+    // ====================================================================================================
+    //  [PERBAIKAN] GRUP 1: ADMIN, AUDIT, & ADMIN GAJI MANAGEMENT (PINDAHKAN KE ATAS!)
+    //  Agar route seperti /users/create dibaca LEBIH DULU daripada /users/{user}
+    // ====================================================================================================
     Route::middleware(['role:admin,audit,admin_gaji'])->group(function () {
         Route::get('/all-attendance', [AdminAttendanceController::class, 'index'])->name('admin.attendance.all');
         Route::put('/audit/verify-attendance/{id}', [App\Http\Controllers\AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
@@ -207,7 +240,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::resource('divisions', DivisionController::class);
         Route::post('/divisions/{division}/toggle-status', [DivisionController::class, 'toggleStatus'])->name('divisions.toggle-status');
 
-        // Approval Requests
+        // Approval Requests (Pastikan ini juga di atas Resource User)
         Route::get('/users/photo-requests', [UserController::class, 'photoRequests'])->name('users.photo-requests');
         Route::patch('/users/{user}/approve-photo', [UserController::class, 'approvePhotoRequest'])->name('users.approve-photo');
         Route::delete('/users/{user}/reject-photo', [UserController::class, 'rejectPhotoRequest'])->name('users.reject-photo');
@@ -217,7 +250,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');
 
         // USER MANAGEMENT (Resource tanpa show)
+        // INI AKAN MEMBUAT ROUTE: GET /users/create
         Route::resource('users', UserController::class)->except(['show']);
+
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
         Route::patch('/users/{user}/verify', [UserController::class, 'verifyUser'])->name('users.verify');
@@ -240,18 +275,24 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::put('/audit/missed-checkouts/{id}', [AuditController::class, 'updateMissedCheckout'])->name('audit.missed-checkout.update');
     });
 
-    // === SHOW USER (WILDCARD) ===
+    // ====================================================================================================
+    //  [PERBAIKAN] GRUP 2: SHOW USER (WILDCARD /users/{user}) (PINDAHKAN KE BAWAH!)
+    //  Ini menangkap semua URL /users/something. Jadi harus paling bawah.
+    // ====================================================================================================
     Route::middleware(['role:admin,audit,admin_gaji,leader'])->group(function () {
+        // Leader sekarang diizinkan mengakses halaman detail user (show)
         Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
     });
 
     // === RUTE SECURITY ===
     Route::middleware(['role:security,admin'])->prefix('security')->name('security.')->group(function () {
+
         Route::get('/scan', [ScanController::class, 'index'])->name('scan');
         Route::post('/check-user', [ScanController::class, 'checkUser'])->name('check-user');
         Route::post('/store-attendance', [ScanController::class, 'storeAttendance'])->name('store-attendance');
         Route::get('/stats', [ScanController::class, 'getStats'])->name('stats');
         Route::get('/riwayat-scan', [ScanController::class, 'history'])->name('history');
+
         Route::get('/attendance-log', [ScanController::class, 'attendanceLog'])->name('attendance-log');
         Route::get('/today-attendance', [ScanController::class, 'todayAttendance'])->name('today-attendance');
     });
@@ -298,12 +339,21 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/export/attendance', [AuditController::class, 'exportAttendance'])->name('export.attendance');
     });
 
-    // === RUTE MONITORING WILAYAH ===
+    // ==========================================================
+    //  RUTE MONITORING WILAYAH (INVENTARIS CABANG & LEADERBOARD)
+    // ==========================================================
     Route::middleware(['role:admin,audit,leader'])->group(function () {
-        Route::get('/inventaris-cabang', [BranchInventoryController::class, 'index'])->name('inventory.branches');
-        Route::get('/inventaris-cabang/{id}', [BranchInventoryController::class, 'show'])->name('inventory.branch.detail');
-        Route::get('/top-absensi-cabang', [BranchLeaderboardController::class, 'index'])->name('branch-leaderboard.index');
-        Route::get('/top-absensi-cabang/{id}', [BranchLeaderboardController::class, 'show'])->name('branch-leaderboard.show');
+        Route::get('/inventaris-cabang', [BranchInventoryController::class, 'index'])
+            ->name('inventory.branches');
+
+        Route::get('/inventaris-cabang/{id}', [BranchInventoryController::class, 'show'])
+            ->name('inventory.branch.detail');
+
+        Route::get('/top-absensi-cabang', [BranchLeaderboardController::class, 'index'])
+            ->name('branch-leaderboard.index');
+
+        Route::get('/top-absensi-cabang/{id}', [BranchLeaderboardController::class, 'show'])
+            ->name('branch-leaderboard.show');
     });
 
     // === RUTE API ===
@@ -312,6 +362,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/recent-activities', [DashboardController::class, 'getRecentActivities'])->name('recent.activities');
         Route::get('/attendance-chart', [DashboardController::class, 'getAttendanceChart'])->name('attendance.chart');
     });
+
+    Route::get('/test-role-middleware', function () {
+        return response()->json(['message' => 'Middleware test berhasil!']);
+    })->middleware(['role:admin,audit,security,leader,user_biasa']);
 
     Route::fallback(function () {
         return response()->view('errors.404', [], 404);
