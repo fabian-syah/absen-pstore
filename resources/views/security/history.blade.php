@@ -163,7 +163,9 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3">{{ $logs->links() }}</div>
+                 <div class="mt-4 d-flex justify-content-end">
+                        {{ $logs->links('pagination::bootstrap-5') }}
+                    </div>
             </div>
         </div>
     </div>
