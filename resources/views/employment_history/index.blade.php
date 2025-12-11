@@ -5,7 +5,7 @@
 @section('content')
 <div class="row">
     
-    {{-- FILTER USER --}}
+    {{-- FILTER USER (HANYA MUNCUL UNTUK ADMIN, AUDIT, LEADER) --}}
     @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
     <div class="col-12 mb-4">
         <div class="card">
@@ -13,26 +13,22 @@
                 <div>
                     <h4 class="card-title mb-1">Daftar Riwayat Karir</h4>
                     <p class="text-muted mb-0 small">
-                        @if($canEdit)
-                            <span class="text-success fw-bold"><i class="mdi mdi-pencil"></i> MODE EDIT AKTIF</span> - 
-                        @endif
-                        Pilih pegawai untuk melihat timeline.
+                        Pilih pegawai untuk mengelola timeline.
                     </p>
                 </div>
                 
                 <form action="{{ route('employment-history.index') }}" method="GET" class="d-flex align-items-center w-50 justify-content-end">
-                    @if(request()->get('mode') == 'edit')
-                        <input type="hidden" name="mode" value="edit">
-                    @endif
-
                     <select name="user_id" class="form-control w-75" onchange="this.form.submit()" style="border-radius: 8px;">
+                        {{-- Opsi Saya Sendiri --}}
                         <option value="{{ auth()->user()->id }}" {{ isset($targetUser) && $targetUser->id == auth()->id() ? 'selected' : '' }}>
-                            -- Saya Sendiri ({{ auth()->user()->name }}) --
+                            -- Saya Sendiri ({{ auth()->user()->branch->name ?? 'Pusat' }}) --
                         </option>
+
+                        {{-- Loop User Lain --}}
                         @foreach($selectableUsers as $u)
                             @if($u->id != auth()->id())
                                 <option value="{{ $u->id }}" {{ isset($targetUser) && $targetUser->id == $u->id ? 'selected' : '' }}>
-                                    {{ $u->name }} ({{ ucfirst($u->role) }})
+                                    {{ $u->name }} ({{ $u->branch->name ?? 'Non-Cabang' }})
                                 </option>
                             @endif
                         @endforeach
@@ -50,9 +46,10 @@
                 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                     <div>
                         <h4 class="card-title mb-1">Timeline: {{ $targetUser->name }}</h4>
-                        <span class="badge badge-outline-primary">{{ strtoupper($targetUser->role) }}</span>
+                        <span class="badge badge-outline-primary">{{ $targetUser->branch->name ?? 'Non-Cabang' }}</span>
                     </div>
                     
+                    {{-- TOMBOL TAMBAH DATA --}}
                     @if($canCreate)
                         <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn btn-primary btn-icon-text">
                             <i class="mdi mdi-plus-circle-outline btn-icon-prepend"></i> Tambah Riwayat
@@ -127,7 +124,7 @@
                                                     <span class="text-muted small">{!! $history->audit_change_text !!}</span>
                                                 </div>
 
-                                            {{-- PINDAH CABANG (Hanya Show Tujuan) --}}
+                                            {{-- PINDAH CABANG --}}
                                             @elseif($history->type == 'transfer_branch')
                                                 <p class="mb-1">
                                                     <i class="mdi mdi-arrow-right-bold-circle text-success me-1"></i>

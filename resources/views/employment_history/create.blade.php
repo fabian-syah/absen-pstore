@@ -67,6 +67,7 @@
                             <label>Cabang Tujuan</label>
                             <select name="branch_id" class="form-select select2-single">
                                 <option value="">-- Pilih Cabang --</option>
+                                {{-- Menampilkan SEMUA cabang agar Leader/Admin bisa memindahkan user kemana saja --}}
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                 @endforeach
