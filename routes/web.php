@@ -28,7 +28,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\BranchInventoryController;
 use App\Http\Controllers\AdminMonitoringController;
 use App\Http\Controllers\BranchLeaderboardController;
-use App\Http\Controllers\AttendanceSummaryController; 
+use App\Http\Controllers\AttendanceSummaryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,13 +63,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     Route::get('/my-wrapped-2025', [App\Http\Controllers\AttendanceRecapController::class, 'index'])->name('attendance.recap');
 
-    Route::get('/riwayat-divisi-cabang', [EmploymentHistoryController::class, 'index'])->name('employment-history.index');
-    Route::post('/riwayat-divisi-cabang', [EmploymentHistoryController::class, 'store'])->name('employment-history.store');
-    Route::delete('/riwayat-divisi-cabang/{id}', [EmploymentHistoryController::class, 'destroy'])->name('employment-history.destroy');
+    // Pastikan route ini ada di dalam group middleware auth
+    Route::resource('employment-history', App\Http\Controllers\EmploymentHistoryController::class)
+        ->except(['destroy', 'show']); // Hapus 'destroy' dari route agar tidak bisa diakses
 
     // === RUTE RIWAYAT ABSENSI ===
     Route::get('/riwayat-absensi', [AttendanceHistoryController::class, 'index'])->name('attendance.history');
-    
+
     // === RUTE RINGKASAN TAHUNAN (PENGGANTI RECAP) ===
     // 1. Versi Saya Sendiri (Tanpa ID)
     Route::get('/ringkasan-tahunan', [AttendanceSummaryController::class, 'index'])->name('attendance.summary');
@@ -251,7 +251,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // USER MANAGEMENT (Resource tanpa show)
         // INI AKAN MEMBUAT ROUTE: GET /users/create
         Route::resource('users', UserController::class)->except(['show']);
-        
+
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
         Route::patch('/users/{user}/verify', [UserController::class, 'verifyUser'])->name('users.verify');
