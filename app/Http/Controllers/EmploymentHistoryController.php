@@ -22,8 +22,10 @@ class EmploymentHistoryController extends Controller
 
         // --- 1. LOGIKA LIST USER (DROPDOWN) ---
         if ($currentUser->role === 'admin') {
+            // Admin: Semua User
             $selectableUsers = User::orderBy('name')->get();
         } elseif ($currentUser->role === 'audit') {
+            // Audit: User Cabang + Diri Sendiri
             $branchIds = $currentUser->branches->pluck('id')->toArray();
             $selectableUsers = User::whereIn('branch_id', $branchIds)
                 ->orWhere('id', $currentUser->id)
@@ -76,8 +78,19 @@ class EmploymentHistoryController extends Controller
 
         // --- 3. LOGIKA HAK AKSES EDIT ---
         $canEdit = false;
+
+        // A. Admin/Audit/Leader: Harus kirim parameter '?mode=edit' atau edit diri sendiri
         if (in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
             if ($request->get('mode') === 'edit') {
+                $canEdit = true;
+            }
+            // Opsional: Jika ingin Admin/Leader otomatis bisa edit diri sendiri tanpa parameter, uncomment ini:
+            // if ($targetUser->id == $currentUser->id) $canEdit = true; 
+        } 
+        
+        // B. [BARU] User Biasa / Security: Otomatis BISA edit jika melihat diri sendiri
+        elseif (in_array($currentUser->role, ['user_biasa', 'security'])) {
+            if ($targetUser->id == $currentUser->id) {
                 $canEdit = true;
             }
         }
@@ -103,14 +116,13 @@ class EmploymentHistoryController extends Controller
         $targetId = $request->get('user_id', $currentUser->id);
         $targetUser = User::findOrFail($targetId);
 
-        // Validasi Akses
-        if (!in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
-             // Jika bukan role manajemen, hanya boleh create untuk diri sendiri (jika diizinkan sistem)
-             // Disini kita blok jika mencoba akses ID orang lain
-             if($targetId != $currentUser->id) abort(403, 'Akses ditolak.');
+        // --- VALIDASI AKSES CREATE ---
+        // 1. Jika User Biasa/Security mencoba create untuk ORANG LAIN -> Tolak
+        if (!in_array($currentUser->role, ['admin', 'audit', 'leader']) && $targetId != $currentUser->id) {
+             abort(403, 'Akses ditolak.');
         }
 
-        // Validasi Scope Wilayah
+        // 2. Validasi Scope Wilayah (Khusus Leader & Audit)
         if ($targetId != $currentUser->id) {
             if ($currentUser->role === 'audit') {
                 $allowedBranches = $currentUser->branches->pluck('id')->toArray();
@@ -142,9 +154,14 @@ class EmploymentHistoryController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        // Keamanan: Jika User Biasa/Security, paksa user_id jadi diri sendiri
+        if (in_array($currentUser->role, ['user_biasa', 'security'])) {
+            $request->merge(['user_id' => $currentUser->id]);
+        }
+
         $data = $request->only(['user_id', 'type', 'event_date', 'description', 'division_id', 'branch_id']);
 
-        // [LOGIKA BARU] Jika Pindah Cabang, kosongkan Divisi
+        // Jika Pindah Cabang, kosongkan Divisi
         if ($request->type == 'transfer_branch') {
             $data['division_id'] = null;
         }
@@ -172,7 +189,13 @@ class EmploymentHistoryController extends Controller
 
         EmploymentHistory::create($data);
 
-        return redirect()->route('employment-history.index', ['user_id' => $data['user_id'], 'mode' => 'edit'])
+        // Redirect logika: Jika user biasa/security, tidak perlu ?mode=edit karena otomatis aktif di index
+        $redirectParams = ['user_id' => $data['user_id']];
+        if (in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
+            $redirectParams['mode'] = 'edit';
+        }
+
+        return redirect()->route('employment-history.index', $redirectParams)
             ->with('success', 'Riwayat berhasil dicatat (Timeline Only).');
     }
 
@@ -184,14 +207,17 @@ class EmploymentHistoryController extends Controller
         $history = EmploymentHistory::findOrFail($id);
         $currentUser = auth()->user();
 
-        // Validasi Akses
-        if (!in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
+        // Validasi Akses: Boleh edit jika Admin/Audit/Leader ATAU Milik Sendiri
+        $isOwner = ($history->user_id == $currentUser->id);
+        $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
+
+        if (!$isManagement && !$isOwner) {
             abort(403, 'Akses ditolak.');
         }
 
-        // Validasi Wilayah
+        // Validasi Wilayah (Jika Manajemen mengedit orang lain)
         $targetUser = $history->user;
-        if ($targetUser->id != $currentUser->id) {
+        if ($targetUser->id != $currentUser->id && $isManagement) {
             if ($currentUser->role === 'audit') {
                 $allowedBranches = $currentUser->branches->pluck('id')->toArray();
                 if (!in_array($targetUser->branch_id, $allowedBranches)) abort(403);
@@ -216,7 +242,11 @@ class EmploymentHistoryController extends Controller
         $history = EmploymentHistory::findOrFail($id);
         $currentUser = auth()->user();
 
-        if (!in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
+        // Validasi Akses (Sama seperti Edit)
+        $isOwner = ($history->user_id == $currentUser->id);
+        $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
+
+        if (!$isManagement && !$isOwner) {
             abort(403, 'Akses ditolak.');
         }
 
@@ -228,7 +258,6 @@ class EmploymentHistoryController extends Controller
 
         $data = $request->only(['type', 'event_date', 'description', 'division_id', 'branch_id']);
 
-        // [LOGIKA BARU] Jika Pindah Cabang, kosongkan Divisi
         if ($request->type == 'transfer_branch') {
             $data['division_id'] = null;
         }
@@ -254,7 +283,13 @@ class EmploymentHistoryController extends Controller
 
         $history->update($data);
 
-        return redirect()->route('employment-history.index', ['user_id' => $history->user_id, 'mode' => 'edit'])
+        // Redirect logika
+        $redirectParams = ['user_id' => $history->user_id];
+        if (in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
+            $redirectParams['mode'] = 'edit';
+        }
+
+        return redirect()->route('employment-history.index', $redirectParams)
             ->with('success', 'Data riwayat berhasil diperbarui.');
     }
 }

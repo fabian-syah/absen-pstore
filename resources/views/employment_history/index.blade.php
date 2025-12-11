@@ -21,8 +21,8 @@
                 </div>
                 
                 <form action="{{ route('employment-history.index') }}" method="GET" class="d-flex align-items-center w-50 justify-content-end">
-                    {{-- Jika sedang mode edit, pertahankan mode edit saat ganti user --}}
-                    @if($canEdit)
+                    {{-- Jika sedang mode edit (dari User Show), pertahankan saat filter --}}
+                    @if(request()->get('mode') == 'edit')
                         <input type="hidden" name="mode" value="edit">
                     @endif
 
@@ -58,7 +58,8 @@
                     </div>
                     
                     {{-- TOMBOL TAMBAH DATA --}}
-                    @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']) || auth()->id() == $targetUser->id)
+                    {{-- Muncul jika $canEdit bernilai TRUE (Untuk User Biasa/Security otomatis TRUE) --}}
+                    @if($canEdit)
                         <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn btn-primary btn-icon-text">
                             <i class="mdi mdi-plus-circle-outline btn-icon-prepend"></i> Tambah Riwayat
                         </a>
@@ -191,7 +192,7 @@
     </div>
 </div>
 
-{{-- Style Tambahan untuk Hover Effect --}}
+{{-- Style Tambahan --}}
 <style>
     .hover-opacity-100:hover {
         opacity: 1 !important;
@@ -208,7 +209,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         var attachmentModal = document.getElementById('attachmentModal');
         attachmentModal.addEventListener('show.bs.modal', function(event) {
-            var div = event.relatedTarget; // Element div pembungkus gambar yang diklik
+            var div = event.relatedTarget; 
             var src = div.getAttribute('data-src');
             var modalImg = document.getElementById('modalImageSrc');
             modalImg.src = src;
