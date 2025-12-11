@@ -34,6 +34,7 @@ class User extends Authenticatable
         'login_id',        // ID Login khusus (wajib)
         'password',
         'role',
+        'only_security_scan',
         'gaji',            // <--- FIELD BARU GAJI DITAMBAHKAN DI SINI
         'division_id',     // Primary Division (Homebase)
         'qr_code_value',
@@ -76,6 +77,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'hire_date' => 'date',
         'is_active' => 'boolean',
+        'only_security_scan' => 'boolean',
         'gaji' => 'decimal:2', // Casting agar outputnya selalu format desimal/angka
     ];
 

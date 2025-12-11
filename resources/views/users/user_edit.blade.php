@@ -95,6 +95,16 @@
                             @endif
                         </div>
 
+                        {{-- [TAMBAHAN BARU] CHECKBOX ONLY SECURITY SCAN --}}
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="only_security_scan" name="only_security_scan" value="1" 
+                                {{ old('only_security_scan', $user->only_security_scan) ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold text-danger" for="only_security_scan">
+                                <i class="mdi mdi-lock-alert me-1"></i> Wajib Absen via Security (Scan Only)
+                            </label>
+                            <small class="d-block text-muted">Jika diaktifkan, user ini TIDAK BISA absen mandiri.</small>
+                        </div>
+
                         <div class="form-group mb-3">
                             <label>awal masuk pstore ( opsional )</label>
                             <input type="date" class="form-control" name="hire_date"

@@ -73,10 +73,11 @@
                         </a>
 
                         {{-- [NEW] 2. HISTORY TAHUNAN --}}
-                        <a href="{{ route('attendance.summary.user', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                        {{-- (Jika ada routenya, biarkan. Jika tidak, bisa dikomen) --}}
+                        {{-- <a href="{{ route('attendance.summary.user', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                             <span><i class="mdi mdi-chart-bar text-warning me-2"></i> History Tahunan</span>
                             <i class="mdi mdi-chevron-right text-muted"></i>
-                        </a>
+                        </a> --}}
 
                         {{-- 3. HISTORY INVENTARIS --}}
                         <a href="{{ route('inventory.index', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
@@ -154,21 +155,19 @@
                         <p class="h6">{{ $user->whatsapp ?? '-' }}</p>
                     </div>
 
-                    {{-- DETAIL GAJI (DICOMMENT SEMENTARA) --}}
-                    {{-- 
-                    @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                    {{-- [TAMBAHAN BARU] INDIKATOR TIPE ABSENSI --}}
                     <div class="col-md-6 mb-3">
-                        <label class="fw-bold text-primary small">Gaji Pokok</label>
-                        <p class="h6 fw-bold">
-                            @if($user->gaji)
-                                Rp {{ number_format($user->gaji, 0, ',', '.') }}
-                            @else
-                                <span class="text-danger">Belum input gaji</span>
-                            @endif
-                        </p>
+                        <label class="fw-bold text-muted small">Tipe Absensi</label>
+                        @if($user->only_security_scan)
+                            <p class="h6 text-danger fw-bold">
+                                <i class="mdi mdi-qrcode-scan"></i> Wajib Scan Security (Locked)
+                            </p>
+                        @else
+                            <p class="h6 text-success">
+                                <i class="mdi mdi-cellphone"></i> Bisa Mandiri & Scan
+                            </p>
+                        @endif
                     </div>
-                    @endif
-                    --}}
 
                     {{-- TANGGAL LAHIR & SOSMED --}}
                     <div class="col-md-6 mb-3">

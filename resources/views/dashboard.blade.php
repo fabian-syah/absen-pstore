@@ -675,41 +675,52 @@
                                     </div>
                                 </div>
 
-                                {{-- TOMBOL AKSI PULANG (HYBRID: Muncul walau absen masuk via SCAN) --}}
+                                {{-- TOMBOL AKSI PULANG (HYBRID) --}}
                                 <div class="mt-3 pt-3 border-top position-relative z-index-1">
 
-                                    @if ($isCrossDay)
-                                        <p class="text-center text-muted mb-3 small">
-                                            Anda belum absen pulang kemarin. Pilih tindakan:
-                                        </p>
-
-                                        <div class="row g-2">
-                                            <div class="col-6">
-                                                <a href="{{ route('self.attend.create') }}"
-                                                   class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 shadow-sm hover-scale">
-                                                    <i class="mdi mdi-camera-party-mode fs-4 mb-1"></i>
-                                                    <span>Pulang (Lembur)</span>
-                                                </a>
-                                            </div>
-                                            <div class="col-6">
-                                                <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
-                                                      method="POST" class="h-100">
-                                                    @csrf
-                                                    <button type="submit"
-                                                            class="btn btn-warning btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 text-dark shadow-sm hover-scale"
-                                                            onclick="return confirm('Pilih ini jika Anda KEMARIN LUPA absen pulang.\nSesi kemarin akan ditutup otomatis tanpa foto.\n\nLanjutkan?');">
-                                                        <i class="mdi mdi-skip-forward fs-4 mb-1"></i>
-                                                        <span>Lewati (Lupa)</span>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
+                                    {{-- [TAMBAHAN BARU] CEK ONLY SECURITY SCAN --}}
+                                    @if(Auth::user()->only_security_scan)
+                                        {{-- TAMPILAN JIKA DI BLOKIR --}}
+                                        <button class="btn btn-secondary btn-sm w-100 shadow-sm" disabled style="cursor: not-allowed; opacity: 0.7;">
+                                            <i class="mdi mdi-lock me-1"></i> Absen Pulang Mandiri Dikunci
+                                        </button>
+                                        <small class="text-danger d-block text-center mt-1" style="font-size: 10px;">
+                                            Silahkan Scan QR Code ke Security untuk Pulang
+                                        </small>
                                     @else
-                                        <a href="{{ route('self.attend.create') }}"
-                                           class="btn btn-danger btn-sm w-100 shadow hover-scale">
-                                            <i class="mdi mdi-logout me-1"></i>
-                                            Absen Pulang Mandiri
-                                        </a>
+                                        @if ($isCrossDay)
+                                            <p class="text-center text-muted mb-3 small">
+                                                Anda belum absen pulang kemarin. Pilih tindakan:
+                                            </p>
+
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <a href="{{ route('self.attend.create') }}"
+                                                       class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 shadow-sm hover-scale">
+                                                        <i class="mdi mdi-camera-party-mode fs-4 mb-1"></i>
+                                                        <span>Pulang (Lembur)</span>
+                                                    </a>
+                                                </div>
+                                                <div class="col-6">
+                                                    <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
+                                                          method="POST" class="h-100">
+                                                        @csrf
+                                                        <button type="submit"
+                                                                class="btn btn-warning btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 text-dark shadow-sm hover-scale"
+                                                                onclick="return confirm('Pilih ini jika Anda KEMARIN LUPA absen pulang.\nSesi kemarin akan ditutup otomatis tanpa foto.\n\nLanjutkan?');">
+                                                            <i class="mdi mdi-skip-forward fs-4 mb-1"></i>
+                                                            <span>Lewati (Lupa)</span>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <a href="{{ route('self.attend.create') }}"
+                                               class="btn btn-danger btn-sm w-100 shadow hover-scale">
+                                                <i class="mdi mdi-logout me-1"></i>
+                                                Absen Pulang Mandiri
+                                            </a>
+                                        @endif
                                     @endif
 
                                 </div>
@@ -778,13 +789,22 @@
 
                             @if ($myLeaveToday->type == 'telat' && $myLeaveToday->status == 'approved')
                                 <div class="mt-3 pt-3 border-top text-center">
-                                    <form action="{{ route('leave-requests.cancel', $myLeaveToday->id) }}" method="POST"
-                                          class="d-inline">
-                                        @csrf @method('PATCH')
-                                        <button type="submit" class="btn btn-dark btn-sm w-100 shadow-sm hover-scale">
-                                            <i class="mdi mdi-fingerprint me-2"></i>Absen Sekarang
+                                    
+                                    {{-- [TAMBAHAN BARU] CEK ONLY SECURITY SCAN UNTUK IZIN TELAT --}}
+                                    @if(Auth::user()->only_security_scan)
+                                        <button class="btn btn-secondary btn-sm w-100 shadow-sm" disabled style="cursor: not-allowed; opacity: 0.7;">
+                                            <i class="mdi mdi-lock me-1"></i> Absen Dikunci (Scan Only)
                                         </button>
-                                    </form>
+                                    @else
+                                        <form action="{{ route('leave-requests.cancel', $myLeaveToday->id) }}" method="POST"
+                                              class="d-inline">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="btn btn-dark btn-sm w-100 shadow-sm hover-scale">
+                                                <i class="mdi mdi-fingerprint me-2"></i>Absen Sekarang
+                                            </button>
+                                        </form>
+                                    @endif
+
                                 </div>
                             @endif
                         </div>
@@ -799,9 +819,23 @@
                                 <h5 class="mb-2 fw-bold">Anda Belum Absen Hari Ini</h5>
                                 <p class="text-muted mb-4">Gunakan fitur ini jika Anda bekerja WFH atau Dinas Luar.</p>
                                 <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('self.attend.create') }}" class="btn btn-dark shadow hover-scale">
-                                        <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
-                                    </a>
+                                    
+                                    {{-- [TAMBAHAN BARU] TOMBOL ABSEN MANDIRI DENGAN PENGECEKAN --}}
+                                    @if(Auth::user()->only_security_scan)
+                                        <div class="d-flex flex-column align-items-center w-100">
+                                            <button class="btn btn-secondary shadow-sm w-100" disabled style="cursor: not-allowed; opacity: 0.7;">
+                                                <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
+                                            </button>
+                                            <small class="text-danger mt-1" style="font-size: 10px;">
+                                                <i class="mdi mdi-alert-circle"></i> Wajib Scan QR ke Security
+                                            </small>
+                                        </div>
+                                    @else
+                                        <a href="{{ route('self.attend.create') }}" class="btn btn-dark shadow hover-scale">
+                                            <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
+                                        </a>
+                                    @endif
+
                                     <a href="{{ route('leave-requests.create') }}" class="btn btn-outline-dark shadow-sm hover-scale">
                                         <i class="mdi mdi-file-document-edit-outline me-2"></i>Izin/Sakit
                                     </a>

@@ -26,6 +26,13 @@ class SelfAttendanceController extends Controller
         $today = today();
         $now = now();
 
+        // =========================================================================
+        // [BARU] CEK BLOKIR: Jika user diset "Scan Only", tendang ke dashboard
+        // =========================================================================
+        if ($user->only_security_scan) {
+            return redirect()->route('dashboard')->with('error', 'AKSES DITOLAK: Akun Anda diatur hanya boleh absen melalui Scan Security (QR Code).');
+        }
+
         // 1. AUTO-CLOSE (Membersihkan sesi basi > 32 Jam)
         $hangingSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
@@ -98,6 +105,13 @@ class SelfAttendanceController extends Controller
 
     public function store(Request $request)
     {
+        // =========================================================================
+        // [BARU] CEK BLOKIR (Double Protection saat Submit)
+        // =========================================================================
+        if (Auth::user()->only_security_scan) {
+            return redirect()->route('dashboard')->with('error', 'AKSES DITOLAK: Anda hanya boleh absen melalui Scan Security.');
+        }
+
         $request->validate([
             'photo' => 'required|image|max:51200',
             'latitude' => 'required',

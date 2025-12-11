@@ -59,10 +59,6 @@
                                     <th> Profil Pengguna </th>
                                     <th> Kontak </th>
                                     <th> Role </th>
-                                    {{-- HANYA ADMIN & ADMIN_GAJI YANG BISA LIHAT KOLOM INI --}}
-                                    {{-- @if(in_array(auth()->user()->role, ['admin', 'admin_gaji'])) --}}
-                                        {{-- <th> Gaji </th> --}}
-                                    {{-- @endif --}}
                                     <th> Penempatan & Divisi </th>
                                     <th> Tanggal Join </th>
                                     <th> QR Code </th>
@@ -118,24 +114,17 @@
 
                                         {{-- ROLE --}}
                                         <td>
-                                            <span
-                                                class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
-                                        </td>
-
-                                        {{-- KOLOM GAJI (RESTRICTED - COMMENTED OUT) --}}
-                                        {{-- 
-                                        @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
-                                            <td>
-                                                @if($user->gaji)
-                                                    <span class="text-success fw-bold">
-                                                        Rp {{ number_format($user->gaji, 0, ',', '.') }}
+                                            <span class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
+                                            
+                                            {{-- [TAMBAHAN BARU] Indikator Scan Only --}}
+                                            @if($user->only_security_scan)
+                                                <div class="mt-1">
+                                                    <span class="badge bg-danger text-white" style="font-size: 10px;">
+                                                        <i class="mdi mdi-qrcode-scan"></i> Scan Only
                                                     </span>
-                                                @else
-                                                    <span class="text-muted small text-danger">Belum input gaji</span>
-                                                @endif
-                                            </td>
-                                        @endif
-                                        --}}
+                                                </div>
+                                            @endif
+                                        </td>
 
                                         {{-- PENEMPATAN & DIVISI --}}
                                         <td>

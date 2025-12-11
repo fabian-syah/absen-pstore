@@ -110,9 +110,13 @@ class UserController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
+            'only_security_scan' => 'nullable', // Validasi input checkbox
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
+
+        // [TAMBAHAN BARU] Cek status Scan Only
+        $data['only_security_scan'] = $request->has('only_security_scan') ? 1 : 0;
 
         $data['check_in_start']  = $request->check_in_start ?: null;
         $data['check_out_start'] = $request->check_out_start ?: null;
@@ -205,6 +209,7 @@ class UserController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
+            'only_security_scan' => 'nullable', // Validasi input checkbox
         ]);
 
         // ==========================================================
@@ -220,6 +225,9 @@ class UserController extends Controller
         }
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
+
+        // [TAMBAHAN BARU] Update status Scan Only
+        $data['only_security_scan'] = $request->has('only_security_scan') ? 1 : 0;
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
