@@ -24,6 +24,52 @@
         }
         .form-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; }
         .card-header-custom { background-color: #f8f9fa; border-bottom: 1px solid #e9ecef; padding: 15px 20px; }
+
+        /* === NEW: SECURITY TOGGLE STYLES === */
+        .security-access-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+        }
+        
+        .security-access-card.unlocked {
+            border-left: 5px solid #10b981; /* Green */
+            background: linear-gradient(to right, #f0fdf4, #fff);
+        }
+
+        .security-access-card.locked {
+            border-left: 5px solid #dc3545; /* Red */
+            background: linear-gradient(to right, #fef2f2, #fff);
+        }
+
+        .security-icon-wrapper {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .unlocked .security-icon-wrapper { background-color: #d1fae5; color: #10b981; }
+        .locked .security-icon-wrapper { background-color: #fee2e2; color: #dc3545; }
+
+        .form-switch .form-check-input {
+            width: 3.5em;
+            height: 1.75em;
+            cursor: pointer;
+        }
+        .security-status-text {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
     </style>
 
     @if ($errors->any())
@@ -107,17 +153,32 @@
                                 @endif
                             </div>
 
-                            {{-- [TOGGLE SCAN ONLY] --}}
-                            <div class="p-3 bg-light rounded border mt-3">
-                                <div class="form-check form-switch mb-0">
-                                    <input class="form-check-input" type="checkbox" id="only_security_scan" name="only_security_scan" value="1" 
-                                        {{ old('only_security_scan', $user->only_security_scan) ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-bold text-danger d-flex align-items-center" for="only_security_scan">
-                                        <i class="mdi mdi-lock-alert me-2 fs-5"></i> Wajib Absen via Security (Scan Only)
-                                    </label>
+                            {{-- [MODIFIKASI] TAMPILAN SECURITY ACCESS CARD --}}
+                            <div class="mt-4">
+                                <label class="form-label mb-2">Kontrol Akses Absensi</label>
+                                
+                                <div class="security-access-card p-3 d-flex align-items-center justify-content-between {{ old('only_security_scan', $user->only_security_scan) ? 'locked' : 'unlocked' }}" id="securityCard">
+                                    <div class="d-flex align-items-center">
+                                        <div class="security-icon-wrapper me-3">
+                                            <i class="mdi {{ old('only_security_scan', $user->only_security_scan) ? 'mdi-lock-alert' : 'mdi-cellphone-check' }}" id="securityIcon"></i>
+                                        </div>
+                                        <div>
+                                            <div class="security-status-text {{ old('only_security_scan', $user->only_security_scan) ? 'text-danger' : 'text-success' }}" id="securityStatusTitle">
+                                                {{ old('only_security_scan', $user->only_security_scan) ? 'DIBATASI: HANYA SCAN SECURITY' : 'ABSENSI MANDIRI AKTIF' }}
+                                            </div>
+                                            <small class="text-muted lh-1 d-block mt-1" id="securityStatusDesc">
+                                                {{ old('only_security_scan', $user->only_security_scan) ? 'User DILARANG absen mandiri/selfie. Wajib Scan QR ke Security.' : 'User bisa melakukan absen mandiri via HP (Selfie/Lokasi).' }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" id="only_security_scan" name="only_security_scan" value="1" 
+                                            {{ old('only_security_scan', $user->only_security_scan) ? 'checked' : '' }} onchange="toggleSecurityCard(this)">
+                                    </div>
                                 </div>
-                                <small class="text-muted ms-4 d-block mt-1">Jika aktif, user ini <b>TIDAK BISA</b> absen mandiri/selfie.</small>
                             </div>
+                            {{-- [END MODIFIKASI] --}}
 
                             <div class="mt-4">
                                 <h6 class="text-muted text-uppercase small fw-bold mb-2">Ubah Password (Opsional)</h6>
@@ -298,6 +359,42 @@
                 }
             };
             toggleInputs();
+
+            // === LOGIKA JAVASCRIPT UNTUK CARD SECURITY TOGGLE ===
+            window.toggleSecurityCard = function(checkbox) {
+                const card = document.getElementById('securityCard');
+                const icon = document.getElementById('securityIcon');
+                const title = document.getElementById('securityStatusTitle');
+                const desc = document.getElementById('securityStatusDesc');
+
+                if (checkbox.checked) {
+                    // MODE TERKUNCI (MERAH)
+                    card.classList.remove('unlocked');
+                    card.classList.add('locked');
+                    
+                    icon.classList.remove('mdi-cellphone-check');
+                    icon.classList.add('mdi-lock-alert');
+                    
+                    title.classList.remove('text-success');
+                    title.classList.add('text-danger');
+                    title.textContent = 'DIBATASI: HANYA SCAN SECURITY';
+                    
+                    desc.textContent = 'User DILARANG absen mandiri/selfie. Wajib Scan QR ke Security.';
+                } else {
+                    // MODE BEBAS (HIJAU)
+                    card.classList.remove('locked');
+                    card.classList.add('unlocked');
+                    
+                    icon.classList.remove('mdi-lock-alert');
+                    icon.classList.add('mdi-cellphone-check');
+                    
+                    title.classList.remove('text-danger');
+                    title.classList.add('text-success');
+                    title.textContent = 'ABSENSI MANDIRI AKTIF';
+                    
+                    desc.textContent = 'User bisa melakukan absen mandiri via HP (Selfie/Lokasi).';
+                }
+            };
         });
     </script>
 @endpush
