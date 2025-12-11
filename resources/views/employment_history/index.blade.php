@@ -5,7 +5,7 @@
 @section('content')
 <div class="row">
     
-    {{-- FILTER USER (HANYA MUNCUL UNTUK ADMIN, AUDIT, LEADER) --}}
+    {{-- FILTER USER --}}
     @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
     <div class="col-12 mb-4">
         <div class="card">
@@ -13,22 +13,26 @@
                 <div>
                     <h4 class="card-title mb-1">Daftar Riwayat Karir</h4>
                     <p class="text-muted mb-0 small">
-                        Pilih pegawai untuk mengelola timeline.
+                        @if($canEdit)
+                            <span class="text-success fw-bold"><i class="mdi mdi-pencil"></i> MODE EDIT AKTIF</span> - 
+                        @endif
+                        Pilih pegawai untuk melihat timeline.
                     </p>
                 </div>
                 
                 <form action="{{ route('employment-history.index') }}" method="GET" class="d-flex align-items-center w-50 justify-content-end">
-                    <select name="user_id" class="form-control w-75" onchange="this.form.submit()" style="border-radius: 8px;">
-                        {{-- Opsi Saya Sendiri --}}
-                        <option value="{{ auth()->user()->id }}" {{ isset($targetUser) && $targetUser->id == auth()->id() ? 'selected' : '' }}>
-                            -- Saya Sendiri ({{ auth()->user()->branch->name ?? 'Pusat' }}) --
-                        </option>
+                    @if(request()->get('mode') == 'edit')
+                        <input type="hidden" name="mode" value="edit">
+                    @endif
 
-                        {{-- Loop User Lain --}}
+                    <select name="user_id" class="form-control w-75" onchange="this.form.submit()" style="border-radius: 8px;">
+                        <option value="{{ auth()->user()->id }}" {{ isset($targetUser) && $targetUser->id == auth()->id() ? 'selected' : '' }}>
+                            -- Saya Sendiri ({{ auth()->user()->name }}) --
+                        </option>
                         @foreach($selectableUsers as $u)
                             @if($u->id != auth()->id())
                                 <option value="{{ $u->id }}" {{ isset($targetUser) && $targetUser->id == $u->id ? 'selected' : '' }}>
-                                    {{ $u->name }} ({{ $u->branch->name ?? 'Non-Cabang' }})
+                                    {{ $u->name }} ({{ ucfirst($u->role) }})
                                 </option>
                             @endif
                         @endforeach
@@ -46,7 +50,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                     <div>
                         <h4 class="card-title mb-1">Timeline: {{ $targetUser->name }}</h4>
-                        <span class="badge badge-outline-primary">{{ $targetUser->branch->name ?? 'Non-Cabang' }}</span>
+                        <span class="badge badge-outline-primary">{{ strtoupper($targetUser->role) }}</span>
                     </div>
                     
                     {{-- TOMBOL TAMBAH DATA --}}
@@ -63,6 +67,9 @@
                             <i class="mdi mdi-timeline-text-outline text-muted" style="font-size: 4rem;"></i>
                         </div>
                         <h5 class="text-muted">Belum ada riwayat tercatat.</h5>
+                        @if($canCreate)
+                            <p class="text-muted small">Klik tombol tambah untuk membuat catatan baru.</p>
+                        @endif
                     </div>
                 @else
                     <ul class="bullet-line-list">
@@ -81,19 +88,22 @@
                                     </div>
                                     
                                     {{-- AKSI EDIT & HAPUS --}}
-                                    @if($canEdit)
-                                        <div class="d-flex gap-2">
+                                    <div class="d-flex gap-2">
+                                        @if($canEdit)
                                             <a href="{{ route('employment-history.edit', $history->id) }}" class="btn btn-inverse-warning btn-sm p-2" title="Edit">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
+                                        @endif
+                                        
+                                        @if($canDelete)
                                             <form action="{{ route('employment-history.destroy', $history->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat ini?');">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-inverse-danger btn-sm p-2" title="Hapus">
                                                     <i class="mdi mdi-trash-can"></i>
                                                 </button>
                                             </form>
-                                        </div>
-                                    @endif
+                                        @endif
+                                    </div>
                                 </div>
                                 
                                 {{-- DETAIL CONTENT --}}
@@ -117,21 +127,15 @@
 
                                         {{-- INFORMASI --}}
                                         <div class="{{ $history->attachment ? 'col-md-9' : 'col-12' }}">
-                                            
-                                            {{-- AUDIT --}}
                                             @if($targetUser->role == 'audit' && $history->type == 'transfer_branch')
                                                 <div class="mb-2">
                                                     <span class="text-muted small">{!! $history->audit_change_text !!}</span>
                                                 </div>
-
-                                            {{-- PINDAH CABANG --}}
                                             @elseif($history->type == 'transfer_branch')
                                                 <p class="mb-1">
                                                     <i class="mdi mdi-arrow-right-bold-circle text-success me-1"></i>
                                                     Pindah ke Cabang: <strong>{{ $history->branch->name ?? '-' }}</strong>
                                                 </p>
-
-                                            {{-- LAINNYA --}}
                                             @elseif($history->type != 'resign')
                                                 @if($history->branch)
                                                     <p class="mb-1"><i class="mdi mdi-map-marker me-1"></i> Cabang: <strong>{{ $history->branch->name }}</strong></p>
@@ -141,14 +145,12 @@
                                                 @endif
                                             @endif
 
-                                            {{-- KETERANGAN --}}
                                             @if($history->description)
                                                 <div class="mt-2 pt-2 border-top">
                                                     <p class="mb-0 small text-muted font-italic">"{{ $history->description }}"</p>
                                                 </div>
                                             @endif
 
-                                            {{-- FOOTER CREATOR/EDITOR --}}
                                             <div class="mt-3 text-end">
                                                 @if($history->creator)
                                                     <small class="text-muted d-block" style="font-size: 0.75rem;">
@@ -161,7 +163,6 @@
                                                     </small>
                                                 @endif
                                             </div>
-
                                         </div>
                                     </div>
                                 </div>
