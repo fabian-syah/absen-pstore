@@ -2,13 +2,48 @@
 
 @section('content')
 <div class="row">
+    {{-- ==================================================== --}}
+    {{-- BAGIAN FILTER USER (HANYA ADMIN & AUDIT)             --}}
+    {{-- ==================================================== --}}
+    @if(in_array(auth()->user()->role, ['admin', 'audit']))
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body py-3">
+                <form action="{{ route('employment-history.index') }}" method="GET" class="d-flex align-items-center">
+                    <label class="mr-3 mb-0 font-weight-bold">Lihat Riwayat Pegawai:</label>
+                    <select name="user_id" class="form-control w-50 mr-2 select2" onchange="this.form.submit()">
+                        <option value="{{ auth()->user()->id }}">-- Saya Sendiri --</option>
+                        @foreach($selectableUsers as $u)
+                            <option value="{{ $u->id }}" {{ isset($targetUser) && $targetUser->id == $u->id ? 'selected' : '' }}>
+                                {{ $u->name }} - {{ $u->role }} ({{ $u->branch->name ?? 'No Branch' }})
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ==================================================== --}}
+    {{-- FORM INPUT (CREATE)                                  --}}
+    {{-- ==================================================== --}}
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Tambah Riwayat</h4>
+                <h4 class="card-title">
+                    @if(auth()->user()->id == $targetUser->id)
+                        Tambah Riwayat Saya
+                    @else
+                        Tambah Riwayat: <span class="text-primary">{{ $targetUser->name }}</span>
+                    @endif
+                </h4>
+                
                 <form action="{{ route('employment-history.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    
+                    {{-- Kirim user_id target --}}
+                    <input type="hidden" name="user_id" value="{{ $targetUser->id }}">
+
                     <div class="form-group">
                         <label>Kategori Kejadian</label>
                         <select name="type" id="typeSelect" class="form-control" required onchange="handleTypeChange()">
@@ -24,10 +59,9 @@
                     <div class="form-group">
                         <label>Tanggal Kejadian</label>
                         <input type="date" name="event_date" class="form-control" required>
-                        <small class="text-muted">Pastikan tanggal sesuai kejadian asli agar urutan benar.</small>
                     </div>
 
-                    {{-- Container untuk Cabang --}}
+                    {{-- Container Cabang --}}
                     <div class="form-group" id="branchContainer">
                         <label>Cabang Tujuan</label>
                         <select name="branch_id" id="branchInput" class="form-control">
@@ -38,7 +72,7 @@
                         </select>
                     </div>
 
-                    {{-- Container untuk Divisi --}}
+                    {{-- Container Divisi --}}
                     <div class="form-group" id="divisionContainer">
                         <label>Divisi / Jabatan Tujuan</label>
                         <select name="division_id" class="form-control">
@@ -65,13 +99,16 @@
         </div>
     </div>
 
+    {{-- ==================================================== --}}
+    {{-- TIMELINE LIST (READ/SHOW)                            --}}
+    {{-- ==================================================== --}}
     <div class="col-md-8">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Timeline Riwayat Divisi / Cabang</h4>
+                <h4 class="card-title">Timeline Karir: {{ $targetUser->name }}</h4>
                 
                 @if($histories->isEmpty())
-                    <p class="text-center text-muted mt-4">Belum ada riwayat karir.</p>
+                    <p class="text-center text-muted mt-4">Belum ada riwayat karir untuk user ini.</p>
                 @else
                     <ul class="bullet-line-list">
                         @foreach($histories as $history)
@@ -109,13 +146,22 @@
                                     @endif
                                 </div>
 
-                                <div class="mt-2 text-right">
-                                    <form action="{{ route('employment-history.destroy', $history->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-inverse-danger btn-sm p-1"><i class="mdi mdi-trash-can"></i></button>
-                                    </form>
-                                </div>
+                                {{-- ==================================================== --}}
+                                {{-- TOMBOL DELETE (HANYA ADMIN & AUDIT)                  --}}
+                                {{-- ==================================================== --}}
+                                @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                                    <div class="mt-2 text-right">
+                                        <form action="{{ route('employment-history.destroy', $history->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-inverse-danger btn-sm p-1" title="Hapus Data">
+                                                <i class="mdi mdi-trash-can"></i> Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
+                                {{-- End tombol delete --}}
+
                             </li>
                         @endforeach
                     </ul>
@@ -132,24 +178,20 @@
         const divisionContainer = document.getElementById('divisionContainer');
         const branchInput = document.getElementById('branchInput');
         
-        // Reset state
         branchContainer.style.display = 'block';
         divisionContainer.style.display = 'block';
         branchInput.disabled = false;
 
-        // Logika sesuai permintaan
         if (type === 'transfer_division') {
-            // Jika Pindah Divisi: Cabang Disabled (Tetap di cabang sekarang)
-            // Secara visual kita disable, di backend kita ambil auth()->user()->branch_id
-            branchInput.value = "{{ auth()->user()->branch_id }}"; 
+            // Kita ambil branch ID user target (dari backend atau di-set readonly)
+            // Di sini kita disable saja agar user tidak mengubah cabang
+            branchInput.value = "{{ $targetUser->branch_id }}"; 
             branchInput.disabled = true;
         } 
         else if (type === 'resign') {
-            // Jika Resign: Sembunyikan input cabang & divisi
             branchContainer.style.display = 'none';
             divisionContainer.style.display = 'none';
         }
-        // Untuk 'join', 'rejoin', 'transfer_branch', semua input aktif
     }
 </script>
 @endsection
