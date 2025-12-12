@@ -38,7 +38,7 @@
                         <select name="type" id="typeSelect" class="form-select select2-single" required onchange="handleTypeChange()">
                             <option value="" disabled selected>-- Pilih Jenis --</option>
                             <option value="join">Awal Masuk</option>
-                            <option value="transfer_branch">Pindah Cabang (Divisi Dihilangkan)</option>
+                            <option value="transfer_branch">Pindah Cabang</option>
                             <option value="transfer_division">Pindah Divisi</option>
                             <option value="resign">Resign / Keluar</option>
                             <option value="rejoin">Masuk Kembali</option>
