@@ -10,9 +10,9 @@
 
 @push('styles')
     <style>
-        /* Style untuk Pill Audit (Mirip Team Blade) */
+        /* --- STYLE EXISTING (AUDIT) --- */
         .audit-pill {
-            background: rgba(13, 110, 253, 0.1); /* Warna Soft Primary */
+            background: rgba(13, 110, 253, 0.1);
             border: 1px solid rgba(13, 110, 253, 0.2);
             border-radius: 50px;
             padding: 4px 12px;
@@ -47,6 +47,54 @@
             font-weight: 600;
             color: #0d6efd;
         }
+
+        /* --- STYLE BARU: BADGE ROLE MEWAH --- */
+        .badge-role-custom {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255,255,255,0.4);
+            transition: transform 0.2s;
+        }
+        .badge-role-custom:hover {
+            transform: translateY(-1px);
+        }
+
+        /* 1. Leader: Gold Luxury Style */
+        .role-leader {
+            background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); /* Emas Mewah */
+            color: #7a5800; /* Warna teks coklat emas tua */
+            border: 1px solid #ffeeb0;
+        }
+        
+        /* 2. Karyawan (User Biasa): Clean Professional Style */
+        .role-employee {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); /* Soft Blue-Purple */
+            color: #4a5073;
+            border: 1px solid #dae1f5;
+        }
+
+        /* 3. Default / Lainnya */
+        .role-default {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Highlight Row Khusus Leader */
+        .tr-leader-highlight {
+            background-color: #fffef2 !important; /* Background kuning sangat muda */
+        }
+        .tr-leader-highlight:hover {
+            background-color: #fff9db !important;
+        }
     </style>
 @endpush
 
@@ -72,7 +120,7 @@
                             <span class="badge bg-primary fs-6">{{ $totalEmployees }}</span>
                         </div>
 
-                        {{-- [BARU] SECTION AUDIT PENANGGUNG JAWAB --}}
+                        {{-- SECTION AUDIT PENANGGUNG JAWAB --}}
                         <div class="py-3">
                             <span class="fw-bold text-muted d-block mb-2">Audit Penanggung Jawab</span>
                             <div class="d-flex flex-wrap">
@@ -90,8 +138,6 @@
                                 @endforelse
                             </div>
                         </div>
-                        {{-- [AKHIR] SECTION AUDIT --}}
-
                     </div>
 
                     <div class="mt-4 d-grid gap-2">
@@ -119,15 +165,16 @@
                                 <tr>
                                     <th>Foto</th>
                                     <th>Nama / ID</th>
+                                    <th>Jabatan</th> {{-- Kolom Baru --}}
                                     <th>Divisi</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {{-- PERUBAHAN DISINI: Menggunakan $employees menggantikan $users --}}
                                 @forelse($employees as $user)
-                                    <tr>
+                                    {{-- Highlight Row jika Leader --}}
+                                    <tr class="{{ $user->role == 'leader' ? 'tr-leader-highlight' : '' }}">
                                         <td>
                                             <div class="position-relative d-inline-block">
                                                 @if ($user->profile_photo_path)
@@ -136,7 +183,7 @@
                                                         class="img-sm rounded-circle"
                                                         style="width: 40px; height: 40px; object-fit: cover; border: {{ $user->is_verified ? '2px solid #0d6efd' : '2px solid #e9ecef' }}; padding: 1px;" />
                                                 @else
-                                                    {{-- Fallback ke Initial jika tidak ada foto --}}
+                                                    {{-- Fallback ke Initial --}}
                                                     <div class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
                                                          style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-size: 14px; border: {{ $user->is_verified ? '2px solid #0d6efd' : '2px solid #e9ecef' }};">
                                                         {{ strtoupper(substr($user->name, 0, 2)) }}
@@ -161,6 +208,32 @@
                                             </div>
                                             <small class="text-muted d-block mt-1">{{ $user->login_id }}</small>
                                         </td>
+                                        
+                                        {{-- KOLOM JABATAN / ROLE CUSTOM --}}
+                                        <td>
+                                            @php
+                                                // Logika Tampilan Role
+                                                if($user->role == 'leader') {
+                                                    $displayRole = 'Leader';
+                                                    $badgeClass = 'role-leader';
+                                                    $icon = 'mdi-crown'; // Ikon Mahkota
+                                                } elseif($user->role == 'user_biasa') {
+                                                    $displayRole = 'Karyawan'; // Masking nama
+                                                    $badgeClass = 'role-employee';
+                                                    $icon = 'mdi-account-tie';
+                                                } else {
+                                                    $displayRole = $user->role;
+                                                    $badgeClass = 'role-default';
+                                                    $icon = 'mdi-account-circle';
+                                                }
+                                            @endphp
+
+                                            <span class="badge-role-custom {{ $badgeClass }}">
+                                                <i class="mdi {{ $icon }} fs-6"></i> 
+                                                {{ $displayRole }}
+                                            </span>
+                                        </td>
+
                                         <td>
                                             @if ($user->division)
                                                 <span class="badge badge-outline-primary rounded-pill">{{ $user->division->name }}</span>
@@ -184,7 +257,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center py-5 text-muted">
+                                        <td colspan="6" class="text-center py-5 text-muted">
                                             <div class="d-flex flex-column align-items-center">
                                                 <div class="bg-light rounded-circle p-3 mb-2">
                                                     <i class="mdi mdi-account-off fs-2 text-secondary"></i>
@@ -200,7 +273,6 @@
 
                     {{-- Pagination Links --}}
                     <div class="mt-4 d-flex justify-content-end">
-                        {{-- PERUBAHAN DISINI: Menggunakan $employees menggantikan $users --}}
                         {{ $employees->links('pagination::bootstrap-5') }}
                     </div>
                 </div>
