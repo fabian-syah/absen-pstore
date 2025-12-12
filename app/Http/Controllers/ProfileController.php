@@ -46,11 +46,13 @@ class ProfileController extends Controller
             'birth_date' => 'nullable|date',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
+            // Validasi Sosmed
             'whatsapp' => 'nullable|string|max:20',
             'instagram' => 'nullable|string|max:100',
             'tiktok' => 'nullable|string|max:100',
             'facebook' => 'nullable|string|max:100',
-            // HAPUS validasi boolean jika ada, atau biarkan kosong
+            // Validasi Setting AI (Boleh 0 atau 1)
+            'use_face_recognition' => 'nullable|in:0,1',
         ]);
 
         $data = $request->only([
@@ -68,16 +70,11 @@ class ProfileController extends Controller
         }
 
         // =========================================================
-        // [FIXING] UPDATE PENGATURAN AI WAJAH
+        // [FIXED] UPDATE PENGATURAN AI WAJAH
         // =========================================================
-        // Checkbox: Jika dicentang value="1". Jika tidak, field tidak dikirim.
-        // Kita paksa konversi ke boolean:
-        // Jika ada di request -> true. Jika tidak ada -> false.
-
-        $data['use_face_recognition'] = $request->input('use_face_recognition') == '1' ? true : false;
-
-        // DEBUGGING (Opsional: Cek apakah data benar-benar false saat dimatikan)
-        // \Log::info('Face Recog Status:', ['val' => $data['use_face_recognition']]);
+        // Kita ambil input langsung. Karena ada hidden input di view,
+        // nilainya pasti terkirim: '1' jika dicentang, '0' jika tidak.
+        $data['use_face_recognition'] = $request->input('use_face_recognition');
 
         $user->update($data);
 
