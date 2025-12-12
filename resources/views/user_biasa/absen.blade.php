@@ -232,7 +232,7 @@
                         startBtn.disabled = true;
                         try {
                             // Pastikan path ini benar sesuai folder public Anda
-                            await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+                            await faceapi.nets.tinyFaceDetector.loadFromUri('public/models');
                             modelsLoaded = true;
                             modelLoadingText.classList.add('d-none');
                             startCamera();
