@@ -5,7 +5,7 @@
 @section('content')
 <div class="row">
     
-    {{-- FILTER USER --}}
+    {{-- FILTER USER (Hanya muncul jika Management) --}}
     @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
     <div class="col-12 mb-4">
         <div class="card">
@@ -14,13 +14,17 @@
                     <h4 class="card-title mb-1">Daftar Riwayat Karir</h4>
                     <p class="text-muted mb-0 small">
                         @if($canEdit)
+                            {{-- Indikator Mode Edit --}}
                             <span class="text-success fw-bold"><i class="mdi mdi-pencil"></i> MODE EDIT AKTIF</span> - 
                         @endif
                         Pilih pegawai untuk melihat timeline.
                     </p>
                 </div>
                 
+                {{-- Form Ganti User --}}
                 <form action="{{ route('employment-history.index') }}" method="GET" class="d-flex align-items-center w-50 justify-content-end">
+                    {{-- Kita pertahankan input hidden ini, jadi kalau user sedang di mode edit dan ganti orang, mode editnya tetap nyala. 
+                         TAPI kalau dari Controller (store/update), input ini gak akan kepanggil. --}}
                     @if(request()->get('mode') == 'edit')
                         <input type="hidden" name="mode" value="edit">
                     @endif
@@ -85,11 +89,14 @@
                                     
                                     {{-- AKSI --}}
                                     <div class="d-flex gap-2">
+                                        {{-- TOMBOL EDIT HANYA MUNCUL JIKA $canEdit TRUE (Mode Edit Aktif) --}}
                                         @if($canEdit)
                                             <a href="{{ route('employment-history.edit', $history->id) }}" class="btn btn-inverse-warning btn-sm p-2" title="Edit">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
                                         @endif
+                                        
+                                        {{-- TOMBOL HAPUS TETAP MUNCUL JIKA ADMIN/MANAGEMENT ($canDelete) --}}
                                         @if($canDelete)
                                             <form action="{{ route('employment-history.destroy', $history->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat ini?');">
                                                 @csrf @method('DELETE')
@@ -160,7 +167,6 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    {{-- KOLOM TANGGAL DIHAPUS --}}
                                     <th>Judul / Perusahaan</th>
                                     <th>Keterangan</th>
                                     <th>Lampiran</th>
@@ -170,7 +176,6 @@
                             <tbody>
                                 @foreach($externalHistories as $ext)
                                     <tr>
-                                        {{-- DATA TANGGAL DIHAPUS --}}
                                         <td class="fw-bold text-primary">{{ $ext->title }}</td>
                                         <td>{{ $ext->description ?? '-' }}</td>
                                         <td>
@@ -184,11 +189,13 @@
                                         </td>
                                         <td class="text-end">
                                             <div class="d-flex justify-content-end gap-1">
+                                                {{-- EDIT HANYA JIKA MODE EDIT NYALA --}}
                                                 @if($canEdit)
                                                     <a href="{{ route('employment-history.edit', $ext->id) }}" class="btn btn-sm btn-inverse-warning p-1">
                                                         <i class="mdi mdi-pencil"></i>
                                                     </a>
                                                 @endif
+                                                {{-- HAPUS TETAP NYALA --}}
                                                 @if($canDelete)
                                                     <form action="{{ route('employment-history.destroy', $ext->id) }}" method="POST" onsubmit="return confirm('Hapus?');">
                                                         @csrf @method('DELETE')

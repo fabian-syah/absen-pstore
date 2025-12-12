@@ -69,13 +69,20 @@ class EmploymentHistoryController extends Controller
         $isOwner = ($targetUser->id == $currentUser->id);
         $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
         $isRegular = in_array($currentUser->role, ['user_biasa', 'security']);
+        
+        // Cek apakah URL memiliki parameter ?mode=edit
         $isModeEdit = ($request->get('mode') === 'edit');
 
+        // Logic: 
+        // Create: User Biasa (Punya sendiri) ATAU Management
+        // Edit: User Biasa (Punya sendiri) ATAU (Management TAPI HARUS mode=edit)
+        // Delete: User Biasa (Punya sendiri) ATAU Management (Selalu bisa hapus tanpa mode edit)
+        
         $canCreate = ($isRegular && $isOwner) || $isManagement;
         $canEdit = ($isRegular && $isOwner) || ($isManagement && $isModeEdit);
         $canDelete = ($isRegular && $isOwner) || $isManagement;
 
-        // --- 4. AMBIL DATA HISTORI (DIPISAH INTERNAL & EXTERNAL) ---
+        // --- 4. AMBIL DATA HISTORI ---
         $internalHistories = collect([]);
         $externalHistories = collect([]);
 
@@ -133,7 +140,6 @@ class EmploymentHistoryController extends Controller
     {
         $currentUser = auth()->user();
 
-        // Validasi: event_date WAJIB kecuali tipenya external
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'type' => 'required',
@@ -150,7 +156,6 @@ class EmploymentHistoryController extends Controller
         $data = $request->only(['user_id', 'type', 'title', 'event_date', 'description', 'division_id', 'branch_id']);
         $data['created_by'] = $currentUser->id;
 
-        // Jika external dan tanggal kosong (karena di-hidden), isi default hari ini agar masuk DB
         if ($request->type == 'external' && empty($data['event_date'])) {
             $data['event_date'] = now(); 
         }
@@ -172,10 +177,12 @@ class EmploymentHistoryController extends Controller
 
         EmploymentHistory::create($data);
 
+        // --- PERUBAHAN DISINI ---
+        // Kita HAPUS logika yang memaksa mode='edit'.
+        // Jadi setelah simpan, dia balik ke index BIASA (Hanya tombol Hapus yang aktif buat admin).
+        
         $redirectParams = ['user_id' => $data['user_id']];
-        if (in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
-            $redirectParams['mode'] = 'edit';
-        }
+        // $redirectParams['mode'] = 'edit';  <-- INI DIHAPUS AGAR TOMBOL EDIT HILANG
 
         return redirect()->route('employment-history.index', $redirectParams)
             ->with('success', 'Riwayat berhasil ditambahkan.');
@@ -233,7 +240,6 @@ class EmploymentHistoryController extends Controller
         $data = $request->only(['type', 'title', 'event_date', 'description', 'division_id', 'branch_id']);
         $data['updated_by'] = $currentUser->id;
 
-        // Jika external dan tanggal kosong, biarkan yang lama atau isi now()
         if ($request->type == 'external' && empty($data['event_date'])) {
             $data['event_date'] = $history->event_date ?? now();
         }
@@ -253,10 +259,10 @@ class EmploymentHistoryController extends Controller
 
         $history->update($data);
 
+        // --- PERUBAHAN DISINI JUGA ---
+        // Setelah update, kembalikan ke view biasa (tanpa tombol edit)
         $redirectParams = ['user_id' => $history->user_id];
-        if (in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
-            $redirectParams['mode'] = 'edit';
-        }
+        // $redirectParams['mode'] = 'edit'; <-- INI DIHAPUS
 
         return redirect()->route('employment-history.index', $redirectParams)
             ->with('success', 'Data riwayat diperbarui.');
