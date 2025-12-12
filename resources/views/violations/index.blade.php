@@ -98,10 +98,10 @@
                                             </a>
                                             <form action="{{ route('violations.destroy', $v->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data ini?')">
                                                 @csrf
-                                                @method('DELETE')
+                                                {{-- @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-sm icon-btn p-2">
                                                     <i class="mdi mdi-delete"></i>
-                                                </button>
+                                                </button> --}}
                                             </form>
                                         </td>
                                     @endif
