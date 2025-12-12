@@ -18,7 +18,8 @@ class AttendanceHistoryController extends Controller
     {
         $user = Auth::user();
 
-        if ($request->has('employeeId') && (Auth::user()->role == 'audit' || Auth::user()->role == 'admin')) {
+        // [FIX] Tambahkan 'leader' ke dalam array pengecekan role
+        if ($request->has('employeeId') && in_array($user->role, ['audit', 'admin', 'leader'])) {
             $targetUser = User::find($request->employeeId);
             $employee = $targetUser; 
         } else {
@@ -62,10 +63,15 @@ class AttendanceHistoryController extends Controller
     {
         $user = Auth::user();
 
-        if ($request->has('employeeId') && (Auth::user()->role == 'audit' || Auth::user()->role == 'admin')) {
+        // [FIX] Tambahkan 'leader' disini juga agar leader bisa download PDF timnya
+        if ($request->has('employeeId') && in_array($user->role, ['audit', 'admin', 'leader'])) {
             $targetUser = User::find($request->employeeId);
         } else {
             $targetUser = $user;
+        }
+
+        if (!$targetUser) {
+            return back()->with('error', 'User tidak ditemukan.');
         }
 
         $selectedMonth = $request->get('month', date('m'));
@@ -86,7 +92,6 @@ class AttendanceHistoryController extends Controller
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
         // 1. AMBIL DATA ABSENSI ASLI
-        // [UPDATE PENTING]: Tambahkan 'user' di with() agar bisa diakses di Blade untuk fallback jadwal jika snapshot NULL
         $attendances = Attendance::with(['verifier', 'scanner', 'user']) 
             ->where('user_id', $user->id)
             ->whereYear('check_in_time', $selectedYear)
@@ -148,8 +153,6 @@ class AttendanceHistoryController extends Controller
                         // Set Relasi
                         $fakeAtt->setRelation('leaveRequest', $leave);
                         $fakeAtt->setRelation('verifier', $leave->verifier); 
-                        
-                        // [UPDATE PENTING] Set Relasi User agar Blade tidak error saat cek jadwal
                         $fakeAtt->setRelation('user', $user);
 
                         $historyCollection->push($fakeAtt);
@@ -209,7 +212,6 @@ class AttendanceHistoryController extends Controller
         $workSchedule = WorkSchedule::getScheduleForUser($attendance->user_id);
         $isLate = $attendance->is_late_checkin;
         
-        // Logika hitung telat manual saat audit update
         if ($newCheckIn->format('Y-m-d') >= '2025-12-01') {
             if ($workSchedule && $request->presence_status == 'Masuk') {
                 $scheduleStart = Carbon::parse($originalDate . ' ' . $workSchedule->check_in_end);
