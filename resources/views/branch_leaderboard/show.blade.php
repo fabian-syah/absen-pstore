@@ -46,10 +46,28 @@
                                         @endif
                                     </div>
                                     <div class="user-info mt-3 text-center">
-                                        <h6 class="fw-bold text-dark mb-0">{{ $top3[1]->user->name }}</h6>
+                                        <h6 class="fw-bold text-dark mb-0">{{ explode(' ', $top3[1]->user->name)[0] }}</h6>
                                         <small class="text-muted d-block">{{ $top3[1]->user->division->name ?? '-' }}</small>
-                                        <div class="stat-badge bg-secondary text-white mt-2">
+                                        
+                                        {{-- Stats --}}
+                                        <div class="stat-badge bg-secondary text-white mt-2 mb-1">
                                             <i class="mdi mdi-check-decagram"></i> {{ $top3[1]->total_attendance }} Verified
+                                        </div>
+                                        
+                                        {{-- Extra Info --}}
+                                        <div class="lh-1 mt-1">
+                                            <small class="text-muted d-block" style="font-size: 10px;">
+                                                <i class="mdi mdi-clock-outline"></i> Avg: <b>{{ \Carbon\Carbon::parse($top3[1]->avg_arrival_time)->format('H:i') }}</b>
+                                            </small>
+                                            @if(isset($top3[1]->total_work_seconds))
+                                                @php
+                                                    $h = floor($top3[1]->total_work_seconds / 3600);
+                                                    $m = floor(($top3[1]->total_work_seconds % 3600) / 60);
+                                                @endphp
+                                                <small class="text-muted d-block" style="font-size: 10px;">
+                                                    <i class="mdi mdi-briefcase-clock"></i> Total: <b>{{ $h }}j {{ $m }}m</b>
+                                                </small>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="podium-block silver-block"></div>
@@ -73,8 +91,26 @@
                                     <div class="user-info mt-3 text-center">
                                         <h5 class="fw-bold text-dark mb-0">{{ $top3[0]->user->name }}</h5>
                                         <small class="text-muted d-block fw-semibold">{{ $top3[0]->user->division->name ?? '-' }}</small>
-                                        <div class="stat-badge bg-warning text-dark mt-2 shadow-sm">
+                                        
+                                        {{-- Stats --}}
+                                        <div class="stat-badge bg-warning text-dark mt-2 shadow-sm mb-1">
                                             <i class="mdi mdi-trophy"></i> {{ $top3[0]->total_attendance }} Verified
+                                        </div>
+
+                                        {{-- Extra Info --}}
+                                        <div class="lh-1 mt-1">
+                                            <small class="text-dark opacity-75 d-block" style="font-size: 11px;">
+                                                <i class="mdi mdi-clock-fast"></i> Avg: <b>{{ \Carbon\Carbon::parse($top3[0]->avg_arrival_time)->format('H:i') }}</b>
+                                            </small>
+                                            @if(isset($top3[0]->total_work_seconds))
+                                                @php
+                                                    $h = floor($top3[0]->total_work_seconds / 3600);
+                                                    $m = floor(($top3[0]->total_work_seconds % 3600) / 60);
+                                                @endphp
+                                                <small class="text-dark opacity-75 d-block" style="font-size: 11px;">
+                                                    <i class="mdi mdi-briefcase-clock"></i> Total: <b>{{ $h }}j {{ $m }}m</b>
+                                                </small>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="podium-block gold-block">
@@ -97,10 +133,28 @@
                                         @endif
                                     </div>
                                     <div class="user-info mt-3 text-center">
-                                        <h6 class="fw-bold text-dark mb-0">{{ $top3[2]->user->name }}</h6>
+                                        <h6 class="fw-bold text-dark mb-0">{{ explode(' ', $top3[2]->user->name)[0] }}</h6>
                                         <small class="text-muted d-block">{{ $top3[2]->user->division->name ?? '-' }}</small>
-                                        <div class="stat-badge border-warning text-white mt-2" style="background-color: #A0522D !important;">
+                                        
+                                        {{-- Stats --}}
+                                        <div class="stat-badge border-warning text-white mt-2 mb-1" style="background-color: #A0522D !important;">
                                             <i class="mdi mdi-check-decagram"></i> {{ $top3[2]->total_attendance }} Verified
+                                        </div>
+
+                                        {{-- Extra Info --}}
+                                        <div class="lh-1 mt-1">
+                                            <small class="text-muted d-block" style="font-size: 10px;">
+                                                <i class="mdi mdi-clock-outline"></i> Avg: <b>{{ \Carbon\Carbon::parse($top3[2]->avg_arrival_time)->format('H:i') }}</b>
+                                            </small>
+                                            @if(isset($top3[2]->total_work_seconds))
+                                                @php
+                                                    $h = floor($top3[2]->total_work_seconds / 3600);
+                                                    $m = floor(($top3[2]->total_work_seconds % 3600) / 60);
+                                                @endphp
+                                                <small class="text-muted d-block" style="font-size: 10px;">
+                                                    <i class="mdi mdi-briefcase-clock"></i> Total: <b>{{ $h }}j {{ $m }}m</b>
+                                                </small>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="podium-block bronze-block"></div>
@@ -129,8 +183,9 @@
                             <tr>
                                 <th class="ps-4" width="10%">Rank</th>
                                 <th>Karyawan</th>
-                                <th class="text-center">Total Kehadiran</th>
+                                <th class="text-center">Kehadiran</th>
                                 <th class="text-center">Rata-rata Masuk</th>
+                                <th class="text-center">Total Jam Kerja</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -156,11 +211,22 @@
                                 </td>
                                 <td class="text-center">
                                     <span class="badge bg-success text-white fw-bold px-3 py-2 border-0">
-                                        <i class="mdi mdi-check-decagram me-1"></i>{{ $row->total_attendance }} Verified
+                                        <i class="mdi mdi-check-decagram me-1"></i>{{ $row->total_attendance }}
                                     </span>
                                 </td>
                                 <td class="text-center text-muted font-monospace">
                                     {{ \Carbon\Carbon::parse($row->avg_arrival_time)->format('H:i') }}
+                                </td>
+                                <td class="text-center text-muted">
+                                    @if(isset($row->total_work_seconds))
+                                        @php
+                                            $h = floor($row->total_work_seconds / 3600);
+                                            $m = floor(($row->total_work_seconds % 3600) / 60);
+                                        @endphp
+                                        <small class="fw-bold text-dark">{{ $h }}j {{ $m }}m</small>
+                                    @else
+                                        -
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach

@@ -12,10 +12,8 @@ use Carbon\Carbon;
 
 class BranchLeaderboardController extends Controller
 {
-    // ... method index() biarkan saja (sudah benar) ...
     public function index()
     {
-        // (Isi sama seperti sebelumnya)
         $user = Auth::user();
         $branches = collect();
 
@@ -39,19 +37,31 @@ class BranchLeaderboardController extends Controller
                 ->whereNotIn('role', ['admin'])
                 ->count();
 
-            // Preview Top 3 untuk Index
-            $top3 = Attendance::select('user_id', DB::raw('count(*) as total_attendance'))
+            // Preview Top 3 untuk Index (Logic disamakan)
+            $top3 = Attendance::select(
+                    'user_id', 
+                    DB::raw('count(*) as total_attendance'),
+                    DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
+                    DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds')
+                )
                 ->whereMonth('check_in_time', Carbon::now()->month)
                 ->whereYear('check_in_time', Carbon::now()->year)
+                
+                // FILTER KETAT
                 ->whereNotNull('check_out_time')
-                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])
                 ->where('status', 'verified')
+                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])
+                ->where('presence_status', '!=', 'Alpha')
+                ->whereTime('check_in_time', '!=', '00:00:00')
+                ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0')
+                
                 ->where('branch_id', $branch->id)
                 ->whereHas('user', function($q) {
                     $q->where('is_active', true)->whereNotIn('role', ['admin']);
                 })
                 ->groupBy('user_id')
                 ->orderBy('total_attendance', 'desc')
+                ->orderBy('avg_arrival_time', 'asc')
                 ->take(3)
                 ->with('user')
                 ->get();
@@ -77,19 +87,25 @@ class BranchLeaderboardController extends Controller
              if ($user->branch_id != $id) abort(403, 'Unauthorized action.');
         }
 
-        // --- LEADERBOARD LOGIC (FIXED) ---
-        // Ambil SEMUA data leaderboard yang memenuhi syarat (tanpa limit dulu)
-        // Agar kita bisa memisahkan Top 3 dan sisanya secara akurat.
+        // --- LEADERBOARD LOGIC (FIXED & MATCHED WITH DASHBOARD) ---
         $leaderboard = Attendance::select(
                 'user_id',
                 DB::raw('count(*) as total_attendance'),
-                DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time')
+                DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
+                // Menghitung Total Jam Kerja
+                DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds')
             )
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
+            
+            // FILTER KETAT (Sama seperti Dashboard)
             ->whereNotNull('check_out_time')
-            ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])
             ->where('status', 'verified')
+            ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])
+            ->where('presence_status', '!=', 'Alpha')
+            ->whereTime('check_in_time', '!=', '00:00:00')
+            ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0')
+
             ->where('branch_id', $id)
             ->whereHas('user', function($q) {
                 $q->where('is_active', true)
@@ -99,13 +115,12 @@ class BranchLeaderboardController extends Controller
             ->orderBy('total_attendance', 'desc')     // Urutkan berdasarkan total hadir terbanyak
             ->orderBy('avg_arrival_time', 'asc')      // Jika sama, urutkan yang datang lebih pagi
             ->with(['user', 'user.division'])
-            ->get(); // Ambil Collection, bukan Query Builder
+            ->get(); 
 
         // Pisahkan Top 3
         $top3 = $leaderboard->take(3);
         
-        // Sisanya (mulai dari indeks ke-3, yaitu Rank 4 dst)
-        // Values() digunakan untuk me-reset key array agar foreach di view mulai dari 0 lagi (opsional tapi aman)
+        // Sisanya (Rank 4 dst)
         $others = $leaderboard->slice(3)->values(); 
 
         return view('branch_leaderboard.show', compact('branch', 'top3', 'others'));
