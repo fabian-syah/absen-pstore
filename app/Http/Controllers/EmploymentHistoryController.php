@@ -21,7 +21,6 @@ class EmploymentHistoryController extends Controller
         $selectableUsers = collect([]);
 
         // --- 1. LOGIKA LIST USER (DROPDOWN) ---
-        // Update: Menambahkan with('branch') untuk mengambil nama cabang
         if ($currentUser->role === 'admin') {
             $selectableUsers = User::with('branch')->orderBy('name')->get();
         } elseif ($currentUser->role === 'audit') {
@@ -153,16 +152,8 @@ class EmploymentHistoryController extends Controller
         $targetUser = User::find($request->user_id);
         $data['previous_branch_id'] = $targetUser->branch_id; 
 
-        if ($targetUser->role == 'audit' && $request->has('audit_branch_ids')) {
-            $newBranches = Branch::whereIn('id', $request->audit_branch_ids)->get();
-            $newBranchNames = $newBranches->pluck('name')->toArray();
-
-            $data['audit_branch_snapshot'] = [
-                'from' => [], 
-                'to'   => $newBranchNames
-            ];
-        }
-
+        // NOTE: Logika Audit Multi Branch Dihapus sesuai permintaan, sekarang Audit pakai branch_id single biasa.
+        
         if ($request->hasFile('attachment')) {
             $data['attachment'] = $request->file('attachment')->store('employment_attachments', 'public');
         }
@@ -244,16 +235,7 @@ class EmploymentHistoryController extends Controller
             $data['attachment'] = $request->file('attachment')->store('employment_attachments', 'public');
         }
 
-        if ($history->user->role == 'audit' && $request->has('audit_branch_ids')) {
-             $newBranches = Branch::whereIn('id', $request->audit_branch_ids)->get();
-             $newBranchNames = $newBranches->pluck('name')->toArray();
-             
-             $currentSnapshot = $history->audit_branch_snapshot ?? [];
-             $data['audit_branch_snapshot'] = [
-                 'from' => $currentSnapshot['from'] ?? [], 
-                 'to' => $newBranchNames
-             ];
-        }
+        // NOTE: Logika update snapshot Audit dihapus, sekarang pakai branch_id biasa.
 
         $history->update($data);
 

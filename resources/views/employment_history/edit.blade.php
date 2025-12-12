@@ -42,33 +42,18 @@
                         <input type="date" name="event_date" class="form-control" required value="{{ $history->event_date->format('Y-m-d') }}">
                     </div>
 
-                    @if($targetUser->role == 'audit')
-                        <div class="form-group mb-3 d-none" id="auditBranchContainer">
-                            <label>Update Wilayah Audit</label>
-                            <select name="audit_branch_ids[]" class="form-select select2-multi" multiple="multiple" style="width:100%">
-                                @php 
-                                    $selectedNames = $history->audit_branch_snapshot['to'] ?? [];
-                                @endphp
-                                @foreach($branches as $branch)
-                                    <option value="{{ $branch->id }}" {{ in_array($branch->name, $selectedNames) ? 'selected' : '' }}>
-                                        {{ $branch->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @else
-                        <div class="form-group mb-3 d-none" id="singleBranchContainer">
-                            <label>Cabang</label>
-                            <select name="branch_id" class="form-select select2-single">
-                                <option value="">-- Pilih Cabang --</option>
-                                @foreach($branches as $branch)
-                                    <option value="{{ $branch->id }}" {{ $history->branch_id == $branch->id ? 'selected' : '' }}>
-                                        {{ $branch->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
+                    {{-- Form Cabang (Unified) --}}
+                    <div class="form-group mb-3 d-none" id="singleBranchContainer">
+                        <label>Cabang</label>
+                        <select name="branch_id" class="form-select select2-single">
+                            <option value="">-- Pilih Cabang --</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}" {{ $history->branch_id == $branch->id ? 'selected' : '' }}>
+                                    {{ $branch->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
                     <div class="form-group mb-3" id="divisionContainer">
                         <label>Divisi</label>
@@ -108,36 +93,27 @@
 <script>
     $(document).ready(function() {
         $('.select2-single').select2({ theme: "bootstrap-5", width: '100%' });
-        $('.select2-multi').select2({ theme: "bootstrap-5", width: '100%', closeOnSelect: false, placeholder: "Pilih Cabang..." });
         handleTypeChange();
     });
 
     function handleTypeChange() {
         const type = $('#typeSelect').val();
-        const auditContainer = $('#auditBranchContainer');
         const singleContainer = $('#singleBranchContainer');
         const divContainer = $('#divisionContainer');
-        const isAudit = "{{ $targetUser->role == 'audit' }}"; 
 
-        if(auditContainer.length) auditContainer.addClass('d-none');
+        // Reset display
         if(singleContainer.length) singleContainer.addClass('d-none');
         divContainer.removeClass('d-none');
 
         if (type === 'transfer_branch') {
-            if (isAudit) {
-                if(auditContainer.length) auditContainer.removeClass('d-none');
-            } else {
-                if(singleContainer.length) singleContainer.removeClass('d-none');
-            }
+            // Pindah Cabang
+            if(singleContainer.length) singleContainer.removeClass('d-none');
             divContainer.addClass('d-none'); 
             $('#divisionSelect').val(null).trigger('change');
 
         } else if (type === 'join' || type === 'rejoin') {
-            if (isAudit) {
-                if(auditContainer.length) auditContainer.removeClass('d-none');
-            } else {
-                if(singleContainer.length) singleContainer.removeClass('d-none');
-            }
+            // Masuk
+            if(singleContainer.length) singleContainer.removeClass('d-none');
             divContainer.removeClass('d-none');
 
         } else if (type === 'transfer_division') {

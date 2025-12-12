@@ -130,7 +130,8 @@
 
                                         {{-- INFORMASI --}}
                                         <div class="{{ $history->attachment ? 'col-md-9' : 'col-12' }}">
-                                            @if($targetUser->role == 'audit' && $history->type == 'transfer_branch')
+                                            @if($targetUser->role == 'audit' && $history->type == 'transfer_branch' && !empty($history->audit_branch_snapshot))
+                                                {{-- Handle Legacy Data (Jika ada data lama tipe array) --}}
                                                 <div class="mb-2">
                                                     <span class="text-muted small">{!! $history->audit_change_text !!}</span>
                                                 </div>
