@@ -20,7 +20,7 @@
                         </div>
                     </div>
 
-                    {{-- ALERT STATUS (LOGIKA LAMA TETAP ADA) --}}
+                    {{-- ALERT STATUS --}}
                     @if ($mode == 'pulang' && isset($attendance))
                         <div class="alert alert-light border shadow-sm mb-3 small">
                             <i class="mdi mdi-clock-outline me-1"></i> Masuk: <strong>{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</strong>
@@ -33,21 +33,19 @@
                             <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
                         @endif
 
-                        {{-- INPUT FILE HIDDEN (PENAMPUNG DATA GAMBAR) --}}
                         <input type="file" name="photo" id="photo-input-hidden" class="d-none" accept="image/jpeg">
 
-                        {{-- === AREA KAMERA UTAMA (STYLE INSTAGRAM/NATIVE) === --}}
+                        {{-- === AREA KAMERA UTAMA === --}}
                         <div class="camera-wrapper position-relative overflow-hidden rounded-4 mb-3">
                             
-                            {{-- 1. VIDEO FEED (MURNI TANPA KONTROL) --}}
+                            {{-- 1. VIDEO FEED (Normal View / Tidak Zoom) --}}
                             <video id="video-feed" autoplay muted playsinline></video>
 
-                            {{-- 2. OVERLAY UI (FOCUS BOX & STATUS) --}}
+                            {{-- 2. OVERLAY UI --}}
                             <div class="camera-overlay d-flex flex-column justify-content-between p-3">
-                                {{-- Top Status --}}
                                 <div class="text-center">
-                                    <span id="face-status-badge" class="badge bg-dark bg-opacity-50 rounded-pill backdrop-blur">
-                                        <i class="mdi mdi-loading mdi-spin me-1"></i> Mencari wajah...
+                                    <span id="face-status-badge" class="badge bg-dark bg-opacity-75 rounded-pill backdrop-blur border border-secondary">
+                                        <i class="mdi mdi-loading mdi-spin me-1"></i> Menunggu Kamera...
                                     </span>
                                 </div>
 
@@ -59,13 +57,12 @@
                                     <div class="corner bottom-right"></div>
                                 </div>
 
-                                {{-- Bottom (Hidden by default, shown when camera active) --}}
-                                <div class="text-center text-white small text-shadow" id="camera-instruction">
-                                    Tahan posisi wajah
+                                <div class="text-center text-white small text-shadow fw-bold" id="camera-instruction">
+                                    Siapkan Wajah
                                 </div>
                             </div>
 
-                            {{-- 3. LAYAR HITAM (START SCREEN) --}}
+                            {{-- 3. TOMBOL START (Layar Hitam Awal) --}}
                             <div id="start-screen" class="position-absolute top-0 start-0 w-100 h-100 bg-dark d-flex flex-column justify-content-center align-items-center z-3">
                                 <div class="icon-circle mb-3">
                                     <i class="mdi mdi-camera text-white fs-1"></i>
@@ -80,27 +77,25 @@
 
                             {{-- 4. HASIL FOTO (PREVIEW) --}}
                             <div id="result-screen" class="position-absolute top-0 start-0 w-100 h-100 bg-black d-none z-3">
-                                <img id="preview-image" src="" alt="Result" class="w-100 h-100 object-fit-cover">
+                                <img id="preview-image" src="" alt="Result" class="w-100 h-100 object-fit-contain">
                                 <div class="position-absolute bottom-0 w-100 p-4 d-flex gap-2 bg-gradient-black">
                                     <button type="button" id="retake-btn" class="btn btn-outline-light flex-fill rounded-pill">
                                         Ulangi
                                     </button>
                                     <div class="flex-fill text-center text-white align-self-center fw-bold">
-                                        <i class="mdi mdi-check-circle text-success me-1"></i> Oke
+                                        <i class="mdi mdi-check-circle text-success me-1"></i> Foto Oke
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        {{-- === END AREA KAMERA === --}}
 
-
-                        {{-- TOMBOL SHUTTER (BUTTON KAMERA ASLI) --}}
-                        <div class="d-flex justify-content-center mb-4 position-relative" style="height: 80px;">
-                            {{-- Tombol Capture (Hanya aktif jika wajah ok) --}}
-                            <button type="button" id="capture-btn" class="shutter-btn" disabled></button>
-                            
-                            {{-- Loading Spinner saat proses foto --}}
-                            <div id="capture-loading" class="spinner-border text-primary position-absolute top-50 start-50 translate-middle d-none" role="status"></div>
+                        {{-- TOMBOL SHUTTER (HIJAU MENYALA) --}}
+                        <div class="d-flex flex-column align-items-center mb-4 position-relative">
+                            {{-- Tombol Capture --}}
+                            <button type="button" id="capture-btn" class="shutter-btn" disabled>
+                                <i class="mdi mdi-camera-iris text-white fs-2"></i>
+                            </button>
+                            <div class="mt-2 small text-muted" id="shutter-label">Tunggu deteksi wajah...</div>
                         </div>
 
                         {{-- INFO LOKASI --}}
@@ -149,97 +144,73 @@
         /* === CAMERA UI STYLES === */
         .camera-wrapper {
             width: 100%;
-            height: 0;
-            padding-bottom: 125%; /* Aspect Ratio 4:5 (Portrait) */
+            height: 450px; /* FIXED HEIGHT AGAR TIDAK TERLALU PANJANG */
             background: #000;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #video-feed {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover; /* INI KUNCINYA: Biar full screen ga gepeng */
+            /* KUNCI SUPAYA TIDAK ZOOM: CONTAIN = TAMPILKAN UTUH */
+            object-fit: contain; 
             transform: scaleX(-1); /* Mirror effect */
         }
-
-        /* Hilangkan kontrol video bawaan browser */
-        video::-webkit-media-controls { display: none !important; }
-        video::-webkit-media-controls-play-button { display: none !important; }
-        video::-webkit-media-controls-start-playback-button { display: none !important; }
 
         .camera-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 2;
-            pointer-events: none; /* Biar ga ngehalangin klik */
+            z-index: 2; pointer-events: none;
         }
 
-        .backdrop-blur {
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
+        .backdrop-blur { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 
-        /* Focus Frame Animation */
+        /* Focus Frame */
         .focus-frame {
-            width: 200px;
-            height: 250px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 20px;
+            width: 220px; height: 280px;
+            border: 2px dashed rgba(255,255,255,0.4);
+            border-radius: 24px;
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             transition: all 0.3s ease;
-            box-shadow: 0 0 0 9999px rgba(0,0,0,0.3); /* Gelapin area luar fokus */
         }
         
         .focus-frame.active {
-            border-color: #00ff88; /* Hijau saat detect */
-            box-shadow: 0 0 0 9999px rgba(0,0,0,0.1), 0 0 20px rgba(0,255,136,0.3);
+            border: 3px solid #00ff88; /* Hijau saat detect */
+            box-shadow: 0 0 20px rgba(0,255,136,0.2);
         }
 
-        /* Shutter Button (Tombol Bulet Besar) */
+        /* === TOMBOL SHUTTER HIJAU === */
         .shutter-btn {
-            width: 70px;
-            height: 70px;
+            width: 80px; height: 80px;
             border-radius: 50%;
-            background-color: transparent;
-            border: 4px solid #ccc;
-            position: relative;
+            border: 5px solid #e0e0e0;
+            background-color: #9e9e9e; /* Abu-abu default (disabled) */
+            cursor: not-allowed;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Saat Wajah Terdeteksi (Ready) */
+        .shutter-btn.ready {
+            background-color: #00c853; /* HIJAU TERANG */
+            border-color: #fff;
             cursor: pointer;
-            transition: all 0.2s;
+            box-shadow: 0 0 20px rgba(0, 200, 83, 0.6); /* Efek Glow Hijau */
+            transform: scale(1.1);
         }
 
-        .shutter-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 54px;
-            height: 54px;
-            background-color: #ccc;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
+        .shutter-btn.ready:active { transform: scale(0.95); }
 
-        .shutter-btn:not(:disabled):hover { border-color: #fff; }
-        .shutter-btn:not(:disabled):hover::after { background-color: #fff; }
-        
-        /* State Aktif (Bisa Foto) */
-        .shutter-btn.ready { border-color: #fff; }
-        .shutter-btn.ready::after { background-color: #fff; }
+        .object-fit-contain { object-fit: contain; }
+        .bg-gradient-black { background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
 
-        /* State ditekan */
-        .shutter-btn:active::after { width: 45px; height: 45px; }
-
-        .shutter-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-        .object-fit-cover { object-fit: cover; }
-        .bg-gradient-black { background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
-
-        /* SLIDER STYLES (Cleaned up) */
+        /* SLIDER STYLES */
         .slide-submit-container { position: relative; width: 100%; height: 55px; background: #e9ecef; border-radius: 50px; overflow: hidden; }
         .slide-track { height: 100%; display: flex; align-items: center; cursor: pointer; }
         .slide-track.submitted { background: #198754; transition: 0.3s; }
@@ -256,25 +227,25 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- DOM ELEMENTS ---
+            // ELEMENT REFERENCES
             const videoFeed = document.getElementById('video-feed');
             const startScreen = document.getElementById('start-screen');
             const resultScreen = document.getElementById('result-screen');
             const startBtn = document.getElementById('start-camera-btn');
             const captureBtn = document.getElementById('capture-btn');
+            const shutterLabel = document.getElementById('shutter-label');
             const retakeBtn = document.getElementById('retake-btn');
             const previewImage = document.getElementById('preview-image');
             const photoInputHidden = document.getElementById('photo-input-hidden');
             const canvas = document.getElementById('capture-canvas');
             
-            // UI Status Elements
+            // UI Status
             const faceStatusBadge = document.getElementById('face-status-badge');
             const focusFrame = document.querySelector('.focus-frame');
             const modelLoadingText = document.getElementById('model-loading-text');
             const cameraInstruction = document.getElementById('camera-instruction');
 
             // Location & Slider
-            const locationCard = document.querySelector('.location-card');
             const form = document.getElementById('attendance-form');
             const slideTrack = document.getElementById('slide-track');
             const slideThumb = document.getElementById('slide-thumb');
@@ -285,9 +256,7 @@
             let isFaceValid = false;
             let modelsLoaded = false;
 
-            // ==========================================
-            // 1. INIT & LOAD MODELS
-            // ==========================================
+            // 1. LOAD MODELS
             startBtn.addEventListener('click', async () => {
                 if (!modelsLoaded) {
                     modelLoadingText.classList.remove('d-none');
@@ -307,165 +276,137 @@
                 }
             });
 
-            // ==========================================
-            // 2. CAMERA & DETECTION
-            // ==========================================
+            // 2. CAMERA SETUP
             function startCamera() {
-                // Request Camera (PENTING: attributes video di HTML sudah autoplay muted playsinline)
+                // Minta resolusi standar (4:3) agar tidak terlalu zoom di mobile
                 navigator.mediaDevices.getUserMedia({ 
                     video: { 
                         facingMode: "user",
-                        width: { ideal: 720 }, // Resolusi ideal
-                        height: { ideal: 1280 }
+                        width: { ideal: 640 }, 
+                        height: { ideal: 480 } 
                     }, 
                     audio: false 
                 })
                 .then(stream => {
                     streamRef = stream;
                     videoFeed.srcObject = stream;
-                    
-                    // Update UI
                     startScreen.classList.add('d-none');
-                    captureBtn.disabled = true; // Disable tombol sampai wajah ketemu
                     
-                    // Mulai Deteksi saat video play
                     videoFeed.onloadedmetadata = () => {
                         videoFeed.play();
                         startFaceDetection();
                     };
                 })
                 .catch(err => {
-                    console.error(err);
-                    alert("Gagal akses kamera. Pastikan izin browser diberikan.");
+                    alert("Gagal akses kamera.");
                 });
             }
 
+            // 3. FACE DETECTION
             function startFaceDetection() {
-                // Interval 200ms (Ringan)
                 detectionInterval = setInterval(async () => {
                     if (videoFeed.paused || videoFeed.ended) return;
 
                     const detections = await faceapi.detectAllFaces(videoFeed, new faceapi.TinyFaceDetectorOptions());
 
                     if (detections.length > 0 && detections[0].score > 0.5) {
-                        // === WAJAH TERDETEKSI ===
-                        if (!isFaceValid) { // Supaya ga render berulang kali
+                        if (!isFaceValid) { 
                             isFaceValid = true;
                             
-                            // UI Feedback: Hijau
+                            // UI HIJAU (ACTIVE)
                             focusFrame.classList.add('active');
-                            faceStatusBadge.className = 'badge bg-success rounded-pill shadow';
-                            faceStatusBadge.innerHTML = '<i class="mdi mdi-face-recognition"></i> Wajah Oke';
-                            cameraInstruction.innerText = "Siap mengambil foto";
+                            faceStatusBadge.innerHTML = '<i class="mdi mdi-face-recognition"></i> Wajah Terdeteksi';
+                            faceStatusBadge.className = 'badge bg-success rounded-pill shadow border border-light';
+                            cameraInstruction.innerText = "Tekan Tombol Hijau";
                             
-                            // Enable Shutter
+                            // Enable Tombol Hijau
                             captureBtn.disabled = false;
                             captureBtn.classList.add('ready');
+                            shutterLabel.innerText = "Klik untuk ambil foto";
+                            shutterLabel.className = "mt-2 small text-success fw-bold";
                         }
                     } else {
-                        // === WAJAH HILANG ===
                         if (isFaceValid) {
                             isFaceValid = false;
                             
-                            // UI Feedback: Default/Merah
+                            // UI RESET
                             focusFrame.classList.remove('active');
-                            faceStatusBadge.className = 'badge bg-dark bg-opacity-50 rounded-pill backdrop-blur';
-                            faceStatusBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Mencari...';
-                            cameraInstruction.innerText = "Posisikan wajah di dalam kotak";
+                            faceStatusBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Mencari Wajah...';
+                            faceStatusBadge.className = 'badge bg-dark bg-opacity-75 rounded-pill backdrop-blur border border-secondary';
+                            cameraInstruction.innerText = "Posisikan Wajah";
 
-                            // Disable Shutter
+                            // Disable Tombol
                             captureBtn.disabled = true;
                             captureBtn.classList.remove('ready');
+                            shutterLabel.innerText = "Wajah tidak terlihat";
+                            shutterLabel.className = "mt-2 small text-muted";
                         }
                     }
                 }, 200);
             }
 
-            // ==========================================
-            // 3. CAPTURE PHOTO
-            // ==========================================
+            // 4. CAPTURE
             captureBtn.addEventListener('click', () => {
                 if (!isFaceValid) return;
 
-                // Visual Feedback Click
+                // Efek Klik
                 captureBtn.style.transform = "scale(0.9)";
-                setTimeout(() => captureBtn.style.transform = "scale(1)", 100);
+                setTimeout(() => captureBtn.style.transform = "scale(1.1)", 100);
 
-                // Draw to Canvas
                 const ctx = canvas.getContext('2d');
                 canvas.width = videoFeed.videoWidth;
                 canvas.height = videoFeed.videoHeight;
                 
-                // Mirror Effect (Sesuai preview)
+                // Mirror & Draw
                 ctx.save();
                 ctx.scale(-1, 1);
                 ctx.drawImage(videoFeed, -canvas.width, 0, canvas.width, canvas.height);
                 ctx.restore();
 
-                // Convert to Blob
                 canvas.toBlob(blob => {
                     const file = new File([blob], "attendance.jpg", { type: "image/jpeg" });
-                    
-                    // Set Input File Hidden
                     const dt = new DataTransfer();
                     dt.items.add(file);
                     photoInputHidden.files = dt.files;
 
-                    // Show Result Screen
-                    const url = URL.createObjectURL(blob);
-                    previewImage.src = url;
+                    previewImage.src = URL.createObjectURL(blob);
                     
-                    stopCameraAndShowResult();
-                    checkGlobalValidity(); // Cek apakah boleh slide
+                    if (detectionInterval) clearInterval(detectionInterval);
+                    if (streamRef) streamRef.getTracks().forEach(t => t.stop());
+                    
+                    resultScreen.classList.remove('d-none');
+                    checkGlobalValidity();
                 }, 'image/jpeg', 0.85);
             });
 
-            function stopCameraAndShowResult() {
-                if (detectionInterval) clearInterval(detectionInterval);
-                if (streamRef) streamRef.getTracks().forEach(t => t.stop());
-                resultScreen.classList.remove('d-none');
-            }
-
             retakeBtn.addEventListener('click', () => {
                 resultScreen.classList.add('d-none');
-                startScreen.classList.remove('d-none'); // Kembali ke tombol start
-                photoInputHidden.value = ''; // Clear file
+                startScreen.classList.remove('d-none');
+                photoInputHidden.value = '';
                 isFaceValid = false;
                 captureBtn.classList.remove('ready');
                 captureBtn.disabled = true;
-                
-                // Lock slider lagi
+                shutterLabel.innerText = "Tunggu deteksi wajah...";
+                shutterLabel.className = "mt-2 small text-muted";
                 checkGlobalValidity();
             });
 
-            // ==========================================
-            // 4. GPS & SLIDER LOGIC
-            // ==========================================
+            // 5. GPS & SLIDER
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        document.getElementById('latitude').value = pos.coords.latitude;
-                        document.getElementById('longitude').value = pos.coords.longitude;
-                        document.getElementById('accuracy').value = pos.coords.accuracy;
-                        
-                        document.getElementById('coordinates-display').innerText = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-                        document.getElementById('gps-accuracy-badge').innerText = `±${Math.round(pos.coords.accuracy)}m`;
-                        document.getElementById('gps-accuracy-badge').className = 'badge bg-success rounded-pill';
-                        
-                        checkGlobalValidity();
-                    },
-                    (err) => { 
-                        document.getElementById('coordinates-display').innerText = "Gagal Deteksi Lokasi";
-                        document.getElementById('coordinates-display').classList.add('text-danger');
-                    },
-                    { enableHighAccuracy: true }
-                );
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    document.getElementById('latitude').value = pos.coords.latitude;
+                    document.getElementById('longitude').value = pos.coords.longitude;
+                    document.getElementById('accuracy').value = pos.coords.accuracy;
+                    document.getElementById('coordinates-display').innerText = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                    document.getElementById('gps-accuracy-badge').innerText = `±${Math.round(pos.coords.accuracy)}m`;
+                    document.getElementById('gps-accuracy-badge').className = 'badge bg-success rounded-pill';
+                    checkGlobalValidity();
+                }, (err) => { document.getElementById('coordinates-display').innerText = "Gagal Lokasi"; });
             }
 
             function checkGlobalValidity() {
                 const hasPhoto = photoInputHidden.files.length > 0;
                 const hasLoc = document.getElementById('latitude').value !== '';
-
                 if (hasPhoto && hasLoc) {
                     slideTrack.classList.remove('disabled');
                     slideText.innerText = "GESER KE KANAN >>";
@@ -477,53 +418,16 @@
                 }
             }
 
-            // SLIDER DRAG (Standard Logic)
-            let isDragging = false, startX = 0, currentX = 0, trackWidth = 0, thumbWidth = 0, maxSlide = 0, isSubmitted = false;
-            
+            // Slider Logic Standard
+            let isDragging = false, startX = 0, currentX = 0, trackWidth = 0, thumbWidth = 0, maxSlide = 0;
             function initSlider() { trackWidth = slideTrack.offsetWidth; thumbWidth = slideThumb.offsetWidth; maxSlide = trackWidth - thumbWidth - 5; }
             window.addEventListener('resize', initSlider); initSlider();
-
-            const onDragStart = (e) => {
-                if (slideTrack.classList.contains('disabled') || isSubmitted) return;
-                isDragging = true;
-                startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
-                slideThumb.style.transition = 'none';
-            };
-
-            const onDragMove = (e) => {
-                if (!isDragging) return;
-                const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
-                let moveX = clientX - startX;
-                if (moveX < 0) moveX = 0; if (moveX > maxSlide) moveX = maxSlide;
-                currentX = moveX;
-                slideThumb.style.left = moveX + 'px';
-                slideText.style.opacity = 1 - (moveX/maxSlide);
-            };
-
-            const onDragEnd = () => {
-                if (!isDragging) return;
-                isDragging = false;
-                if (currentX >= maxSlide * 0.9) {
-                    isSubmitted = true;
-                    slideThumb.style.left = maxSlide + 'px';
-                    slideTrack.classList.add('submitted');
-                    slideThumb.innerHTML = '<i class="mdi mdi-check"></i>';
-                    slideText.innerText = "MENGIRIM...";
-                    slideText.style.opacity = 1;
-                    form.submit();
-                } else {
-                    slideThumb.style.transition = 'left 0.3s';
-                    slideThumb.style.left = '0px';
-                    slideText.style.opacity = 1;
-                }
-            };
-
-            slideThumb.addEventListener('mousedown', onDragStart);
-            slideThumb.addEventListener('touchstart', onDragStart);
-            window.addEventListener('mousemove', onDragMove);
-            window.addEventListener('touchmove', onDragMove);
-            window.addEventListener('mouseup', onDragEnd);
-            window.addEventListener('touchend', onDragEnd);
+            const onDragStart = (e) => { if (!slideTrack.classList.contains('disabled')) { isDragging = true; startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX; slideThumb.style.transition = 'none'; } };
+            const onDragMove = (e) => { if (isDragging) { const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX; let moveX = clientX - startX; if (moveX < 0) moveX = 0; if (moveX > maxSlide) moveX = maxSlide; currentX = moveX; slideThumb.style.left = moveX + 'px'; slideText.style.opacity = 1 - (moveX/maxSlide); } };
+            const onDragEnd = () => { if (isDragging) { isDragging = false; if (currentX >= maxSlide * 0.9) { slideThumb.style.left = maxSlide + 'px'; slideTrack.classList.add('submitted'); slideThumb.innerHTML = '<i class="mdi mdi-check"></i>'; slideText.innerText = "MENGIRIM..."; slideText.style.opacity = 1; form.submit(); } else { slideThumb.style.transition = 'left 0.3s'; slideThumb.style.left = '0px'; slideText.style.opacity = 1; } } };
+            
+            slideThumb.addEventListener('mousedown', onDragStart); window.addEventListener('mousemove', onDragMove); window.addEventListener('mouseup', onDragEnd);
+            slideThumb.addEventListener('touchstart', onDragStart); window.addEventListener('touchmove', onDragMove); window.addEventListener('touchend', onDragEnd);
         });
     </script>
 @endpush
