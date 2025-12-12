@@ -72,24 +72,30 @@
                                 <i class="mdi mdi-chevron-right text-muted"></i>
                             </a>
 
-                            {{-- [NEW] 2. HISTORY TAHUNAN --}}
+                            {{-- 2. HISTORY TAHUNAN --}}
                             <a href="{{ route('attendance.summary.user', ['user_id' => $user->id]) }}"
                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                                 <span><i class="mdi mdi-chart-bar text-warning me-2"></i> History Tahunan</span>
                                 <i class="mdi mdi-chevron-right text-muted"></i>
                             </a>
 
-                            {{-- [BARU] 2. KELOLA RIWAYAT KARIR (MUTASI/DIVISI) --}}
-                            {{-- Link ini membawa parameter 'mode=edit' agar Admin/Audit/Leader bisa mengedit --}}
+                            {{-- [TAMBAHAN BARU] 3. RIWAYAT PELANGGARAN (Anchor Link ke bawah) --}}
+                             <a href="#violationSection"
+                                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                                <span><i class="mdi mdi-alert-circle text-danger me-2"></i> Riwayat Pelanggaran</span>
+                                <span class="badge bg-danger rounded-pill">{{ $violations->count() }}</span>
+                            </a>
+
+                            {{-- 4. KELOLA RIWAYAT KARIR (MUTASI/DIVISI) --}}
                             @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
                                 <a href="{{ route('employment-history.index', ['user_id' => $user->id, 'mode' => 'edit']) }}"
                                     class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
-                                    <span><i class="mdi mdi-briefcase-edit text-info me-2"></i> Kelola Riwayat
+                                    <span><i class="mdi mdi-briefcase-edit text-info me-2"></i> Riwayat
                                         Divisi/Cabang</span>
                                     <i class="mdi mdi-chevron-right text-muted"></i>
                                 </a>
                             @endif
-                            {{-- 3. HISTORY INVENTARIS --}}
+                            {{-- 5. HISTORY INVENTARIS --}}
                             <a href="{{ route('inventory.index', ['user_id' => $user->id]) }}"
                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                                 <span><i class="mdi mdi-package-variant text-success me-2"></i> History Inventaris</span>
@@ -144,7 +150,7 @@
             </div>
         </div>
 
-        {{-- KOLOM KANAN (DETAIL & 5 AKTIVITAS) --}}
+        {{-- KOLOM KANAN (DETAIL & 5 AKTIVITAS & PELANGGARAN) --}}
         <div class="col-md-8 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
@@ -168,7 +174,7 @@
                             <p class="h6">{{ $user->whatsapp ?? '-' }}</p>
                         </div>
 
-                        {{-- [TAMBAHAN BARU] INDIKATOR TIPE ABSENSI --}}
+                        {{-- INDIKATOR TIPE ABSENSI --}}
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold text-muted small">Tipe Absensi</label>
                             @if ($user->only_security_scan)
@@ -219,7 +225,7 @@
                             </div>
                         </div>
 
-                        {{-- [BARU] JAM KERJA PERSONAL --}}
+                        {{-- JAM KERJA PERSONAL --}}
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold text-muted small">Jam Kerja Personal</label>
                             @if ($user->check_in_start || $user->check_out_start)
@@ -310,6 +316,92 @@
                         </div>
                     </div>
 
+                    {{-- [TAMBAHAN BARU] TABEL RIWAYAT PELANGGARAN --}}
+                    <div class="mt-5" id="violationSection">
+                         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                            <h5 class="card-title mb-0 text-danger">
+                                <i class="mdi mdi-alert-circle me-2"></i>Riwayat Pelanggaran
+                            </h5>
+                            @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                                <a href="{{ route('violations.create') }}" class="btn btn-sm btn-outline-danger">
+                                    <i class="mdi mdi-plus"></i> Tambah
+                                </a>
+                            @endif
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Kategori</th>
+                                        <th>Judul & Tanggal</th>
+                                        <th>Masa Berlaku</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($violations as $violation)
+                                        <tr>
+                                            <td>
+                                                @if($violation->category == 'berat')
+                                                    <span class="badge bg-danger">BERAT</span>
+                                                @elseif($violation->category == 'sedang')
+                                                    <span class="badge bg-warning text-dark">SEDANG</span>
+                                                @else
+                                                    <span class="badge bg-info">RINGAN</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ $violation->title }}</div>
+                                                <small class="text-muted">
+                                                    Dibuat: {{ $violation->created_at->format('d M Y') }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                @if($violation->expires_at)
+                                                    <span class="d-block small text-muted">Hingga:</span>
+                                                    <span class="fw-bold {{ $violation->expires_at->isPast() ? 'text-success' : 'text-danger' }}">
+                                                        {{ $violation->expires_at->format('d M Y') }}
+                                                    </span>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($violation->expires_at && $violation->expires_at->isPast())
+                                                    <span class="badge bg-soft-success text-success border border-success">
+                                                        <i class="mdi mdi-check"></i> Selesai
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-soft-danger text-danger border border-danger">
+                                                        <i class="mdi mdi-alert"></i> Aktif
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                {{-- Tombol Lihat Detail (Modal Gambar) --}}
+                                                @if($violation->photo_path)
+                                                    <button type="button" class="btn btn-sm btn-info text-white" 
+                                                        onclick="showImageModal('{{ asset('storage/' . $violation->photo_path) }}', '{{ $violation->title }}')">
+                                                        <i class="mdi mdi-image"></i>
+                                                    </button>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4">
+                                                <i class="mdi mdi-shield-check display-4 mb-2 d-block text-success"></i>
+                                                <span class="text-success fw-bold">Bersih!</span> Tidak ada riwayat pelanggaran.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <div class="mt-4 d-flex justify-content-between">
                         <a href="{{ route('users.index') }}" class="btn btn-light">Kembali</a>
                         <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning text-white">Edit Data</a>
@@ -355,4 +447,30 @@
         </div>
     </div>
 
+    {{-- MODAL BUKTI PELANGGARAN --}}
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="violationModalTitle">Bukti Pelanggaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="$('#imagePreviewModal').modal('hide')"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="previewImageSrc" src="" class="img-fluid rounded" style="max-height: 80vh;">
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
+
+@push('scripts')
+<script>
+    function showImageModal(src, title) {
+        document.getElementById('previewImageSrc').src = src;
+        document.getElementById('violationModalTitle').innerText = 'Bukti: ' + title;
+        var myModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+        myModal.show();
+    }
+</script>
+@endpush

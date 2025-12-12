@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Division;
 use App\Models\Branch;
 use App\Models\Attendance;
+use App\Models\Violation; // [TAMBAHAN] Import Model Violation
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -108,17 +109,12 @@ class UserController extends Controller
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
             'only_security_scan' => 'nullable',
-            'use_face_recognition' => 'nullable', // [BARU]
+            'use_face_recognition' => 'nullable',
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
-        // [LOGIC SCAN ONLY]
         $data['only_security_scan'] = $request->has('only_security_scan') ? 1 : 0;
-        
-        // [LOGIC FACE RECOGNITION]
-        // Cek input checkbox/hidden. Default = 1 (True) jika tidak ada input (biasanya hidden input handle ini)
-        // Tapi kita pakai logic $request->input untuk menangkap value '0' atau '1'
         $data['use_face_recognition'] = $request->input('use_face_recognition', 1); 
 
         $data['check_in_start']  = $request->check_in_start ?: null;
@@ -203,7 +199,7 @@ class UserController extends Controller
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
             'only_security_scan' => 'nullable',
-            'use_face_recognition' => 'nullable', // [BARU]
+            'use_face_recognition' => 'nullable',
         ]);
 
         if (Auth::user()->role == 'audit' && $request->filled('branch_id')) {
@@ -215,11 +211,7 @@ class UserController extends Controller
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
-        // [LOGIC SCAN ONLY]
         $data['only_security_scan'] = $request->has('only_security_scan') ? 1 : 0;
-
-        // [LOGIC FACE RECOGNITION]
-        // Ambil input langsung (karena ada hidden field '0' dan checkbox '1')
         $data['use_face_recognition'] = $request->input('use_face_recognition');
 
         if ($request->filled('password')) {
@@ -303,6 +295,8 @@ class UserController extends Controller
 
         $user->load(['branch', 'division', 'branches', 'divisions']);
         $stats = $this->getSpecificUserStats($user->id);
+        
+        // Data Absensi
         $recentAttendance = Attendance::where('user_id', $user->id)
             ->whereNotNull('check_in_time')
             ->whereTime('check_in_time', '!=', '00:00:00')
@@ -315,7 +309,13 @@ class UserController extends Controller
             ->take(5)
             ->get();
 
-        return view('users.user_show', compact('user', 'stats', 'recentAttendance'));
+        // [TAMBAHAN] Data Pelanggaran User Ini
+        // Mengambil semua pelanggaran, diurutkan terbaru
+        $violations = Violation::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('users.user_show', compact('user', 'stats', 'recentAttendance', 'violations'));
     }
 
     public function verifyUser(User $user)
