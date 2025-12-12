@@ -23,8 +23,8 @@ class InventoryController extends Controller
         $pageTitle = '';
 
         // === 1. LOGIKA FILTER USER ID (SHORTCUT DARI PROFIL) ===
-        // Jika ada parameter ?user_id=123 DAN User yang login adalah Admin/Audit
-        if ($request->has('user_id') && ($user->role == 'admin' || $user->role == 'audit')) {
+        // [UPDATE] Menambahkan 'leader' agar bisa melihat inventaris user lain saat klik dari profil
+        if ($request->has('user_id') && in_array($user->role, ['admin', 'audit', 'leader'])) {
             $query->where('user_id', $request->user_id);
             
             // Ambil nama user target untuk judul halaman
@@ -33,13 +33,9 @@ class InventoryController extends Controller
         }
         
         // === 2. LOGIKA DEFAULT (HAK AKSES) ===
-        // Jika BUKAN Admin (Audit, Leader, Security, User Biasa) DAN TIDAK sedang memfilter user lain (untuk Audit)
+        // Jika BUKAN Admin (Audit, Leader, Security, User Biasa) DAN TIDAK sedang memfilter user lain (di blok atas)
         elseif ($user->role !== 'admin') {
-            // Audit boleh lihat semua jika tidak ada filter spesifik? 
-            // Atau defaultnya Audit hanya lihat punya sendiri dulu kecuali klik link shortcut?
-            // Di sini kita buat default: Audit/Leader/User Biasa hanya lihat milik sendiri
-            // KECUALI Audit tadi sudah masuk ke if pertama (klik shortcut).
-            
+            // Default: Hanya lihat milik sendiri
             $query->where('user_id', $user->id);
             $pageTitle = 'Inventaris Saya';
         }
