@@ -28,44 +28,55 @@ class EmploymentHistoryController extends Controller
                 ->orderBy('name')
                 ->get();
         } elseif ($currentUser->role === 'leader') {
+            // Leader hanya melihat user di cabangnya + dirinya sendiri
             $selectableUsers = User::with('branch')
                 ->where('branch_id', $currentUser->branch_id)
                 ->orWhere('id', $currentUser->id)
                 ->orderBy('name')
                 ->get();
         } else {
+            // User biasa hanya melihat diri sendiri
             $selectableUsers = User::with('branch')->where('id', $currentUser->id)->get();
         }
 
-        // --- 2. LOGIKA TARGET USER ---
+        // --- 2. LOGIKA TARGET USER & VALIDASI KEAMANAN ---
         if ($request->has('user_id')) {
             $requestedId = $request->user_id;
+            $targetUser = User::find($requestedId);
 
-            if ($requestedId != $currentUser->id) {
+            if (!$targetUser) {
+                return back()->with('error', 'User tidak ditemukan.');
+            }
+
+            // Jika melihat orang lain (bukan diri sendiri)
+            if ($targetUser->id !== $currentUser->id) {
+                
+                // Cek Role Management
                 if (!in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
                     abort(403, 'Anda hanya boleh melihat data diri sendiri.');
                 }
-                $targetCheck = User::find($requestedId);
-                
+
+                // Validasi Audit (Sesuai Wilayah)
                 if ($currentUser->role === 'audit') {
                     $allowedBranches = $currentUser->branches->pluck('id')->toArray();
-                    if ($targetCheck && !in_array($targetCheck->branch_id, $allowedBranches)) {
+                    if (!in_array($targetUser->branch_id, $allowedBranches)) {
                         abort(403, 'User ini di luar wilayah audit Anda.');
                     }
                 }
                 
+                // Validasi Leader (Sesuai Cabang)
                 if ($currentUser->role === 'leader') {
-                    if ($targetCheck && $targetCheck->branch_id != $currentUser->branch_id) {
-                        abort(403, 'Anda hanya boleh melihat karyawan di cabang Anda.');
+                    if ($targetUser->branch_id != $currentUser->branch_id) {
+                        abort(403, 'ANDA HANYA BOLEH MELIHAT KARYAWAN DI CABANG ANDA.');
                     }
                 }
             }
-            $targetUser = User::find($requestedId);
         } else {
+            // Default ke diri sendiri jika tidak ada param user_id
             $targetUser = $currentUser;
         }
 
-        // --- 3. HAK AKSES TOMBOL ---
+        // --- 3. HAK AKSES TOMBOL (Create/Edit/Delete) ---
         $isOwner = ($targetUser->id == $currentUser->id);
         $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
         $isRegular = in_array($currentUser->role, ['user_biasa', 'security']);
@@ -73,11 +84,9 @@ class EmploymentHistoryController extends Controller
         // Cek apakah URL memiliki parameter ?mode=edit
         $isModeEdit = ($request->get('mode') === 'edit');
 
-        // Logic: 
-        // Create: User Biasa (Punya sendiri) ATAU Management
-        // Edit: User Biasa (Punya sendiri) ATAU (Management TAPI HARUS mode=edit)
-        // Delete: User Biasa (Punya sendiri) ATAU Management (Selalu bisa hapus tanpa mode edit)
-        
+        // Logic Hak Akses:
+        // Leader bisa Create/Delete untuk timnya.
+        // Edit hanya muncul jika tombol Edit ditekan (mode=edit).
         $canCreate = ($isRegular && $isOwner) || $isManagement;
         $canEdit = ($isRegular && $isOwner) || ($isManagement && $isModeEdit);
         $canDelete = ($isRegular && $isOwner) || $isManagement;
@@ -92,15 +101,9 @@ class EmploymentHistoryController extends Controller
                 ->orderBy('event_date', 'desc')
                 ->get();
             
-            // Filter Internal
-            $internalHistories = $allHistories->filter(function ($item) {
-                return $item->type !== 'external';
-            });
-
-            // Filter External
-            $externalHistories = $allHistories->filter(function ($item) {
-                return $item->type === 'external';
-            });
+            // Pisahkan Internal & Eksternal
+            $internalHistories = $allHistories->filter(fn($item) => $item->type !== 'external');
+            $externalHistories = $allHistories->filter(fn($item) => $item->type === 'external');
         }
 
         return view('employment_history.index', compact(
@@ -116,10 +119,12 @@ class EmploymentHistoryController extends Controller
         $targetId = $request->get('user_id', $currentUser->id);
         $targetUser = User::findOrFail($targetId);
 
+        // Validasi Akses Halaman Create
         if (!in_array($currentUser->role, ['admin', 'audit', 'leader']) && $targetId != $currentUser->id) {
              abort(403, 'Akses ditolak.');
         }
 
+        // Validasi Branch untuk Management
         if ($targetId != $currentUser->id) {
             if ($currentUser->role === 'audit') {
                 $allowedBranches = $currentUser->branches->pluck('id')->toArray();
@@ -149,6 +154,7 @@ class EmploymentHistoryController extends Controller
             'title' => 'nullable|string|required_if:type,external',
         ]);
 
+        // Jika user biasa, paksa ID ke diri sendiri
         if (in_array($currentUser->role, ['user_biasa', 'security'])) {
             $request->merge(['user_id' => $currentUser->id]);
         }
@@ -160,6 +166,7 @@ class EmploymentHistoryController extends Controller
             $data['event_date'] = now(); 
         }
 
+        // Reset kolom yang tidak perlu berdasarkan tipe
         if ($request->type == 'transfer_branch' || $request->type == 'external') {
             $data['division_id'] = null;
         }
@@ -168,6 +175,7 @@ class EmploymentHistoryController extends Controller
             $data['branch_id'] = null; 
         }
 
+        // Simpan branch asal untuk history mutasi
         $targetUser = User::find($request->user_id);
         $data['previous_branch_id'] = $targetUser->branch_id; 
 
@@ -177,14 +185,8 @@ class EmploymentHistoryController extends Controller
 
         EmploymentHistory::create($data);
 
-        // --- PERUBAHAN DISINI ---
-        // Kita HAPUS logika yang memaksa mode='edit'.
-        // Jadi setelah simpan, dia balik ke index BIASA (Hanya tombol Hapus yang aktif buat admin).
-        
-        $redirectParams = ['user_id' => $data['user_id']];
-        // $redirectParams['mode'] = 'edit';  <-- INI DIHAPUS AGAR TOMBOL EDIT HILANG
-
-        return redirect()->route('employment-history.index', $redirectParams)
+        // Redirect kembali ke index user tersebut (tanpa mode edit)
+        return redirect()->route('employment-history.index', ['user_id' => $data['user_id']])
             ->with('success', 'Riwayat berhasil ditambahkan.');
     }
 
@@ -192,15 +194,17 @@ class EmploymentHistoryController extends Controller
     {
         $history = EmploymentHistory::findOrFail($id);
         $currentUser = auth()->user();
+        $targetUser = $history->user;
 
         $isOwner = ($history->user_id == $currentUser->id);
         $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
         $isRegular = in_array($currentUser->role, ['user_biasa', 'security']);
 
+        // Validasi Akses
         if ($isRegular && !$isOwner) abort(403, 'Akses ditolak.');
         if (!$isManagement && !$isRegular) abort(403);
 
-        $targetUser = $history->user;
+        // Validasi Wilayah Audit / Leader
         if ($targetUser->id != $currentUser->id && $isManagement) {
             if ($currentUser->role === 'audit') {
                 $allowedBranches = $currentUser->branches->pluck('id')->toArray();
@@ -213,7 +217,6 @@ class EmploymentHistoryController extends Controller
 
         $branches = Branch::all();
         $divisions = Division::all();
-        $targetUser = $history->user;
 
         return view('employment_history.edit', compact('history', 'branches', 'divisions', 'targetUser'));
     }
@@ -225,10 +228,9 @@ class EmploymentHistoryController extends Controller
 
         $isOwner = ($history->user_id == $currentUser->id);
         $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
-        $isRegular = in_array($currentUser->role, ['user_biasa', 'security']);
-
-        if ($isRegular && !$isOwner) abort(403);
-        if (!$isManagement && !$isRegular) abort(403);
+        
+        // Validasi dasar
+        if (!$isOwner && !$isManagement) abort(403);
 
         $request->validate([
             'type' => 'required',
@@ -259,12 +261,7 @@ class EmploymentHistoryController extends Controller
 
         $history->update($data);
 
-        // --- PERUBAHAN DISINI JUGA ---
-        // Setelah update, kembalikan ke view biasa (tanpa tombol edit)
-        $redirectParams = ['user_id' => $history->user_id];
-        // $redirectParams['mode'] = 'edit'; <-- INI DIHAPUS
-
-        return redirect()->route('employment-history.index', $redirectParams)
+        return redirect()->route('employment-history.index', ['user_id' => $history->user_id])
             ->with('success', 'Data riwayat diperbarui.');
     }
 
@@ -272,16 +269,15 @@ class EmploymentHistoryController extends Controller
     {
         $history = EmploymentHistory::findOrFail($id);
         $currentUser = auth()->user();
+        $targetUser = $history->user;
 
         $isOwner = ($history->user_id == $currentUser->id);
         $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
-        $isRegular = in_array($currentUser->role, ['user_biasa', 'security']);
 
-        if ($isRegular && !$isOwner) abort(403, 'Akses ditolak.');
-        if (!$isManagement && !$isRegular) abort(403);
+        if (!$isOwner && !$isManagement) abort(403, 'Akses ditolak.');
 
+        // Validasi Wilayah Audit / Leader saat delete
         if ($isManagement && !$isOwner) {
-             $targetUser = $history->user;
              if ($currentUser->role === 'audit') {
                 $allowedBranches = $currentUser->branches->pluck('id')->toArray();
                 if (!in_array($targetUser->branch_id, $allowedBranches)) abort(403);
