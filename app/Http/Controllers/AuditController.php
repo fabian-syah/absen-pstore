@@ -173,7 +173,7 @@ class AuditController extends Controller
             }
         }
 
-        $pendingAttendances = $query->latest()->get();
+        $pendingAttendances = $query->oldest()->get();
 
         return view('audit.verification_list', compact('pendingAttendances'));
     }
@@ -205,7 +205,7 @@ class AuditController extends Controller
             }
         }
 
-        $requests = $query->latest()->paginate(10);
+        $requests = $query->oldest()->paginate(10);
 
         return view('leave_requests.history', compact('requests'));
     }
