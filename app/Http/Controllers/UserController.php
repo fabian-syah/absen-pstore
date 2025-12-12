@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Division;
 use App\Models\Branch;
 use App\Models\Attendance;
-use App\Models\Violation; // Pastikan Model Violation di-import
+use App\Models\Violation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -30,9 +30,10 @@ class UserController extends Controller
                     abort(403, 'Akses ditolak. Anda tidak memiliki hak akses.');
                 }
             } 
-            // Untuk method selain 'show', Leader DILARANG
+            // Untuk method selain 'show', Leader DILARANG (Kecuali jika Anda ingin Leader bisa edit user, sesuaikan di sini)
+            // Sesuai request, Leader dibuat seperti Audit (bisa kelola multi branch), jadi saya izinkan Leader di sini.
             else {
-                if (!in_array($user->role, ['admin', 'audit', 'admin_gaji'])) {
+                if (!in_array($user->role, ['admin', 'audit', 'admin_gaji', 'leader'])) {
                     abort(403, 'Akses ditolak. Anda tidak memiliki hak akses.');
                 }
             }
@@ -46,11 +47,20 @@ class UserController extends Controller
         $user = Auth::user();
         $query = User::with(['division', 'branch', 'branches', 'divisions']);
 
+        // Admin Cabang Tertentu
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('branch_id', $user->branch_id);
-        } elseif ($user->role == 'audit') {
-            $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
-            $query->whereIn('branch_id', $auditBranchIds);
+        } 
+        // Logic Audit DAN Leader (Multi Branch)
+        elseif (in_array($user->role, ['audit', 'leader'])) {
+            $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
+            // Tambahkan branch_id utama milik user tersebut juga (opsional, untuk keamanan)
+            if ($user->branch_id) {
+                $allowedBranchIds[] = $user->branch_id;
+            }
+            $allowedBranchIds = array_unique($allowedBranchIds);
+            
+            $query->whereIn('branch_id', $allowedBranchIds);
         }
 
         if ($request->has('search') && $request->search != '') {
@@ -76,10 +86,17 @@ class UserController extends Controller
         if ($user->role == 'admin' && $user->branch_id != null) {
             $branches = Branch::where('id', $user->branch_id)->get();
             $allowedRoles = ['leader', 'security', 'user_biasa'];
-        } elseif ($user->role == 'audit') {
+        } 
+        // Audit & Leader melihat cabang yang mereka pegang
+        elseif (in_array($user->role, ['audit', 'leader'])) {
             $branches = $user->branches; 
+            // Jika kosong, fallback ke branch_id utama atau kosong
+            if ($branches->isEmpty() && $user->branch_id) {
+                $branches = Branch::where('id', $user->branch_id)->get();
+            }
             $allowedRoles = ['audit', 'leader', 'security', 'user_biasa'];
         } else {
+            // Super Admin / Admin Gaji
             $branches = Branch::all();
             $allowedRoles = ['admin', 'admin_gaji', 'audit', 'leader', 'security', 'user_biasa'];
         }
@@ -144,9 +161,11 @@ class UserController extends Controller
 
         $newUser = User::create($data);
 
-        if ($request->role == 'audit' && $request->has('multi_branches')) {
+        // SYNC BRANCHES untuk Audit DAN Leader
+        if (in_array($request->role, ['audit', 'leader']) && $request->has('multi_branches')) {
             $newUser->branches()->sync($request->multi_branches);
         }
+        
         if ($request->has('multi_divisions')) {
             $newUser->divisions()->sync($request->multi_divisions);
         }
@@ -159,8 +178,11 @@ class UserController extends Controller
         $user->load(['branches', 'divisions']);
         $auth_user = Auth::user();
 
-        if ($auth_user->role == 'audit') {
+        // Validasi Akses Audit & Leader terhadap user yang diedit
+        if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
+            if ($auth_user->branch_id) $allowedBranchIds[] = $auth_user->branch_id;
+            
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
             }
@@ -170,8 +192,12 @@ class UserController extends Controller
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
 
-        if ($auth_user->role == 'audit') {
+        // Siapkan data cabang untuk Dropdown
+        if (in_array($auth_user->role, ['audit', 'leader'])) {
             $branches = $auth_user->branches; 
+             if ($branches->isEmpty() && $auth_user->branch_id) {
+                $branches = Branch::where('id', $auth_user->branch_id)->get();
+            }
         } elseif ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             $branches = Branch::where('id', $auth_user->branch_id)->get();
         } else {
@@ -202,9 +228,12 @@ class UserController extends Controller
             'use_face_recognition' => 'nullable',
         ]);
 
-        if (Auth::user()->role == 'audit' && $request->filled('branch_id')) {
-            $auditBranchIds = Auth::user()->branches()->pluck('branches.id')->toArray();
-            if (!in_array($request->branch_id, $auditBranchIds)) {
+        // Validasi pemindahan cabang oleh Audit/Leader
+        if (in_array(Auth::user()->role, ['audit', 'leader']) && $request->filled('branch_id')) {
+            $allowedBranchIds = Auth::user()->branches()->pluck('branches.id')->toArray();
+            if (Auth::user()->branch_id) $allowedBranchIds[] = Auth::user()->branch_id;
+
+            if (!in_array($request->branch_id, $allowedBranchIds)) {
                 return back()->with('error', 'Anda tidak memiliki akses untuk memindahkan user ke cabang tersebut.');
             }
         }
@@ -236,10 +265,14 @@ class UserController extends Controller
 
         $user->update($data);
 
-        if ($request->role == 'audit') {
+        // SYNC Multi Branch untuk Audit & Leader
+        if (in_array($request->role, ['audit', 'leader'])) {
             $user->branches()->sync($request->multi_branches ?? []);
         } else {
-            $user->divisions()->sync($request->multi_divisions ?? []);
+            // Untuk role lain (misal user biasa), multi branch dihapus/dikosongkan (karena logic UI hidden)
+            // Tapi jika tidak ingin menghapus eksisting data multi branch jika role berubah, hapus baris ini.
+            // Sesuai UI, jika role != audit/leader, input hidden.
+             $user->divisions()->sync($request->multi_divisions ?? []);
             if (!in_array($request->role, ['admin', 'admin_gaji'])) {
                 if ($request->has('multi_divisions') && count($request->multi_divisions) > 0) {
                     $user->division_id = $request->multi_divisions[0];
@@ -275,21 +308,18 @@ class UserController extends Controller
     public function show(User $user)
     {
         $auth_user = Auth::user();
+        
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
-        if ($auth_user->role == 'audit') {
+        
+        // Akses Audit DAN Leader (Multi Branch Check)
+        if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
+            if ($auth_user->branch_id) $allowedBranchIds[] = $auth_user->branch_id;
+            
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di luar wilayah cabang Anda.');
-            }
-        }
-        if ($auth_user->role == 'leader') {
-            if ($user->branch_id != $auth_user->branch_id) {
-                $leaderPivotIds = $auth_user->branches()->pluck('branches.id')->toArray();
-                if (!in_array($user->branch_id, $leaderPivotIds)) {
-                    abort(403, 'Akses Ditolak: Anda hanya boleh melihat karyawan di cabang Anda sendiri.');
-                }
             }
         }
 
@@ -309,15 +339,13 @@ class UserController extends Controller
             ->take(5)
             ->get();
 
-        // [UPDATE] MENGAMBIL PELANGGARAN AKTIF vs HISTORY
-        
-        // 1. Pelanggaran Aktif (Masa berlaku belum habis / Hari ini masih berlaku)
+        // 1. Pelanggaran Aktif
         $activeViolations = Violation::where('user_id', $user->id)
             ->where('expires_at', '>', now()) // Masih aktif
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // 2. History Pelanggaran (Masa berlaku sudah habis / Expired)
+        // 2. History Pelanggaran
         $historyViolations = Violation::where('user_id', $user->id)
             ->where('expires_at', '<=', now()) // Sudah lewat
             ->orderBy('expires_at', 'desc')
@@ -346,12 +374,16 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $query = User::where('photo_request_status', 'pending')->with(['branch', 'division']);
+        
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('branch_id', $user->branch_id);
-        } elseif ($user->role == 'audit') {
-            $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
-            $query->whereIn('branch_id', $auditBranchIds);
+        } 
+        elseif (in_array($user->role, ['audit', 'leader'])) {
+            $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
+            if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
+            $query->whereIn('branch_id', $allowedBranchIds);
         }
+        
         $requests = $query->latest('updated_at')->paginate(10);
         return view('users.photo_requests', compact('requests'));
     }
@@ -360,12 +392,16 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $query = User::where('ktp_request_status', 'pending')->with('division');
+        
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('branch_id', $user->branch_id);
-        } elseif ($user->role == 'audit') {
-            $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
-            $query->whereIn('branch_id', $auditBranchIds);
+        } 
+        elseif (in_array($user->role, ['audit', 'leader'])) {
+            $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
+            if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
+            $query->whereIn('branch_id', $allowedBranchIds);
         }
+        
         $users = $query->get();
         return view('users.ktp-requests', compact('users'));
     }

@@ -100,7 +100,7 @@
                                         </td>
                                         <td>
                                             <div class="fw-bold mb-1" style="font-size: 0.9rem;">
-                                                @if ($user->role == 'audit')
+                                                @if ($user->role == 'audit' || $user->role == 'leader')
                                                     {{ $user->branches->pluck('name')->join(', ') ?: 'Semua Cabang' }}
                                                 @else
                                                     {{ $user->branch->name ?? 'Semua Cabang' }}
@@ -128,7 +128,7 @@
                                         <td>
                                             <a href="{{ route('users.show', $user->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail"><i class="mdi mdi-eye"></i></a>
                                             <a href="{{ route('users.edit', $user->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
-                                            @if ($user->id != auth()->id() && auth()->user()->role != 'audit')
+                                            @if ($user->id != auth()->id() && auth()->user()->role != 'audit' && auth()->user()->role != 'leader')
                                                 <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?');">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm" title="Hapus"><i class="mdi mdi-delete"></i></button>

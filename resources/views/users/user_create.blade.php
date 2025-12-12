@@ -120,7 +120,7 @@
                         <div class="mb-4">
                             <h6 class="text-muted text-uppercase small fw-bold mb-3">Lokasi Kerja</h6>
                             <div class="form-group mb-3" id="single-branch-group"><label class="form-label">Cabang Utama</label><select class="form-select select2-single" name="branch_id" data-placeholder="Pilih Cabang"><option></option>@foreach ($branches as $branch)<option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>@endforeach</select></div>
-                            <div class="form-group mb-3 d-none" id="multi-branch-group"><label class="form-label text-primary">Akses Wilayah Audit (Multi)</label><select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%">@foreach ($branches as $branch)<option value="{{ $branch->id }}" {{ in_array($branch->id, old('multi_branches', [])) ? 'selected' : '' }}>{{ $branch->name }}</option>@endforeach</select><div class="mt-2 small"><a href="javascript:void(0)" onclick="selectAll('#multi-branch-group .select2-multi')">Pilih Semua</a> | <a href="javascript:void(0)" onclick="clearAll('#multi-branch-group .select2-multi')" class="text-danger">Hapus</a></div></div>
+                            <div class="form-group mb-3 d-none" id="multi-branch-group"><label class="form-label text-primary">Akses Wilayah Audit/Leader (Multi)</label><select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%">@foreach ($branches as $branch)<option value="{{ $branch->id }}" {{ in_array($branch->id, old('multi_branches', [])) ? 'selected' : '' }}>{{ $branch->name }}</option>@endforeach</select><div class="mt-2 small"><a href="javascript:void(0)" onclick="selectAll('#multi-branch-group .select2-multi')">Pilih Semua</a> | <a href="javascript:void(0)" onclick="clearAll('#multi-branch-group .select2-multi')" class="text-danger">Hapus</a></div></div>
                             <div class="form-group mb-3" id="multi-division-group"><label class="form-label">Divisi (Multi Select)</label><select class="form-select select2-multi" name="multi_divisions[]" multiple="multiple" style="width: 100%">@foreach ($divisions as $division)<option value="{{ $division->id }}" {{ in_array($division->id, old('multi_divisions', [])) ? 'selected' : '' }}>{{ $division->name }}</option>@endforeach</select><div class="mt-2 small"><a href="javascript:void(0)" onclick="selectAll('#multi-division-group .select2-multi')">Pilih Semua</a> | <a href="javascript:void(0)" onclick="clearAll('#multi-division-group .select2-multi')" class="text-danger">Hapus</a></div></div>
                         </div>
                         <hr class="my-4">
@@ -169,10 +169,18 @@
             window.selectAll = function(selector) { $(selector).find('option').prop('selected', true); $(selector).trigger('change'); }
             window.clearAll = function(selector) { $(selector).val(null).trigger('change'); }
             window.clearWorkHours = function() { $('input[name="check_in_start"]').val(''); $('input[name="check_out_start"]').val(''); }
+            
+            // LOGIC UTAMA: Role Audit ATAU Leader menampilkan Multi Branch
             window.toggleInputs = function() {
                 const role = $('#role').val();
                 if (role === 'admin' || role === 'admin_gaji') { $('#single-branch-group').addClass('d-none'); } else { $('#single-branch-group').removeClass('d-none'); }
-                if (role === 'audit') { $('#multi-branch-group').removeClass('d-none'); } else { $('#multi-branch-group').addClass('d-none'); }
+                
+                // DISINI UPDATE-NYA:
+                if (role === 'audit' || role === 'leader') { 
+                    $('#multi-branch-group').removeClass('d-none'); 
+                } else { 
+                    $('#multi-branch-group').addClass('d-none'); 
+                }
             };
             toggleInputs();
 
