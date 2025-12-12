@@ -6,12 +6,6 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
-<style>
-    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
-        background-color: #e9ecef !important; color: #333 !important;
-    }
-</style>
-
 <div class="row justify-content-center">
     <div class="col-md-8 grid-margin stretch-card">
         <div class="card">
@@ -29,12 +23,18 @@
                     <div class="form-group mb-3">
                         <label>Jenis Kejadian</label>
                         <select name="type" id="typeSelect" class="form-select select2-single" required onchange="handleTypeChange()">
-                            <option value="join" {{ $history->type == 'join' ? 'selected' : '' }}>Awal Masuk</option>
+                            <option value="join" {{ $history->type == 'join' ? 'selected' : '' }}>Awal Masuk Pstore</option>
                             <option value="transfer_branch" {{ $history->type == 'transfer_branch' ? 'selected' : '' }}>Pindah Cabang</option>
                             <option value="transfer_division" {{ $history->type == 'transfer_division' ? 'selected' : '' }}>Pindah Divisi</option>
                             <option value="resign" {{ $history->type == 'resign' ? 'selected' : '' }}>Resign</option>
                             <option value="rejoin" {{ $history->type == 'rejoin' ? 'selected' : '' }}>Masuk Kembali</option>
+                            <option value="external" {{ $history->type == 'external' ? 'selected' : '' }}>-- Pengalaman Di Luar Pstore --</option>
                         </select>
+                    </div>
+
+                    <div class="form-group mb-3 d-none" id="titleContainer">
+                        <label>Judul / Nama Perusahaan</label>
+                        <input type="text" name="title" class="form-control" value="{{ $history->title }}">
                     </div>
 
                     <div class="form-group mb-3">
@@ -42,7 +42,6 @@
                         <input type="date" name="event_date" class="form-control" required value="{{ $history->event_date->format('Y-m-d') }}">
                     </div>
 
-                    {{-- Form Cabang (Unified) --}}
                     <div class="form-group mb-3 d-none" id="singleBranchContainer">
                         <label>Cabang</label>
                         <select name="branch_id" class="form-select select2-single">
@@ -100,25 +99,30 @@
         const type = $('#typeSelect').val();
         const singleContainer = $('#singleBranchContainer');
         const divContainer = $('#divisionContainer');
+        const titleContainer = $('#titleContainer');
 
-        // Reset display
+        // Reset
         if(singleContainer.length) singleContainer.addClass('d-none');
         divContainer.removeClass('d-none');
+        titleContainer.addClass('d-none');
 
         if (type === 'transfer_branch') {
-            // Pindah Cabang
             if(singleContainer.length) singleContainer.removeClass('d-none');
             divContainer.addClass('d-none'); 
             $('#divisionSelect').val(null).trigger('change');
 
         } else if (type === 'join' || type === 'rejoin') {
-            // Masuk
             if(singleContainer.length) singleContainer.removeClass('d-none');
             divContainer.removeClass('d-none');
 
         } else if (type === 'transfer_division') {
             divContainer.removeClass('d-none');
+
         } else if (type === 'resign') {
+            divContainer.addClass('d-none');
+        
+        } else if (type === 'external') {
+            titleContainer.removeClass('d-none');
             divContainer.addClass('d-none');
         }
     }

@@ -6,13 +6,6 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
-{{-- Custom Style Select2 --}}
-<style>
-    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
-        background-color: #e9ecef !important; color: #333 !important;
-    }
-</style>
-
 <div class="row justify-content-center">
     <div class="col-md-8 grid-margin stretch-card">
         <div class="card">
@@ -37,25 +30,30 @@
                         <label>Jenis Kejadian <span class="text-danger">*</span></label>
                         <select name="type" id="typeSelect" class="form-select select2-single" required onchange="handleTypeChange()">
                             <option value="" disabled selected>-- Pilih Jenis --</option>
-                            <option value="join">Awal Masuk</option>
+                            <option value="join">Awal Masuk Pstore</option>
                             <option value="transfer_branch">Pindah Cabang</option>
                             <option value="transfer_division">Pindah Divisi</option>
                             <option value="resign">Resign / Keluar</option>
                             <option value="rejoin">Masuk Kembali</option>
+                            <option value="external" class="fw-bold">-- Pengalaman Di Luar Pstore --</option>
                         </select>
                     </div>
 
+                    {{-- Input Judul Khusus External --}}
+                    <div class="form-group mb-3 d-none" id="titleContainer">
+                        <label>Judul / Nama Perusahaan <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" placeholder="Contoh: Staff IT di PT. Maju Mundur">
+                    </div>
+
                     <div class="form-group mb-3">
-                        <label>Tanggal Efektif <span class="text-danger">*</span></label>
+                        <label>Tanggal <span class="text-danger">*</span></label>
                         <input type="date" name="event_date" class="form-control" required value="{{ date('Y-m-d') }}">
                     </div>
 
-                    {{-- Form Cabang (Unified untuk semua Role termasuk Audit) --}}
                     <div class="form-group mb-3 d-none" id="singleBranchContainer">
                         <label>Cabang Tujuan</label>
                         <select name="branch_id" class="form-select select2-single">
                             <option value="">-- Pilih Cabang --</option>
-                            {{-- Menampilkan SEMUA cabang agar Leader/Admin bisa memindahkan user kemana saja --}}
                             @foreach($branches as $branch)
                                 <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                             @endforeach
@@ -73,8 +71,8 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Keterangan Tambahan</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="Contoh: SK Nomor 123..."></textarea>
+                        <label>Keterangan</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Deskripsi kejadian..."></textarea>
                     </div>
 
                     <div class="form-group mb-3">
@@ -100,31 +98,35 @@
 
     function handleTypeChange() {
         const type = $('#typeSelect').val();
-        const singleContainer = $('#singleBranchContainer'); // Container Cabang Single
+        const singleContainer = $('#singleBranchContainer');
         const divContainer = $('#divisionContainer');
+        const titleContainer = $('#titleContainer');
 
         // Reset display
         if(singleContainer.length) singleContainer.addClass('d-none');
-        divContainer.removeClass('d-none'); // Default muncul
+        divContainer.removeClass('d-none');
+        titleContainer.addClass('d-none');
 
         if (type === 'transfer_branch') {
-            // Pindah Cabang: Tampilkan pilih cabang, Sembunyikan divisi
             if(singleContainer.length) singleContainer.removeClass('d-none');
-            
             divContainer.addClass('d-none'); 
             $('#divisionSelect').val(null).trigger('change');
 
         } else if (type === 'join' || type === 'rejoin') {
-            // Masuk/Masuk Kembali: Tampilkan Cabang DAN Divisi
             if(singleContainer.length) singleContainer.removeClass('d-none');
             divContainer.removeClass('d-none');
 
         } else if (type === 'transfer_division') {
-            // Pindah Divisi: Hanya Divisi, Cabang sembunyi
             divContainer.removeClass('d-none');
+
         } else if (type === 'resign') {
-            // Resign: Sembunyikan semua
             divContainer.addClass('d-none');
+        
+        } else if (type === 'external') {
+            // EXTERNAL: Tampilkan Judul, Sembunyikan Branch & Division
+            titleContainer.removeClass('d-none');
+            divContainer.addClass('d-none');
+            if(singleContainer.length) singleContainer.addClass('d-none');
         }
     }
 </script>

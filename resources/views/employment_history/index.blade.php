@@ -27,13 +27,11 @@
 
                     <select name="user_id" class="form-control w-75" onchange="this.form.submit()" style="border-radius: 8px;">
                         <option value="{{ auth()->user()->id }}" {{ isset($targetUser) && $targetUser->id == auth()->id() ? 'selected' : '' }}>
-                            {{-- Menampilkan Cabang Sendiri --}}
                             -- Saya Sendiri ({{ auth()->user()->branch->name ?? 'Pusat/Non-Cabang' }}) --
                         </option>
                         @foreach($selectableUsers as $u)
                             @if($u->id != auth()->id())
                                 <option value="{{ $u->id }}" {{ isset($targetUser) && $targetUser->id == $u->id ? 'selected' : '' }}>
-                                    {{-- UPDATE: NAMA (CABANG) --}}
                                     {{ $u->name }} ({{ $u->branch->name ?? 'Non-Cabang' }})
                                 </option>
                             @endif
@@ -45,18 +43,16 @@
     </div>
     @endif
 
-    {{-- KONTEN TIMELINE --}}
+    {{-- KONTEN TIMELINE INTERNAL PSTORE --}}
     <div class="col-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                     <div>
-                        <h4 class="card-title mb-1">Timeline: {{ $targetUser->name }}</h4>
-                        {{-- Badge tetap menampilkan role atau bisa diganti cabang juga --}}
+                        <h4 class="card-title mb-1">Timeline Internal Pstore: {{ $targetUser->name }}</h4>
                         <span class="badge badge-outline-primary">{{ strtoupper($targetUser->role) }} - {{ $targetUser->branch->name ?? 'PUSAT' }}</span>
                     </div>
                     
-                    {{-- TOMBOL TAMBAH DATA --}}
                     @if($canCreate)
                         <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn btn-primary btn-icon-text">
                             <i class="mdi mdi-plus-circle-outline btn-icon-prepend"></i> Tambah Riwayat
@@ -64,19 +60,16 @@
                     @endif
                 </div>
 
-                @if($histories->isEmpty())
+                @if($internalHistories->isEmpty())
                     <div class="text-center py-5">
                         <div class="mb-3">
                             <i class="mdi mdi-timeline-text-outline text-muted" style="font-size: 4rem;"></i>
                         </div>
-                        <h5 class="text-muted">Belum ada riwayat tercatat.</h5>
-                        @if($canCreate)
-                            <p class="text-muted small">Klik tombol tambah untuk membuat catatan baru.</p>
-                        @endif
+                        <h5 class="text-muted">Belum ada riwayat internal Pstore.</h5>
                     </div>
                 @else
                     <ul class="bullet-line-list">
-                        @foreach($histories as $history)
+                        @foreach($internalHistories as $history)
                             <li class="mb-4">
                                 <div class="d-flex justify-content-between align-items-start">
                                     {{-- HEADER --}}
@@ -90,14 +83,13 @@
                                         </p>
                                     </div>
                                     
-                                    {{-- AKSI EDIT & HAPUS --}}
+                                    {{-- AKSI --}}
                                     <div class="d-flex gap-2">
                                         @if($canEdit)
                                             <a href="{{ route('employment-history.edit', $history->id) }}" class="btn btn-inverse-warning btn-sm p-2" title="Edit">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
                                         @endif
-                                        
                                         @if($canDelete)
                                             <form action="{{ route('employment-history.destroy', $history->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat ini?');">
                                                 @csrf @method('DELETE')
@@ -118,24 +110,14 @@
                                                 <div class="position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#attachmentModal" data-src="{{ asset('storage/' . $history->attachment) }}">
                                                     <img src="{{ asset('storage/' . $history->attachment) }}" 
                                                          class="img-fluid rounded shadow-sm w-100" 
-                                                         style="object-fit: cover; height: 150px; min-height: 100%; border: 1px solid #dee2e6;"
-                                                         alt="Lampiran">
-                                                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 hover-opacity-100 transition-all rounded">
-                                                        <i class="mdi mdi-magnify-plus text-white display-4"></i>
-                                                    </div>
+                                                         style="object-fit: cover; height: 100px;" alt="Lampiran">
                                                 </div>
-                                                <small class="text-muted text-center d-block mt-1" style="font-size: 10px;">Klik untuk memperbesar</small>
                                             </div>
                                         @endif
 
                                         {{-- INFORMASI --}}
                                         <div class="{{ $history->attachment ? 'col-md-9' : 'col-12' }}">
-                                            @if($targetUser->role == 'audit' && $history->type == 'transfer_branch' && !empty($history->audit_branch_snapshot))
-                                                {{-- Handle Legacy Data (Jika ada data lama tipe array) --}}
-                                                <div class="mb-2">
-                                                    <span class="text-muted small">{!! $history->audit_change_text !!}</span>
-                                                </div>
-                                            @elseif($history->type == 'transfer_branch')
+                                            @if($history->type == 'transfer_branch')
                                                 <p class="mb-1">
                                                     <i class="mdi mdi-arrow-right-bold-circle text-success me-1"></i>
                                                     Pindah ke Cabang: <strong>{{ $history->branch->name ?? '-' }}</strong>
@@ -154,19 +136,6 @@
                                                     <p class="mb-0 small text-muted font-italic">"{{ $history->description }}"</p>
                                                 </div>
                                             @endif
-
-                                            <div class="mt-3 text-end">
-                                                @if($history->creator)
-                                                    <small class="text-muted d-block" style="font-size: 0.75rem;">
-                                                        <i class="mdi mdi-account-plus me-1"></i> Dibuat: {{ $history->creator->name }}
-                                                    </small>
-                                                @endif
-                                                @if($history->editor)
-                                                    <small class="text-muted d-block" style="font-size: 0.75rem;">
-                                                        <i class="mdi mdi-account-edit me-1"></i> Diedit: {{ $history->editor->name }}
-                                                    </small>
-                                                @endif
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -177,9 +146,72 @@
             </div>
         </div>
     </div>
+
+    {{-- KONTEN PENGALAMAN LUAR PSTORE (PALING BAWAH) --}}
+    <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-3">Pengalaman di Luar Pstore</h4>
+                
+                @if($externalHistories->isEmpty())
+                    <p class="text-muted">Tidak ada data pengalaman luar.</p>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Judul / Perusahaan</th>
+                                    <th>Keterangan</th>
+                                    <th>Lampiran</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($externalHistories as $ext)
+                                    <tr>
+                                        <td>{{ \Carbon\Carbon::parse($ext->event_date)->format('d/m/Y') }}</td>
+                                        <td class="fw-bold text-primary">{{ $ext->title }}</td>
+                                        <td>{{ $ext->description ?? '-' }}</td>
+                                        <td>
+                                            @if($ext->attachment)
+                                                <a href="#" data-bs-toggle="modal" data-bs-target="#attachmentModal" data-src="{{ asset('storage/' . $ext->attachment) }}">
+                                                    <i class="mdi mdi-image text-info"></i> Lihat
+                                                </a>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-flex justify-content-end gap-1">
+                                                @if($canEdit)
+                                                    <a href="{{ route('employment-history.edit', $ext->id) }}" class="btn btn-sm btn-inverse-warning p-1">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </a>
+                                                @endif
+                                                @if($canDelete)
+                                                    <form action="{{ route('employment-history.destroy', $ext->id) }}" method="POST" onsubmit="return confirm('Hapus?');">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-inverse-danger p-1">
+                                                            <i class="mdi mdi-trash-can"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
 </div>
 
-{{-- MODAL --}}
+{{-- MODAL IMAGE --}}
 <div class="modal fade" id="attachmentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -193,10 +225,6 @@
         </div>
     </div>
 </div>
-<style>
-    .hover-opacity-100:hover { opacity: 1 !important; }
-    .transition-all { transition: all 0.3s ease; }
-</style>
 @endsection
 
 @push('scripts')
@@ -204,8 +232,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         var attachmentModal = document.getElementById('attachmentModal');
         attachmentModal.addEventListener('show.bs.modal', function(event) {
-            var div = event.relatedTarget; 
-            var src = div.getAttribute('data-src');
+            var el = event.relatedTarget; 
+            var src = el.getAttribute('data-src');
             document.getElementById('modalImageSrc').src = src;
         });
         attachmentModal.addEventListener('hidden.bs.modal', function() {

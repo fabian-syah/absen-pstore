@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class EmploymentHistory extends Model
 {
     protected $fillable = [
-        'user_id', 'type', 'event_date', 
+        'user_id', 'type', 'title', 'event_date', // <--- Title ditambahkan
         'branch_id', 
         'division_id', 
         'description', 'attachment',
         'previous_branch_id', 
         'audit_branch_snapshot',
-        'created_by', // <--- BARU
-        'updated_by'  // <--- BARU
+        'created_by',
+        'updated_by'
     ];
 
     protected $casts = [
@@ -31,13 +31,11 @@ class EmploymentHistory extends Model
         return $this->belongsTo(Branch::class, 'previous_branch_id');
     }
 
-    // Relasi Pencatat
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    // Relasi Pengedit Terakhir
     public function editor()
     {
         return $this->belongsTo(User::class, 'updated_by');
@@ -48,7 +46,6 @@ class EmploymentHistory extends Model
         if (empty($this->audit_branch_snapshot)) return '-';
         
         $data = $this->audit_branch_snapshot;
-        // Hanya tampilkan 'To' (Yang baru) sesuai request
         $to = isset($data['to']) ? implode(', ', $data['to']) : '-';
 
         return "Wilayah Audit Baru: <br><strong>$to</strong>";
@@ -62,6 +59,7 @@ class EmploymentHistory extends Model
             'transfer_division' => 'Pindah Divisi / Jabatan',
             'resign' => 'Resign / Dirumahkan',
             'rejoin' => 'Masuk Pstore Lagi',
+            'external' => 'Pengalaman Luar', // <--- Baru
             default => ucfirst($this->type),
         };
     }
@@ -73,6 +71,7 @@ class EmploymentHistory extends Model
             'transfer_branch' => 'warning',
             'transfer_division' => 'info',
             'resign' => 'danger',
+            'external' => 'primary', // <--- Warna Biru untuk External
             default => 'secondary',
         };
     }
