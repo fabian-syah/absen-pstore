@@ -33,6 +33,7 @@ class User extends Authenticatable
         'birth_date',
         'login_id',        // ID Login khusus (wajib)
         'password',
+        'use_face_recognition',
         'role',
         'only_security_scan',
         'gaji',            // <--- FIELD BARU GAJI DITAMBAHKAN DI SINI

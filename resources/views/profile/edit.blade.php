@@ -46,7 +46,7 @@
                                  style="width: 150px; height: 150px; object-fit: cover; border: {{ $user->is_verified ? '5px solid #0d6efd' : '3px solid #e3e3e3' }};">
                         @else
                             <div class="profile-initial-dropdown mx-auto shadow-sm"
-                                style="background-color: #007bff; width: 150px; height: 150px; line-height: 150px; font-size: 40px; border-radius: 50%; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                                 style="background-color: #007bff; width: 150px; height: 150px; line-height: 150px; font-size: 40px; border-radius: 50%; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center;">
                                 {{ substr($user->name, 0, 1) }}
                             </div>
                         @endif
@@ -211,6 +211,32 @@
                          <div class="col-md-6 mb-4">
                             <label class="fw-bold text-muted small text-uppercase">Email Login</label>
                             <input type="email" class="form-control" name="email" value="{{ old('email', $user->email) }}">
+                        </div>
+
+                        {{-- =================================================== --}}
+                        {{-- [BARU] PENGATURAN ABSENSI (SWITCH AI WAJAH) --}}
+                        {{-- =================================================== --}}
+                        <div class="col-12 mb-2 mt-2">
+                            <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2">Pengaturan Absensi</h6>
+                        </div>
+                        <div class="col-12 mb-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold mb-1"><i class="mdi mdi-face-recognition me-1"></i> Aktifkan Deteksi Wajah (AI)</h6>
+                                        <p class="text-muted small mb-0" style="line-height: 1.2;">
+                                            Matikan fitur ini jika Anda menggunakan cadar (niqab) atau masker medis yang menutupi wajah saat absen.
+                                            <br><span class="text-danger fw-bold">*Jika dimatikan, tombol kamera akan langsung aktif tanpa scan wajah.</span>
+                                        </p>
+                                    </div>
+                                    <div class="form-check form-switch ms-3">
+                                        {{-- Checkbox ini otomatis tercentang jika user->use_face_recognition == true --}}
+                                        <input class="form-check-input" type="checkbox" id="useAI" name="use_face_recognition" value="1" 
+                                            {{ $user->use_face_recognition ? 'checked' : '' }} 
+                                            style="width: 50px; height: 25px; cursor: pointer;">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- 2. INFORMASI PEKERJAAN (READ ONLY) --}}

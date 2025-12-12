@@ -34,7 +34,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update data (Nama, Tanggal Lahir, Email, Sosmed, Password).
+     * Update data (Nama, Tgl Lahir, Email, Sosmed, Password, & SETTING AI).
      */
     public function update(Request $request)
     {
@@ -43,7 +43,7 @@ class ProfileController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'birth_date' => 'nullable|date', // Validasi Tanggal Lahir
+            'birth_date' => 'nullable|date',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
             // Validasi Sosmed
@@ -51,11 +51,12 @@ class ProfileController extends Controller
             'instagram' => 'nullable|string|max:100',
             'tiktok' => 'nullable|string|max:100',
             'facebook' => 'nullable|string|max:100',
+            // Checkbox 'use_face_recognition' tidak perlu validasi required karena boolean
         ]);
 
         $data = $request->only([
             'name',
-            'birth_date', // Simpan Tanggal Lahir
+            'birth_date',
             'email',
             'whatsapp',
             'instagram',
@@ -67,10 +68,17 @@ class ProfileController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
+        // =========================================================
+        // [BARU] UPDATE PENGATURAN AI WAJAH
+        // =========================================================
+        // Checkbox HTML: Jika dicentang kirim value '1', jika tidak, tidak kirim apa2.
+        // Gunakan $request->has() atau filter input.
+        $data['use_face_recognition'] = $request->has('use_face_recognition') ? true : false;
+
         $user->update($data);
 
         return redirect()->route('profile.edit')
-            ->with('success', 'Informasi profil berhasil diperbarui.');
+            ->with('success', 'Informasi profil dan pengaturan berhasil diperbarui.');
     }
 
     /**
