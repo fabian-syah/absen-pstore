@@ -85,10 +85,10 @@
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="modal-body text-center">
-                                                    {{-- Responsive: Max height 85% layar, Width menyesuaikan --}}
+                                                    {{-- PERBAIKAN STYLE: width: 100% agar memenuhi modal --}}
                                                     <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
                                                          class="img-fluid rounded" 
-                                                         style="max-height: 85vh; width: auto; max-width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                                         style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                                                 </div>
                                             </div>
                                         </div>
@@ -121,10 +121,10 @@
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body text-center p-4">
-                                                        {{-- Responsive Image Logic --}}
+                                                        {{-- PERBAIKAN STYLE: width: 100% agar memenuhi modal --}}
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
-                                                             class="img-fluid rounded shadow-sm"
-                                                             style="max-height: 85vh; width: auto; max-width: 100%;">
+                                                             class="img-fluid rounded"
+                                                             style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                                                     </div>
                                                 </div>
                                             </div>
@@ -151,7 +151,7 @@
                                             </span>
                                         </div>
 
-                                        {{-- MODAL KTP BARU (Responsive & Clean) --}}
+                                        {{-- MODAL KTP BARU (Besar & Jelas) --}}
                                         <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-xl">
                                                 <div class="modal-content">
@@ -161,17 +161,18 @@
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     
-                                                    {{-- Body: Responsive Size --}}
+                                                    {{-- Body: PERBAIKAN STYLE DISINI --}}
                                                     <div class="modal-body text-center p-3">
                                                         {{-- 
-                                                            LOGIKA RESPONSIVE:
-                                                            max-height: 80vh -> Agar tidak melebihi tinggi layar monitor (tidak perlu scroll).
-                                                            width: auto      -> Lebar menyesuaikan proporsi gambar aslinya.
-                                                            max-width: 100%  -> Agar di HP tidak offside (melebar keluar).
+                                                            LOGIKA BARU UNTUK GAMBAR BESAR:
+                                                            width: 100%      -> Paksa gambar memenuhi lebar modal.
+                                                            height: auto     -> Tinggi menyesuaikan agar proporsional.
+                                                            max-height: 85vh -> Batasi tinggi agar tidak melebihi layar.
+                                                            object-fit: contain -> Pastikan seluruh gambar terlihat jelas.
                                                         --}}
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
                                                              class="img-fluid rounded"
-                                                             style="max-height: 80vh; width: auto; max-width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                                             style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                                                     </div>
 
                                                     {{-- Footer --}}
