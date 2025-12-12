@@ -223,7 +223,7 @@
                 startBtn.disabled = true;
                 try {
                     // Pastikan folder /models ada di public dan berisi file shard/manifest
-                    await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+                    await faceapi.nets.tinyFaceDetector.loadFromUri('public/models');
                     console.log("Face API Models Loaded");
                     modelsLoaded = true;
                     modelLoadingText.classList.add('d-none');
