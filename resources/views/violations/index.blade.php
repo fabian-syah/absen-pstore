@@ -113,7 +113,7 @@
                                                     <i class="mdi mdi-check-bold"></i>
                                                 </button>
 
-                                                {{-- 3. Hapus --}}
+                                                {{-- 3. Hapus
                                                 @if(auth()->user()->role == 'admin')
                                                     <form action="{{ route('violations.destroy', $v->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus permanen data ini?')">
                                                         @csrf
@@ -122,7 +122,7 @@
                                                             <i class="mdi mdi-delete"></i>
                                                         </button>
                                                     </form>
-                                                @endif
+                                                @endif --}}
                                             </div>
                                         </td>
                                     @endif
