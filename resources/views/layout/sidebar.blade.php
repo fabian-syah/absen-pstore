@@ -77,6 +77,13 @@
                     <span class="menu-title">Data Cabang</span>
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin.correction.index') }}">
+                    <i class="menu-icon mdi mdi-eraser"></i>
+                    <span class="menu-title">Koreksi Absensi</span>
+                </a>
+            </li>
         @endif
 
         {{-- =================================== --}}
