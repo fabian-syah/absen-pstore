@@ -66,7 +66,8 @@
                         <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">MENU & RIWAYAT</h6>
                         <div class="list-group list-group-flush">
                             {{-- 1. HISTORY ABSEN --}}
-                            <a href="{{ route('attendance.history', ['employeeId' => $user->id]) }}"
+                            {{-- PERBAIKAN: Menggunakan route 'my.team.attendance' agar melihat history user tsb, bukan diri sendiri --}}
+                            <a href="{{ route('my.team.attendance', $user->id) }}"
                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                                 <span><i class="mdi mdi-calendar-clock text-primary me-2"></i> History Absen Full</span>
                                 <i class="mdi mdi-chevron-right text-muted"></i>
@@ -79,8 +80,7 @@
                                 <i class="mdi mdi-chevron-right text-muted"></i>
                             </a>
 
-                            {{-- [UPDATE] 3. HISTORY PELANGGARAN --}}
-                            {{-- Mengarah ke ID #violationSection di bawah halaman ini --}}
+                            {{-- 3. HISTORY PELANGGARAN --}}
                             <a href="#violationSection"
                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                                 <span><i class="mdi mdi-alert-circle text-danger me-2"></i> Pelanggaran</span>

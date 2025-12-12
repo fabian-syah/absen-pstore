@@ -31,7 +31,6 @@ class UserController extends Controller
                 }
             } 
             // Untuk method selain 'show', Leader DILARANG (Kecuali jika Anda ingin Leader bisa edit user, sesuaikan di sini)
-            // Sesuai request, Leader dibuat seperti Audit (bisa kelola multi branch), jadi saya izinkan Leader di sini.
             else {
                 if (!in_array($user->role, ['admin', 'audit', 'admin_gaji', 'leader'])) {
                     abort(403, 'Akses ditolak. Anda tidak memiliki hak akses.');

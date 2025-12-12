@@ -15,10 +15,10 @@ class BranchController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (Auth::check() && in_array(Auth::user()->role, ['admin', 'audit'])) {
+            if (Auth::check() && in_array(Auth::user()->role, ['admin', 'audit', 'leader'])) {
                 return $next($request);
             }
-            return abort(403, 'Hanya Admin atau Audit yang boleh mengakses halaman ini.');
+            return abort(403, 'Hanya Admin, Audit, atau Leader yang boleh mengakses halaman ini.');
         });
     }
 
@@ -35,10 +35,17 @@ class BranchController extends Controller
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('id', $user->branch_id);
         }
-        // Jika Audit -> Hanya lihat cabang wilayah auditnya (dari tabel pivot)
-        elseif ($user->role == 'audit') {
-            $auditBranchIds = $user->branches->pluck('id')->toArray();
-            $query->whereIn('id', $auditBranchIds);
+        // Jika Audit ATAU Leader -> Hanya lihat cabang wilayahnya (dari tabel pivot)
+        elseif (in_array($user->role, ['audit', 'leader'])) {
+            $allowedBranchIds = $user->branches->pluck('id')->toArray();
+            
+            // Tambahkan branch_id utama user jika ada (untuk safety)
+            if ($user->branch_id) {
+                $allowedBranchIds[] = $user->branch_id;
+            }
+            $allowedBranchIds = array_unique($allowedBranchIds);
+
+            $query->whereIn('id', $allowedBranchIds);
         }
         // Jika Super Admin -> Melihat SEMUA (Tidak ada filter role)
 
@@ -53,7 +60,6 @@ class BranchController extends Controller
             });
         }
 
-        $branches = $query->withCount('users')->oldest()->get();
         $branches = $query->latest()->get();
         
         return view('branch.branch_index', compact('branches'));
@@ -70,13 +76,19 @@ class BranchController extends Controller
         if ($user->role == 'admin' && $user->branch_id != null) {
             if ($branch->id != $user->branch_id) abort(403, 'Akses Ditolak.');
         }
-        elseif ($user->role == 'audit') {
-            $auditBranchIds = $user->branches->pluck('id')->toArray();
-            if (!in_array($branch->id, $auditBranchIds)) abort(403, 'Akses Ditolak.');
+        elseif (in_array($user->role, ['audit', 'leader'])) {
+            $allowedBranchIds = $user->branches->pluck('id')->toArray();
+            if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
+            
+            if (!in_array($branch->id, $allowedBranchIds)) abort(403, 'Akses Ditolak. Cabang ini bukan wilayah Anda.');
         }
 
         // 2. Ambil User di Cabang Ini (Eager Loading Division)
-        $users = User::with('division')
+        // [UPDATE] Menggunakan nama variabel $employees agar cocok dengan blade view yang diberikan
+        $employees = User::with(['division', 'attendances' => function($q) {
+                // Ambil attendance hari ini saja untuk ditampilkan di tabel
+                $q->whereDate('check_in_time', now());
+            }])
             ->where('branch_id', $branch->id)
             ->where('role', '!=', 'admin') // Opsional: Sembunyikan super admin jika ada
             ->latest()
@@ -85,8 +97,7 @@ class BranchController extends Controller
         // 3. Hitung Statistik Ringan
         $totalEmployees = User::where('branch_id', $branch->id)->count();
 
-        // [BARU] 4. Ambil Audit Penanggung Jawab Cabang Ini
-        // Menggunakan whereHas untuk mengecek relasi many-to-many (pivot table)
+        // 4. Ambil Audit Penanggung Jawab Cabang Ini
         $assignedAudits = User::where('role', 'audit')
             ->where('is_active', true)
             ->whereHas('branches', function($q) use ($branch) {
@@ -94,7 +105,7 @@ class BranchController extends Controller
             })
             ->get();
 
-        return view('branch.branch_show', compact('branch', 'users', 'totalEmployees', 'assignedAudits'));
+        return view('branch.branch_show', compact('branch', 'employees', 'totalEmployees', 'assignedAudits'));
     }
 
     /**
@@ -135,8 +146,8 @@ class BranchController extends Controller
     {
         $user = Auth::user();
 
-        // Proteksi: Audit tidak boleh edit
-        if ($user->role == 'audit') abort(403, 'Anda tidak memiliki akses edit.');
+        // Proteksi: Audit/Leader tidak boleh edit
+        if (in_array($user->role, ['audit', 'leader'])) abort(403, 'Anda tidak memiliki akses edit.');
 
         // Proteksi: Admin Cabang hanya boleh edit cabangnya sendiri
         if ($user->role == 'admin' && $user->branch_id != null) {
@@ -153,7 +164,7 @@ class BranchController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role == 'audit') abort(403);
+        if (in_array($user->role, ['audit', 'leader'])) abort(403);
         if ($user->role == 'admin' && $user->branch_id != null && $branch->id != $user->branch_id) abort(403);
 
         $request->validate([

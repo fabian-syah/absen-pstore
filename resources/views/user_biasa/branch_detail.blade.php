@@ -131,7 +131,8 @@
 
                                     {{-- AKSI --}}
                                     <td>
-                                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branch->id, 'employeeId' => $emp->id]) }}" 
+                                        {{-- PERBAIKAN: Menggunakan route 'my.team.attendance' agar melihat history user tsb --}}
+                                        <a href="{{ route('my.team.attendance', $emp->id) }}" 
                                            class="btn btn-outline-primary btn-sm">
                                             <i class="mdi mdi-history me-1"></i> Riwayat
                                         </a>
