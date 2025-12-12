@@ -9,143 +9,127 @@
 @endsection
 
 @section('content')
-    <div class="row">
-        <div class="col-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="card-title mb-0">Form Absen Mandiri ({{ ucfirst($mode) }})</h4>
-                        <div class="badge badge-success badge-pill">
-                            <i class="mdi mdi-face-recognition me-1"></i>Face Detection Active
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 grid-margin stretch-card">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="card-title mb-0 fw-bold">Absen {{ ucfirst($mode) }}</h4>
+                        <div class="badge badge-success rounded-pill px-3">
+                            <i class="mdi mdi-face-recognition me-1"></i>AI Detect
                         </div>
                     </div>
 
-                    {{-- ALERT STATUS (TETAP SAMA SEPERTI KODE ANDA) --}}
+                    {{-- ALERT STATUS (LOGIKA LAMA TETAP ADA) --}}
                     @if ($mode == 'pulang' && isset($attendance))
-                        @php
-                            $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time);
-                            $isNextDay = !$checkInDate->isToday();
-                            $statusClass = 'secondary';
-                            if($attendance->status == 'verified' || $attendance->status == 'present') $statusClass = 'success';
-                            if($attendance->status == 'pending_verification') $statusClass = 'warning';
-                            if($attendance->status == 'rejected') $statusClass = 'danger';
-                            $typeLabel = ($attendance->attendance_type == 'scan') ? 'Security Scan' : 'Selfie Mandiri';
-                        @endphp
-                        @if ($isNextDay)
-                            <div class="alert alert-warning border-0 shadow-sm mb-4">
-                                <strong><i class="mdi mdi-weather-night me-1"></i> Pulang Lintas Hari (Lembur)</strong>
-                            </div>
-                        @else
-                            <div class="alert alert-info border-0 shadow-sm mb-4">
-                                Masuk pukul <strong>{{ $checkInDate->format('H:i') }}</strong> via <strong>{{ $typeLabel }}</strong>.
-                                Status: <span class="badge badge-{{ $statusClass }}">{{ strtoupper($attendance->status) }}</span>
-                            </div>
-                        @endif
+                        <div class="alert alert-light border shadow-sm mb-3 small">
+                            <i class="mdi mdi-clock-outline me-1"></i> Masuk: <strong>{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</strong>
+                        </div>
                     @endif
 
-                    <form class="forms-sample" action="{{ route('self.attend.store') }}" method="POST"
-                        enctype="multipart/form-data" id="attendance-form">
+                    <form class="forms-sample" action="{{ route('self.attend.store') }}" method="POST" enctype="multipart/form-data" id="attendance-form">
                         @csrf
                         @if (isset($attendance) && $attendance)
                             <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
                         @endif
 
-                        {{-- INPUT FILE HIDDEN UNTUK MENAMPUNG HASIL FOTO DARI JS --}}
+                        {{-- INPUT FILE HIDDEN (PENAMPUNG DATA GAMBAR) --}}
                         <input type="file" name="photo" id="photo-input-hidden" class="d-none" accept="image/jpeg">
 
-                        <div class="row mb-4">
-                            {{-- KOLOM KIRI: KAMERA STREAM --}}
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="fw-semibold mb-3">Foto Selfie <span class="text-danger">*</span></label>
-                                    
-                                    <div class="camera-container text-center position-relative">
-                                        
-                                        {{-- 1. VIDEO STREAM (KAMERA AKTIF) --}}
-                                        <div id="video-container" class="d-none overflow-hidden rounded position-relative">
-                                            <video id="video-feed" autoplay muted playsinline class="w-100 rounded"></video>
-                                            
-                                            {{-- Status Deteksi di atas Video --}}
-                                            <div id="face-overlay-status" class="position-absolute bottom-0 start-0 w-100 p-2 bg-dark bg-opacity-75 text-white">
-                                                <i class="mdi mdi-loading mdi-spin me-1"></i> Mencari wajah...
-                                            </div>
-                                        </div>
+                        {{-- === AREA KAMERA UTAMA (STYLE INSTAGRAM/NATIVE) === --}}
+                        <div class="camera-wrapper position-relative overflow-hidden rounded-4 mb-3">
+                            
+                            {{-- 1. VIDEO FEED (MURNI TANPA KONTROL) --}}
+                            <video id="video-feed" autoplay muted playsinline></video>
 
-                                        {{-- 2. HASIL FOTO (PREVIEW) --}}
-                                        <div id="result-container" class="d-none">
-                                            <img id="preview-image" src="" alt="Preview" class="img-fluid rounded shadow-sm">
-                                            <div class="mt-2 text-success fw-bold small">
-                                                <i class="mdi mdi-check-circle"></i> Foto Berhasil Diambil
-                                            </div>
-                                            <button type="button" id="retake-btn" class="btn btn-danger btn-sm mt-2">
-                                                <i class="mdi mdi-camera-retake me-1"></i>Ambil Ulang
-                                            </button>
-                                        </div>
+                            {{-- 2. OVERLAY UI (FOCUS BOX & STATUS) --}}
+                            <div class="camera-overlay d-flex flex-column justify-content-between p-3">
+                                {{-- Top Status --}}
+                                <div class="text-center">
+                                    <span id="face-status-badge" class="badge bg-dark bg-opacity-50 rounded-pill backdrop-blur">
+                                        <i class="mdi mdi-loading mdi-spin me-1"></i> Mencari wajah...
+                                    </span>
+                                </div>
 
-                                        {{-- 3. TOMBOL START --}}
-                                        <div id="start-container" class="py-5">
-                                            <i class="mdi mdi-camera display-4 text-muted mb-3 d-block"></i>
-                                            <button type="button" id="start-camera-btn" class="btn btn-primary btn-lg rounded-pill shadow">
-                                                <i class="mdi mdi-camera me-1"></i> Buka Kamera
-                                            </button>
-                                            <div id="model-loading-text" class="text-muted mt-2 d-none small">
-                                                <span class="spinner-border spinner-border-sm me-1"></span> Menyiapkan AI...
-                                            </div>
-                                        </div>
+                                {{-- Focus Frame (Kotak Wajah) --}}
+                                <div class="focus-frame">
+                                    <div class="corner top-left"></div>
+                                    <div class="corner top-right"></div>
+                                    <div class="corner bottom-left"></div>
+                                    <div class="corner bottom-right"></div>
+                                </div>
 
-                                        {{-- 4. TOMBOL CAPTURE (MUNCUL SAAT VIDEO AKTIF) --}}
-                                        <div id="capture-container" class="mt-3 d-none">
-                                            <button type="button" id="capture-btn" class="btn btn-success btn-lg rounded-circle shadow-lg p-3" disabled style="width: 60px; height: 60px;">
-                                                <i class="mdi mdi-camera-iris fs-4"></i>
-                                            </button>
-                                            <div class="small text-muted mt-1" id="capture-hint">Tunggu wajah terdeteksi...</div>
-                                        </div>
-
-                                    </div>
+                                {{-- Bottom (Hidden by default, shown when camera active) --}}
+                                <div class="text-center text-white small text-shadow" id="camera-instruction">
+                                    Tahan posisi wajah
                                 </div>
                             </div>
 
-                            {{-- KOLOM KANAN: LOKASI --}}
-                            <div class="col-md-6">
-                                <div class="location-info p-4 rounded bg-light h-100">
-                                    <h6 class="fw-semibold mb-3">
-                                        <i class="mdi mdi-map-marker-outline me-2"></i>Lokasi Anda
-                                    </h6>
-                                    <div id="location-status" class="alert alert-info mb-3">
-                                        <div class="d-flex align-items-center">
-                                            <i class="mdi mdi-loading mdi-spin me-2"></i> <span>Mencari GPS...</span>
-                                        </div>
+                            {{-- 3. LAYAR HITAM (START SCREEN) --}}
+                            <div id="start-screen" class="position-absolute top-0 start-0 w-100 h-100 bg-dark d-flex flex-column justify-content-center align-items-center z-3">
+                                <div class="icon-circle mb-3">
+                                    <i class="mdi mdi-camera text-white fs-1"></i>
+                                </div>
+                                <button type="button" id="start-camera-btn" class="btn btn-light rounded-pill fw-bold px-4">
+                                    Buka Kamera
+                                </button>
+                                <div id="model-loading-text" class="text-white-50 mt-3 small d-none">
+                                    <span class="spinner-border spinner-border-sm me-1"></span> Menyiapkan AI...
+                                </div>
+                            </div>
+
+                            {{-- 4. HASIL FOTO (PREVIEW) --}}
+                            <div id="result-screen" class="position-absolute top-0 start-0 w-100 h-100 bg-black d-none z-3">
+                                <img id="preview-image" src="" alt="Result" class="w-100 h-100 object-fit-cover">
+                                <div class="position-absolute bottom-0 w-100 p-4 d-flex gap-2 bg-gradient-black">
+                                    <button type="button" id="retake-btn" class="btn btn-outline-light flex-fill rounded-pill">
+                                        Ulangi
+                                    </button>
+                                    <div class="flex-fill text-center text-white align-self-center fw-bold">
+                                        <i class="mdi mdi-check-circle text-success me-1"></i> Oke
                                     </div>
-                                    <div id="location-details" class="d-none">
-                                        <div class="mb-2">
-                                            <small class="text-muted d-block">Koordinat</small>
-                                            <span class="fw-bold font-monospace" id="coordinates-display">-</span>
-                                        </div>
-                                        <div class="mb-2">
-                                            <small class="text-muted d-block">Akurasi GPS</small>
-                                            <span class="badge badge-outline-success" id="accuracy-display">-</span>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" id="latitude" name="latitude">
-                                    <input type="hidden" id="longitude" name="longitude">
-                                    <input type="hidden" id="accuracy" name="accuracy">
                                 </div>
                             </div>
                         </div>
+                        {{-- === END AREA KAMERA === --}}
 
-                        {{-- INPUT NOTES --}}
+
+                        {{-- TOMBOL SHUTTER (BUTTON KAMERA ASLI) --}}
+                        <div class="d-flex justify-content-center mb-4 position-relative" style="height: 80px;">
+                            {{-- Tombol Capture (Hanya aktif jika wajah ok) --}}
+                            <button type="button" id="capture-btn" class="shutter-btn" disabled></button>
+                            
+                            {{-- Loading Spinner saat proses foto --}}
+                            <div id="capture-loading" class="spinner-border text-primary position-absolute top-50 start-50 translate-middle d-none" role="status"></div>
+                        </div>
+
+                        {{-- INFO LOKASI --}}
+                        <div class="location-card bg-light rounded-3 p-3 mb-4 d-flex align-items-center">
+                            <div class="icon-box bg-white rounded-circle p-2 me-3 shadow-sm">
+                                <i class="mdi mdi-map-marker text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <small class="text-muted d-block">Lokasi Anda</small>
+                                <h6 class="mb-0 text-truncate fw-bold" id="coordinates-display">Mencari GPS...</h6>
+                            </div>
+                            <div id="gps-accuracy-badge" class="badge bg-secondary rounded-pill">...</div>
+                        </div>
+
+                        {{-- FORM INPUTS --}}
                         <div class="form-group mb-4">
-                            <label class="fw-semibold mb-2">Catatan (Opsional)</label>
-                            <textarea name="notes" class="form-control" rows="3" placeholder="Contoh: Lembur..."></textarea>
+                            <textarea name="notes" class="form-control bg-light border-0 rounded-3" rows="2" placeholder="Tulis catatan (Opsional)..."></textarea>
                         </div>
+                        
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                        <input type="hidden" id="accuracy" name="accuracy">
 
-                        {{-- SLIDE TO SUBMIT --}}
-                        <div class="slide-submit-container mt-4">
+                        {{-- SLIDER SUBMIT --}}
+                        <div class="slide-submit-container">
                             <div class="slide-track disabled" id="slide-track">
-                                <div class="slide-text" id="slide-text">Geser untuk {{ ucfirst($mode) }} <i class="mdi mdi-chevron-double-right"></i></div>
-                                <div class="slide-thumb" id="slide-thumb"><i class="mdi mdi-arrow-right"></i></div>
+                                <div class="slide-text" id="slide-text">Geser untuk Absen</div>
+                                <div class="slide-thumb" id="slide-thumb"><i class="mdi mdi-chevron-right"></i></div>
                             </div>
-                            <small class="text-muted text-center d-block mt-2" id="slide-hint">Ambil foto & lokasi untuk membuka kunci</small>
                         </div>
 
                         <div class="text-center mt-3">
@@ -157,24 +141,112 @@
         </div>
     </div>
     
-    {{-- CANVAS HIDDEN UNTUK PROSES GAMBAR --}}
     <canvas id="capture-canvas" class="d-none"></canvas>
 @endsection
 
 @push('styles')
     <style>
-        .camera-container { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 1.5rem; background: #f8fafc; min-height: 350px; display: flex; flex-direction: column; justify-content: center; }
-        #video-feed { transform: scaleX(-1); /* Mirror effect supaya natural */ object-fit: cover; }
+        /* === CAMERA UI STYLES === */
+        .camera-wrapper {
+            width: 100%;
+            height: 0;
+            padding-bottom: 125%; /* Aspect Ratio 4:5 (Portrait) */
+            background: #000;
+            position: relative;
+        }
+
+        #video-feed {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* INI KUNCINYA: Biar full screen ga gepeng */
+            transform: scaleX(-1); /* Mirror effect */
+        }
+
+        /* Hilangkan kontrol video bawaan browser */
+        video::-webkit-media-controls { display: none !important; }
+        video::-webkit-media-controls-play-button { display: none !important; }
+        video::-webkit-media-controls-start-playback-button { display: none !important; }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2;
+            pointer-events: none; /* Biar ga ngehalangin klik */
+        }
+
+        .backdrop-blur {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        /* Focus Frame Animation */
+        .focus-frame {
+            width: 200px;
+            height: 250px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.3); /* Gelapin area luar fokus */
+        }
         
-        /* SLIDE TO SUBMIT CSS (SAMA SEPERTI YANG LAMA) */
-        .slide-submit-container { position: relative; user-select: none; width: 100%; height: 60px; }
-        .slide-track { position: relative; width: 100%; height: 100%; background-color: #e2e8f0; border-radius: 30px; overflow: hidden; cursor: pointer; transition: background-color 0.3s ease; }
-        .slide-track.disabled { opacity: 0.6; pointer-events: none; background-color: #f1f5f9; }
-        .slide-track.submitted { background-color: #10b981; }
-        .slide-thumb { position: absolute; top: 4px; left: 4px; width: 52px; height: 52px; background-color: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; cursor: grab; z-index: 2; transition: left 0.1s linear, transform 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .slide-thumb:active { cursor: grabbing; transform: scale(0.95); }
-        .slide-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #64748b; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; z-index: 1; padding-left: 20px; }
-        .slide-track.submitted .slide-text { color: white; padding-left: 0; }
+        .focus-frame.active {
+            border-color: #00ff88; /* Hijau saat detect */
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.1), 0 0 20px rgba(0,255,136,0.3);
+        }
+
+        /* Shutter Button (Tombol Bulet Besar) */
+        .shutter-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 4px solid #ccc;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .shutter-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 54px;
+            height: 54px;
+            background-color: #ccc;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .shutter-btn:not(:disabled):hover { border-color: #fff; }
+        .shutter-btn:not(:disabled):hover::after { background-color: #fff; }
+        
+        /* State Aktif (Bisa Foto) */
+        .shutter-btn.ready { border-color: #fff; }
+        .shutter-btn.ready::after { background-color: #fff; }
+
+        /* State ditekan */
+        .shutter-btn:active::after { width: 45px; height: 45px; }
+
+        .shutter-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .object-fit-cover { object-fit: cover; }
+        .bg-gradient-black { background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
+
+        /* SLIDER STYLES (Cleaned up) */
+        .slide-submit-container { position: relative; width: 100%; height: 55px; background: #e9ecef; border-radius: 50px; overflow: hidden; }
+        .slide-track { height: 100%; display: flex; align-items: center; cursor: pointer; }
+        .slide-track.submitted { background: #198754; transition: 0.3s; }
+        .slide-thumb { width: 45px; height: 45px; background: #fff; border-radius: 50%; margin-left: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: relative; z-index: 2; transition: left 0.1s; }
+        .slide-text { position: absolute; width: 100%; text-align: center; font-weight: 600; color: #6c757d; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; user-select: none; }
+        .slide-track.submitted .slide-text { color: #fff; }
+        .slide-track.disabled { pointer-events: none; opacity: 0.6; }
     </style>
 @endpush
 
@@ -184,268 +256,274 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ELEMENT REFERENCES
+            // --- DOM ELEMENTS ---
             const videoFeed = document.getElementById('video-feed');
-            const videoContainer = document.getElementById('video-container');
-            const resultContainer = document.getElementById('result-container');
-            const startContainer = document.getElementById('start-container');
+            const startScreen = document.getElementById('start-screen');
+            const resultScreen = document.getElementById('result-screen');
             const startBtn = document.getElementById('start-camera-btn');
-            const captureContainer = document.getElementById('capture-container');
             const captureBtn = document.getElementById('capture-btn');
-            const captureHint = document.getElementById('capture-hint');
             const retakeBtn = document.getElementById('retake-btn');
             const previewImage = document.getElementById('preview-image');
-            const canvas = document.getElementById('capture-canvas');
-            const overlayStatus = document.getElementById('face-overlay-status');
-            const modelLoadingText = document.getElementById('model-loading-text');
             const photoInputHidden = document.getElementById('photo-input-hidden');
+            const canvas = document.getElementById('capture-canvas');
             
-            // LOCATION & FORM
-            const locationStatus = document.getElementById('location-status');
-            const locationDetails = document.getElementById('location-details');
+            // UI Status Elements
+            const faceStatusBadge = document.getElementById('face-status-badge');
+            const focusFrame = document.querySelector('.focus-frame');
+            const modelLoadingText = document.getElementById('model-loading-text');
+            const cameraInstruction = document.getElementById('camera-instruction');
+
+            // Location & Slider
+            const locationCard = document.querySelector('.location-card');
             const form = document.getElementById('attendance-form');
             const slideTrack = document.getElementById('slide-track');
             const slideThumb = document.getElementById('slide-thumb');
             const slideText = document.getElementById('slide-text');
-            const slideHint = document.getElementById('slide-hint');
 
             let streamRef = null;
             let detectionInterval = null;
             let isFaceValid = false;
             let modelsLoaded = false;
 
-            // ============================================
-            // 1. LOGIC FACE RECOGNITION & KAMERA
-            // ============================================
-            
-            async function loadModels() {
-                modelLoadingText.classList.remove('d-none');
-                startBtn.disabled = true;
-                try {
-                    // Pastikan folder /models ada di public dan berisi file shard/manifest
-                    await faceapi.nets.tinyFaceDetector.loadFromUri('public/models');
-                    console.log("Face API Models Loaded");
-                    modelsLoaded = true;
-                    modelLoadingText.classList.add('d-none');
-                    startBtn.disabled = false;
-                    startCamera();
-                } catch (err) {
-                    console.error("Error loading models:", err);
-                    alert("Gagal memuat AI. Pastikan file model ada di folder public/models.");
-                    modelLoadingText.innerText = "Error memuat Model AI.";
-                }
-            }
-
-            startBtn.addEventListener('click', function() {
+            // ==========================================
+            // 1. INIT & LOAD MODELS
+            // ==========================================
+            startBtn.addEventListener('click', async () => {
                 if (!modelsLoaded) {
-                    loadModels();
+                    modelLoadingText.classList.remove('d-none');
+                    startBtn.disabled = true;
+                    try {
+                        await faceapi.nets.tinyFaceDetector.loadFromUri('public/models');
+                        modelsLoaded = true;
+                        modelLoadingText.classList.add('d-none');
+                        startCamera();
+                    } catch (err) {
+                        console.error(err);
+                        alert("Gagal memuat AI. Cek file model.");
+                        startBtn.disabled = false;
+                    }
                 } else {
                     startCamera();
                 }
             });
 
+            // ==========================================
+            // 2. CAMERA & DETECTION
+            // ==========================================
             function startCamera() {
-                startContainer.classList.add('d-none');
-                videoContainer.classList.remove('d-none');
-                captureContainer.classList.remove('d-none');
-
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-                    .then(stream => {
-                        streamRef = stream;
-                        videoFeed.srcObject = stream;
-                        videoFeed.onloadedmetadata = () => {
-                            videoFeed.play();
-                            startDetection(); // Mulai deteksi saat video jalan
-                        };
-                    })
-                    .catch(err => {
-                        console.error("Camera Error:", err);
-                        alert("Gagal membuka kamera. Pastikan izin diberikan dan menggunakan HTTPS.");
-                        startContainer.classList.remove('d-none');
-                        videoContainer.classList.add('d-none');
-                        captureContainer.classList.add('d-none');
-                    });
+                // Request Camera (PENTING: attributes video di HTML sudah autoplay muted playsinline)
+                navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: "user",
+                        width: { ideal: 720 }, // Resolusi ideal
+                        height: { ideal: 1280 }
+                    }, 
+                    audio: false 
+                })
+                .then(stream => {
+                    streamRef = stream;
+                    videoFeed.srcObject = stream;
+                    
+                    // Update UI
+                    startScreen.classList.add('d-none');
+                    captureBtn.disabled = true; // Disable tombol sampai wajah ketemu
+                    
+                    // Mulai Deteksi saat video play
+                    videoFeed.onloadedmetadata = () => {
+                        videoFeed.play();
+                        startFaceDetection();
+                    };
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Gagal akses kamera. Pastikan izin browser diberikan.");
+                });
             }
 
-            function startDetection() {
-                // Interval deteksi setiap 200ms agar ringan
+            function startFaceDetection() {
+                // Interval 200ms (Ringan)
                 detectionInterval = setInterval(async () => {
                     if (videoFeed.paused || videoFeed.ended) return;
 
-                    // Deteksi wajah menggunakan TinyFaceDetector (Cepat & Ringan)
                     const detections = await faceapi.detectAllFaces(videoFeed, new faceapi.TinyFaceDetectorOptions());
 
-                    if (detections.length > 0) {
-                        // WAJAH DITEMUKAN
-                        const detection = detections[0];
-                        if (detection.score > 0.5) { // Akurasi > 50%
+                    if (detections.length > 0 && detections[0].score > 0.5) {
+                        // === WAJAH TERDETEKSI ===
+                        if (!isFaceValid) { // Supaya ga render berulang kali
                             isFaceValid = true;
-                            captureBtn.disabled = false;
-                            captureBtn.classList.remove('btn-secondary');
-                            captureBtn.classList.add('btn-success');
                             
-                            overlayStatus.innerHTML = '<i class="mdi mdi-check-circle text-success"></i> Wajah Terdeteksi';
-                            captureHint.innerText = "Silakan ambil foto";
-                            captureHint.classList.add('text-success');
+                            // UI Feedback: Hijau
+                            focusFrame.classList.add('active');
+                            faceStatusBadge.className = 'badge bg-success rounded-pill shadow';
+                            faceStatusBadge.innerHTML = '<i class="mdi mdi-face-recognition"></i> Wajah Oke';
+                            cameraInstruction.innerText = "Siap mengambil foto";
+                            
+                            // Enable Shutter
+                            captureBtn.disabled = false;
+                            captureBtn.classList.add('ready');
                         }
                     } else {
-                        // WAJAH HILANG
-                        isFaceValid = false;
-                        captureBtn.disabled = true;
-                        captureBtn.classList.add('btn-secondary');
-                        captureBtn.classList.remove('btn-success');
-                        
-                        overlayStatus.innerHTML = '<i class="mdi mdi-alert-circle text-warning"></i> Wajah Tidak Terlihat';
-                        captureHint.innerText = "Arahkan wajah ke kamera...";
-                        captureHint.classList.remove('text-success');
+                        // === WAJAH HILANG ===
+                        if (isFaceValid) {
+                            isFaceValid = false;
+                            
+                            // UI Feedback: Default/Merah
+                            focusFrame.classList.remove('active');
+                            faceStatusBadge.className = 'badge bg-dark bg-opacity-50 rounded-pill backdrop-blur';
+                            faceStatusBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Mencari...';
+                            cameraInstruction.innerText = "Posisikan wajah di dalam kotak";
+
+                            // Disable Shutter
+                            captureBtn.disabled = true;
+                            captureBtn.classList.remove('ready');
+                        }
                     }
                 }, 200);
             }
 
-            function stopCamera() {
-                if (streamRef) {
-                    streamRef.getTracks().forEach(track => track.stop());
-                }
-                if (detectionInterval) clearInterval(detectionInterval);
-            }
+            // ==========================================
+            // 3. CAPTURE PHOTO
+            // ==========================================
+            captureBtn.addEventListener('click', () => {
+                if (!isFaceValid) return;
 
-            // TOMBOL AMBIL FOTO
-            captureBtn.addEventListener('click', function() {
-                if (!isFaceValid) return; // Proteksi ganda
+                // Visual Feedback Click
+                captureBtn.style.transform = "scale(0.9)";
+                setTimeout(() => captureBtn.style.transform = "scale(1)", 100);
 
-                // Ambil gambar dari video ke canvas
-                const context = canvas.getContext('2d');
+                // Draw to Canvas
+                const ctx = canvas.getContext('2d');
                 canvas.width = videoFeed.videoWidth;
                 canvas.height = videoFeed.videoHeight;
                 
-                // Draw video (tambah scaleX -1 jika ingin hasil mirror seperti preview)
-                context.save();
-                context.scale(-1, 1); 
-                context.drawImage(videoFeed, -canvas.width, 0, canvas.width, canvas.height);
-                context.restore();
+                // Mirror Effect (Sesuai preview)
+                ctx.save();
+                ctx.scale(-1, 1);
+                ctx.drawImage(videoFeed, -canvas.width, 0, canvas.width, canvas.height);
+                ctx.restore();
 
-                // Convert Canvas ke Blob (File)
-                canvas.toBlob(function(blob) {
-                    // Buat File Object baru
-                    const file = new File([blob], "selfie_attendance.jpg", { type: "image/jpeg" });
+                // Convert to Blob
+                canvas.toBlob(blob => {
+                    const file = new File([blob], "attendance.jpg", { type: "image/jpeg" });
                     
-                    // Masukkan ke Input File Hidden (Agar Controller tidak berubah)
-                    const container = new DataTransfer();
-                    container.items.add(file);
-                    photoInputHidden.files = container.files;
+                    // Set Input File Hidden
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    photoInputHidden.files = dt.files;
 
-                    // Tampilkan Preview
+                    // Show Result Screen
                     const url = URL.createObjectURL(blob);
                     previewImage.src = url;
-
-                    // Update UI
-                    videoContainer.classList.add('d-none');
-                    captureContainer.classList.add('d-none');
-                    resultContainer.classList.remove('d-none');
                     
-                    stopCamera();
-                    checkFormValidity(); // Cek slider unlock
-                }, 'image/jpeg', 0.8);
+                    stopCameraAndShowResult();
+                    checkGlobalValidity(); // Cek apakah boleh slide
+                }, 'image/jpeg', 0.85);
             });
 
-            retakeBtn.addEventListener('click', function() {
-                resultContainer.classList.add('d-none');
-                photoInputHidden.value = ''; // Reset file
-                startCamera(); // Buka kamera lagi
-                checkFormValidity();
+            function stopCameraAndShowResult() {
+                if (detectionInterval) clearInterval(detectionInterval);
+                if (streamRef) streamRef.getTracks().forEach(t => t.stop());
+                resultScreen.classList.remove('d-none');
+            }
+
+            retakeBtn.addEventListener('click', () => {
+                resultScreen.classList.add('d-none');
+                startScreen.classList.remove('d-none'); // Kembali ke tombol start
+                photoInputHidden.value = ''; // Clear file
+                isFaceValid = false;
+                captureBtn.classList.remove('ready');
+                captureBtn.disabled = true;
+                
+                // Lock slider lagi
+                checkGlobalValidity();
             });
 
-
-            // ============================================
-            // 2. LOGIC LOKASI & SLIDER
-            // ============================================
+            // ==========================================
+            // 4. GPS & SLIDER LOGIC
+            // ==========================================
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         document.getElementById('latitude').value = pos.coords.latitude;
                         document.getElementById('longitude').value = pos.coords.longitude;
                         document.getElementById('accuracy').value = pos.coords.accuracy;
-                        document.getElementById('coordinates-display').innerText = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
-                        document.getElementById('accuracy-display').innerText = `± ${Math.round(pos.coords.accuracy)} m`;
-                        locationStatus.innerHTML = `<div class="text-success small"><i class="mdi mdi-check-circle me-1"></i>Lokasi Terkunci</div>`;
-                        locationDetails.classList.remove('d-none');
-                        checkFormValidity();
+                        
+                        document.getElementById('coordinates-display').innerText = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                        document.getElementById('gps-accuracy-badge').innerText = `±${Math.round(pos.coords.accuracy)}m`;
+                        document.getElementById('gps-accuracy-badge').className = 'badge bg-success rounded-pill';
+                        
+                        checkGlobalValidity();
                     },
-                    (err) => { locationStatus.innerHTML = `<div class="text-danger small">Gagal: ${err.message}</div>`; },
-                    { enableHighAccuracy: true, timeout: 10000 }
+                    (err) => { 
+                        document.getElementById('coordinates-display').innerText = "Gagal Deteksi Lokasi";
+                        document.getElementById('coordinates-display').classList.add('text-danger');
+                    },
+                    { enableHighAccuracy: true }
                 );
-            } else { locationStatus.innerHTML = "Browser tidak support GPS."; }
+            }
 
-            function checkFormValidity() {
+            function checkGlobalValidity() {
                 const hasPhoto = photoInputHidden.files.length > 0;
                 const hasLoc = document.getElementById('latitude').value !== '';
-                
+
                 if (hasPhoto && hasLoc) {
                     slideTrack.classList.remove('disabled');
-                    slideHint.textContent = "Geser tombol ke kanan untuk konfirmasi";
-                    slideHint.classList.remove('text-muted');
-                    slideHint.classList.add('text-success', 'fw-bold');
+                    slideText.innerText = "GESER KE KANAN >>";
+                    slideText.classList.add('text-success');
                 } else {
                     slideTrack.classList.add('disabled');
-                    slideHint.textContent = "Ambil foto & lokasi untuk membuka kunci";
-                    slideHint.classList.add('text-muted');
-                    slideHint.classList.remove('text-success', 'fw-bold');
+                    slideText.innerText = "Lengkapi Foto & Lokasi";
+                    slideText.classList.remove('text-success');
                 }
             }
 
-            // SLIDER LOGIC (Copy Paste yang lama, fungsi sama)
+            // SLIDER DRAG (Standard Logic)
             let isDragging = false, startX = 0, currentX = 0, trackWidth = 0, thumbWidth = 0, maxSlide = 0, isSubmitted = false;
             
-            function initSlider() {
-                trackWidth = slideTrack.offsetWidth;
-                thumbWidth = slideThumb.offsetWidth;
-                maxSlide = trackWidth - thumbWidth - 8;
-            }
-            window.addEventListener('resize', initSlider);
-            initSlider(); // Init awal
+            function initSlider() { trackWidth = slideTrack.offsetWidth; thumbWidth = slideThumb.offsetWidth; maxSlide = trackWidth - thumbWidth - 5; }
+            window.addEventListener('resize', initSlider); initSlider();
 
-            function startDrag(e) {
+            const onDragStart = (e) => {
                 if (slideTrack.classList.contains('disabled') || isSubmitted) return;
                 isDragging = true;
                 startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
                 slideThumb.style.transition = 'none';
-            }
-            function onDrag(e) {
-                if (!isDragging || isSubmitted) return;
+            };
+
+            const onDragMove = (e) => {
+                if (!isDragging) return;
                 const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
                 let moveX = clientX - startX;
-                if (moveX < 0) moveX = 0;
-                if (moveX > maxSlide) moveX = maxSlide;
+                if (moveX < 0) moveX = 0; if (moveX > maxSlide) moveX = maxSlide;
                 currentX = moveX;
-                slideThumb.style.left = (4 + moveX) + 'px';
-                slideText.style.opacity = 1 - (moveX / maxSlide);
-            }
-            function endDrag() {
-                if (!isDragging || isSubmitted) return;
+                slideThumb.style.left = moveX + 'px';
+                slideText.style.opacity = 1 - (moveX/maxSlide);
+            };
+
+            const onDragEnd = () => {
+                if (!isDragging) return;
                 isDragging = false;
                 if (currentX >= maxSlide * 0.9) {
                     isSubmitted = true;
-                    slideThumb.style.left = (4 + maxSlide) + 'px';
+                    slideThumb.style.left = maxSlide + 'px';
                     slideTrack.classList.add('submitted');
                     slideThumb.innerHTML = '<i class="mdi mdi-check"></i>';
-                    slideThumb.style.backgroundColor = '#fff';
-                    slideThumb.style.color = '#10b981';
+                    slideText.innerText = "MENGIRIM...";
                     slideText.style.opacity = 1;
-                    slideText.innerHTML = "MEMPROSES DATA...";
                     form.submit();
                 } else {
-                    slideThumb.style.transition = 'left 0.3s ease';
-                    slideThumb.style.left = '4px';
+                    slideThumb.style.transition = 'left 0.3s';
+                    slideThumb.style.left = '0px';
                     slideText.style.opacity = 1;
                 }
-            }
+            };
 
-            slideThumb.addEventListener('mousedown', startDrag);
-            document.addEventListener('mousemove', onDrag);
-            document.addEventListener('mouseup', endDrag);
-            slideThumb.addEventListener('touchstart', startDrag);
-            document.addEventListener('touchmove', onDrag);
-            document.addEventListener('touchend', endDrag);
+            slideThumb.addEventListener('mousedown', onDragStart);
+            slideThumb.addEventListener('touchstart', onDragStart);
+            window.addEventListener('mousemove', onDragMove);
+            window.addEventListener('touchmove', onDragMove);
+            window.addEventListener('mouseup', onDragEnd);
+            window.addEventListener('touchend', onDragEnd);
         });
     </script>
 @endpush
