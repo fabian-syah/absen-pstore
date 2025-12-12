@@ -23,11 +23,13 @@
                     {{-- ALERT STATUS --}}
                     @if ($mode == 'pulang' && isset($attendance))
                         <div class="alert alert-light border shadow-sm mb-3 small">
-                            <i class="mdi mdi-clock-outline me-1"></i> Masuk: <strong>{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</strong>
+                            <i class="mdi mdi-clock-outline me-1"></i> Masuk:
+                            <strong>{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</strong>
                         </div>
                     @endif
 
-                    <form class="forms-sample" action="{{ route('self.attend.store') }}" method="POST" enctype="multipart/form-data" id="attendance-form">
+                    <form class="forms-sample" action="{{ route('self.attend.store') }}" method="POST"
+                        enctype="multipart/form-data" id="attendance-form">
                         @csrf
                         @if (isset($attendance) && $attendance)
                             <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
@@ -37,14 +39,15 @@
 
                         {{-- === AREA KAMERA UTAMA === --}}
                         <div class="camera-wrapper position-relative overflow-hidden rounded-4 mb-3">
-                            
+
                             {{-- 1. VIDEO FEED (Normal View / Tidak Zoom) --}}
                             <video id="video-feed" autoplay muted playsinline></video>
 
                             {{-- 2. OVERLAY UI --}}
                             <div class="camera-overlay d-flex flex-column justify-content-between p-3">
                                 <div class="text-center">
-                                    <span id="face-status-badge" class="badge bg-dark bg-opacity-75 rounded-pill backdrop-blur border border-secondary">
+                                    <span id="face-status-badge"
+                                        class="badge bg-dark bg-opacity-75 rounded-pill backdrop-blur border border-secondary">
                                         <i class="mdi mdi-loading mdi-spin me-1"></i> Menunggu Kamera...
                                     </span>
                                 </div>
@@ -63,11 +66,13 @@
                             </div>
 
                             {{-- 3. TOMBOL START (Layar Hitam Awal) --}}
-                            <div id="start-screen" class="position-absolute top-0 start-0 w-100 h-100 bg-dark d-flex flex-column justify-content-center align-items-center z-3">
+                            <div id="start-screen"
+                                class="position-absolute top-0 start-0 w-100 h-100 bg-dark d-flex flex-column justify-content-center align-items-center z-3">
                                 <div class="icon-circle mb-3">
                                     <i class="mdi mdi-camera text-white fs-1"></i>
                                 </div>
-                                <button type="button" id="start-camera-btn" class="btn btn-light rounded-pill fw-bold px-4">
+                                <button type="button" id="start-camera-btn"
+                                    class="btn btn-light rounded-pill fw-bold px-4">
                                     Buka Kamera
                                 </button>
                                 <div id="model-loading-text" class="text-white-50 mt-3 small d-none">
@@ -77,9 +82,11 @@
 
                             {{-- 4. HASIL FOTO (PREVIEW) --}}
                             <div id="result-screen" class="position-absolute top-0 start-0 w-100 h-100 bg-black d-none z-3">
-                                <img id="preview-image" src="" alt="Result" class="w-100 h-100 object-fit-contain">
+                                <img id="preview-image" src="" alt="Result"
+                                    class="w-100 h-100 object-fit-contain">
                                 <div class="position-absolute bottom-0 w-100 p-4 d-flex gap-2 bg-gradient-black">
-                                    <button type="button" id="retake-btn" class="btn btn-outline-light flex-fill rounded-pill">
+                                    <button type="button" id="retake-btn"
+                                        class="btn btn-outline-light flex-fill rounded-pill">
                                         Ulangi
                                     </button>
                                     <div class="flex-fill text-center text-white align-self-center fw-bold">
@@ -112,9 +119,10 @@
 
                         {{-- FORM INPUTS --}}
                         <div class="form-group mb-4">
-                            <textarea name="notes" class="form-control bg-light border-0 rounded-3" rows="2" placeholder="Tulis catatan (Opsional)..."></textarea>
+                            <textarea name="notes" class="form-control bg-light border-0 rounded-3" rows="2"
+                                placeholder="Tulis catatan (Opsional)..."></textarea>
                         </div>
-                        
+
                         <input type="hidden" id="latitude" name="latitude">
                         <input type="hidden" id="longitude" name="longitude">
                         <input type="hidden" id="accuracy" name="accuracy">
@@ -135,7 +143,7 @@
             </div>
         </div>
     </div>
-    
+
     <canvas id="capture-canvas" class="d-none"></canvas>
 @endsection
 
@@ -144,7 +152,8 @@
         /* === CAMERA UI STYLES === */
         .camera-wrapper {
             width: 100%;
-            height: 450px; /* FIXED HEIGHT AGAR TIDAK TERLALU PANJANG */
+            height: 450px;
+            /* FIXED HEIGHT AGAR TIDAK TERLALU PANJANG */
             background: #000;
             position: relative;
             display: flex;
@@ -156,68 +165,141 @@
             width: 100%;
             height: 100%;
             /* KUNCI SUPAYA TIDAK ZOOM: CONTAIN = TAMPILKAN UTUH */
-            object-fit: contain; 
-            transform: scaleX(-1); /* Mirror effect */
+            object-fit: contain;
+            transform: scaleX(-1);
+            /* Mirror effect */
         }
 
         .camera-overlay {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 2; pointer-events: none;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
         }
 
-        .backdrop-blur { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+        .backdrop-blur {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
 
         /* Focus Frame */
         .focus-frame {
-            width: 220px; height: 280px;
-            border: 2px dashed rgba(255,255,255,0.4);
+            width: 220px;
+            height: 280px;
+            border: 2px dashed rgba(255, 255, 255, 0.4);
             border-radius: 24px;
             position: absolute;
-            top: 50%; left: 50%;
+            top: 50%;
+            left: 50%;
             transform: translate(-50%, -50%);
             transition: all 0.3s ease;
         }
-        
+
         .focus-frame.active {
-            border: 3px solid #00ff88; /* Hijau saat detect */
-            box-shadow: 0 0 20px rgba(0,255,136,0.2);
+            border: 3px solid #00ff88;
+            /* Hijau saat detect */
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
         }
 
         /* === TOMBOL SHUTTER HIJAU === */
         .shutter-btn {
-            width: 80px; height: 80px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             border: 5px solid #e0e0e0;
-            background-color: #9e9e9e; /* Abu-abu default (disabled) */
+            background-color: #9e9e9e;
+            /* Abu-abu default (disabled) */
             cursor: not-allowed;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         /* Saat Wajah Terdeteksi (Ready) */
         .shutter-btn.ready {
-            background-color: #00c853; /* HIJAU TERANG */
+            background-color: #00c853;
+            /* HIJAU TERANG */
             border-color: #fff;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(0, 200, 83, 0.6); /* Efek Glow Hijau */
+            box-shadow: 0 0 20px rgba(0, 200, 83, 0.6);
+            /* Efek Glow Hijau */
             transform: scale(1.1);
         }
 
-        .shutter-btn.ready:active { transform: scale(0.95); }
+        .shutter-btn.ready:active {
+            transform: scale(0.95);
+        }
 
-        .object-fit-contain { object-fit: contain; }
-        .bg-gradient-black { background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
+        .object-fit-contain {
+            object-fit: contain;
+        }
+
+        .bg-gradient-black {
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+        }
 
         /* SLIDER STYLES */
-        .slide-submit-container { position: relative; width: 100%; height: 55px; background: #e9ecef; border-radius: 50px; overflow: hidden; }
-        .slide-track { height: 100%; display: flex; align-items: center; cursor: pointer; }
-        .slide-track.submitted { background: #198754; transition: 0.3s; }
-        .slide-thumb { width: 45px; height: 45px; background: #fff; border-radius: 50%; margin-left: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: relative; z-index: 2; transition: left 0.1s; }
-        .slide-text { position: absolute; width: 100%; text-align: center; font-weight: 600; color: #6c757d; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; user-select: none; }
-        .slide-track.submitted .slide-text { color: #fff; }
-        .slide-track.disabled { pointer-events: none; opacity: 0.6; }
+        .slide-submit-container {
+            position: relative;
+            width: 100%;
+            height: 55px;
+            background: #e9ecef;
+            border-radius: 50px;
+            overflow: hidden;
+        }
+
+        .slide-track {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .slide-track.submitted {
+            background: #198754;
+            transition: 0.3s;
+        }
+
+        .slide-thumb {
+            width: 45px;
+            height: 45px;
+            background: #fff;
+            border-radius: 50%;
+            margin-left: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 2;
+            transition: left 0.1s;
+        }
+
+        .slide-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            user-select: none;
+        }
+
+        .slide-track.submitted .slide-text {
+            color: #fff;
+        }
+
+        .slide-track.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
     </style>
 @endpush
 
@@ -238,7 +320,7 @@
             const previewImage = document.getElementById('preview-image');
             const photoInputHidden = document.getElementById('photo-input-hidden');
             const canvas = document.getElementById('capture-canvas');
-            
+
             // UI Status
             const faceStatusBadge = document.getElementById('face-status-badge');
             const focusFrame = document.querySelector('.focus-frame');
@@ -262,7 +344,7 @@
                     modelLoadingText.classList.remove('d-none');
                     startBtn.disabled = true;
                     try {
-                        await faceapi.nets.tinyFaceDetector.loadFromUri('public/models');
+                        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
                         modelsLoaded = true;
                         modelLoadingText.classList.add('d-none');
                         startCamera();
@@ -278,28 +360,32 @@
 
             // 2. CAMERA SETUP
             function startCamera() {
-                // Minta resolusi standar (4:3) agar tidak terlalu zoom di mobile
-                navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: "user",
-                        width: { ideal: 640 }, 
-                        height: { ideal: 480 } 
-                    }, 
-                    audio: false 
-                })
-                .then(stream => {
-                    streamRef = stream;
-                    videoFeed.srcObject = stream;
-                    startScreen.classList.add('d-none');
-                    
-                    videoFeed.onloadedmetadata = () => {
-                        videoFeed.play();
-                        startFaceDetection();
-                    };
-                })
-                .catch(err => {
-                    alert("Gagal akses kamera.");
-                });
+                // Resolusi dimaksimalkan untuk deteksi wajah, nanti di-resize saat capture
+                navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: "user",
+                            width: {
+                                ideal: 1280
+                            },
+                            height: {
+                                ideal: 720
+                            }
+                        },
+                        audio: false
+                    })
+                    .then(stream => {
+                        streamRef = stream;
+                        videoFeed.srcObject = stream;
+                        startScreen.classList.add('d-none');
+
+                        videoFeed.onloadedmetadata = () => {
+                            videoFeed.play();
+                            startFaceDetection();
+                        };
+                    })
+                    .catch(err => {
+                        alert("Gagal akses kamera.");
+                    });
             }
 
             // 3. FACE DETECTION
@@ -307,19 +393,18 @@
                 detectionInterval = setInterval(async () => {
                     if (videoFeed.paused || videoFeed.ended) return;
 
-                    const detections = await faceapi.detectAllFaces(videoFeed, new faceapi.TinyFaceDetectorOptions());
+                    const detections = await faceapi.detectAllFaces(videoFeed, new faceapi
+                        .TinyFaceDetectorOptions());
 
                     if (detections.length > 0 && detections[0].score > 0.5) {
-                        if (!isFaceValid) { 
+                        if (!isFaceValid) {
                             isFaceValid = true;
-                            
-                            // UI HIJAU (ACTIVE)
                             focusFrame.classList.add('active');
-                            faceStatusBadge.innerHTML = '<i class="mdi mdi-face-recognition"></i> Wajah Terdeteksi';
-                            faceStatusBadge.className = 'badge bg-success rounded-pill shadow border border-light';
+                            faceStatusBadge.innerHTML =
+                                '<i class="mdi mdi-face-recognition"></i> Wajah Terdeteksi';
+                            faceStatusBadge.className =
+                                'badge bg-success rounded-pill shadow border border-light';
                             cameraInstruction.innerText = "Tekan Tombol Hijau";
-                            
-                            // Enable Tombol Hijau
                             captureBtn.disabled = false;
                             captureBtn.classList.add('ready');
                             shutterLabel.innerText = "Klik untuk ambil foto";
@@ -328,14 +413,12 @@
                     } else {
                         if (isFaceValid) {
                             isFaceValid = false;
-                            
-                            // UI RESET
                             focusFrame.classList.remove('active');
-                            faceStatusBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Mencari Wajah...';
-                            faceStatusBadge.className = 'badge bg-dark bg-opacity-75 rounded-pill backdrop-blur border border-secondary';
+                            faceStatusBadge.innerHTML =
+                                '<i class="mdi mdi-loading mdi-spin"></i> Mencari Wajah...';
+                            faceStatusBadge.className =
+                                'badge bg-dark bg-opacity-75 rounded-pill backdrop-blur border border-secondary';
                             cameraInstruction.innerText = "Posisikan Wajah";
-
-                            // Disable Tombol
                             captureBtn.disabled = true;
                             captureBtn.classList.remove('ready');
                             shutterLabel.innerText = "Wajah tidak terlihat";
@@ -345,38 +428,77 @@
                 }, 200);
             }
 
-            // 4. CAPTURE
-            captureBtn.addEventListener('click', () => {
+            // ==========================================
+            // 4. CAPTURE & SMART COMPRESS (MAX 200KB)
+            // ==========================================
+            captureBtn.addEventListener('click', async () => {
                 if (!isFaceValid) return;
 
-                // Efek Klik
+                // Animasi Klik
                 captureBtn.style.transform = "scale(0.9)";
                 setTimeout(() => captureBtn.style.transform = "scale(1.1)", 100);
 
+                // --- 1. RESIZE RESOLUSI DULU (Agar File Kecil) ---
+                const MAX_WIDTH = 800; // Lebar max 800px (Cukup untuk absen)
+                let width = videoFeed.videoWidth;
+                let height = videoFeed.videoHeight;
+
+                if (width > MAX_WIDTH) {
+                    height = Math.round(height * (MAX_WIDTH / width));
+                    width = MAX_WIDTH;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
                 const ctx = canvas.getContext('2d');
-                canvas.width = videoFeed.videoWidth;
-                canvas.height = videoFeed.videoHeight;
-                
-                // Mirror & Draw
+                // Mirror effect
                 ctx.save();
                 ctx.scale(-1, 1);
-                ctx.drawImage(videoFeed, -canvas.width, 0, canvas.width, canvas.height);
+                ctx.drawImage(videoFeed, -width, 0, width, height);
                 ctx.restore();
 
-                canvas.toBlob(blob => {
-                    const file = new File([blob], "attendance.jpg", { type: "image/jpeg" });
-                    const dt = new DataTransfer();
-                    dt.items.add(file);
-                    photoInputHidden.files = dt.files;
+                // --- 2. KOMPRESI ITERATIF (Target < 200KB) ---
+                const MAX_FILE_SIZE = 200 * 1024; // 200KB dalam bytes
+                let quality = 0.9; // Mulai dari kualitas 90%
+                let blob = null;
 
-                    previewImage.src = URL.createObjectURL(blob);
-                    
-                    if (detectionInterval) clearInterval(detectionInterval);
-                    if (streamRef) streamRef.getTracks().forEach(t => t.stop());
-                    
-                    resultScreen.classList.remove('d-none');
-                    checkGlobalValidity();
-                }, 'image/jpeg', 0.85);
+                // Fungsi helper untuk bikin blob
+                const makeBlob = (q) => new Promise(resolve => canvas.toBlob(blob => resolve(blob),
+                    'image/jpeg', q));
+
+                // Loading indikator sementara (opsional, karena prosesnya cepat)
+                shutterLabel.innerText = "Mengompresi...";
+
+                // Loop: Turunkan kualitas sampai di bawah 200KB atau kualitas mentok di 10%
+                do {
+                    blob = await makeBlob(quality);
+                    if (blob.size > MAX_FILE_SIZE) {
+                        quality -= 0.1; // Kurangi 10%
+                    }
+                } while (blob.size > MAX_FILE_SIZE && quality > 0.1);
+
+                // --- 3. SET HASIL KE INPUT ---
+                const file = new File([blob], "attendance.jpg", {
+                    type: "image/jpeg"
+                });
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                photoInputHidden.files = dt.files;
+
+                console.log(
+                    `Foto Final: ${(blob.size / 1024).toFixed(2)} KB (Quality: ${quality.toFixed(1)})`
+                    );
+
+                // Tampilkan Preview
+                previewImage.src = URL.createObjectURL(blob);
+
+                // Stop Kamera
+                if (detectionInterval) clearInterval(detectionInterval);
+                if (streamRef) streamRef.getTracks().forEach(t => t.stop());
+
+                resultScreen.classList.remove('d-none');
+                checkGlobalValidity();
             });
 
             retakeBtn.addEventListener('click', () => {
@@ -397,11 +519,16 @@
                     document.getElementById('latitude').value = pos.coords.latitude;
                     document.getElementById('longitude').value = pos.coords.longitude;
                     document.getElementById('accuracy').value = pos.coords.accuracy;
-                    document.getElementById('coordinates-display').innerText = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-                    document.getElementById('gps-accuracy-badge').innerText = `±${Math.round(pos.coords.accuracy)}m`;
-                    document.getElementById('gps-accuracy-badge').className = 'badge bg-success rounded-pill';
+                    document.getElementById('coordinates-display').innerText =
+                        `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                    document.getElementById('gps-accuracy-badge').innerText =
+                        `±${Math.round(pos.coords.accuracy)}m`;
+                    document.getElementById('gps-accuracy-badge').className =
+                        'badge bg-success rounded-pill';
                     checkGlobalValidity();
-                }, (err) => { document.getElementById('coordinates-display').innerText = "Gagal Lokasi"; });
+                }, (err) => {
+                    document.getElementById('coordinates-display').innerText = "Gagal Lokasi";
+                });
             }
 
             function checkGlobalValidity() {
@@ -419,15 +546,62 @@
             }
 
             // Slider Logic Standard
-            let isDragging = false, startX = 0, currentX = 0, trackWidth = 0, thumbWidth = 0, maxSlide = 0;
-            function initSlider() { trackWidth = slideTrack.offsetWidth; thumbWidth = slideThumb.offsetWidth; maxSlide = trackWidth - thumbWidth - 5; }
-            window.addEventListener('resize', initSlider); initSlider();
-            const onDragStart = (e) => { if (!slideTrack.classList.contains('disabled')) { isDragging = true; startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX; slideThumb.style.transition = 'none'; } };
-            const onDragMove = (e) => { if (isDragging) { const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX; let moveX = clientX - startX; if (moveX < 0) moveX = 0; if (moveX > maxSlide) moveX = maxSlide; currentX = moveX; slideThumb.style.left = moveX + 'px'; slideText.style.opacity = 1 - (moveX/maxSlide); } };
-            const onDragEnd = () => { if (isDragging) { isDragging = false; if (currentX >= maxSlide * 0.9) { slideThumb.style.left = maxSlide + 'px'; slideTrack.classList.add('submitted'); slideThumb.innerHTML = '<i class="mdi mdi-check"></i>'; slideText.innerText = "MENGIRIM..."; slideText.style.opacity = 1; form.submit(); } else { slideThumb.style.transition = 'left 0.3s'; slideThumb.style.left = '0px'; slideText.style.opacity = 1; } } };
-            
-            slideThumb.addEventListener('mousedown', onDragStart); window.addEventListener('mousemove', onDragMove); window.addEventListener('mouseup', onDragEnd);
-            slideThumb.addEventListener('touchstart', onDragStart); window.addEventListener('touchmove', onDragMove); window.addEventListener('touchend', onDragEnd);
+            let isDragging = false,
+                startX = 0,
+                currentX = 0,
+                trackWidth = 0,
+                thumbWidth = 0,
+                maxSlide = 0;
+
+            function initSlider() {
+                trackWidth = slideTrack.offsetWidth;
+                thumbWidth = slideThumb.offsetWidth;
+                maxSlide = trackWidth - thumbWidth - 5;
+            }
+            window.addEventListener('resize', initSlider);
+            initSlider();
+            const onDragStart = (e) => {
+                if (!slideTrack.classList.contains('disabled')) {
+                    isDragging = true;
+                    startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
+                    slideThumb.style.transition = 'none';
+                }
+            };
+            const onDragMove = (e) => {
+                if (isDragging) {
+                    const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
+                    let moveX = clientX - startX;
+                    if (moveX < 0) moveX = 0;
+                    if (moveX > maxSlide) moveX = maxSlide;
+                    currentX = moveX;
+                    slideThumb.style.left = moveX + 'px';
+                    slideText.style.opacity = 1 - (moveX / maxSlide);
+                }
+            };
+            const onDragEnd = () => {
+                if (isDragging) {
+                    isDragging = false;
+                    if (currentX >= maxSlide * 0.9) {
+                        slideThumb.style.left = maxSlide + 'px';
+                        slideTrack.classList.add('submitted');
+                        slideThumb.innerHTML = '<i class="mdi mdi-check"></i>';
+                        slideText.innerText = "MENGIRIM...";
+                        slideText.style.opacity = 1;
+                        form.submit();
+                    } else {
+                        slideThumb.style.transition = 'left 0.3s';
+                        slideThumb.style.left = '0px';
+                        slideText.style.opacity = 1;
+                    }
+                }
+            };
+
+            slideThumb.addEventListener('mousedown', onDragStart);
+            window.addEventListener('mousemove', onDragMove);
+            window.addEventListener('mouseup', onDragEnd);
+            slideThumb.addEventListener('touchstart', onDragStart);
+            window.addEventListener('touchmove', onDragMove);
+            window.addEventListener('touchend', onDragEnd);
         });
     </script>
 @endpush
