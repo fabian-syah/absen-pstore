@@ -9,7 +9,7 @@ class Branch extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'address'];
+    protected $fillable = ['name', 'address', 'is_active'];
 
     // Relasi: Satu cabang punya banyak user
     public function users()

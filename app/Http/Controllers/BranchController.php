@@ -53,6 +53,7 @@ class BranchController extends Controller
             });
         }
 
+        $branches = $query->withCount('users')->oldest()->get();
         $branches = $query->latest()->get();
         
         return view('branch.branch_index', compact('branches'));
