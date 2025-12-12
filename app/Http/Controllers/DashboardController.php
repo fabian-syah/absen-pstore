@@ -117,25 +117,32 @@ class DashboardController extends Controller
                     'user_id', 
                     DB::raw('count(*) as total_attendance'), 
                     DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
-                    // [UPDATE BARU] Menghitung Total Jam Kerja dalam Detik
+                    // [UPDATE] Menghitung Total Jam Kerja dalam Detik
                     DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds')
                 )
                 ->whereMonth('check_in_time', Carbon::now()->month)
                 ->whereYear('check_in_time', Carbon::now()->year)
-                ->whereNotNull('check_out_time') // Wajib sudah pulang
-                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar']) // Masuk & WFH
-                ->where('status', 'verified') // Wajib Verified
+                
+                // --- [FILTER KETAT BERDASARKAN REQUEST] ---
+                ->whereNotNull('check_out_time')                                     // Wajib sudah pulang
+                ->where('status', 'verified')                                        // Wajib Terverifikasi
+                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])   // Status Wajib Masuk/WFH (ALPHA DIBUANG)
+                ->where('presence_status', '!=', 'Alpha')                            // Extra safety: Pastikan bukan Alpha
+                ->whereTime('check_in_time', '!=', '00:00:00')                       // Hindari data dummy 00:00
+                ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0') // Durasi kerja harus ada
+                // ------------------------------------------
+
                 ->whereHas('user', function($q) use ($user) {
                     $q->where('is_active', true)
-                      ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk leaderboard kerajinan
+                      ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk leaderboard
 
                     if ($user->role !== 'admin') {
                         $q->where('branch_id', $user->branch_id);
                     }
                 })
                 ->groupBy('user_id')
-                ->orderBy('total_attendance', 'desc')
-                ->orderBy('avg_arrival_time', 'asc')
+                ->orderBy('total_attendance', 'desc')   // 1. Paling Rajin
+                ->orderBy('avg_arrival_time', 'asc')    // 2. Paling Pagi
                 ->take(5)
                 ->with(['user', 'user.division'])
                 ->get();
@@ -149,7 +156,7 @@ class DashboardController extends Controller
         if ($user->role == 'admin' || $user->role == 'security') {
             // Ambil semua user role security (atau admin jika admin ikut scan)
             $securityUsersQuery = User::where('is_active', true)
-                ->whereIn('role', ['security', 'admin']); // Admin dimasukkan jaga2 jika admin ikut scan
+                ->whereIn('role', ['security', 'admin']);
 
             // Filter cabang jika bukan global admin
             if ($user->role != 'admin' || ($user->role == 'admin' && $branch_id != null)) {
@@ -237,7 +244,9 @@ class DashboardController extends Controller
 
     private function getAdminAttendanceStats($branch_id = null)
     {
-        $query = Attendance::whereDate('check_in_time', today());
+        $query = Attendance::whereDate('check_in_time', today())
+            ->where('presence_status', '!=', 'Alpha'); // Filter Alpha di Statistik juga
+
         if ($branch_id) $query->where('branch_id', $branch_id);
 
         $totalUsers = User::when($branch_id, function ($q) use ($branch_id) {
@@ -268,7 +277,9 @@ class DashboardController extends Controller
 
     private function getAuditAttendanceStats($branchData = null)
     {
-        $query = Attendance::whereDate('check_in_time', today());
+        $query = Attendance::whereDate('check_in_time', today())
+             ->where('presence_status', '!=', 'Alpha'); // Filter Alpha
+
         if ($branchData) {
             if (is_array($branchData)) {
                 $query->whereIn('branch_id', $branchData);
@@ -315,7 +326,8 @@ class DashboardController extends Controller
     {
         $query = Attendance::where('user_id', $user_id)
             ->whereMonth('check_in_time', Carbon::now()->month)
-            ->whereYear('check_in_time', Carbon::now()->year);
+            ->whereYear('check_in_time', Carbon::now()->year)
+            ->where('presence_status', '!=', 'Alpha'); // Filter Alpha
 
         if ($branch_id) $query->where('branch_id', $branch_id);
 
