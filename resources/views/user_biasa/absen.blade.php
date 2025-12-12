@@ -28,7 +28,7 @@
                         @endif
                     </div>
 
-                    {{-- ALERT STATUS (LOGIKA LAMA TETAP ADA) --}}
+                    {{-- ALERT STATUS --}}
                     @if ($mode == 'pulang' && isset($attendance))
                         <div class="alert alert-light border shadow-sm mb-3 small">
                             <i class="mdi mdi-clock-outline me-1"></i> Masuk: 
@@ -49,7 +49,8 @@
                         <div class="camera-wrapper position-relative overflow-hidden rounded-4 mb-3">
 
                             {{-- 1. VIDEO FEED --}}
-                            <video id="video-feed" autoplay muted playsinline></video>
+                            {{-- Added attributes to help layout stability --}}
+                            <video id="video-feed" autoplay muted playsinline width="100%" height="100%"></video>
 
                             {{-- 2. OVERLAY UI --}}
                             <div class="camera-overlay d-flex flex-column justify-content-between p-3">
@@ -59,7 +60,7 @@
                                     </span>
                                 </div>
 
-                                {{-- Focus Frame (Hanya Tampil Jika AI ON) --}}
+                                {{-- Focus Frame --}}
                                 @if(Auth::user()->use_face_recognition)
                                     <div class="focus-frame">
                                         <div class="corner top-left"></div>
@@ -71,7 +72,6 @@
                                         Siapkan Wajah
                                     </div>
                                 @else
-                                    {{-- Frame Statis untuk Mode Manual --}}
                                     <div class="focus-frame border-white opacity-50"></div>
                                     <div class="text-center text-white small text-shadow fw-bold">
                                         Mode Manual (Tanpa Deteksi)
@@ -158,7 +158,19 @@
 @push('styles')
     <style>
         .camera-wrapper { width: 100%; height: 450px; background: #000; position: relative; display: flex; align-items: center; justify-content: center; }
-        #video-feed { width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1); }
+        
+        /* FIX GLITCH: Video opacity 0 di awal */
+        #video-feed { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; /* Ganti ke cover agar full frame */
+            transform: scaleX(-1); 
+            opacity: 0; 
+            transition: opacity 0.4s ease-in; 
+        }
+        /* Class ini ditambahkan via JS saat video sudah siap */
+        #video-feed.ready { opacity: 1; }
+
         .camera-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
         .backdrop-blur { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
         
@@ -188,13 +200,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ==========================================
-            // 0. SETTING DARI BACKEND (USER PROFILE)
-            // ==========================================
-            // Mengambil nilai boolean dari PHP ke JS
             const useAI = {{ Auth::user()->use_face_recognition ? 'true' : 'false' }};
 
-            // ELEMENT REFERENCES
             const videoFeed = document.getElementById('video-feed');
             const startScreen = document.getElementById('start-screen');
             const resultScreen = document.getElementById('result-screen');
@@ -222,38 +229,40 @@
             let modelsLoaded = false;
 
             // ==========================================
-            // 1. TOMBOL START (Logic Cabang AI vs Manual)
+            // 1. TOMBOL START
             // ==========================================
             startBtn.addEventListener('click', async () => {
                 if (useAI) {
-                    // JIKA AI AKTIF: LOAD MODEL DULU
                     if (!modelsLoaded) {
                         modelLoadingText.classList.remove('d-none');
                         startBtn.disabled = true;
                         try {
-                            // Pastikan path ini benar sesuai folder public Anda
+                            // Sesuaikan path model
                             await faceapi.nets.tinyFaceDetector.loadFromUri('public/models');
                             modelsLoaded = true;
                             modelLoadingText.classList.add('d-none');
                             startCamera();
                         } catch (err) {
-                            console.error(err);
-                            alert("Gagal memuat AI. Cek file model.");
+                            console.error("Model Error:", err);
+                            alert("Gagal memuat AI. Cek koneksi/file model.");
                             startBtn.disabled = false;
+                            modelLoadingText.classList.add('d-none');
                         }
                     } else {
                         startCamera();
                     }
                 } else {
-                    // JIKA AI MATI (MANUAL): LANGSUNG BUKA KAMERA
                     startCamera();
                 }
             });
 
             // ==========================================
-            // 2. KAMERA SETUP
+            // 2. KAMERA SETUP (FIXED GLITCH)
             // ==========================================
             function startCamera() {
+                // Reset Video State agar tidak tampil sebelum ready
+                videoFeed.classList.remove('ready'); 
+
                 navigator.mediaDevices.getUserMedia({
                     video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
                     audio: false
@@ -261,20 +270,22 @@
                 .then(stream => {
                     streamRef = stream;
                     videoFeed.srcObject = stream;
-                    startScreen.classList.add('d-none');
-
+                    
                     videoFeed.onloadedmetadata = () => {
                         videoFeed.play();
                         
+                        // FIX: Tampilkan video hanya setelah metadata siap agar ukurannya pas
+                        setTimeout(() => {
+                            videoFeed.classList.add('ready'); // Trigger CSS opacity 1
+                            startScreen.classList.add('d-none');
+                        }, 100); 
+
                         if (useAI) {
-                            // MODE AI: MULAI DETEKSI
                             startFaceDetection();
                         } else {
-                            // MODE MANUAL: LANGSUNG AKTIFKAN TOMBOL
-                            isFaceValid = true; // Bypass validasi
+                            // MANUAL MODE
+                            isFaceValid = true;
                             enableCaptureButton();
-                            
-                            // Update UI Manual
                             faceStatusBadge.innerHTML = '<i class="mdi mdi-camera"></i> Kamera Siap';
                             faceStatusBadge.className = 'badge bg-primary rounded-pill shadow';
                             if(cameraInstruction) cameraInstruction.innerText = "Ambil Foto Anda";
@@ -282,43 +293,51 @@
                     };
                 })
                 .catch(err => {
-                    console.error(err);
-                    alert("Gagal akses kamera.");
+                    console.error("Camera Error:", err);
+                    alert("Gagal akses kamera. Izinkan akses di browser.");
+                    startBtn.disabled = false;
                 });
             }
 
             // ==========================================
-            // 3. DETEKSI WAJAH (HANYA JALAN JIKA USE AI = TRUE)
+            // 3. DETEKSI WAJAH
             // ==========================================
             function startFaceDetection() {
+                // Clear interval lama jika ada
+                if (detectionInterval) clearInterval(detectionInterval);
+
                 detectionInterval = setInterval(async () => {
                     if (videoFeed.paused || videoFeed.ended) return;
 
-                    const detections = await faceapi.detectAllFaces(videoFeed, new faceapi.TinyFaceDetectorOptions());
+                    // Menggunakan try-catch agar tidak crash jika stream putus tiba-tiba
+                    try {
+                        const detections = await faceapi.detectAllFaces(videoFeed, new faceapi.TinyFaceDetectorOptions());
 
-                    if (detections.length > 0 && detections[0].score > 0.5) {
-                        if (!isFaceValid) {
-                            isFaceValid = true;
-                            focusFrame.classList.add('active');
-                            faceStatusBadge.innerHTML = '<i class="mdi mdi-face-recognition"></i> Wajah Terdeteksi';
-                            faceStatusBadge.className = 'badge bg-success rounded-pill shadow border border-light';
-                            if(cameraInstruction) cameraInstruction.innerText = "Tekan Tombol Hijau";
-                            enableCaptureButton();
+                        if (detections.length > 0 && detections[0].score > 0.5) {
+                            if (!isFaceValid) {
+                                isFaceValid = true;
+                                focusFrame.classList.add('active');
+                                faceStatusBadge.innerHTML = '<i class="mdi mdi-face-recognition"></i> Wajah Terdeteksi';
+                                faceStatusBadge.className = 'badge bg-success rounded-pill shadow border border-light';
+                                if(cameraInstruction) cameraInstruction.innerText = "Tekan Tombol Hijau";
+                                enableCaptureButton();
+                            }
+                        } else {
+                            if (isFaceValid) {
+                                isFaceValid = false;
+                                focusFrame.classList.remove('active');
+                                faceStatusBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Mencari Wajah...';
+                                faceStatusBadge.className = 'badge bg-dark bg-opacity-75 rounded-pill backdrop-blur border border-secondary';
+                                if(cameraInstruction) cameraInstruction.innerText = "Posisikan Wajah";
+                                disableCaptureButton();
+                            }
                         }
-                    } else {
-                        if (isFaceValid) {
-                            isFaceValid = false;
-                            focusFrame.classList.remove('active');
-                            faceStatusBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Mencari Wajah...';
-                            faceStatusBadge.className = 'badge bg-dark bg-opacity-75 rounded-pill backdrop-blur border border-secondary';
-                            if(cameraInstruction) cameraInstruction.innerText = "Posisikan Wajah";
-                            disableCaptureButton();
-                        }
+                    } catch (e) {
+                        console.log("Detection skipped frame");
                     }
                 }, 200);
             }
 
-            // Helper Functions untuk Tombol
             function enableCaptureButton() {
                 captureBtn.disabled = false;
                 captureBtn.classList.add('ready');
@@ -334,16 +353,17 @@
             }
 
             // ==========================================
-            // 4. CAPTURE & SMART COMPRESS (MAX 200KB)
+            // 4. CAPTURE & COMPRESS
             // ==========================================
             captureBtn.addEventListener('click', async () => {
-                if (!isFaceValid) return; // Mode manual isFaceValid sudah di-set true
+                if (!isFaceValid && useAI) return;
+                // Double check untuk mode manual, pastikan stream masih jalan
+                if (!streamRef || !streamRef.active) return;
 
-                // Animasi Klik
+                // Animasi
                 captureBtn.style.transform = "scale(0.9)";
                 setTimeout(() => captureBtn.style.transform = "scale(1.1)", 100);
 
-                // 4.1. RESIZE (Lebar Max 800px)
                 const MAX_WIDTH = 800;
                 let width = videoFeed.videoWidth;
                 let height = videoFeed.videoHeight;
@@ -357,11 +377,10 @@
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.save();
-                ctx.scale(-1, 1); // Mirror Effect
+                ctx.scale(-1, 1);
                 ctx.drawImage(videoFeed, -width, 0, width, height);
                 ctx.restore();
 
-                // 4.2. ITERATIVE COMPRESSION
                 const MAX_FILE_SIZE = 200 * 1024; // 200KB
                 let quality = 0.9;
                 let blob = null;
@@ -374,39 +393,47 @@
                     if (blob.size > MAX_FILE_SIZE) quality -= 0.1;
                 } while (blob.size > MAX_FILE_SIZE && quality > 0.1);
 
-                // 4.3. HASIL KE INPUT
                 const file = new File([blob], "attendance.jpg", { type: "image/jpeg" });
                 const dt = new DataTransfer();
                 dt.items.add(file);
                 photoInputHidden.files = dt.files;
 
-                console.log(`Foto Final: ${(blob.size / 1024).toFixed(2)} KB (Quality: ${quality.toFixed(1)})`);
-
-                // Preview
                 previewImage.src = URL.createObjectURL(blob);
                 
-                // Stop Kamera
+                // STOP KAMERA BENAR-BENAR
                 if (detectionInterval) clearInterval(detectionInterval);
-                if (streamRef) streamRef.getTracks().forEach(t => t.stop());
+                if (streamRef) {
+                    streamRef.getTracks().forEach(track => track.stop());
+                    streamRef = null; // Bersihkan referensi
+                }
+                videoFeed.srcObject = null;
 
                 resultScreen.classList.remove('d-none');
                 checkGlobalValidity();
             });
 
+            // ==========================================
+            // FIX: RETAKE BUTTON LOGIC
+            // ==========================================
             retakeBtn.addEventListener('click', () => {
                 resultScreen.classList.add('d-none');
                 startScreen.classList.remove('d-none');
+                
                 photoInputHidden.value = '';
                 
-                // Reset Logic berdasarkan mode
-                if (useAI) {
-                    isFaceValid = false;
-                    disableCaptureButton();
-                } else {
-                    // Di mode manual, reset flag dulu sampai user klik "Buka Kamera" lagi
-                    isFaceValid = false; 
-                    disableCaptureButton();
-                }
+                // Reset States
+                isFaceValid = false;
+                disableCaptureButton();
+
+                // FIX: Pastikan tombol start aktif kembali
+                startBtn.disabled = false;
+                
+                // FIX: Reset Video Element agar bersih saat mulai ulang
+                videoFeed.srcObject = null;
+                videoFeed.classList.remove('ready');
+
+                // Reset UI Status Text
+                faceStatusBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Menunggu Kamera...';
                 
                 checkGlobalValidity();
             });
@@ -440,7 +467,7 @@
                 }
             }
 
-            // Slider Logic Standard
+            // Slider Logic
             let isDragging = false, startX = 0, currentX = 0, trackWidth = 0, thumbWidth = 0, maxSlide = 0;
             function initSlider() { trackWidth = slideTrack.offsetWidth; thumbWidth = slideThumb.offsetWidth; maxSlide = trackWidth - thumbWidth - 5; }
             window.addEventListener('resize', initSlider); initSlider();
