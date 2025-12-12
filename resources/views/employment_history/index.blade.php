@@ -27,12 +27,14 @@
 
                     <select name="user_id" class="form-control w-75" onchange="this.form.submit()" style="border-radius: 8px;">
                         <option value="{{ auth()->user()->id }}" {{ isset($targetUser) && $targetUser->id == auth()->id() ? 'selected' : '' }}>
-                            -- Saya Sendiri ({{ auth()->user()->name }}) --
+                            {{-- Menampilkan Cabang Sendiri --}}
+                            -- Saya Sendiri ({{ auth()->user()->branch->name ?? 'Pusat/Non-Cabang' }}) --
                         </option>
                         @foreach($selectableUsers as $u)
                             @if($u->id != auth()->id())
                                 <option value="{{ $u->id }}" {{ isset($targetUser) && $targetUser->id == $u->id ? 'selected' : '' }}>
-                                    {{ $u->name }} ({{ ucfirst($u->role) }})
+                                    {{-- UPDATE: NAMA (CABANG) --}}
+                                    {{ $u->name }} ({{ $u->branch->name ?? 'Non-Cabang' }})
                                 </option>
                             @endif
                         @endforeach
@@ -50,7 +52,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                     <div>
                         <h4 class="card-title mb-1">Timeline: {{ $targetUser->name }}</h4>
-                        <span class="badge badge-outline-primary">{{ strtoupper($targetUser->role) }}</span>
+                        {{-- Badge tetap menampilkan role atau bisa diganti cabang juga --}}
+                        <span class="badge badge-outline-primary">{{ strtoupper($targetUser->role) }} - {{ $targetUser->branch->name ?? 'PUSAT' }}</span>
                     </div>
                     
                     {{-- TOMBOL TAMBAH DATA --}}

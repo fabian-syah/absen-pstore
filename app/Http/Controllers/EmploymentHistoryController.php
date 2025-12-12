@@ -21,21 +21,24 @@ class EmploymentHistoryController extends Controller
         $selectableUsers = collect([]);
 
         // --- 1. LOGIKA LIST USER (DROPDOWN) ---
+        // Update: Menambahkan with('branch') untuk mengambil nama cabang
         if ($currentUser->role === 'admin') {
-            $selectableUsers = User::orderBy('name')->get();
+            $selectableUsers = User::with('branch')->orderBy('name')->get();
         } elseif ($currentUser->role === 'audit') {
             $branchIds = $currentUser->branches->pluck('id')->toArray();
-            $selectableUsers = User::whereIn('branch_id', $branchIds)
+            $selectableUsers = User::with('branch')
+                ->whereIn('branch_id', $branchIds)
                 ->orWhere('id', $currentUser->id)
                 ->orderBy('name')
                 ->get();
         } elseif ($currentUser->role === 'leader') {
-            $selectableUsers = User::where('branch_id', $currentUser->branch_id)
+            $selectableUsers = User::with('branch')
+                ->where('branch_id', $currentUser->branch_id)
                 ->orWhere('id', $currentUser->id)
                 ->orderBy('name')
                 ->get();
         } else {
-            $selectableUsers = User::where('id', $currentUser->id)->get();
+            $selectableUsers = User::with('branch')->where('id', $currentUser->id)->get();
         }
 
         // --- 2. LOGIKA TARGET USER ---
@@ -70,25 +73,14 @@ class EmploymentHistoryController extends Controller
             $targetUser = $currentUser;
         }
 
-        // --- 3. HAK AKSES TOMBOL (LOGIKA DIPERBARUI) ---
+        // --- 3. HAK AKSES TOMBOL ---
         $isOwner = ($targetUser->id == $currentUser->id);
         $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
         $isRegular = in_array($currentUser->role, ['user_biasa', 'security']);
         $isModeEdit = ($request->get('mode') === 'edit');
 
-        // A. CREATE (TAMBAH)
-        // User Biasa: Diri sendiri.
-        // Management: Bisa untuk siapa saja yg discop-nya (Sidebar / Profile).
         $canCreate = ($isRegular && $isOwner) || $isManagement;
-
-        // B. EDIT (PENSIL)
-        // User Biasa: Bisa edit diri sendiri.
-        // Management: Hanya bisa edit jika ?mode=edit (akses dari profil user). Sidebar = Hidden.
         $canEdit = ($isRegular && $isOwner) || ($isManagement && $isModeEdit);
-
-        // C. DELETE (HAPUS)
-        // User Biasa: Bisa hapus diri sendiri.
-        // Management: BISA hapus dari Sidebar maupun Profile (Request: "tambahkan hapus dong ... kalau akses lewat sidebar").
         $canDelete = ($isRegular && $isOwner) || $isManagement;
 
         // --- 4. AMBIL DATA HISTORI ---
@@ -112,12 +104,10 @@ class EmploymentHistoryController extends Controller
         $targetId = $request->get('user_id', $currentUser->id);
         $targetUser = User::findOrFail($targetId);
 
-        // Validasi Akses
         if (!in_array($currentUser->role, ['admin', 'audit', 'leader']) && $targetId != $currentUser->id) {
              abort(403, 'Akses ditolak.');
         }
 
-        // Validasi Scope Wilayah
         if ($targetId != $currentUser->id) {
             if ($currentUser->role === 'audit') {
                 $allowedBranches = $currentUser->branches->pluck('id')->toArray();
@@ -154,7 +144,6 @@ class EmploymentHistoryController extends Controller
         }
 
         $data = $request->only(['user_id', 'type', 'event_date', 'description', 'division_id', 'branch_id']);
-        
         $data['created_by'] = $currentUser->id;
 
         if ($request->type == 'transfer_branch') {
@@ -244,7 +233,6 @@ class EmploymentHistoryController extends Controller
         ]);
 
         $data = $request->only(['type', 'event_date', 'description', 'division_id', 'branch_id']);
-        
         $data['updated_by'] = $currentUser->id;
 
         if ($request->type == 'transfer_branch') {
@@ -293,7 +281,6 @@ class EmploymentHistoryController extends Controller
         if ($isRegular && !$isOwner) abort(403, 'Akses ditolak.');
         if (!$isManagement && !$isRegular) abort(403);
 
-        // Validasi Wilayah untuk Management (Jika hapus punya orang lain)
         if ($isManagement && !$isOwner) {
              $targetUser = $history->user;
              if ($currentUser->role === 'audit') {
@@ -312,7 +299,6 @@ class EmploymentHistoryController extends Controller
         $userId = $history->user_id;
         $history->delete();
 
-        // Redirect tanpa mode edit (balik ke tampilan index awal)
         return redirect()->route('employment-history.index', ['user_id' => $userId])
             ->with('success', 'Riwayat berhasil dihapus.');
     }
