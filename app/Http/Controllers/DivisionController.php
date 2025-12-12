@@ -2,26 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Division; // <-- PENTING: Panggil modelnya
+use App\Models\Division;
 use Illuminate\Http\Request;
 
 class DivisionController extends Controller
 {
     /**
-     * Menampilkan daftar semua divisi (Dengan Fitur Search).
+     * Menampilkan daftar divisi dengan jumlah karyawannya.
      */
     public function index(Request $request)
     {
-        $query = Division::query();
+        // Gunakan 'withCount' untuk menghitung jumlah user di setiap divisi secara otomatis.
+        // Hasilnya nanti bisa diakses via property: $division->users_count
+        $query = Division::withCount('users');
 
         // LOGIKA SEARCH
         if ($request->has('search') && $request->search != null) {
             $query->where('name', 'LIKE', '%' . $request->search . '%');
         }
 
-        $divisions = $query->latest()->get(); // Mengambil data terbaru (terfilter jika ada search)
+        // Gunakan paginate agar halaman rapi jika data sudah ratusan
+        $divisions = $query->latest()->paginate(10)->withQueryString();
 
-        // Memanggil file view: resources/views/division/division_index.blade.php
         return view('division.division_index', compact('divisions'));
     }
 
@@ -30,7 +32,6 @@ class DivisionController extends Controller
      */
     public function create()
     {
-        // Memanggil file view: resources/views/division/division_create.blade.php
         return view('division.division_create');
     }
 
@@ -39,12 +40,10 @@ class DivisionController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input
         $request->validate([
             'name' => 'required|string|max:255|unique:divisions',
         ]);
 
-        // Buat divisi baru
         Division::create([
             'name' => $request->name,
         ]);
@@ -54,16 +53,13 @@ class DivisionController extends Controller
     }
 
     /**
-     * Menampilkan detail satu divisi.
-     * (Kita arahkan ke halaman edit)
+     * Menampilkan detail satu divisi (List Anggota).
      */
     public function show(Division $division)
     {
-        // Load relasi users beserta data branch-nya untuk ditampilkan di tabel
-        // Kita gunakan pagination untuk user supaya halaman tidak berat jika anggota ribuan
+        // Load relasi users beserta data branch-nya
         $members = $division->users()->with('branch')->latest()->paginate(10);
 
-        // Return ke view baru: division_show.blade.php
         return view('division.division_show', compact('division', 'members'));
     }
 
@@ -72,7 +68,6 @@ class DivisionController extends Controller
      */
     public function edit(Division $division)
     {
-        // Memanggil file view: resources/views/division/division_edit.blade.php
         return view('division.division_edit', compact('division'));
     }
 
@@ -81,13 +76,10 @@ class DivisionController extends Controller
      */
     public function update(Request $request, Division $division)
     {
-        // Validasi input
         $request->validate([
-            // Pastikan nama unik, KECUALI untuk ID dia sendiri
             'name' => 'required|string|max:255|unique:divisions,name,' . $division->id,
         ]);
 
-        // Update divisi
         $division->update([
             'name' => $request->name,
         ]);
@@ -102,15 +94,19 @@ class DivisionController extends Controller
     public function destroy(Division $division)
     {
         try {
-            // Hapus divisi
+            // Cek manual jika ingin memastikan lebih aman (opsional, karena constraint database biasanya sudah handle)
+            if ($division->users()->count() > 0) {
+                return redirect()->route('divisions.index')
+                ->with('error', 'Gagal hapus: Masih ada ' . $division->users()->count() . ' karyawan di divisi ini.');
+            }
+
             $division->delete();
 
             return redirect()->route('divisions.index')
                 ->with('success', 'Divisi berhasil dihapus.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Tangkap error jika divisi tidak bisa dihapus (karena masih dipakai user)
+        } catch (\Exception $e) {
             return redirect()->route('divisions.index')
-                ->with('error', 'Gagal menghapus divisi. Pastikan tidak ada user yang terhubung ke divisi ini.');
+                ->with('error', 'Terjadi kesalahan saat menghapus data.');
         }
     }
 }
