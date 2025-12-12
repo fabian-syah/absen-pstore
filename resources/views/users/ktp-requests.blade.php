@@ -85,9 +85,10 @@
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="modal-body text-center">
+                                                    {{-- Responsive: Max height 85% layar, Width menyesuaikan --}}
                                                     <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
                                                          class="img-fluid rounded" 
-                                                         style="width: 100%; height: auto;">
+                                                         style="max-height: 85vh; width: auto; max-width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                                                 </div>
                                             </div>
                                         </div>
@@ -119,11 +120,11 @@
                                                         <h5 class="modal-title">KTP Lama: {{ $user->name }}</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    {{-- HAPUS BG-DARK DISINI --}}
                                                     <div class="modal-body text-center p-4">
+                                                        {{-- Responsive Image Logic --}}
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
                                                              class="img-fluid rounded shadow-sm"
-                                                             style="width: 100%; height: auto;">
+                                                             style="max-height: 85vh; width: auto; max-width: 100%;">
                                                     </div>
                                                 </div>
                                             </div>
@@ -150,9 +151,8 @@
                                             </span>
                                         </div>
 
-                                        {{-- MODAL KTP BARU (SESUAI REQUEST GAMBAR) --}}
+                                        {{-- MODAL KTP BARU (Responsive & Clean) --}}
                                         <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                            {{-- Gunakan Modal XL agar besar --}}
                                             <div class="modal-dialog modal-dialog-centered modal-xl">
                                                 <div class="modal-content">
                                                     {{-- Header --}}
@@ -161,11 +161,17 @@
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     
-                                                    {{-- Body: HAPUS BG-DARK, Pakai Padding --}}
+                                                    {{-- Body: Responsive Size --}}
                                                     <div class="modal-body text-center p-3">
+                                                        {{-- 
+                                                            LOGIKA RESPONSIVE:
+                                                            max-height: 80vh -> Agar tidak melebihi tinggi layar monitor (tidak perlu scroll).
+                                                            width: auto      -> Lebar menyesuaikan proporsi gambar aslinya.
+                                                            max-width: 100%  -> Agar di HP tidak offside (melebar keluar).
+                                                        --}}
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
                                                              class="img-fluid rounded"
-                                                             style="width: 100%; height: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                                             style="max-height: 80vh; width: auto; max-width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                                                     </div>
 
                                                     {{-- Footer --}}
