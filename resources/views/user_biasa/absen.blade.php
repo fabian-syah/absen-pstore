@@ -344,7 +344,7 @@
                     modelLoadingText.classList.remove('d-none');
                     startBtn.disabled = true;
                     try {
-                        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+                        await faceapi.nets.tinyFaceDetector.loadFromUri('public/models');
                         modelsLoaded = true;
                         modelLoadingText.classList.add('d-none');
                         startCamera();
