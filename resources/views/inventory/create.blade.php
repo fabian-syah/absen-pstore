@@ -86,7 +86,7 @@
                                     <option value="Motor / Sepeda">Motor / Sepeda</option>
                                     <option value="Mobil">Mobil</option>
                                     <option value="Kamera / Lensa">Kamera / Lensa</option>
-                                    <option value="Accesories">Accesories</option>
+                                    <option value="Accesories">Accesories / Elektronik</option>
                                     <option value="Lainnya">Lainnya</option>
                                 </select>
                             </div>
