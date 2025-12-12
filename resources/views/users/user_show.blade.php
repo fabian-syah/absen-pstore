@@ -66,8 +66,7 @@
                         <h6 class="text-muted text-small fw-bold mb-2 border-bottom pb-2">MENU & RIWAYAT</h6>
                         <div class="list-group list-group-flush">
                             {{-- 1. HISTORY ABSEN --}}
-                            {{-- PERBAIKAN: Menggunakan route 'my.team.attendance' agar mengarah ke history user yang dilihat --}}
-                            <a href="{{ route('my.team.attendance', $user->id) }}"
+                            <a href="{{ route('attendance.history', ['employeeId' => $user->id]) }}"
                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                                 <span><i class="mdi mdi-calendar-clock text-primary me-2"></i> History Absen Full</span>
                                 <i class="mdi mdi-chevron-right text-muted"></i>
