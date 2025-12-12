@@ -10,9 +10,10 @@ class AttendanceCorrectionController extends Controller
 {
     public function index(Request $request)
     {
-        // Ambil data absensi hari ini secara default, atau sesuai filter tanggal
+        // Filter tanggal, default hari ini
         $date = $request->input('date', date('Y-m-d'));
 
+        // Ambil semua data absensi pada tanggal tersebut
         $attendances = Attendance::with(['user', 'branch'])
             ->whereDate('check_in_time', $date)
             ->orderBy('created_at', 'desc')
@@ -21,40 +22,47 @@ class AttendanceCorrectionController extends Controller
         return view('admin.correction.index', compact('attendances', 'date'));
     }
 
-    // Fungsi untuk menghapus JAM PULANG saja (Kasus: Kepencet pulang padahal baru masuk)
+    // Fungsi: Reset Checkout (User bisa absen pulang ulang)
     public function resetCheckout($id)
     {
         $attendance = Attendance::findOrFail($id);
 
-        // Hapus foto pulang jika ada (opsional, biar bersih)
+        // Hapus foto pulang fisik jika ada
         if ($attendance->photo_out_path) {
-            Storage::disk('public')->delete($attendance->photo_out_path);
+            if (Storage::disk('public')->exists($attendance->photo_out_path)) {
+                Storage::disk('public')->delete($attendance->photo_out_path);
+            }
         }
 
-        // Set kolom terkait kepulangan menjadi NULL
+        // Reset kolom database ke NULL
         $attendance->update([
             'check_out_time'    => null,
             'photo_out_path'    => null,
             'latitude_out'      => null,
             'longitude_out'     => null,
-            'is_early_checkout' => false, // Reset status pulang cepat
+            'is_early_checkout' => false,
         ]);
 
-        return redirect()->back()->with('success', 'Data Checkout berhasil di-reset. User bisa absen pulang kembali.');
+        return redirect()->back()->with('success', 'Jam pulang berhasil di-reset. User dapat melakukan checkout ulang.');
     }
 
-    // Fungsi Hapus TOTAL (Satu baris hilang)
+    // Fungsi: Hapus Data Absen Permanen
     public function destroy($id)
     {
         $attendance = Attendance::findOrFail($id);
 
-        // Hapus file foto check in
+        // Hapus Foto Masuk
         if ($attendance->photo_path) {
-            Storage::disk('public')->delete($attendance->photo_path);
+            if (Storage::disk('public')->exists($attendance->photo_path)) {
+                Storage::disk('public')->delete($attendance->photo_path);
+            }
         }
-        // Hapus file foto check out
+
+        // Hapus Foto Pulang
         if ($attendance->photo_out_path) {
-            Storage::disk('public')->delete($attendance->photo_out_path);
+            if (Storage::disk('public')->exists($attendance->photo_out_path)) {
+                Storage::disk('public')->delete($attendance->photo_out_path);
+            }
         }
 
         $attendance->delete();

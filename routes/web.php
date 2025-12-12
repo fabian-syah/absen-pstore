@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttendanceCorrectionController;
 use App\Http\Controllers\EmploymentHistoryController;
 use App\Models\User;
 use App\Traits\SendFcmNotification;
@@ -62,6 +63,18 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/search', [GlobalSearchController::class, 'search'])->name('search');
 
     Route::get('/my-wrapped-2025', [App\Http\Controllers\AttendanceRecapController::class, 'index'])->name('attendance.recap');
+
+    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
+        // Halaman Utama Koreksi
+        Route::get('/correction', [AttendanceCorrectionController::class, 'index'])->name('correction.index');
+
+        // Reset Jam Pulang (Hanya hapus jam checkout)
+        Route::patch('/correction/{id}/reset-checkout', [AttendanceCorrectionController::class, 'resetCheckout'])->name('correction.reset-checkout');
+
+        // Hapus Permanen (Hapus baris data)
+        Route::delete('/correction/{id}', [AttendanceCorrectionController::class, 'destroy'])->name('correction.destroy');
+    });
 
     // === RUTE RIWAYAT KARIR & MUTASI (Full Resource kecuali show) ===
     // Akses role (Admin, Audit, Leader, User Biasa, Security) sudah diatur di dalam Controller
@@ -223,15 +236,6 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/monitoring/daily-attendance', [AdminMonitoringController::class, 'dailyAttendance'])
             ->name('admin.monitoring.daily');
-
-        // === ROUTE KOREKSI ABSENSI ===
-        Route::get('/correction', [App\Http\Controllers\AttendanceCorrectionController::class, 'index'])->name('correction.index');
-
-        // Fitur Reset Checkout (Hapus jam pulang saja)
-        Route::patch('/correction/{id}/reset-checkout', [App\Http\Controllers\AttendanceCorrectionController::class, 'resetCheckout'])->name('correction.reset-checkout');
-
-        // Fitur Hapus Permanen (Hapus satu baris data)
-        Route::delete('/correction/{id}', [App\Http\Controllers\AttendanceCorrectionController::class, 'destroy'])->name('correction.destroy');
     });
 
     // ====================================================================================================

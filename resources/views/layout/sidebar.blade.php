@@ -69,6 +69,8 @@
         {{-- =================================== --}}
         {{--    MENU KHUSUS SUPER ADMIN          --}}
         {{-- =================================== --}}
+        
+        {{-- Menu Cabang (Admin & Audit Boleh Lihat) --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Menu Cabang</li>
             <li class="nav-item">
@@ -77,11 +79,15 @@
                     <span class="menu-title">Data Cabang</span>
                 </a>
             </li>
+        @endif
 
+        {{-- Menu Koreksi Absensi (HANYA ADMIN YANG BISA LIHAT) --}}
+        @if (auth()->user()->role == 'admin') 
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin.correction.index') }}">
                     <i class="menu-icon mdi mdi-eraser"></i>
                     <span class="menu-title">Koreksi Absensi</span>
+                    <span class="badge badge-danger ms-2" style="font-size: 0.6rem;">Admin</span>
                 </a>
             </li>
         @endif
