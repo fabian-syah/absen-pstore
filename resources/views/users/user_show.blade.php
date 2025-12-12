@@ -79,14 +79,15 @@
                                 <i class="mdi mdi-chevron-right text-muted"></i>
                             </a>
 
-                            {{-- [TAMBAHAN BARU] 3. RIWAYAT PELANGGARAN (Anchor Link ke bawah) --}}
-                             <a href="#violationSection"
+                            {{-- [BARU] 3. HISTORY PELANGGARAN --}}
+                            {{-- Mengarah ke ID #violationSection di bawah halaman ini --}}
+                            <a href="#violationSection"
                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
-                                <span><i class="mdi mdi-alert-circle text-danger me-2"></i> Riwayat Pelanggaran</span>
+                                <span><i class="mdi mdi-alert-circle text-danger me-2"></i> History Pelanggaran</span>
                                 <span class="badge bg-danger rounded-pill">{{ $violations->count() }}</span>
                             </a>
 
-                            {{-- 4. KELOLA RIWAYAT KARIR (MUTASI/DIVISI) --}}
+                            {{-- 4. KELOLA RIWAYAT KARIR --}}
                             @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
                                 <a href="{{ route('employment-history.index', ['user_id' => $user->id, 'mode' => 'edit']) }}"
                                     class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
@@ -95,6 +96,7 @@
                                     <i class="mdi mdi-chevron-right text-muted"></i>
                                 </a>
                             @endif
+
                             {{-- 5. HISTORY INVENTARIS --}}
                             <a href="{{ route('inventory.index', ['user_id' => $user->id]) }}"
                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
