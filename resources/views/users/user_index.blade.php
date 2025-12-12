@@ -17,13 +17,10 @@
 
                     {{-- CONTAINER: TOMBOL TAMBAH & SEARCH FORM --}}
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-
-                        {{-- Tombol Tambah --}}
                         <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
                             <i class="mdi mdi-plus"></i> Tambah User Baru
                         </a>
 
-                        {{-- Form Pencarian --}}
                         <form action="{{ route('users.index') }}" method="GET" class="d-flex">
                             <div class="input-group input-group-sm" style="width: 250px;">
                                 <input type="text" name="search" class="form-control"
@@ -41,14 +38,10 @@
                     </div>
 
                     @if (session('success'))
-                        <div class="alert alert-success" role="alert">
-                            {{ session('success') }}
-                        </div>
+                        <div class="alert alert-success" role="alert">{{ session('success') }}</div>
                     @endif
                     @if (session('error'))
-                        <div class="alert alert-danger" role="alert">
-                            {{ session('error') }}
-                        </div>
+                        <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
                     @endif
 
                     <div class="table-responsive">
@@ -69,64 +62,42 @@
                                 @forelse ($users as $key => $user)
                                     <tr>
                                         <td> {{ $users->firstItem() + $key }} </td>
-
-                                        {{-- PROFIL & CENTANG BIRU --}}
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="me-3 position-relative">
                                                     @if ($user->profile_photo_path)
-                                                        <img src="{{ asset('storage/' . $user->profile_photo_path) }}"
-                                                            alt="profile" class="img-sm rounded-circle"
-                                                            style="width: 40px; height: 40px; object-fit: cover; border: {{ $user->is_verified ? '2px solid #0d6efd' : 'none' }};">
+                                                        <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="profile" class="img-sm rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: {{ $user->is_verified ? '2px solid #0d6efd' : 'none' }};">
                                                     @else
-                                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random"
-                                                            alt="profile" class="img-sm rounded-circle">
+                                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random" alt="profile" class="img-sm rounded-circle">
                                                     @endif
-
-                                                    {{-- Indikator Centang Biru di List --}}
                                                     @if ($user->is_verified)
-                                                        <span
-                                                            class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
-                                                            style="bottom: -2px; right: -2px; width: 16px; height: 16px;">
-                                                            <i class="mdi mdi-check-decagram text-primary"
-                                                                style="font-size: 14px;"></i>
+                                                        <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center" style="bottom: -2px; right: -2px; width: 16px; height: 16px;">
+                                                            <i class="mdi mdi-check-decagram text-primary" style="font-size: 14px;"></i>
                                                         </span>
                                                     @endif
                                                 </div>
                                                 <div>
-                                                    <div class="fw-bold d-flex align-items-center gap-1">
-                                                        {{ $user->name }}
-                                                    </div>
+                                                    <div class="fw-bold d-flex align-items-center gap-1">{{ $user->name }}</div>
                                                     <small class="text-muted">ID: {{ $user->login_id ?? '-' }}</small>
                                                 </div>
                                             </div>
                                         </td>
-
-                                        {{-- KONTAK --}}
                                         <td>
                                             <div><i class="mdi mdi-email-outline me-1"></i> {{ $user->email }}</div>
                                             @if ($user->whatsapp)
-                                                <div class="text-success mt-1">
-                                                    <i class="mdi mdi-whatsapp me-1"></i> {{ $user->whatsapp }}
-                                                </div>
+                                                <div class="text-success mt-1"><i class="mdi mdi-whatsapp me-1"></i> {{ $user->whatsapp }}</div>
                                             @endif
                                         </td>
-
-                                        {{-- ROLE --}}
                                         <td>
                                             <span class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
-                                            
-                                            {{-- [TAMBAHAN BARU] Indikator Scan Only --}}
                                             @if($user->only_security_scan)
-                                                <div class="mt-1">
-                                                    <span class="badge bg-danger text-white" style="font-size: 10px;">
-                                                        <i class="mdi mdi-qrcode-scan"></i> Scan Only
-                                                    </span>
-                                                </div>
+                                                <div class="mt-1"><span class="badge bg-danger text-white" style="font-size: 10px;"><i class="mdi mdi-qrcode-scan"></i> Scan Only</span></div>
+                                            @endif
+                                            {{-- Indikator AI --}}
+                                            @if($user->use_face_recognition)
+                                                 <div class="mt-1"><span class="badge bg-success text-white" style="font-size: 10px;"><i class="mdi mdi-face-recognition"></i> AI ON</span></div>
                                             @endif
                                         </td>
-
-                                        {{-- PENEMPATAN & DIVISI --}}
                                         <td>
                                             <div class="fw-bold mb-1" style="font-size: 0.9rem;">
                                                 @if ($user->role == 'audit')
@@ -135,96 +106,51 @@
                                                     {{ $user->branch->name ?? 'Semua Cabang' }}
                                                 @endif
                                             </div>
-
                                             <div class="text-muted">
                                                 @if ($user->divisions->isNotEmpty())
                                                     <i class="mdi mdi-label-outline text-primary me-1" style="font-size: 10px;"></i>
-                                                    <span style="font-size: 0.8rem;">
-                                                        {{ $user->divisions->pluck('name')->join(', ') }}
-                                                    </span>
+                                                    <span style="font-size: 0.8rem;">{{ $user->divisions->pluck('name')->join(', ') }}</span>
                                                 @else
                                                     <span class="text-muted fst-italic" style="font-size: 0.8rem;">-</span>
                                                 @endif
                                             </div>
                                         </td>
-
-                                        {{-- TANGGAL JOIN --}}
-                                        <td>
-                                            {{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}
-                                        </td>
-
-                                        {{-- QR CODE --}}
+                                        <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}</td>
                                         <td>
                                             @if ($user->qr_code_value)
-                                                <button type="button" class="btn btn-inverse-dark btn-icon btn-sm"
-                                                    data-bs-toggle="modal" data-bs-target="#qrModal"
-                                                    data-name="{{ $user->name }}" data-qr="{{ $user->qr_code_value }}">
+                                                <button type="button" class="btn btn-inverse-dark btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#qrModal" data-name="{{ $user->name }}" data-qr="{{ $user->qr_code_value }}">
                                                     <i class="mdi mdi-qrcode"></i>
                                                 </button>
                                             @else
                                                 <span class="text-muted text-small">N/A</span>
                                             @endif
                                         </td>
-
-                                        {{-- AKSI --}}
                                         <td>
-                                            {{-- Detail (Dashboard User) --}}
-                                            <a href="{{ route('users.show', $user->id) }}"
-                                                class="btn btn-inverse-info btn-icon btn-sm"
-                                                title="Lihat Detail & Verifikasi">
-                                                <i class="mdi mdi-eye"></i>
-                                            </a>
-
-                                            {{-- Edit --}}
-                                            <a href="{{ route('users.edit', $user->id) }}"
-                                                class="btn btn-inverse-warning btn-icon btn-sm" title="Edit">
-                                                <i class="mdi mdi-pencil"></i>
-                                            </a>
-
-                                            {{-- Hapus (Kecuali diri sendiri & Audit) --}}
+                                            <a href="{{ route('users.show', $user->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail"><i class="mdi mdi-eye"></i></a>
+                                            <a href="{{ route('users.edit', $user->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
                                             @if ($user->id != auth()->id() && auth()->user()->role != 'audit')
-                                                <form action="{{ route('users.destroy', $user->id) }}" method="POST"
-                                                    class="d-inline"
-                                                    onsubmit="return confirm('Yakin ingin menghapus user ini?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm"
-                                                        title="Hapus">
-                                                        <i class="mdi mdi-delete"></i>
-                                                    </button>
+                                                <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?');">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm" title="Hapus"><i class="mdi mdi-delete"></i></button>
                                                 </form>
                                             @endif
-
-                                            {{-- Toggle Status --}}
                                             @if ($user->id != auth()->id())
-                                                <form action="{{ route('users.toggle-status', $user->id) }}" method="POST"
-                                                    class="d-inline">
+                                                <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
                                                     @csrf
-                                                    <button type="submit"
-                                                        class="btn btn-icon btn-sm {{ $user->is_active ? 'btn-inverse-danger' : 'btn-inverse-success' }}"
-                                                        title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
-                                                        <i
-                                                            class="mdi {{ $user->is_active ? 'mdi-power-off' : 'mdi-power' }}"></i>
+                                                    <button type="submit" class="btn btn-icon btn-sm {{ $user->is_active ? 'btn-inverse-danger' : 'btn-inverse-success' }}" title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                                        <i class="mdi {{ $user->is_active ? 'mdi-power-off' : 'mdi-power' }}"></i>
                                                     </button>
                                                 </form>
                                             @endif
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="9" class="text-center py-4">
-                                            <div class="text-muted">Tidak ada data user yang ditemukan.</div>
-                                        </td>
-                                    </tr>
+                                    <tr><td colspan="9" class="text-center py-4"><div class="text-muted">Tidak ada data user yang ditemukan.</div></td></tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="mt-4 d-flex justify-content-end">
-                        {{ $users->links('pagination::bootstrap-5') }}
-                    </div>
-
+                    <div class="mt-4 d-flex justify-content-end">{{ $users->links('pagination::bootstrap-5') }}</div>
                 </div>
             </div>
         </div>
@@ -234,17 +160,12 @@
     <div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="qrModalLabel">QR Code User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
+                <div class="modal-header"><h5 class="modal-title" id="qrModalLabel">QR Code User</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
                 <div class="modal-body text-center">
                     <div id="qrcode-container" class="d-flex justify-content-center my-3"></div>
                     <p class="text-muted small mt-2">Scan QR ini untuk absensi</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button></div>
             </div>
         </div>
     </div>
@@ -262,16 +183,8 @@
             modalTitle.textContent = 'QR Code: ' + name;
             var qrContainer = document.getElementById('qrcode-container');
             qrContainer.innerHTML = '';
-
             if (qrValue) {
-                new QRCode(qrContainer, {
-                    text: qrValue,
-                    width: 200,
-                    height: 200,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
+                new QRCode(qrContainer, { text: qrValue, width: 200, height: 200, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
             } else {
                 qrContainer.innerHTML = '<span class="text-danger">Value QR Code tidak ditemukan</span>';
             }

@@ -18,13 +18,10 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        // [PERBAIKAN] Middleware Konstruktor
-        // Aturan Default: Hanya Admin, Audit, Admin Gaji yang boleh akses Controller ini.
-        // KECUALI method 'show', Leader juga boleh masuk.
-        
+        // Middleware Konstruktor
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
-            $routeAction = $request->route()->getActionMethod(); // Ambil nama method (index, create, show, dll)
+            $routeAction = $request->route()->getActionMethod();
 
             // Jika method-nya 'show', izinkan Leader juga
             if ($routeAction === 'show') {
@@ -32,7 +29,7 @@ class UserController extends Controller
                     abort(403, 'Akses ditolak. Anda tidak memiliki hak akses.');
                 }
             } 
-            // Untuk method selain 'show' (create, store, edit, update, destroy, index), Leader DILARANG
+            // Untuk method selain 'show', Leader DILARANG
             else {
                 if (!in_array($user->role, ['admin', 'audit', 'admin_gaji'])) {
                     abort(403, 'Akses ditolak. Anda tidak memiliki hak akses.');
@@ -110,13 +107,19 @@ class UserController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
-            'only_security_scan' => 'nullable', // Validasi input checkbox
+            'only_security_scan' => 'nullable',
+            'use_face_recognition' => 'nullable', // [BARU]
         ]);
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
-        // [TAMBAHAN BARU] Cek status Scan Only
+        // [LOGIC SCAN ONLY]
         $data['only_security_scan'] = $request->has('only_security_scan') ? 1 : 0;
+        
+        // [LOGIC FACE RECOGNITION]
+        // Cek input checkbox/hidden. Default = 1 (True) jika tidak ada input (biasanya hidden input handle ini)
+        // Tapi kita pakai logic $request->input untuk menangkap value '0' atau '1'
+        $data['use_face_recognition'] = $request->input('use_face_recognition', 1); 
 
         $data['check_in_start']  = $request->check_in_start ?: null;
         $data['check_out_start'] = $request->check_out_start ?: null;
@@ -129,7 +132,6 @@ class UserController extends Controller
             $data['branch_id'] = $user->branch_id;
         }
         
-        // Jika role ADMIN atau ADMIN_GAJI, set branch & division jadi NULL (Global Access)
         if (in_array($request->role, ['admin', 'admin_gaji'])) {
             $data['branch_id'] = null;
             $data['division_id'] = null;
@@ -161,31 +163,22 @@ class UserController extends Controller
         $user->load(['branches', 'divisions']);
         $auth_user = Auth::user();
 
-        // 1. Validasi Akses Audit: Pastikan User yang diedit ada di wilayah Audit
         if ($auth_user->role == 'audit') {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
-            // Jika user punya cabang, dan cabangnya tidak ada di list audit -> Tolak
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
             }
         }
         
-        // 2. Validasi Akses Admin Cabang
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
 
-        // ==========================================================
-        // LOGIC PENGAMBILAN DATA CABANG ($branches)
-        // ==========================================================
         if ($auth_user->role == 'audit') {
-            // Audit hanya boleh melihat/memilih cabang yang dia pegang
             $branches = $auth_user->branches; 
         } elseif ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
-            // Admin Cabang hanya melihat cabangnya sendiri
             $branches = Branch::where('id', $auth_user->branch_id)->get();
         } else {
-            // Super Admin / Admin Gaji melihat semua cabang
             $branches = Branch::all();
         }
 
@@ -209,16 +202,12 @@ class UserController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'check_in_start' => 'nullable',
             'check_out_start' => 'nullable',
-            'only_security_scan' => 'nullable', // Validasi input checkbox
+            'only_security_scan' => 'nullable',
+            'use_face_recognition' => 'nullable', // [BARU]
         ]);
 
-        // ==========================================================
-        // KEAMANAN UNTUK AUDIT (Mencegah Inspect Element)
-        // ==========================================================
         if (Auth::user()->role == 'audit' && $request->filled('branch_id')) {
             $auditBranchIds = Auth::user()->branches()->pluck('branches.id')->toArray();
-            
-            // Jika Audit mencoba memindah user ke cabang yang TIDAK dia pegang -> Error
             if (!in_array($request->branch_id, $auditBranchIds)) {
                 return back()->with('error', 'Anda tidak memiliki akses untuk memindahkan user ke cabang tersebut.');
             }
@@ -226,8 +215,12 @@ class UserController extends Controller
 
         $data = $request->except(['password', 'profile_photo_path', 'multi_branches', 'multi_divisions']);
 
-        // [TAMBAHAN BARU] Update status Scan Only
+        // [LOGIC SCAN ONLY]
         $data['only_security_scan'] = $request->has('only_security_scan') ? 1 : 0;
+
+        // [LOGIC FACE RECOGNITION]
+        // Ambil input langsung (karena ada hidden field '0' dan checkbox '1')
+        $data['use_face_recognition'] = $request->input('use_face_recognition');
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
@@ -244,7 +237,6 @@ class UserController extends Controller
             $data['profile_photo_path'] = $request->file('profile_photo_path')->store('profile-photos', 'public');
         }
 
-        // Jika role diubah jadi ADMIN atau ADMIN_GAJI, set branch & division NULL
         if (in_array($request->role, ['admin', 'admin_gaji'])) {
             $data['branch_id'] = null;
             $data['division_id'] = null;
@@ -252,13 +244,10 @@ class UserController extends Controller
 
         $user->update($data);
 
-        // Sync Relasi
         if ($request->role == 'audit') {
             $user->branches()->sync($request->multi_branches ?? []);
         } else {
             $user->divisions()->sync($request->multi_divisions ?? []);
-            
-            // Logika tambahan jika bukan admin/admin_gaji
             if (!in_array($request->role, ['admin', 'admin_gaji'])) {
                 if ($request->has('multi_divisions') && count($request->multi_divisions) > 0) {
                     $user->division_id = $request->multi_divisions[0];
@@ -275,7 +264,6 @@ class UserController extends Controller
         if (Auth::user()->role == 'audit') {
             return back()->with('error', 'Akses Ditolak: Role Audit tidak diizinkan menghapus data user.');
         }
-
         if ($user->id == auth()->id()) {
             return back()->with('error', 'Tidak bisa hapus akun sendiri.');
         }
@@ -283,7 +271,6 @@ class UserController extends Controller
         try {
             if ($user->profile_photo_path) Storage::disk('public')->delete($user->profile_photo_path);
             if ($user->ktp_photo_path) Storage::disk('public')->delete($user->ktp_photo_path);
-
             $user->branches()->detach();
             $user->divisions()->detach();
             $user->delete();
@@ -296,23 +283,17 @@ class UserController extends Controller
     public function show(User $user)
     {
         $auth_user = Auth::user();
-
-        // 1. Validasi Admin Cabang
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
-        // 2. Validasi Audit (Sesuai Wilayah)
         if ($auth_user->role == 'audit') {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di luar wilayah cabang Anda.');
             }
         }
-        // 3. [PERBAIKAN] Validasi Leader (Hanya Cabang Sendiri)
         if ($auth_user->role == 'leader') {
-            // Leader hanya boleh lihat user yang satu cabang dengannya (kecuali Super Admin/Audit yang branch_id nya null)
             if ($user->branch_id != $auth_user->branch_id) {
-                // Kecuali jika si Leader punya akses multi branch (kasus jarang, tapi jaga2)
                 $leaderPivotIds = $auth_user->branches()->pluck('branches.id')->toArray();
                 if (!in_array($user->branch_id, $leaderPivotIds)) {
                     abort(403, 'Akses Ditolak: Anda hanya boleh melihat karyawan di cabang Anda sendiri.');
@@ -321,9 +302,7 @@ class UserController extends Controller
         }
 
         $user->load(['branch', 'division', 'branches', 'divisions']);
-
         $stats = $this->getSpecificUserStats($user->id);
-
         $recentAttendance = Attendance::where('user_id', $user->id)
             ->whereNotNull('check_in_time')
             ->whereTime('check_in_time', '!=', '00:00:00')
@@ -339,22 +318,18 @@ class UserController extends Controller
         return view('users.user_show', compact('user', 'stats', 'recentAttendance'));
     }
 
-    // ... (method verifyUser, photoRequests, ktpRequests, approvePhoto, rejectPhoto, dll SAMA) ...
-    
     public function verifyUser(User $user)
     {
         if (!$user->is_verified) {
             if (empty($user->profile_photo_path) || empty($user->ktp_photo_path)) {
                 return back()->with('error', 'Gagal Verifikasi: User harus mengunggah Foto Profil DAN Foto KTP terlebih dahulu!');
             }
-
             $user->is_verified = true;
             $msg = 'User berhasil diverifikasi (Centang Biru Aktif). Foto profil user sekarang terkunci.';
         } else {
             $user->is_verified = false;
             $msg = 'Verifikasi dicabut (Centang Biru Non-Aktif).';
         }
-
         $user->save();
         return back()->with('success', $msg);
     }
@@ -363,15 +338,12 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $query = User::where('photo_request_status', 'pending')->with(['branch', 'division']);
-
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('branch_id', $user->branch_id);
-            
         } elseif ($user->role == 'audit') {
             $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
             $query->whereIn('branch_id', $auditBranchIds);
         }
-
         $requests = $query->latest('updated_at')->paginate(10);
         return view('users.photo_requests', compact('requests'));
     }
@@ -380,97 +352,49 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $query = User::where('ktp_request_status', 'pending')->with('division');
-
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('branch_id', $user->branch_id);
-            
         } elseif ($user->role == 'audit') {
             $auditBranchIds = $user->branches()->pluck('branches.id')->toArray();
             $query->whereIn('branch_id', $auditBranchIds);
         }
-
         $users = $query->get();
         return view('users.ktp-requests', compact('users'));
     }
 
     public function approvePhotoRequest(User $user)
     {
-        if (!$user->profile_photo_temp_path) {
-            return back()->with('error', 'Tidak ada file pengajuan foto baru.');
-        }
-
-        if ($user->profile_photo_path) {
-            if (Storage::disk('public')->exists($user->profile_photo_path)) {
-                Storage::disk('public')->delete($user->profile_photo_path);
-            }
-        }
-
-        $user->update([
-            'profile_photo_path' => $user->profile_photo_temp_path,
-            'profile_photo_temp_path' => null,
-            'photo_request_status' => 'approved'
-        ]);
-
+        if (!$user->profile_photo_temp_path) return back()->with('error', 'Tidak ada file pengajuan foto baru.');
+        if ($user->profile_photo_path) if (Storage::disk('public')->exists($user->profile_photo_path)) Storage::disk('public')->delete($user->profile_photo_path);
+        $user->update(['profile_photo_path' => $user->profile_photo_temp_path, 'profile_photo_temp_path' => null, 'photo_request_status' => 'approved']);
         return back()->with('success', 'Izin ganti foto diberikan & foto lama dihapus.');
     }
 
     public function rejectPhotoRequest(User $user)
     {
-        if ($user->profile_photo_temp_path) {
-            if (Storage::disk('public')->exists($user->profile_photo_temp_path)) {
-                Storage::disk('public')->delete($user->profile_photo_temp_path);
-            }
-        }
-
-        $user->update([
-            'profile_photo_temp_path' => null,
-            'photo_request_status' => 'rejected'
-        ]);
-        
+        if ($user->profile_photo_temp_path) if (Storage::disk('public')->exists($user->profile_photo_temp_path)) Storage::disk('public')->delete($user->profile_photo_temp_path);
+        $user->update(['profile_photo_temp_path' => null, 'photo_request_status' => 'rejected']);
         return back()->with('success', 'Pengajuan foto ditolak. File pengajuan dihapus.');
     }
 
     public function approveKtpRequest(User $user)
     {
-        if (!$user->ktp_photo_temp_path) {
-            return back()->with('error', 'Tidak ada file pengajuan KTP baru.');
-        }
-
-        if ($user->ktp_photo_path) {
-            if (Storage::disk('public')->exists($user->ktp_photo_path)) {
-                Storage::disk('public')->delete($user->ktp_photo_path);
-            }
-        }
-        
-        $user->update([
-            'ktp_photo_path' => $user->ktp_photo_temp_path,
-            'ktp_photo_temp_path' => null,
-            'ktp_request_status' => 'none'
-        ]);
-
+        if (!$user->ktp_photo_temp_path) return back()->with('error', 'Tidak ada file pengajuan KTP baru.');
+        if ($user->ktp_photo_path) if (Storage::disk('public')->exists($user->ktp_photo_path)) Storage::disk('public')->delete($user->ktp_photo_path);
+        $user->update(['ktp_photo_path' => $user->ktp_photo_temp_path, 'ktp_photo_temp_path' => null, 'ktp_request_status' => 'none']);
         return back()->with('success', 'Permintaan ganti KTP disetujui & file lama dihapus.');
     }
 
     public function rejectKtpRequest(User $user)
     {
-        if ($user->ktp_photo_temp_path) {
-            if (Storage::disk('public')->exists($user->ktp_photo_temp_path)) {
-                Storage::disk('public')->delete($user->ktp_photo_temp_path);
-            }
-        }
-
-        $user->update([
-            'ktp_photo_temp_path' => null,
-            'ktp_request_status' => 'rejected'
-        ]);
-
+        if ($user->ktp_photo_temp_path) if (Storage::disk('public')->exists($user->ktp_photo_temp_path)) Storage::disk('public')->delete($user->ktp_photo_temp_path);
+        $user->update(['ktp_photo_temp_path' => null, 'ktp_request_status' => 'rejected']);
         return back()->with('success', 'Permintaan ganti KTP ditolak.');
     }
 
     public function toggleStatus(User $user)
     {
         if ($user->id == auth()->id()) return back();
-
         $user->is_active = !$user->is_active;
         $user->save();
         return back()->with('success', 'Status user diperbarui.');
@@ -484,27 +408,13 @@ class UserController extends Controller
             ->where('attendance_type', '!=', 'system') 
             ->whereIn('status', ['verified', 'present', 'late'])
             ->count();
-
-        return [
-            'total' => $presentCount,
-            'present' => $presentCount,
-            'alpha' => 0,
-            'late' => 0,
-            'early' => 0,
-            'pending' => 0,
-            'on_time' => 0,
-            'on_time_percentage' => 0,
-            'late_percentage' => 0,
-            'current_month' => Carbon::now()->format('F Y')
-        ];
+        return ['total' => $presentCount, 'present' => $presentCount, 'alpha' => 0, 'late' => 0, 'early' => 0, 'pending' => 0, 'on_time' => 0, 'on_time_percentage' => 0, 'late_percentage' => 0, 'current_month' => Carbon::now()->format('F Y')];
     }
 
     public function updateFcmToken(Request $request)
     {
         try {
-            $request->validate([
-                'token' => 'required|string'
-            ]);
+            $request->validate(['token' => 'required|string']);
             $user = Auth::user();
             $user->fcm_token = $request->token;
             $user->save();
