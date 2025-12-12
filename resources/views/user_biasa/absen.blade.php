@@ -9,6 +9,15 @@
 @endsection
 
 @section('content')
+    {{-- OVERLAY LOADING MODELS --}}
+    <div id="model-loader" class="d-flex flex-column justify-content-center align-items-center position-fixed w-100 h-100 top-0 start-0 bg-white" style="z-index: 9999;">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="fw-bold text-muted" id="loader-text">Memuat Fitur Deteksi Wajah...</h5>
+        <small class="text-muted">Mohon tunggu sebentar</small>
+    </div>
+
     <div class="row">
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
@@ -16,7 +25,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="card-title mb-0">Form Absen Mandiri ({{ ucfirst($mode) }})</h4>
                         <div class="badge badge-dark badge-pill">
-                            <i class="mdi mdi-camera me-1"></i>Selfie Mode
+                            <i class="mdi mdi-face-recognition me-1"></i>Face Detection ON
                         </div>
                     </div>
 
@@ -63,7 +72,7 @@
                         @endif
                     @else
                         <p class="text-muted mb-4">
-                            Silakan ambil foto selfie untuk melakukan absen <strong>{{ strtoupper($mode) }}</strong> hari ini.
+                            Silakan ambil foto selfie. <span class="text-danger fw-bold">Wajah harus terlihat jelas untuk diproses.</span>
                         </p>
                     @endif
 
@@ -85,6 +94,12 @@
                                         {{-- Preview --}}
                                         <div id="camera-preview" class="camera-preview mb-3 d-none">
                                             <img id="preview-image" src="" alt="Preview Foto" class="img-fluid rounded shadow-sm">
+                                            
+                                            {{-- Status Wajah --}}
+                                            <div id="face-status" class="mt-2 fw-bold text-warning">
+                                                <i class="mdi mdi-loading mdi-spin me-1"></i> Memindai Wajah...
+                                            </div>
+
                                             <div class="preview-overlay">
                                                 <div class="watermark-timestamp">
                                                     {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, d F Y H:i:s') }}
@@ -96,13 +111,13 @@
                                         </div>
                                         {{-- Placeholder --}}
                                         <div id="camera-placeholder" class="camera-placeholder">
-                                            <i class="mdi mdi-camera display-4 text-muted mb-3"></i>
+                                            <i class="mdi mdi-face-recognition display-4 text-muted mb-3"></i>
                                             <p class="text-muted mb-3">Klik tombol untuk ambil foto</p>
                                         </div>
                                         {{-- Tombol --}}
                                         <div class="d-flex gap-2 justify-content-center">
                                             <input type="file" name="photo" id="photo-input" class="d-none" accept="image/*" capture="user" required>
-                                            <button type="button" id="capture-btn" class="btn btn-dark">
+                                            <button type="button" id="capture-btn" class="btn btn-dark" disabled>
                                                 <i class="mdi mdi-camera me-1"></i>Buka Kamera
                                             </button>
                                         </div>
@@ -153,7 +168,7 @@
                                     <i class="mdi mdi-arrow-right"></i>
                                 </div>
                             </div>
-                            <small class="text-muted text-center d-block mt-2" id="slide-hint">Ambil foto & lokasi untuk membuka kunci</small>
+                            <small class="text-muted text-center d-block mt-2" id="slide-hint">Ambil foto (wajah terlihat) & lokasi untuk membuka kunci</small>
                         </div>
 
                         <div class="text-center mt-3">
@@ -255,6 +270,9 @@
 @endpush
 
 @push('scripts')
+    {{-- LOAD FACE API LIBRARY --}}
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const photoInput = document.getElementById('photo-input');
@@ -266,6 +284,33 @@
             const locationStatus = document.getElementById('location-status');
             const locationDetails = document.getElementById('location-details');
             const form = document.getElementById('attendance-form');
+            const faceStatus = document.getElementById('face-status');
+            const modelLoader = document.getElementById('model-loader');
+            const loaderText = document.getElementById('loader-text');
+
+            // Status Global
+            let isFaceDetected = false;
+
+            // Load Models saat halaman dibuka
+            async function loadModels() {
+                try {
+                    // PENTING: Pastikan folder /models ada di folder public Anda
+                    // Dan berisi file: tiny_face_detector_model-weights_manifest.json, dll.
+                    await faceapi.nets.tinyFaceDetector.loadFromUri('/models'); 
+                    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+                    
+                    console.log("Models Loaded");
+                    modelLoader.classList.add('d-none'); // Sembunyikan loader
+                    captureBtn.disabled = false; // Buka tombol kamera
+                } catch (error) {
+                    console.error("Error loading models:", error);
+                    loaderText.innerText = "Gagal memuat AI Wajah. Cek koneksi atau file model.";
+                    loaderText.classList.add('text-danger');
+                }
+            }
+
+            // Jalankan Load Models (Tunggu Script face-api terload dulu)
+            setTimeout(loadModels, 1000);
 
             // Slide Elements
             const slideTrack = document.getElementById('slide-track');
@@ -283,15 +328,52 @@
 
             // 1. Kamera Logic
             captureBtn.addEventListener('click', () => photoInput.click());
-            photoInput.addEventListener('change', function(e) {
+            
+            photoInput.addEventListener('change', async function(e) {
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = async function(e) {
                         previewImage.src = e.target.result;
+                        
+                        // Tampilkan Preview
                         cameraPreview.classList.remove('d-none');
                         cameraPlaceholder.classList.add('d-none');
                         retakeBtn.classList.remove('d-none');
+                        
+                        // Kunci slider dulu sebelum deteksi selesai
+                        isFaceDetected = false;
+                        checkValidity();
+
+                        // Deteksi Wajah
+                        faceStatus.innerHTML = '<i class="mdi mdi-loading mdi-spin me-1"></i> Sedang memindai wajah...';
+                        faceStatus.className = 'mt-2 fw-bold text-warning';
+
+                        try {
+                            // Buat Image Element sementara untuk deteksi
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            
+                            // Deteksi Wajah dengan TinyFaceDetector (Cepat untuk HP)
+                            const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions());
+
+                            if (detections.length > 0) {
+                                // WAJAH DITEMUKAN
+                                isFaceDetected = true;
+                                faceStatus.innerHTML = '<i class="mdi mdi-check-circle me-1"></i> Wajah Terdeteksi';
+                                faceStatus.className = 'mt-2 fw-bold text-success';
+                            } else {
+                                // WAJAH TIDAK DITEMUKAN
+                                isFaceDetected = false;
+                                faceStatus.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i> Wajah TIDAK Terdeteksi!';
+                                faceStatus.className = 'mt-2 fw-bold text-danger';
+                                alert("Wajah tidak terdeteksi! Pastikan wajah terlihat jelas dan pencahayaan cukup.");
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            faceStatus.innerText = "Error deteksi wajah.";
+                        }
+
                         checkValidity();
                     }
                     reader.readAsDataURL(file);
@@ -302,6 +384,7 @@
                 photoInput.value = '';
                 cameraPreview.classList.add('d-none');
                 cameraPlaceholder.classList.remove('d-none');
+                isFaceDetected = false;
                 checkValidity();
             });
 
@@ -328,15 +411,21 @@
                 const hasPhoto = photoInput.files.length > 0;
                 const hasLoc = document.getElementById('latitude').value !== '';
                 
-                if (hasPhoto && hasLoc) {
+                // SYARAT: Ada Foto + Ada Lokasi + Wajah Terdeteksi
+                if (hasPhoto && hasLoc && isFaceDetected) {
                     slideTrack.classList.remove('disabled');
                     slideHint.textContent = "Geser tombol ke kanan untuk konfirmasi";
-                    slideHint.classList.remove('text-muted');
-                    slideHint.classList.add('text-dark');
+                    slideHint.classList.remove('text-muted', 'text-danger');
+                    slideHint.classList.add('text-success', 'fw-bold');
                 } else {
                     slideTrack.classList.add('disabled');
-                    slideHint.textContent = "Ambil foto & lokasi untuk membuka kunci";
-                    slideHint.classList.add('text-muted');
+                    if (!isFaceDetected && hasPhoto) {
+                        slideHint.textContent = "Wajah tidak terdeteksi! Mohon foto ulang.";
+                        slideHint.classList.add('text-danger');
+                    } else {
+                        slideHint.textContent = "Ambil foto (wajah terlihat) & lokasi untuk membuka kunci";
+                        slideHint.classList.add('text-muted');
+                    }
                 }
             }
 
