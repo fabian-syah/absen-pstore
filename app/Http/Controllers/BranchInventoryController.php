@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class BranchInventoryController extends Controller
 {
@@ -32,16 +33,25 @@ class BranchInventoryController extends Controller
 
         // --- 1. LOGIC FILTER DATA CABANG (Security Layer) ---
 
-        // Jika Admin Cabang ATAU Leader -> Hanya lihat cabangnya sendiri
-        if (($user->role == 'admin' && $user->branch_id != null) || $user->role == 'leader') {
+        // A. Jika Admin Cabang (Bukan Super Admin) -> Hanya lihat cabangnya sendiri
+        if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('id', $user->branch_id);
         } 
-        // Jika Audit -> Hanya lihat cabang yang diaudit (dari tabel pivot)
-        elseif ($user->role == 'audit') {
-            $auditBranchIds = $user->branches->pluck('id')->toArray();
-            $query->whereIn('id', $auditBranchIds);
+        // B. Jika Audit ATAU Leader -> Melihat Multi-Cabang (Dari Pivot + Main Branch)
+        elseif (in_array($user->role, ['audit', 'leader'])) {
+            // Ambil cabang dari relasi many-to-many (pivot)
+            $allowedBranchIds = $user->branches->pluck('id')->toArray();
+            
+            // Tambahkan branch_id utama user jika ada (untuk safety agar cabang homebase tetap muncul)
+            if ($user->branch_id) {
+                $allowedBranchIds[] = $user->branch_id;
+            }
+            
+            // Hapus duplikat id dan filter query
+            $allowedBranchIds = array_unique($allowedBranchIds);
+            $query->whereIn('id', $allowedBranchIds);
         }
-        // Jika Super Admin (Admin tanpa branch_id) -> Melihat SEMUA (Tidak ada where)
+        // C. Jika Super Admin (Admin tanpa branch_id) -> Melihat SEMUA (Tidak ada where)
 
         
         // --- 2. LOGIC SEARCH / PENCARIAN ---
@@ -56,7 +66,7 @@ class BranchInventoryController extends Controller
         // --- 3. AMBIL DATA DENGAN EAGER LOADING ---
         // Kita perlu relasi: Branch -> Users -> Inventories
         $branches = $query->with(['users.inventories' => function ($q) {
-            // Kita bisa filter barang di sini jika mau
+            // Filter tambahan inventory jika diperlukan bisa disini
         }])->latest()->get();
 
         // --- 4. HITUNG RINGKASAN KATEGORI & SORTING ---
@@ -72,7 +82,7 @@ class BranchInventoryController extends Controller
                 ->map(function ($items) {
                     return $items->count();
                 })
-                ->sortDesc(); // <--- [UPDATE] Logika Sorting ditambahkan di sini
+                ->sortDesc(); // Logika Sorting desc
 
             // Hitung total aset keseluruhan
             $branch->total_assets = $allInventories->count();
@@ -80,7 +90,6 @@ class BranchInventoryController extends Controller
             return $branch;
         });
 
-        // PERBAIKAN: Mengarah ke file 'resources/views/inventory/branch_inventory_list.blade.php'
         return view('inventory.branch_inventory_list', compact('branches'));
     }
 
@@ -93,16 +102,23 @@ class BranchInventoryController extends Controller
         $branch = Branch::findOrFail($id);
 
         // --- VALIDASI AKSES (Security) ---
-        // 1. Jika Leader/Admin Cabang -> Cek apakah ini cabangnya dia?
-        if (($user->role == 'leader' || ($user->role == 'admin' && $user->branch_id != null)) && $user->branch_id != $branch->id) {
-            abort(403, 'Anda tidak memiliki akses ke cabang ini.');
-        }
         
-        // 2. Jika Audit -> Cek apakah cabang ini ada di list audit dia?
-        if ($user->role == 'audit') {
-            $auditBranchIds = $user->branches->pluck('id')->toArray();
-            if (!in_array($branch->id, $auditBranchIds)) {
-                abort(403, 'Cabang ini bukan wilayah audit Anda.');
+        // 1. Validasi untuk Admin Cabang (Single Branch)
+        if ($user->role == 'admin' && $user->branch_id != null && $user->branch_id != $branch->id) {
+             abort(403, 'Anda tidak memiliki akses ke cabang ini.');
+        }
+
+        // 2. Validasi untuk Audit ATAU Leader (Multi Branch)
+        if (in_array($user->role, ['audit', 'leader'])) {
+            $allowedBranchIds = $user->branches->pluck('id')->toArray();
+            
+            // Masukkan juga main branch_id ke whitelist
+            if ($user->branch_id) {
+                $allowedBranchIds[] = $user->branch_id;
+            }
+
+            if (!in_array($branch->id, $allowedBranchIds)) {
+                abort(403, 'Cabang ini bukan wilayah otoritas/audit Anda.');
             }
         }
 
@@ -127,7 +143,6 @@ class BranchInventoryController extends Controller
 
         $inventories = $inventoryQuery->latest()->get();
 
-        // Asumsi nama file detail adalah 'branch_inventory_detail.blade.php' di folder inventory
         return view('inventory.branch_inventory_detail', compact('branch', 'inventories'));
     }
 }
