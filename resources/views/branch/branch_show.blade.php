@@ -125,13 +125,14 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($users as $user)
+                                {{-- PERUBAHAN DISINI: Menggunakan $employees menggantikan $users --}}
+                                @forelse($employees as $user)
                                     <tr>
                                         <td>
                                             <div class="position-relative d-inline-block">
                                                 @if ($user->profile_photo_path)
                                                     <img src="{{ asset('storage/' . $user->profile_photo_path) }}"
-                                                        alt="image" 
+                                                        alt="image"
                                                         class="img-sm rounded-circle"
                                                         style="width: 40px; height: 40px; object-fit: cover; border: {{ $user->is_verified ? '2px solid #0d6efd' : '2px solid #e9ecef' }}; padding: 1px;" />
                                                 @else
@@ -199,7 +200,8 @@
 
                     {{-- Pagination Links --}}
                     <div class="mt-4 d-flex justify-content-end">
-                        {{ $users->links('pagination::bootstrap-5') }}
+                        {{-- PERUBAHAN DISINI: Menggunakan $employees menggantikan $users --}}
+                        {{ $employees->links('pagination::bootstrap-5') }}
                     </div>
                 </div>
             </div>
