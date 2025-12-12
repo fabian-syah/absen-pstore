@@ -15,61 +15,37 @@ class ViolationController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        
-        // Ambil data yang tanggal kedaluwarsanya MASIH di masa depan
-        $query = Violation::with(['user', 'reporter'])
-                          ->where('expires_at', '>', now());
-
+        $query = Violation::with(['user', 'reporter'])->where('expires_at', '>', now());
         $query = $this->applyAccessFilter($query, $user);
-
-        // Sortir dari yang terbaru dibuat
         $violations = $query->orderBy('created_at', 'desc')->get();
-
         return view('violations.index', compact('violations'));
     }
 
-    /**
-     * Menampilkan daftar pelanggaran yang SUDAH SELESAI (History).
-     */
     public function history(Request $request)
     {
         $user = auth()->user();
-
-        // Ambil data yang tanggal kedaluwarsanya SUDAH LEWAT atau HARI INI
-        $query = Violation::with(['user', 'reporter'])
-                          ->where('expires_at', '<=', now());
-
+        $query = Violation::with(['user', 'reporter', 'resolver'])->where('expires_at', '<=', now()); // Tambah resolver
         $query = $this->applyAccessFilter($query, $user);
-
-        // Sortir berdasarkan tanggal expired (yang baru selesai di atas)
         $violations = $query->orderBy('expires_at', 'desc')->get();
-
         return view('violations.history', compact('violations'));
     }
 
-    /**
-     * Logic filter hak akses (Admin lihat semua, Audit lihat cabang, User lihat sendiri).
-     */
     private function applyAccessFilter($query, $user)
     {
         if ($user->role === 'admin') {
-            // Admin: No filter (lihat semua)
+            // No filter
         } elseif ($user->role === 'audit') {
-            // Audit: Lihat user di cabang yang sama ATAU pelanggaran dirinya sendiri
             $branchIds = $user->branches->pluck('id');
-            $query->where(function($q) use ($branchIds, $user) {
+            $query->where(function ($q) use ($branchIds, $user) {
                 $q->whereHas('user', function ($subQ) use ($branchIds) {
                     $subQ->whereIn('branch_id', $branchIds);
-                })
-                ->orWhere('user_id', $user->id);
+                })->orWhere('user_id', $user->id);
             });
         } else {
-            // User Biasa / Leader / Security: Hanya lihat milik sendiri
             $query->where('user_id', $user->id);
         }
         return $query;
     }
-
     public function create()
     {
         if (!in_array(auth()->user()->role, ['admin', 'audit'])) {
@@ -77,16 +53,16 @@ class ViolationController extends Controller
         }
 
         $currentUser = auth()->user();
-        
+
         if ($currentUser->role === 'admin') {
             $users = User::where('role', '!=', 'admin')->orderBy('name')->get();
         } elseif ($currentUser->role === 'audit') {
             $branchIds = $currentUser->branches->pluck('id');
             $users = User::whereIn('branch_id', $branchIds)
-                          ->where('role', '!=', 'audit')
-                          ->where('role', '!=', 'admin')
-                          ->orderBy('name')
-                          ->get();
+                ->where('role', '!=', 'audit')
+                ->where('role', '!=', 'admin')
+                ->orderBy('name')
+                ->get();
         }
 
         return view('violations.create', compact('users'));
@@ -131,7 +107,7 @@ class ViolationController extends Controller
 
     public function edit(Violation $violation)
     {
-         if (auth()->user()->role !== 'admin') {
+        if (auth()->user()->role !== 'admin') {
             abort(403, 'Hanya Admin yang boleh mengedit data pelanggaran.');
         }
 
@@ -180,4 +156,37 @@ class ViolationController extends Controller
 
         return redirect()->route('violations.index')->with('success', 'Data pelanggaran dihapus.');
     }
+
+    /**
+     * [BARU] Logic untuk menyelesaikan pelanggaran secara manual.
+     * Menggantikan fungsi Destroy/Delete.
+     */
+    public function resolve(Request $request, Violation $violation)
+    {
+        if (!in_array(auth()->user()->role, ['admin', 'audit'])) {
+            abort(403, 'Anda tidak berhak menyelesaikan pelanggaran ini.');
+        }
+
+        $request->validate([
+            'resolution_notes' => 'required|string|max:255', // Wajib isi alasan
+        ]);
+
+        $violation->update([
+            'expires_at' => now(), // Set expired SEKARANG (langsung masuk history)
+            'resolved_at' => now(),
+            'resolved_by' => auth()->id(),
+            'resolution_notes' => $request->resolution_notes,
+        ]);
+
+        return redirect()->route('violations.index')->with('success', 'Pelanggaran diselesaikan & dipindah ke history.');
+    }
+    
+    // // Fitur Hapus Permanen (Opsional, buat Admin Master saja jika perlu)
+    // public function destroy(Violation $violation)
+    // {
+    //     if (auth()->user()->role !== 'admin') abort(403);
+    //     if ($violation->photo_path) Storage::disk('public')->delete($violation->photo_path);
+    //     $violation->delete();
+    //     return back()->with('success', 'Data dihapus permanen.');
+    // }
 }

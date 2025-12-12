@@ -113,6 +113,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/violations/{violation}/edit', [App\Http\Controllers\ViolationController::class, 'edit'])->name('violations.edit');
         Route::put('/violations/{violation}', [App\Http\Controllers\ViolationController::class, 'update'])->name('violations.update');
         Route::delete('/violations/{violation}', [App\Http\Controllers\ViolationController::class, 'destroy'])->name('violations.destroy');
+        // Tambahkan Route ini di dalam group middleware violation
+        Route::put('/violations/{violation}/resolve', [App\Http\Controllers\ViolationController::class, 'resolve'])->name('violations.resolve');
     });
 
     Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');

@@ -17,23 +17,31 @@ class Violation extends Model
         'category',
         'notes',
         'photo_path',
-        'expires_at', // <--- TAMBAHKAN INI
+        'expires_at',
+        // [BARU] Kolom Penyelesaian Manual
+        'resolution_notes',
+        'resolved_by',
+        'resolved_at',
     ];
 
-    // Tambahkan casts agar otomatis jadi object Carbon (Date)
     protected $casts = [
         'expires_at' => 'date',
+        'resolved_at' => 'datetime',
     ];
 
-    // Relasi ke User (Pelaku)
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relasi ke User (Pelapor/Admin/Audit)
     public function reporter()
     {
         return $this->belongsTo(User::class, 'reported_by');
+    }
+
+    // [BARU] Relasi ke User yang menyelesaikan (Admin/Audit)
+    public function resolver()
+    {
+        return $this->belongsTo(User::class, 'resolved_by');
     }
 }
