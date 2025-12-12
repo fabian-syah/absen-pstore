@@ -100,7 +100,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::patch('/job-targets/{id}/update-outcome', [JobTargetController::class, 'updateOutcome'])->name('job-targets.update-outcome');
 
     // === RUTE RIWAYAT PELANGGARAN ===
+    // 1. Route History (Ditaruh sebelum resource/index agar tidak tertimpa)
+    Route::get('/violations/history', [App\Http\Controllers\ViolationController::class, 'history'])->name('violations.history');
+
+    // 2. Route Index (Aktif)
     Route::get('/violations', [App\Http\Controllers\ViolationController::class, 'index'])->name('violations.index');
+
+    // 3. Route CRUD (Admin & Audit)
     Route::middleware(['role:admin,audit'])->group(function () {
         Route::get('/violations/create', [App\Http\Controllers\ViolationController::class, 'create'])->name('violations.create');
         Route::post('/violations', [App\Http\Controllers\ViolationController::class, 'store'])->name('violations.store');

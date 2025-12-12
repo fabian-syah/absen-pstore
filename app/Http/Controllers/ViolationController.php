@@ -9,17 +9,53 @@ use Illuminate\Support\Facades\Storage;
 
 class ViolationController extends Controller
 {
+    /**
+     * Menampilkan daftar pelanggaran yang MASIH BERLAKU (Aktif).
+     */
     public function index(Request $request)
     {
         $user = auth()->user();
         
-        // Query Dasar
-        $query = Violation::with(['user', 'reporter']);
+        // Ambil data yang tanggal kedaluwarsanya MASIH di masa depan
+        $query = Violation::with(['user', 'reporter'])
+                          ->where('expires_at', '>', now());
 
-        // Filter Hak Akses
+        $query = $this->applyAccessFilter($query, $user);
+
+        // Sortir dari yang terbaru dibuat
+        $violations = $query->orderBy('created_at', 'desc')->get();
+
+        return view('violations.index', compact('violations'));
+    }
+
+    /**
+     * Menampilkan daftar pelanggaran yang SUDAH SELESAI (History).
+     */
+    public function history(Request $request)
+    {
+        $user = auth()->user();
+
+        // Ambil data yang tanggal kedaluwarsanya SUDAH LEWAT atau HARI INI
+        $query = Violation::with(['user', 'reporter'])
+                          ->where('expires_at', '<=', now());
+
+        $query = $this->applyAccessFilter($query, $user);
+
+        // Sortir berdasarkan tanggal expired (yang baru selesai di atas)
+        $violations = $query->orderBy('expires_at', 'desc')->get();
+
+        return view('violations.history', compact('violations'));
+    }
+
+    /**
+     * Logic filter hak akses (Admin lihat semua, Audit lihat cabang, User lihat sendiri).
+     */
+    private function applyAccessFilter($query, $user)
+    {
         if ($user->role === 'admin') {
-            // Admin lihat semua
+            // Admin: No filter (lihat semua)
         } elseif ($user->role === 'audit') {
+            // Audit: Lihat user di cabang yang sama ATAU pelanggaran dirinya sendiri
             $branchIds = $user->branches->pluck('id');
             $query->where(function($q) use ($branchIds, $user) {
                 $q->whereHas('user', function ($subQ) use ($branchIds) {
@@ -28,14 +64,10 @@ class ViolationController extends Controller
                 ->orWhere('user_id', $user->id);
             });
         } else {
-            // User biasa hanya lihat punya sendiri
+            // User Biasa / Leader / Security: Hanya lihat milik sendiri
             $query->where('user_id', $user->id);
         }
-
-        // Sorting: Terbaru paling atas
-        $violations = $query->orderBy('created_at', 'desc')->get();
-
-        return view('violations.index', compact('violations'));
+        return $query;
     }
 
     public function create()
@@ -78,18 +110,14 @@ class ViolationController extends Controller
         $data = $request->except(['photo']);
         $data['reported_by'] = auth()->id();
 
-        // [LOGIKA BARU] Hitung Tanggal Habis Masa (Expires At) otomatis
+        // LOGIKA MASA BERLAKU OTOMATIS
         $createdAt = now();
-        
         if ($request->category == 'berat') {
-            // Berat: 1 Tahun
-            $data['expires_at'] = $createdAt->copy()->addYear(); 
+            $data['expires_at'] = $createdAt->copy()->addYear(); // 1 Tahun
         } elseif ($request->category == 'sedang') {
-            // Sedang: 6 Bulan
-            $data['expires_at'] = $createdAt->copy()->addMonths(6); 
+            $data['expires_at'] = $createdAt->copy()->addMonths(6); // 6 Bulan
         } else {
-            // Ringan: 1 Bulan
-            $data['expires_at'] = $createdAt->copy()->addMonth(); 
+            $data['expires_at'] = $createdAt->copy()->addMonth(); // 1 Bulan
         }
 
         if ($request->hasFile('photo')) {
@@ -125,9 +153,6 @@ class ViolationController extends Controller
         ]);
 
         $data = $request->except(['photo']);
-
-        // OPSI: Jika ingin update kategori mengubah masa berlaku juga, bisa tambahkan logika di sini.
-        // Untuk saat ini dibiarkan manual atau sesuai input awal agar tidak merubah history tanggal.
 
         if ($request->hasFile('photo')) {
             if ($violation->photo_path) {
