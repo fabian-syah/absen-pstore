@@ -79,15 +79,21 @@
                                 <i class="mdi mdi-chevron-right text-muted"></i>
                             </a>
 
-                            {{-- [BARU] 3. HISTORY PELANGGARAN --}}
+                            {{-- [UPDATE] 3. HISTORY PELANGGARAN --}}
                             {{-- Mengarah ke ID #violationSection di bawah halaman ini --}}
                             <a href="#violationSection"
                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
-                                <span><i class="mdi mdi-alert-circle text-danger me-2"></i> History Pelanggaran</span>
-                                <span class="badge bg-danger rounded-pill">{{ $violations->count() }}</span>
+                                <span><i class="mdi mdi-alert-circle text-danger me-2"></i> Pelanggaran</span>
+                                
+                                {{-- Jika ada pelanggaran AKTIF, badge merah. Jika tidak, badge abu --}}
+                                @if($activeViolations->count() > 0)
+                                    <span class="badge bg-danger rounded-pill">{{ $activeViolations->count() }} Aktif</span>
+                                @else
+                                    <span class="badge bg-secondary rounded-pill" style="opacity: 0.5">0</span>
+                                @endif
                             </a>
 
-                            {{-- 4. KELOLA RIWAYAT KARIR --}}
+                            {{-- 4. KELOLA RIWAYAT KARIR (MUTASI/DIVISI) --}}
                             @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
                                 <a href="{{ route('employment-history.index', ['user_id' => $user->id, 'mode' => 'edit']) }}"
                                     class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
@@ -96,7 +102,7 @@
                                     <i class="mdi mdi-chevron-right text-muted"></i>
                                 </a>
                             @endif
-
+                            
                             {{-- 5. HISTORY INVENTARIS --}}
                             <a href="{{ route('inventory.index', ['user_id' => $user->id]) }}"
                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
@@ -318,89 +324,143 @@
                         </div>
                     </div>
 
-                    {{-- [TAMBAHAN BARU] TABEL RIWAYAT PELANGGARAN --}}
+                    {{-- [UPDATE] SECTION PELANGGARAN DENGAN TABS --}}
                     <div class="mt-5" id="violationSection">
-                         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="card-title mb-0 text-danger">
-                                <i class="mdi mdi-alert-circle me-2"></i>Riwayat Pelanggaran
+                                <i class="mdi mdi-gavel me-2"></i>Catatan Pelanggaran
                             </h5>
                             @if(in_array(auth()->user()->role, ['admin', 'audit']))
                                 <a href="{{ route('violations.create') }}" class="btn btn-sm btn-outline-danger">
-                                    <i class="mdi mdi-plus"></i> Tambah
+                                    <i class="mdi mdi-plus"></i> Input Pelanggaran
                                 </a>
                             @endif
                         </div>
-                        
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Kategori</th>
-                                        <th>Judul & Tanggal</th>
-                                        <th>Masa Berlaku</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($violations as $violation)
-                                        <tr>
-                                            <td>
-                                                @if($violation->category == 'berat')
-                                                    <span class="badge bg-danger">BERAT</span>
-                                                @elseif($violation->category == 'sedang')
-                                                    <span class="badge bg-warning text-dark">SEDANG</span>
-                                                @else
-                                                    <span class="badge bg-info">RINGAN</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <div class="fw-bold text-dark">{{ $violation->title }}</div>
-                                                <small class="text-muted">
-                                                    Dibuat: {{ $violation->created_at->format('d M Y') }}
-                                                </small>
-                                            </td>
-                                            <td>
-                                                @if($violation->expires_at)
-                                                    <span class="d-block small text-muted">Hingga:</span>
-                                                    <span class="fw-bold {{ $violation->expires_at->isPast() ? 'text-success' : 'text-danger' }}">
-                                                        {{ $violation->expires_at->format('d M Y') }}
-                                                    </span>
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($violation->expires_at && $violation->expires_at->isPast())
-                                                    <span class="badge bg-soft-success text-success border border-success">
-                                                        <i class="mdi mdi-check"></i> Selesai
-                                                    </span>
-                                                @else
-                                                    <span class="badge bg-soft-danger text-danger border border-danger">
-                                                        <i class="mdi mdi-alert"></i> Aktif
-                                                    </span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                {{-- Tombol Lihat Detail (Modal Gambar) --}}
-                                                @if($violation->photo_path)
-                                                    <button type="button" class="btn btn-sm btn-info text-white" 
-                                                        onclick="showImageModal('{{ asset('storage/' . $violation->photo_path) }}', '{{ $violation->title }}')">
-                                                        <i class="mdi mdi-image"></i>
-                                                    </button>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted py-4">
-                                                <i class="mdi mdi-shield-check display-4 mb-2 d-block text-success"></i>
-                                                <span class="text-success fw-bold">Bersih!</span> Tidak ada riwayat pelanggaran.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+
+                        {{-- NAV TABS --}}
+                        <ul class="nav nav-tabs" id="violationTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-bold text-danger" id="active-tab" data-bs-toggle="tab" data-bs-target="#active-violations" type="button" role="tab">
+                                    <i class="mdi mdi-alert-circle-outline"></i> Masih Berlaku 
+                                    @if($activeViolations->count() > 0) 
+                                        <span class="badge bg-danger ms-1">{{ $activeViolations->count() }}</span>
+                                    @endif
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-bold text-secondary" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-violations" type="button" role="tab">
+                                    <i class="mdi mdi-history"></i> Riwayat / Selesai
+                                    <span class="badge bg-light text-dark ms-1 border">{{ $historyViolations->count() }}</span>
+                                </button>
+                            </li>
+                        </ul>
+
+                        {{-- TAB CONTENT --}}
+                        <div class="tab-content border border-top-0 p-3 rounded-bottom" id="violationTabsContent">
+                            
+                            {{-- TAB 1: PELANGGARAN AKTIF --}}
+                            <div class="tab-pane fade show active" id="active-violations" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Level</th>
+                                                <th>Masalah</th>
+                                                <th>Berakhir Pada</th>
+                                                <th>Bukti</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($activeViolations as $v)
+                                                <tr>
+                                                    <td>
+                                                        @if($v->category == 'berat')
+                                                            <span class="badge bg-danger">BERAT</span>
+                                                        @elseif($v->category == 'sedang')
+                                                            <span class="badge bg-warning text-dark">SEDANG</span>
+                                                        @else
+                                                            <span class="badge bg-info">RINGAN</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">{{ $v->title }}</div>
+                                                        <small class="text-muted">Tgl Input: {{ $v->created_at->format('d M Y') }}</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="fw-bold text-danger">{{ $v->expires_at->format('d M Y') }}</span>
+                                                        <br>
+                                                        <small class="text-muted">({{ now()->diffInDays($v->expires_at) }} hari lagi)</small>
+                                                    </td>
+                                                    <td>
+                                                        @if($v->photo_path)
+                                                            <button class="btn btn-sm btn-light border" onclick="showImageModal('{{ asset('storage/' . $v->photo_path) }}', '{{ $v->title }}')">
+                                                                <i class="mdi mdi-image text-primary"></i>
+                                                            </button>
+                                                        @else - @endif
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-4">
+                                                        <i class="mdi mdi-shield-check text-success display-4"></i>
+                                                        <p class="mb-0 mt-2 text-success fw-bold">Tidak ada pelanggaran aktif.</p>
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {{-- TAB 2: HISTORY (SUDAH SELESAI) --}}
+                            <div class="tab-pane fade" id="history-violations" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Status</th>
+                                                <th>Masalah</th>
+                                                <th>Selesai Sejak</th>
+                                                <th>Bukti</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($historyViolations as $h)
+                                                <tr class="text-muted" style="background-color: #fafafa;">
+                                                    <td>
+                                                        <span class="badge bg-secondary">
+                                                            {{ strtoupper($h->category) }} (Selesai)
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div>{{ $h->title }}</div>
+                                                        <small>{{ Str::limit($h->description, 30) }}</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-success">
+                                                            <i class="mdi mdi-check-all"></i> {{ $h->expires_at->format('d M Y') }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        @if($h->photo_path)
+                                                            <button class="btn btn-sm btn-light border" onclick="showImageModal('{{ asset('storage/' . $h->photo_path) }}', '{{ $h->title }}')">
+                                                                <i class="mdi mdi-image-outline"></i>
+                                                            </button>
+                                                        @else - @endif
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-4 text-muted">
+                                                        <i class="mdi mdi-history display-4 opacity-25"></i>
+                                                        <p class="mb-0 mt-2">Belum ada riwayat pelanggaran masa lalu.</p>
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

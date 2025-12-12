@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Division;
 use App\Models\Branch;
 use App\Models\Attendance;
-use App\Models\Violation; // [TAMBAHAN] Import Model Violation
+use App\Models\Violation; // Pastikan Model Violation di-import
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -309,13 +309,21 @@ class UserController extends Controller
             ->take(5)
             ->get();
 
-        // [TAMBAHAN] Data Pelanggaran User Ini
-        // Mengambil semua pelanggaran, diurutkan terbaru
-        $violations = Violation::where('user_id', $user->id)
+        // [UPDATE] MENGAMBIL PELANGGARAN AKTIF vs HISTORY
+        
+        // 1. Pelanggaran Aktif (Masa berlaku belum habis / Hari ini masih berlaku)
+        $activeViolations = Violation::where('user_id', $user->id)
+            ->where('expires_at', '>', now()) // Masih aktif
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('users.user_show', compact('user', 'stats', 'recentAttendance', 'violations'));
+        // 2. History Pelanggaran (Masa berlaku sudah habis / Expired)
+        $historyViolations = Violation::where('user_id', $user->id)
+            ->where('expires_at', '<=', now()) // Sudah lewat
+            ->orderBy('expires_at', 'desc')
+            ->get();
+
+        return view('users.user_show', compact('user', 'stats', 'recentAttendance', 'activeViolations', 'historyViolations'));
     }
 
     public function verifyUser(User $user)

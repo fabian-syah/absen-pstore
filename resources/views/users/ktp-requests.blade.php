@@ -75,19 +75,19 @@
                                         </div>
                                     </div>
 
-                                    {{-- MODAL FOTO PROFIL (Sudah diperbesar) --}}
+                                    {{-- MODAL FOTO PROFIL --}}
                                     @if($user->profile_photo_path)
                                     <div class="modal fade" id="modalProfile{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                        {{-- Menggunakan modal-xl agar besar --}}
                                         <div class="modal-dialog modal-dialog-centered modal-xl">
-                                            <div class="modal-content bg-transparent border-0">
-                                                <div class="modal-header border-0">
-                                                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+                                            <div class="modal-content">
+                                                <div class="modal-header border-0 pb-0">
+                                                    <h5 class="modal-title">Foto Profil: {{ $user->name }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="modal-body text-center">
                                                     <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
-                                                         class="img-fluid rounded shadow-lg" 
-                                                         style="max-height: 85vh; width: auto; max-width: 100%;">
+                                                         class="img-fluid rounded" 
+                                                         style="width: 100%; height: auto;">
                                                 </div>
                                             </div>
                                         </div>
@@ -111,20 +111,19 @@
                                              data-bs-toggle="modal" 
                                              data-bs-target="#modalOldKtp{{ $user->id }}">
                                     
-                                        {{-- Modal View Old (Dibuat Besar) --}}
+                                        {{-- Modal View Old --}}
                                         <div class="modal fade" id="modalOldKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                            {{-- MENGGUNAKAN MODAL-XL --}}
                                             <div class="modal-dialog modal-dialog-centered modal-xl">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
                                                         <h5 class="modal-title">KTP Lama: {{ $user->name }}</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body text-center bg-dark">
-                                                        {{-- Style max-height agar tidak terlalu panjang ke bawah --}}
+                                                    {{-- HAPUS BG-DARK DISINI --}}
+                                                    <div class="modal-body text-center p-4">
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
-                                                             class="img-fluid rounded"
-                                                             style="max-height: 85vh; width: auto; max-width: 100%;">
+                                                             class="img-fluid rounded shadow-sm"
+                                                             style="width: 100%; height: auto;">
                                                     </div>
                                                 </div>
                                             </div>
@@ -151,23 +150,27 @@
                                             </span>
                                         </div>
 
-                                        {{-- MODAL KTP BARU (Dibuat Besar) --}}
+                                        {{-- MODAL KTP BARU (SESUAI REQUEST GAMBAR) --}}
                                         <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                            {{-- MENGGUNAKAN MODAL-XL --}}
+                                            {{-- Gunakan Modal XL agar besar --}}
                                             <div class="modal-dialog modal-dialog-centered modal-xl">
                                                 <div class="modal-content">
+                                                    {{-- Header --}}
                                                     <div class="modal-header">
-                                                        <h5 class="modal-title text-success">Calon KTP Baru: {{ $user->name }}</h5>
+                                                        <h5 class="modal-title text-success fs-4">Calon KTP Baru: {{ $user->name }}</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body text-center bg-dark">
-                                                        {{-- Style max-height agar pas di layar --}}
+                                                    
+                                                    {{-- Body: HAPUS BG-DARK, Pakai Padding --}}
+                                                    <div class="modal-body text-center p-3">
                                                         <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
                                                              class="img-fluid rounded"
-                                                             style="max-height: 85vh; width: auto; max-width: 100%;">
+                                                             style="width: 100%; height: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                                                     </div>
-                                                    <div class="modal-footer justify-content-center">
-                                                        <small class="text-muted">Pastikan data terlihat jelas sebelum disetujui.</small>
+
+                                                    {{-- Footer --}}
+                                                    <div class="modal-footer justify-content-center border-0 pt-0 pb-4">
+                                                        <small class="text-muted fs-6">Pastikan data terlihat jelas sebelum disetujui.</small>
                                                     </div>
                                                 </div>
                                             </div>
