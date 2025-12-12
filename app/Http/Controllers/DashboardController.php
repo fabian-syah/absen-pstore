@@ -116,7 +116,9 @@ class DashboardController extends Controller
             $data['leaderboard'] = Attendance::select(
                     'user_id', 
                     DB::raw('count(*) as total_attendance'), 
-                    DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time')
+                    DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
+                    // [UPDATE BARU] Menghitung Total Jam Kerja dalam Detik
+                    DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds')
                 )
                 ->whereMonth('check_in_time', Carbon::now()->month)
                 ->whereYear('check_in_time', Carbon::now()->year)
@@ -164,14 +166,8 @@ class DashboardController extends Controller
                     ->whereYear('check_in_time', Carbon::now()->year)
                     ->count();
 
-                // 2. Hitung Scan Pulang (Asumsi kolom scanned_out_by_user_id ada)
-                // Jika database Anda belum punya kolom scanned_out_by_user_id, 
-                // pastikan logic ScanController menyimpan ID security saat checkout.
-                // Jika belum ada kolomnya, logic ini hanya menghitung Scan Masuk.
+                // 2. Hitung Scan Pulang
                 $scanOut = 0;
-                // Cek apakah kolom exists di model/table untuk menghindari error
-                // Disini saya pakai try/catch simple atau asumsi kolom ada. 
-                // Untuk Full Code saya asumsikan kolom 'scanned_out_by_user_id' ada.
                 try {
                     $scanOut = Attendance::where('scanned_out_by_user_id', $sec->id)
                         ->whereMonth('check_in_time', Carbon::now()->month)
