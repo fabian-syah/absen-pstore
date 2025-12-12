@@ -157,7 +157,8 @@
                                                     <i class="mdi mdi-account-group text-info"></i>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-0 fw-bold">{{ $branch->users_count ?? 0 }}</h6>
+                                                    {{-- FIX: Menggunakan count() langsung agar tidak 0 --}}
+                                                    <h6 class="mb-0 fw-bold">{{ $branch->users()->count() }}</h6>
                                                     <small class="text-muted">Karyawan</small>
                                                 </div>
                                             </div>
@@ -248,7 +249,8 @@
                                         <div class="col-6">
                                             <div class="p-2 border rounded bg-white text-center">
                                                 <small class="text-muted d-block" style="font-size: 0.7rem;">TOTAL KARYAWAN</small>
-                                                <span class="fw-bold text-dark fs-5">{{ $branch->users_count ?? 0 }}</span>
+                                                {{-- FIX: Menggunakan count() langsung agar tidak 0 --}}
+                                                <span class="fw-bold text-dark fs-5">{{ $branch->users()->count() }}</span>
                                             </div>
                                         </div>
                                         <div class="col-6">
