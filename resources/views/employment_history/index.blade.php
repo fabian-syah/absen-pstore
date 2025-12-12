@@ -160,7 +160,7 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Tanggal</th>
+                                    {{-- KOLOM TANGGAL DIHAPUS --}}
                                     <th>Judul / Perusahaan</th>
                                     <th>Keterangan</th>
                                     <th>Lampiran</th>
@@ -170,7 +170,7 @@
                             <tbody>
                                 @foreach($externalHistories as $ext)
                                     <tr>
-                                        <td>{{ \Carbon\Carbon::parse($ext->event_date)->format('d/m/Y') }}</td>
+                                        {{-- DATA TANGGAL DIHAPUS --}}
                                         <td class="fw-bold text-primary">{{ $ext->title }}</td>
                                         <td>{{ $ext->description ?? '-' }}</td>
                                         <td>

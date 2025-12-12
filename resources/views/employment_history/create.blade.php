@@ -45,9 +45,10 @@
                         <input type="text" name="title" class="form-control" placeholder="Contoh: Staff IT di PT. Maju Mundur">
                     </div>
 
-                    <div class="form-group mb-3">
+                    {{-- Container Tanggal (Akan disembunyikan jika External) --}}
+                    <div class="form-group mb-3" id="dateContainer">
                         <label>Tanggal <span class="text-danger">*</span></label>
-                        <input type="date" name="event_date" class="form-control" required value="{{ date('Y-m-d') }}">
+                        <input type="date" name="event_date" class="form-control" value="{{ date('Y-m-d') }}">
                     </div>
 
                     <div class="form-group mb-3 d-none" id="singleBranchContainer">
@@ -101,11 +102,13 @@
         const singleContainer = $('#singleBranchContainer');
         const divContainer = $('#divisionContainer');
         const titleContainer = $('#titleContainer');
+        const dateContainer = $('#dateContainer'); // ID container tanggal
 
-        // Reset display
+        // Reset display default
         if(singleContainer.length) singleContainer.addClass('d-none');
         divContainer.removeClass('d-none');
         titleContainer.addClass('d-none');
+        dateContainer.removeClass('d-none'); // Default tanggal muncul
 
         if (type === 'transfer_branch') {
             if(singleContainer.length) singleContainer.removeClass('d-none');
@@ -123,9 +126,10 @@
             divContainer.addClass('d-none');
         
         } else if (type === 'external') {
-            // EXTERNAL: Tampilkan Judul, Sembunyikan Branch & Division
+            // EXTERNAL: Tampilkan Judul, Sembunyikan Branch, Divisi, DAN Tanggal
             titleContainer.removeClass('d-none');
             divContainer.addClass('d-none');
+            dateContainer.addClass('d-none'); // Sembunyikan Tanggal
             if(singleContainer.length) singleContainer.addClass('d-none');
         }
     }

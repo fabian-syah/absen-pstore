@@ -85,12 +85,12 @@ class EmploymentHistoryController extends Controller
                 ->orderBy('event_date', 'desc')
                 ->get();
             
-            // Filter Internal (Timeline Pstore)
+            // Filter Internal
             $internalHistories = $allHistories->filter(function ($item) {
                 return $item->type !== 'external';
             });
 
-            // Filter External (Pengalaman Luar)
+            // Filter External
             $externalHistories = $allHistories->filter(function ($item) {
                 return $item->type === 'external';
             });
@@ -133,13 +133,13 @@ class EmploymentHistoryController extends Controller
     {
         $currentUser = auth()->user();
 
+        // Validasi: event_date WAJIB kecuali tipenya external
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'type' => 'required',
-            'event_date' => 'required|date',
+            'event_date' => 'required_unless:type,external|date|nullable', 
             'attachment' => 'nullable|image|max:2048',
             'description' => 'nullable|string',
-            // Judul wajib diisi jika tipe external
             'title' => 'nullable|string|required_if:type,external',
         ]);
 
@@ -150,12 +150,17 @@ class EmploymentHistoryController extends Controller
         $data = $request->only(['user_id', 'type', 'title', 'event_date', 'description', 'division_id', 'branch_id']);
         $data['created_by'] = $currentUser->id;
 
+        // Jika external dan tanggal kosong (karena di-hidden), isi default hari ini agar masuk DB
+        if ($request->type == 'external' && empty($data['event_date'])) {
+            $data['event_date'] = now(); 
+        }
+
         if ($request->type == 'transfer_branch' || $request->type == 'external') {
             $data['division_id'] = null;
         }
         
         if ($request->type == 'external') {
-            $data['branch_id'] = null; // External tidak punya cabang Pstore
+            $data['branch_id'] = null; 
         }
 
         $targetUser = User::find($request->user_id);
@@ -220,13 +225,18 @@ class EmploymentHistoryController extends Controller
 
         $request->validate([
             'type' => 'required',
-            'event_date' => 'required|date',
+            'event_date' => 'required_unless:type,external|date|nullable',
             'attachment' => 'nullable|image|max:2048',
             'title' => 'nullable|string|required_if:type,external',
         ]);
 
         $data = $request->only(['type', 'title', 'event_date', 'description', 'division_id', 'branch_id']);
         $data['updated_by'] = $currentUser->id;
+
+        // Jika external dan tanggal kosong, biarkan yang lama atau isi now()
+        if ($request->type == 'external' && empty($data['event_date'])) {
+            $data['event_date'] = $history->event_date ?? now();
+        }
 
         if ($request->type == 'transfer_branch' || $request->type == 'external') {
             $data['division_id'] = null;

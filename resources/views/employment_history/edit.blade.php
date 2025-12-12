@@ -37,9 +37,10 @@
                         <input type="text" name="title" class="form-control" value="{{ $history->title }}">
                     </div>
 
-                    <div class="form-group mb-3">
+                    {{-- Container Tanggal --}}
+                    <div class="form-group mb-3" id="dateContainer">
                         <label>Tanggal Efektif</label>
-                        <input type="date" name="event_date" class="form-control" required value="{{ $history->event_date->format('Y-m-d') }}">
+                        <input type="date" name="event_date" class="form-control" value="{{ $history->event_date ? $history->event_date->format('Y-m-d') : date('Y-m-d') }}">
                     </div>
 
                     <div class="form-group mb-3 d-none" id="singleBranchContainer">
@@ -100,11 +101,13 @@
         const singleContainer = $('#singleBranchContainer');
         const divContainer = $('#divisionContainer');
         const titleContainer = $('#titleContainer');
+        const dateContainer = $('#dateContainer');
 
         // Reset
         if(singleContainer.length) singleContainer.addClass('d-none');
         divContainer.removeClass('d-none');
         titleContainer.addClass('d-none');
+        dateContainer.removeClass('d-none');
 
         if (type === 'transfer_branch') {
             if(singleContainer.length) singleContainer.removeClass('d-none');
@@ -124,6 +127,7 @@
         } else if (type === 'external') {
             titleContainer.removeClass('d-none');
             divContainer.addClass('d-none');
+            dateContainer.addClass('d-none'); // Hide Date
         }
     }
 </script>
