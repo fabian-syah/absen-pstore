@@ -335,12 +335,16 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE LEAVE REQUESTS ===
     Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
+        // Pastikan middleware mencakup: user_biasa, leader, audit, security, admin
         Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
             Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');
             Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
             Route::post('/store', [LeaveRequestController::class, 'store'])->name('store');
+
             Route::patch('/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
-            Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finish-early'])->name('finish-early');
+
+            // PERBAIKAN DISINI: Ubah 'finish-early' menjadi 'finishEarly'
+            Route::patch('/{leaveRequest}/finish-early', [LeaveRequestController::class, 'finishEarly'])->name('finish-early');
         });
     });
 

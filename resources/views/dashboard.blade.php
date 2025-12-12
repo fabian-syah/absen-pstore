@@ -772,6 +772,8 @@
                                 </div>
                             </div>
 
+                            {{-- [PERBAIKAN] TOMBOL SAYA MASUK KANTOR SEKARANG --}}
+                            {{-- Logic ini TIDAK dibungkus oleh 'only_security_scan' sehingga BISA diakses oleh Security/Audit/dll --}}
                             @if ($myLeaveToday->status == 'approved' && $myLeaveToday->type != 'telat')
                                 <div class="mt-3 pt-3 border-top text-center">
                                     <p class="small text-muted mb-2">Sudah kembali bekerja di kantor?</p>
