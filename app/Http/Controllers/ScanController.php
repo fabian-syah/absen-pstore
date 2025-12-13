@@ -157,7 +157,7 @@ class ScanController extends Controller
             $snapOut = $user->check_out_start;
             if (!$snapOut && $workSchedule) $snapOut = $workSchedule->check_out_start;
 
-            Attendance::create([
+            $attendance = Attendance::create([
                 'user_id' => $user->id,
                 'branch_id' => $user->branch_id,
                 'check_in_time' => $currentTime,
@@ -215,7 +215,7 @@ class ScanController extends Controller
             $securityNote = ' | Pulang via Security Scan by ' . $securityUser->name;
             $userNoteString = $manualNotes ? " | Catatan: " . $manualNotes : "";
             
-            $updateData['notes'] = $attendance->notes . $userNoteString . $securityNote;
+            $updateData['notes'] = ($attendance->notes ? $attendance->notes : '') . $userNoteString . $securityNote;
 
             $attendance->update($updateData);
 
