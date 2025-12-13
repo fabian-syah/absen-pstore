@@ -38,7 +38,7 @@ class BranchController extends Controller
         // Jika Audit ATAU Leader -> Hanya lihat cabang wilayahnya (dari tabel pivot)
         elseif (in_array($user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $user->branches->pluck('id')->toArray();
-            
+
             // Tambahkan branch_id utama user jika ada (untuk safety)
             if ($user->branch_id) {
                 $allowedBranchIds[] = $user->branch_id;
@@ -53,15 +53,17 @@ class BranchController extends Controller
         if ($request->has('search') && $request->search != null) {
             $search = $request->search;
             // Menggunakan closure function agar logika OR tidak merusak filter Role di atas
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('address', 'LIKE', "%{$search}%")
-                  ->orWhere('id', 'LIKE', "%{$search}%");
+                    ->orWhere('address', 'LIKE', "%{$search}%")
+                    ->orWhere('id', 'LIKE', "%{$search}%");
             });
         }
 
-        $branches = $query->latest()->get();
-        
+        $branches = $query->orderBy('is_active', 'desc')
+            ->orderBy('name', 'asc')
+            ->get();
+
         return view('branch.branch_index', compact('branches'));
     }
 
@@ -75,24 +77,23 @@ class BranchController extends Controller
         // 1. Validasi Akses Melihat
         if ($user->role == 'admin' && $user->branch_id != null) {
             if ($branch->id != $user->branch_id) abort(403, 'Akses Ditolak.');
-        }
-        elseif (in_array($user->role, ['audit', 'leader'])) {
+        } elseif (in_array($user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $user->branches->pluck('id')->toArray();
             if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
-            
+
             if (!in_array($branch->id, $allowedBranchIds)) abort(403, 'Akses Ditolak. Cabang ini bukan wilayah Anda.');
         }
 
         // 2. Ambil User di Cabang Ini (Eager Loading Division)
         // [UPDATE] Menggunakan nama variabel $employees agar cocok dengan blade view yang diberikan
-        $employees = User::with(['division', 'attendances' => function($q) {
-                // Ambil attendance hari ini saja untuk ditampilkan di tabel
-                $q->whereDate('check_in_time', now());
-            }])
+        $employees = User::with(['division', 'attendances' => function ($q) {
+            // Ambil attendance hari ini saja untuk ditampilkan di tabel
+            $q->whereDate('check_in_time', now());
+        }])
             ->where('branch_id', $branch->id)
             ->where('role', '!=', 'admin') // Opsional: Sembunyikan super admin jika ada
             ->latest()
-            ->paginate(10); 
+            ->paginate(10);
 
         // 3. Hitung Statistik Ringan
         $totalEmployees = User::where('branch_id', $branch->id)->count();
@@ -100,7 +101,7 @@ class BranchController extends Controller
         // 4. Ambil Audit Penanggung Jawab Cabang Ini
         $assignedAudits = User::where('role', 'audit')
             ->where('is_active', true)
-            ->whereHas('branches', function($q) use ($branch) {
+            ->whereHas('branches', function ($q) use ($branch) {
                 $q->where('branches.id', $branch->id);
             })
             ->get();
