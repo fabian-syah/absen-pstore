@@ -69,7 +69,7 @@
         {{-- =================================== --}}
         {{--    MENU KHUSUS SUPER ADMIN          --}}
         {{-- =================================== --}}
-        
+
         {{-- Menu Cabang (Admin & Audit Boleh Lihat) --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Menu Cabang</li>
@@ -82,7 +82,7 @@
         @endif
 
         {{-- Menu Koreksi Absensi (HANYA ADMIN YANG BISA LIHAT) --}}
-        @if (auth()->user()->role == 'admin') 
+        @if (auth()->user()->role == 'admin')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin.correction.index') }}">
                     <i class="menu-icon mdi mdi-eraser"></i>
@@ -253,7 +253,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{{ route('branch-targets.index') }}">
                     <i class="menu-icon mdi mdi-target"></i>
                     <span class="menu-title">Target Cabang</span>
                 </a>

@@ -387,6 +387,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         Route::get('/top-absensi-cabang/{id}', [BranchLeaderboardController::class, 'show'])
             ->name('branch-leaderboard.show');
+
+        Route::get('/branch-targets', [App\Http\Controllers\BranchTargetController::class, 'index'])->name('branch-targets.index');
+        Route::get('/branch-targets/{id}', [App\Http\Controllers\BranchTargetController::class, 'show'])->name('branch-targets.show');
     });
 
     // === RUTE API ===
