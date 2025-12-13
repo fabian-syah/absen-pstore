@@ -32,11 +32,9 @@
                                 <span class="badge bg-warning text-dark" style="font-size: 9px;">PRESTASI</span>
                             @endif
                         </div>
-                        
                         <div class="small text-muted text-wrap mb-2" style="max-width: 500px; line-height: 1.3;">
                             {{ Str::limit($item->description, 90) }}
                         </div>
-                        
                         <div class="d-flex align-items-center gap-2 flex-wrap" style="font-size: 0.75rem;">
                             @if($item->user)
                                 <div class="d-flex align-items-center text-secondary bg-light px-2 py-1 rounded-pill border">
@@ -63,23 +61,31 @@
                                 {{ $item->outcome ?? 'Selesai' }}
                             </span>
                         @else
-                            @if($allow_action)
-                                <div class="d-flex justify-content-end gap-1">
-                                    {{-- Tombol Edit Detail --}}
+                            {{-- LOGIKA BARU PEMISAHAN TOMBOL --}}
+                            <div class="d-flex justify-content-end gap-1">
+                                
+                                {{-- A. TOMBOL EDIT DETAIL (Hanya muncul jika allow_edit_detail TRUE) --}}
+                                @if(isset($allow_edit_detail) && $allow_edit_detail)
                                     <a href="{{ route('job-targets.edit', $item->id) }}" class="btn btn-light btn-sm border" title="Edit Data">
                                         <i class="mdi mdi-pencil text-muted"></i>
                                     </a>
-                                    {{-- Tombol Update Status --}}
+                                @endif
+
+                                {{-- B. TOMBOL UPDATE STATUS (Hanya muncul jika allow_update_status TRUE) --}}
+                                @if(isset($allow_update_status) && $allow_update_status)
                                     <button class="btn btn-warning btn-sm fw-bold text-white shadow-sm px-3 rounded-3" 
                                         onclick="openActionModal({{ $item->id }}, '{{ addslashes($item->title) }}')">
                                         Update Hasil
                                     </button>
-                                </div>
-                            @endif
+                                @endif
+
+                            </div>
                         @endif
                     </td>
                 </tr>
             @endforeach
+            
+            {{-- ... (Bagian No Data Message SAMA) ... --}}
             <tr class="no-data-message d-none">
                 <td colspan="3" class="text-center py-4 text-muted small">
                     <i class="mdi mdi-magnify-remove mdi-24px d-block mb-1"></i>

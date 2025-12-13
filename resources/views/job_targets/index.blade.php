@@ -34,11 +34,12 @@
         </div>
     </div>
     <div class="card-body p-3 p-md-4">
-        {{-- UPDATE DI SINI: Set allow_action => false --}}
+        {{-- UPDATE LOGIC: allow_edit_detail = false, TAPI allow_update_status = true --}}
         @include('job_targets.partials.period_tabs', [
             'idPrefix' => 'branch', 
             'dataCollection' => $teamData,
-            'allow_action' => false 
+            'allow_edit_detail' => false, 
+            'allow_update_status' => true 
         ])
     </div>
 </div>
@@ -57,12 +58,12 @@
         </div>
     </div>
     <div class="card-body p-3 p-md-4">
-        {{-- UPDATE DI SINI: Set allow_action => true (Pribadi boleh edit sendiri) atau false jika mau read-only juga --}}
-        {{-- Jika pribadi juga tidak boleh edit dari sini, ubah jadi false --}}
+        {{-- Pribadi juga sama: Boleh Update Status, Tidak Boleh Edit Detail (kecuali lewat menu lain jika diinginkan) --}}
         @include('job_targets.partials.period_tabs', [
             'idPrefix' => 'personal', 
             'dataCollection' => $personalData,
-            'allow_action' => false 
+            'allow_edit_detail' => false,
+            'allow_update_status' => true
         ])
     </div>
 </div>
@@ -70,24 +71,20 @@
 {{-- MODAL UPDATE STATUS --}}
 @include('job_targets.partials.modal_update')
 
-{{-- CSS KHUSUS --}}
+{{-- CSS & JS SAMA SEPERTI SEBELUMNYA --}}
+{{-- ... (Sisanya tetap sama) ... --}}
 <style>
     .card-rounded { border-radius: 16px; overflow: hidden; }
     .bg-gradient-info { background: linear-gradient(45deg, #198ae3, #4b49ac); }
-    
-    /* BINTANG MEWAH */
     .star-badge-3 { background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); color: #000; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); border: 1px solid #d4af37; }
     .star-badge-2 { background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%); color: #333; border: 1px solid #b0b0b0; }
     .star-badge-1 { background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
     .star-animation { animation: glow 2s infinite; }
     @keyframes glow { 0% { box-shadow: 0 0 5px #FFD700; } 50% { box-shadow: 0 0 15px #FFD700; } 100% { box-shadow: 0 0 5px #FFD700; } }
-
-    /* TABS */
     .nav-pills-custom .nav-link { background: #f8f9fa; color: #6c757d; border: 1px solid #e9ecef; margin-right: 5px; margin-bottom: 5px; transition: all 0.3s; }
     .nav-pills-custom .nav-link.active { background: #4b49ac; color: #fff; border-color: #4b49ac; box-shadow: 0 4px 6px rgba(75, 73, 172, 0.2); }
 </style>
 
-{{-- JAVASCRIPT FILTER LOGIC --}}
 <script>
     function applyFilter(containerId, periodType) {
         let filterBox = document.getElementById('filter-container-' + containerId);
@@ -95,7 +92,6 @@
         if (!filterBox || !dataContainer) return;
 
         let startVal = '', endVal = '';
-
         if (periodType === 'daily') {
             startVal = filterBox.querySelector('.filter-date-start').value;
             endVal = filterBox.querySelector('.filter-date-end').value;
@@ -108,7 +104,6 @@
         }
 
         let items = dataContainer.querySelectorAll('.filterable-item');
-        
         items.forEach(item => {
             let itemVal = '';
             if (periodType === 'daily') itemVal = item.getAttribute('data-date');   
