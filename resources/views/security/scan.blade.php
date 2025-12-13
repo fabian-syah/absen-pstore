@@ -60,7 +60,7 @@
 
 <script>
     function checkMaintenanceStatus() {
-        const isUnderMaintenance = false;
+        const isUnderMaintenance = true;
         
         if (isUnderMaintenance) {
             document.getElementById('maintenanceOverlay').style.display = 'flex';
