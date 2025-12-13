@@ -98,7 +98,7 @@ class ScanController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
-        $user = User::find($request->user_id);
+        $user = User::with(['division', 'branch'])->find($request->user_id);
         $securityUser = Auth::user(); 
         $workSchedule = WorkSchedule::getScheduleForUser($user->id);
         $currentTime = now();
@@ -153,7 +153,6 @@ class ScanController extends Controller
             }
 
             // === [SNAPSHOT LOGIC START] ===
-            // Simpan jadwal saat ini agar history tidak berubah jika user ganti jadwal nanti
             $snapIn = $user->check_in_start;
             if (!$snapIn && $workSchedule) {
                 $snapIn = $workSchedule->check_in_start;
@@ -178,13 +177,11 @@ class ScanController extends Controller
                 'is_late_checkin' => $isLate,
                 'attendance_type' => 'scan',
                 'notes' => $manualNotes, 
-                
-                // Fields Baru (Snapshot)
                 'scheduled_check_in' => $snapIn,
                 'scheduled_check_out' => $snapOut,
             ]);
 
-            $msg = $isLate ? "Absen MASUK Berhasil (TERLAMBAT)" : "Absen MASUK Berhasil";
+            $msg = $isLate ? "Absen MASUK (TERLAMBAT)" : "Absen MASUK Berhasil";
 
         } 
         elseif ($request->type == 'pulang') {
@@ -218,13 +215,11 @@ class ScanController extends Controller
                 'is_early_checkout' => $isEarlyCheckout,
             ];
 
-            // SECURITY FORCE VERIFIED
             if ($attendance->status != 'verified') {
                 $updateData['status'] = 'verified';
                 $updateData['verified_by_user_id'] = $securityUser->id;
             }
 
-            // PERHATIAN: Text ini penting untuk deteksi history di Controller history()
             $securityNote = ' | Pulang via Security Scan by ' . $securityUser->name;
             $userNoteString = $manualNotes ? " | Catatan: " . $manualNotes : "";
             
@@ -232,25 +227,27 @@ class ScanController extends Controller
 
             $attendance->update($updateData);
 
-            $msg = $isEarlyCheckout ? "Absen PULANG Berhasil (PULANG CEPAT)" : "Absen PULANG Berhasil";
+            $msg = $isEarlyCheckout ? "Absen PULANG (PULANG CEPAT)" : "Absen PULANG Berhasil";
         }
 
+        // ==========================================
+        // UPDATE RETURN DATA AGAR BIODATA MUNCUL
+        // ==========================================
         return response()->json([
             'status' => 'success',
             'message' => $msg,
             'data' => [
                 'name' => $user->name,
-                'photo' => asset('storage/' . $imageName),
-                'time' => $currentTime->format('H:i:s'),
-                'date' => $currentTime->format('d-m-Y'),
+                'role' => $user->role, // Tambahan Role
+                'division' => $user->division->name ?? '-', // Tambahan Divisi
+                'branch' => $user->branch->name ?? '-', // Tambahan Cabang
+                // Gunakan foto profil user untuk biodata agar bagus, foto capture hanya untuk bukti sistem
+                'profile_photo' => $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
+                'photo' => asset('storage/' . $imageName), // Ini foto bukti saat scan
+                'time' => $currentTime->format('H:i'),
+                'date' => $currentTime->format('d M Y'),
                 'is_late' => $isLate ?? false,
                 'is_early_checkout' => $isEarlyCheckout ?? false,
-                'work_schedule' => $workSchedule ? [
-                    'check_in_start' => $workSchedule->check_in_start->format('H:i'),
-                    'check_in_end' => $workSchedule->check_in_end->format('H:i'),
-                    'check_out_start' => $workSchedule->check_out_start->format('H:i'),
-                    'check_out_end' => $workSchedule->check_out_end->format('H:i'),
-                ] : null
             ]
         ]);
     }
@@ -269,28 +266,20 @@ class ScanController extends Controller
          return response()->json(['status' => 'success', 'data' => $stats]);
     }
 
-    // --- REVISI LOGIC HISTORY ---
     public function history(Request $request)
     {
         $user = Auth::user();
         $query = Attendance::with(['user.division', 'user.branch', 'branch', 'scanner', 'verifier']);
 
-        // LOGIKA BARU:
-        // Tampilkan jika:
-        // 1. Scanned IN oleh Security (scanned_by_user_id tidak null)
-        // 2. ATAU Scanned OUT oleh Security (deteksi dari notes 'Security Scan by...')
-        
         if ($user->role == 'admin') {
-            // Admin melihat semua transaksi yang melibatkan security manapun
             $query->where(function($q) {
                 $q->whereNotNull('scanned_by_user_id')
                   ->orWhere('notes', 'LIKE', '%Security Scan by%');
             });
         } else {
-            // Security hanya melihat transaksi yang DIA lakukan (Masuk scan dia ATAU Pulang scan dia)
             $query->where(function($q) use ($user) {
-                $q->where('scanned_by_user_id', $user->id) // Dia scan masuk
-                  ->orWhere('notes', 'LIKE', '%Security Scan by ' . $user->name . '%'); // Dia scan pulang
+                $q->where('scanned_by_user_id', $user->id)
+                  ->orWhere('notes', 'LIKE', '%Security Scan by ' . $user->name . '%');
             });
         }
 
