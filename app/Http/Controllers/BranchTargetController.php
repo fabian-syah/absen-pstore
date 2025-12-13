@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\JobTarget;
-use App\Models\User; // Pastikan import User
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -27,7 +27,7 @@ class BranchTargetController extends Controller
             $branch->team_monthly = JobTarget::where('branch_id', $branch->id)->whereIn('type', ['team_target', 'team_achievement'])->where('period', 'monthly')->where('status', '!=', 'completed')->count();
             $branch->team_yearly = JobTarget::where('branch_id', $branch->id)->whereIn('type', ['team_target', 'team_achievement'])->where('period', 'yearly')->where('status', '!=', 'completed')->count();
 
-            // Hitung Target Personal (Total item aktif milik semua user di cabang)
+            // Hitung Target Personal
             $branch->personal_count = JobTarget::whereHas('user', function($q) use ($branch) {
                 $q->where('branch_id', $branch->id);
             })->whereIn('type', ['personal_target', 'personal_achievement'])->where('status', '!=', 'completed')->count();
@@ -43,12 +43,11 @@ class BranchTargetController extends Controller
         $branch = Branch::findOrFail($id);
         $user = Auth::user();
 
-        // Validasi Leader
         if ($user->role == 'leader' && $user->branch_id != $branch->id) {
             return redirect()->route('branch-targets.index')->with('error', 'Akses ditolak.');
         }
 
-        // 1. Ambil Target Global Cabang (Sama seperti sebelumnya)
+        // 1. Target Global Cabang
         $teamData = JobTarget::with(['user'])
             ->whereIn('type', ['team_target', 'team_achievement']) 
             ->where('branch_id', $branch->id)
@@ -56,11 +55,11 @@ class BranchTargetController extends Controller
             ->orderBy('deadline', 'asc')
             ->get();
 
-        // 2. [BARU] Ambil Daftar Karyawan di Cabang Ini
-        // Kita load juga jumlah target aktif mereka untuk info tambahan (opsional)
+        // 2. Daftar Karyawan di Cabang Ini
+        // Menggunakan withCount('jobTargets') yang sekarang sudah bisa karena Model User diperbaiki
         $branchMembers = User::where('branch_id', $branch->id)
             ->where('is_active', true)
-            ->orderBy('role', 'asc') // Urutkan role (misal Admin/Leader dulu) atau nama
+            ->orderBy('role', 'asc')
             ->orderBy('name', 'asc')
             ->withCount(['jobTargets as active_targets_count' => function($query) {
                 $query->where('status', '!=', 'completed')
