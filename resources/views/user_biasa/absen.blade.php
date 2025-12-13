@@ -1,482 +1,639 @@
 @extends('layout.master')
 
 @section('title')
-    Absen Mandiri ({{ ucfirst($mode) }})
+    Absen Mandiri - {{ ucfirst($mode) }}
 @endsection
 
 @section('heading')
-    Absen Mandiri ({{ ucfirst($mode) }})
+    Absen Mandiri
 @endsection
 
 @section('content')
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6 grid-margin stretch-card">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="card-title mb-0 fw-bold">Absen {{ ucfirst($mode) }}</h4>
-                        
-                        {{-- INDIKATOR MODE BERDASARKAN SETTING USER --}}
-                        @if(Auth::user()->use_face_recognition)
-                            <div class="badge badge-success rounded-pill px-3">
-                                <i class="mdi mdi-face-recognition me-1"></i>AI Detect ON
-                            </div>
-                        @else
-                            <div class="badge badge-warning rounded-pill px-3 text-dark">
-                                <i class="mdi mdi-camera-off me-1"></i>Manual Mode
-                            </div>
-                        @endif
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5 col-xl-4">
+        
+        {{-- CARD UTAMA --}}
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden position-relative main-card">
+            
+            {{-- HEADER CARD --}}
+            <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">Absen {{ ucfirst($mode) }}</h5>
+                        <p class="text-muted small mb-0">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</p>
                     </div>
-
-                    {{-- ALERT STATUS --}}
-                    @if ($mode == 'pulang' && isset($attendance))
-                        <div class="alert alert-light border shadow-sm mb-3 small">
-                            <i class="mdi mdi-clock-outline me-1"></i> Masuk: 
-                            <strong>{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</strong>
+                    
+                    {{-- INDICATOR MODE --}}
+                    @if(Auth::user()->use_face_recognition)
+                        <div class="status-pill active" data-bs-toggle="tooltip" title="AI Face Recognition Aktif">
+                            <span class="dot pulse"></span> AI Detect
+                        </div>
+                    @else
+                        <div class="status-pill manual" data-bs-toggle="tooltip" title="Mode Foto Manual">
+                            <span class="dot"></span> Manual
                         </div>
                     @endif
+                </div>
 
-                    <form class="forms-sample" action="{{ route('self.attend.store') }}" method="POST"
-                        enctype="multipart/form-data" id="attendance-form">
-                        @csrf
-                        @if (isset($attendance) && $attendance)
-                            <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
+                {{-- ALERT INFO (JIKA ABSEN PULANG) --}}
+                @if ($mode == 'pulang' && isset($attendance))
+                    <div class="alert alert-soft-primary d-flex align-items-center py-2 px-3 rounded-3 mt-3 mb-0 fade show">
+                        <i class="mdi mdi-clock-check-outline fs-5 me-2"></i>
+                        <div class="small">
+                            Masuk pukul <span class="fw-bold">{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</span>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="card-body px-4 pb-4 pt-3">
+                <form action="{{ route('self.attend.store') }}" method="POST" enctype="multipart/form-data" id="attendance-form">
+                    @csrf
+                    @if (isset($attendance) && $attendance)
+                        <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
+                    @endif
+                    <input type="file" name="photo" id="photo-input-hidden" class="d-none" accept="image/jpeg">
+
+                    {{-- === VIEW FINDER / KAMERA === --}}
+                    <div class="camera-container mb-4">
+                        
+                        {{-- 1. VIDEO ELEMENT --}}
+                        <video id="video-feed" autoplay muted playsinline></video>
+
+                        {{-- 2. SCANNING LINE ANIMATION (AI MODE ONLY) --}}
+                        @if(Auth::user()->use_face_recognition)
+                            <div class="scan-line d-none" id="ai-scan-line"></div>
                         @endif
 
-                        <input type="file" name="photo" id="photo-input-hidden" class="d-none" accept="image/jpeg">
-
-                        {{-- === AREA KAMERA UTAMA === --}}
-                        <div class="camera-wrapper position-relative overflow-hidden rounded-4 mb-3">
-
-                            {{-- 1. VIDEO FEED --}}
-                            {{-- Added attributes to help layout stability --}}
-                            <video id="video-feed" autoplay muted playsinline width="100%" height="100%"></video>
-
-                            {{-- 2. OVERLAY UI --}}
-                            <div class="camera-overlay d-flex flex-column justify-content-between p-3">
-                                <div class="text-center">
-                                    <span id="face-status-badge" class="badge bg-dark bg-opacity-75 rounded-pill backdrop-blur border border-secondary">
-                                        <i class="mdi mdi-loading mdi-spin me-1"></i> Menunggu Kamera...
-                                    </span>
-                                </div>
-
-                                {{-- Focus Frame --}}
-                                @if(Auth::user()->use_face_recognition)
-                                    <div class="focus-frame">
-                                        <div class="corner top-left"></div>
-                                        <div class="corner top-right"></div>
-                                        <div class="corner bottom-left"></div>
-                                        <div class="corner bottom-right"></div>
-                                    </div>
-                                    <div class="text-center text-white small text-shadow fw-bold" id="camera-instruction">
-                                        Siapkan Wajah
-                                    </div>
-                                @else
-                                    <div class="focus-frame border-white opacity-50"></div>
-                                    <div class="text-center text-white small text-shadow fw-bold">
-                                        Mode Manual (Tanpa Deteksi)
-                                    </div>
-                                @endif
+                        {{-- 3. OVERLAY UI (Status, Instructions) --}}
+                        <div class="camera-overlay">
+                            {{-- Top Gradient & Status --}}
+                            <div class="overlay-top p-3 text-center">
+                                <span id="face-status-badge" class="badge-glass">
+                                    <i class="mdi mdi-camera-off me-1"></i> Kamera Belum Aktif
+                                </span>
                             </div>
 
-                            {{-- 3. TOMBOL START --}}
-                            <div id="start-screen" class="position-absolute top-0 start-0 w-100 h-100 bg-dark d-flex flex-column justify-content-center align-items-center z-3">
-                                <div class="icon-circle mb-3">
-                                    <i class="mdi mdi-camera text-white fs-1"></i>
+                            {{-- Focus Frame --}}
+                            <div class="focus-area">
+                                <div class="focus-box {{ Auth::user()->use_face_recognition ? 'ai-mode' : 'manual-mode' }}">
+                                    <div class="corner tl"></div>
+                                    <div class="corner tr"></div>
+                                    <div class="corner bl"></div>
+                                    <div class="corner br"></div>
                                 </div>
-                                <button type="button" id="start-camera-btn" class="btn btn-light rounded-pill fw-bold px-4">
+                                <div class="instruction-text" id="camera-instruction">Ketuk tombol kamera</div>
+                            </div>
+
+                            {{-- Bottom Gradient --}}
+                            <div class="overlay-bottom"></div>
+                        </div>
+
+                        {{-- 4. START SCREEN (Cover) --}}
+                        <div id="start-screen" class="camera-cover">
+                            <div class="content text-center">
+                                <div class="icon-pulse mb-3">
+                                    <i class="mdi mdi-camera-iris text-white fs-1"></i>
+                                </div>
+                                <button type="button" id="start-camera-btn" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm">
                                     Buka Kamera
                                 </button>
                                 <div id="model-loading-text" class="text-white-50 mt-3 small d-none">
                                     <span class="spinner-border spinner-border-sm me-1"></span> Menyiapkan AI...
                                 </div>
                             </div>
+                        </div>
 
-                            {{-- 4. HASIL FOTO (PREVIEW) --}}
-                            <div id="result-screen" class="position-absolute top-0 start-0 w-100 h-100 bg-black d-none z-3">
-                                <img id="preview-image" src="" alt="Result" class="w-100 h-100 object-fit-contain">
-                                <div class="position-absolute bottom-0 w-100 p-4 d-flex gap-2 bg-gradient-black">
-                                    <button type="button" id="retake-btn" class="btn btn-outline-light flex-fill rounded-pill">
-                                        Ulangi
-                                    </button>
-                                    <div class="flex-fill text-center text-white align-self-center fw-bold">
-                                        <i class="mdi mdi-check-circle text-success me-1"></i> Foto Oke
-                                    </div>
-                                </div>
+                        {{-- 5. RESULT SCREEN (Preview) --}}
+                        <div id="result-screen" class="camera-result d-none">
+                            <img id="preview-image" src="" alt="Capture">
+                            <div class="result-actions">
+                                <button type="button" id="retake-btn" class="btn-retake">
+                                    <i class="mdi mdi-refresh"></i> Ulangi
+                                </button>
+                                <span class="badge bg-success rounded-pill px-3 py-2 shadow-sm">
+                                    <i class="mdi mdi-check-circle me-1"></i> Foto Bagus
+                                </span>
                             </div>
                         </div>
+                    </div>
 
-                        {{-- TOMBOL SHUTTER --}}
-                        <div class="d-flex flex-column align-items-center mb-4 position-relative">
-                            <button type="button" id="capture-btn" class="shutter-btn" disabled>
-                                <i class="mdi mdi-camera-iris text-white fs-2"></i>
-                            </button>
-                            <div class="mt-2 small text-muted" id="shutter-label">Tunggu kamera...</div>
+                    {{-- CONTROLLER SECTION (Shutter & Inputs) --}}
+                    
+                    {{-- SHUTTER BUTTON --}}
+                    <div class="d-flex justify-content-center mb-4 position-relative z-index-10">
+                        <button type="button" id="capture-btn" class="shutter-button" disabled>
+                            <div class="inner-circle"></div>
+                        </button>
+                    </div>
+
+                    {{-- LOCATION WIDGET --}}
+                    <div class="location-widget mb-4">
+                        <div class="loc-icon">
+                            <i class="mdi mdi-map-marker-radius"></i>
                         </div>
+                        <div class="loc-info">
+                            <label>Lokasi Saat Ini</label>
+                            <h6 id="coordinates-display" class="text-truncate">Mencari Koordinat...</h6>
+                        </div>
+                        <div class="loc-badge">
+                            <span id="gps-accuracy-badge" class="badge bg-light text-dark border">...</span>
+                        </div>
+                    </div>
 
-                        {{-- INFO LOKASI --}}
-                        <div class="location-card bg-light rounded-3 p-3 mb-4 d-flex align-items-center">
-                            <div class="icon-box bg-white rounded-circle p-2 me-3 shadow-sm">
-                                <i class="mdi mdi-map-marker text-primary"></i>
+                    {{-- NOTES INPUT --}}
+                    <div class="form-group mb-4">
+                        <label class="form-label small text-muted fw-bold text-uppercase">Catatan (Opsional)</label>
+                        <textarea name="notes" class="form-control form-control-modern" rows="2" placeholder="Sedang di lokasi klien..."></textarea>
+                    </div>
+
+                    {{-- HIDDEN INPUTS --}}
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                    <input type="hidden" id="accuracy" name="accuracy">
+
+                    {{-- SLIDE TO SUBMIT --}}
+                    <div class="slide-submit-wrapper">
+                        <div class="slide-track disabled" id="slide-track">
+                            <div class="slide-bg-text">GESER UNTUK ABSEN</div>
+                            <div class="slide-thumb" id="slide-thumb">
+                                <i class="mdi mdi-chevron-double-right"></i>
                             </div>
-                            <div class="flex-grow-1 overflow-hidden">
-                                <small class="text-muted d-block">Lokasi Anda</small>
-                                <h6 class="mb-0 text-truncate fw-bold" id="coordinates-display">Mencari GPS...</h6>
-                            </div>
-                            <div id="gps-accuracy-badge" class="badge bg-secondary rounded-pill">...</div>
                         </div>
+                    </div>
 
-                        {{-- FORM INPUTS --}}
-                        <div class="form-group mb-4">
-                            <textarea name="notes" class="form-control bg-light border-0 rounded-3" rows="2" placeholder="Tulis catatan (Opsional)..."></textarea>
-                        </div>
-
-                        <input type="hidden" id="latitude" name="latitude">
-                        <input type="hidden" id="longitude" name="longitude">
-                        <input type="hidden" id="accuracy" name="accuracy">
-
-                        {{-- SLIDER SUBMIT --}}
-                        <div class="slide-submit-container">
-                            <div class="slide-track disabled" id="slide-track">
-                                <div class="slide-text" id="slide-text">Geser untuk Absen</div>
-                                <div class="slide-thumb" id="slide-thumb"><i class="mdi mdi-chevron-right"></i></div>
-                            </div>
-                        </div>
-
-                        <div class="text-center mt-3">
-                            <a href="{{ route('dashboard') }}" class="text-muted small text-decoration-none">Batal</a>
-                        </div>
-                    </form>
-                </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ route('dashboard') }}" class="text-muted small text-decoration-none fw-medium">Kembali ke Dashboard</a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <canvas id="capture-canvas" class="d-none"></canvas>
+<canvas id="capture-canvas" class="d-none"></canvas>
 @endsection
 
 @push('styles')
-    <style>
-        .camera-wrapper { width: 100%; height: 450px; background: #000; position: relative; display: flex; align-items: center; justify-content: center; }
-        
-        /* FIX GLITCH: Video opacity 0 di awal */
-        #video-feed { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; /* Ganti ke cover agar full frame */
-            transform: scaleX(-1); 
-            opacity: 0; 
-            transition: opacity 0.4s ease-in; 
-        }
-        /* Class ini ditambahkan via JS saat video sudah siap */
-        #video-feed.ready { opacity: 1; }
+<style>
+    :root {
+        --primary-color: #4361ee;
+        --success-color: #06d6a0;
+        --bg-soft: #f8f9fa;
+        --card-radius: 24px;
+    }
 
-        .camera-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
-        .backdrop-blur { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
-        
-        .focus-frame { width: 220px; height: 280px; border: 2px dashed rgba(255, 255, 255, 0.4); border-radius: 24px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: all 0.3s ease; }
-        .focus-frame.active { border: 3px solid #00ff88; box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); }
-        
-        .shutter-btn { width: 80px; height: 80px; border-radius: 50%; border: 5px solid #e0e0e0; background-color: #9e9e9e; cursor: not-allowed; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
-        .shutter-btn.ready { background-color: #00c853; border-color: #fff; cursor: pointer; box-shadow: 0 0 20px rgba(0, 200, 83, 0.6); transform: scale(1.1); }
-        .shutter-btn.ready:active { transform: scale(0.95); }
-        
-        .object-fit-contain { object-fit: contain; }
-        .bg-gradient-black { background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent); }
-        
-        .slide-submit-container { position: relative; width: 100%; height: 55px; background: #e9ecef; border-radius: 50px; overflow: hidden; }
-        .slide-track { height: 100%; display: flex; align-items: center; cursor: pointer; }
-        .slide-track.submitted { background: #198754; transition: 0.3s; }
-        .slide-thumb { width: 45px; height: 45px; background: #fff; border-radius: 50%; margin-left: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); position: relative; z-index: 2; transition: left 0.1s; }
-        .slide-text { position: absolute; width: 100%; text-align: center; font-weight: 600; color: #6c757d; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; user-select: none; }
-        .slide-track.submitted .slide-text { color: #fff; }
-        .slide-track.disabled { pointer-events: none; opacity: 0.6; }
-    </style>
+    /* === UTILS === */
+    .main-card { background: #fff; border-radius: var(--card-radius); overflow: hidden; transition: transform 0.2s; }
+    .alert-soft-primary { background-color: rgba(67, 97, 238, 0.1); color: var(--primary-color); border: 1px solid rgba(67, 97, 238, 0.2); }
+    
+    /* === HEADER PILL === */
+    .status-pill { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: #f1f3f5; color: #6c757d; }
+    .status-pill.active { background: rgba(6, 214, 160, 0.1); color: var(--success-color); border: 1px solid rgba(6, 214, 160, 0.2); }
+    .status-pill.manual { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .status-pill .dot { width: 8px; height: 8px; background: currentColor; border-radius: 50%; margin-right: 6px; display: inline-block; }
+    .status-pill .dot.pulse { animation: pulse-green 2s infinite; }
+
+    @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(6, 214, 160, 0); } 100% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0); } }
+
+    /* === CAMERA CONTAINER === */
+    .camera-container {
+        position: relative;
+        width: 100%;
+        height: 420px; /* Tinggi fix agar proporsional */
+        background: #000;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        transform: translateZ(0); /* Hardware accel */
+    }
+
+    #video-feed {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1);
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+    #video-feed.ready { opacity: 1; }
+
+    /* AI Scanning Line */
+    .scan-line {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 2px;
+        background: #00ff88;
+        box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+        z-index: 5;
+        animation: scanMove 2s infinite linear;
+    }
+    @keyframes scanMove { 0% { top: 10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 90%; opacity: 0; } }
+
+    /* Overlay Gradient & UI */
+    .camera-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
+    .overlay-top { background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent); padding-top: 20px; }
+    .overlay-bottom { height: 80px; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent); }
+
+    .badge-glass {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 6px 16px;
+        border-radius: 30px;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border: 1px solid rgba(255,255,255,0.3);
+        display: inline-block;
+    }
+
+    /* Focus Box */
+    .focus-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+    .focus-box { width: 240px; height: 300px; position: relative; transition: all 0.3s ease; }
+    
+    .focus-box .corner { position: absolute; width: 20px; height: 20px; border-color: rgba(255,255,255,0.5); border-style: solid; transition: all 0.3s; }
+    .focus-box .tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 8px 0 0 0; }
+    .focus-box .tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 8px 0 0; }
+    .focus-box .bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 8px; }
+    .focus-box .br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 8px 0; }
+
+    .focus-box.active { transform: scale(1.02); }
+    .focus-box.active .corner { border-color: #00ff88; box-shadow: 0 0 10px rgba(0,255,136,0.3); }
+
+    .instruction-text {
+        margin-top: 15px; color: rgba(255,255,255,0.9); font-size: 0.85rem; 
+        font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    /* Start & Result Screens */
+    .camera-cover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 6; display: flex; align-items: center; justify-content: center; }
+    .camera-result { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 7; }
+    #preview-image { width: 100%; height: 100%; object-fit: contain; }
+    .result-actions { position: absolute; bottom: 20px; left: 0; width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 15px; }
+    .btn-retake { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 30px; padding: 6px 16px; font-size: 0.85rem; backdrop-filter: blur(4px); transition: 0.2s; }
+    .btn-retake:hover { background: rgba(255,255,255,0.2); }
+
+    /* === SHUTTER BUTTON (iOS Style) === */
+    .shutter-button {
+        width: 72px; height: 72px; border-radius: 50%;
+        background: transparent; border: 4px solid #e5e5e5;
+        padding: 4px; cursor: pointer; outline: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .shutter-button .inner-circle { width: 100%; height: 100%; background: #e5e5e5; border-radius: 50%; transition: all 0.3s; }
+    
+    .shutter-button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #ccc; }
+    .shutter-button:disabled .inner-circle { background: #ccc; }
+
+    .shutter-button.ready { border-color: var(--primary-color); transform: scale(1.05); }
+    .shutter-button.ready .inner-circle { background: var(--primary-color); }
+    .shutter-button.ready:active { transform: scale(0.95); }
+    .shutter-button.ready:active .inner-circle { transform: scale(0.85); }
+
+    /* === LOCATION WIDGET === */
+    .location-widget {
+        background: #f8f9fa; border-radius: 16px; padding: 12px 16px;
+        display: flex; align-items: center; gap: 12px;
+        border: 1px solid #e9ecef;
+    }
+    .loc-icon { width: 40px; height: 40px; background: #e0e7ff; color: var(--primary-color); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .loc-info { flex-grow: 1; overflow: hidden; }
+    .loc-info label { display: block; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .loc-info h6 { margin: 0; font-size: 0.9rem; font-weight: 600; color: #333; }
+    
+    /* === FORM INPUTS === */
+    .form-control-modern { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 12px; resize: none; font-size: 0.9rem; transition: 0.2s; }
+    .form-control-modern:focus { background: #fff; border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1); outline: none; }
+
+    /* === SLIDE TO SUBMIT === */
+    .slide-submit-wrapper { position: relative; width: 100%; height: 56px; border-radius: 50px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+    .slide-track {
+        background: #e9ecef; height: 100%; width: 100%; display: flex; align-items: center; position: relative; cursor: pointer; transition: background 0.4s;
+    }
+    .slide-track.disabled { pointer-events: none; opacity: 0.6; filter: grayscale(1); }
+    .slide-track.submitted { background: var(--success-color); }
+    
+    .slide-bg-text {
+        position: absolute; left: 0; width: 100%; text-align: center;
+        color: #adb5bd; font-weight: 700; font-size: 0.85rem; letter-spacing: 1px;
+        z-index: 1; user-select: none;
+        background: linear-gradient(90deg, #adb5bd 0%, #fff 50%, #adb5bd 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shine 3s linear infinite;
+    }
+    @keyframes shine { to { background-position: 200% center; } }
+    
+    .slide-thumb {
+        width: 48px; height: 48px; background: #fff; border-radius: 50%;
+        margin-left: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--primary-color); font-size: 1.2rem;
+        position: relative; z-index: 2; transition: transform 0.1s;
+    }
+    .slide-track.submitted .slide-thumb { color: var(--success-color); }
+
+    /* Mobile Tweaks */
+    @media (max-width: 576px) {
+        .card-body { padding: 1.25rem; }
+        .camera-container { height: 380px; }
+        .focus-box { width: 200px; height: 260px; }
+    }
+</style>
 @endpush
 
 @push('scripts')
-    {{-- LOAD FACE API --}}
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
+{{-- LOAD FACE API --}}
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const useAI = {{ Auth::user()->use_face_recognition ? 'true' : 'false' }};
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const useAI = {{ Auth::user()->use_face_recognition ? 'true' : 'false' }};
 
-            const videoFeed = document.getElementById('video-feed');
-            const startScreen = document.getElementById('start-screen');
-            const resultScreen = document.getElementById('result-screen');
-            const startBtn = document.getElementById('start-camera-btn');
-            const captureBtn = document.getElementById('capture-btn');
-            const shutterLabel = document.getElementById('shutter-label');
-            const retakeBtn = document.getElementById('retake-btn');
-            const previewImage = document.getElementById('preview-image');
-            const photoInputHidden = document.getElementById('photo-input-hidden');
-            const canvas = document.getElementById('capture-canvas');
-            
-            const faceStatusBadge = document.getElementById('face-status-badge');
-            const focusFrame = document.querySelector('.focus-frame');
-            const modelLoadingText = document.getElementById('model-loading-text');
-            const cameraInstruction = document.getElementById('camera-instruction');
+        // DOM Elements
+        const videoFeed = document.getElementById('video-feed');
+        const startScreen = document.getElementById('start-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const startBtn = document.getElementById('start-camera-btn');
+        const captureBtn = document.getElementById('capture-btn');
+        const retakeBtn = document.getElementById('retake-btn');
+        const previewImage = document.getElementById('preview-image');
+        const photoInputHidden = document.getElementById('photo-input-hidden');
+        const canvas = document.getElementById('capture-canvas');
+        
+        // UI Indicators
+        const faceStatusBadge = document.getElementById('face-status-badge');
+        const focusBox = document.querySelector('.focus-box');
+        const modelLoadingText = document.getElementById('model-loading-text');
+        const cameraInstruction = document.getElementById('camera-instruction');
+        const aiScanLine = document.getElementById('ai-scan-line');
+        const slideTrack = document.getElementById('slide-track');
+        const slideThumb = document.getElementById('slide-thumb');
+        const slideText = document.querySelector('.slide-bg-text');
+        const form = document.getElementById('attendance-form');
 
-            const form = document.getElementById('attendance-form');
-            const slideTrack = document.getElementById('slide-track');
-            const slideThumb = document.getElementById('slide-thumb');
-            const slideText = document.getElementById('slide-text');
+        // State
+        let streamRef = null;
+        let detectionInterval = null;
+        let isFaceValid = false;
+        let modelsLoaded = false;
 
-            let streamRef = null;
-            let detectionInterval = null;
-            let isFaceValid = false;
-            let modelsLoaded = false;
-
-            // ==========================================
-            // 1. TOMBOL START
-            // ==========================================
-            startBtn.addEventListener('click', async () => {
-                if (useAI) {
-                    if (!modelsLoaded) {
-                        modelLoadingText.classList.remove('d-none');
-                        startBtn.disabled = true;
-                        try {
-                            // Sesuaikan path model
-                            await faceapi.nets.tinyFaceDetector.loadFromUri('public/models');
-                            modelsLoaded = true;
-                            modelLoadingText.classList.add('d-none');
-                            startCamera();
-                        } catch (err) {
-                            console.error("Model Error:", err);
-                            alert("Gagal memuat AI. Cek koneksi/file model.");
-                            startBtn.disabled = false;
-                            modelLoadingText.classList.add('d-none');
-                        }
-                    } else {
-                        startCamera();
+        // --- 1. INITIALIZE ---
+        startBtn.addEventListener('click', async () => {
+            if (useAI) {
+                if (!modelsLoaded) {
+                    toggleLoadingState(true);
+                    try {
+                        // ADJUST PATH AS NEEDED
+                        await faceapi.nets.tinyFaceDetector.loadFromUri('/models'); 
+                        modelsLoaded = true;
+                        toggleLoadingState(false);
+                        initCamera();
+                    } catch (err) {
+                        console.error("AI Error:", err);
+                        alert("Gagal memuat AI. Pastikan file model ada di folder public/models.");
+                        toggleLoadingState(false);
+                        // Fallback to manual if AI fails
+                        initCamera(); 
                     }
                 } else {
-                    startCamera();
+                    initCamera();
                 }
-            });
-
-            // ==========================================
-            // 2. KAMERA SETUP (FIXED GLITCH)
-            // ==========================================
-            function startCamera() {
-                // Reset Video State agar tidak tampil sebelum ready
-                videoFeed.classList.remove('ready'); 
-
-                navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
-                    audio: false
-                })
-                .then(stream => {
-                    streamRef = stream;
-                    videoFeed.srcObject = stream;
-                    
-                    videoFeed.onloadedmetadata = () => {
-                        videoFeed.play();
-                        
-                        // FIX: Tampilkan video hanya setelah metadata siap agar ukurannya pas
-                        setTimeout(() => {
-                            videoFeed.classList.add('ready'); // Trigger CSS opacity 1
-                            startScreen.classList.add('d-none');
-                        }, 100); 
-
-                        if (useAI) {
-                            startFaceDetection();
-                        } else {
-                            // MANUAL MODE
-                            isFaceValid = true;
-                            enableCaptureButton();
-                            faceStatusBadge.innerHTML = '<i class="mdi mdi-camera"></i> Kamera Siap';
-                            faceStatusBadge.className = 'badge bg-primary rounded-pill shadow';
-                            if(cameraInstruction) cameraInstruction.innerText = "Ambil Foto Anda";
-                        }
-                    };
-                })
-                .catch(err => {
-                    console.error("Camera Error:", err);
-                    alert("Gagal akses kamera. Izinkan akses di browser.");
-                    startBtn.disabled = false;
-                });
+            } else {
+                initCamera();
             }
+        });
 
-            // ==========================================
-            // 3. DETEKSI WAJAH
-            // ==========================================
-            function startFaceDetection() {
-                // Clear interval lama jika ada
-                if (detectionInterval) clearInterval(detectionInterval);
+        function toggleLoadingState(isLoading) {
+            startBtn.disabled = isLoading;
+            startBtn.classList.toggle('d-none', isLoading);
+            modelLoadingText.classList.toggle('d-none', !isLoading);
+        }
 
-                detectionInterval = setInterval(async () => {
-                    if (videoFeed.paused || videoFeed.ended) return;
+        // --- 2. CAMERA HANDLING ---
+        function initCamera() {
+            navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            })
+            .then(stream => {
+                streamRef = stream;
+                videoFeed.srcObject = stream;
+                
+                videoFeed.onloadedmetadata = () => {
+                    videoFeed.play();
+                    // Smooth transition
+                    setTimeout(() => {
+                        videoFeed.classList.add('ready');
+                        startScreen.classList.add('d-none');
+                        if (useAI && aiScanLine) aiScanLine.classList.remove('d-none');
+                    }, 300);
 
-                    // Menggunakan try-catch agar tidak crash jika stream putus tiba-tiba
-                    try {
-                        const detections = await faceapi.detectAllFaces(videoFeed, new faceapi.TinyFaceDetectorOptions());
-
-                        if (detections.length > 0 && detections[0].score > 0.5) {
-                            if (!isFaceValid) {
-                                isFaceValid = true;
-                                focusFrame.classList.add('active');
-                                faceStatusBadge.innerHTML = '<i class="mdi mdi-face-recognition"></i> Wajah Terdeteksi';
-                                faceStatusBadge.className = 'badge bg-success rounded-pill shadow border border-light';
-                                if(cameraInstruction) cameraInstruction.innerText = "Tekan Tombol Hijau";
-                                enableCaptureButton();
-                            }
-                        } else {
-                            if (isFaceValid) {
-                                isFaceValid = false;
-                                focusFrame.classList.remove('active');
-                                faceStatusBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Mencari Wajah...';
-                                faceStatusBadge.className = 'badge bg-dark bg-opacity-75 rounded-pill backdrop-blur border border-secondary';
-                                if(cameraInstruction) cameraInstruction.innerText = "Posisikan Wajah";
-                                disableCaptureButton();
-                            }
-                        }
-                    } catch (e) {
-                        console.log("Detection skipped frame");
+                    if (useAI) {
+                        startFaceDetection();
+                    } else {
+                        // Manual Mode
+                        setReadyToCapture(true, "Siap Foto");
                     }
-                }, 200);
-            }
+                };
+            })
+            .catch(err => {
+                alert("Tidak dapat mengakses kamera. Pastikan izin diberikan.");
+                console.error(err);
+            });
+        }
 
-            function enableCaptureButton() {
+        // --- 3. AI DETECTION ---
+        function startFaceDetection() {
+            if (detectionInterval) clearInterval(detectionInterval);
+
+            detectionInterval = setInterval(async () => {
+                if (!streamRef || videoFeed.paused || videoFeed.ended) return;
+
+                try {
+                    const detections = await faceapi.detectAllFaces(videoFeed, new faceapi.TinyFaceDetectorOptions());
+                    
+                    if (detections.length > 0 && detections[0].score > 0.5) {
+                        if (!isFaceValid) {
+                            isFaceValid = true;
+                            focusBox.classList.add('active');
+                            setReadyToCapture(true, "Wajah Terdeteksi");
+                        }
+                    } else {
+                        if (isFaceValid) {
+                            isFaceValid = false;
+                            focusBox.classList.remove('active');
+                            setReadyToCapture(false, "Posisikan Wajah");
+                        }
+                    }
+                } catch (e) { console.log(e); }
+            }, 300); // Check every 300ms
+        }
+
+        function setReadyToCapture(ready, message) {
+            if (ready) {
                 captureBtn.disabled = false;
                 captureBtn.classList.add('ready');
-                shutterLabel.innerText = "Klik untuk ambil foto";
-                shutterLabel.className = "mt-2 small text-success fw-bold";
-            }
-
-            function disableCaptureButton() {
+                faceStatusBadge.innerHTML = `<i class="mdi mdi-face-recognition"></i> ${message}`;
+                faceStatusBadge.style.background = "rgba(6, 214, 160, 0.4)";
+                faceStatusBadge.style.borderColor = "#00ff88";
+                cameraInstruction.innerText = "Tekan tombol shutter di bawah";
+            } else {
                 captureBtn.disabled = true;
                 captureBtn.classList.remove('ready');
-                shutterLabel.innerText = useAI ? "Wajah tidak terlihat" : "Tunggu kamera...";
-                shutterLabel.className = "mt-2 small text-muted";
+                faceStatusBadge.innerHTML = `<i class="mdi mdi-loading mdi-spin"></i> ${message}`;
+                faceStatusBadge.style.background = "rgba(255, 255, 255, 0.2)";
+                faceStatusBadge.style.borderColor = "rgba(255,255,255,0.3)";
+                cameraInstruction.innerText = "Mencari wajah...";
             }
+        }
 
-            // ==========================================
-            // 4. CAPTURE & COMPRESS
-            // ==========================================
-            captureBtn.addEventListener('click', async () => {
-                if (!isFaceValid && useAI) return;
-                // Double check untuk mode manual, pastikan stream masih jalan
-                if (!streamRef || !streamRef.active) return;
+        // --- 4. CAPTURE LOGIC ---
+        captureBtn.addEventListener('click', async () => {
+            if (useAI && !isFaceValid) return;
 
-                // Animasi
-                captureBtn.style.transform = "scale(0.9)";
-                setTimeout(() => captureBtn.style.transform = "scale(1.1)", 100);
+            // Haptic/Visual Feedback
+            captureBtn.style.transform = "scale(0.9)";
+            setTimeout(() => captureBtn.style.transform = "scale(1.05)", 100);
 
-                const MAX_WIDTH = 800;
-                let width = videoFeed.videoWidth;
-                let height = videoFeed.videoHeight;
+            // Capture Frame
+            const width = videoFeed.videoWidth;
+            const height = videoFeed.videoHeight;
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // Mirror image processing
+            ctx.save();
+            ctx.scale(-1, 1);
+            ctx.drawImage(videoFeed, -width, 0, width, height);
+            ctx.restore();
 
-                if (width > MAX_WIDTH) {
-                    height = Math.round(height * (MAX_WIDTH / width));
-                    width = MAX_WIDTH;
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.save();
-                ctx.scale(-1, 1);
-                ctx.drawImage(videoFeed, -width, 0, width, height);
-                ctx.restore();
-
-                const MAX_FILE_SIZE = 200 * 1024; // 200KB
-                let quality = 0.9;
-                let blob = null;
-                const makeBlob = (q) => new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/jpeg', q));
-
-                shutterLabel.innerText = "Mengompresi...";
-
-                do {
-                    blob = await makeBlob(quality);
-                    if (blob.size > MAX_FILE_SIZE) quality -= 0.1;
-                } while (blob.size > MAX_FILE_SIZE && quality > 0.1);
-
+            // Convert to blob
+            canvas.toBlob(blob => {
                 const file = new File([blob], "attendance.jpg", { type: "image/jpeg" });
                 const dt = new DataTransfer();
                 dt.items.add(file);
                 photoInputHidden.files = dt.files;
-
+                
                 previewImage.src = URL.createObjectURL(blob);
                 
-                // STOP KAMERA BENAR-BENAR
-                if (detectionInterval) clearInterval(detectionInterval);
-                if (streamRef) {
-                    streamRef.getTracks().forEach(track => track.stop());
-                    streamRef = null; // Bersihkan referensi
-                }
-                videoFeed.srcObject = null;
-
+                // Stop Stream for performance
+                stopCamera();
+                
                 resultScreen.classList.remove('d-none');
                 checkGlobalValidity();
-            });
-
-            // ==========================================
-            // FIX: RETAKE BUTTON LOGIC
-            // ==========================================
-            retakeBtn.addEventListener('click', () => {
-                resultScreen.classList.add('d-none');
-                startScreen.classList.remove('d-none');
-                
-                photoInputHidden.value = '';
-                
-                // Reset States
-                isFaceValid = false;
-                disableCaptureButton();
-
-                // FIX: Pastikan tombol start aktif kembali
-                startBtn.disabled = false;
-                
-                // FIX: Reset Video Element agar bersih saat mulai ulang
-                videoFeed.srcObject = null;
-                videoFeed.classList.remove('ready');
-
-                // Reset UI Status Text
-                faceStatusBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Menunggu Kamera...';
-                
-                checkGlobalValidity();
-            });
-
-            // ==========================================
-            // 5. GPS & SLIDER
-            // ==========================================
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    document.getElementById('latitude').value = pos.coords.latitude;
-                    document.getElementById('longitude').value = pos.coords.longitude;
-                    document.getElementById('accuracy').value = pos.coords.accuracy;
-                    document.getElementById('coordinates-display').innerText = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-                    document.getElementById('gps-accuracy-badge').innerText = `±${Math.round(pos.coords.accuracy)}m`;
-                    document.getElementById('gps-accuracy-badge').className = 'badge bg-success rounded-pill';
-                    checkGlobalValidity();
-                }, (err) => { document.getElementById('coordinates-display').innerText = "Gagal Lokasi"; });
-            }
-
-            function checkGlobalValidity() {
-                const hasPhoto = photoInputHidden.files.length > 0;
-                const hasLoc = document.getElementById('latitude').value !== '';
-                if (hasPhoto && hasLoc) {
-                    slideTrack.classList.remove('disabled');
-                    slideText.innerText = "GESER KE KANAN >>";
-                    slideText.classList.add('text-success');
-                } else {
-                    slideTrack.classList.add('disabled');
-                    slideText.innerText = "Lengkapi Foto & Lokasi";
-                    slideText.classList.remove('text-success');
-                }
-            }
-
-            // Slider Logic
-            let isDragging = false, startX = 0, currentX = 0, trackWidth = 0, thumbWidth = 0, maxSlide = 0;
-            function initSlider() { trackWidth = slideTrack.offsetWidth; thumbWidth = slideThumb.offsetWidth; maxSlide = trackWidth - thumbWidth - 5; }
-            window.addEventListener('resize', initSlider); initSlider();
-            const onDragStart = (e) => { if (!slideTrack.classList.contains('disabled')) { isDragging = true; startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX; slideThumb.style.transition = 'none'; } };
-            const onDragMove = (e) => { if (isDragging) { const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX; let moveX = clientX - startX; if (moveX < 0) moveX = 0; if (moveX > maxSlide) moveX = maxSlide; currentX = moveX; slideThumb.style.left = moveX + 'px'; slideText.style.opacity = 1 - (moveX / maxSlide); } };
-            const onDragEnd = () => { if (isDragging) { isDragging = false; if (currentX >= maxSlide * 0.9) { slideThumb.style.left = maxSlide + 'px'; slideTrack.classList.add('submitted'); slideThumb.innerHTML = '<i class="mdi mdi-check"></i>'; slideText.innerText = "MENGIRIM..."; slideText.style.opacity = 1; form.submit(); } else { slideThumb.style.transition = 'left 0.3s'; slideThumb.style.left = '0px'; slideText.style.opacity = 1; } } };
-            
-            slideThumb.addEventListener('mousedown', onDragStart); window.addEventListener('mousemove', onDragMove); window.addEventListener('mouseup', onDragEnd);
-            slideThumb.addEventListener('touchstart', onDragStart); window.addEventListener('touchmove', onDragMove); window.addEventListener('touchend', onDragEnd);
+            }, 'image/jpeg', 0.85);
         });
-    </script>
+
+        function stopCamera() {
+            if (detectionInterval) clearInterval(detectionInterval);
+            if (streamRef) {
+                streamRef.getTracks().forEach(track => track.stop());
+                streamRef = null;
+            }
+        }
+
+        retakeBtn.addEventListener('click', () => {
+            resultScreen.classList.add('d-none');
+            photoInputHidden.value = '';
+            initCamera(); // Restart camera
+            checkGlobalValidity();
+        });
+
+        // --- 5. GPS & SLIDER ---
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude, accuracy } = pos.coords;
+                    document.getElementById('latitude').value = latitude;
+                    document.getElementById('longitude').value = longitude;
+                    document.getElementById('accuracy').value = accuracy;
+                    
+                    document.getElementById('coordinates-display').innerText = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                    document.getElementById('gps-accuracy-badge').innerText = `Akurasi ±${Math.round(accuracy)}m`;
+                    document.getElementById('gps-accuracy-badge').className = 'badge bg-soft-success text-success border';
+                    checkGlobalValidity();
+                },
+                (err) => {
+                    document.getElementById('coordinates-display').innerText = "Gagal mendapatkan lokasi";
+                    document.getElementById('gps-accuracy-badge').className = 'badge bg-danger text-white';
+                },
+                { enableHighAccuracy: true }
+            );
+        }
+
+        function checkGlobalValidity() {
+            const hasPhoto = photoInputHidden.files.length > 0;
+            const hasLoc = document.getElementById('latitude').value !== '';
+            
+            if (hasPhoto && hasLoc) {
+                slideTrack.classList.remove('disabled');
+                slideText.innerText = "GESER KE KANAN >>";
+                slideText.style.background = "linear-gradient(90deg, #06d6a0 0%, #fff 50%, #06d6a0 100%)";
+                slideText.style.webkitBackgroundClip = "text";
+            } else {
+                slideTrack.classList.add('disabled');
+                slideText.innerText = "LENGKAPI FOTO & LOKASI";
+                slideText.style.background = "linear-gradient(90deg, #adb5bd 0%, #fff 50%, #adb5bd 100%)";
+                slideText.style.webkitBackgroundClip = "text";
+            }
+        }
+
+        // --- 6. SLIDER LOGIC ---
+        let isDragging = false, startX, currentX, maxSlide;
+        
+        const updateSliderWidth = () => { maxSlide = slideTrack.offsetWidth - slideThumb.offsetWidth - 8; };
+        window.addEventListener('resize', updateSliderWidth);
+        updateSliderWidth();
+
+        const handleStart = (e) => {
+            if (slideTrack.classList.contains('disabled')) return;
+            isDragging = true;
+            startX = (e.type.includes('touch')) ? e.touches[0].clientX : e.clientX;
+            slideThumb.style.transition = 'none';
+        };
+
+        const handleMove = (e) => {
+            if (!isDragging) return;
+            const clientX = (e.type.includes('touch')) ? e.touches[0].clientX : e.clientX;
+            let move = clientX - startX;
+            if (move < 0) move = 0;
+            if (move > maxSlide) move = maxSlide;
+            
+            currentX = move;
+            slideThumb.style.transform = `translateX(${move}px)`;
+            slideText.style.opacity = 1 - (move / maxSlide);
+        };
+
+        const handleEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            if (currentX >= maxSlide * 0.9) {
+                // Success
+                slideThumb.style.transform = `translateX(${maxSlide}px)`;
+                slideTrack.classList.add('submitted');
+                slideThumb.innerHTML = '<i class="mdi mdi-check"></i>';
+                slideText.innerText = "MENGIRIM...";
+                slideText.style.opacity = 1;
+                form.submit();
+            } else {
+                // Reset
+                slideThumb.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                slideThumb.style.transform = 'translateX(0px)';
+                slideText.style.opacity = 1;
+            }
+        };
+
+        slideThumb.addEventListener('mousedown', handleStart);
+        slideThumb.addEventListener('touchstart', handleStart);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchend', handleEnd);
+    });
+</script>
 @endpush

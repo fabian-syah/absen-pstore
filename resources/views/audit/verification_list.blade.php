@@ -56,6 +56,8 @@
                                 <tr>
                                     <th class="ps-4 py-3 text-uppercase font-size-11 fw-bold">Karyawan</th>
                                     <th class="py-3 text-uppercase font-size-11 fw-bold">Waktu & Lokasi</th>
+                                    {{-- Kolom Catatan dengan lebar tetap --}}
+                                    <th class="py-3 text-uppercase font-size-11 fw-bold" style="width: 250px; min-width: 200px;">Catatan</th>
                                     <th class="py-3 text-uppercase font-size-11 fw-bold">Bukti Foto</th>
                                     <th class="text-end pe-4 py-3 text-uppercase font-size-11 fw-bold">Aksi</th>
                                 </tr>
@@ -66,7 +68,6 @@
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-3">
-                                                    {{-- LINK KE SHOW PROFILE (AVATAR) --}}
                                                     @if($att->user)
                                                         <a href="{{ route('users.show', $att->user->id) }}" class="text-decoration-none">
                                                             <span class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fw-bold hover-scale">
@@ -78,7 +79,6 @@
                                                     @endif
                                                 </div>
                                                 <div>
-                                                    {{-- LINK KE SHOW PROFILE (NAMA) --}}
                                                     @if($att->user)
                                                         <a href="{{ route('users.show', $att->user->id) }}" class="text-dark text-decoration-none">
                                                             <h6 class="mb-0 fw-bold hover-text-primary">
@@ -120,6 +120,27 @@
                                                 @endif
                                             </div>
                                         </td>
+                                        {{-- Kolom Catatan (Desktop) --}}
+                                        <td>
+                                            @if($att->notes)
+                                                <div class="p-2 bg-light rounded border border-light position-relative">
+                                                    <div class="d-flex align-items-start">
+                                                        {{-- Ikon --}}
+                                                        <i class="mdi mdi-note-text-outline text-primary me-2 mt-1 flex-shrink-0"></i>
+                                                        
+                                                        {{-- Teks (Truncated 2 baris + Tooltip) --}}
+                                                        <div class="text-muted small fst-italic text-truncate-multiline" 
+                                                             data-bs-toggle="tooltip" 
+                                                             data-bs-placement="top" 
+                                                             title="{{ $att->notes }}">
+                                                            "{{ $att->notes }}"
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="text-muted small ms-2">-</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             <a href="{{ Storage::url($att->photo_path) }}" class="image-popup d-inline-block position-relative">
                                                 <img src="{{ Storage::url($att->photo_path) }}" alt="foto" class="rounded shadow-sm object-fit-cover" width="50" height="50">
@@ -157,9 +178,8 @@
                 @foreach ($pendingAttendances as $att)
                     <div class="card shadow-sm mb-3 border-0 attendance-card">
                         <div class="card-body">
-                            {{-- Header Card: User Info (LINK ADDED HERE) --}}
+                            {{-- Header Card: User Info --}}
                             <div class="d-flex justify-content-between align-items-start mb-3">
-                                {{-- Kita bungkus bagian Avatar dan Nama dengan anchor tag agar bisa diklik --}}
                                 @if($att->user)
                                     <a href="{{ route('users.show', $att->user->id) }}" class="d-flex align-items-center text-decoration-none text-dark flex-grow-1">
                                         <div class="avatar-sm me-3">
@@ -208,6 +228,17 @@
                                     <span class="fw-semibold text-dark">{{ $att->check_in_time->format('d M Y') }}</span>
                                 </div>
                             </div>
+
+                            {{-- Info Catatan (Mobile View - Full Text) --}}
+                            @if($att->notes)
+                                <div class="alert alert-info border-0 bg-opacity-10 p-2 mb-3 small d-flex">
+                                    <i class="mdi mdi-information-outline me-2 mt-1"></i>
+                                    <div>
+                                        <strong>Catatan:</strong><br>
+                                        <span class="text-dark">{{ $att->notes }}</span>
+                                    </div>
+                                </div>
+                            @endif
 
                             {{-- Foto & Lokasi --}}
                             <div class="row g-2 mb-3">
@@ -279,7 +310,7 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Tooltip Init
+            // Tooltip Init (Wajib untuk menampilkan teks catatan penuh saat hover)
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl)
@@ -301,7 +332,6 @@
     </script>
     
     <style>
-        /* CSS Tambahan untuk mempercantik */
         .object-fit-cover { object-fit: cover; }
         .bg-soft-primary { background-color: rgba(59, 130, 246, 0.1); }
         .badge-soft-secondary { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
@@ -312,7 +342,6 @@
         .btn-soft-danger { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; }
         .btn-soft-danger:hover { background-color: #ef4444; color: white; }
 
-        /* Efek Hover pada Foto di Desktop */
         .image-popup { display: block; overflow: hidden; border-radius: 6px; }
         .overlay-icon {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -321,15 +350,23 @@
         }
         .image-popup:hover .overlay-icon { opacity: 1; }
 
-        /* Hover Effect untuk Nama User */
         .hover-text-primary:hover { color: #3b82f6 !important; transition: color 0.2s; }
         .hover-scale:hover { transform: scale(1.1); transition: transform 0.2s; }
 
-        /* Typography */
         .font-size-11 { font-size: 11px; letter-spacing: 0.5px; }
         .text-xs { font-size: 0.75rem; }
 
-        /* Mobile Card Tweaks */
+        /* CSS KHUSUS CATATAN (TRUNCATE) */
+        .text-truncate-multiline {
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Batasi maksimal 2 baris */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            cursor: help; /* Kursor tanda tanya saat hover */
+        }
+
         @media (max-width: 768px) {
             .container-fluid { padding-left: 15px; padding-right: 15px; }
             .attendance-card { border-radius: 12px; }
