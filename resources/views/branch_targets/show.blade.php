@@ -20,17 +20,16 @@
         </p>
     </div>
     
-    {{-- TOMBOL AKSI UTAMA --}}
+    {{-- Tombol Tambah Target Global (Untuk satu cabang) --}}
     <div>
-         {{-- LOGIC: Tombol ini mengirim parameter 'branch_id' agar form Create tahu target ini untuk cabang mana --}}
-         <a href="{{ route('job-targets.create', ['branch_id' => $branch->id]) }}" class="btn btn-primary btn-lg shadow-lg rounded-4 px-4 fw-bold hover-scale w-100 w-md-auto">
-            <i class="mdi mdi-account-plus me-1"></i> Beri Target Anggota
+         <a href="{{ route('job-targets.create', ['branch_id' => $branch->id, 'type_preselect' => 'team']) }}" class="btn btn-dark btn-lg shadow-lg rounded-4 px-4 fw-bold hover-scale w-100 w-md-auto">
+            <i class="mdi mdi-target me-1"></i> Buat Target Global Tim
         </a>
     </div>
 </div>
 
 {{-- SECTION 1: TARGET GLOBAL CABANG (TIM) --}}
-<div class="card card-rounded shadow-sm border-0 mb-4">
+<div class="card card-rounded shadow-sm border-0 mb-5">
     <div class="card-header bg-white border-bottom py-3">
         <div class="d-flex align-items-center">
             <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
@@ -43,11 +42,7 @@
         </div>
     </div>
     <div class="card-body p-3 p-md-4">
-        {{-- 
-            PENTING: 
-            - allow_edit_detail = true (Leader bisa edit judul/deskripsi target tim)
-            - allow_update_status = true (Leader bisa update hasil target tim)
-        --}}
+        {{-- Menggunakan Partial Tabs (Harian/Bulanan/Tahunan) --}}
         @include('job_targets.partials.period_tabs', [
             'idPrefix' => 'branch', 
             'dataCollection' => $teamData, 
@@ -57,7 +52,7 @@
     </div>
 </div>
 
-{{-- SECTION 2: TARGET PRIBADI KARYAWAN --}}
+{{-- SECTION 2: DAFTAR KARYAWAN (LIST USER) --}}
 <div class="card card-rounded shadow-sm border-0 mb-5">
     <div class="card-header bg-gradient-info text-white border-bottom py-3">
         <div class="d-flex align-items-center">
@@ -65,52 +60,95 @@
                 <i class="mdi mdi-account-group text-white mdi-24px"></i>
             </div>
             <div>
-                <h5 class="mb-0 fw-bold text-white">👤 Target Pribadi Karyawan</h5>
-                <small class="text-white opacity-75">Monitoring target individu seluruh anggota di cabang ini.</small>
+                <h5 class="mb-0 fw-bold text-white">👥 Daftar Anggota Tim</h5>
+                <small class="text-white opacity-75">Kelola target personal untuk setiap karyawan di cabang ini.</small>
             </div>
         </div>
     </div>
-    <div class="card-body p-3 p-md-4">
-        {{-- 
-            PENTING:
-            - allow_edit_detail = true (Leader bisa edit target bawahan jika salah input)
-            - allow_update_status = true (Leader bisa bantu update status jika bawahan berhalangan)
-        --}}
-        @include('job_targets.partials.period_tabs', [
-            'idPrefix' => 'personal', 
-            'dataCollection' => $personalData,
-            'allow_edit_detail' => true,
-            'allow_update_status' => true
-        ])
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="py-3 ps-4">Nama Karyawan</th>
+                        <th>Posisi / Role</th>
+                        <th class="text-center">Target Aktif</th>
+                        <th class="text-end pe-4">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($branchMembers as $member)
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    {{-- Avatar Placeholder --}}
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 40px; height: 40px;">
+                                        {{ substr($member->name, 0, 2) }}
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">{{ $member->name }}</h6>
+                                        <small class="text-muted">{{ $member->email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border text-uppercase">
+                                    {{ $member->role }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                @if($member->active_targets_count > 0)
+                                    <span class="badge bg-warning text-dark rounded-pill px-3">
+                                        {{ $member->active_targets_count }} Item
+                                    </span>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            </td>
+                            <td class="text-end pe-4">
+                                {{-- TOMBOL BERI TARGET --}}
+                                {{-- Mengirim ID user ke halaman create --}}
+                                <a href="{{ route('job-targets.create', ['assign_user_id' => $member->id, 'branch_id' => $branch->id]) }}" 
+                                   class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                                    <i class="mdi mdi-plus-circle-outline me-1"></i> Beri Target
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="mdi mdi-account-off mdi-36px d-block mb-2"></i>
+                                Belum ada anggota tim di cabang ini.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-{{-- MODAL UPDATE STATUS (Untuk popup Update Hasil) --}}
+{{-- MODAL UPDATE STATUS (Untuk target global) --}}
 @include('job_targets.partials.modal_update')
 
-{{-- STYLE TAMBAHAN --}}
+{{-- STYLE --}}
 <style>
-    /* Card Styling */
     .card-rounded { border-radius: 16px; overflow: hidden; }
     .bg-gradient-info { background: linear-gradient(45deg, #198ae3, #4b49ac); }
-    
-    /* Tombol Hover Effect */
     .hover-scale { transition: transform 0.2s; }
     .hover-scale:hover { transform: scale(1.02); }
-
-    /* Badge & Bintang (Sama seperti Index Utama) */
+    
+    /* Copy style bintang & tabs dari sebelumnya agar tampilan Target Global tetap bagus */
     .star-badge-3 { background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); color: #000; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); border: 1px solid #d4af37; }
     .star-badge-2 { background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%); color: #333; border: 1px solid #b0b0b0; }
     .star-badge-1 { background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
     .star-animation { animation: glow 2s infinite; }
     @keyframes glow { 0% { box-shadow: 0 0 5px #FFD700; } 50% { box-shadow: 0 0 15px #FFD700; } 100% { box-shadow: 0 0 5px #FFD700; } }
-
-    /* Tabs Styling */
     .nav-pills-custom .nav-link { background: #f8f9fa; color: #6c757d; border: 1px solid #e9ecef; margin-right: 5px; margin-bottom: 5px; transition: all 0.3s; }
     .nav-pills-custom .nav-link.active { background: #4b49ac; color: #fff; border-color: #4b49ac; box-shadow: 0 4px 6px rgba(75, 73, 172, 0.2); }
 </style>
 
-{{-- JAVASCRIPT FILTER (Agar fitur filter Tanggal/Bulan/Tahun berfungsi di halaman ini) --}}
+{{-- JAVASCRIPT FILTER (Untuk Target Global) --}}
 <script>
     function applyFilter(containerId, periodType) {
         let filterBox = document.getElementById('filter-container-' + containerId);

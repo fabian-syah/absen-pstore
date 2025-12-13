@@ -1,59 +1,145 @@
-<div class="modal fade" id="createTeamTargetModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Buat Target Tim</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ route('job-targets.store') }}" method="POST">
-                @csrf
-                <input type="hidden" name="type" value="team">
-                {{-- Period di-set via JS saat tombol ditekan --}}
-                <input type="hidden" name="period" id="modalPeriodInput">
+@extends('layout.master')
+@section('title', 'Buat Baru')
 
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label>Judul Target <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" required>
+@section('content')
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <a href="{{ url()->previous() }}" class="btn btn-light bg-white shadow-sm mb-3 border-0 rounded-3 text-dark fw-bold">
+            <i class="mdi mdi-arrow-left me-1"></i> Kembali
+        </a>
+
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4 border-bottom pb-3">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                        <i class="mdi mdi-bullseye-arrow text-primary mdi-24px"></i>
                     </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">Buat / Beri Target</h4>
+                        <small class="text-muted">Tentukan target untuk diri sendiri atau tim.</small>
+                    </div>
+                </div>
+                
+                <form action="{{ route('job-targets.store') }}" method="POST">
+                    @csrf
                     
-                    <div class="mb-3">
-                        <label>Ditugaskan Kepada <span class="text-danger">*</span></label>
-                        <select name="user_id" class="form-select" required>
-                            <option value="">-- Pilih Anggota Tim --</option>
-                            @foreach($teamMembers as $member)
-                                <option value="{{ $member->id }}">{{ $member->name }} - {{ $member->division->name ?? '' }}</option>
-                            @endforeach
+                    {{-- Hidden Input untuk Redirect balik --}}
+                    @if(request('branch_id'))
+                        <input type="hidden" name="redirect_to_branch" value="{{ request('branch_id') }}">
+                        <input type="hidden" name="branch_id" value="{{ request('branch_id') }}">
+                    @endif
+
+                    {{-- 1. PILIH PENERIMA TARGET (Khusus Leader/Admin) --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'leader', 'audit']) && isset($branchMembers) && count($branchMembers) > 0)
+                        <div class="mb-4 bg-light p-3 rounded-3 border border-primary border-opacity-25">
+                            <label class="fw-bold mb-2 text-primary small text-uppercase ls-1">
+                                <i class="mdi mdi-account-arrow-right me-1"></i> Tugaskan Kepada (Penerima)
+                            </label>
+                            <select name="assign_user_id" class="form-select form-select-lg fw-bold border-primary shadow-none text-dark">
+                                <option value="{{ auth()->user()->id }}">👤 Saya Sendiri (Pribadi)</option>
+                                <optgroup label="Anggota Tim">
+                                    @foreach($branchMembers as $member)
+                                        @if($member->id != auth()->user()->id)
+                                            {{-- LOGIC: Cek URL request untuk auto-select --}}
+                                            <option value="{{ $member->id }}" {{ request('assign_user_id') == $member->id ? 'selected' : '' }}>
+                                                {{ $member->name }} - {{ $member->login_id }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                </optgroup>
+                            </select>
+                        </div>
+                    @endif
+
+                    {{-- 2. JENIS DATA --}}
+                    <div class="mb-4">
+                        <label class="fw-bold mb-2 text-dark small text-uppercase ls-1">Jenis Target</label>
+                        <select name="type" id="typeSelect" class="form-select fw-bold border-secondary text-dark" onchange="toggleFormElements()">
+                            <option value="personal_target" selected>🎯 Target Pekerjaan (Job Desk)</option>
+                            <option value="personal_achievement">🏅 Pencapaian / Prestasi</option>
+                            
+                            {{-- Target Global hanya muncul jika Admin/Leader dan BUKAN assignment ke orang lain spesifik --}}
+                            @if((auth()->user()->role == 'leader' || auth()->user()->role == 'admin') && !request('assign_user_id'))
+                                <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>🏢 Target Global Cabang (Tim)</option>
+                            @endif
                         </select>
                     </div>
 
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label>Mulai Tanggal</label>
-                            <input type="date" name="start_date" class="form-control" value="{{ date('Y-m-d') }}">
+                    {{-- ... (SISA KODE FORM: BINTANG, TANGGAL, JUDUL, DESKRIPSI) ... --}}
+                    {{-- Copy bagian ini SAMA PERSIS dari kode create.blade.php sebelumnya --}}
+                    {{-- Saya singkat agar fokus ke perubahan Assign User --}}
+                    
+                    <div class="mb-4" id="starLevelGroup">
+                        <label class="fw-bold mb-2 d-block small text-uppercase ls-1">Prioritas (Level)</label>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="star_level" id="star1" value="1" checked>
+                                <label class="btn btn-outline-secondary w-100 h-100 rounded-3 p-3 text-start star-option" for="star1">Lvl 1 <small class="d-block">Standar</small></label>
+                            </div>
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="star_level" id="star2" value="2">
+                                <label class="btn btn-outline-warning w-100 h-100 rounded-3 p-3 text-start star-option" for="star2">Lvl 2 <small class="d-block">Penting</small></label>
+                            </div>
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="star_level" id="star3" value="3">
+                                <label class="btn btn-outline-warning w-100 h-100 rounded-3 p-3 text-start star-option level-3-label" for="star3">Lvl 3 <small class="d-block fw-bold">UTAMA!</small></label>
+                            </div>
                         </div>
-                        <div class="col-6 mb-3">
-                            <label>Deadline <span class="text-danger">*</span></label>
-                            <input type="date" name="deadline" class="form-control" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="fw-bold mb-2 small text-uppercase ls-1">Periode</label>
+                        <div class="btn-group w-100 mb-3" role="group">
+                            <input type="radio" class="btn-check" name="period_type" id="p_daily" value="daily" checked onclick="toggleDates('daily')"><label class="btn btn-outline-primary py-2 fw-bold" for="p_daily">Harian</label>
+                            <input type="radio" class="btn-check" name="period_type" id="p_monthly" value="monthly" onclick="toggleDates('monthly')"><label class="btn btn-outline-primary py-2 fw-bold" for="p_monthly">Bulanan</label>
+                            <input type="radio" class="btn-check" name="period_type" id="p_yearly" value="yearly" onclick="toggleDates('yearly')"><label class="btn btn-outline-primary py-2 fw-bold" for="p_yearly">Tahunan</label>
+                        </div>
+                        <div class="bg-light p-3 rounded-3 border">
+                            <div id="date_daily"><div class="row g-2"><div class="col-6"><input type="date" name="daily_start" class="form-control" value="{{ date('Y-m-d') }}"></div><div class="col-6"><input type="date" name="daily_end" class="form-control" value="{{ date('Y-m-d') }}"></div></div></div>
+                            <div id="date_monthly" class="d-none"><div class="row g-2"><div class="col-6"><input type="month" name="monthly_start" class="form-control" value="{{ date('Y-m') }}"></div><div class="col-6"><input type="month" name="monthly_end" class="form-control" value="{{ date('Y-m') }}"></div></div></div>
+                            <div id="date_yearly" class="d-none"><div class="row g-2"><div class="col-6"><input type="number" name="yearly_start" class="form-control" value="{{ date('Y') }}"></div><div class="col-6"><input type="number" name="yearly_end" class="form-control" value="{{ date('Y') }}"></div></div></div>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label>Deskripsi (Opsional)</label>
-                        <textarea name="description" class="form-control" rows="2"></textarea>
+                        <label class="fw-bold mb-2 small text-uppercase ls-1">Judul Target</label>
+                        <input type="text" name="title" class="form-control form-control-lg fw-bold border-secondary" required>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
+                    <div class="mb-4">
+                        <label class="fw-bold mb-2 small text-uppercase ls-1">Deskripsi</label>
+                        <textarea name="description" class="form-control border-secondary" rows="4" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold fs-5 shadow-lg text-white hover-scale">
+                        <i class="mdi mdi-check-circle me-1"></i> Simpan Data
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
+<style>
+    .ls-1 { letter-spacing: 1px; }
+    .star-option { border-width: 2px; transition: all 0.2s; }
+    .level-3-label { border-color: #FFD700; color: #bfa800; }
+    #star3:checked + .level-3-label { background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%) !important; color: #000 !important; border-color: #d4af37 !important; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,215,0,0.4); }
+    #star2:checked + label { background-color: #ffc107 !important; color: #000 !important; }
+    #star1:checked + label { background-color: #6c757d !important; color: #fff !important; }
+    .hover-scale:hover { transform: scale(1.01); transition: transform 0.2s; }
+</style>
+
 <script>
-    function setModalPeriod(period) {
-        document.getElementById('modalPeriodInput').value = period;
+    function toggleFormElements() {
+        let type = document.getElementById('typeSelect').value;
+        let starGroup = document.getElementById('starLevelGroup');
+        if (type.includes('achievement')) { starGroup.classList.add('d-none'); } else { starGroup.classList.remove('d-none'); }
+    }
+    function toggleDates(period) {
+        document.getElementById('date_daily').classList.add('d-none');
+        document.getElementById('date_monthly').classList.add('d-none');
+        document.getElementById('date_yearly').classList.add('d-none');
+        document.getElementById('date_' + period).classList.remove('d-none');
     }
 </script>
+@endsection

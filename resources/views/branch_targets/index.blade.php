@@ -86,7 +86,7 @@
                                 <small class="text-secondary fw-bold" style="font-size: 11px;">{{ $branch->total_users }} User</small>
                             </div>
                             
-                            {{-- Badge Target Personal (UPDATED: High Contrast) --}}
+                            {{-- Badge Target Personal (UPDATED: High Contrast & Solid Color) --}}
                             <div class="badge bg-primary text-white shadow-sm px-3 py-2 fw-bold rounded-pill" style="font-size: 10px; letter-spacing: 0.5px;">
                                 {{ $branch->personal_count }} Target Individu
                             </div>
