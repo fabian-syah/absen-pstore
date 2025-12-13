@@ -10,25 +10,25 @@ use Illuminate\Support\Facades\Log;
 
 class LeaveRequestController extends Controller
 {
-    // MENAMPILKAN LIST DATA (Pending List untuk Verifikasi)
+    /**
+     * MENAMPILKAN LIST DATA (Pending List untuk Verifikasi oleh Audit/Admin)
+     */
     public function index()
     {
         $user = Auth::user();
 
         Log::info('LeaveRequestController@index dipanggil', [
             'user_id' => $user->id,
-            'user_name' => $user->name,
             'role' => $user->role
         ]);
 
-        // PERBAIKAN: Hanya ambil yang status = 'pending' untuk verifikasi
+        // Hanya ambil yang status = 'pending' untuk verifikasi
         $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
-            ->where('status', 'pending') // <- TAMBAHKAN INI
+            ->where('status', 'pending') 
             ->latest();
 
         if ($user->role == 'admin') {
             // ADMIN: Melihat Semua Data PENDING
-            Log::info('Admin melihat semua data pending');
         } elseif ($user->role == 'audit') {
             // AUDIT: Melihat data cabang yang dipegang + Punya sendiri
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
@@ -52,15 +52,12 @@ class LeaveRequestController extends Controller
 
         $requests = $query->paginate(10);
 
-        Log::info('Data pending ditemukan', [
-            'total' => $requests->total(),
-            'count' => $requests->count()
-        ]);
-
         return view('leave_requests.index', compact('requests'));
     }
 
-    // LIST PENGAJUAN SAYA (History User)
+    /**
+     * LIST PENGAJUAN SAYA (History User)
+     */
     public function myRequests()
     {
         $user = Auth::user();
@@ -70,17 +67,20 @@ class LeaveRequestController extends Controller
             ->oldest()
             ->paginate(10);
 
-        // GUNAKAN VIEW YANG SUDAH ADA
         return view('leave_requests.index', compact('requests'));
     }
 
-    // MENAMPILKAN FORM
+    /**
+     * MENAMPILKAN FORM
+     */
     public function create()
     {
         return view('leave_requests.create');
     }
 
-    // MENYIMPAN DATA
+    /**
+     * MENYIMPAN DATA PENGAJUAN
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -104,6 +104,7 @@ class LeaveRequestController extends Controller
             'is_active' => true,
         ];
 
+        // Logika khusus tipe Telat vs Lainnya
         if ($request->type === 'telat') {
             $data['start_time'] = $request->start_time;
             $data['end_date'] = null;
@@ -112,6 +113,7 @@ class LeaveRequestController extends Controller
             $data['start_time'] = null;
         }
 
+        // Upload File
         if ($request->hasFile('file_proof')) {
             $path = $request->file('file_proof')->store('proofs', 'public');
             $data['file_proof'] = $path;
@@ -119,51 +121,32 @@ class LeaveRequestController extends Controller
 
         LeaveRequest::create($data);
 
-        // LOGIKA REDIRECT BERDASARKAN ROLE
-        $role = Auth::user()->role;
-        if (in_array($role, ['admin', 'audit'])) {
-            return redirect()->route('leave-requests.index')->with('success', 'Pengajuan berhasil dikirim.');
-        }
-
-        return redirect()->route('leave-requests.my-requests')->with('success', 'Pengajuan berhasil dikirim.');
+        // === PERUBAHAN UTAMA: Redirect ke Dashboard ===
+        // Agar user melihat status "Menunggu Verifikasi" dan tidak bisa hapus sembarangan
+        return redirect()->route('dashboard')->with('success', 'Pengajuan berhasil dikirim. Status saat ini: Menunggu Verifikasi Audit.');
     }
 
-    // ACTION: APPROVE - Method ini TIDAK DIGUNAKAN karena route menggunakan AuditController
+    /**
+     * ACTION: APPROVE (Biasanya dipanggil via AuditController, tapi disimpan untuk backup)
+     */
     public function approve(LeaveRequest $leaveRequest)
     {
-        Log::info('LeaveRequestController@approve dipanggil', [
-            'leave_request_id' => $leaveRequest->id,
-            'current_status' => $leaveRequest->status,
-            'approver_id' => Auth::id(),
-            'approver_name' => Auth::user()->name
-        ]);
-
         $leaveRequest->update([
             'status' => 'approved',
             'approved_by' => Auth::id(),
             'rejection_reason' => null,
         ]);
 
-        Log::info('LeaveRequestController@approve selesai', [
-            'leave_request_id' => $leaveRequest->id,
-            'new_status' => $leaveRequest->status,
-            'approved_by' => $leaveRequest->approved_by
-        ]);
-
         return redirect()->back()->with('success', 'Pengajuan disetujui.');
     }
 
-    // ACTION: REJECT - Method ini TIDAK DIGUNAKAN karena route menggunakan AuditController
+    /**
+     * ACTION: REJECT
+     */
     public function reject(Request $request, LeaveRequest $leaveRequest)
     {
         $request->validate([
             'rejection_reason' => 'required|string|max:255',
-        ]);
-
-        Log::info('LeaveRequestController@reject dipanggil', [
-            'leave_request_id' => $leaveRequest->id,
-            'current_status' => $leaveRequest->status,
-            'approver_id' => Auth::id()
         ]);
 
         $leaveRequest->update([
@@ -176,9 +159,12 @@ class LeaveRequestController extends Controller
         return redirect()->back()->with('success', 'Pengajuan ditolak.');
     }
 
-    // ACTION: CANCEL (User)
+    /**
+     * ACTION: CANCEL (User membatalkan pengajuan sendiri)
+     */
     public function cancel(LeaveRequest $leaveRequest)
     {
+        // Pastikan yang cancel adalah pemiliknya
         if ($leaveRequest->user_id != Auth::id()) {
             abort(403);
         }
@@ -189,10 +175,14 @@ class LeaveRequestController extends Controller
         ]);
 
         $msg = $leaveRequest->type == 'telat' ? 'Izin telat dibatalkan.' : 'Pengajuan izin dibatalkan.';
-        return redirect()->route('leave-requests.my-requests')->with('success', $msg);
+        
+        // Redirect back agar fleksibel (bisa dari dashboard atau list)
+        return redirect()->back()->with('success', $msg);
     }
 
-    // ACTION: FINISH EARLY
+    /**
+     * ACTION: FINISH EARLY (Masuk kantor sebelum izin selesai)
+     */
     public function finishEarly(LeaveRequest $leaveRequest)
     {
         if ($leaveRequest->user_id != Auth::id()) abort(403);
@@ -201,21 +191,24 @@ class LeaveRequestController extends Controller
             return back()->with('error', 'Tipe izin ini tidak bisa diselesaikan lebih awal.');
         }
 
+        // Set tanggal selesai menjadi KEMARIN, otomatis hari ini dianggap masuk
         $leaveRequest->update(['end_date' => Carbon::yesterday()]);
-        return redirect()->route('dashboard')->with('success', 'Status izin diperbarui.');
+        
+        return redirect()->route('dashboard')->with('success', 'Status izin diperbarui. Selamat bekerja kembali.');
     }
 
+    /**
+     * HISTORY PRIBADI (Halaman khusus riwayat user)
+     */
     public function personalHistory()
     {
-        // LOGIKA PENTING: where('user_id', Auth::id())
-        // Ini mengunci data agar hanya milik user yang login yang muncul.
         $requests = LeaveRequest::with(['approver'])
-            ->where('user_id', Auth::id()) // <--- KUNCI PRIVASI
-            ->whereIn('status', ['approved', 'rejected', 'cancelled']) // Mengambil yang statusnya sudah selesai
+            ->where('user_id', Auth::id())
+            // Ambil yang statusnya sudah final (Approved/Rejected/Cancelled)
+            ->whereIn('status', ['approved', 'rejected', 'cancelled']) 
             ->latest()
             ->paginate(10);
 
-        // Kita lempar ke view BARU bernama 'personal_history'
         return view('leave_requests.personal_history', compact('requests'));
     }
 }

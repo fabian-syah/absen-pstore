@@ -74,18 +74,10 @@
                 <div class="card card-bank gradient-blue">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
-
-                        {{-- Ubah Icon menjadi Gedung --}}
                         <div class="card-bank-icon"><i class="mdi mdi-office-building"></i></div>
-
                         <div class="card-bank-content">
-                            {{-- Ubah Label --}}
                             <p class="card-bank-label">Total Cabang</p>
-
-                            {{-- Ubah Variable Data --}}
                             <h2 class="card-bank-value count-up" data-target="{{ $totalBranches }}">0</h2>
-
-                            {{-- Ubah Deskripsi --}}
                             <p class="card-bank-desc">Cabang Terdaftar</p>
                         </div>
                         <div class="card-bank-pattern"></div>
@@ -213,7 +205,6 @@
     {{-- ======================================================================= --}}
 
     {{-- 1. ATTENDANCE LEADERBOARD (Top Performance Karyawan) --}}
-    {{-- Visible for: Admin, Audit, Leader, User Biasa (NOT Security) --}}
     @if (auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
         <div class="row animate-enter mb-5" style="animation-delay: 0.45s">
             <div class="col-12">
@@ -560,7 +551,8 @@
                                             <h5 class="fw-bolder text-dark text-truncate w-100 mb-0">
                                                 {{ $topScanners[0]->name }}</h5>
                                             <div class="stat-pill gold mt-2">
-                                                <i class="mdi mdi-qrcode-scan me-1"></i>{{ $topScanners[0]->total_scans }}
+                                                <i
+                                                    class="mdi mdi-qrcode-scan me-1"></i>{{ $topScanners[0]->total_scans }}
                                                 Scan
                                             </div>
                                         </div>
@@ -815,7 +807,8 @@
                                             <h5 class="mb-1 fw-bold text-danger">Lembur Lintas Hari</h5>
                                             <p class="mb-0 small text-dark">Masuk:
                                                 <strong>{{ $myAttendanceToday->check_in_time->format('d M, H:i') }}</strong>
-                                                via {{ $sourceLabel }}</p>
+                                                via {{ $sourceLabel }}
+                                            </p>
                                         @else
                                             <div class="d-flex align-items-center">
                                                 <h5 class="mb-1 fw-bold">Sedang Bekerja</h5>
@@ -823,7 +816,8 @@
                                             </div>
                                             <p class="mb-0">Masuk Pukul:
                                                 <strong>{{ $myAttendanceToday->check_in_time->format('H:i') }}</strong> via
-                                                {{ $sourceLabel }}</p>
+                                                {{ $sourceLabel }}
+                                            </p>
                                         @endif
                                     </div>
                                 </div>
@@ -881,6 +875,38 @@
                             </div>
                         @endif
 
+                        {{-- [BARU] JIKA STATUS PENDING (MENUNGGU VERIFIKASI) --}}
+                    @elseif($myPendingLeave)
+                        <div class="status-card status-warning mb-3 hover-float">
+                            <div class="d-flex align-items-start">
+                                <div class="status-icon shadow bg-warning text-white">
+                                    <i class="mdi mdi-timer-sand"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <h5 class="mb-1 fw-bold">Menunggu Verifikasi</h5>
+                                        <span class="badge bg-warning text-dark shadow-sm">PENDING</span>
+                                    </div>
+                                    <p class="text-muted mb-2 small">
+                                        Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda sedang
+                                        ditinjau oleh Audit.
+                                    </p>
+                                    <div class="bg-white p-2 rounded border mb-2 shadow-sm">
+                                        <span class="fst-italic text-dark">"{{ $myPendingLeave->reason }}"</span>
+                                    </div>
+                                    <div class="alert alert-light border-warning mt-3 mb-0 py-2">
+                                        <div class="d-flex align-items-center">
+                                            <i class="mdi mdi-information-outline text-warning me-2 fs-4"></i>
+                                            <small class="text-muted lh-sm">
+                                                Status absensi dikunci sementara hingga pengajuan ini disetujui atau ditolak
+                                                oleh Audit/HRD.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- IZIN / SAKIT / CUTI / WFH --}}
                     @elseif(isset($myLeaveToday) && $myLeaveToday && $myLeaveToday->user_id == Auth::id())
                         @php
@@ -891,7 +917,8 @@
                                 $leaveTitle = 'Sedang Bekerja (WFH)';
                                 $leaveDesc = 'Absensi Dinas/Remote';
                             } else {
-                                $leaveColor = $myLeaveToday->status == 'approved' ? 'status-success' : 'status-warning';
+                                $leaveColor =
+                                    $myLeaveToday->status == 'approved' ? 'status-success' : 'status-warning';
                                 $leaveIcon =
                                     $myLeaveToday->type == 'sakit'
                                         ? 'mdi-hospital-box'
@@ -903,7 +930,8 @@
                                     $myLeaveToday->type == 'telat'
                                         ? 'Hadir pukul: ' .
                                             \Carbon\Carbon::parse($myLeaveToday->start_time)->format('H:i')
-                                        : 'Sampai: ' . \Carbon\Carbon::parse($myLeaveToday->end_date)->format('d M Y');
+                                        : 'Sampai: ' .
+                                            \Carbon\Carbon::parse($myLeaveToday->end_date)->format('d M Y');
                             }
                         @endphp
 
@@ -2042,7 +2070,8 @@
                                 {{ $stats['absent'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
-                                '#8c94a3'],
+                                '#8c94a3'
+                            ],
                             borderWidth: 0,
                             hoverOffset: 10 // Efek hover keluar
                         }]
