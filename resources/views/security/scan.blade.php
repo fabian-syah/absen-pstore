@@ -16,6 +16,12 @@
             <h2 class="text-white fw-bold mb-2">Sistem Sedang Dirawat</h2>
             <p class="text-white-50 mb-4">Mohon maaf, sistem absensi sedang dalam perbaikan.</p>
             <p class="text-white-50 small">Estimasi waktu selesai: <span id="maintenanceTime">30 menit</span></p>
+            <div class="mt-3 mb-3">
+                <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <p class="text-white-50 small mb-4" id="statusMessage">Mengecek status sistem...</p>
             <button class="btn btn-outline-light mt-4 rounded-pill px-4" onclick="checkMaintenanceStatus()">
                 <i class="fas fa-sync-alt me-2"></i> Cek Status
             </button>
@@ -60,15 +66,26 @@
 
 <script>
     function checkMaintenanceStatus() {
-        const isUnderMaintenance = true;
+        const statusMessage = document.getElementById('statusMessage');
+        const button = event.target;
         
-        if (isUnderMaintenance) {
-            document.getElementById('maintenanceOverlay').style.display = 'flex';
-            document.getElementById('qrSection').style.display = 'none';
-        }
+        button.disabled = true;
+        statusMessage.textContent = 'Mengecek status sistem...';
+        
+        setTimeout(() => {
+            const isUnderMaintenance = true;
+            
+            if (isUnderMaintenance) {
+                statusMessage.textContent = 'Sistem masih dalam perbaikan. Coba lagi nanti.';
+                button.disabled = false;
+            }
+        }, 1500);
     }
 
-    document.addEventListener('DOMContentLoaded', checkMaintenanceStatus);
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('maintenanceOverlay').style.display = 'flex';
+        document.getElementById('qrSection').style.display = 'none';
+    });
 </script>
 </body>
 </html>
