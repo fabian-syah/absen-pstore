@@ -40,7 +40,7 @@
     </div>
     <div class="card-body p-3 p-md-4">
         {{-- MENGGUNAKAN PARTIAL YANG SAMA DENGAN INDEX UTAMA --}}
-        @include('job_targets.partials.period_tabs', ['idPrefix' => 'branch', 'dataCollection' => $teamData])
+        @include('job_targets.partials.period_tabs', ['idPrefix' => 'branch', 'dataCollection' => $teamData, 'allow_action' => true])
     </div>
 </div>
 

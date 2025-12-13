@@ -34,7 +34,12 @@
         </div>
     </div>
     <div class="card-body p-3 p-md-4">
-        @include('job_targets.partials.period_tabs', ['idPrefix' => 'branch', 'dataCollection' => $teamData])
+        {{-- UPDATE DI SINI: Set allow_action => false --}}
+        @include('job_targets.partials.period_tabs', [
+            'idPrefix' => 'branch', 
+            'dataCollection' => $teamData,
+            'allow_action' => false 
+        ])
     </div>
 </div>
 
@@ -52,7 +57,13 @@
         </div>
     </div>
     <div class="card-body p-3 p-md-4">
-        @include('job_targets.partials.period_tabs', ['idPrefix' => 'personal', 'dataCollection' => $personalData])
+        {{-- UPDATE DI SINI: Set allow_action => true (Pribadi boleh edit sendiri) atau false jika mau read-only juga --}}
+        {{-- Jika pribadi juga tidak boleh edit dari sini, ubah jadi false --}}
+        @include('job_targets.partials.period_tabs', [
+            'idPrefix' => 'personal', 
+            'dataCollection' => $personalData,
+            'allow_action' => false 
+        ])
     </div>
 </div>
 
@@ -76,14 +87,13 @@
     .nav-pills-custom .nav-link.active { background: #4b49ac; color: #fff; border-color: #4b49ac; box-shadow: 0 4px 6px rgba(75, 73, 172, 0.2); }
 </style>
 
-{{-- JAVASCRIPT FILTER LOGIC (UPDATED FOR RANGES) --}}
+{{-- JAVASCRIPT FILTER LOGIC --}}
 <script>
     function applyFilter(containerId, periodType) {
         let filterBox = document.getElementById('filter-container-' + containerId);
         let dataContainer = document.getElementById('data-container-' + containerId);
         if (!filterBox || !dataContainer) return;
 
-        // Ambil Nilai Range
         let startVal = '', endVal = '';
 
         if (periodType === 'daily') {
@@ -101,24 +111,17 @@
         
         items.forEach(item => {
             let itemVal = '';
-            // Tentukan value item mana yang akan dicek (date, month, atau year)
             if (periodType === 'daily') itemVal = item.getAttribute('data-date');   
             else if (periodType === 'monthly') itemVal = item.getAttribute('data-month'); 
             else if (periodType === 'yearly') itemVal = item.getAttribute('data-year');   
 
             let show = true;
-
-            // LOGIKA RANGE:
-            // 1. Jika ada Start, Item harus >= Start
             if (startVal && itemVal < startVal) show = false;
-            
-            // 2. Jika ada End, Item harus <= End
             if (endVal && itemVal > endVal) show = false;
 
             show ? item.classList.remove('d-none') : item.classList.add('d-none');
         });
 
-        // Handle Empty State Message
         let tables = dataContainer.querySelectorAll('tbody');
         tables.forEach(tbody => {
             let visibleRows = tbody.querySelectorAll('.filterable-item:not(.d-none)');
