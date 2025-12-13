@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Division;
 use App\Models\Attendance;
+use App\Models\Branch;
 use App\Models\LateNotification;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
@@ -76,7 +77,7 @@ class DashboardController extends Controller
 
         // 4. DATA IZIN & SESI HARI INI
         $data['myLeaveToday'] = $this->getTodayLeaveRequest($user->id);
-        
+
         // HYBRID CHECK FOR DASHBOARD
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
@@ -111,18 +112,18 @@ class DashboardController extends Controller
         // FITUR 1: TOP 5 ATTENDANCE LEADERBOARD (KARYAWAN RAJIN)
         // Logika: Admin & User Biasa/Audit/Leader lihat ini. Security TIDAK lihat ini.
         // =========================================================================
-        
+
         if ($user->role != 'security') {
             $data['leaderboard'] = Attendance::select(
-                    'user_id', 
-                    DB::raw('count(*) as total_attendance'), 
-                    DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
-                    // [UPDATE] Menghitung Total Jam Kerja dalam Detik
-                    DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds')
-                )
+                'user_id',
+                DB::raw('count(*) as total_attendance'),
+                DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
+                // [UPDATE] Menghitung Total Jam Kerja dalam Detik
+                DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds')
+            )
                 ->whereMonth('check_in_time', Carbon::now()->month)
                 ->whereYear('check_in_time', Carbon::now()->year)
-                
+
                 // --- [FILTER KETAT BERDASARKAN REQUEST] ---
                 ->whereNotNull('check_out_time')                                     // Wajib sudah pulang
                 ->where('status', 'verified')                                        // Wajib Terverifikasi
@@ -132,9 +133,9 @@ class DashboardController extends Controller
                 ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0') // Durasi kerja harus ada
                 // ------------------------------------------
 
-                ->whereHas('user', function($q) use ($user) {
+                ->whereHas('user', function ($q) use ($user) {
                     $q->where('is_active', true)
-                      ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk leaderboard
+                        ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk leaderboard
 
                     if ($user->role !== 'admin') {
                         $q->where('branch_id', $user->branch_id);
@@ -152,7 +153,7 @@ class DashboardController extends Controller
         // FITUR 2: TOP 5 SCANNER LEADERBOARD (SECURITY RAJIN)
         // Logika: Security & Admin lihat ini.
         // =========================================================================
-        
+
         if ($user->role == 'admin' || $user->role == 'security') {
             // Ambil semua user role security (atau admin jika admin ikut scan)
             $securityUsersQuery = User::where('is_active', true)
@@ -162,11 +163,11 @@ class DashboardController extends Controller
             if ($user->role != 'admin' || ($user->role == 'admin' && $branch_id != null)) {
                 $securityUsersQuery->where('branch_id', $branch_id);
             }
-            
+
             $securityUsers = $securityUsersQuery->get();
 
             // Hitung manual Scan Masuk + Scan Pulang
-            $scanners = $securityUsers->map(function($sec) {
+            $scanners = $securityUsers->map(function ($sec) {
                 // 1. Hitung Scan Masuk
                 $scanIn = Attendance::where('scanned_by_user_id', $sec->id)
                     ->whereMonth('check_in_time', Carbon::now()->month)
@@ -196,7 +197,13 @@ class DashboardController extends Controller
         // 6. LOGIKA DASHBOARD PEKERJAAN
         if ($user->role == 'admin') {
             $data['totalUsers'] = (clone $userQuery)->where('role', '!=', 'admin')->where('is_active', true)->count();
-            $data['totalDivisions'] = (clone $divisionQuery)->count();
+            $branchQuery = Branch::query();
+            // Jika Admin Cabang, hanya hitung cabangnya sendiri (hasilnya 1)
+            // Jika Super Admin, hitung semua cabang
+            if ($branch_id) {
+                $branchQuery->where('id', $branch_id);
+            }
+            $data['totalBranches'] = $branchQuery->count();
             $data['attendancesToday'] = (clone $attendanceQuery)->whereDate('check_in_time', today())->count();
             $data['pendingVerifications'] = (clone $attendanceQuery)->where('status', 'pending_verification')->count();
             $data['stats'] = $this->getAdminAttendanceStats($branch_id);
@@ -278,7 +285,7 @@ class DashboardController extends Controller
     private function getAuditAttendanceStats($branchData = null)
     {
         $query = Attendance::whereDate('check_in_time', today())
-             ->where('presence_status', '!=', 'Alpha'); // Filter Alpha
+            ->where('presence_status', '!=', 'Alpha'); // Filter Alpha
 
         if ($branchData) {
             if (is_array($branchData)) {
