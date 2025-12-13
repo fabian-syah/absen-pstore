@@ -31,7 +31,6 @@ class ScanController extends Controller
 
         $today = today();
         
-        // Cari sesi aktif 32 jam terakhir (Lembur Coverage)
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', Carbon::now()->subHours(32)) 
@@ -152,17 +151,11 @@ class ScanController extends Controller
                 }
             }
 
-            // === [SNAPSHOT LOGIC START] ===
             $snapIn = $user->check_in_start;
-            if (!$snapIn && $workSchedule) {
-                $snapIn = $workSchedule->check_in_start;
-            }
+            if (!$snapIn && $workSchedule) $snapIn = $workSchedule->check_in_start;
 
             $snapOut = $user->check_out_start;
-            if (!$snapOut && $workSchedule) {
-                $snapOut = $workSchedule->check_out_start;
-            }
-            // === [SNAPSHOT LOGIC END] ===
+            if (!$snapOut && $workSchedule) $snapOut = $workSchedule->check_out_start;
 
             Attendance::create([
                 'user_id' => $user->id,
@@ -186,7 +179,6 @@ class ScanController extends Controller
         } 
         elseif ($request->type == 'pulang') {
             
-            // Lookback 32 Jam
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', Carbon::now()->subHours(32))
@@ -236,13 +228,11 @@ class ScanController extends Controller
             'data' => [
                 'name' => $user->name,
                 'role' => $user->role, 
-                'division' => $user->division->name ?? '-', // Divisi dikirim di sini
+                'division' => $user->division->name ?? '-', 
                 'branch' => $user->branch->name ?? '-', 
                 'profile_photo' => $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
-                
                 'photo' => asset('storage/' . $imageName), 
-                'notes' => $manualNotes, // Notes dikirim kembali untuk ditampilkan
-                
+                'notes' => $manualNotes, 
                 'time' => $currentTime->format('H:i'),
                 'date' => $currentTime->format('d M Y'),
                 'is_late' => $isLate ?? false,
