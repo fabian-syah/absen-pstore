@@ -193,7 +193,7 @@
             margin-bottom: 10px;
         }
 
-        /* --- STYLING BARU UNTUK RESULT OVERLAY --- */
+        /* --- STYLING RESULT OVERLAY --- */
         .result-overlay {
             position: fixed;
             top: 0;
@@ -220,32 +220,44 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             position: relative;
             overflow: hidden;
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         .result-status-bar {
             position: absolute;
             top: 0; left: 0; width: 100%;
             height: 8px;
-            background: #28a745; /* Default success */
+            background: #28a745;
         }
         
         .result-profile-img {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid #28a745;
+            border: 3px solid #28a745;
             margin-top: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             background: #333;
         }
 
+        .result-captured-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid #555;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
         .result-time {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 800;
             letter-spacing: 2px;
             line-height: 1;
-            margin: 15px 0;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -296,7 +308,6 @@
         </div>
 
         <div id="step-confirm-btn" style="display: none;">
-            {{-- FORM CATATAN BARU --}}
             <div class="form-group mb-3 text-start">
                 <label for="scanNotes" class="text-white small fw-bold mb-1">Catatan (Opsional)</label>
                 <textarea id="scanNotes" class="form-control bg-dark text-white border-secondary" rows="2"
@@ -317,27 +328,27 @@
         <div class="result-card">
             <div class="result-status-bar" id="resStatusBar"></div>
             
-            <div class="mb-3">
+            <div class="d-flex align-items-center justify-content-center mb-2">
                 <i id="resIcon" class="fas fa-check-circle fa-2x text-success"></i>
-                <span id="resTitle" class="h4 fw-bold ms-2 text-white">BERHASIL</span>
+                <span id="resTitle" class="h4 fw-bold ms-2 text-white m-0">BERHASIL</span>
             </div>
 
             <img id="resProfileImg" src="" class="result-profile-img" alt="Profile">
-            
-            <h3 id="resName" class="fw-bold mb-1 text-white">Nama User</h3>
-            <p class="text-white-50 small mb-2"><span id="resRole">Jabatan</span> | <span id="resDivision">Divisi</span></p>
-            <span id="resBranch" class="badge bg-dark border border-secondary mb-3">Cabang</span>
+            <h4 id="resName" class="fw-bold mb-0 text-white">Nama User</h4>
+            <p class="text-white-50 small mb-2"><span id="resRole">Jabatan</span> | <span id="resBranch">Cabang</span></p>
 
-            <hr class="border-secondary my-3">
-            
-            <p class="text-uppercase text-white-50 small fw-bold mb-0" id="resTypeLabel">WAKTU SCAN</p>
+            <hr class="border-secondary my-2">
+
+            <p class="text-white-50 small fw-bold mb-1 text-uppercase">Foto Bukti</p>
+            <img id="resCapturedImg" src="" class="result-captured-img" alt="Bukti Absen">
+
             <div id="resTime" class="result-time text-success">00:00</div>
             <div id="resDate" class="text-muted small">Tanggal</div>
 
             <p id="resMessage" class="mt-2 text-info small fst-italic"></p>
 
-            <div class="mt-4">
-                <button class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase mb-3 shadow" onclick="resetScan()">
+            <div class="mt-3">
+                <button class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase mb-2 shadow" onclick="resetScan()">
                     <i class="fas fa-qrcode me-2"></i> Scan Selanjutnya
                 </button>
 
@@ -370,9 +381,7 @@
 
         function initScanner() {
             html5QrCode = new Html5Qrcode("reader", {
-                experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: true
-                },
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
                 verbose: false
             });
             const qrConfig = {
@@ -402,10 +411,7 @@
         function checkUser(qrCode) {
             fetch("{{ route('security.check-user') }}", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": csrfToken
-                    },
+                    headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
                     body: JSON.stringify({ qr_code: qrCode })
                 })
                 .then(res => res.json())
@@ -515,10 +521,7 @@
 
             fetch("{{ route('security.store-attendance') }}", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": csrfToken
-                    },
+                    headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
                     body: JSON.stringify({
                         user_id: currentUserId,
                         type: type,
@@ -529,7 +532,6 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        // PASS DATA LENGKAP KE FUNGSI TAMPILAN
                         showResult('success', data.message, data.data);
                     } else {
                         alert(data.message);
@@ -544,53 +546,50 @@
                 });
         }
 
-        // --- FUNGSI TAMPILKAN HASIL BIODATA ---
+        // --- TAMPILKAN HASIL DENGAN FOTO BUKTI ---
         function showResult(status, message, data) {
             const overlay = document.getElementById('resultOverlay');
             
-            // Stop Camera
             if (streamRef) {
                 streamRef.getTracks().forEach(track => track.stop());
             }
 
             overlay.style.display = 'flex';
 
-            // Data Population
+            // Populate Text Data
             document.getElementById('resName').innerText = data.name;
             document.getElementById('resRole').innerText = data.role;
-            document.getElementById('resDivision').innerText = data.division;
             document.getElementById('resBranch').innerText = data.branch;
             
-            // Foto Profil (Gunakan foto profil user dari DB, bukan foto capture agar lebih rapi)
+            // 1. Foto Profil Database (Bulat)
             document.getElementById('resProfileImg').src = data.profile_photo;
+            
+            // 2. Foto Bukti Capture (Kotak) - INI YANG BARU
+            document.getElementById('resCapturedImg').src = data.photo;
             
             document.getElementById('resTime').innerText = data.time;
             document.getElementById('resDate').innerText = data.date;
             document.getElementById('resMessage').innerText = message;
 
-            // Styling Status (Warna)
+            // Styling Status
             const statusBar = document.getElementById('resStatusBar');
             const timeText = document.getElementById('resTime');
             const profileImg = document.getElementById('resProfileImg');
             const icon = document.getElementById('resIcon');
-            const typeLabel = document.getElementById('resTypeLabel');
 
             if (data.is_late) {
-                // Terlambat -> Merah
                 statusBar.style.background = '#dc3545';
                 timeText.className = 'result-time text-danger';
                 profileImg.style.borderColor = '#dc3545';
                 icon.className = 'fas fa-exclamation-circle fa-2x text-danger';
                 document.getElementById('resTitle').innerText = "TERLAMBAT";
             } else if (data.is_early_checkout) {
-                // Pulang Cepat -> Kuning/Orange
                 statusBar.style.background = '#ffc107';
                 timeText.className = 'result-time text-warning';
                 profileImg.style.borderColor = '#ffc107';
                 icon.className = 'fas fa-clock fa-2x text-warning';
                 document.getElementById('resTitle').innerText = "PULANG CEPAT";
             } else {
-                // Normal -> Hijau
                 statusBar.style.background = '#28a745';
                 timeText.className = 'result-time text-success';
                 profileImg.style.borderColor = '#28a745';

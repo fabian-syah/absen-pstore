@@ -230,20 +230,19 @@ class ScanController extends Controller
             $msg = $isEarlyCheckout ? "Absen PULANG (PULANG CEPAT)" : "Absen PULANG Berhasil";
         }
 
-        // ==========================================
-        // UPDATE RETURN DATA AGAR BIODATA MUNCUL
-        // ==========================================
         return response()->json([
             'status' => 'success',
             'message' => $msg,
             'data' => [
                 'name' => $user->name,
-                'role' => $user->role, // Tambahan Role
-                'division' => $user->division->name ?? '-', // Tambahan Divisi
-                'branch' => $user->branch->name ?? '-', // Tambahan Cabang
-                // Gunakan foto profil user untuk biodata agar bagus, foto capture hanya untuk bukti sistem
+                'role' => $user->role, 
+                'division' => $user->division->name ?? '-', 
+                'branch' => $user->branch->name ?? '-', 
                 'profile_photo' => $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
-                'photo' => asset('storage/' . $imageName), // Ini foto bukti saat scan
+                
+                // --- INI FOTO HASIL SCAN ---
+                'photo' => asset('storage/' . $imageName), 
+                
                 'time' => $currentTime->format('H:i'),
                 'date' => $currentTime->format('d M Y'),
                 'is_late' => $isLate ?? false,
