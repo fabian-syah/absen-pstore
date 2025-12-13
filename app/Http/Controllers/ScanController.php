@@ -236,12 +236,12 @@ class ScanController extends Controller
             'data' => [
                 'name' => $user->name,
                 'role' => $user->role, 
-                'division' => $user->division->name ?? '-', 
+                'division' => $user->division->name ?? '-', // Divisi dikirim di sini
                 'branch' => $user->branch->name ?? '-', 
                 'profile_photo' => $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
                 
-                // --- INI FOTO HASIL SCAN ---
                 'photo' => asset('storage/' . $imageName), 
+                'notes' => $manualNotes, // Notes dikirim kembali untuk ditampilkan
                 
                 'time' => $currentTime->format('H:i'),
                 'date' => $currentTime->format('d M Y'),

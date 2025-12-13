@@ -290,8 +290,7 @@
         <div class="profile-card">
             <img src="" id="dbPhoto" class="profile-img-db mb-3" alt="User">
             <h4 id="dbName" class="fw-bold m-0">Nama Karyawan</h4>
-            <p id="dbRole" class="text-muted small m-0">Jabatan</p>
-            <span id="dbBranch" class="badge bg-primary mt-2">Cabang</span>
+            <p class="text-white-50 small m-0"><span id="dbDivision">Divisi</span> | <span id="dbBranch">Cabang</span></p>
         </div>
 
         <div class="text-white mb-2 fw-bold small text-uppercase"><i class="fas fa-camera me-1"></i> Ambil Foto Bukti
@@ -335,7 +334,9 @@
 
             <img id="resProfileImg" src="" class="result-profile-img" alt="Profile">
             <h4 id="resName" class="fw-bold mb-0 text-white">Nama User</h4>
-            <p class="text-white-50 small mb-2"><span id="resRole">Jabatan</span> | <span id="resBranch">Cabang</span></p>
+            <p class="text-white-50 small mb-2"><span id="resDivision">Divisi</span> | <span id="resBranch">Cabang</span></p>
+
+            <p id="resNotes" class="small fst-italic text-warning bg-dark border border-secondary rounded p-2 mb-2" style="display: none;"></p>
 
             <hr class="border-secondary my-2">
 
@@ -432,7 +433,8 @@
         function showVerificationPage(user) {
             currentUserId = user.id;
             document.getElementById('dbName').innerText = user.name;
-            document.getElementById('dbRole').innerText = user.role + ' - ' + user.division;
+            // Menampilkan Divisi di halaman verifikasi
+            document.getElementById('dbDivision').innerText = user.division;
             document.getElementById('dbBranch').innerText = user.branch;
             document.getElementById('dbPhoto').src = user.photo_url;
 
@@ -546,7 +548,7 @@
                 });
         }
 
-        // --- TAMPILKAN HASIL DENGAN FOTO BUKTI ---
+        // --- TAMPILKAN HASIL ---
         function showResult(status, message, data) {
             const overlay = document.getElementById('resultOverlay');
             
@@ -558,13 +560,21 @@
 
             // Populate Text Data
             document.getElementById('resName').innerText = data.name;
-            document.getElementById('resRole').innerText = data.role;
+            // PERUBAHAN: Menampilkan DIVISI
+            document.getElementById('resDivision').innerText = data.division;
             document.getElementById('resBranch').innerText = data.branch;
             
-            // 1. Foto Profil Database (Bulat)
+            // PERUBAHAN: Menampilkan NOTES (Jika Ada)
+            const notesElem = document.getElementById('resNotes');
+            if(data.notes && data.notes.trim() !== "") {
+                notesElem.innerText = '"' + data.notes + '"';
+                notesElem.style.display = 'block';
+            } else {
+                notesElem.style.display = 'none';
+            }
+
+            // Foto
             document.getElementById('resProfileImg').src = data.profile_photo;
-            
-            // 2. Foto Bukti Capture (Kotak) - INI YANG BARU
             document.getElementById('resCapturedImg').src = data.photo;
             
             document.getElementById('resTime').innerText = data.time;
@@ -610,6 +620,7 @@
             document.querySelector('.btn-masuk').innerHTML = '<i class="fas fa-sign-in-alt fa-lg mb-1 d-block"></i> MASUK';
             document.querySelector('.btn-pulang').innerHTML = '<i class="fas fa-sign-out-alt fa-lg mb-1 d-block"></i> PULANG';
             document.getElementById('scanNotes').value = '';
+            document.getElementById('resNotes').style.display = 'none'; // Hide notes
 
             startQRScanner();
         }
