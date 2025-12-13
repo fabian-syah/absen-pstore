@@ -1,90 +1,105 @@
 @extends('layout.master')
-
-@section('title', 'Update Target')
-@section('heading', 'Update Progres Pekerjaan')
+@section('title', 'Edit Data')
 
 @section('content')
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="card-title">Detail Target</h4>
-                        <span class="badge {{ $jobTarget->priority == 'high' ? 'bg-danger' : 'bg-info' }}">
-                            Prioritas: {{ ucfirst($jobTarget->priority) }}
-                        </span>
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <a href="{{ route('job-targets.index') }}" class="btn btn-light bg-white shadow-sm mb-3 border-0 rounded-3 text-dark fw-bold">
+            <i class="mdi mdi-arrow-left me-1"></i> Batal Edit
+        </a>
+
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-4 p-md-5">
+                <h4 class="fw-bold mb-4 text-dark border-bottom pb-3">✏️ Edit Target / Pencapaian</h4>
+                
+                <form action="{{ route('job-targets.update', $jobTarget->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    
+                    {{-- 1. JENIS DATA (Readonly saat edit agar tidak merusak struktur) --}}
+                    <div class="mb-4">
+                        <label class="fw-bold mb-2 small text-uppercase">Jenis Data</label>
+                        <input type="text" class="form-control bg-light fw-bold" value="{{ ucfirst(str_replace('_', ' ', $jobTarget->type)) }}" readonly>
                     </div>
 
-                    <form action="{{ route('job-targets.update', $jobTarget->id) }}" method="POST">
-                        @csrf
-                        @method('PUT')
-
-                        {{-- AREA READONLY (INFO) UNTUK USER BIASA --}}
-                        <div class="form-group mb-3">
-                            <label>Judul Pekerjaan</label>
-                            <input type="text" name="title" class="form-control" value="{{ $jobTarget->title }}" 
-                                {{ auth()->user()->role == 'user_biasa' ? 'readonly' : '' }}>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label>Start Date</label>
-                                    <input type="date" name="start_date" class="form-control" value="{{ $jobTarget->start_date->format('Y-m-d') }}"
-                                        {{ auth()->user()->role == 'user_biasa' ? 'readonly' : '' }}>
-                                </div>
+                    {{-- 2. LEVEL (Jika Target) --}}
+                    @if(!Str::contains($jobTarget->type, 'achievement'))
+                    <div class="mb-4">
+                        <label class="fw-bold mb-2 d-block small text-uppercase">Prioritas</label>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="star_level" id="star1" value="1" {{ $jobTarget->star_level == 1 ? 'checked' : '' }}>
+                                <label class="btn btn-outline-secondary w-100 h-100 rounded-3 p-3 text-start star-option" for="star1">Lvl 1</label>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label>Deadline</label>
-                                    <input type="date" name="deadline" class="form-control" value="{{ $jobTarget->deadline->format('Y-m-d') }}"
-                                        {{ auth()->user()->role == 'user_biasa' ? 'readonly' : '' }}>
-                                </div>
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="star_level" id="star2" value="2" {{ $jobTarget->star_level == 2 ? 'checked' : '' }}>
+                                <label class="btn btn-outline-warning w-100 h-100 rounded-3 p-3 text-start star-option" for="star2">Lvl 2</label>
+                            </div>
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="star_level" id="star3" value="3" {{ $jobTarget->star_level == 3 ? 'checked' : '' }}>
+                                <label class="btn btn-outline-warning w-100 h-100 rounded-3 p-3 text-start star-option level-3-label" for="star3">Lvl 3</label>
                             </div>
                         </div>
+                    </div>
+                    @endif
 
-                        @if(auth()->user()->role != 'user_biasa')
-                            <div class="form-group mb-3">
-                                <label>Deskripsi</label>
-                                <textarea name="description" class="form-control" rows="3">{{ $jobTarget->description }}</textarea>
-                            </div>
-                        @else
-                            <div class="alert alert-secondary mb-3">
-                                <strong>Deskripsi:</strong><br>
-                                {{ $jobTarget->description ?? 'Tidak ada deskripsi' }}
-                            </div>
-                        @endif
-
-                        <hr>
-                        <h5 class="mb-3">Update Progres</h5>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label>Status Saat Ini</label>
-                                    <select name="status" class="form-select">
-                                        <option value="pending" {{ $jobTarget->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                        <option value="in_progress" {{ $jobTarget->status == 'in_progress' ? 'selected' : '' }}>Sedang Dikerjakan</option>
-                                        <option value="completed" {{ $jobTarget->status == 'completed' ? 'selected' : '' }}>Selesai</option>
-                                        @if(auth()->user()->role != 'user_biasa')
-                                            <option value="canceled" {{ $jobTarget->status == 'canceled' ? 'selected' : '' }}>Dibatalkan</option>
-                                        @endif
-                                    </select>
+                    {{-- 3. PERIODE --}}
+                    <div class="mb-4">
+                        <label class="fw-bold mb-2 small text-uppercase">Periode ({{ ucfirst($jobTarget->period) }})</label>
+                        
+                        {{-- Tampilkan input sesuai data tersimpan saja --}}
+                        <div class="bg-light p-3 rounded-3 border">
+                            @if($jobTarget->period == 'daily')
+                                <div class="row g-2">
+                                    <div class="col-6"><label>Dari</label><input type="date" name="daily_start" class="form-control" value="{{ $jobTarget->start_date->format('Y-m-d') }}"></div>
+                                    <div class="col-6"><label>Sampai</label><input type="date" name="daily_end" class="form-control" value="{{ $jobTarget->deadline->format('Y-m-d') }}"></div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label>Persentase Progres (0-100%)</label>
-                                    <input type="number" name="progress" class="form-control" min="0" max="100" value="{{ $jobTarget->progress }}">
+                                <input type="hidden" name="period_type" value="daily">
+                            @elseif($jobTarget->period == 'monthly')
+                                <div class="row g-2">
+                                    <div class="col-6"><label>Bulan Awal</label><input type="month" name="monthly_start" class="form-control" value="{{ $jobTarget->start_date->format('Y-m') }}"></div>
+                                    <div class="col-6"><label>Bulan Akhir</label><input type="month" name="monthly_end" class="form-control" value="{{ $jobTarget->deadline->format('Y-m') }}"></div>
                                 </div>
-                            </div>
+                                <input type="hidden" name="period_type" value="monthly">
+                            @else
+                                <div class="row g-2">
+                                    <div class="col-6"><label>Tahun Awal</label><input type="number" name="yearly_start" class="form-control" value="{{ $jobTarget->start_date->format('Y') }}"></div>
+                                    <div class="col-6"><label>Tahun Akhir</label><input type="number" name="yearly_end" class="form-control" value="{{ $jobTarget->deadline->format('Y') }}"></div>
+                                </div>
+                                <input type="hidden" name="period_type" value="yearly">
+                            @endif
                         </div>
+                    </div>
 
-                        <button type="submit" class="btn btn-primary me-2">Update Progres</button>
-                        <a href="{{ route('job-targets.index') }}" class="btn btn-light">Kembali</a>
-                    </form>
-                </div>
+                    {{-- 4. DETAIL --}}
+                    <div class="mb-3">
+                        <label class="fw-bold mb-2 small text-uppercase">Judul</label>
+                        <input type="text" name="title" class="form-control form-control-lg fw-bold border-secondary" value="{{ $jobTarget->title }}" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="fw-bold mb-2 small text-uppercase">Deskripsi</label>
+                        <textarea name="description" class="form-control border-secondary" rows="4" required>{{ $jobTarget->description }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning w-100 py-3 rounded-3 fw-bold fs-5 shadow-sm text-dark">
+                        <i class="mdi mdi-content-save me-1"></i> Update Perubahan
+                    </button>
+                </form>
             </div>
         </div>
     </div>
+</div>
+
+{{-- CSS Copy dari Create --}}
+<style>
+    .star-option { border-width: 2px; transition: all 0.2s; }
+    .level-3-label { border-color: #FFD700; color: #bfa800; }
+    #star3:checked + .level-3-label {
+        background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%) !important;
+        color: #000 !important; border-color: #d4af37 !important;
+        box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4) !important;
+    }
+    #star2:checked + label { background-color: #ffc107 !important; color: #000 !important; }
+    #star1:checked + label { background-color: #6c757d !important; color: #fff !important; }
+</style>
 @endsection
