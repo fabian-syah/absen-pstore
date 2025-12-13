@@ -387,7 +387,7 @@
                     toggleLoadingState(true);
                     try {
                         // ADJUST PATH AS NEEDED
-                        await faceapi.nets.tinyFaceDetector.loadFromUri('/models'); 
+                        await faceapi.nets.tinyFaceDetector.loadFromUri('public/models'); 
                         modelsLoaded = true;
                         toggleLoadingState(false);
                         initCamera();
