@@ -122,11 +122,11 @@ class LeaveRequestController extends Controller
         LeaveRequest::create($data);
 
         // === REDIRECT KE DASHBOARD (Agar status pending terlihat) ===
-        return redirect()->route('dashboard')->with('success', 'Pengajuan berhasil dikirim. Status saat ini: Menunggu Verifikasi Audit.');
+        return redirect()->route('dashboard')->with('success', 'Pengajuan berhasil dikirim.');
     }
 
     /**
-     * ACTION: APPROVE (Biasanya dipanggil via AuditController, tapi disimpan untuk backup)
+     * ACTION: APPROVE
      */
     public function approve(LeaveRequest $leaveRequest)
     {
@@ -193,7 +193,7 @@ class LeaveRequestController extends Controller
         // Set tanggal selesai menjadi KEMARIN, otomatis hari ini dianggap masuk
         $leaveRequest->update(['end_date' => Carbon::yesterday()]);
         
-        return redirect()->route('dashboard')->with('success', 'Status izin diperbarui. Selamat bekerja kembali.');
+        return redirect()->route('dashboard')->with('success', 'Status izin dibatalkan. Silahkan absen mandiri.');
     }
 
     /**

@@ -56,7 +56,6 @@ class DashboardController extends Controller
         // =========================================================================
         $attendanceQuery = Attendance::query();
         $userQuery = User::query();
-        // $divisionQuery = Division::query(); // Jika dibutuhkan
 
         if ($user->role == 'audit') {
             $auditBranchIds = $user->branches->pluck('id')->toArray();
@@ -76,19 +75,16 @@ class DashboardController extends Controller
         // 4. DATA IZIN HARI INI (MODIFIED)
         // =========================================================================
         
-        // A. Mengambil Izin yang sudah APPROVED (Untuk menampilkan status 'Sedang Cuti/Sakit')
+        // A. Mengambil Izin yang sudah APPROVED 
         $data['myLeaveToday'] = $this->getTodayLeaveRequest($user->id, 'approved');
 
-        // B. Mengambil Izin yang masih PENDING (Untuk menampilkan status 'Menunggu Verifikasi')
-        // Ini kunci agar dashboard bisa menampilkan kartu kuning "Pending"
+        // B. Mengambil Izin yang masih PENDING 
         $data['myPendingLeave'] = $this->getTodayLeaveRequest($user->id, 'pending');
-
 
         // =========================================================================
         // 5. DATA ABSENSI HARI INI (LOGIKA LEMBUR / CROSS DAY)
         // =========================================================================
         
-        // Cek sesi aktif: Check-in dalam 24 jam terakhir tapi belum check-out
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', Carbon::now()->subHours(24))
@@ -98,7 +94,6 @@ class DashboardController extends Controller
         if ($activeSession) {
             $data['myAttendanceToday'] = $activeSession;
         } else {
-            // Jika tidak ada sesi aktif, ambil sesi yang sudah selesai HARI INI
             $finishedSession = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', today())
                 ->whereNotNull('check_out_time')
@@ -141,7 +136,7 @@ class DashboardController extends Controller
                 ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0')
                 ->whereHas('user', function ($q) use ($user) {
                     $q->where('is_active', true)
-                        ->whereNotIn('role', ['admin', 'security']); // Admin & Security exclude
+                        ->whereNotIn('role', ['admin', 'security']);
                     if ($user->role !== 'admin') {
                         $q->where('branch_id', $user->branch_id);
                     }
@@ -168,13 +163,11 @@ class DashboardController extends Controller
             $securityUsers = $securityUsersQuery->get();
 
             $scanners = $securityUsers->map(function ($sec) {
-                // Hitung Scan Masuk
                 $scanIn = Attendance::where('scanned_by_user_id', $sec->id)
                     ->whereMonth('check_in_time', Carbon::now()->month)
                     ->whereYear('check_in_time', Carbon::now()->year)
                     ->count();
 
-                // Hitung Scan Pulang
                 $scanOut = 0;
                 try {
                     $scanOut = Attendance::where('scanned_out_by_user_id', $sec->id)
@@ -193,7 +186,7 @@ class DashboardController extends Controller
         }
 
         // =========================================================================
-        // 9. LOGIKA DASHBOARD PEKERJAAN (WIDGET ADMIN/AUDIT/SECURITY)
+        // 9. LOGIKA DASHBOARD PEKERJAAN
         // =========================================================================
         if ($user->role == 'admin') {
             $data['totalUsers'] = (clone $userQuery)->where('role', '!=', 'admin')->where('is_active', true)->count();
@@ -227,15 +220,11 @@ class DashboardController extends Controller
     // PRIVATE HELPER FUNCTIONS
     // =========================================================================
 
-    /**
-     * Mengambil Leave Request hari ini berdasarkan status
-     * Updated: Menerima parameter status (approved/pending)
-     */
     private function getTodayLeaveRequest($user_id, $status = 'approved')
     {
         return LeaveRequest::where('user_id', $user_id)
             ->where('is_active', true)
-            ->where('status', $status) // <-- Filter Status Dinamis
+            ->where('status', $status)
             ->where(function ($query) {
                 $query->where(function ($q) {
                     $q->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh'])

@@ -750,6 +750,7 @@
 
                     {{-- LOGIKA TAMPILAN STATUS --}}
                     @if ($myAttendanceToday)
+                        {{-- 1. JIKA SUDAH ABSEN MASUK --}}
                         @php
                             $isCrossDay = false;
                             if (!$myAttendanceToday->check_out_time) {
@@ -870,129 +871,75 @@
                             </div>
                         @endif
 
-                        {{-- [BARU] JIKA STATUS PENGAJUAN PENDING (MENUNGGU VERIFIKASI) --}}
                     @elseif($myPendingLeave)
+                        {{-- 2. JIKA ADA PENGAJUAN PENDING (KUNING) --}}
                         <div class="status-card status-warning mb-3 hover-shadow-lg">
                             <div class="text-center py-5">
                                 <div class="mb-3">
                                     <i class="mdi mdi-timer-sand display-3 text-warning pulse-animation"></i>
                                 </div>
-                                <h4 class="mb-2 fw-bold text-warning">Pengajuan Sedang Diverifikasi</h4>
+                                <h4 class="mb-2 fw-bold text-warning">Sedang Menunggu Approve dari Audit</h4>
                                 <p class="text-muted mb-4 px-3">
-                                    Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda telah berhasil
-                                    dikirim dan sedang menunggu persetujuan dari Audit.
+                                    Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda sedang diproses.
                                 </p>
                                 <div class="bg-white p-3 rounded border mb-3 shadow-sm mx-4">
                                     <span class="fst-italic text-dark">"{{ $myPendingLeave->reason }}"</span>
                                 </div>
-                                <div
-                                    class="d-inline-block bg-white px-4 py-2 rounded-pill border border-warning shadow-sm">
-                                    <span class="text-dark fw-bold"><i class="mdi mdi-lock me-1"></i> Akses Absensi
-                                        Dikunci Sementara</span>
-                                </div>
+                                {{-- Tombol Batalkan --}}
+                                <form action="{{ route('leave-requests.cancel', $myPendingLeave->id) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn btn-danger btn-sm shadow-sm" onclick="return confirm('Batalkan pengajuan ini?')">
+                                        <i class="mdi mdi-close-circle me-1"></i> Batalkan Pengajuan
+                                    </button>
+                                </form>
                             </div>
                         </div>
 
-                        {{-- IZIN / SAKIT / CUTI / WFH --}}
-                    @elseif(isset($myLeaveToday) && $myLeaveToday && $myLeaveToday->user_id == Auth::id())
-                        @php
-                            // LOGIKA WARNA & ICON KHUSUS WFH
-                            if ($myLeaveToday->type == 'wfh') {
-                                $leaveColor = 'status-success';
-                                $leaveIcon = 'mdi-laptop-mac';
-                                $leaveTitle = 'Sedang Bekerja (WFH)';
-                                $leaveDesc = 'Absensi Dinas/Remote';
-                            } else {
-                                $leaveColor =
-                                    $myLeaveToday->status == 'approved' ? 'status-success' : 'status-warning';
-                                $leaveIcon =
-                                    $myLeaveToday->type == 'sakit'
-                                        ? 'mdi-hospital-box'
-                                        : ($myLeaveToday->type == 'telat'
-                                            ? 'mdi-clock-alert'
-                                            : 'mdi-bag-suitcase');
-                                $leaveTitle = 'Izin ' . ucfirst($myLeaveToday->type);
-                                $leaveDesc =
-                                    $myLeaveToday->type == 'telat'
-                                        ? 'Hadir pukul: ' .
-                                            \Carbon\Carbon::parse($myLeaveToday->start_time)->format('H:i')
-                                        : 'Sampai: ' .
-                                            \Carbon\Carbon::parse($myLeaveToday->end_date)->format('d M Y');
-                            }
-                        @endphp
-
-                        <div class="status-card {{ $leaveColor }} mb-3 hover-float">
+                    @elseif(isset($myLeaveToday) && $myLeaveToday && $myLeaveToday->status == 'approved')
+                        {{-- 3. JIKA SUDAH DI APPROVE (HIJAU) --}}
+                        <div class="status-card status-success mb-3 hover-float">
                             <div class="d-flex align-items-start">
-                                <div class="status-icon shadow"><i class="mdi {{ $leaveIcon }}"></i></div>
+                                <div class="status-icon shadow"><i class="mdi mdi-check-decagram"></i></div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between">
-                                        <h5 class="mb-1 fw-bold">{{ $leaveTitle }}</h5>
-                                        <span
-                                            class="badge shadow-sm {{ $myLeaveToday->status == 'approved' ? 'bg-success' : 'bg-warning' }}">
-                                            {{ strtoupper($myLeaveToday->status) }}
-                                        </span>
+                                        <h5 class="mb-1 fw-bold">Izin Anda sudah di approve oleh audit</h5>
                                     </div>
                                     <p class="text-muted mb-2 small">
-                                        {{ $leaveDesc }}
+                                        Status: {{ strtoupper($myLeaveToday->type) }}
                                     </p>
                                     <div class="bg-white p-2 rounded border mb-2 shadow-sm">
                                         <span class="fst-italic text-dark">"{{ $myLeaveToday->reason }}"</span>
                                     </div>
 
-                                    @if ($myLeaveToday->type == 'wfh' && $myLeaveToday->file_proof)
+                                    @if ($myLeaveToday->file_proof)
                                         <div class="mt-2">
                                             <button type="button" class="btn btn-sm btn-light border shadow-sm"
                                                 onclick="window.open('{{ Storage::url($myLeaveToday->file_proof) }}', '_blank')">
-                                                <i class="mdi mdi-image-area me-1"></i>Lihat Bukti WFH
+                                                <i class="mdi mdi-image-area me-1"></i>Lihat Bukti Foto
                                             </button>
                                         </div>
                                     @endif
                                 </div>
                             </div>
 
-                            {{-- [PERBAIKAN] TOMBOL SAYA MASUK KANTOR SEKARANG --}}
-                            {{-- Logic ini TIDAK dibungkus oleh 'only_security_scan' sehingga BISA diakses oleh Security/Audit/dll --}}
-                            @if ($myLeaveToday->status == 'approved' && $myLeaveToday->type != 'telat')
-                                <div class="mt-3 pt-3 border-top text-center">
-                                    <p class="small text-muted mb-2">Sudah kembali bekerja di kantor?</p>
-                                    <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}"
-                                        method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="btn btn-primary btn-sm w-100 shadow-sm hover-scale"
-                                            onclick="return confirm('Apakah Anda yakin ingin mengakhiri status ini?');">
-                                            <i class="mdi mdi-briefcase-check me-2"></i>Saya Masuk Kantor Sekarang
-                                        </button>
-                                    </form>
-                                </div>
-                            @endif
-
-                            @if ($myLeaveToday->type == 'telat' && $myLeaveToday->status == 'approved')
-                                <div class="mt-3 pt-3 border-top text-center">
-
-                                    {{-- [TAMBAHAN BARU] CEK ONLY SECURITY SCAN UNTUK IZIN TELAT --}}
-                                    @if (Auth::user()->only_security_scan)
-                                        <button class="btn btn-secondary btn-sm w-100 shadow-sm" disabled
-                                            style="cursor: not-allowed; opacity: 0.7;">
-                                            <i class="mdi mdi-lock me-1"></i> Absen Dikunci (Scan Only)
-                                        </button>
-                                    @else
-                                        <form action="{{ route('leave-requests.cancel', $myLeaveToday->id) }}"
-                                            method="POST" class="d-inline">
-                                            @csrf @method('PATCH')
-                                            <button type="submit"
-                                                class="btn btn-dark btn-sm w-100 shadow-sm hover-scale">
-                                                <i class="mdi mdi-fingerprint me-2"></i>Absen Sekarang
-                                            </button>
-                                        </form>
-                                    @endif
-
-                                </div>
-                            @endif
+                            {{-- TOMBOL SAYA BERADA DI KANTOR --}}
+                            <div class="mt-3 pt-3 border-top text-center">
+                                <p class="small text-muted mb-2">Berubah pikiran atau sudah sampai kantor?</p>
+                                <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}"
+                                    method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn btn-primary btn-sm w-100 shadow-sm hover-scale"
+                                        onclick="return confirm('Apakah Anda yakin? Status izin hari ini akan dibatalkan dan Anda bisa absen kembali.');">
+                                        <i class="mdi mdi-map-marker-radius me-2"></i>Saya Berada di Kantor
+                                    </button>
+                                </form>
+                            </div>
                         </div>
 
-                        {{-- BELUM ABSEN --}}
                     @else
+                        {{-- 4. BELUM ABSEN (DEFAULT) --}}
                         <div class="status-card status-info hover-shadow-lg">
                             <div class="text-center py-4">
                                 <div class="mb-3">
@@ -1002,7 +949,7 @@
                                 <p class="text-muted mb-4">Gunakan fitur ini jika Anda bekerja WFH atau Dinas Luar.</p>
                                 <div class="d-flex justify-content-center gap-2">
 
-                                    {{-- [TAMBAHAN BARU] TOMBOL ABSEN MANDIRI DENGAN PENGECEKAN --}}
+                                    {{-- TOMBOL ABSEN MANDIRI --}}
                                     @if (Auth::user()->only_security_scan)
                                         <div class="d-flex flex-column align-items-center w-100">
                                             <button class="btn btn-secondary shadow-sm w-100" disabled
