@@ -120,6 +120,56 @@ class JobTargetController extends Controller
         return redirect()->route('job-targets.index')->with('success', 'Data berhasil disimpan.');
     }
 
+    // Menampilkan halaman Edit
+    public function edit($id)
+    {
+        $jobTarget = JobTarget::findOrFail($id);
+
+        // Opsional: Cek hak akses (hanya pembuat atau admin yang bisa edit)
+        if (auth()->user()->id != $jobTarget->user_id && auth()->user()->role != 'admin') {
+            return redirect()->route('job-targets.index')->with('error', 'Anda tidak memiliki akses edit.');
+        }
+
+        return view('job_targets.edit', compact('jobTarget'));
+    }
+
+    // Menyimpan Perubahan Edit
+    public function update(Request $request, $id)
+    {
+        $jobTarget = JobTarget::findOrFail($id);
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required',
+            // Validasi lain jika diperlukan
+        ]);
+
+        // Hitung Tanggal baru jika periode diubah (Opsional, sesuaikan logika form edit Anda)
+        $startDate = $jobTarget->start_date;
+        $deadline = $jobTarget->deadline;
+
+        if ($request->has('daily_start')) {
+            $startDate = $request->daily_start;
+            $deadline = $request->daily_end;
+        } elseif ($request->has('monthly_start')) {
+            $startDate = $request->monthly_start . '-01';
+            $deadline = \Carbon\Carbon::parse($request->monthly_end)->endOfMonth()->format('Y-m-d');
+        } elseif ($request->has('yearly_start')) {
+            $startDate = $request->yearly_start . '-01-01';
+            $deadline = $request->yearly_end . '-12-31';
+        }
+
+        $jobTarget->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'star_level' => $request->star_level ?? $jobTarget->star_level,
+            'start_date' => $startDate,
+            'deadline' => $deadline,
+        ]);
+
+        return redirect()->route('job-targets.index')->with('success', 'Data berhasil diperbarui.');
+    }
+
     public function updateOutcome(Request $request, $id)
     {
         $target = JobTarget::findOrFail($id);
