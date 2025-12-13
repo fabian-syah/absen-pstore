@@ -97,7 +97,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/job-targets', [JobTargetController::class, 'index'])->name('job-targets.index');
     Route::get('/job-targets/create', [JobTargetController::class, 'create'])->name('job-targets.create');
     Route::post('/job-targets', [JobTargetController::class, 'store'])->name('job-targets.store');
+
+    // --- TAMBAHKAN 2 BARIS INI ---
+    Route::get('/job-targets/{id}/edit', [JobTargetController::class, 'edit'])->name('job-targets.edit');
+    Route::put('/job-targets/{id}', [JobTargetController::class, 'update'])->name('job-targets.update');
+    // -----------------------------
+
     Route::patch('/job-targets/{id}/update-outcome', [JobTargetController::class, 'updateOutcome'])->name('job-targets.update-outcome');
+    Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
+    Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
 
     // === RUTE RIWAYAT PELANGGARAN ===
     // 1. Route History (Ditaruh sebelum resource/index agar tidak tertimpa)
