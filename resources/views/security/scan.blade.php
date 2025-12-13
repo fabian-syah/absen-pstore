@@ -1,18 +1,30 @@
-<!-- Tambahkan di dalam <body>, sebelum <div class="scanner-wrapper"> -->
+@extends('layout.master')
 
-<div class="maintenance-overlay" id="maintenanceOverlay">
-    <div class="maintenance-content">
-        <i class="fas fa-tools display-1 text-warning mb-3"></i>
-        <h2 class="text-white fw-bold mb-2">Sistem Sedang Dirawat</h2>
-        <p class="text-white-50 mb-4">Mohon maaf, sistem absensi sedang dalam perbaikan.</p>
-        <p class="text-white-50 small">Estimasi waktu selesai: <span id="maintenanceTime">30 menit</span></p>
-        <button class="btn btn-outline-light mt-4 rounded-pill px-4" onclick="checkMaintenanceStatus()">
-            <i class="fas fa-sync-alt me-2"></i> Cek Status
-        </button>
+@section('content')
+<div class="container-fluid">
+    <!-- Maintenance Overlay -->
+    <div class="maintenance-overlay" id="maintenanceOverlay">
+        <div class="maintenance-content">
+            <i class="fas fa-tools display-1 text-warning mb-3"></i>
+            <h2 class="text-white fw-bold mb-2">Sistem Sedang Dirawat</h2>
+            <p class="text-white-50 mb-4">Mohon maaf, sistem absensi sedang dalam perbaikan.</p>
+            <p class="text-white-50 small">Estimasi waktu selesai: <span id="maintenanceTime">30 menit</span></p>
+            <button class="btn btn-outline-light mt-4 rounded-pill px-4" onclick="checkMaintenanceStatus()">
+                <i class="fas fa-sync-alt me-2"></i> Cek Status
+            </button>
+        </div>
+    </div>
+
+    <!-- Scanner Section -->
+    <div class="scanner-wrapper" id="qrSection">
+        <div class="scanner-container">
+            <h1 class="mb-4">Pemindai QR Code</h1>
+            <video id="scanner" width="100%" height="auto"></video>
+            <div id="result" class="mt-3"></div>
+        </div>
     </div>
 </div>
 
-<!-- Tambahkan CSS -->
 <style>
     .maintenance-overlay {
         position: fixed;
@@ -33,14 +45,15 @@
         padding: 40px 20px;
         max-width: 400px;
     }
+
+    .scanner-wrapper {
+        padding: 20px;
+    }
 </style>
 
-<!-- Tambahkan di dalam <script> -->
 <script>
-    // Cek maintenance status saat load
     function checkMaintenanceStatus() {
-        // Ubah false ke true untuk aktifkan maintenance
-        const isUnderMaintenance = false;
+        const isUnderMaintenance = false; // Ubah ke true untuk aktifkan
         
         if (isUnderMaintenance) {
             document.getElementById('maintenanceOverlay').style.display = 'flex';
@@ -48,6 +61,6 @@
         }
     }
 
-    // Jalankan saat halaman load
     document.addEventListener('DOMContentLoaded', checkMaintenanceStatus);
 </script>
+@endsection
