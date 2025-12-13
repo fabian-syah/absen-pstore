@@ -55,9 +55,8 @@
                             <thead class="bg-light text-muted">
                                 <tr>
                                     <th class="ps-4 py-3 text-uppercase font-size-11 fw-bold">Karyawan</th>
-                                    <th class="py-3 text-uppercase font-size-11 fw-bold">Waktu & Lokasi</th>
-                                    {{-- Kolom Catatan dengan lebar tetap --}}
-                                    <th class="py-3 text-uppercase font-size-11 fw-bold" style="width: 250px; min-width: 200px;">Catatan</th>
+                                    <th class="py-3 text-uppercase font-size-11 fw-bold" style="min-width: 180px;">Waktu & Lokasi</th>
+                                    <th class="py-3 text-uppercase font-size-11 fw-bold" style="width: 220px;">Catatan</th>
                                     <th class="py-3 text-uppercase font-size-11 fw-bold">Bukti Foto</th>
                                     <th class="text-end pe-4 py-3 text-uppercase font-size-11 fw-bold">Aksi</th>
                                 </tr>
@@ -65,6 +64,7 @@
                             <tbody>
                                 @foreach ($pendingAttendances as $att)
                                     <tr>
+                                        {{-- 1. Karyawan --}}
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-3">
@@ -102,33 +102,57 @@
                                                 </div>
                                             </div>
                                         </td>
+
+                                        {{-- 2. Waktu & Lokasi (Updated: Masuk & Pulang Terpisah) --}}
                                         <td>
-                                            <div class="d-flex flex-column">
-                                                <span class="fw-semibold text-dark">
-                                                    {{ $att->check_in_time->format('H:i') }} WIB
-                                                </span>
-                                                <span class="small text-muted mb-1">
-                                                    {{ $att->check_in_time->format('d M Y') }}
-                                                </span>
-                                                
-                                                @if($att->latitude && $att->longitude)
-                                                    <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="text-info small text-decoration-none">
-                                                        <i class="mdi mdi-map-marker-radius me-1"></i>Lihat Peta
-                                                    </a>
-                                                @else
-                                                    <span class="text-muted small"><i class="mdi mdi-map-marker-off me-1"></i>No Loc</span>
+                                            <div class="d-flex flex-column gap-2 py-2">
+                                                {{-- JAM MASUK (Hijau) --}}
+                                                <div>
+                                                    <span class="badge bg-soft-success text-success mb-1">
+                                                        <i class="mdi mdi-login me-1"></i>Masuk: {{ $att->check_in_time->format('H:i') }}
+                                                    </span>
+                                                    <div class="d-flex align-items-center">
+                                                        @if($att->latitude && $att->longitude)
+                                                            <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="text-muted small text-decoration-none hover-text-primary">
+                                                                <i class="mdi mdi-map-marker me-1"></i>Peta Masuk
+                                                            </a>
+                                                        @else
+                                                            <span class="text-muted small"><i class="mdi mdi-map-marker-off me-1"></i>No Loc</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                        
+                                                {{-- JAM PULANG (Merah) - Muncul jika ada --}}
+                                                @if($att->check_out_time)
+                                                    <div class="border-top pt-2 mt-1 dashed-border">
+                                                        <span class="badge bg-soft-danger text-danger mb-1">
+                                                            <i class="mdi mdi-logout me-1"></i>Pulang: {{ $att->check_out_time->format('H:i') }}
+                                                        </span>
+                                                        <div class="d-flex align-items-center">
+                                                            @if($att->latitude_out && $att->longitude_out)
+                                                                <a href="https://maps.google.com/?q={{ $att->latitude_out }},{{ $att->longitude_out }}" target="_blank" class="text-muted small text-decoration-none hover-text-primary">
+                                                                    <i class="mdi mdi-map-marker me-1"></i>Peta Pulang
+                                                                </a>
+                                                            @else
+                                                                <span class="text-muted small"><i class="mdi mdi-map-marker-off me-1"></i>No Loc</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
                                                 @endif
+                                                
+                                                {{-- Tanggal --}}
+                                                <span class="small text-muted mt-1 border-top pt-1">
+                                                    <i class="mdi mdi-calendar-blank me-1"></i>{{ $att->check_in_time->format('d M Y') }}
+                                                </span>
                                             </div>
                                         </td>
-                                        {{-- Kolom Catatan (Desktop) --}}
+
+                                        {{-- 3. Catatan (Updated: Truncate + Tooltip) --}}
                                         <td>
                                             @if($att->notes)
                                                 <div class="p-2 bg-light rounded border border-light position-relative">
                                                     <div class="d-flex align-items-start">
-                                                        {{-- Ikon --}}
                                                         <i class="mdi mdi-note-text-outline text-primary me-2 mt-1 flex-shrink-0"></i>
-                                                        
-                                                        {{-- Teks (Truncated 2 baris + Tooltip) --}}
                                                         <div class="text-muted small fst-italic text-truncate-multiline" 
                                                              data-bs-toggle="tooltip" 
                                                              data-bs-placement="top" 
@@ -141,14 +165,23 @@
                                                 <span class="text-muted small ms-2">-</span>
                                             @endif
                                         </td>
+
+                                        {{-- 4. Bukti Foto --}}
                                         <td>
                                             <a href="{{ Storage::url($att->photo_path) }}" class="image-popup d-inline-block position-relative">
-                                                <img src="{{ Storage::url($att->photo_path) }}" alt="foto" class="rounded shadow-sm object-fit-cover" width="50" height="50">
+                                                <img src="{{ Storage::url($att->photo_path) }}" alt="foto" class="rounded shadow-sm object-fit-cover" width="60" height="60">
                                                 <div class="overlay-icon">
                                                     <i class="mdi mdi-magnify text-white"></i>
                                                 </div>
                                             </a>
+                                            @if($att->check_out_time && $att->photo_out_path)
+                                                 <div class="mt-1">
+                                                    <span class="badge bg-light text-muted border" style="font-size: 0.6rem;">OUT</span>
+                                                 </div>
+                                            @endif
                                         </td>
+
+                                        {{-- 5. Aksi --}}
                                         <td class="text-end pe-4">
                                             <div class="d-flex justify-content-end gap-2">
                                                 <form action="{{ route('audit.approve', $att->id) }}" method="POST">
@@ -211,25 +244,41 @@
                                         </div>
                                     </div>
                                 @endif
-
-                                <span class="badge bg-light text-dark border ms-2">
-                                    {{ $att->check_in_time->format('H:i') }}
-                                </span>
                             </div>
 
-                            {{-- Info Cabang & Tanggal --}}
+                            {{-- Info Cabang & Waktu Grid --}}
                             <div class="bg-light rounded p-2 mb-3 small">
                                 <div class="d-flex justify-content-between mb-1">
                                     <span class="text-muted"><i class="mdi mdi-store me-1"></i>Cabang:</span>
                                     <span class="fw-semibold text-dark">{{ $att->user->branch->name ?? '-' }}</span>
                                 </div>
-                                <div class="d-flex justify-content-between">
+                                <div class="d-flex justify-content-between mb-1">
                                     <span class="text-muted"><i class="mdi mdi-calendar me-1"></i>Tanggal:</span>
                                     <span class="fw-semibold text-dark">{{ $att->check_in_time->format('d M Y') }}</span>
                                 </div>
+
+                                {{-- GRID JAM MASUK vs PULANG --}}
+                                <div class="d-flex justify-content-between mt-2 pt-2 border-top">
+                                    <div class="text-center w-50 border-end">
+                                        <span class="d-block text-muted xxs">JAM MASUK</span>
+                                        <span class="fw-bold text-success">
+                                            <i class="mdi mdi-login"></i> {{ $att->check_in_time->format('H:i') }}
+                                        </span>
+                                    </div>
+                                    <div class="text-center w-50">
+                                        <span class="d-block text-muted xxs">JAM PULANG</span>
+                                        @if($att->check_out_time)
+                                            <span class="fw-bold text-danger">
+                                                <i class="mdi mdi-logout"></i> {{ $att->check_out_time->format('H:i') }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted fst-italic">-</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
 
-                            {{-- Info Catatan (Mobile View - Full Text) --}}
+                            {{-- Info Catatan (Full) --}}
                             @if($att->notes)
                                 <div class="alert alert-info border-0 bg-opacity-10 p-2 mb-3 small d-flex">
                                     <i class="mdi mdi-information-outline me-2 mt-1"></i>
@@ -250,7 +299,7 @@
                                 <div class="col-8">
                                     @if($att->latitude && $att->longitude)
                                         <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="btn btn-outline-info w-100 h-100 d-flex align-items-center justify-content-center btn-sm">
-                                            <i class="mdi mdi-map-marker-radius me-2"></i> Buka Maps
+                                            <i class="mdi mdi-map-marker-radius me-2"></i> Peta Masuk
                                         </a>
                                     @else
                                         <button disabled class="btn btn-light w-100 h-100 d-flex align-items-center justify-content-center btn-sm text-muted">
@@ -310,7 +359,7 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Tooltip Init (Wajib untuk menampilkan teks catatan penuh saat hover)
+            // Tooltip Init
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl)
@@ -335,7 +384,12 @@
         .object-fit-cover { object-fit: cover; }
         .bg-soft-primary { background-color: rgba(59, 130, 246, 0.1); }
         .badge-soft-secondary { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
+        .bg-soft-success { background-color: rgba(16, 185, 129, 0.1); }
+        .bg-soft-danger { background-color: rgba(239, 68, 68, 0.1); }
         
+        .text-danger { color: #ef4444 !important; }
+        .text-success { color: #10b981 !important; }
+
         .btn-rounded { border-radius: 50px; padding-left: 15px; padding-right: 15px; }
         .btn-soft-success { background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: none; }
         .btn-soft-success:hover { background-color: #10b981; color: white; }
@@ -355,16 +409,20 @@
 
         .font-size-11 { font-size: 11px; letter-spacing: 0.5px; }
         .text-xs { font-size: 0.75rem; }
+        .xxs { font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase; }
+
+        /* Dashed Border untuk pemisah Jam Pulang */
+        .dashed-border { border-top: 1px dashed #dee2e6 !important; }
 
         /* CSS KHUSUS CATATAN (TRUNCATE) */
         .text-truncate-multiline {
             display: -webkit-box;
-            -webkit-line-clamp: 2; /* Batasi maksimal 2 baris */
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: normal;
-            cursor: help; /* Kursor tanda tanya saat hover */
+            cursor: help;
         }
 
         @media (max-width: 768px) {
