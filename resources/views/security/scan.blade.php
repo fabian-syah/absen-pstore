@@ -3,313 +3,311 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Security Scanner</title>
+    <title>Security Scanner - AbsenPS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-
-        :root {
-            --bg-dark: #000000;
-            --card-dark: #1c1c1e;
-            --primary-blue: #007aff;
-            --success-green: #28cd41;
-            --text-gray: #8e8e93;
-        }
-
         body {
-            background-color: var(--bg-dark);
+            background-color: #000;
             height: 100vh;
-            height: 100dvh;
-            width: 100vw;
-            font-family: 'Inter', sans-serif;
             overflow: hidden;
-            margin: 0; padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
         }
 
-        /* === 1. SCANNER AREA === */
         .scanner-wrapper {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: black; z-index: 1;
-        }
-        #reader { width: 100%; height: 100%; position: absolute; }
-        #reader video { object-fit: cover; width: 100% !important; height: 100% !important; }
-
-        .scan-frame {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 280px; height: 280px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 24px;
-            box-shadow: 0 0 0 4000px rgba(0,0,0,0.7); /* Darken surroundings */
-            z-index: 10; pointer-events: none;
-        }
-        .scan-line {
-            width: 100%; height: 2px; background: var(--success-green);
-            position: absolute; top: 10%;
-            box-shadow: 0 0 15px var(--success-green);
-            animation: scanning 2s infinite ease-in-out;
-        }
-        @keyframes scanning { 0% {top: 10%; opacity: 0;} 50% {opacity: 1;} 100% {top: 90%; opacity: 0;} }
-
-        /* === 2. VERIFICATION OVERLAY (PRE-SUBMIT) === */
-        .verification-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark); z-index: 50; display: none;
-            flex-direction: column; padding: 20px;
-            padding-top: max(20px, env(safe-area-inset-top));
-            overflow-y: auto;
-        }
-        /* ...Styling Camera Preview box sama seperti sebelumnya... */
-        .camera-preview-box {
-            width: 100%; height: 0; padding-bottom: 100%;
-            background: #000; border-radius: 16px; overflow: hidden; position: relative;
-            margin-bottom: 20px; border: 2px solid #333;
-        }
-        #camera-stream, #camera-canvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
-        }
-
-        /* === 3. RESULT OVERLAY (TAMPILAN AKHIR) === */
-        .result-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 100;
-            display: none; justify-content: center; align-items: center;
-            padding: 20px;
-        }
-
-        .result-card {
-            background: var(--card-dark);
-            width: 100%; max-width: 380px;
-            border-radius: 28px;
-            overflow: hidden;
-            text-align: center;
             position: relative;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            display: flex; flex-direction: column;
-            padding-bottom: 30px;
-            max-height: 90vh; /* Agar scrollable di layar pendek */
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #reader {
+            width: 100%;
+            height: 100%;
+            background: black;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        .scanner-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
+            color: white;
+            z-index: 20;
+            text-align: center;
+        }
+
+        .scan-area {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            z-index: 15;
+            pointer-events: none;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        }
+
+        .scan-laser {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: #00ff00;
+            box-shadow: 0 0 4px #00ff00;
+            top: 50%;
+            animation: scan 2s infinite ease-in-out;
+        }
+
+        @keyframes scan {
+
+            0%,
+            100% {
+                top: 10%;
+                opacity: 0;
+            }
+
+            50% {
+                top: 90%;
+                opacity: 1;
+            }
+        }
+
+        .permission-btn-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 30;
+            text-align: center;
+            display: none;
+            width: 80%;
+        }
+
+        .verification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #121212;
+            z-index: 50;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
             overflow-y: auto;
         }
 
-        /* Top Green Bar */
-        .status-bar-top {
-            height: 12px; width: 100%; background: var(--success-green);
-            flex-shrink: 0;
-        }
-
-        /* Header "BERHASIL" */
-        .result-header {
-            padding-top: 25px; padding-bottom: 10px;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-        }
-        .text-status { font-weight: 800; font-size: 1.4rem; color: #fff; letter-spacing: 1px; }
-
-        /* Avatar Circle */
-        .avatar-circle {
-            width: 90px; height: 90px;
-            background: #fff; border-radius: 50%;
-            margin: 10px auto;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 2rem; font-weight: 700; color: #333;
-            border: 4px solid var(--success-green);
-            overflow: hidden;
-        }
-        .avatar-img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* User Info */
-        .user-name { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
-        .user-meta { color: var(--text-gray); font-size: 0.9rem; margin-bottom: 20px; font-weight: 500; }
-
-        /* Separator Line */
-        .divider { height: 1px; background: #3a3a3c; margin: 0 30px 15px 30px; }
-
-        /* Foto Bukti Label */
-        .label-proof {
-            color: var(--text-gray); font-size: 0.8rem;
-            font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1px; margin-bottom: 10px;
-        }
-
-        /* Image Box */
-        .proof-img-container {
-            width: 85%; margin: 0 auto 15px auto;
-            border-radius: 16px; overflow: hidden;
+        .profile-card {
+            background: #1e1e1e;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            color: white;
             border: 1px solid #333;
-            height: 160px; /* Fixed height for consistency */
-            background: #000;
+            margin-bottom: 20px;
         }
-        .proof-img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Time & Date */
-        .time-display {
-            font-size: 3.5rem; font-weight: 800;
-            color: var(--success-green);
-            line-height: 1; margin-bottom: 5px;
-            font-family: 'Courier New', monospace; /* Monospace agar angka diam */
-            letter-spacing: -2px;
+        .profile-img-db {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #00aa13;
+            object-fit: cover;
         }
-        .date-display { color: var(--text-gray); font-size: 0.95rem; margin-bottom: 5px; }
-        .msg-display { color: #00d2d3; font-size: 0.9rem; font-style: italic; margin-bottom: 25px; }
 
-        /* === BUTTONS (DIBUAT MIRIP GAMBAR) === */
-        .btn-container { padding: 0 30px; display: flex; flex-direction: column; gap: 12px; }
-        
-        .btn-scan-next {
-            background-color: var(--primary-blue);
-            color: white; border: none;
-            padding: 16px; border-radius: 50px;
-            font-weight: 800; font-size: 0.95rem;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px;
-            box-shadow: 0 4px 15px rgba(0,122,255,0.3);
+        .camera-preview-box {
+            width: 100%;
+            height: 350px;
+            background: black;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #444;
+            margin-bottom: 20px;
+        }
+
+        /* REVISI: Mirror dihapus (transform scaleX dibuang) */
+        #camera-stream {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #camera-canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-absen {
+            padding: 15px;
+            font-weight: bold;
+            border-radius: 12px;
+            border: none;
+            color: white;
+            font-size: 1rem;
             transition: transform 0.1s;
         }
-        .btn-scan-next:active { transform: scale(0.98); }
 
-        .btn-dashboard {
-            background-color: transparent;
-            color: white;
-            border: 2px solid #fff; /* Outline putih */
-            padding: 14px; border-radius: 50px;
-            font-weight: 700; font-size: 0.95rem;
-            text-transform: uppercase;
-            width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px;
-            text-decoration: none;
+        .btn-absen:active {
+            transform: scale(0.98);
         }
-        .btn-dashboard:hover { color: #fff; background: rgba(255,255,255,0.1); }
 
-        /* Helper Classes */
-        .text-warning-custom { color: #ffcc00; }
-        .text-danger-custom { color: #ff3b30; }
+        .btn-masuk {
+            background: linear-gradient(45deg, #00b09b, #96c93d);
+        }
+
+        .btn-pulang {
+            background: linear-gradient(45deg, #ff5f6d, #ffc371);
+        }
+
+        .btn-capture {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+            background: white;
+            color: black;
+            border: none;
+        }
+
+        .btn-retake {
+            width: 100%;
+            padding: 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            margin-bottom: 10px;
+        }
+
+        .result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
     </style>
 </head>
 
 <body>
 
     <div class="scanner-wrapper" id="qrSection">
-        <div id="reader"></div>
-        
-        <div class="scan-frame">
-            <div class="scan-line"></div>
+        <div class="scanner-header">
+            <h5 class="m-0 fw-bold"><i class="fas fa-qrcode me-2"></i>Scan Absensi</h5>
+            <small class="text-white-50">Arahkan kamera ke QR Code</small>
         </div>
-
-        <div class="position-absolute top-50 start-50 translate-middle text-center w-75" id="permissionBtn" style="display:none; z-index:50;">
-            <div class="bg-dark p-4 rounded-3 border border-secondary">
-                <i class="fas fa-camera-slash fa-3x text-danger mb-3"></i>
-                <h5 class="text-white">Kamera Error</h5>
-                <button class="btn btn-light rounded-pill px-4 mt-2 fw-bold" onclick="forceReload()">Refresh</button>
-            </div>
+        <div id="reader"></div>
+        <div class="scan-area">
+            <div class="scan-laser"></div>
+        </div>
+        <div class="permission-btn-container" id="permissionBtn">
+            <i class="fas fa-camera-slash display-4 text-white mb-3"></i>
+            <h5 class="text-white mb-3">Kamera Tidak Aktif</h5>
+            <button class="btn btn-success rounded-pill px-4" onclick="startQRScanner()">Mulai Kamera</button>
+            <p class="text-white-50 mt-3 small">iOS memerlukan izin HTTPS atau Localhost</p>
         </div>
     </div>
 
     <div class="verification-overlay" id="verifSection">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="text-white fw-bold m-0">Konfirmasi</h5>
-            <button class="btn btn-sm btn-dark rounded-pill px-3 border border-secondary" onclick="resetScan()">
-                <i class="fas fa-times"></i> Batal
-            </button>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="text-white m-0">Konfirmasi Absensi</h5>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="resetScan()"><i
+                    class="fas fa-times me-1"></i> Batal</button>
+        </div>
+        <div class="profile-card">
+            <img src="" id="dbPhoto" class="profile-img-db mb-3" alt="User">
+            <h4 id="dbName" class="fw-bold m-0">Nama Karyawan</h4>
+            <p id="dbRole" class="text-muted small m-0">Jabatan</p>
+            <span id="dbBranch" class="badge bg-primary mt-2">Cabang</span>
         </div>
 
-        <div class="text-center mb-4">
-            <div class="avatar-circle mx-auto mb-2" style="width:70px; height:70px; font-size:1.5rem;">
-                <img src="" id="dbPhoto" class="avatar-img d-none">
-                <span id="dbInitials">U</span>
-            </div>
-            <h4 class="text-white fw-bold mb-0" id="dbName">User Name</h4>
-            <div class="text-secondary small mt-1">
-                <span id="dbRole">Role</span> | <span id="dbBranch">Branch</span>
-            </div>
-        </div>
+        <div class="text-white mb-2 fw-bold small text-uppercase"><i class="fas fa-camera me-1"></i> Ambil Foto Bukti
+            (Wajib)</div>
 
-        <p class="text-secondary small fw-bold text-center text-uppercase mb-2">
-            <i class="fas fa-camera me-1"></i> Ambil Foto Bukti
-        </p>
         <div class="camera-preview-box">
             <video id="camera-stream" autoplay playsinline muted></video>
             <canvas id="camera-canvas"></canvas>
         </div>
 
         <div id="step-capture-btn">
-            <button class="btn btn-light w-100 py-3 rounded-pill fw-bold" onclick="capturePhoto()">
-                <i class="fas fa-camera fa-lg me-2"></i> JEPRET FOTO
-            </button>
+            <button class="btn-capture" onclick="capturePhoto()"><i class="fas fa-camera fa-lg me-2"></i> AMBIL
+                FOTO</button>
         </div>
 
         <div id="step-confirm-btn" style="display: none;">
-            <div class="mb-3">
-                <textarea id="scanNotes" class="form-control bg-dark text-white border-secondary" 
-                    rows="2" placeholder="Catatan (Opsional)..."></textarea>
+            {{-- FORM CATATAN BARU --}}
+            <div class="form-group mb-3 text-start">
+                <label for="scanNotes" class="text-white small fw-bold mb-1">Catatan (Opsional)</label>
+                <textarea id="scanNotes" class="form-control bg-dark text-white border-secondary" rows="2"
+                    placeholder="Contoh: Lembur, Tugas Luar, dll..."></textarea>
             </div>
-            
-            <button class="btn btn-dark w-100 py-2 rounded-pill border-secondary mb-3 text-secondary" onclick="retakePhoto()">
-                <i class="fas fa-redo me-1"></i> Foto Ulang
-            </button>
 
-            <div class="row g-2">
-                <div class="col-6">
-                    <button class="btn btn-success w-100 py-3 rounded-4 fw-bold btn-masuk" onclick="submitAttendance('masuk')">
-                        MASUK
-                    </button>
-                </div>
-                <div class="col-6">
-                    <button class="btn btn-warning w-100 py-3 rounded-4 fw-bold btn-pulang text-dark" onclick="submitAttendance('pulang')">
-                        PULANG
-                    </button>
-                </div>
+            <button class="btn-retake" onclick="retakePhoto()"><i class="fas fa-redo me-2"></i> FOTO ULANG</button>
+            <div class="action-buttons">
+                <button class="btn-absen btn-masuk" onclick="submitAttendance('masuk')"><i
+                        class="fas fa-sign-in-alt fa-lg mb-1 d-block"></i> MASUK</button>
+                <button class="btn-absen btn-pulang" onclick="submitAttendance('pulang')"><i
+                        class="fas fa-sign-out-alt fa-lg mb-1 d-block"></i> PULANG</button>
             </div>
         </div>
     </div>
 
     <div class="result-overlay" id="resultOverlay">
-        <div class="result-card">
-            
-            <div class="status-bar-top" id="resStatusBar"></div>
+        <div class="p-4 w-100" style="max-width: 400px;">
+            <div id="resultIcon" class="mb-3" style="font-size: 5rem;"></div>
+            <h2 id="resultTitle" class="fw-bold mb-2"></h2>
+            <p id="resultMessage" class="text-white-50 mb-4 fs-5"></p>
+            <img id="capturedPhoto" src=""
+                style="width: 200px; height: 200px; object-fit: cover; border-radius: 15px; border: 4px solid white; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"
+                class="mx-auto mb-4">
 
-            <div class="result-header">
-                <i class="fas fa-check-circle fa-lg text-success" id="resIcon"></i>
-                <span class="text-status" id="resTitle">BERHASIL</span>
-            </div>
+            <button class="btn btn-light w-100 py-3 rounded-pill fw-bold text-uppercase mb-3" onclick="resetScan()">
+                <i class="fas fa-qrcode me-2"></i> Scan Selanjutnya
+            </button>
 
-            <div class="avatar-circle">
-                <span id="resInitials">BI</span>
-                <img id="resProfileImg" class="avatar-img d-none" src="">
-            </div>
-
-            <div class="user-name" id="resName">Nama User</div>
-            <div class="user-meta">
-                <span id="resDivision">Divisi</span> | <span id="resBranch">Cabang</span>
-            </div>
-
-            <div id="resNotesContainer" class="d-none mb-3 px-3">
-                <div class="p-2 border border-secondary rounded bg-dark">
-                    <small class="text-warning fst-italic" id="resNotes">Notes...</small>
-                </div>
-            </div>
-
-            <div class="label-proof">FOTO BUKTI</div>
-            <div class="proof-img-container">
-                <img id="resCapturedImg" class="proof-img" src="">
-            </div>
-
-            <div class="time-display" id="resTime">00:00</div>
-            <div class="date-display" id="resDate">13 Dec 2025</div>
-            <div class="msg-display" id="resMessage">Absen MASUK Berhasil</div>
-
-            <div class="btn-container">
-                <button class="btn-scan-next" onclick="resetScan()">
-                    <i class="fas fa-qrcode"></i> SCAN SELANJUTNYA
-                </button>
-                
-                <a href="{{ url('/dashboard') }}" class="btn-dashboard">
-                    <i class="fas fa-arrow-left"></i> DASHBOARD
-                </a>
-            </div>
-
+            <a href="{{ url('/dashboard') }}"
+                class="btn btn-outline-light w-100 py-3 rounded-pill fw-bold text-uppercase">
+                <i class="fas fa-arrow-left me-2"></i> Kembali ke Dashboard
+            </a>
         </div>
     </div>
 
@@ -319,107 +317,98 @@
         let html5QrCode = null;
         let currentUserId = null;
         let streamRef = null;
-        let capturedImageBase64 = null;
-        let isProcessing = false;
+        let capturedImageBase64 = null; // Variable untuk menyimpan foto sementara
 
-        // --- 1. SCANNER LOGIC ---
-        async function startQRScanner() {
-            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                alert("Wajib HTTPS untuk kamera HP!");
-            }
-
+        function startQRScanner() {
             document.getElementById('permissionBtn').style.display = 'none';
-            isProcessing = false;
-
             if (html5QrCode) {
-                try {
-                    if (html5QrCode.isScanning) { await html5QrCode.stop(); }
-                    html5QrCode.clear();
-                } catch (e) { console.warn(e); }
+                html5QrCode.clear().catch(err => {}).finally(() => {
+                    initScanner();
+                });
+            } else {
+                initScanner();
             }
+        }
 
-            html5QrCode = new Html5Qrcode("reader");
-            
-            // Config Optimal HP
-            const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
-            
-            try {
-                await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, ()=>{});
-            } catch (err) {
-                console.error("Cam Error:", err);
-                document.getElementById('permissionBtn').style.display = 'block';
-            }
+        function initScanner() {
+            html5QrCode = new Html5Qrcode("reader", {
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                },
+                verbose: false
+            });
+            const qrConfig = {
+                fps: 20,
+                qrbox: {
+                    width: 250,
+                    height: 250
+                },
+                aspectRatio: 1.0,
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+            };
+
+            html5QrCode.start({
+                    facingMode: "environment"
+                }, qrConfig, onScanSuccess, onScanFailure)
+                .catch(err => {
+                    console.error("Gagal start scanner:", err);
+                    document.getElementById('permissionBtn').style.display = 'block';
+                    alert("Gagal akses kamera: " + err);
+                });
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            if (isProcessing) return;
-            isProcessing = true;
-
             html5QrCode.stop().then(() => {
                 html5QrCode.clear();
                 checkUser(decodedText);
-            }).catch(err => checkUser(decodedText));
+            }).catch(err => console.error(err));
         }
 
-        function forceReload() { location.reload(); }
+        function onScanFailure(error) {}
 
-        // --- 2. CHECK USER ---
         function checkUser(qrCode) {
             fetch("{{ route('security.check-user') }}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
-                body: JSON.stringify({ qr_code: qrCode })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    showVerificationPage(data.data);
-                } else {
-                    alert(data.message);
-                    isProcessing = false;
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": csrfToken
+                    },
+                    body: JSON.stringify({
+                        qr_code: qrCode
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showVerificationPage(data.data);
+                    } else {
+                        alert(data.message);
+                        startQRScanner();
+                    }
+                })
+                .catch(err => {
+                    alert('Gagal terhubung ke server.');
                     startQRScanner();
-                }
-            })
-            .catch(err => {
-                alert('Koneksi Error');
-                isProcessing = false;
-                startQRScanner();
-            });
+                });
         }
 
-        // --- 3. SHOW VERIFICATION ---
         function showVerificationPage(user) {
             currentUserId = user.id;
-            
-            // Populate Data
             document.getElementById('dbName').innerText = user.name;
-            document.getElementById('dbRole').innerText = user.role;
+            document.getElementById('dbRole').innerText = user.role + ' - ' + user.division;
             document.getElementById('dbBranch').innerText = user.branch;
-            
-            // Initials Logic
-            let initials = user.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
-            document.getElementById('dbInitials').innerText = initials;
+            document.getElementById('dbPhoto').src = user.photo_url;
 
-            if(user.photo_url && !user.photo_url.includes('ui-avatars')) {
-                let img = document.getElementById('dbPhoto');
-                img.src = user.photo_url;
-                img.classList.remove('d-none');
-                document.getElementById('dbInitials').classList.add('d-none');
-            } else {
-                document.getElementById('dbPhoto').classList.add('d-none');
-                document.getElementById('dbInitials').classList.remove('d-none');
-            }
-
-            retakePhoto(); // Reset form state
-            document.getElementById('scanNotes').value = '';
+            // Reset UI State
+            retakePhoto(); // Pastikan dalam mode ambil foto (bukan review)
+            document.getElementById('scanNotes').value = ''; // Reset catatan
 
             document.getElementById('qrSection').style.display = 'none';
             document.getElementById('verifSection').style.display = 'flex';
 
-            setTimeout(startCameraStream, 400);
+            setTimeout(startCameraStream, 300);
         }
 
-        // --- 4. CAMERA BUKTI ---
         function startCameraStream() {
             const video = document.getElementById('camera-stream');
             video.setAttribute('autoplay', '');
@@ -427,178 +416,166 @@
             video.setAttribute('playsinline', '');
 
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                    .then(stream => {
+                navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: "environment",
+                            width: {
+                                ideal: 640
+                            }
+                        }
+                    })
+                    .then(function(stream) {
                         streamRef = stream;
                         video.srcObject = stream;
                         video.play();
                     })
-                    .catch(err => alert("Gagal akses kamera bukti."));
+                    .catch(function(error) {
+                        console.error(error);
+                        alert("Gagal akses kamera bukti.");
+                    });
             }
         }
 
+        // --- FUNGSI BARU: CAPTURE FOTO DULU ---
         function capturePhoto() {
             const video = document.getElementById('camera-stream');
             const canvas = document.getElementById('camera-canvas');
-            
-            if (video.videoWidth === 0) return alert("Kamera loading...");
+            const context = canvas.getContext('2d');
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            
+            if (video.videoWidth === 0) {
+                alert("Kamera belum siap.");
+                return;
+            }
+
+            // Hitung ukuran & Gambar ke Canvas
+            const scaleFactor = 800 / video.videoWidth;
+            const newWidth = 800;
+            const newHeight = video.videoHeight * scaleFactor;
+
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            // Draw image (Tanpa mirror karena CSS mirror sudah dihapus)
+            context.drawImage(video, 0, 0, newWidth, newHeight);
+
+            // Simpan data
             capturedImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
 
+            // Ubah Tampilan: Sembunyikan Video, Tampilkan Canvas (Hasil Foto)
             video.style.display = 'none';
             canvas.style.display = 'block';
-            
+
+            // Ganti Tombol
             document.getElementById('step-capture-btn').style.display = 'none';
             document.getElementById('step-confirm-btn').style.display = 'block';
         }
 
+        // --- FUNGSI BARU: RETAKE (ULANGI) FOTO ---
         function retakePhoto() {
+            const video = document.getElementById('camera-stream');
+            const canvas = document.getElementById('camera-canvas');
+
             capturedImageBase64 = null;
-            document.getElementById('camera-stream').style.display = 'block';
-            document.getElementById('camera-canvas').style.display = 'none';
+
+            // Reset Tampilan: Tampilkan Video, Sembunyikan Canvas
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+
+            // Reset Tombol
             document.getElementById('step-capture-btn').style.display = 'block';
             document.getElementById('step-confirm-btn').style.display = 'none';
+            document.getElementById('scanNotes').value = ''; // Reset catatan jika foto ulang
         }
 
-        // --- 5. SUBMIT ---
         function submitAttendance(type) {
-            if (!capturedImageBase64) return alert("Foto bukti wajib!");
+            if (!capturedImageBase64) {
+                alert("Silakan ambil foto terlebih dahulu.");
+                return;
+            }
 
-            const btnClass = type === 'masuk' ? '.btn-masuk' : '.btn-pulang';
-            const btn = document.querySelector(btnClass);
-            const originalText = btn.innerText;
-            
-            btn.innerText = 'Loading...';
-            document.querySelectorAll('button').forEach(b => b.disabled = true);
+            const btn = document.querySelector(`.btn-${type}`);
+            const originalContent = btn.innerHTML;
+            const notes = document.getElementById('scanNotes').value; // Ambil nilai catatan
+
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Loading...';
+
+            // Disable semua tombol agar tidak double click
+            document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => b.disabled = true);
 
             fetch("{{ route('security.store-attendance') }}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
-                body: JSON.stringify({
-                    user_id: currentUserId,
-                    type: type,
-                    image: capturedImageBase64,
-                    notes: document.getElementById('scanNotes').value
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": csrfToken
+                    },
+                    body: JSON.stringify({
+                        user_id: currentUserId,
+                        type: type,
+                        image: capturedImageBase64,
+                        notes: notes // Kirim catatan ke server
+                    })
                 })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    showResult(data.message, data.data);
-                } else {
-                    alert(data.message);
-                    resetButtons(btn, originalText);
-                }
-            })
-            .catch(err => {
-                alert("Error System");
-                resetButtons(btn, originalText);
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showResult('success', data.message, data.data.photo);
+                    } else {
+                        alert(data.message);
+                        btn.innerHTML = originalContent;
+                        document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => b.disabled = false);
+                    }
+                })
+                .catch(err => {
+                    alert("Error sistem.");
+                    btn.innerHTML = originalContent;
+                    document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => b.disabled = false);
+                });
         }
 
-        function resetButtons(btn, text) {
-            btn.innerText = text;
-            document.querySelectorAll('button').forEach(b => b.disabled = false);
-        }
+        function showResult(status, message, photoUrl = null) {
+            const overlay = document.getElementById('resultOverlay');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const msg = document.getElementById('resultMessage');
+            const img = document.getElementById('capturedPhoto');
 
-        // --- 6. RESULT DISPLAY (SESUAI GAMBAR) ---
-        function showResult(message, data) {
-            if (streamRef) streamRef.getTracks().forEach(t => t.stop());
-
-            document.getElementById('verifSection').style.display = 'none';
-            document.getElementById('resultOverlay').style.display = 'flex';
-
-            // Populate Data
-            document.getElementById('resName').innerText = data.name;
-            document.getElementById('resDivision').innerText = data.division; // DIVISI
-            document.getElementById('resBranch').innerText = data.branch; // CABANG
-            
-            // Notes
-            const notesEl = document.getElementById('resNotesContainer');
-            if (data.notes && data.notes.trim()) {
-                document.getElementById('resNotes').innerText = data.notes;
-                notesEl.classList.remove('d-none');
-            } else {
-                notesEl.classList.add('d-none');
+            if (streamRef) {
+                streamRef.getTracks().forEach(track => track.stop());
             }
 
-            // Initials / Photo Avatar
-            let initials = data.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
-            document.getElementById('resInitials').innerText = initials;
-            
-            let profileImg = document.getElementById('resProfileImg');
-            if (data.profile_photo && !data.profile_photo.includes('ui-avatars')) {
-                profileImg.src = data.profile_photo;
-                profileImg.classList.remove('d-none');
-                document.getElementById('resInitials').classList.add('d-none');
-            } else {
-                profileImg.classList.add('d-none');
-                document.getElementById('resInitials').classList.remove('d-none');
-            }
+            overlay.style.display = 'flex';
+            msg.innerText = message;
 
-            // Proof Image
-            document.getElementById('resCapturedImg').src = data.photo;
-
-            // Time & Msg
-            document.getElementById('resTime').innerText = data.time;
-            document.getElementById('resDate').innerText = data.date;
-            document.getElementById('resMessage').innerText = message;
-
-            // Warna Status Logic
-            const statusBar = document.getElementById('resStatusBar');
-            const icon = document.getElementById('resIcon');
-            const title = document.getElementById('resTitle');
-            const timeText = document.getElementById('resTime');
-            const msgText = document.getElementById('resMessage');
-
-            // Reset
-            icon.className = 'fas fa-lg'; 
-            
-            if (data.is_late) {
-                // Merah
-                let color = '#ff3b30';
-                statusBar.style.background = color;
-                icon.classList.add('fa-exclamation-triangle');
-                icon.style.color = color;
-                title.innerText = "TERLAMBAT";
-                timeText.style.color = color;
-                msgText.style.color = color;
-            } else if (data.is_early_checkout) {
-                // Kuning
-                let color = '#ffcc00';
-                statusBar.style.background = color;
-                icon.classList.add('fa-walking');
-                icon.style.color = color;
-                title.innerText = "PULANG CEPAT";
-                timeText.style.color = color;
-                msgText.style.color = color;
-            } else {
-                // Hijau (Default)
-                let color = '#28cd41';
-                statusBar.style.background = color;
-                icon.classList.add('fa-check-circle');
-                icon.style.color = color;
+            if (status === 'success') {
+                icon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
                 title.innerText = "BERHASIL";
-                timeText.style.color = color;
-                msgText.style.color = '#00d2d3'; // Cyan for message
+                title.className = "fw-bold mb-2 text-success";
+                if (photoUrl) {
+                    img.src = photoUrl;
+                    img.style.display = 'block';
+                }
+            } else {
+                icon.innerHTML = '<i class="fas fa-times-circle text-danger"></i>';
+                title.innerText = "GAGAL";
+                title.className = "fw-bold mb-2 text-danger";
+                img.style.display = 'none';
             }
         }
 
-        // --- 7. RESET FLOW ---
         function resetScan() {
-            if (streamRef) streamRef.getTracks().forEach(t => t.stop());
-
-            document.getElementById('resultOverlay').style.display = 'none';
+            if (streamRef) {
+                streamRef.getTracks().forEach(track => track.stop());
+            }
             document.getElementById('verifSection').style.display = 'none';
-            document.getElementById('qrSection').style.display = 'block'; // Block biar full
+            document.getElementById('resultOverlay').style.display = 'none';
+            document.getElementById('qrSection').style.display = 'flex';
 
-            resetButtons(document.querySelector('.btn-masuk'), 'MASUK'); // Hack reset text
-            document.getElementById('scanNotes').value = '';
-            document.getElementById('resNotesContainer').classList.add('d-none');
+            // Reset Tombol State
+            document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => b.disabled = false);
+            document.querySelector('.btn-masuk').innerHTML = '<i class="fas fa-sign-in-alt fa-lg mb-1 d-block"></i> MASUK';
+            document.querySelector('.btn-pulang').innerHTML =
+                '<i class="fas fa-sign-out-alt fa-lg mb-1 d-block"></i> PULANG';
+            document.getElementById('scanNotes').value = ''; // Pastikan notes bersih
 
             startQRScanner();
         }
@@ -606,4 +583,5 @@
         document.addEventListener('DOMContentLoaded', startQRScanner);
     </script>
 </body>
+
 </html>
