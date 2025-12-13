@@ -15,25 +15,53 @@
     @foreach(['daily', 'monthly', 'yearly'] as $period)
         <div class="tab-pane fade {{ $period == 'daily' ? 'show active' : '' }}" id="{{ $idPrefix }}-{{ $period }}">
             
-            {{-- AREA FILTERING --}}
+            {{-- AREA FILTERING RANGE --}}
             <div class="bg-light p-3 rounded-3 mb-4 border" id="filter-container-{{ $idPrefix }}-{{ $period }}">
-                <div class="row g-2 align-items-end">
-                    <div class="col-12 col-md-auto fw-bold text-muted small"><i class="mdi mdi-filter"></i> Filter:</div>
+                <div class="d-flex flex-wrap align-items-end gap-2">
+                    <div class="fw-bold text-muted small me-1 mb-1"><i class="mdi mdi-filter"></i> Filter:</div>
                     
                     @if($period == 'daily')
-                        <div class="col-6 col-md-auto"><input type="date" class="form-control form-control-sm border-secondary filter-input-date"></div>
-                        <div class="col-6 col-md-auto"><input type="month" class="form-control form-control-sm border-secondary filter-input-month"></div>
-                        <div class="col-6 col-md-auto"><input type="number" class="form-control form-control-sm border-secondary filter-input-year" placeholder="Tahun" min="2020"></div>
+                        {{-- RANGE TANGGAL --}}
+                        <div class="input-group input-group-sm" style="max-width: 300px;">
+                            <span class="input-group-text bg-white">Dari</span>
+                            <input type="date" class="form-control border-secondary filter-date-start">
+                        </div>
+                        <div class="input-group input-group-sm" style="max-width: 300px;">
+                            <span class="input-group-text bg-white">Sampai</span>
+                            <input type="date" class="form-control border-secondary filter-date-end">
+                        </div>
+
                     @elseif($period == 'monthly')
-                        <div class="col-6 col-md-auto"><input type="month" class="form-control form-control-sm border-secondary filter-input-month"></div>
-                        <div class="col-6 col-md-auto"><input type="number" class="form-control form-control-sm border-secondary filter-input-year" placeholder="Tahun" min="2020"></div>
+                        {{-- RANGE BULAN --}}
+                        <div class="input-group input-group-sm" style="max-width: 300px;">
+                            <span class="input-group-text bg-white">Dari</span>
+                            <input type="month" class="form-control border-secondary filter-month-start">
+                        </div>
+                        <div class="input-group input-group-sm" style="max-width: 300px;">
+                            <span class="input-group-text bg-white">Sampai</span>
+                            <input type="month" class="form-control border-secondary filter-month-end">
+                        </div>
+
                     @elseif($period == 'yearly')
-                        <div class="col-6 col-md-auto"><input type="number" class="form-control form-control-sm border-secondary filter-input-year" placeholder="Tahun" min="2020"></div>
+                        {{-- RANGE TAHUN --}}
+                        <div class="input-group input-group-sm" style="max-width: 250px;">
+                            <span class="input-group-text bg-white">Dari</span>
+                            <input type="number" class="form-control border-secondary filter-year-start" placeholder="Tahun" min="2020">
+                        </div>
+                        <div class="input-group input-group-sm" style="max-width: 250px;">
+                            <span class="input-group-text bg-white">Sampai</span>
+                            <input type="number" class="form-control border-secondary filter-year-end" placeholder="Tahun" min="2020">
+                        </div>
                     @endif
 
-                    <div class="col-6 col-md-auto d-flex gap-1">
-                        <button class="btn btn-primary btn-sm px-3 fw-bold flex-fill" onclick="applyFilter('{{ $idPrefix }}-{{ $period }}')">Cari</button>
-                        <button class="btn btn-light btn-sm px-3 border flex-fill" onclick="resetFilter('{{ $idPrefix }}-{{ $period }}')">Reset</button>
+                    {{-- TOMBOL AKSI --}}
+                    <div class="d-flex gap-1 ms-md-2 mt-2 mt-md-0">
+                        <button class="btn btn-primary btn-sm px-3 fw-bold" onclick="applyFilter('{{ $idPrefix }}-{{ $period }}', '{{ $period }}')">
+                            <i class="mdi mdi-magnify"></i> Cari
+                        </button>
+                        <button class="btn btn-light btn-sm px-3 border" onclick="resetFilter('{{ $idPrefix }}-{{ $period }}')">
+                            Reset
+                        </button>
                     </div>
                 </div>
             </div>

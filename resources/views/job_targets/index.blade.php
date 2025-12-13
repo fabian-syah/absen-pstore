@@ -76,28 +76,44 @@
     .nav-pills-custom .nav-link.active { background: #4b49ac; color: #fff; border-color: #4b49ac; box-shadow: 0 4px 6px rgba(75, 73, 172, 0.2); }
 </style>
 
-{{-- JAVASCRIPT FILTER --}}
+{{-- JAVASCRIPT FILTER LOGIC (UPDATED FOR RANGES) --}}
 <script>
-    function applyFilter(containerId) {
+    function applyFilter(containerId, periodType) {
         let filterBox = document.getElementById('filter-container-' + containerId);
         let dataContainer = document.getElementById('data-container-' + containerId);
         if (!filterBox || !dataContainer) return;
 
-        let dateVal = filterBox.querySelector('.filter-input-date')?.value || '';
-        let monthVal = filterBox.querySelector('.filter-input-month')?.value || '';
-        let yearVal = filterBox.querySelector('.filter-input-year')?.value || '';
+        // Ambil Nilai Range
+        let startVal = '', endVal = '';
+
+        if (periodType === 'daily') {
+            startVal = filterBox.querySelector('.filter-date-start').value;
+            endVal = filterBox.querySelector('.filter-date-end').value;
+        } else if (periodType === 'monthly') {
+            startVal = filterBox.querySelector('.filter-month-start').value;
+            endVal = filterBox.querySelector('.filter-month-end').value;
+        } else if (periodType === 'yearly') {
+            startVal = filterBox.querySelector('.filter-year-start').value;
+            endVal = filterBox.querySelector('.filter-year-end').value;
+        }
 
         let items = dataContainer.querySelectorAll('.filterable-item');
         
         items.forEach(item => {
-            let itemDate = item.getAttribute('data-date');   
-            let itemMonth = item.getAttribute('data-month'); 
-            let itemYear = item.getAttribute('data-year');   
+            let itemVal = '';
+            // Tentukan value item mana yang akan dicek (date, month, atau year)
+            if (periodType === 'daily') itemVal = item.getAttribute('data-date');   
+            else if (periodType === 'monthly') itemVal = item.getAttribute('data-month'); 
+            else if (periodType === 'yearly') itemVal = item.getAttribute('data-year');   
+
             let show = true;
 
-            if (dateVal && itemDate !== dateVal) show = false;
-            if (!dateVal && monthVal && itemMonth !== monthVal) show = false;
-            if (!dateVal && !monthVal && yearVal && itemYear !== yearVal) show = false;
+            // LOGIKA RANGE:
+            // 1. Jika ada Start, Item harus >= Start
+            if (startVal && itemVal < startVal) show = false;
+            
+            // 2. Jika ada End, Item harus <= End
+            if (endVal && itemVal > endVal) show = false;
 
             show ? item.classList.remove('d-none') : item.classList.add('d-none');
         });
