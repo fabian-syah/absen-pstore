@@ -67,4 +67,79 @@
     @keyframes glow { 0% { box-shadow: 0 0 5px #FFD700; } 50% { box-shadow: 0 0 15px #FFD700; } 100% { box-shadow: 0 0 5px #FFD700; } }
 </style>
 
+@section('scripts') 
+{{-- Jika Anda punya section scripts di master layout, atau taruh saja di bawah endsection content --}}
+<script>
+    function applyFilter(containerId) {
+        // 1. Ambil Container Filter & Data
+        let filterBox = document.getElementById('filter-container-' + containerId);
+        let dataContainer = document.getElementById('data-container-' + containerId);
+        
+        // 2. Ambil Nilai Input
+        let dateVal = filterBox.querySelector('.filter-input-date') ? filterBox.querySelector('.filter-input-date').value : '';
+        let monthVal = filterBox.querySelector('.filter-input-month') ? filterBox.querySelector('.filter-input-month').value : '';
+        let yearVal = filterBox.querySelector('.filter-input-year') ? filterBox.querySelector('.filter-input-year').value : '';
+
+        // 3. Loop Semua Item di Container Data
+        let items = dataContainer.querySelectorAll('.filterable-item');
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            let itemDate = item.getAttribute('data-date');   // YYYY-MM-DD
+            let itemMonth = item.getAttribute('data-month'); // YYYY-MM
+            let itemYear = item.getAttribute('data-year');   // YYYY
+
+            let show = true;
+
+            // Logika Filter (AND Logic)
+            // Jika user isi tanggal, harus match tanggal persis
+            if (dateVal && itemDate !== dateVal) show = false;
+            
+            // Jika user isi bulan, harus match bulan (kecuali kalau tanggal sudah diisi & match, abaikan bulan)
+            if (!dateVal && monthVal && itemMonth !== monthVal) show = false;
+
+            // Jika user isi tahun, harus match tahun
+            if (!dateVal && !monthVal && yearVal && itemYear !== yearVal) show = false;
+
+            // Terapkan visibility
+            if (show) {
+                item.classList.remove('d-none');
+                visibleCount++;
+            } else {
+                item.classList.add('d-none');
+            }
+        });
+
+        // 4. Handle Pesan "No Data"
+        // Kita cari table body di dalam container ini
+        let tables = dataContainer.querySelectorAll('tbody');
+        tables.forEach(tbody => {
+            let rows = tbody.querySelectorAll('.filterable-item:not(.d-none)');
+            let msgRow = tbody.querySelector('.no-data-message');
+            
+            if (rows.length === 0) {
+                if(msgRow) msgRow.classList.remove('d-none');
+            } else {
+                if(msgRow) msgRow.classList.add('d-none');
+            }
+        });
+    }
+
+    function resetFilter(containerId) {
+        let filterBox = document.getElementById('filter-container-' + containerId);
+        let dataContainer = document.getElementById('data-container-' + containerId);
+
+        // Reset Inputs
+        let inputs = filterBox.querySelectorAll('input');
+        inputs.forEach(input => input.value = '');
+
+        // Show All Items
+        let items = dataContainer.querySelectorAll('.filterable-item');
+        items.forEach(item => item.classList.remove('d-none'));
+
+        // Hide No Data Message
+        let msgs = dataContainer.querySelectorAll('.no-data-message');
+        msgs.forEach(msg => msg.classList.add('d-none'));
+    }
+</script>
 @endsection
