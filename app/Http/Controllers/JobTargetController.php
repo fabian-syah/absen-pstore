@@ -16,49 +16,26 @@ class JobTargetController extends Controller
         $user = Auth::user();
         $isLeader = in_array($user->role, ['admin', 'leader', 'audit']);
 
-        // --- QUERY DASAR ---
-        // Kita ambil semua data relevan dulu untuk meminimalkan query berulang di view
-        // Filter di View menggunakan Collection filtering agar lebih cepat jika data tidak ribuan
-
-        // 1. DATA TARGET (Status != Completed untuk On Going, Status == Completed untuk History)
-        // A. Target Cabang (Hanya untuk Leader/Admin atau User di cabang tersebut melihat target tim)
-        $teamTargets = JobTarget::with(['user'])
-            ->where('type', 'team_target')
+        // --- 1. DATA CABANG / TIM (Gabungan Target & Achievement) ---
+        // Mengambil semua data yang tipenya 'team_target' ATAU 'team_achievement'
+        $teamData = JobTarget::with(['user'])
+            ->whereIn('type', ['team_target', 'team_achievement'])
             ->where('branch_id', $user->branch_id)
-            ->orderBy('star_level', 'desc') // Prioritas Bintang Tertinggi Dulu
-            ->orderBy('deadline', 'asc')
+            ->orderBy('star_level', 'desc') // Prioritas Bintang
+            ->orderBy('deadline', 'asc')    // Deadline terdekat
             ->get();
 
-        // B. Target Pribadi
-        $personalTargets = JobTarget::where('type', 'personal_target')
+        // --- 2. DATA PRIBADI (Gabungan Target & Achievement) ---
+        // Mengambil semua data yang tipenya 'personal_target' ATAU 'personal_achievement'
+        $personalData = JobTarget::whereIn('type', ['personal_target', 'personal_achievement'])
             ->where('user_id', $user->id)
             ->orderBy('star_level', 'desc')
             ->orderBy('deadline', 'asc')
             ->get();
 
-        // 2. DATA PENCAPAIAN (ACHIEVEMENT) - Biasanya status sudah completed/hanya display
-        // A. Pencapaian Cabang
-        $teamAchievements = JobTarget::with(['user'])
-            ->where('type', 'team_achievement')
-            ->where('branch_id', $user->branch_id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // B. Pencapaian Pribadi
-        $personalAchievements = JobTarget::where('type', 'personal_achievement')
-            ->where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return view('job_targets.index', compact(
-            'teamTargets', 
-            'personalTargets', 
-            'teamAchievements', 
-            'personalAchievements',
-            'isLeader'
-        ));
+        // Variable lain tidak perlu dikirim karena sudah digabung
+        return view('job_targets.index', compact('teamData', 'personalData', 'isLeader'));
     }
-
     public function create()
     {
         $user = Auth::user();
@@ -99,7 +76,7 @@ class JobTargetController extends Controller
             $startDate = $request->daily_start;
             $deadline = $request->daily_end;
         } elseif ($request->period_type == 'monthly') {
-            $startDate = $request->monthly_start . '-01'; 
+            $startDate = $request->monthly_start . '-01';
             $deadline = \Carbon\Carbon::parse($request->monthly_end)->endOfMonth()->format('Y-m-d');
         } elseif ($request->period_type == 'yearly') {
             $startDate = $request->yearly_start . '-01-01';
@@ -109,7 +86,7 @@ class JobTargetController extends Controller
         // Default Data
         $targetUserId = $user->id;
         $targetBranchId = $user->branch_id;
-        
+
         // Star Level hanya untuk Target (Bukan Achievement)
         $starLevel = 0;
         if (Str::contains($request->type, 'target')) {
@@ -146,7 +123,7 @@ class JobTargetController extends Controller
     public function updateOutcome(Request $request, $id)
     {
         $target = JobTarget::findOrFail($id);
-        
+
         $request->validate([
             'outcome' => 'required',
             'completion_description' => 'required|string',
