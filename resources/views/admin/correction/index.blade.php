@@ -96,14 +96,14 @@
                                                 </form>
                                             @endif
 
-                                            {{-- TOMBOL 2: HAPUS TOTAL --}}
+                                            {{-- TOMBOL 2: HAPUS TOTAL
                                             <form action="{{ route('admin.correction.destroy', $item->id) }}" method="POST" onsubmit="return confirm('HATI-HATI! Data absensi {{ $item->user->name }} akan dihapus PERMANEN. Lanjutkan?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger text-white" title="Hapus seluruh data hari ini">
                                                     <i class="mdi mdi-delete"></i> Hapus Data
                                                 </button>
-                                            </form>
+                                            </form> --}}
 
                                         </div>
                                     </td>
