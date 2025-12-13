@@ -17,7 +17,8 @@
 
         body {
             background-color: #000;
-            height: 100dvh;
+            height: 100vh; /* Fallback */
+            height: 100dvh; /* Mobile Modern */
             width: 100vw;
             overflow: hidden;
             font-family: 'Segoe UI', Roboto, sans-serif;
@@ -25,7 +26,7 @@
             padding: 0;
         }
 
-        /* WRAPPER UTAMA */
+        /* WRAPPER KAMERA */
         .scanner-wrapper {
             position: absolute;
             top: 0; left: 0;
@@ -34,59 +35,41 @@
             z-index: 1;
         }
 
-        /* READER CONTAINER - WAJIB FULL */
         #reader {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0; left: 0;
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
         }
 
-        /* HACK CSS UNTUK PAKSA VIDEO TAMPIL */
         #reader video {
-            width: 100% !important;
-            height: 100% !important;
+            width: 100% !important; height: 100% !important;
             object-fit: cover !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            z-index: 1 !important;
         }
 
-        /* HEADER */
         .scanner-header {
-            position: absolute;
-            top: 0; left: 0; width: 100%;
+            position: absolute; top: 0; left: 0; width: 100%;
             padding: 20px;
             padding-top: max(20px, env(safe-area-inset-top));
             background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
-            color: white;
-            z-index: 10; /* Di atas video */
-            text-align: center;
+            color: white; z-index: 10; text-align: center;
             pointer-events: none;
         }
 
-        /* KOTAK SCAN */
+        /* KOTAK FOCUS */
         .scan-area {
-            position: absolute;
-            top: 50%; left: 50%;
+            position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             width: 70vw; height: 70vw;
             max-width: 280px; max-height: 280px;
-            z-index: 10;
+            z-index: 10; pointer-events: none;
             border: 2px solid rgba(255, 255, 255, 0.7);
             border-radius: 20px;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6); /* Gelapkan sekeliling */
-            pointer-events: none;
+            box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.6);
         }
 
         .scan-laser {
-            position: absolute;
-            width: 100%; height: 2px;
-            background: #00ff00;
-            box-shadow: 0 0 10px #00ff00;
-            top: 50%;
-            animation: scan 2s infinite ease-in-out;
+            position: absolute; width: 100%; height: 2px;
+            background: #00ff00; box-shadow: 0 0 10px #00ff00;
+            top: 50%; animation: scan 2s infinite ease-in-out;
         }
 
         @keyframes scan {
@@ -95,25 +78,18 @@
             100% { top: 90%; opacity: 0; }
         }
 
-        /* TOMBOL IZIN KAMERA (ERROR STATE) */
         .permission-btn-container {
-            position: absolute;
-            top: 50%; left: 50%;
+            position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 50;
-            text-align: center;
-            display: none;
-            width: 85%;
+            z-index: 50; text-align: center; display: none; width: 85%;
         }
 
-        /* === VERIFICATION OVERLAY === */
+        /* === VERIFIKASI OVERLAY === */
         .verification-overlay {
-            position: fixed;
-            top: 0; left: 0;
+            position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
             background: var(--bg-dark);
-            z-index: 100;
-            display: none;
+            z-index: 100; display: none;
             flex-direction: column;
             padding: 20px;
             padding-top: max(20px, env(safe-area-inset-top));
@@ -122,38 +98,27 @@
 
         .profile-card {
             background: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            color: white;
-            border: 1px solid #333;
-            margin-bottom: 20px;
+            border-radius: 16px; padding: 20px;
+            text-align: center; color: white;
+            border: 1px solid #333; margin-bottom: 20px;
         }
 
         .profile-img-db {
             width: 80px; height: 80px;
-            border-radius: 50%;
-            border: 3px solid #28a745;
-            object-fit: cover;
-            background: #333;
+            border-radius: 50%; object-fit: cover;
+            border: 3px solid #28a745; background: #333;
         }
 
         .camera-preview-box {
-            width: 100%;
-            height: 0;
-            padding-bottom: 100%; /* Kotak Persegi */
-            background: black;
-            border-radius: 16px;
-            overflow: hidden;
-            position: relative;
-            border: 2px solid #444;
-            margin-bottom: 20px;
+            width: 100%; height: 0; padding-bottom: 100%;
+            background: black; border-radius: 16px;
+            overflow: hidden; position: relative;
+            border: 2px solid #444; margin-bottom: 20px;
         }
 
         #camera-stream, #camera-canvas {
             position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
+            width: 100%; height: 100%; object-fit: cover;
         }
 
         .btn-capture {
@@ -174,29 +139,40 @@
         .btn-pulang { background: linear-gradient(135deg, #ff5f6d, #ffc371); }
         .btn-retake { width: 100%; padding: 10px; border-radius: 12px; background: #333; color: white; border: 1px solid #555; }
 
-        /* === RESULT OVERLAY === */
+        /* === RESULT OVERLAY (FIXING SCROLL & CENTER) === */
         .result-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95);
             z-index: 200;
-            display: none;
+            
+            /* PENTING: Gunakan display flex agar bisa scroll */
+            display: none; 
             flex-direction: column;
-            overflow-y: auto;
+            overflow-y: auto; /* Scroll jika konten panjang */
+            -webkit-overflow-scrolling: touch;
+            
             padding: 20px;
             padding-top: max(40px, env(safe-area-inset-top));
+            padding-bottom: 40px; /* Space bawah agar tombol tidak kepotong */
         }
 
         .result-card {
             background: #212529;
             border-radius: 24px;
-            padding: 25px;
-            width: 100%; max-width: 380px;
+            padding: 30px 20px;
+            width: 100%; 
+            max-width: 380px;
             border: 1px solid #495057;
             position: relative;
             overflow: hidden;
-            margin: auto; /* Center Vertikal */
+            
+            /* Center Horizontal & Vertical (Auto Margin) */
+            margin: auto; 
+            text-align: center; /* PUSATKAN SEMUA TEXT */
+            
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .result-status-bar {
@@ -208,23 +184,27 @@
             border-radius: 50%;
             object-fit: cover;
             border: 4px solid #28a745;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 15px auto; /* Auto margin kiri kanan */
             display: block;
             background: #333;
         }
 
         .result-captured-img {
-            width: 100%; height: 180px;
+            width: 100%; height: 200px;
             object-fit: cover;
             border-radius: 12px;
             border: 1px solid #555;
             margin: 15px 0;
             background: #000;
+            display: block; /* Agar margin auto bekerja */
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .result-time {
-            font-size: 2.8rem; font-weight: 800; letter-spacing: 1px;
-            line-height: 1; margin: 10px 0;
+            font-size: 3rem; font-weight: 800; letter-spacing: 1px;
+            line-height: 1; margin: 10px 0 5px 0;
+            text-align: center;
         }
     </style>
 </head>
@@ -237,7 +217,9 @@
             <small class="text-white-50">Arahkan kamera ke QR Code</small>
         </div>
         
-        <div id="reader"></div> <div class="scan-area">
+        <div id="reader"></div>
+        
+        <div class="scan-area">
             <div class="scan-laser"></div>
         </div>
 
@@ -245,9 +227,9 @@
             <div class="bg-dark p-4 rounded-3 border border-secondary shadow">
                 <i class="fas fa-exclamation-triangle display-4 text-warning mb-3"></i>
                 <h5 class="text-white mb-2">Kamera Tidak Aktif</h5>
-                <p class="text-white-50 small mb-3">Jika di HP, pastikan website menggunakan <strong>HTTPS</strong>.</p>
+                <p class="text-white-50 small mb-3">Mohon refresh halaman atau periksa izin kamera.</p>
                 <button class="btn btn-primary rounded-pill px-4 w-100 fw-bold" onclick="forceRestartScanner()">
-                    <i class="fas fa-sync me-2"></i> Muat Ulang Kamera
+                    <i class="fas fa-sync me-2"></i> Refresh
                 </button>
             </div>
         </div>
@@ -264,10 +246,10 @@
         <div class="profile-card">
             <img src="" id="dbPhoto" class="profile-img-db mb-3" alt="User">
             <h4 id="dbName" class="fw-bold m-0 text-white">Nama</h4>
-            <p class="text-white-50 small m-0 mt-1"><span id="dbRole">Role</span> | <span id="dbBranch">Cabang</span></p>
+            <p class="text-white-50 small m-0 mt-1"><span id="dbRole">Jabatan</span> | <span id="dbBranch">Cabang</span></p>
         </div>
 
-        <div class="text-white mb-2 fw-bold small text-uppercase d-flex align-items-center">
+        <div class="text-white mb-2 fw-bold small text-uppercase d-flex align-items-center justify-content-center">
             <i class="fas fa-camera me-2 text-warning"></i> Foto Bukti
         </div>
 
@@ -315,22 +297,25 @@
 
             <img id="resProfileImg" src="" class="result-profile-img" alt="Profile">
             <h4 id="resName" class="fw-bold mb-0 text-white">Nama</h4>
-            <p class="text-white-50 small mb-2"><span id="resDivision">Divisi</span> | <span id="resBranch">Cabang</span></p>
+            
+            <p class="text-white-50 small mb-2 text-center">
+                <span id="resDivision">Divisi</span> | <span id="resBranch">Cabang</span>
+            </p>
 
-            <div id="resNotesContainer" class="d-none mb-3">
-                <div class="p-2 bg-dark border border-secondary rounded text-warning fst-italic small text-break">
+            <div id="resNotesContainer" class="d-none mb-3 d-flex justify-content-center">
+                <div class="p-2 bg-dark border border-secondary rounded text-warning fst-italic small text-break d-inline-block">
                     <i class="fas fa-sticky-note me-1"></i> "<span id="resNotes"></span>"
                 </div>
             </div>
 
             <hr class="border-secondary my-3 opacity-25">
 
-            <p class="text-white-50 small fw-bold mb-2 text-uppercase text-start">FOTO BUKTI</p>
+            <p class="text-white-50 small fw-bold mb-2 text-uppercase text-center">FOTO BUKTI</p>
             <img id="resCapturedImg" src="" class="result-captured-img" alt="Bukti">
 
-            <div id="resTime" class="result-time text-success">00:00</div>
-            <div id="resDate" class="text-muted small mb-3">Tanggal</div>
-            <p id="resMessage" class="text-info small fst-italic m-0"></p>
+            <div id="resTime" class="result-time text-success text-center">00:00</div>
+            <div id="resDate" class="text-muted small mb-3 text-center">Tanggal</div>
+            <p id="resMessage" class="text-info small fst-italic m-0 text-center"></p>
 
             <div class="mt-4">
                 <button class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase mb-2 shadow" onclick="resetScan()">
@@ -344,7 +329,6 @@
     </div>
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         let html5QrCode = null;
@@ -353,81 +337,47 @@
         let capturedImageBase64 = null;
         let isProcessing = false;
 
-        // --- SCANNER LOGIC (FIXED) ---
-        
         async function startQRScanner() {
-            // 1. Cek HTTPS (Wajib untuk HP)
             if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                alert("Peringatan: Kamera memerlukan HTTPS untuk berjalan di HP. Silakan gunakan Ngrok atau Valet Secure.");
+                alert("Wajib HTTPS untuk kamera di HP!");
             }
 
             document.getElementById('permissionBtn').style.display = 'none';
             isProcessing = false;
 
-            // 2. Clear Instance Lama (Jika Ada)
             if (html5QrCode) {
                 try {
-                    // Cek status sebelum stop agar tidak error
-                    if (html5QrCode.getState() === Html5QrcodeScannerState.SCANNING || 
-                        html5QrCode.getState() === Html5QrcodeScannerState.PAUSED) {
-                        await html5QrCode.stop();
-                    }
+                    if (html5QrCode.isScanning) { await html5QrCode.stop(); }
                     html5QrCode.clear();
-                } catch (err) {
-                    console.warn("Cleanup error (ignore):", err);
-                }
+                } catch (err) { console.warn(err); }
             }
 
-            // 3. Buat Instance Baru
             html5QrCode = new Html5Qrcode("reader");
 
-            // 4. Config Scanner
-            const config = { 
-                fps: 10, 
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0 
-            };
+            const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
 
-            // 5. Start (Coba Environment, Fallback ke User)
             try {
-                await html5QrCode.start(
-                    { facingMode: "environment" }, 
-                    config, 
-                    onScanSuccess, 
-                    (errorMessage) => { /* ignore frame errors */ }
-                );
+                await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, ()=>{});
             } catch (err) {
-                console.error("Start failed:", err);
+                console.error("Kamera Error:", err);
                 document.getElementById('permissionBtn').style.display = 'flex';
-                // Coba fallback tanpa facingMode (biar browser pilih default)
-                try {
-                    await html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, ()=>{});
-                } catch(e) {
-                    // Benar-benar gagal
-                }
             }
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            if (isProcessing) return; // Prevent double submit
+            if (isProcessing) return;
             isProcessing = true;
 
-            // Stop scanner
             html5QrCode.stop().then(() => {
                 html5QrCode.clear();
                 checkUser(decodedText);
             }).catch(err => {
-                console.error("Stop failed:", err);
-                checkUser(decodedText); // Lanjut aja
+                checkUser(decodedText);
             });
         }
 
-        // --- TOMBOL RESTART MANUAL ---
-        function forceRestartScanner() {
-            location.reload(); // Refresh halaman paling aman jika kamera hang
-        }
+        function forceRestartScanner() { location.reload(); }
 
-        // --- BACKEND CHECK ---
         function checkUser(qrCode) {
             fetch("{{ route('security.check-user') }}", {
                     method: "POST",
@@ -445,16 +395,14 @@
                     }
                 })
                 .catch(err => {
-                    alert('Gagal terhubung ke server.');
+                    alert('Gagal koneksi server.');
                     isProcessing = false;
                     startQRScanner();
                 });
         }
 
-        // --- UI TRANSITIONS ---
         function showVerificationPage(user) {
             currentUserId = user.id;
-            
             document.getElementById('dbName').innerText = user.name;
             document.getElementById('dbRole').innerText = user.role; 
             document.getElementById('dbBranch').innerText = user.branch;
@@ -466,14 +414,11 @@
             document.getElementById('qrSection').style.display = 'none';
             document.getElementById('verifSection').style.display = 'flex';
 
-            setTimeout(startCameraStream, 500); // Delay agar DOM siap
+            setTimeout(startCameraStream, 500);
         }
 
-        // --- CAMERA BUKTI (CAPTURE) ---
         function startCameraStream() {
             const video = document.getElementById('camera-stream');
-            
-            // Atribut wajib iOS
             video.setAttribute('autoplay', '');
             video.setAttribute('muted', '');
             video.setAttribute('playsinline', '');
@@ -486,8 +431,7 @@
                         video.play();
                     })
                     .catch(function(error) {
-                        console.error("Camera Bukti Error:", error);
-                        alert("Gagal buka kamera bukti. Cek izin browser.");
+                        alert("Gagal buka kamera bukti.");
                     });
             }
         }
@@ -497,10 +441,7 @@
             const canvas = document.getElementById('camera-canvas');
             const context = canvas.getContext('2d');
 
-            if (video.videoWidth === 0) {
-                alert("Tunggu kamera siap...");
-                return;
-            }
+            if (video.videoWidth === 0) return alert("Tunggu kamera siap...");
 
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
@@ -523,17 +464,13 @@
             document.getElementById('step-confirm-btn').style.display = 'none';
         }
 
-        // --- SUBMIT DATA ---
         function submitAttendance(type) {
-            if (!capturedImageBase64) return alert("Foto bukti wajib diambil!");
+            if (!capturedImageBase64) return alert("Foto bukti wajib!");
 
             const btn = document.querySelector(`.btn-${type}`);
             const originalContent = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
-            
-            // Disable buttons
-            const allBtns = document.querySelectorAll('button');
-            allBtns.forEach(b => b.disabled = true);
+            document.querySelectorAll('button').forEach(b => b.disabled = true);
 
             fetch("{{ route('security.store-attendance') }}", {
                     method: "POST",
@@ -552,34 +489,29 @@
                     } else {
                         alert(data.message);
                         btn.innerHTML = originalContent;
-                        allBtns.forEach(b => b.disabled = false);
+                        document.querySelectorAll('button').forEach(b => b.disabled = false);
                     }
                 })
                 .catch(err => {
                     alert("Error sistem.");
                     btn.innerHTML = originalContent;
-                    allBtns.forEach(b => b.disabled = false);
+                    document.querySelectorAll('button').forEach(b => b.disabled = false);
                 });
         }
 
-        // --- RESULT UI ---
         function showResult(message, data) {
-            if (streamRef) {
-                streamRef.getTracks().forEach(track => track.stop());
-            }
+            if (streamRef) streamRef.getTracks().forEach(track => track.stop());
 
             document.getElementById('verifSection').style.display = 'none';
-            document.getElementById('resultOverlay').style.display = 'flex';
+            document.getElementById('resultOverlay').style.display = 'flex'; // FLEX agar center/scroll
 
-            // Data Text
             document.getElementById('resName').innerText = data.name;
-            document.getElementById('resDivision').innerText = data.division;
+            document.getElementById('resDivision').innerText = data.division; 
             document.getElementById('resBranch').innerText = data.branch;
             document.getElementById('resTime').innerText = data.time;
             document.getElementById('resDate').innerText = data.date;
             document.getElementById('resMessage').innerText = message;
 
-            // Notes
             const notesEl = document.getElementById('resNotesContainer');
             if (data.notes && data.notes.trim()) {
                 document.getElementById('resNotes').innerText = data.notes;
@@ -588,19 +520,16 @@
                 notesEl.classList.add('d-none');
             }
 
-            // Images
             document.getElementById('resProfileImg').src = data.profile_photo;
             document.getElementById('resCapturedImg').src = data.photo;
 
-            // Color Logic
             const statusBar = document.getElementById('resStatusBar');
             const timeText = document.getElementById('resTime');
             const title = document.getElementById('resTitle');
             const icon = document.getElementById('resIcon');
             const profileImg = document.getElementById('resProfileImg');
 
-            // Reset classes
-            timeText.className = 'result-time';
+            timeText.className = 'result-time text-center'; // Pastikan center
             icon.className = 'fas fa-2x';
 
             if (data.is_late) {
@@ -624,32 +553,20 @@
             }
         }
 
-        // --- RESET FLOW ---
         function resetScan() {
-            // Stop Camera Bukti
-            if (streamRef) {
-                streamRef.getTracks().forEach(track => track.stop());
-            }
+            if (streamRef) streamRef.getTracks().forEach(track => track.stop());
 
-            // Hide Overlays
             document.getElementById('resultOverlay').style.display = 'none';
             document.getElementById('verifSection').style.display = 'none';
-            
-            // Show Scanner Wrapper
             document.getElementById('qrSection').style.display = 'flex';
 
-            // Reset Buttons
-            const allBtns = document.querySelectorAll('button');
-            allBtns.forEach(b => b.disabled = false);
-            
+            document.querySelectorAll('button').forEach(b => b.disabled = false);
             document.querySelector('.btn-masuk').innerHTML = '<i class="fas fa-sign-in-alt mb-1 d-block"></i> MASUK';
             document.querySelector('.btn-pulang').innerHTML = '<i class="fas fa-sign-out-alt mb-1 d-block"></i> PULANG';
-
-            // Start Scanner with Delay
+            
             setTimeout(startQRScanner, 300);
         }
 
-        // Init on Load
         document.addEventListener('DOMContentLoaded', startQRScanner);
     </script>
 </body>
