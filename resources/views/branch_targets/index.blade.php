@@ -33,11 +33,11 @@
             <a href="{{ route('branch-targets.show', $branch->id) }}" class="text-decoration-none">
                 <div class="card card-branch h-100 border-0 shadow-sm position-relative overflow-hidden">
                     
-                    {{-- Status Indicator (Opsional: Misal jika ada target gagal banyak, warnanya merah) --}}
+                    {{-- Status Indicator (Garis Warna Kiri) --}}
                     <div class="status-indicator bg-primary"></div>
 
                     <div class="card-body p-4">
-                        {{-- Header Card --}}
+                        {{-- Header Card (Icon & ID) --}}
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div class="icon-box bg-light text-primary rounded-3">
                                 <i class="mdi mdi-storefront-outline mdi-24px"></i>
@@ -74,20 +74,20 @@
                             </div>
                         </div>
 
-                        {{-- FOOTER: PERSONAL TARGET & USER COUNT --}}
-                        <div class="d-flex justify-content-between align-items-center">
+                        {{-- FOOTER: USER COUNT & PERSONAL TARGET --}}
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            {{-- User Count --}}
                             <div class="d-flex align-items-center">
                                 <div class="avatar-group me-2">
-                                    {{-- Visualisasi User (Dummy Icon) --}}
-                                    <div class="avatar-sm bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center border border-white" style="width: 24px; height: 24px; font-size: 10px;">
+                                    <div class="avatar-sm bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center border border-white shadow-sm" style="width: 24px; height: 24px; font-size: 10px;">
                                         <i class="mdi mdi-account"></i>
                                     </div>
                                 </div>
-                                <small class="text-muted fw-bold" style="font-size: 11px;">{{ $branch->total_users }} Karyawan</small>
+                                <small class="text-secondary fw-bold" style="font-size: 11px;">{{ $branch->total_users }} User</small>
                             </div>
                             
-                            {{-- Badge Target Personal --}}
-                            <div class="badge bg-primary bg-opacity-10 text-primary px-2 py-1" style="font-size: 10px;">
+                            {{-- Badge Target Personal (PERBAIKAN KONTRAS) --}}
+                            <div class="badge bg-primary text-white shadow-sm px-2 py-1 fw-bold rounded-pill" style="font-size: 10px; letter-spacing: 0.5px;">
                                 {{ $branch->personal_count }} Target Individu
                             </div>
                         </div>
@@ -95,8 +95,8 @@
                     
                     {{-- Hover Effect Overlay --}}
                     <div class="hover-overlay d-flex align-items-center justify-content-center">
-                        <span class="btn btn-light fw-bold shadow-sm rounded-pill px-4">
-                            Lihat Detail <i class="mdi mdi-arrow-right ms-1"></i>
+                        <span class="btn btn-light fw-bold shadow-lg rounded-pill px-4 py-2">
+                            Lihat Detail <i class="mdi mdi-arrow-right ms-1 text-primary"></i>
                         </span>
                     </div>
                 </div>
@@ -110,8 +110,9 @@
     /* Dasar Card */
     .card-branch {
         border-radius: 16px;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         background: #fff;
+        border: 1px solid rgba(0,0,0,0.05) !important;
     }
 
     /* Icon Box */
@@ -137,13 +138,15 @@
 
     /* Hover Effects */
     .card-branch:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
+        border-color: rgba(75, 73, 172, 0.2) !important;
     }
 
     .card-branch:hover .icon-box {
         background-color: #4b49ac !important; /* Warna Primary Pstore */
         color: #fff !important;
+        transform: scale(1.1);
     }
 
     /* Hover Overlay (Muncul tombol saat hover) */
@@ -153,10 +156,10 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(75, 73, 172, 0.85); /* Primary Color with Opacity */
+        background: rgba(75, 73, 172, 0.9); /* Primary Color lebih pekat */
         opacity: 0;
         transition: opacity 0.3s ease;
-        backdrop-filter: blur(2px);
+        backdrop-filter: blur(3px);
     }
 
     .card-branch:hover .hover-overlay {
