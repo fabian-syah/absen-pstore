@@ -55,7 +55,12 @@
             $isAdminGaji  = $currentUser->role == 'admin_gaji';
             $isAudit      = $currentUser->role == 'audit';
             $isLeader     = $currentUser->role == 'leader';
+            
+            // Logic: Hanya Super Admin / Admin Gaji yang boleh mengubah struktur cabang User
             $canEditBranch = $isSuperAdmin || $isAdminGaji || $isAudit || $isLeader;
+            
+            // Variable untuk men-disable input Multi Branch jika yang login bukan Admin/Admin Gaji
+            // Ini akan membuat input jadi abu-abu (disabled) untuk Audit/Leader
             $globalDisabled = ($isSuperAdmin || $isAdminGaji) ? '' : 'disabled';
         @endphp
 
@@ -132,7 +137,21 @@
                         <div class="mb-4">
                             <h6 class="text-muted text-uppercase small fw-bold mb-3">Lokasi Kerja</h6>
                             <div class="form-group mb-3" id="single-branch-group"><label class="form-label">Cabang Utama</label><select class="form-select select2-single" name="branch_id" data-placeholder="Pilih Cabang" {{ $canEditBranch ? '' : 'disabled' }}><option></option>@foreach ($branches as $branch)<option value="{{ $branch->id }}" {{ old('branch_id', $user->branch_id) == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>@endforeach</select>@if (!$canEditBranch && $user->branch_id)<input type="hidden" name="branch_id" value="{{ $user->branch_id }}">@endif</div>
-                            <div class="form-group mb-3 d-none" id="multi-branch-group"><label class="form-label text-primary">Akses Wilayah Audit/Leader (Multi)</label><select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%" {{ $globalDisabled }}>@foreach ($branches as $branch)<option value="{{ $branch->id }}" {{ in_array($branch->id, old('multi_branches', $user->branches->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $branch->name }}</option>@endforeach</select></div>
+                            
+                            {{-- MULTI BRANCH SELECT - INI YANG DIMINTA DISABLED --}}
+                            <div class="form-group mb-3 d-none" id="multi-branch-group">
+                                <label class="form-label text-primary">Akses Wilayah Audit/Leader (Multi)</label>
+                                {{-- Jika $globalDisabled aktif ('disabled'), maka user (Audit/Leader) tidak bisa klik ini. --}}
+                                <select class="form-select select2-multi" name="multi_branches[]" multiple="multiple" style="width: 100%" {{ $globalDisabled }}>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ in_array($branch->id, old('multi_branches', $user->branches->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $branch->name }}</option>
+                                    @endforeach
+                                </select>
+                                @if($globalDisabled == 'disabled')
+                                    <small class="text-danger mt-1 d-block"><i class="mdi mdi-lock"></i> Akses wilayah terkunci. Hanya Admin yang bisa mengubah.</small>
+                                @endif
+                            </div>
+
                             <div class="form-group mb-3" id="multi-division-group"><label class="form-label">Divisi (Multi Select)</label><select class="form-select select2-multi" name="multi_divisions[]" multiple="multiple" style="width: 100%">@foreach ($divisions as $division)<option value="{{ $division->id }}" {{ in_array($division->id, old('multi_divisions', $user->divisions->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $division->name }}</option>@endforeach</select><div class="mt-2 small"><a href="javascript:void(0)" onclick="selectAll('#multi-division-group .select2-multi')">Pilih Semua</a> | <a href="javascript:void(0)" onclick="clearAll('#multi-division-group .select2-multi')" class="text-danger">Hapus</a></div></div>
                         </div>
                         <hr class="my-4">

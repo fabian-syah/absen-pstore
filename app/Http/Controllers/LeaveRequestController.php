@@ -121,8 +121,7 @@ class LeaveRequestController extends Controller
 
         LeaveRequest::create($data);
 
-        // === PERUBAHAN UTAMA: Redirect ke Dashboard ===
-        // Agar user melihat status "Menunggu Verifikasi" dan tidak bisa hapus sembarangan
+        // === REDIRECT KE DASHBOARD (Agar status pending terlihat) ===
         return redirect()->route('dashboard')->with('success', 'Pengajuan berhasil dikirim. Status saat ini: Menunggu Verifikasi Audit.');
     }
 

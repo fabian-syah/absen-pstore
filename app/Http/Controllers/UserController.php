@@ -182,6 +182,7 @@ class UserController extends Controller
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
             if ($auth_user->branch_id) $allowedBranchIds[] = $auth_user->branch_id;
             
+            // Cek apakah user target berada di salah satu cabang yang dipegang Audit
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
             }
@@ -228,6 +229,7 @@ class UserController extends Controller
         ]);
 
         // Validasi pemindahan cabang oleh Audit/Leader
+        // Audit/Leader tidak boleh memindahkan user ke cabang yang bukan wewenangnya
         if (in_array(Auth::user()->role, ['audit', 'leader']) && $request->filled('branch_id')) {
             $allowedBranchIds = Auth::user()->branches()->pluck('branches.id')->toArray();
             if (Auth::user()->branch_id) $allowedBranchIds[] = Auth::user()->branch_id;
@@ -264,19 +266,30 @@ class UserController extends Controller
 
         $user->update($data);
 
-        // SYNC Multi Branch untuk Audit & Leader
-        if (in_array($request->role, ['audit', 'leader'])) {
-            $user->branches()->sync($request->multi_branches ?? []);
-        } else {
-            // Untuk role lain (misal user biasa), multi branch dihapus/dikosongkan (karena logic UI hidden)
-            // Tapi jika tidak ingin menghapus eksisting data multi branch jika role berubah, hapus baris ini.
-            // Sesuai UI, jika role != audit/leader, input hidden.
-             $user->divisions()->sync($request->multi_divisions ?? []);
-            if (!in_array($request->role, ['admin', 'admin_gaji'])) {
-                if ($request->has('multi_divisions') && count($request->multi_divisions) > 0) {
-                    $user->division_id = $request->multi_divisions[0];
-                    $user->save();
-                }
+        // --- LOGIC PERBAIKAN: HANDLING MULTI BRANCH ---
+        // Jika yang login adalah Super Admin atau Admin Gaji, boleh update struktur multi branch.
+        // Jika yang login adalah Audit/Leader, input di view di-disabled, sehingga data $request->multi_branches akan NULL.
+        // Kita harus mencegah penghapusan data branch eksisting jika yang edit adalah Audit/Leader.
+        
+        $currentUserRole = Auth::user()->role;
+        
+        // Cek apakah user yang login punya hak akses penuh (Admin/Admin Gaji)
+        if (in_array($currentUserRole, ['admin', 'admin_gaji'])) {
+            // Hanya sync jika target role adalah audit atau leader
+            if (in_array($request->role, ['audit', 'leader'])) {
+                $user->branches()->sync($request->multi_branches ?? []);
+            }
+        } 
+        // Jika yang edit adalah Audit/Leader, KITA LEWATI PROSES SYNC BRANCHES.
+        // Ini menjaga agar cabang-cabang (termasuk cabang di luar wilayah si pengedit) tidak terhapus.
+
+        // Sync Divisi (Boleh diedit oleh siapa saja yang punya akses edit)
+        $user->divisions()->sync($request->multi_divisions ?? []);
+        
+        if (!in_array($request->role, ['admin', 'admin_gaji'])) {
+            if ($request->has('multi_divisions') && count($request->multi_divisions) > 0) {
+                $user->division_id = $request->multi_divisions[0];
+                $user->save();
             }
         }
 

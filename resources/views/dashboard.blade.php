@@ -16,19 +16,16 @@
 @section('content')
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: ATTENDANCE WRAPPED BANNER                                  --}}
+    {{-- BAGIAN BARU: ATTENDANCE WRAPPED BANNER (Desember Only)                  --}}
     {{-- ======================================================================= --}}
-
     @if (\Carbon\Carbon::now()->month == 12)
         <div class="row mb-4 animate-enter">
             <div class="col-12">
                 <div class="card bg-gradient-warning text-white shadow-lg"
                     style="background: linear-gradient(135deg, #111 0%, #333 100%); border: 1px solid #FFD700; overflow: hidden; position: relative;">
-
                     <div
                         style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%); animation: rotateGlow 20s linear infinite; pointer-events: none;">
                     </div>
-
                     <div class="card-body d-flex justify-content-between align-items-center position-relative z-index-1">
                         <div class="d-flex align-items-center">
                             <div class="me-3 d-none d-sm-block">
@@ -50,9 +47,8 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN 1: DASHBOARD PEKERJAAN (KHUSUS ADMIN, AUDIT, SECURITY)           --}}
+    {{-- BAGIAN 1: DASHBOARD PEKERJAAN (WIDGET ADMIN/AUDIT/SECURITY)             --}}
     {{-- ======================================================================= --}}
-
     @if (auth()->user()->role == 'admin')
         {{-- WIDGET ADMIN --}}
         <div class="row mb-4">
@@ -759,7 +755,6 @@
                             if (!$myAttendanceToday->check_out_time) {
                                 $isCrossDay = $myAttendanceToday->check_in_time->format('Y-m-d') !== date('Y-m-d');
                             }
-                            // Label hybrid
                             $sourceLabel =
                                 $myAttendanceToday->attendance_type == 'scan' ? 'Security Scan' : 'Selfie Mandiri';
                         @endphp
@@ -875,34 +870,25 @@
                             </div>
                         @endif
 
-                        {{-- [BARU] JIKA STATUS PENDING (MENUNGGU VERIFIKASI) --}}
+                        {{-- [BARU] JIKA STATUS PENGAJUAN PENDING (MENUNGGU VERIFIKASI) --}}
                     @elseif($myPendingLeave)
-                        <div class="status-card status-warning mb-3 hover-float">
-                            <div class="d-flex align-items-start">
-                                <div class="status-icon shadow bg-warning text-white">
-                                    <i class="mdi mdi-timer-sand"></i>
+                        <div class="status-card status-warning mb-3 hover-shadow-lg">
+                            <div class="text-center py-5">
+                                <div class="mb-3">
+                                    <i class="mdi mdi-timer-sand display-3 text-warning pulse-animation"></i>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between">
-                                        <h5 class="mb-1 fw-bold">Menunggu Verifikasi</h5>
-                                        <span class="badge bg-warning text-dark shadow-sm">PENDING</span>
-                                    </div>
-                                    <p class="text-muted mb-2 small">
-                                        Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda sedang
-                                        ditinjau oleh Audit.
-                                    </p>
-                                    <div class="bg-white p-2 rounded border mb-2 shadow-sm">
-                                        <span class="fst-italic text-dark">"{{ $myPendingLeave->reason }}"</span>
-                                    </div>
-                                    <div class="alert alert-light border-warning mt-3 mb-0 py-2">
-                                        <div class="d-flex align-items-center">
-                                            <i class="mdi mdi-information-outline text-warning me-2 fs-4"></i>
-                                            <small class="text-muted lh-sm">
-                                                Status absensi dikunci sementara hingga pengajuan ini disetujui atau ditolak
-                                                oleh Audit/HRD.
-                                            </small>
-                                        </div>
-                                    </div>
+                                <h4 class="mb-2 fw-bold text-warning">Pengajuan Sedang Diverifikasi</h4>
+                                <p class="text-muted mb-4 px-3">
+                                    Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda telah berhasil
+                                    dikirim dan sedang menunggu persetujuan dari Audit.
+                                </p>
+                                <div class="bg-white p-3 rounded border mb-3 shadow-sm mx-4">
+                                    <span class="fst-italic text-dark">"{{ $myPendingLeave->reason }}"</span>
+                                </div>
+                                <div
+                                    class="d-inline-block bg-white px-4 py-2 rounded-pill border border-warning shadow-sm">
+                                    <span class="text-dark fw-bold"><i class="mdi mdi-lock me-1"></i> Akses Absensi
+                                        Dikunci Sementara</span>
                                 </div>
                             </div>
                         </div>
