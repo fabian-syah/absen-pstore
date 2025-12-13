@@ -157,6 +157,12 @@ class User extends Authenticatable
         return $this->hasMany(Broadcast::class, 'created_by');
     }
 
+    // TAMBAHKAN RELASI INI
+    public function jobTargets()
+    {
+        return $this->hasMany(JobTarget::class, 'user_id');
+    }
+
     public function leaveRequests(): HasMany
     {
         // Pastikan model LeaveRequest ada di App\Models\LeaveRequest
