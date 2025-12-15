@@ -351,7 +351,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const useAI = {{ Auth::user()->use_face_recognition ? 'true' : 'false' }};
-        const assetPath = "{{ asset('public/models') }}"; // Path ke folder public/models
 
         // DOM Elements
         const videoFeed = document.getElementById('video-feed');
@@ -387,18 +386,17 @@
                 if (!modelsLoaded) {
                     toggleLoadingState(true);
                     try {
-                        console.log("Memuat model dari:", assetPath);
-                        // === UPDATE: LOAD SSD MOBILENET V1 (Model Berat & Akurat) ===
-                        await faceapi.nets.ssdMobilenetv1.loadFromUri(assetPath);
-                        
+                        // ADJUST PATH AS NEEDED
+                        await faceapi.nets.tinyFaceDetector.loadFromUri('public/models'); 
                         modelsLoaded = true;
                         toggleLoadingState(false);
                         initCamera();
                     } catch (err) {
                         console.error("AI Error:", err);
-                        alert("Gagal memuat AI. Cek console browser untuk detail error path.");
+                        alert("Gagal memuat AI. Pastikan file model ada di folder public/models.");
                         toggleLoadingState(false);
-                        initCamera(); // Fallback jika gagal
+                        // Fallback to manual if AI fails
+                        initCamera(); 
                     }
                 } else {
                     initCamera();
@@ -426,6 +424,7 @@
                 
                 videoFeed.onloadedmetadata = () => {
                     videoFeed.play();
+                    // Smooth transition
                     setTimeout(() => {
                         videoFeed.classList.add('ready');
                         startScreen.classList.add('d-none');
@@ -446,50 +445,31 @@
             });
         }
 
-        // --- 3. AI DETECTION (ANTI MASKER) ---
+        // --- 3. AI DETECTION ---
         function startFaceDetection() {
             if (detectionInterval) clearInterval(detectionInterval);
-
-            // === UPDATE: SETTING SENSITIVITAS ===
-            // minConfidence: 0.6 = AI harus 60% yakin. 
-            // Kalau pakai masker, confidence biasanya drop ke 0.3-0.4, jadi bakal ditolak.
-            const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.6 });
 
             detectionInterval = setInterval(async () => {
                 if (!streamRef || videoFeed.paused || videoFeed.ended) return;
 
                 try {
-                    // Gunakan options SSD Mobilenet
-                    const detections = await faceapi.detectAllFaces(videoFeed, options);
+                    const detections = await faceapi.detectAllFaces(videoFeed, new faceapi.TinyFaceDetectorOptions());
                     
-                    if (detections.length > 0) {
-                        const score = detections[0].score;
-                        // console.log("Score Wajah:", score); // Debugging nilai
-
-                        if (score > 0.6) { // Strict Check
-                             if (!isFaceValid) {
-                                isFaceValid = true;
-                                focusBox.classList.add('active');
-                                setReadyToCapture(true, "Wajah Terdeteksi");
-                            }
-                        } else {
-                            // Wajah terdeteksi tapi score rendah (mungkin masker/gelap)
-                            handleInvalidFace();
+                    if (detections.length > 0 && detections[0].score > 0.5) {
+                        if (!isFaceValid) {
+                            isFaceValid = true;
+                            focusBox.classList.add('active');
+                            setReadyToCapture(true, "Wajah Terdeteksi");
                         }
                     } else {
-                        // Tidak ada wajah
-                        handleInvalidFace();
+                        if (isFaceValid) {
+                            isFaceValid = false;
+                            focusBox.classList.remove('active');
+                            setReadyToCapture(false, "Posisikan Wajah");
+                        }
                     }
                 } catch (e) { console.log(e); }
-            }, 500); // Check every 500ms (SSD lebih berat)
-        }
-
-        function handleInvalidFace() {
-            if (isFaceValid) {
-                isFaceValid = false;
-                focusBox.classList.remove('active');
-                setReadyToCapture(false, "Buka Masker & Lihat Kamera");
-            }
+            }, 300); // Check every 300ms
         }
 
         function setReadyToCapture(ready, message) {
@@ -503,10 +483,10 @@
             } else {
                 captureBtn.disabled = true;
                 captureBtn.classList.remove('ready');
-                faceStatusBadge.innerHTML = `<i class="mdi mdi-account-alert"></i> ${message}`;
-                faceStatusBadge.style.background = "rgba(255, 50, 50, 0.2)";
-                faceStatusBadge.style.borderColor = "rgba(255,50,50,0.3)";
-                cameraInstruction.innerText = "Posisikan wajah tanpa masker...";
+                faceStatusBadge.innerHTML = `<i class="mdi mdi-loading mdi-spin"></i> ${message}`;
+                faceStatusBadge.style.background = "rgba(255, 255, 255, 0.2)";
+                faceStatusBadge.style.borderColor = "rgba(255,255,255,0.3)";
+                cameraInstruction.innerText = "Mencari wajah...";
             }
         }
 
