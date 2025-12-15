@@ -20,7 +20,6 @@ class SelfAttendanceController extends Controller
 {
     use SendFcmNotification;
 
-    // Helper untuk SQL Offset Timezone
     private function getOffset($timezone) {
         return Carbon::now($timezone)->format('P');
     }
@@ -29,34 +28,17 @@ class SelfAttendanceController extends Controller
     {
         $user = Auth::user();
         
-        // [TIMEZONE LOGIC]
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $localTime = Carbon::now($branchTimezone);
         $todayLocal = $localTime->copy()->startOfDay();
 
-        // =========================================================================
-        // [BARU] CEK BLOKIR: Jika user diset "Scan Only", tendang ke dashboard
-        // =========================================================================
+        // CEK BLOKIR
         if ($user->only_security_scan) {
             return redirect()->route('dashboard')->with('error', 'AKSES DITOLAK: Akun Anda diatur hanya boleh absen melalui Scan Security (QR Code).');
         }
 
-        // 1. AUTO-CLOSE (Membersihkan sesi basi > 32 Jam Server Time)
-        $hangingSession = Attendance::where('user_id', $user->id)
-            ->whereNull('check_out_time')
-            ->where('check_in_time', '<', now()->subHours(32))
-            ->where('status', '!=', 'alpha')
-            ->first();
-
-        if ($hangingSession) {
-            $hangingSession->update([
-                'check_out_time' => Carbon::parse($hangingSession->check_in_time)->endOfDay(),
-                'notes' => $hangingSession->notes . ' | Auto-closed (Expired)',
-                'status' => ($hangingSession->status == 'verified' || $hangingSession->status == 'present') ? $hangingSession->status : 'pending_verification'
-            ]);
-        }
-
-        // 2. CEK SESI AKTIF
+        // 1. CEK SESI AKTIF (Termasuk Lembur)
+        // Sesi yang belum checkout dan check_in >= 32 jam lalu (batas wajar)
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', now()->subHours(32)) 
@@ -71,7 +53,7 @@ class SelfAttendanceController extends Controller
         else {
             // === MODE MASUK ===
             
-            // Cek Cuti (Gunakan Tanggal Lokal User)
+            // Cek Cuti
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
                 ->where('status', 'approved')
                 ->where('type', '!=', 'telat')
@@ -83,22 +65,13 @@ class SelfAttendanceController extends Controller
                 return redirect()->route('dashboard')->with('error', "Anda sedang status " . strtoupper($isOnLeave->type) . " hari ini.");
             }
 
-            // Cek sudah selesai hari ini (Gunakan Tanggal Lokal User)
+            // Cek sudah selesai hari ini (Lokal)
             $finishedToday = Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayLocal->format('Y-m-d')])
                 ->whereNotNull('check_out_time')
                 ->where('status', '!=', 'alpha')
                 ->exists();
             
-            // Fallback jika raw query bermasalah
-            if (!$finishedToday) {
-                 $finishedToday = Attendance::where('user_id', $user->id)
-                    ->whereDate('check_in_time', today()) // Check Server Time
-                    ->whereNotNull('check_out_time')
-                    ->where('status', '!=', 'alpha')
-                    ->exists();
-            }
-
             if ($finishedToday) {
                 return redirect()->route('dashboard')->with('success', 'Anda sudah menyelesaikan absensi hari ini.');
             }
@@ -122,9 +95,6 @@ class SelfAttendanceController extends Controller
 
     public function store(Request $request)
     {
-        // =========================================================================
-        // [BARU] CEK BLOKIR (Double Protection saat Submit)
-        // =========================================================================
         if (Auth::user()->only_security_scan) {
             return redirect()->route('dashboard')->with('error', 'AKSES DITOLAK: Anda hanya boleh absen melalui Scan Security.');
         }
@@ -138,23 +108,20 @@ class SelfAttendanceController extends Controller
         ]);
 
         $user = Auth::user();
-        $currentTime = now(); // Waktu Server (WIB)
-        
-        // [TIMEZONE LOGIC]
+        $currentTime = now(); 
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $localTime = Carbon::now($branchTimezone);
-        $todayLocal = $localTime->copy()->startOfDay();
-
+        
         $branchName = $user->branch->name ?? '-';
         $attendanceToUpdate = null;
 
-        // A. Cek ID dari Form
+        // A. Ambil ID dari Form (Prioritas Utama untuk Checkout Lembur)
         if ($request->filled('attendance_id')) {
             $attendanceToUpdate = Attendance::find($request->attendance_id);
         }
         
-        // B. Fallback: Cari manual sesi aktif 32 jam terakhir
-        if (!$attendanceToUpdate) {
+        // B. Fallback
+        if (!$attendanceToUpdate && $request->has('mode') && $request->mode == 'pulang') {
              $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', now()->subHours(32))
@@ -196,32 +163,44 @@ class SelfAttendanceController extends Controller
 
             $isEarly = false;
             if ($workSchedule && $workSchedule->check_out_start) {
-                 // Konversi Jadwal Pulang ke Timezone User Hari Ini
                  $scheduleStartStr = Carbon::parse($workSchedule->check_out_start)->format('H:i:s');
                  $scheduleStartLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleStartStr, $branchTimezone);
                  
-                 // Bandingkan Waktu Lokal Sekarang dgn Jadwal
                  if ($localTime->lt($scheduleStartLocal)) {
                      $isEarly = true;
                  }
             }
 
-            // Notes
+            // Notes Logic
             $finalNotes = $attendanceToUpdate->notes;
-            
-            // Cek Lintas Hari (Lembur)
-            $checkInLocal = Carbon::parse($attendanceToUpdate->check_in_time)->timezone($branchTimezone);
-            $extraNote = (!$checkInLocal->isSameDay($localTime)) ? "[Lembur/Lintas Hari] " : "";
-            
             $userNote = $request->notes ? ": " . $request->notes : "";
-            $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $extraNote . "Pulang (Selfie)" . $userNote;
+            
+            // Cek apakah ini Lembur Lintas Hari?
+            $checkInLocal = Carbon::parse($attendanceToUpdate->check_in_time)->timezone($branchTimezone);
+            $isCrossDay = !$checkInLocal->isSameDay($localTime);
 
             $currentStatus = $attendanceToUpdate->status;
             $newStatus = $currentStatus; 
 
+            // LOGIKA STATUS:
+            // 1. Jika sebelumnya rejected/alpha -> ubah jadi pending.
             if (in_array($currentStatus, ['rejected', 'alpha'])) {
                 $newStatus = 'pending_verification';
             }
+            // 2. [PERMINTAAN KHUSUS] Jika Lembur & Sebelumnya 'verified' -> Tetap 'verified' (Auto Verify)
+            if ($isCrossDay) {
+                $extraNote = "[Lembur/Lintas Hari] ";
+                // Jika status sebelumnya verified, maka pulang lembur juga verified.
+                // Jika pending, tetap pending.
+                // Jika request meminta "verif ulang jika lembur dan statusnya terverifikasi", maka:
+                if ($currentStatus == 'verified') {
+                    $newStatus = 'verified'; // Tetap verified
+                }
+            } else {
+                $extraNote = "";
+            }
+
+            $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $extraNote . "Pulang (Selfie)" . $userNote;
             
             $attendanceToUpdate->update([
                 'check_out_time'    => $currentTime,
@@ -234,6 +213,11 @@ class SelfAttendanceController extends Controller
             ]);
 
             $message = "Berhasil absen pulang.";
+            if ($isCrossDay) {
+                $message = "Konfirmasi Lembur Berhasil. Absen pulang tercatat.";
+            }
+
+            // Notif hanya jika status pending / berubah jadi pending
             if ($newStatus == 'pending_verification') {
                 $shouldSendNotif = true;
                 $notifTitle = "Verifikasi Pulang";
@@ -245,7 +229,6 @@ class SelfAttendanceController extends Controller
         // LOGIKA ABSEN MASUK (CREATE BARU)
         // =====================================================================
         else {
-            
             // Cek ulang sesi aktif
             $checkAgain = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
@@ -253,10 +236,10 @@ class SelfAttendanceController extends Controller
                 ->first();
             
             if ($checkAgain) {
-                 return redirect()->route('dashboard')->with('error', 'Anda masih memiliki sesi aktif yang belum dipulangkan. Silakan refresh halaman.');
+                 return redirect()->route('dashboard')->with('error', 'Anda masih memiliki sesi aktif. Refresh halaman.');
             }
 
-            // Cek Absen Harian (Lokal)
+            // Cek Absen Harian (Lokal) - Double check
             $existingSessionToday = Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $localTime->format('Y-m-d')])
                 ->where('status', '!=', 'alpha')
@@ -272,26 +255,17 @@ class SelfAttendanceController extends Controller
 
             $isLate = false;
             if ($workSchedule && $workSchedule->check_in_end) {
-                // Konversi Batas Masuk ke Timezone User
                 $scheduleEndStr = Carbon::parse($workSchedule->check_in_end)->format('H:i:s');
                 $scheduleEndLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleEndStr, $branchTimezone);
-                
                 if ($localTime->gt($scheduleEndLocal)) {
                     $isLate = true;
                 }
             }
 
-            // === [SNAPSHOT LOGIC START] ===
             $snapIn = $user->check_in_start;
-            if (!$snapIn && $workSchedule) {
-                $snapIn = $workSchedule->check_in_start;
-            }
-
+            if (!$snapIn && $workSchedule) $snapIn = $workSchedule->check_in_start;
             $snapOut = $user->check_out_start;
-            if (!$snapOut && $workSchedule) {
-                $snapOut = $workSchedule->check_out_start;
-            }
-            // === [SNAPSHOT LOGIC END] ===
+            if (!$snapOut && $workSchedule) $snapOut = $workSchedule->check_out_start;
 
             Attendance::create([
                 'user_id'           => $user->id,
@@ -331,20 +305,34 @@ class SelfAttendanceController extends Controller
     public function skipCheckOut($id)
     {
         $user = Auth::user();
-        $attendance = Attendance::where('id', $id)->where('user_id', $user->id)->whereNull('check_out_time')->first();
+        // Cari sesi yang ID-nya cocok DAN belum checkout
+        $attendance = Attendance::where('id', $id)
+            ->where('user_id', $user->id)
+            ->whereNull('check_out_time')
+            ->first();
 
         if ($attendance) {
+            // Tutup sesi pada 23:59:59 di hari check-in tersebut
+            // Agar dianggap sudah selesai kemarin dan tidak mengganggu hari ini.
+            $endOfPreviousDay = Carbon::parse($attendance->check_in_time)->endOfDay();
+
+            // Status tetap verified/present jika sebelumnya sudah verified, 
+            // tapi tandai di notes bahwa user skip checkout.
+            // Atau bisa diubah ke 'pending_verification' jika kebijakan perusahaan mengharuskan check-out.
+            // Sesuai prompt: "dia status di team saya buat yang belum absen masuk itu belum hadir / alpha"
+            // Jadi kita tutup sesi ini, sehingga DashboardController tidak mendeteksi sesi aktif lagi.
+            
             $status = ($attendance->status == 'verified' || $attendance->status == 'present') 
                         ? $attendance->status 
                         : 'pending_verification';
             
             $attendance->update([
-                'check_out_time' => Carbon::parse($attendance->check_in_time)->endOfDay(),
-                'photo_out_path' => null,
+                'check_out_time' => $endOfPreviousDay,
+                'photo_out_path' => null, // Tidak ada foto
                 'status'         => $status,
-                'notes'          => $attendance->notes . ' | User lupa absen pulang (Skip)',
+                'notes'          => $attendance->notes . ' | User LEWATI absen pulang (Lupa/Skip)',
             ]);
-            return redirect()->route('dashboard')->with('success', 'Sesi ditutup.');
+            return redirect()->route('dashboard')->with('success', 'Sesi kemarin ditutup. Anda bisa absen masuk baru sekarang.');
         }
         return redirect()->route('dashboard')->with('error', 'Sesi tidak valid.');
     }

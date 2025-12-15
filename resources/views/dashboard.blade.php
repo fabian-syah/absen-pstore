@@ -141,7 +141,6 @@
                             <p class="card-bank-label">Approve Izin</p>
                             <h2 class="card-bank-value count-up" data-target="{{ $pendingLeaves }}">0</h2>
                             <p class="card-bank-desc">Izin, Sakit, Cuti, WFH, Telat</p>
-                            {{-- Ganti route('audit.leave.list') dengan route daftar izin approval Anda --}}
                             <a href="{{ route('leave-requests.index') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
                                 <i class="mdi mdi-playlist-check me-1"></i>Lihat Pengajuan
                             </a>
@@ -204,435 +203,6 @@
             </div>
         </div>
     @endif
-
-    {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: LEADERBOARDS --}}
-    {{-- ======================================================================= --}}
-
-    {{-- 1. ATTENDANCE LEADERBOARD (Top Performance Karyawan) --}}
-    @if (auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
-        <div class="row animate-enter mb-5" style="animation-delay: 0.45s">
-            <div class="col-12">
-                <div class="card border-0 shadow-lg luxury-card"
-                    style="border-radius: 24px; overflow: hidden; background: #fff;">
-                    <div class="luxury-bg-glow"></div>
-                    <div class="luxury-bg-pattern"></div>
-
-                    <div class="card-body p-4 position-relative z-index-1">
-                        <div class="d-flex justify-content-between align-items-center mb-5">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-box-luxury me-3">
-                                    <i class="mdi mdi-trophy-variant-outline text-warning"></i>
-                                </div>
-                                <div>
-                                    <h4 class="fw-bold mb-0 text-dark">Top Performance</h4>
-                                    <small class="text-muted">Ranking berdasarkan Kehadiran, Jam Masuk & Jam Kerja</small>
-                                </div>
-                            </div>
-                            <div class="glass-badge">
-                                <i class="mdi mdi-calendar-star me-2"></i>
-                                {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
-                            </div>
-                        </div>
-
-                        <div class="row align-items-end justify-content-center text-center podium-luxury-container pb-4">
-
-                            {{-- JUARA 2 (SILVER) --}}
-                            @if (isset($leaderboard[1]))
-                                <div class="col-4 col-md-3 order-1 podium-step-container">
-                                    <div class="podium-avatar-wrapper silver-glow delay-200">
-                                        <div class="rank-circle silver">2</div>
-                                        @if ($leaderboard[1]->user->profile_photo_path)
-                                            <img src="{{ Storage::url($leaderboard[1]->user->profile_photo_path) }}"
-                                                class="luxury-avatar">
-                                        @else
-                                            <div class="luxury-avatar-placeholder silver-gradient">
-                                                {{ substr($leaderboard[1]->user->name, 0, 1) }}</div>
-                                        @endif
-                                        <div class="sparkle s1"></div>
-                                    </div>
-
-                                    <div class="podium-block silver-block">
-                                        <div class="podium-content">
-                                            <h6 class="fw-bold text-truncate w-100 mb-0">
-                                                {{ explode(' ', $leaderboard[1]->user->name)[0] }}</h6>
-                                            <small
-                                                class="text-muted d-block small-font mb-2">{{ $leaderboard[1]->user->division->name ?? '-' }}</small>
-
-                                            {{-- 1. Total Hadir --}}
-                                            <div class="stat-pill mb-1">
-                                                <i
-                                                    class="mdi mdi-check-circle text-success me-1"></i>{{ $leaderboard[1]->total_attendance }}
-                                            </div>
-
-                                            {{-- 2. Avg Checkin --}}
-                                            <div class="lh-1">
-                                                <small class="text-muted d-block" style="font-size: 10px;">
-                                                    <i class="mdi mdi-clock-outline me-1"></i>Avg:
-                                                    <strong>{{ \Carbon\Carbon::parse($leaderboard[1]->avg_arrival_time)->format('H:i') }}</strong>
-                                                </small>
-
-                                                {{-- 3. Total Jam Kerja --}}
-                                                @if (isset($leaderboard[1]->total_work_seconds))
-                                                    @php
-                                                        $h = floor($leaderboard[1]->total_work_seconds / 3600);
-                                                        $m = floor(($leaderboard[1]->total_work_seconds % 3600) / 60);
-                                                    @endphp
-                                                    <small class="text-muted d-block" style="font-size: 10px;">
-                                                        <i class="mdi mdi-timer-sand me-1"></i>Total:
-                                                        <strong>{{ $h }}j {{ $m }}m</strong>
-                                                    </small>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- JUARA 1 (GOLD) --}}
-                            @if (isset($leaderboard[0]))
-                                <div class="col-4 col-md-4 order-2 podium-step-container main-winner">
-                                    <div class="crown-floating">
-                                        <img src="https://cdn-icons-png.flaticon.com/512/2545/2545603.png" width="50"
-                                            alt="Crown">
-                                    </div>
-                                    <div class="podium-avatar-wrapper gold-glow">
-                                        <div class="rank-circle gold">1</div>
-                                        @if ($leaderboard[0]->user->profile_photo_path)
-                                            <img src="{{ Storage::url($leaderboard[0]->user->profile_photo_path) }}"
-                                                class="luxury-avatar">
-                                        @else
-                                            <div class="luxury-avatar-placeholder gold-gradient">
-                                                {{ substr($leaderboard[0]->user->name, 0, 1) }}</div>
-                                        @endif
-                                        <div class="sparkle s2"></div>
-                                        <div class="sparkle s3"></div>
-                                    </div>
-
-                                    <div class="podium-block gold-block">
-                                        <div class="podium-content">
-                                            <h5 class="fw-bolder text-dark text-truncate w-100 mb-0">
-                                                {{ $leaderboard[0]->user->name }}</h5>
-                                            <small
-                                                class="text-dark opacity-75 d-block fw-semibold mb-2">{{ $leaderboard[0]->user->division->name ?? '-' }}</small>
-
-                                            {{-- 1. Total Hadir --}}
-                                            <div class="stat-pill gold mb-2">
-                                                <i class="mdi mdi-trophy me-1"></i>{{ $leaderboard[0]->total_attendance }}
-                                                Hadir
-                                            </div>
-
-                                            <div class="row g-0 justify-content-center">
-                                                {{-- 2. Avg Checkin --}}
-                                                <div class="col-12 mb-1">
-                                                    <small class="text-dark opacity-75" style="font-size: 11px;">
-                                                        <i class="mdi mdi-clock-fast me-1"></i>Avg Masuk:
-                                                        <span class="fw-bold text-dark">
-                                                            {{ \Carbon\Carbon::parse($leaderboard[0]->avg_arrival_time)->format('H:i') }}
-                                                        </span>
-                                                    </small>
-                                                </div>
-
-                                                {{-- 3. Total Jam Kerja --}}
-                                                @if (isset($leaderboard[0]->total_work_seconds))
-                                                    @php
-                                                        $h = floor($leaderboard[0]->total_work_seconds / 3600);
-                                                        $m = floor(($leaderboard[0]->total_work_seconds % 3600) / 60);
-                                                    @endphp
-                                                    <div class="col-12">
-                                                        <small class="text-dark opacity-75" style="font-size: 11px;">
-                                                            <i class="mdi mdi-briefcase-clock me-1"></i>Total Kerja:
-                                                            <span class="fw-bold text-dark">
-                                                                {{ $h }} Jam {{ $m }} Menit
-                                                            </span>
-                                                        </small>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- JUARA 3 (BRONZE) --}}
-                            @if (isset($leaderboard[2]))
-                                <div class="col-4 col-md-3 order-3 podium-step-container">
-                                    <div class="podium-avatar-wrapper bronze-glow delay-400">
-                                        <div class="rank-circle bronze">3</div>
-                                        @if ($leaderboard[2]->user->profile_photo_path)
-                                            <img src="{{ Storage::url($leaderboard[2]->user->profile_photo_path) }}"
-                                                class="luxury-avatar">
-                                        @else
-                                            <div class="luxury-avatar-placeholder bronze-gradient">
-                                                {{ substr($leaderboard[2]->user->name, 0, 1) }}</div>
-                                        @endif
-                                    </div>
-
-                                    <div class="podium-block bronze-block">
-                                        <div class="podium-content">
-                                            <h6 class="fw-bold text-truncate w-100 mb-0">
-                                                {{ explode(' ', $leaderboard[2]->user->name)[0] }}</h6>
-                                            <small
-                                                class="text-muted d-block small-font mb-2">{{ $leaderboard[2]->user->division->name ?? '-' }}</small>
-
-                                            {{-- 1. Total Hadir --}}
-                                            <div class="stat-pill mb-1">
-                                                <i
-                                                    class="mdi mdi-check-circle text-success me-1"></i>{{ $leaderboard[2]->total_attendance }}
-                                            </div>
-
-                                            {{-- 2. Avg Checkin --}}
-                                            <div class="lh-1">
-                                                <small class="text-muted d-block" style="font-size: 10px;">
-                                                    <i class="mdi mdi-clock-outline me-1"></i>Avg:
-                                                    <strong>{{ \Carbon\Carbon::parse($leaderboard[2]->avg_arrival_time)->format('H:i') }}</strong>
-                                                </small>
-
-                                                {{-- 3. Total Jam Kerja --}}
-                                                @if (isset($leaderboard[2]->total_work_seconds))
-                                                    @php
-                                                        $h = floor($leaderboard[2]->total_work_seconds / 3600);
-                                                        $m = floor(($leaderboard[2]->total_work_seconds % 3600) / 60);
-                                                    @endphp
-                                                    <small class="text-muted d-block" style="font-size: 10px;">
-                                                        <i class="mdi mdi-timer-sand me-1"></i>Total:
-                                                        <strong>{{ $h }}j {{ $m }}m</strong>
-                                                    </small>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
-                        </div>
-
-                        @if (count($leaderboard) > 3)
-                            <div class="row justify-content-center mt-3">
-                                <div class="col-lg-10">
-                                    <div class="runner-up-container">
-                                        @foreach ($leaderboard as $index => $winner)
-                                            @if ($index > 2)
-                                                <div class="runner-up-item hover-scale">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="rank-number">#{{ $index + 1 }}</div>
-                                                        <div class="ms-3 me-3">
-                                                            @if ($winner->user->profile_photo_path)
-                                                                <img src="{{ Storage::url($winner->user->profile_photo_path) }}"
-                                                                    class="rounded-circle runner-avatar shadow-sm">
-                                                            @else
-                                                                <div class="rounded-circle runner-avatar-placeholder">
-                                                                    {{ substr($winner->user->name, 0, 1) }}</div>
-                                                            @endif
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <h6 class="mb-0 fw-bold text-dark">{{ $winner->user->name }}
-                                                            </h6>
-                                                            <small
-                                                                class="text-muted">{{ $winner->user->division->name ?? '-' }}</small>
-
-                                                            {{-- Info Tambahan Runner Up --}}
-                                                            <div class="d-flex align-items-center mt-1">
-                                                                <small class="text-muted me-2" style="font-size: 10px;">
-                                                                    <i class="mdi mdi-clock me-1"></i>Avg:
-                                                                    {{ \Carbon\Carbon::parse($winner->avg_arrival_time)->format('H:i') }}
-                                                                </small>
-                                                                @if (isset($winner->total_work_seconds))
-                                                                    @php
-                                                                        $h = floor($winner->total_work_seconds / 3600);
-                                                                        $m = floor(
-                                                                            ($winner->total_work_seconds % 3600) / 60,
-                                                                        );
-                                                                    @endphp
-                                                                    <small class="text-muted" style="font-size: 10px;">
-                                                                        <i class="mdi mdi-briefcase me-1"></i>Total:
-                                                                        {{ $h }}j {{ $m }}m
-                                                                    </small>
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-end">
-                                                            <span class="badge rounded-pill bg-light text-dark border">
-                                                                {{ $winner->total_attendance }} Verified
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    {{-- 2. SECURITY SCANNER LEADERBOARD (Top Rajin Scan) --}}
-    {{-- Visible for: Admin & Security ONLY --}}
-    @if (
-        (auth()->user()->role == 'admin' || auth()->user()->role == 'security') &&
-            isset($topScanners) &&
-            count($topScanners) > 0)
-        <div class="row animate-enter mb-5" style="animation-delay: 0.5s">
-            <div class="col-12">
-                <div class="card border-0 shadow-lg luxury-card"
-                    style="border-radius: 24px; overflow: hidden; background: #fff;">
-                    <div class="luxury-bg-glow"
-                        style="background: radial-gradient(circle, rgba(0, 0, 0, 0.05) 0%, rgba(255, 255, 255, 0) 70%);">
-                    </div>
-                    <div class="luxury-bg-pattern"></div>
-
-                    <div class="card-body p-4 position-relative z-index-1">
-                        <div class="d-flex justify-content-between align-items-center mb-5">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-box-luxury me-3"
-                                    style="background: linear-gradient(135deg, #e0e0e0, #f5f5f5);">
-                                    <i class="mdi mdi-qrcode-scan text-dark"></i>
-                                </div>
-                                <div>
-                                    <h4 class="fw-bold mb-0 text-dark">Top Security</h4>
-                                    <small class="text-muted">Paling rajin memindai bulan ini</small>
-                                </div>
-                            </div>
-                            <div class="glass-badge">
-                                <i class="mdi mdi-shield-account me-2"></i>
-                                Security Team
-                            </div>
-                        </div>
-
-                        <div class="row align-items-end justify-content-center text-center podium-luxury-container pb-4">
-
-                            {{-- JUARA 2 --}}
-                            @if (isset($topScanners[1]))
-                                <div class="col-4 col-md-3 order-1 podium-step-container">
-                                    <div class="podium-avatar-wrapper silver-glow delay-200">
-                                        <div class="rank-circle silver">2</div>
-                                        @if ($topScanners[1]->profile_photo_path)
-                                            <img src="{{ Storage::url($topScanners[1]->profile_photo_path) }}"
-                                                class="luxury-avatar">
-                                        @else
-                                            <div class="luxury-avatar-placeholder silver-gradient">
-                                                {{ substr($topScanners[1]->name, 0, 1) }}</div>
-                                        @endif
-                                    </div>
-
-                                    <div class="podium-block silver-block">
-                                        <div class="podium-content">
-                                            <h6 class="fw-bold text-truncate w-100 mb-0">
-                                                {{ explode(' ', $topScanners[1]->name)[0] }}</h6>
-                                            <div class="stat-pill mt-2">
-                                                <i class="mdi mdi-qrcode me-1"></i>{{ $topScanners[1]->total_scans }} Scan
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- JUARA 1 --}}
-                            @if (isset($topScanners[0]))
-                                <div class="col-4 col-md-4 order-2 podium-step-container main-winner">
-                                    <div class="crown-floating">
-                                        <img src="https://cdn-icons-png.flaticon.com/512/2545/2545603.png" width="50"
-                                            alt="Crown">
-                                    </div>
-                                    <div class="podium-avatar-wrapper gold-glow">
-                                        <div class="rank-circle gold">1</div>
-                                        @if ($topScanners[0]->profile_photo_path)
-                                            <img src="{{ Storage::url($topScanners[0]->profile_photo_path) }}"
-                                                class="luxury-avatar">
-                                        @else
-                                            <div class="luxury-avatar-placeholder gold-gradient">
-                                                {{ substr($topScanners[0]->name, 0, 1) }}</div>
-                                        @endif
-                                        <div class="sparkle s2"></div>
-                                    </div>
-
-                                    <div class="podium-block gold-block">
-                                        <div class="podium-content">
-                                            <h5 class="fw-bolder text-dark text-truncate w-100 mb-0">
-                                                {{ $topScanners[0]->name }}</h5>
-                                            <div class="stat-pill gold mt-2">
-                                                <i class="mdi mdi-qrcode-scan me-1"></i>{{ $topScanners[0]->total_scans }}
-                                                Scan
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- JUARA 3 --}}
-                            @if (isset($topScanners[2]))
-                                <div class="col-4 col-md-3 order-3 podium-step-container">
-                                    <div class="podium-avatar-wrapper bronze-glow delay-400">
-                                        <div class="rank-circle bronze">3</div>
-                                        @if ($topScanners[2]->profile_photo_path)
-                                            <img src="{{ Storage::url($topScanners[2]->profile_photo_path) }}"
-                                                class="luxury-avatar">
-                                        @else
-                                            <div class="luxury-avatar-placeholder bronze-gradient">
-                                                {{ substr($topScanners[2]->name, 0, 1) }}</div>
-                                        @endif
-                                    </div>
-
-                                    <div class="podium-block bronze-block">
-                                        <div class="podium-content">
-                                            <h6 class="fw-bold text-truncate w-100 mb-0">
-                                                {{ explode(' ', $topScanners[2]->name)[0] }}</h6>
-                                            <div class="stat-pill mt-2">
-                                                <i class="mdi mdi-qrcode me-1"></i>{{ $topScanners[2]->total_scans }} Scan
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- Runner Ups Security --}}
-                        @if (count($topScanners) > 3)
-                            <div class="row justify-content-center mt-3">
-                                <div class="col-lg-10">
-                                    <div class="runner-up-container">
-                                        @foreach ($topScanners as $index => $scanner)
-                                            @if ($index > 2)
-                                                <div class="runner-up-item hover-scale">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="rank-number">#{{ $index + 1 }}</div>
-                                                        <div class="ms-3 me-3">
-                                                            @if ($scanner->profile_photo_path)
-                                                                <img src="{{ Storage::url($scanner->profile_photo_path) }}"
-                                                                    class="rounded-circle runner-avatar shadow-sm">
-                                                            @else
-                                                                <div class="rounded-circle runner-avatar-placeholder">
-                                                                    {{ substr($scanner->name, 0, 1) }}</div>
-                                                            @endif
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <h6 class="mb-0 fw-bold text-dark">{{ $scanner->name }}</h6>
-                                                        </div>
-                                                        <div class="text-end">
-                                                            <span class="badge rounded-pill bg-dark text-white border">
-                                                                {{ $scanner->total_scans }} Total Scan
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
-
 
     {{-- ======================================================================= --}}
     {{-- BAGIAN 2: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI)                  --}}
@@ -767,7 +337,8 @@
                         @php
                             $isCrossDay = false;
                             if (!$myAttendanceToday->check_out_time) {
-                                $isCrossDay = $myAttendanceToday->check_in_time->format('Y-m-d') !== date('Y-m-d');
+                                // Timezone already handled in Controller
+                                $isCrossDay = $myAttendanceToday->check_in_time->format('Y-m-d') !== \Carbon\Carbon::now($current_timezone)->format('Y-m-d');
                             }
                             $sourceLabel =
                                 $myAttendanceToday->attendance_type == 'scan' ? 'Security Scan' : 'Selfie Mandiri';
@@ -813,7 +384,7 @@
                                     </div>
                                     <div class="flex-grow-1">
                                         @if ($isCrossDay)
-                                            <h5 class="mb-1 fw-bold text-danger">Lembur Lintas Hari</h5>
+                                            <h5 class="mb-1 fw-bold text-danger">Lembur Lintas Hari Detected!</h5>
                                             <p class="mb-0 small text-dark">Masuk:
                                                 <strong>{{ $myAttendanceToday->check_in_time->format('d M, H:i') }}</strong>
                                                 via {{ $sourceLabel }}
@@ -847,32 +418,37 @@
                                     @else
                                         @if ($isCrossDay)
                                             <p class="text-center text-muted mb-3 small">
-                                                Anda belum absen pulang kemarin. Pilih tindakan:
+                                                Anda belum absen pulang dari sesi kemarin. Pilih tindakan:
                                             </p>
 
                                             <div class="row g-2">
                                                 <div class="col-6">
-                                                    <a href="{{ route('self.attend.create') }}"
-                                                        class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 shadow-sm hover-scale">
+                                                    {{-- Tombol Lembur (Slide/Button Visual) --}}
+                                                    <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
+                                                        class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 shadow-sm hover-scale"
+                                                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;">
                                                         <i class="mdi mdi-camera-party-mode fs-4 mb-1"></i>
-                                                        <span>Pulang (Lembur)</span>
+                                                        <span>Konfirmasi Lembur</span>
+                                                        <small style="font-size: 0.65rem;">(Foto & Verified)</small>
                                                     </a>
                                                 </div>
                                                 <div class="col-6">
+                                                    {{-- Tombol Lewati (Skip) --}}
                                                     <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
                                                         method="POST" class="h-100">
                                                         @csrf
                                                         <button type="submit"
                                                             class="btn btn-warning btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 text-dark shadow-sm hover-scale"
-                                                            onclick="return confirm('Pilih ini jika Anda KEMARIN LUPA absen pulang.\nSesi kemarin akan ditutup otomatis tanpa foto.\n\nLanjutkan?');">
+                                                            onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis tanpa foto.\nStatus kemarin akan menjadi \'Verified/Present\' tapi ada catatan skip.\n\nLanjutkan?');">
                                                             <i class="mdi mdi-skip-forward fs-4 mb-1"></i>
                                                             <span>Lewati (Lupa)</span>
+                                                            <small style="font-size: 0.65rem;">(Tutup Sesi Kemarin)</small>
                                                         </button>
                                                     </form>
                                                 </div>
                                             </div>
                                         @else
-                                            <a href="{{ route('self.attend.create') }}"
+                                            <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
                                                 class="btn btn-danger btn-sm w-100 shadow hover-scale">
                                                 <i class="mdi mdi-logout me-1"></i>
                                                 Absen Pulang Mandiri

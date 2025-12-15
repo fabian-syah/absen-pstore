@@ -7,7 +7,7 @@ use App\Models\LeaveRequest;
 use App\Models\User;
 use App\Models\Branch;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod; // Pastikan import ini ada
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -42,28 +42,44 @@ class TeamController extends Controller
             });
         }
 
-        // [UPDATE LOGIC] Ambil Attendance Terakhir (Bisa hari ini ATAU kemarin yang belum checkout)
+        // [LOGIKA BARU - FETCH ATTENDANCE]
+        // Kita perlu mengambil:
+        // 1. Absensi hari ini (Normal)
+        // 2. Absensi kemarin TAPI checkout hari ini (Pulang Lembur)
+        // 3. Absensi kemarin BELUM checkout (Sedang Lembur)
+        
         $myTeam = $query->with([
             'workSchedule',
             'attendances' => function ($q) {
                 $q->where(function($sq) {
-                    $sq->whereDate('check_in_time', today()) // Masuk Hari ini
-                       ->orWhere(function($sq2) {
-                           // ATAU Masuk Kemarin TAPI Belum Pulang (Lembur Lintas Hari)
-                           $sq2->whereNull('check_out_time')
-                               ->where('check_in_time', '>=', Carbon::now()->subHours(24));
-                       });
-                })->latest('check_in_time');
+                    // Kasus 1: Masuk Hari Ini
+                    $sq->whereDate('check_in_time', today());
+                })
+                ->orWhere(function($sq) {
+                    // Kasus 2: Pulang Hari Ini (tapi masuk sebelum hari ini) - Untuk status "Pulang Lembur"
+                    $sq->whereDate('check_out_time', today())
+                       ->whereDate('check_in_time', '<', today());
+                })
+                ->orWhere(function($sq) {
+                    // Kasus 3: Masih Aktif dari kemarin (Lembur Belum Pulang)
+                    $sq->whereNull('check_out_time')
+                       ->where('check_in_time', '>=', Carbon::now()->subHours(32));
+                })
+                ->latest('updated_at'); // Ambil update terakhir (check out time atau check in time)
             },
             'leaveRequests' => function ($q) {
-                $q->where('status', 'approved')->whereDate('start_date', '<=', today())->whereDate('end_date', '>=', today());
+                $q->where('status', 'approved')
+                  ->whereDate('start_date', '<=', today())
+                  ->whereDate('end_date', '>=', today());
             },
             'activeLateStatus', 'divisions', 'branch'
         ])
         ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
         ->orderBy('branches.name', 'asc')->orderBy('users.name', 'asc')->select('users.*')->get();
 
-        $controlledBranches = Branch::whereIn('id', $myBranchIds)->withCount(['users' => function ($q) { $q->where('is_active', true); }])->orderBy('name', 'asc')->get();
+        $controlledBranches = Branch::whereIn('id', $myBranchIds)
+            ->withCount(['users' => function ($q) { $q->where('is_active', true); }])
+            ->orderBy('name', 'asc')->get();
 
         $assignedAudits = collect();
         if (!empty($myBranchIds)) {
@@ -74,18 +90,24 @@ class TeamController extends Controller
         // Statistik Sederhana
         $stats = [
             'total' => $myTeam->count(),
-            'hadir' => $myTeam->filter(function($member) {
-                $att = $member->attendances->first();
-                $leave = $member->leaveRequests->first();
-                $isWfh = $leave && $leave->type == 'wfh';
-                return ($att) || $isWfh; 
-            })->count(),
-            'izin_sakit' => $myTeam->filter(function($member) {
-                $leave = $member->leaveRequests->first();
-                return $leave && in_array($leave->type, ['sakit', 'izin', 'cuti']);
-            })->count(),
+            'hadir' => 0,
+            'izin_sakit' => 0,
             'belum_hadir' => 0
         ];
+
+        foreach($myTeam as $member) {
+            $att = $member->attendances->first();
+            $leave = $member->leaveRequests->first();
+            $isWfh = $leave && $leave->type == 'wfh';
+
+            // Hitung Hadir jika: Ada record attendance (Masuk/Lembur/Pulang Lembur) atau WFH
+            if ($att || $isWfh) {
+                $stats['hadir']++;
+            } elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti'])) {
+                $stats['izin_sakit']++;
+            }
+        }
+        
         $stats['belum_hadir'] = $stats['total'] - ($stats['hadir'] + $stats['izin_sakit']);
         if($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0;
 
@@ -107,7 +129,7 @@ class TeamController extends Controller
             if ($user->branch_id) {
                 $allowedBranches[] = $user->branch_id;
             }
-            if (!in_array($id, $allowedBranches)) abort(403, 'Akses Ditolak. Anda tidak memiliki akses ke cabang ini.');
+            if (!in_array($id, $allowedBranches)) abort(403, 'Akses Ditolak.');
         
         } elseif ($user->role == 'leader') {
             if ($user->branch_id != $id) {
@@ -228,7 +250,6 @@ class TeamController extends Controller
         return view('team.my_branches', compact('controlledBranches'));
     }
 
-    // === METODE INI YANG SEBELUMNYA HILANG DAN MENYEBABKAN ERROR ===
     public function showEmployeeHistory(Request $request, $branchId, $employeeId) {
         $user = Auth::user();
 
@@ -259,16 +280,13 @@ class TeamController extends Controller
         $prevMonth = $prevDate->month; $prevYear = $prevDate->year;
         $nextMonth = $nextDate->month; $nextYear = $nextDate->year;
 
-        // Reuse fungsi getHistoryData yang ada di controller ini (kita buat method private baru)
         $data = $this->getHistoryData($employee, $selectedMonth, $selectedYear);
         $history = $data['history'];
         $summary = $data['summary'];
 
-        // Return ke view yang sama dengan riwayat pribadi, tapi dengan data karyawan lain
         return view('attendance.history', compact('history', 'summary', 'selectedMonth', 'selectedYear', 'employee', 'prevMonth', 'prevYear', 'nextMonth', 'nextYear'));
     }
 
-    // Helper Private untuk Logic History (Supaya tidak duplikat kode)
     private function getHistoryData($user, $selectedMonth, $selectedYear) {
         $attendances = Attendance::with('verifier')->where('user_id', $user->id)->whereYear('check_in_time', $selectedYear)->whereMonth('check_in_time', $selectedMonth)->orderBy('check_in_time', 'desc')->get();
         $leaves = LeaveRequest::where('user_id', $user->id)->where('status', 'approved')->where('is_active', true)
