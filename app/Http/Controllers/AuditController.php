@@ -173,7 +173,8 @@ class AuditController extends Controller
             }
         }
 
-        $pendingAttendances = $query->oldest()->get();
+        // UPDATE: Menggunakan paginate(10) alih-alih get() agar ada pagination
+        $pendingAttendances = $query->oldest()->paginate(10);
 
         return view('audit.verification_list', compact('pendingAttendances'));
     }
