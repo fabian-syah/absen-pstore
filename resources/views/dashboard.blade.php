@@ -375,8 +375,7 @@
                         @else
                             <div
                                 class="status-card {{ $isCrossDay ? 'status-warning' : 'status-success' }} mb-3 position-relative overflow-hidden">
-                                {{-- Background Animation Blob --}}
-                                <div class="blob-bg"></div>
+                                
 
                                 <div class="d-flex align-items-center position-relative z-index-1">
                                     <div class="status-icon shadow pulse-animation">
@@ -387,9 +386,6 @@
                                             {{-- [MODIFIKASI] SECTION LEMBUR LINTAS HARI --}}
                                             <div class="alert alert-light border-warning mb-0 p-3" style="background-color: #fffbeb; border: 1px solid #fcd34d;">
                                                 <div class="d-flex align-items-center mb-2">
-                                                    <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                                         <i class="mdi mdi-clock-time-eight-outline fs-4"></i>
-                                                    </div>
                                                     <div>
                                                         <h6 class="text-danger fw-bold mb-0 text-uppercase" style="letter-spacing: 0.5px;">Lembur Lintas Hari Detected!</h6>
                                                         <p class="text-muted small mb-0">
@@ -398,40 +394,49 @@
                                                     </div>
                                                 </div>
                                                 
-                                                <hr class="my-2" style="border-top: 1px solid #fde68a;">
+                                                <hr class="my-3" style="border-top: 1px solid #fde68a;">
 
-                                                {{-- FASE 1: SLIDER CONFIRMATION --}}
-                                                <div id="slider-view" class="text-center pt-2">
-                                                    <p class="text-muted small mb-3">Geser tombol untuk konfirmasi lembur & buka kamera.</p>
+                                                {{-- CONTAINER UTAMA ACTION --}}
+                                                <div id="cross-day-actions">
                                                     
-                                                    <div class="position-relative w-100 rounded-pill d-flex align-items-center px-1 user-select-none shadow-sm" 
-                                                         id="slide-track" 
-                                                         style="height: 50px; background-color: #fde047; transition: all 0.2s;">
+                                                    {{-- OPSI 1: SLIDER UNTUK FOTO (NORMAL) --}}
+                                                    <div class="mb-3" id="slider-view">
+                                                        <p class="text-muted small mb-1">
+                                                            <i class="mdi mdi-camera me-1"></i><strong>Opsi 1:</strong> Absen Pulang Normal (Foto)
+                                                        </p>
                                                         
-                                                        <div class="position-absolute w-100 text-center" style="pointer-events: none; left:0;">
-                                                            <span class="fw-bold text-dark small opacity-75" style="letter-spacing: 1px;">GESER KE KANAN >></span>
-                                                        </div>
+                                                        <div class="position-relative w-100 rounded-pill d-flex align-items-center px-1 user-select-none shadow-sm" 
+                                                             id="slide-track" 
+                                                             style="height: 50px; background-color: #fde047; transition: all 0.2s;">
+                                                            
+                                                            <div class="position-absolute w-100 text-center" style="pointer-events: none; left:0;">
+                                                                <span class="fw-bold text-dark small opacity-75" style="letter-spacing: 1px;">GESER KE KANAN >></span>
+                                                            </div>
 
-                                                        <div id="slide-thumb" 
-                                                             class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center text-warning"
-                                                             style="width: 42px; height: 42px; cursor: pointer; position: absolute; left: 4px; z-index: 10;">
-                                                            <i class="mdi mdi-arrow-right fw-bold fs-5"></i>
+                                                            <div id="slide-thumb" 
+                                                                 class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center text-warning"
+                                                                 style="width: 42px; height: 42px; cursor: pointer; position: absolute; left: 4px; z-index: 10;">
+                                                                <i class="mdi mdi-arrow-right fw-bold fs-5"></i>
+                                                            </div>
                                                         </div>
                                                     </div>
 
-                                                    <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}" method="POST" class="mt-3">
+                                                    {{-- OPSI 2: TOMBOL LEWATI (TANPA FOTO) --}}
+                                                    <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}" method="POST">
                                                         @csrf
+                                                        <p class="text-muted small mb-1">
+                                                            <i class="mdi mdi-cancel me-1"></i><strong>Opsi 2:</strong> Lupa Absen (Tanpa Foto)
+                                                        </p>
                                                         <button type="submit" 
-                                                                class="btn btn-link btn-sm text-muted text-decoration-none small" 
-                                                                style="font-size: 11px;"
-                                                                onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis tanpa foto.\nStatus kemarin akan menjadi \'Verified/Present\' tapi ada catatan skip.\n\nLanjutkan?');">
-                                                            Lewati (Tutup Sesi Kemarin Tanpa Foto)
+                                                                class="btn btn-outline-danger w-100 py-2 shadow-sm" 
+                                                                onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis TANPA FOTO.\nStatus kemarin akan menjadi \'Verified/Present\' tapi ada catatan skip.\n\nLanjutkan?');">
+                                                            <i class="mdi mdi-skip-forward me-2"></i>Lewati & Tutup Sesi
                                                         </button>
                                                     </form>
                                                 </div>
 
-                                                {{-- FASE 2: CAMERA BUTTON (Muncul setelah slide) --}}
-                                                <div id="camera-view" class="d-none text-center animate-enter">
+                                                {{-- FASE 3: CAMERA BUTTON (Muncul setelah slide) --}}
+                                                <div id="camera-view" class="d-none text-center animate-enter mt-3">
                                                     <div class="mb-3">
                                                         <h6 class="text-primary fw-bold">Konfirmasi Pulang</h6>
                                                         <p class="text-muted small">Silahkan ambil foto selfie untuk validasi.</p>
@@ -1613,6 +1618,7 @@
                 const thumb = document.getElementById('slide-thumb');
                 const sliderView = document.getElementById('slider-view');
                 const cameraView = document.getElementById('camera-view');
+                const actionsContainer = document.getElementById('cross-day-actions'); // Container tombol2
 
                 if (track && thumb) {
                     let isDragging = false;
@@ -1689,8 +1695,11 @@
                         track.style.backgroundColor = '#d1fae5'; // Light green
                         
                         setTimeout(() => {
-                            // Hide slider, show camera button container
-                            sliderView.classList.add('d-none');
+                            // Sembunyikan container action (slider + tombol lewati)
+                            if(actionsContainer) actionsContainer.classList.add('d-none');
+                            else sliderView.classList.add('d-none');
+                            
+                            // Munculkan kamera
                             cameraView.classList.remove('d-none');
                         }, 400);
                     }
