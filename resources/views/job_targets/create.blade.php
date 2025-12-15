@@ -26,11 +26,12 @@
                     {{-- Hidden: Redirect ke Branch jika ada --}}
                     @if(request('branch_id'))
                         <input type="hidden" name="redirect_to_branch" value="{{ request('branch_id') }}">
-                        <input type="hidden" name="branch_id" value="{{ request('branch_id') }}">
                     @endif
 
-                    {{-- 1. PILIH PENERIMA TARGET (HANYA LEADER) --}}
-                    {{-- Admin & Audit sekarang dianggap user biasa (hanya bisa diri sendiri) sesuai request --}}
+                    {{-- 1. PILIH PENERIMA TARGET (KHUSUS LEADER) --}}
+                    {{-- Sesuai request: "Selain leader cuman bisa diri sendiri" --}}
+                    {{-- $branchMembers hanya akan terisi jika controller mendeteksi role leader --}}
+                    
                     @if(auth()->user()->role == 'leader' && isset($branchMembers) && count($branchMembers) > 0)
                         <div class="mb-4 bg-light p-3 rounded-3 border border-primary border-opacity-25">
                             <label class="fw-bold mb-2 text-primary small text-uppercase ls-1">
@@ -38,18 +39,19 @@
                             </label>
                             <select name="assign_user_id" class="form-select form-select-lg fw-bold border-primary shadow-none text-dark">
                                 <option value="{{ auth()->user()->id }}">👤 Saya Sendiri (Pribadi)</option>
-                                <optgroup label="Anggota Tim">
+                                <optgroup label="Anggota Tim Cabang {{ auth()->user()->branch->name ?? '' }}">
                                     @foreach($branchMembers as $member)
-                                        {{-- Jangan tampilkan diri sendiri di grup --}}
-                                        @if($member->id != auth()->user()->id)
-                                            <option value="{{ $member->id }}" {{ request('assign_user_id') == $member->id ? 'selected' : '' }}>
-                                                {{ $member->name }} - {{ $member->login_id }}
-                                            </option>
-                                        @endif
+                                        <option value="{{ $member->id }}" {{ request('assign_user_id') == $member->id ? 'selected' : '' }}>
+                                            {{ $member->name }} - {{ $member->division->name ?? 'Staff' }}
+                                        </option>
                                     @endforeach
                                 </optgroup>
                             </select>
+                            <small class="text-muted mt-2 d-block fst-italic">* Anda hanya dapat memilih anggota dari cabang yang Anda pegang.</small>
                         </div>
+                    @else
+                        {{-- Jika Admin / Audit / Staff --}}
+                        <input type="hidden" name="assign_user_id" value="{{ auth()->user()->id }}">
                     @endif
 
                     {{-- 2. JENIS DATA --}}
@@ -59,9 +61,11 @@
                             <option value="personal_target" selected>🎯 Target Pekerjaan (Job Desk)</option>
                             <option value="personal_achievement">🏅 Pencapaian / Prestasi</option>
                             
-                            {{-- Target Global HANYA muncul jika LEADER --}}
+                            {{-- Opsi TARGET CABANG/TIM (KHUSUS LEADER) --}}
+                            {{-- Admin/Audit tidak bisa create tim target berdasarkan request --}}
                             @if(auth()->user()->role == 'leader' && !request('assign_user_id'))
                                 <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>🏢 Target Global Cabang (Tim)</option>
+                                <option value="team_achievement">🏆 Pencapaian Tim (Cabang)</option>
                             @endif
                         </select>
                     </div>
@@ -131,6 +135,7 @@
     function toggleFormElements() {
         let type = document.getElementById('typeSelect').value;
         let starGroup = document.getElementById('starLevelGroup');
+        // Hide star rating for Achievements (Pencapaian)
         if (type.includes('achievement')) { starGroup.classList.add('d-none'); } else { starGroup.classList.remove('d-none'); }
     }
     function toggleDates(period) {
