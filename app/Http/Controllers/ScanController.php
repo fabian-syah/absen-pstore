@@ -21,8 +21,9 @@ class ScanController extends Controller
     }
 
     // Helper Offset
-    private function getOffset($timezone) {
-        return Carbon::now($timezone)->format('P'); 
+    private function getOffset($timezone)
+    {
+        return Carbon::now($timezone)->format('P');
     }
 
     public function checkUser(Request $request)
@@ -40,7 +41,7 @@ class ScanController extends Controller
 
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', now()->subHours(32)) 
+            ->where('check_in_time', '>=', now()->subHours(32))
             ->latest('check_in_time')
             ->first();
 
@@ -55,11 +56,11 @@ class ScanController extends Controller
             if ($isOnLeave) {
                 $endDateFormat = Carbon::parse($isOnLeave->end_date)->format('d M Y');
                 return response()->json([
-                    'status' => 'error', 
+                    'status' => 'error',
                     'message' => "User sedang {$isOnLeave->type} (Sampai {$endDateFormat}). Tidak dapat melakukan absen."
                 ], 403);
             }
-            
+
             // Cek Sesi Hari Ini (Lokal)
             $attendanceSession = Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayLocal->format('Y-m-d')])
@@ -107,10 +108,10 @@ class ScanController extends Controller
         ]);
 
         $user = User::with(['division', 'branch'])->find($request->user_id);
-        $securityUser = Auth::user(); 
+        $securityUser = Auth::user();
         $workSchedule = WorkSchedule::getScheduleForUser($user->id);
         $currentTime = now(); // WIB Server
-        
+
         // [TIMEZONE]
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $localTime = Carbon::now($branchTimezone);
@@ -119,16 +120,16 @@ class ScanController extends Controller
         $image = $request->image;
         $image = preg_replace('/^data:image\/(jpeg|png|jpg);base64,/', '', $image);
         $image = str_replace(' ', '+', $image);
-        
+
         $typeLabel = $request->type;
         $imageName = 'attendance/capture_' . $typeLabel . '_' . time() . '_' . $user->id . '.jpg';
-        
+
         Storage::disk('public')->put($imageName, base64_decode($image));
 
         $manualNotes = $request->notes ? $request->notes : null;
 
         if ($request->type == 'masuk') {
-            
+
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
                 ->where('status', 'approved')
                 ->where('type', '!=', 'telat')
@@ -137,7 +138,7 @@ class ScanController extends Controller
                 ->exists();
 
             if ($isOnLeave) {
-                 return response()->json(['status' => 'error', 'message' => 'Gagal: User sedang dalam status Cuti/Izin.'], 403);
+                return response()->json(['status' => 'error', 'message' => 'Gagal: User sedang dalam status Cuti/Izin.'], 403);
             }
 
             Attendance::where('user_id', $user->id)
@@ -148,15 +149,17 @@ class ScanController extends Controller
             if (Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', $currentTime->copy()->subHours(32))
-                ->exists()) {
+                ->exists()
+            ) {
                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini masih memiliki sesi aktif (Belum Pulang)!'], 409);
             }
-            
+
             // Cek sudah absen hari ini (Lokal)
-             if (Attendance::where('user_id', $user->id)
+            if (Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayLocal->format('Y-m-d')])
-                ->whereNotNull('check_out_time')->exists()) {
-                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini sudah selesai absen hari ini.'], 409);
+                ->whereNotNull('check_out_time')->exists()
+            ) {
+                return response()->json(['status' => 'error', 'message' => 'Karyawan ini sudah selesai absen hari ini.'], 409);
             }
 
             $isLate = false;
@@ -164,7 +167,7 @@ class ScanController extends Controller
                 // Convert Jadwal ke Lokal DateTime hari ini
                 $scheduleEndStr = Carbon::parse($workSchedule->check_in_end)->format('H:i:s');
                 $scheduleEndLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleEndStr, $branchTimezone);
-                
+
                 if ($localTime->gt($scheduleEndLocal)) {
                     $isLate = true;
                 }
@@ -182,22 +185,20 @@ class ScanController extends Controller
                 'check_in_time' => $currentTime,
                 'status' => 'verified',
                 'presence_status' => 'Masuk',
-                'photo_path' => $imageName, 
+                'photo_path' => $imageName,
                 'scanned_by_user_id' => $securityUser->id,
-                'verified_by_user_id' => $securityUser->id, 
+                'verified_by_user_id' => $securityUser->id,
                 'work_schedule_id' => $workSchedule?->id,
                 'is_late_checkin' => $isLate,
                 'attendance_type' => 'scan',
-                'notes' => $manualNotes, 
+                'notes' => $manualNotes,
                 'scheduled_check_in' => $snapIn,
                 'scheduled_check_out' => $snapOut,
             ]);
 
             $msg = $isLate ? "Absen MASUK (TERLAMBAT)" : "Absen MASUK Berhasil";
+        } elseif ($request->type == 'pulang') {
 
-        } 
-        elseif ($request->type == 'pulang') {
-            
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', now()->subHours(32))
@@ -210,19 +211,21 @@ class ScanController extends Controller
 
             $isEarlyCheckout = false;
             if ($workSchedule) {
-                 // Logic Pulang Cepat
-                 $scheduleStartStr = Carbon::parse($workSchedule->check_out_start)->format('H:i:s');
-                 $scheduleStartLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleStartStr, $branchTimezone);
-                 
-                 if ($localTime->lt($scheduleStartLocal)) {
-                     $isEarlyCheckout = true;
-                 }
+                // Logic Pulang Cepat
+                $scheduleStartStr = Carbon::parse($workSchedule->check_out_start)->format('H:i:s');
+                $scheduleStartLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleStartStr, $branchTimezone);
+
+                if ($localTime->lt($scheduleStartLocal)) {
+                    $isEarlyCheckout = true;
+                }
             }
 
             $updateData = [
                 'check_out_time' => $currentTime,
-                'photo_out_path' => $imageName, 
+                'photo_out_path' => $imageName,
                 'is_early_checkout' => $isEarlyCheckout,
+                // TAMBAHKAN BARIS INI AGAR TIDAK NULL & LEADERBOARD JALAN:
+                'scanned_out_by_user_id' => $securityUser->id,
             ];
 
             if ($attendance->status != 'verified') {
@@ -232,7 +235,7 @@ class ScanController extends Controller
 
             $securityNote = ' | Pulang via Security Scan by ' . $securityUser->name;
             $userNoteString = $manualNotes ? " | Catatan: " . $manualNotes : "";
-            
+
             $updateData['notes'] = ($attendance->notes ? $attendance->notes : '') . $userNoteString . $securityNote;
 
             $attendance->update($updateData);
@@ -245,13 +248,13 @@ class ScanController extends Controller
             'message' => $msg,
             'data' => [
                 'name' => $user->name,
-                'role' => $user->role, 
-                'division' => $user->division->name ?? '-', 
-                'branch' => $user->branch->name ?? '-', 
+                'role' => $user->role,
+                'division' => $user->division->name ?? '-',
+                'branch' => $user->branch->name ?? '-',
                 'profile_photo' => $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
-                'photo' => asset('storage/' . $imageName), 
-                'notes' => $manualNotes, 
-                'time' => $localTime->format('H:i'), 
+                'photo' => asset('storage/' . $imageName),
+                'notes' => $manualNotes,
+                'time' => $localTime->format('H:i'),
                 'date' => $localTime->format('d M Y'),
                 'is_late' => $isLate ?? false,
                 'is_early_checkout' => $isEarlyCheckout ?? false,
@@ -261,16 +264,17 @@ class ScanController extends Controller
 
     public function getStats(Request $request)
     {
-         $securityUser = Auth::user(); $today = today();
-         $stats = [
+        $securityUser = Auth::user();
+        $today = today();
+        $stats = [
             'total_scans_today' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('updated_at', $today)->count(),
             'check_in_count' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('check_in_time', $today)->whereNotNull('check_in_time')->count(),
-            'check_out_count' => Attendance::where(function($q) use ($securityUser, $today) {
-                $q->where('scanned_by_user_id', $securityUser->id); 
+            'check_out_count' => Attendance::where(function ($q) use ($securityUser, $today) {
+                $q->where('scanned_by_user_id', $securityUser->id);
             })->whereDate('check_out_time', $today)->whereNotNull('check_out_time')->count(),
             'late_count' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('check_in_time', $today)->where('is_late_checkin', true)->count(),
-         ];
-         return response()->json(['status' => 'success', 'data' => $stats]);
+        ];
+        return response()->json(['status' => 'success', 'data' => $stats]);
     }
 
     public function history(Request $request)
@@ -279,14 +283,14 @@ class ScanController extends Controller
         $query = Attendance::with(['user.division', 'user.branch', 'branch', 'scanner', 'verifier']);
 
         if ($user->role == 'admin') {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->whereNotNull('scanned_by_user_id')
-                  ->orWhere('notes', 'LIKE', '%Security Scan by%');
+                    ->orWhere('notes', 'LIKE', '%Security Scan by%');
             });
         } else {
-            $query->where(function($q) use ($user) {
+            $query->where(function ($q) use ($user) {
                 $q->where('scanned_by_user_id', $user->id)
-                  ->orWhere('notes', 'LIKE', '%Security Scan by ' . $user->name . '%');
+                    ->orWhere('notes', 'LIKE', '%Security Scan by ' . $user->name . '%');
             });
         }
 
