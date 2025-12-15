@@ -12,7 +12,7 @@
         .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
         .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
         .bg-soft-danger  { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
-        /* Warna Baru untuk Status Lembur Lintas Hari */
+        /* Warna Baru: Status Lembur Lintas Hari (Ungu) */
         .bg-soft-indigo  { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; border: 1px solid rgba(102, 16, 242, 0.2); } 
         
         .team-card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); overflow: hidden; }
@@ -85,7 +85,11 @@
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                         <div>
                             <h4 class="mb-2 fw-bold">
-                                <i class="mdi mdi-account-multiple-outline me-2"></i>Status Rekan Tim
+                                @if (count($myBranchIds) > 1)
+                                    <i class="mdi mdi-domain me-2"></i>Tim Lintas Cabang
+                                @else
+                                    <i class="mdi mdi-office-building me-2"></i>Rekan Satu Cabang
+                                @endif
                             </h4>
                             <p class="mb-0 opacity-75 small">Monitoring kehadiran real-time.</p>
                         </div>
@@ -93,6 +97,32 @@
                             <i class="mdi mdi-account-group me-2"></i>{{ $myTeam->count() }} Orang
                         </span>
                     </div>
+
+                    {{-- Audit Penanggung Jawab --}}
+                    @if(isset($assignedAudits) && $assignedAudits->count() > 0)
+                        <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <small class="text-white-50 fw-bold text-uppercase me-2" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                                    <i class="mdi mdi-shield-account me-1"></i> Audit Wilayah:
+                                </small>
+                                @foreach($assignedAudits as $audit)
+                                    <div class="audit-pill">
+                                        @if($audit->profile_photo_path)
+                                            <img src="{{ Storage::url($audit->profile_photo_path) }}" 
+                                                 class="rounded-circle me-2" width="20" height="20" 
+                                                 style="object-fit: cover; border: 1px solid white;">
+                                        @else
+                                            <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center me-2 fw-bold"
+                                                 style="width: 20px; height: 20px; font-size: 10px;">
+                                                {{ substr($audit->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <span class="text-white small fw-bold">{{ $audit->name }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="card-body p-0">
@@ -113,10 +143,9 @@
                                         $leave = $member->leaveRequests->first();
                                         $isWfh = $leave && $leave->type == 'wfh';
                                         
-                                        // Ambil Timezone Cabang Member
+                                        // Ambil Timezone Cabang Member untuk akurasi tanggal
                                         $memberTz = $member->branch->timezone ?? 'Asia/Jakarta';
                                         
-                                        // Cek apakah data absensi ini adalah "Sisa Kemarin" (Lembur)
                                         $isOvertimeYesterday = false;
                                         $isStillWorkingOvertime = false;
 
@@ -127,7 +156,7 @@
                                             // Jika tanggal checkin BUKAN hari ini
                                             if ($checkInDate !== $todayDate) {
                                                 if ($attendance->check_out_time) {
-                                                    // Sudah pulang (tapi pulangnya hari ini) -> INI TARGET KITA
+                                                    // Sudah pulang (tapi pulangnya hari ini)
                                                     $isOvertimeYesterday = true; 
                                                 } else {
                                                     // Belum pulang (masih lembur dari kemarin)
@@ -136,7 +165,7 @@
                                             }
                                         }
 
-                                        // Online status
+                                        // Online status jika belum checkout
                                         $isOnline = ($attendance && !$attendance->check_out_time) || $isWfh;
                                     @endphp
 
@@ -164,14 +193,16 @@
                                             @if ($attendance)
                                                 @if ($isOvertimeYesterday)
                                                     {{-- KASUS: Pulang Lembur (Data Kemarin) --}}
-                                                    <span class="status-badge bg-soft-indigo text-primary" title="Shift dari kemarin">
-                                                        <i class="mdi mdi-bed-clock me-1"></i> 
-                                                        <span>Habis Lembur</span>
-                                                    </span>
-                                                    <div class="small text-muted mt-1">
-                                                        Pulang: {{ \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz)->format('H:i') }}
+                                                    <div class="d-flex flex-column align-items-start">
+                                                        <span class="status-badge bg-soft-indigo text-primary" title="Shift dari kemarin">
+                                                            <i class="mdi mdi-bed-clock me-1"></i> 
+                                                            <span>Habis Lembur</span>
+                                                        </span>
+                                                        <small class="text-muted ms-2 mt-1" style="font-size: 0.7rem;">
+                                                            Pulang: {{ \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz)->format('H:i') }}
+                                                        </small>
+                                                        <span class="badge bg-light text-danger border border-danger mt-1" style="font-size: 0.65rem;">Belum Absen Shift Baru</span>
                                                     </div>
-                                                    <span class="badge bg-light text-danger border border-danger mt-1" style="font-size: 0.65rem;">Belum Absen Shift Baru</span>
 
                                                 @elseif ($isStillWorkingOvertime)
                                                     {{-- KASUS: Masih Lembur (Data Kemarin belum checkout) --}}
@@ -201,18 +232,27 @@
                                         </td>
                                         <td class="py-3">
                                             {{-- BUKTI FOTO --}}
-                                            <div class="d-flex gap-2">
+                                            <div class="d-flex flex-wrap gap-2 align-items-center">
                                                 @if ($attendance)
                                                     @if($attendance->photo_path)
-                                                        <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}">
-                                                            <i class="mdi mdi-camera"></i> Masuk
+                                                        <button class="view-photo-btn bg-success text-white" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}">
+                                                            <div class="photo-preview"><img src="{{ Storage::url($attendance->photo_path) }}" style="width: 100%; height: 100%; object-fit: cover;"></div> 
+                                                            <span>Masuk</span>
                                                         </button>
                                                     @endif
                                                     @if($attendance->photo_out_path)
-                                                        <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_out_path) }}">
-                                                            <i class="mdi mdi-camera"></i> Pulang
+                                                        <button class="view-photo-btn bg-primary text-white" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_out_path) }}">
+                                                            <div class="photo-preview"><img src="{{ Storage::url($attendance->photo_out_path) }}" style="width: 100%; height: 100%; object-fit: cover;"></div> 
+                                                            <span>Pulang</span>
                                                         </button>
                                                     @endif
+                                                @elseif ($leave && $leave->file_proof)
+                                                    <button class="view-photo-btn bg-info text-white" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($leave->file_proof) }}">
+                                                        <div class="photo-preview"><img src="{{ Storage::url($leave->file_proof) }}" style="width: 100%; height: 100%; object-fit: cover;"></div> 
+                                                        <span>Bukti</span>
+                                                    </button>
+                                                @else
+                                                    <span class="text-muted small"><i class="mdi mdi-minus-circle me-1"></i>-</span>
                                                 @endif
                                             </div>
                                         </td>

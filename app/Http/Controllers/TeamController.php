@@ -17,7 +17,7 @@ class TeamController extends Controller
     {
         $user = Auth::user();
         
-        // 1. Ambil ID Cabang yang dikontrol user
+        // 1. Setup ID Cabang
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
         if ($user->branch_id) {
             $myBranchIds[] = $user->branch_id;
@@ -27,19 +27,19 @@ class TeamController extends Controller
         }
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
-        // 2. Setup Timezone User (Untuk referensi dasar)
+        // 2. Setup Timezone
         $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
         $nowInBranch = Carbon::now($userTimezone);
 
-        // 3. Query User Team
+        // 3. Base Query User
         $query = User::where('users.is_active', true);
 
         if (empty($myBranchIds)) {
             if (in_array($user->role, ['user_biasa', 'security'])) {
                 $query->where('division_id', $user->division_id)->where('users.id', '!=', $user->id);
             } else {
-                $query->where('users.id', 0); // Hide all if no branch
+                $query->where('users.id', 0);
             }
         } else {
             $query->where(function ($q) use ($myBranchIds) {
@@ -50,25 +50,28 @@ class TeamController extends Controller
             });
         }
 
-        // 4. Eager Load dengan Logika "Habis Lembur"
+        // 4. EAGER LOADING ATTENDANCE (CRITICAL FIX)
+        // Kita perlu mengambil attendance yang RELEVAN hari ini.
+        // Relevan = Masuk Hari Ini ATAU Pulang Hari Ini (Lembur kemarin) ATAU Masih Aktif dari kemarin.
         $myTeam = $query->with([
             'workSchedule',
             'attendances' => function ($q) use ($todayInBranch, $nowInBranch) {
-                $q->where(function($sq) use ($todayInBranch) {
-                    // A. Masuk Hari Ini
+                $q->where(function($sq) use ($todayInBranch, $nowInBranch) {
+                    // A. Masuk Hari Ini (Normal)
                     $sq->whereDate('check_in_time', $todayInBranch);
                 })
                 ->orWhere(function($sq) use ($todayInBranch) {
-                    // B. Pulang Hari Ini (Tapi Masuk Kemarin) -> INI YANG MEMPERBAIKI STATUS
+                    // B. Pulang Hari Ini (Tapi Masuk Kemarin - "Habis Lembur")
                     $sq->whereDate('check_out_time', $todayInBranch)
                        ->whereDate('check_in_time', '<', $todayInBranch);
                 })
                 ->orWhere(function($sq) use ($nowInBranch) {
-                    // C. Masih Lembur (Belum Pulang dari Kemarin)
+                    // C. Masih Lembur (Belum Pulang) - Batas 32 Jam
                     $sq->whereNull('check_out_time')
                        ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
                 })
-                ->orderBy('check_in_time', 'desc'); 
+                // PENTING: Order by Updated At Desc agar aksi terakhir (misal checkout subuh tadi) yang diambil paling atas
+                ->orderBy('updated_at', 'desc'); 
             },
             'leaveRequests' => function ($q) use ($todayInBranch) {
                 $q->where('status', 'approved')
@@ -80,7 +83,7 @@ class TeamController extends Controller
         ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
         ->orderBy('branches.name', 'asc')->orderBy('users.name', 'asc')->select('users.*')->get();
 
-        // 5. Data Statistik Sidebar (Opsional)
+        // 5. Data Statistik Cabang (Sidebar)
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->withCount(['users' => function ($q) { $q->where('is_active', true); }])
             ->orderBy('name', 'asc')->get();
@@ -91,7 +94,7 @@ class TeamController extends Controller
                 ->whereHas('branches', function($q) use ($myBranchIds) { $q->whereIn('branches.id', $myBranchIds); })->get();
         }
 
-        // 6. Hitung Statistik Header
+        // 6. Hitung Statistik Header (Termasuk Habis Lembur)
         $stats = [
             'total' => $myTeam->count(),
             'hadir' => 0,
@@ -100,10 +103,12 @@ class TeamController extends Controller
         ];
 
         foreach($myTeam as $member) {
-            $att = $member->attendances->first(); // Ambil data attendance yg sudah difilter query diatas
+            $att = $member->attendances->first(); // Ambil record teratas (terbaru)
             $leave = $member->leaveRequests->first();
             $isWfh = $leave && $leave->type == 'wfh';
 
+            // Cek apakah Attendance ini "Valid" sebagai kehadiran
+            // Valid jika: Masuk hari ini ATAU Habis Lembur hari ini ATAU Masih Lembur
             if ($att || $isWfh) {
                 $stats['hadir']++;
             } elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti'])) {
@@ -134,21 +139,18 @@ class TeamController extends Controller
         }
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
-        // FIX ERROR CRASH: Menggunakan map() untuk memproses data
-        // Agar stats_today benar-benar menempel pada object branch
+        // FIX CRASH: Gunakan map() setelah get()
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->orderBy('name', 'asc')
             ->get()
             ->map(function ($branch) {
-                // Timezone per cabang
                 $tz = $branch->timezone ?? 'Asia/Jakarta';
                 $todayInBranch = Carbon::now($tz)->format('Y-m-d');
                 $nowInBranch = Carbon::now($tz);
 
-                // Hitung User Aktif
+                // Query Users & Attendance (Sama persis dengan logic index)
                 $users = User::where('branch_id', $branch->id)->where('is_active', true)
                     ->with(['attendances' => function($q) use ($todayInBranch, $nowInBranch) {
-                        // Logika Absensi yang SAMA dengan index()
                         $q->where(function($sq) use ($todayInBranch) {
                             $sq->whereDate('check_in_time', $todayInBranch);
                         })->orWhere(function($sq) use ($todayInBranch) {
@@ -157,14 +159,14 @@ class TeamController extends Controller
                         })->orWhere(function($sq) use ($nowInBranch) {
                             $sq->whereNull('check_out_time')
                                ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
-                        });
+                        })->orderBy('updated_at', 'desc');
                     }, 'leaveRequests' => function($q) use ($todayInBranch) {
                         $q->where('status', 'approved')
                           ->whereDate('start_date', '<=', $todayInBranch)
                           ->whereDate('end_date', '>=', $todayInBranch);
                     }])->get();
 
-                $branch->users_count = $users->count(); // Set manual count
+                $branch->users_count = $users->count(); 
 
                 $hadir = 0; $sakit = 0; $izin_cuti = 0; $alpha = 0;
 
@@ -187,13 +189,15 @@ class TeamController extends Controller
                     }
                 }
 
-                // Pasang data ke object branch
                 $branch->stats_today = [
                     'hadir' => $hadir,
                     'sakit' => $sakit,
                     'izin' => $izin_cuti,
                     'alpha' => $alpha
                 ];
+
+                // Attach users collection to branch for avatar loop in blade
+                $branch->setRelation('users', $users);
 
                 return $branch;
             });
@@ -242,7 +246,8 @@ class TeamController extends Controller
                 ->orWhere(function($sq) use ($nowInBranch) {
                     $sq->whereNull('check_out_time')
                        ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
-                });
+                })
+                ->orderBy('updated_at', 'desc');
             }])->get();
 
         $attendanceGroups = ['Masuk' => [], 'Izin' => [], 'Sakit' => [], 'Cuti' => [], 'WFH / Dinas Luar' => [], 'Alpha / Belum Absen' => []];
