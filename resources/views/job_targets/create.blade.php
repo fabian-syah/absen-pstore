@@ -16,7 +16,7 @@
                     </div>
                     <div>
                         <h4 class="fw-bold mb-0 text-dark">Beri Target Baru</h4>
-                        <small class="text-muted">Tentukan target pekerjaan atau pencapaian</small>
+                        <small class="text-muted">Tentukan target untuk tim atau diri sendiri</small>
                     </div>
                 </div>
                 
@@ -28,12 +28,26 @@
                         <input type="hidden" name="redirect_to_branch" value="{{ request('branch_id') }}">
                     @endif
 
-                    {{-- 1. PILIH PENERIMA TARGET (KHUSUS LEADER) --}}
-                    {{-- Sesuai request: "Selain leader cuman bisa diri sendiri" --}}
-                    {{-- $branchMembers hanya akan terisi jika controller mendeteksi role leader --}}
-                    
+                    {{-- 2. JENIS TARGET (Dipindah ke atas agar logic JS jalan duluan) --}}
+                    <div class="mb-4">
+                        <label class="fw-bold mb-2 text-dark small text-uppercase ls-1">Jenis Target</label>
+                        <select name="type" id="typeSelect" class="form-select fw-bold border-secondary text-dark" onchange="toggleAssignmentType()">
+                            <option value="personal_target" selected>🎯 Target Pekerjaan (Job Desk)</option>
+                            <option value="personal_achievement">🏅 Pencapaian / Prestasi (Individu)</option>
+                            
+                            {{-- Opsi TARGET CABANG/TIM (KHUSUS LEADER) --}}
+                            @if(auth()->user()->role == 'leader' && !request('assign_user_id'))
+                                <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>🏢 Target Global Cabang (Tim)</option>
+                                <option value="team_achievement">🏆 Pencapaian Tim (Cabang)</option>
+                            @endif
+                        </select>
+                    </div>
+
+                    {{-- 1. BAGIAN ASSIGNMENT (Dinamis via JS) --}}
                     @if(auth()->user()->role == 'leader' && isset($branchMembers) && count($branchMembers) > 0)
-                        <div class="mb-4 bg-light p-3 rounded-3 border border-primary border-opacity-25">
+                        
+                        {{-- A. Jika Target Personal -> Pilih Orang --}}
+                        <div id="userAssignmentRow" class="mb-4 bg-light p-3 rounded-3 border border-primary border-opacity-25">
                             <label class="fw-bold mb-2 text-primary small text-uppercase ls-1">
                                 <i class="mdi mdi-account-arrow-right me-1"></i> Tugaskan Kepada (Penerima)
                             </label>
@@ -47,28 +61,31 @@
                                     @endforeach
                                 </optgroup>
                             </select>
-                            <small class="text-muted mt-2 d-block fst-italic">* Anda hanya dapat memilih anggota dari cabang yang Anda pegang.</small>
+                            <small class="text-muted mt-2 d-block fst-italic">* Target ini akan masuk ke Job Desk individu yang dipilih.</small>
                         </div>
+
+                        {{-- B. Jika Target Tim -> Otomatis ke Cabang (Tampilannya beda) --}}
+                        <div id="branchAssignmentRow" class="mb-4 bg-soft-warning p-3 rounded-3 border border-warning border-opacity-25 d-none">
+                            <label class="fw-bold mb-2 text-warning text-dark small text-uppercase ls-1">
+                                <i class="mdi mdi-bank me-1"></i> Ditugaskan Ke Lingkup Cabang
+                            </label>
+                            <div class="d-flex align-items-center bg-white p-3 rounded border">
+                                <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3">
+                                    <i class="mdi mdi-office-building text-warning mdi-24px"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0 fw-bold text-dark">{{ auth()->user()->branch->name ?? 'Cabang Tidak Diketahui' }}</h5>
+                                    <small class="text-muted">Target ini berlaku untuk satu tim penuh di cabang ini.</small>
+                                </div>
+                            </div>
+                            {{-- Input Hidden untuk memastikan backend tahu ini untuk cabang leader --}}
+                            <input type="hidden" name="assign_branch_id" value="{{ auth()->user()->branch_id }}">
+                        </div>
+
                     @else
-                        {{-- Jika Admin / Audit / Staff --}}
+                        {{-- Jika Admin / Audit / Staff (Hanya diri sendiri) --}}
                         <input type="hidden" name="assign_user_id" value="{{ auth()->user()->id }}">
                     @endif
-
-                    {{-- 2. JENIS DATA --}}
-                    <div class="mb-4">
-                        <label class="fw-bold mb-2 text-dark small text-uppercase ls-1">Jenis Target</label>
-                        <select name="type" id="typeSelect" class="form-select fw-bold border-secondary text-dark" onchange="toggleFormElements()">
-                            <option value="personal_target" selected>🎯 Target Pekerjaan (Job Desk)</option>
-                            <option value="personal_achievement">🏅 Pencapaian / Prestasi</option>
-                            
-                            {{-- Opsi TARGET CABANG/TIM (KHUSUS LEADER) --}}
-                            {{-- Admin/Audit tidak bisa create tim target berdasarkan request --}}
-                            @if(auth()->user()->role == 'leader' && !request('assign_user_id'))
-                                <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>🏢 Target Global Cabang (Tim)</option>
-                                <option value="team_achievement">🏆 Pencapaian Tim (Cabang)</option>
-                            @endif
-                        </select>
-                    </div>
 
                     {{-- 3. LEVEL & PERIODE --}}
                     <div class="mb-4" id="starLevelGroup">
@@ -129,20 +146,48 @@
     #star2:checked + label { background-color: #ffc107 !important; color: #000 !important; }
     #star1:checked + label { background-color: #6c757d !important; color: #fff !important; }
     .hover-scale:hover { transform: scale(1.01); transition: transform 0.2s; }
+    .bg-soft-warning { background-color: #fff8e1; }
 </style>
 
 <script>
-    function toggleFormElements() {
+    // Fungsi Utama: Mengatur Tampilan berdasarkan Jenis Target
+    function toggleAssignmentType() {
         let type = document.getElementById('typeSelect').value;
+        let userRow = document.getElementById('userAssignmentRow');
+        let branchRow = document.getElementById('branchAssignmentRow');
         let starGroup = document.getElementById('starLevelGroup');
-        // Hide star rating for Achievements (Pencapaian)
-        if (type.includes('achievement')) { starGroup.classList.add('d-none'); } else { starGroup.classList.remove('d-none'); }
+
+        // Cek apakah userRow ada (karena hanya render untuk Leader)
+        if (userRow && branchRow) {
+            if (type.includes('team')) {
+                // Jika Target Tim: Sembunyikan Pilih Orang, Tampilkan Info Cabang
+                userRow.classList.add('d-none');
+                branchRow.classList.remove('d-none');
+            } else {
+                // Jika Target Personal: Tampilkan Pilih Orang, Sembunyikan Info Cabang
+                userRow.classList.remove('d-none');
+                branchRow.classList.add('d-none');
+            }
+        }
+
+        // Logic Sembunyikan Bintang untuk Achievement (Prestasi)
+        if (type.includes('achievement')) { 
+            starGroup.classList.add('d-none'); 
+        } else { 
+            starGroup.classList.remove('d-none'); 
+        }
     }
+
     function toggleDates(period) {
         document.getElementById('date_daily').classList.add('d-none');
         document.getElementById('date_monthly').classList.add('d-none');
         document.getElementById('date_yearly').classList.add('d-none');
         document.getElementById('date_' + period).classList.remove('d-none');
     }
+
+    // Jalankan saat load halaman agar kondisi awal sesuai
+    document.addEventListener("DOMContentLoaded", function() {
+        toggleAssignmentType();
+    });
 </script>
 @endsection

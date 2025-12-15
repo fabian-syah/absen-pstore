@@ -21,12 +21,11 @@ class JobTargetController extends Controller
         // 1. Ambil Data Personal (Milik User Sendiri)
         $personalData = JobTarget::where('user_id', $user->id)
             ->whereIn('type', ['personal_target', 'personal_achievement'])
-            ->orderBy('star_level', 'desc') // Prioritas level tinggi dulu
-            ->orderBy('deadline', 'asc')    // Deadline terdekat
+            ->orderBy('star_level', 'desc')
+            ->orderBy('deadline', 'asc')
             ->get();
 
         // 2. Ambil Data Tim/Cabang (Target Global Cabang User)
-        // Semua user (Leader/Staff) bisa melihat target global cabang mereka
         $teamData = collect(); 
         if ($user->branch_id) {
             $teamData = JobTarget::where('branch_id', $user->branch_id)
@@ -76,16 +75,24 @@ class JobTargetController extends Controller
             'period_type' => 'required|in:daily,monthly,yearly',
         ]);
 
-        // Default: Target untuk Diri Sendiri
+        // --- LOGIKA PENENTUAN USER ID & BRANCH ID ---
+        
+        // Default: Target milik diri sendiri
         $targetUserId = $user->id; 
         $branchId     = $user->branch_id;
 
-        // JIKA LEADER memilih orang lain (Assign To)
-        // Pastikan role Leader DAN ada input assign_user_id
-        if ($user->role == 'leader' && $request->filled('assign_user_id')) {
+        // Cek apakah ini Target Tim/Cabang?
+        if (Str::contains($request->type, 'team')) {
+            // Jika Target Tim:
+            // User ID tetap si pembuat (Leader), tapi type-nya 'team_target'
+            // Branch ID dipastikan ambil dari leader
+            $targetUserId = $user->id; 
+            $branchId     = $user->branch_id;
+        } 
+        // Jika Target Personal dan Leader memilih orang lain
+        elseif ($user->role == 'leader' && $request->filled('assign_user_id')) {
             $targetUserId = $request->assign_user_id;
-            
-            // Ambil data user target untuk sync branch_id
+            // Ambil branch dari user yang dituju (biar sinkron jika beda - meski biasanya sama)
             $assignedUser = User::find($targetUserId);
             if($assignedUser) {
                 $branchId = $assignedUser->branch_id;
@@ -165,9 +172,6 @@ class JobTargetController extends Controller
             'star_level'  => $request->input('star_level', $jobTarget->star_level),
         ]);
 
-        // Update tanggal jika ada input (opsional, sesuaikan kebutuhan)
-        // ...
-
         return redirect()->route('job-targets.index')->with('success', 'Data berhasil diperbarui.');
     }
 
@@ -193,14 +197,9 @@ class JobTargetController extends Controller
             $photoPath = $request->file('evidence_photo')->store('targets/evidence', 'public');
         }
 
-        // Tentukan Status (Jika Outcome = Gagal/Diubah, status tetap pending atau failed, selain itu completed)
+        // Tentukan Status
         $status = 'completed';
-        if (in_array($request->outcome, ['Gagal Tercapai', 'Target Diubah'])) {
-            // Bisa diset 'failed' atau tetap 'pending' tergantung flow bisnis
-            // Disini kita set completed tapi outcome-nya negatif agar masuk history
-            $status = 'completed'; 
-        }
-
+        
         $target->update([
             'outcome'                => $request->outcome,
             'completion_description' => $request->completion_description,
