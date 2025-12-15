@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
+    // Set Timezone Admin (Pusat)
+    protected $adminTimezone = 'Asia/Jakarta';
+
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
@@ -120,12 +123,37 @@ class UserController extends Controller
         $data['only_security_scan'] = $request->has('only_security_scan') ? 1 : 0;
         $data['use_face_recognition'] = $request->input('use_face_recognition', 1);
 
-        // --- [PERBAIKAN] SIMPAN JAM APA ADANYA (RAW) ---
-        // Jangan dikonversi. Jika input 10:00, simpan 10:00. 
-        // Ini akan dianggap sebagai "10:00 Waktu Lokal Cabang Tersebut".
-        $data['check_in_start']  = $request->check_in_start ?: null;
-        $data['check_out_start'] = $request->check_out_start ?: null;
-        
+        // --- [LOGIKA KONVERSI TIMEZONE: WIB -> CABANG] ---
+        // Admin input Jam WIB -> Sistem konversi ke Jam Lokal Cabang untuk disimpan di DB
+        if ($request->branch_id) {
+            $branch = Branch::find($request->branch_id);
+            $targetTz = $branch->timezone ?? $this->adminTimezone;
+
+            // Proses Jam Masuk
+            if ($request->check_in_start) {
+                // Anggap inputan admin adalah WIB
+                $timeIn = Carbon::createFromFormat('H:i', $request->check_in_start, $this->adminTimezone);
+                // Konversi ke Timezone Cabang (Misal WITA/WIT)
+                $timeIn->setTimezone($targetTz);
+                $data['check_in_start'] = $timeIn->format('H:i:s');
+            } else {
+                $data['check_in_start'] = null;
+            }
+
+            // Proses Jam Pulang
+            if ($request->check_out_start) {
+                $timeOut = Carbon::createFromFormat('H:i', $request->check_out_start, $this->adminTimezone);
+                $timeOut->setTimezone($targetTz);
+                $data['check_out_start'] = $timeOut->format('H:i:s');
+            } else {
+                $data['check_out_start'] = null;
+            }
+        } else {
+            // Jika tidak ada cabang, simpan apa adanya
+            $data['check_in_start']  = $request->check_in_start ?: null;
+            $data['check_out_start'] = $request->check_out_start ?: null;
+        }
+
         $data['check_in_end']    = null;
         $data['check_out_end']   = null;
 
@@ -171,12 +199,10 @@ class UserController extends Controller
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
             if ($auth_user->branch_id) $allowedBranchIds[] = $auth_user->branch_id;
-
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
             }
         }
-
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
@@ -192,14 +218,34 @@ class UserController extends Controller
         } else {
             $branches = Branch::all();
         }
-
         $divisions = Division::all();
         $allowedRoles = ['admin', 'admin_gaji', 'audit', 'leader', 'security', 'user_biasa'];
 
-        // --- [PERBAIKAN] TAMPILKAN JAM APA ADANYA (RAW) ---
-        // Tidak perlu dikonversi balik, karena kita menyimpan jam lokal apa adanya.
-        $displayCheckIn = $user->check_in_start ? date('H:i', strtotime($user->check_in_start)) : '';
-        $displayCheckOut = $user->check_out_start ? date('H:i', strtotime($user->check_out_start)) : '';
+        // --- [LOGIKA KONVERSI BALIK: CABANG -> WIB] UNTUK FORM EDIT ---
+        // Agar admin melihat jam dalam WIB (sesuai inputan awal), bukan jam lokal (WITA/WIT)
+        $displayCheckIn = '';
+        $displayCheckOut = '';
+        
+        if ($user->branch) {
+            $branchTz = $user->branch->timezone ?? $this->adminTimezone;
+
+            if ($user->check_in_start) {
+                // Ambil jam database (Timezone Cabang)
+                $timeIn = Carbon::createFromFormat('H:i:s', $user->check_in_start, $branchTz);
+                // Konversi tampilannya ke WIB (Admin)
+                $timeIn->setTimezone($this->adminTimezone);
+                $displayCheckIn = $timeIn->format('H:i');
+            }
+
+            if ($user->check_out_start) {
+                $timeOut = Carbon::createFromFormat('H:i:s', $user->check_out_start, $branchTz);
+                $timeOut->setTimezone($this->adminTimezone);
+                $displayCheckOut = $timeOut->format('H:i');
+            }
+        } else {
+            $displayCheckIn = $user->check_in_start ? date('H:i', strtotime($user->check_in_start)) : '';
+            $displayCheckOut = $user->check_out_start ? date('H:i', strtotime($user->check_out_start)) : '';
+        }
 
         return view('users.user_edit', compact('user', 'divisions', 'branches', 'allowedRoles', 'displayCheckIn', 'displayCheckOut'));
     }
@@ -225,7 +271,6 @@ class UserController extends Controller
         if (in_array(Auth::user()->role, ['audit', 'leader']) && $request->filled('branch_id')) {
             $allowedBranchIds = Auth::user()->branches()->pluck('branches.id')->toArray();
             if (Auth::user()->branch_id) $allowedBranchIds[] = Auth::user()->branch_id;
-
             if (!in_array($request->branch_id, $allowedBranchIds)) {
                 return back()->with('error', 'Anda tidak memiliki akses untuk memindahkan user ke cabang tersebut.');
             }
@@ -242,10 +287,35 @@ class UserController extends Controller
 
         $data['hire_date'] = $request->hire_date ?? null;
 
-        // --- [PERBAIKAN] SIMPAN JAM APA ADANYA (RAW) ---
-        $data['check_in_start']  = $request->check_in_start ?: null;
-        $data['check_out_start'] = $request->check_out_start ?: null;
+        // --- [LOGIKA KONVERSI TIMEZONE: WIB -> CABANG] ---
+        $targetBranchId = $request->branch_id ?? $user->branch_id;
         
+        if ($targetBranchId) {
+            $branch = Branch::find($targetBranchId);
+            $targetTz = $branch->timezone ?? $this->adminTimezone;
+
+            if ($request->check_in_start) {
+                // Input Admin (WIB) -> DB (Lokal Cabang)
+                $timeIn = Carbon::createFromFormat('H:i', $request->check_in_start, $this->adminTimezone);
+                $timeIn->setTimezone($targetTz);
+                $data['check_in_start'] = $timeIn->format('H:i:s');
+            } else {
+                $data['check_in_start'] = null;
+            }
+
+            if ($request->check_out_start) {
+                // Input Admin (WIB) -> DB (Lokal Cabang)
+                $timeOut = Carbon::createFromFormat('H:i', $request->check_out_start, $this->adminTimezone);
+                $timeOut->setTimezone($targetTz);
+                $data['check_out_start'] = $timeOut->format('H:i:s');
+            } else {
+                $data['check_out_start'] = null;
+            }
+        } else {
+            $data['check_in_start']  = $request->check_in_start ?: null;
+            $data['check_out_start'] = $request->check_out_start ?: null;
+        }
+
         $data['check_in_end']    = null;
         $data['check_out_end']   = null;
 
@@ -333,10 +403,9 @@ class UserController extends Controller
             ->take(5)
             ->get();
         
-        // --- [PERBAIKAN TAMPILAN] JAM LOKAL ---
         foreach($recentAttendance as $att) {
             if($user->branch && $user->branch->timezone) {
-                // Konversi jam dari DB (WIB Server) ke Timezone Cabang User
+                // Tampilkan jam lokal cabang di view
                 $att->check_in_local = Carbon::parse($att->check_in_time)->timezone($user->branch->timezone);
                 if($att->check_out_time) {
                     $att->check_out_local = Carbon::parse($att->check_out_time)->timezone($user->branch->timezone);
