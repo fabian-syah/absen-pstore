@@ -185,13 +185,22 @@
                                         $attendance = $member->attendances->first();
                                         $leave = $member->leaveRequests->first();
                                         $isWfh = $leave && $leave->type == 'wfh';
-                                        // Online jika belum checkout (termasuk yang masuk kemarin dan belum pulang)
+                                        
+                                        // Online jika belum checkout
                                         $isOnline = ($attendance && !$attendance->check_out_time) || $isWfh;
                                         
-                                        // Cek apakah ini lembur lintas hari
+                                        // [FIX LOGIKA TAMPILAN]
+                                        // Ambil timezone dari data cabang member, default Asia/Jakarta
+                                        $memberTz = $member->branch->timezone ?? 'Asia/Jakarta';
+                                        
                                         $isCrossDay = false;
                                         if ($attendance && !$attendance->check_out_time) {
-                                            if (!$attendance->check_in_time->isSameDay(now())) {
+                                            // Bandingkan tanggal CheckIn (di timezone user) dengan Tanggal Sekarang (di timezone user)
+                                            // Jika tidak sama, berarti Lintas Hari (masuk kemarin, skrg sudah besok)
+                                            $checkInLocal = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz);
+                                            $nowLocal = \Carbon\Carbon::now($memberTz);
+                                            
+                                            if (!$checkInLocal->isSameDay($nowLocal)) {
                                                 $isCrossDay = true;
                                             }
                                         }
@@ -252,8 +261,11 @@
                                             if ($attendance) {
                                                 $scheduleTime = $member->check_in_start ?? ($member->workSchedule->start_time ?? null);
                                                 if ($scheduleTime) {
-                                                    $actualStr = $attendance->check_in_time->format('H:i');
+                                                    // Bandingkan jam saja, karena tanggalnya sudah difilter
+                                                    $actualStr = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('H:i');
                                                     $scheduleStr = \Carbon\Carbon::parse($scheduleTime)->format('H:i');
+                                                    
+                                                    // Simple string comparison for Time
                                                     if ($actualStr > $scheduleStr) {
                                                         $isRealLate = true;
                                                         $lateMinutes = \Carbon\Carbon::parse($scheduleStr)->diffInMinutes(\Carbon\Carbon::parse($actualStr));
@@ -266,7 +278,7 @@
                                         @if ($attendance)
                                             @if ($attendance->check_out_time)
                                                 <span class="status-badge bg-primary text-white">
-                                                    <i class="mdi mdi-home-variant"></i> <span>Pulang {{ $attendance->check_out_time->format('H:i') }}</span>
+                                                    <i class="mdi mdi-home-variant"></i> <span>Pulang {{ \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz)->format('H:i') }}</span>
                                                 </span>
                                             @else
                                                 @if ($isCrossDay)
@@ -277,7 +289,7 @@
                                                 @else
                                                     <span class="status-badge {{ $isRealLate ? 'bg-danger' : 'bg-success' }} text-white">
                                                         <i class="mdi {{ $isRealLate ? 'mdi-alert-circle-outline' : 'mdi-briefcase-check' }}"></i>
-                                                        <span>Masuk {{ $attendance->check_in_time->format('H:i') }} @if ($isRealLate) <small class="fw-bold ms-1" style="font-size: 0.75rem;">({{ $lateText }})</small> @endif</span>
+                                                        <span>Masuk {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('H:i') }} @if ($isRealLate) <small class="fw-bold ms-1" style="font-size: 0.75rem;">({{ $lateText }})</small> @endif</span>
                                                     </span>
                                                 @endif
                                             @endif

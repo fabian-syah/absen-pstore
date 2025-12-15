@@ -25,6 +25,11 @@ class TeamController extends Controller
         }
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
+        // [FIX TIMEZONE] Ambil Timezone User Login untuk acuan query
+        $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
+        $nowInBranch = Carbon::now($userTimezone);
+
         $query = User::where('users.is_active', true);
 
         if (empty($myBranchIds)) {
@@ -42,35 +47,31 @@ class TeamController extends Controller
             });
         }
 
-        // [LOGIKA BARU - FETCH ATTENDANCE]
-        // Kita perlu mengambil:
-        // 1. Absensi hari ini (Normal)
-        // 2. Absensi kemarin TAPI checkout hari ini (Pulang Lembur)
-        // 3. Absensi kemarin BELUM checkout (Sedang Lembur)
-        
+        // [LOGIKA BARU - FETCH ATTENDANCE WITH TIMEZONE FIX]
         $myTeam = $query->with([
             'workSchedule',
-            'attendances' => function ($q) {
-                $q->where(function($sq) {
-                    // Kasus 1: Masuk Hari Ini
-                    $sq->whereDate('check_in_time', today());
+            'attendances' => function ($q) use ($todayInBranch, $nowInBranch) {
+                $q->where(function($sq) use ($todayInBranch) {
+                    // Kasus 1: Masuk Hari Ini (Sesuai Tanggal Cabang)
+                    $sq->whereDate('check_in_time', $todayInBranch);
                 })
-                ->orWhere(function($sq) {
-                    // Kasus 2: Pulang Hari Ini (tapi masuk sebelum hari ini) - Untuk status "Pulang Lembur"
-                    $sq->whereDate('check_out_time', today())
-                       ->whereDate('check_in_time', '<', today());
+                ->orWhere(function($sq) use ($todayInBranch) {
+                    // Kasus 2: Pulang Hari Ini (tapi masuk kemarin)
+                    $sq->whereDate('check_out_time', $todayInBranch)
+                       ->whereDate('check_in_time', '<', $todayInBranch);
                 })
-                ->orWhere(function($sq) {
+                ->orWhere(function($sq) use ($nowInBranch) {
                     // Kasus 3: Masih Aktif dari kemarin (Lembur Belum Pulang)
+                    // Gunakan toleransi jam mundur dari jam SEKARANG DI CABANG
                     $sq->whereNull('check_out_time')
-                       ->where('check_in_time', '>=', Carbon::now()->subHours(32));
+                       ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
                 })
-                ->latest('updated_at'); // Ambil update terakhir (check out time atau check in time)
+                ->latest('updated_at');
             },
-            'leaveRequests' => function ($q) {
+            'leaveRequests' => function ($q) use ($todayInBranch) {
                 $q->where('status', 'approved')
-                  ->whereDate('start_date', '<=', today())
-                  ->whereDate('end_date', '>=', today());
+                  ->whereDate('start_date', '<=', $todayInBranch)
+                  ->whereDate('end_date', '>=', $todayInBranch);
             },
             'activeLateStatus', 'divisions', 'branch'
         ])
@@ -100,7 +101,6 @@ class TeamController extends Controller
             $leave = $member->leaveRequests->first();
             $isWfh = $leave && $leave->type == 'wfh';
 
-            // Hitung Hadir jika: Ada record attendance (Masuk/Lembur/Pulang Lembur) atau WFH
             if ($att || $isWfh) {
                 $stats['hadir']++;
             } elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti'])) {
@@ -124,6 +124,11 @@ class TeamController extends Controller
     public function showBranch($id) {
         $user = Auth::user();
 
+        // Ambil Timezone Cabang yang sedang dilihat
+        $targetBranch = Branch::findOrFail($id);
+        $branchTimezone = $targetBranch->timezone ?? 'Asia/Jakarta';
+        $todayInBranch = Carbon::now($branchTimezone)->format('Y-m-d');
+
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
             if ($user->branch_id) {
@@ -140,18 +145,26 @@ class TeamController extends Controller
             if ($user->branch_id && $user->branch_id != $id) abort(403);
         }
 
-        $branch = Branch::findOrFail($id);
+        $branch = $targetBranch;
         
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)
-            ->with(['division', 'attendances' => function ($q) { $q->whereDate('check_in_time', today()); }])->get();
+            ->with(['division', 'attendances' => function ($q) use ($todayInBranch) { 
+                $q->whereDate('check_in_time', $todayInBranch); // Gunakan tanggal cabang
+            }])->get();
 
         $attendanceGroups = ['Masuk' => [], 'Izin' => [], 'Sakit' => [], 'Cuti' => [], 'WFH / Dinas Luar' => [], 'Alpha / Belum Absen' => []];
 
         foreach ($employees as $emp) {
             $todayLeave = LeaveRequest::where('user_id', $emp->id)->where('status', 'approved')->where('is_active', true)
-                ->where(function ($q) {
-                    $q->where(function ($sub) { $sub->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh'])->whereDate('start_date', '<=', today())->whereDate('end_date', '>=', today()); })
-                      ->orWhere(function ($sub) { $sub->where('type', 'telat')->whereDate('start_date', today()); });
+                ->where(function ($q) use ($todayInBranch) {
+                    $q->where(function ($sub) use ($todayInBranch) { 
+                        $sub->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh'])
+                            ->whereDate('start_date', '<=', $todayInBranch)
+                            ->whereDate('end_date', '>=', $todayInBranch); 
+                    })
+                    ->orWhere(function ($sub) use ($todayInBranch) { 
+                        $sub->where('type', 'telat')->whereDate('start_date', $todayInBranch); 
+                    });
                 })->first();
             $emp->today_leave = $todayLeave;
             $attendance = $emp->attendances->first();
@@ -195,19 +208,10 @@ class TeamController extends Controller
         }
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
+        // Untuk list cabang, kita harus loop manual untuk query tanggal sesuai timezone masing-masing cabang
+        // Karena eager loading 'attendances' satu kali query akan menggunakan server time untuk semua
+        
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
-            ->with(['users' => function($q) {
-                $q->where('is_active', true)
-                  ->select('id', 'branch_id', 'name') 
-                  ->with(['attendances' => function($q2) {
-                      $q2->whereDate('check_in_time', today())->select('user_id', 'check_in_time');
-                  }, 'leaveRequests' => function($q3) {
-                      $q3->where('status', 'approved')
-                          ->whereDate('start_date', '<=', today())
-                          ->whereDate('end_date', '>=', today())
-                          ->select('user_id', 'type');
-                  }]);
-            }])
             ->withCount(['users' => function ($q) {
                 $q->where('is_active', true);
             }])
@@ -215,14 +219,25 @@ class TeamController extends Controller
             ->get();
 
         foreach ($controlledBranches as $branch) {
-            $hadir = 0;
-            $sakit = 0;
-            $izin_cuti = 0; 
-            $alpha = 0;
+            // Tentukan 'Hari Ini' berdasarkan Timezone Cabang
+            $tz = $branch->timezone ?? 'Asia/Jakarta';
+            $todayInBranch = Carbon::now($tz)->format('Y-m-d');
 
-            foreach ($branch->users as $user) {
-                $att = $user->attendances->first();
-                $leave = $user->leaveRequests->first();
+            // Load Users & Statistik manual per cabang
+            $users = User::where('branch_id', $branch->id)->where('is_active', true)
+                ->with(['attendances' => function($q) use ($todayInBranch) {
+                    $q->whereDate('check_in_time', $todayInBranch);
+                }, 'leaveRequests' => function($q) use ($todayInBranch) {
+                    $q->where('status', 'approved')
+                      ->whereDate('start_date', '<=', $todayInBranch)
+                      ->whereDate('end_date', '>=', $todayInBranch);
+                }])->get();
+
+            $hadir = 0; $sakit = 0; $izin_cuti = 0; $alpha = 0;
+
+            foreach ($users as $u) {
+                $att = $u->attendances->first();
+                $leave = $u->leaveRequests->first();
 
                 if ($att) {
                     $hadir++;
