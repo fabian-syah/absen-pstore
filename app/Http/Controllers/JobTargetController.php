@@ -16,14 +16,14 @@ class JobTargetController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Ambil Data Personal (Milik User Sendiri)
+        // 1. Ambil Data Personal
         $personalData = JobTarget::where('user_id', $user->id)
             ->whereIn('type', ['personal_target', 'personal_achievement'])
             ->orderBy('star_level', 'desc')
             ->orderBy('deadline', 'asc')
             ->get();
 
-        // 2. Ambil Data Tim/Cabang (Jika ada)
+        // 2. Ambil Data Tim/Cabang
         $teamData = collect(); 
         if ($user->branch_id) {
             $teamData = JobTarget::where('branch_id', $user->branch_id)
@@ -36,54 +36,33 @@ class JobTargetController extends Controller
         return view('job_targets.index', compact('personalData', 'teamData'));
     }
 
-    /**
-     * FORM CREATE
-     * Logika: 
-     * - Jika tidak ada branch_id (Menu Utama), Admin/Audit hanya bisa Personal.
-     * - Jika ada branch_id (Menu Cabang), Admin/Audit bisa Team/Assign ke member.
-     */
     public function create(Request $request)
     {
         $user = Auth::user();
         $branchMembers = [];
         $branches = []; 
 
-        // SKENARIO 1: AKSES LEWAT MENU "TARGET CABANG" (Ada request branch_id)
-        // Admin/Audit bisa assign ke orang lain dan buat target tim DI CABANG INI.
+        // SKENARIO 1: AKSES LEWAT MENU "TARGET CABANG"
         if ($request->filled('branch_id')) {
             $targetBranchId = $request->branch_id;
-
-            // Cek Izin: Hanya Admin, Audit, atau Leader cabang tsb
             if (in_array($user->role, ['admin', 'audit']) || ($user->role == 'leader' && $user->branch_id == $targetBranchId)) {
-                
-                // Ambil member HANYA dari cabang tersebut
                 $branchMembers = User::with(['branch', 'division'])
                     ->where('branch_id', $targetBranchId)
                     ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
-
-                // Dropdown cabang dikunci ke 1 cabang ini saja (untuk keperluan hidden input/validasi)
                 $branches = Branch::where('id', $targetBranchId)->get();
             }
         } 
-        
-        // SKENARIO 2: AKSES LEWAT MENU UTAMA "JOB DESK" (Tidak ada branch_id)
+        // SKENARIO 2: AKSES LEWAT MENU UTAMA
         else {
-            // LEADER: Masih boleh melihat anggota timnya sendiri
             if ($user->role == 'leader' && $user->branch_id) {
                 $branchMembers = User::where('branch_id', $user->branch_id)
                     ->where('id', '!=', $user->id)
                     ->where('is_active', true)
                     ->orderBy('name', 'asc')
                     ->get();
-            }
-            
-            // ADMIN, AUDIT, SECURITY, USER BIASA:
-            // Kosongkan $branchMembers. 
-            // Akibatnya, di View kolom "Tugaskan Kepada" akan hilang, 
-            // dan user dipaksa membuat untuk diri sendiri (Personal).
-            else {
+            } else {
                 $branchMembers = []; 
             }
         }
@@ -91,9 +70,6 @@ class JobTargetController extends Controller
         return view('job_targets.create', compact('branchMembers', 'branches'));
     }
 
-    /**
-     * STORE DATA
-     */
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -105,40 +81,29 @@ class JobTargetController extends Controller
             'period_type' => 'required|in:daily,monthly,yearly',
         ]);
 
-        // LOGIKA DEFAULT: Target untuk diri sendiri
         $targetUserId = $user->id; 
         $branchId     = $user->branch_id;
 
-        // A. JIKA TARGET TIM / CABANG (Hanya valid jika akses via Menu Cabang / Leader)
         if (Str::contains($request->type, 'team')) {
-            // Jika ada inject hidden target_branch_id (dari menu cabang)
             if ($request->filled('target_branch_id')) {
                 $branchId = $request->target_branch_id;
             } elseif ($user->role == 'leader') {
                 $branchId = $user->branch_id;
             } else {
-                // Security guard: jika user biasa coba inspect element ganti value jadi team
                 return redirect()->back()->with('error', 'Anda tidak memiliki akses membuat target tim dari menu ini.');
             }
-            // User ID pembuat tetap si admin/leader
             $targetUserId = $user->id; 
         } 
-        
-        // B. JIKA ASSIGN KE ORANG LAIN
         elseif ($request->filled('assign_user_id') && $request->assign_user_id != $user->id) {
-            // Validasi: Apakah boleh assign?
-            // Boleh jika ada di menu cabang (filled branch_id di url sebelumnya) atau Leader
             $targetUserId = $request->assign_user_id;
-            
             $assignedUser = User::find($targetUserId);
             if($assignedUser) {
                 $branchId = $assignedUser->branch_id;
             }
         }
 
-        // LOGIKA TANGGAL
         $startDate = now();
-        $deadline  = now(); // Default
+        $deadline  = now(); 
 
         if ($request->period_type == 'daily') {
             $startDate = $request->daily_start;
@@ -151,7 +116,6 @@ class JobTargetController extends Controller
             $deadline  = $request->yearly_end . '-12-31';
         }
 
-        // SIMPAN KE DB
         JobTarget::create([
             'user_id'     => $targetUserId,
             'branch_id'   => $branchId, 
@@ -166,14 +130,11 @@ class JobTargetController extends Controller
             'status'      => 'pending'
         ]);
 
-        // REDIRECT LOGIC
-        // Jika dari menu cabang, kembalikan ke cabang
         if ($request->filled('redirect_to_branch')) {
             return redirect()->route('branch-targets.show', $request->redirect_to_branch)
                 ->with('success', 'Target berhasil ditambahkan untuk cabang ini.');
         }
 
-        // Default balik ke My Target
         return redirect()->route('job-targets.index')->with('success', 'Target berhasil dibuat.');
     }
 
@@ -227,5 +188,30 @@ class JobTargetController extends Controller
         ]);
 
         return back()->with('success', 'Status target berhasil diperbarui.');
+    }
+
+    /**
+     * UPDATE STATUS KHUSUS UNTUK ADMIN/LEADER
+     */
+    public function adminUpdateStatus(Request $request, $id)
+    {
+        // Pastikan hanya role tertentu yang bisa akses
+        if (!in_array(Auth::user()->role, ['admin', 'audit', 'leader'])) {
+            return back()->with('error', 'Unauthorized action.');
+        }
+
+        $target = JobTarget::findOrFail($id);
+        
+        $request->validate([
+            'status' => 'required|in:pending,in_progress,completed,rejected',
+        ]);
+
+        $target->update([
+            'status' => $request->status,
+            // Jika status completed, anggap selesai sekarang
+            'completed_at' => $request->status == 'completed' ? now() : null,
+        ]);
+
+        return back()->with('success', 'Status target berhasil diperbarui oleh admin.');
     }
 }

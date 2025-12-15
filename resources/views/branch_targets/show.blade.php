@@ -20,11 +20,9 @@
         </p>
     </div>
     
-    {{-- TOMBOL CREATE TARGET GLOBAL (Hanya muncul jika $canManage = TRUE) --}}
-    {{-- Berlaku untuk Admin, Audit, dan Leader Cabang ini --}}
+    {{-- TOMBOL CREATE TARGET GLOBAL (Hanya Admin, Audit, Leader) --}}
     @if($canManage)
     <div>
-         {{-- Param 'redirect_to_branch' memastikan setelah simpan balik lagi kesini --}}
          <a href="{{ route('job-targets.create', ['branch_id' => $branch->id, 'type_preselect' => 'team', 'redirect_to_branch' => $branch->id]) }}" 
             class="btn btn-dark btn-lg shadow-lg rounded-4 px-4 fw-bold hover-scale w-100 w-md-auto">
             <i class="mdi mdi-target me-1"></i> Buat Target Global Tim
@@ -47,8 +45,7 @@
         </div>
     </div>
     <div class="card-body p-3 p-md-4">
-        {{-- Kita panggil partial tabs --}}
-        {{-- 'allow_edit_detail' => $canManage artinya Admin/Audit/Leader boleh edit --}}
+        {{-- Menggunakan Partial Tabs yang sudah ada --}}
         @include('job_targets.partials.period_tabs', [
             'idPrefix' => 'branch', 
             'dataCollection' => $teamData, 
@@ -73,7 +70,7 @@
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
+            <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">
                     <tr>
                         <th class="py-3 ps-4">Nama Karyawan</th>
@@ -105,23 +102,122 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                {{-- BUTTON BERI TARGET --}}
-                                @if($canManage)
-                                    {{-- Mengirim 'assign_user_id' agar form otomatis memilih orang ini --}}
-                                    {{-- Mengirim 'redirect_to_branch' agar balik kesini --}}
-                                    <a href="{{ route('job-targets.create', ['assign_user_id' => $member->id, 'branch_id' => $branch->id, 'redirect_to_branch' => $branch->id]) }}" 
-                                       class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
-                                        <i class="mdi mdi-plus-circle-outline me-1"></i> Beri Target
-                                    </a>
-                                @else
-                                    {{-- Untuk role lain hanya view only --}}
-                                    <span class="text-muted small fst-italic">View Only</span>
-                                @endif
+                                <div class="d-flex justify-content-end gap-2">
+                                    {{-- TOMBOL LIHAT DETAIL (MODAL) --}}
+                                    <button type="button" class="btn btn-info btn-sm text-white rounded-pill px-3 fw-bold shadow-sm" 
+                                            data-bs-toggle="modal" data-bs-target="#modalTargets-{{ $member->id }}">
+                                        <i class="mdi mdi-eye me-1"></i> Lihat
+                                    </button>
+
+                                    {{-- TOMBOL BERI TARGET --}}
+                                    @if($canManage)
+                                        <a href="{{ route('job-targets.create', ['assign_user_id' => $member->id, 'branch_id' => $branch->id, 'redirect_to_branch' => $branch->id]) }}" 
+                                           class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                                            <i class="mdi mdi-plus-circle-outline me-1"></i> Target
+                                        </a>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
+
+                        {{-- MODAL LIST TARGET PER USER --}}
+                        <div class="modal fade" id="modalTargets-{{ $member->id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                    <div class="modal-header bg-light border-bottom-0">
+                                        <h5 class="modal-title fw-bold">
+                                            🎯 Target: {{ $member->name }}
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body p-0">
+                                        @if($member->jobTargets->count() > 0)
+                                            <div class="list-group list-group-flush">
+                                                @foreach($member->jobTargets as $target)
+                                                    <div class="list-group-item p-4 border-bottom">
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <div class="w-100">
+                                                                <h6 class="fw-bold text-dark mb-1">{{ $target->title }}</h6>
+                                                                <p class="text-muted small mb-2">{{ Str::limit($target->description, 100) }}</p>
+                                                                
+                                                                {{-- Badge Status --}}
+                                                                @php
+                                                                    $badgeClass = match($target->status) {
+                                                                        'completed' => 'success',
+                                                                        'in_progress' => 'info',
+                                                                        'rejected' => 'danger',
+                                                                        default => 'warning'
+                                                                    };
+                                                                @endphp
+                                                                <div class="d-flex gap-2 mb-2">
+                                                                    <span class="badge bg-{{ $badgeClass }} bg-opacity-10 text-{{ $badgeClass }} border border-{{ $badgeClass }} rounded-pill">
+                                                                        {{ ucfirst(str_replace('_', ' ', $target->status)) }}
+                                                                    </span>
+                                                                    <span class="badge bg-light text-muted border">
+                                                                        <i class="mdi mdi-calendar-clock me-1"></i> 
+                                                                        {{ \Carbon\Carbon::parse($target->deadline)->format('d M Y') }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            {{-- Bintang --}}
+                                                            <div class="d-flex text-nowrap ms-2">
+                                                                @for($i=0; $i<$target->star_level; $i++)
+                                                                    <i class="mdi mdi-star text-warning"></i>
+                                                                @endfor
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- FORM UBAH STATUS (ADMIN/LEADER) --}}
+                                                        @if($canManage)
+                                                            <div class="mt-3 pt-3 border-top bg-light rounded-3 p-3">
+                                                                <form action="{{ route('job-targets.admin-status', $target->id) }}" method="POST" class="d-flex align-items-center gap-2">
+                                                                    @csrf
+                                                                    @method('PUT')
+                                                                    <label class="small fw-bold text-muted mb-0 text-nowrap">Ubah Status:</label>
+                                                                    <select name="status" class="form-select form-select-sm border-0 shadow-sm" style="width: auto;">
+                                                                        <option value="pending" {{ $target->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                                                        <option value="in_progress" {{ $target->status == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                                                        <option value="completed" {{ $target->status == 'completed' ? 'selected' : '' }}>Completed</option>
+                                                                        <option value="rejected" {{ $target->status == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                                                    </select>
+                                                                    <button type="submit" class="btn btn-dark btn-sm rounded-3 px-3">
+                                                                        <i class="mdi mdi-check"></i> Simpan
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        @endif
+                                                        
+                                                        {{-- TAMPILKAN BUKTI JIKA COMPLETED --}}
+                                                        @if($target->status == 'completed' && $target->outcome)
+                                                            <div class="mt-2 p-2 bg-success bg-opacity-10 rounded border border-success border-opacity-25">
+                                                                <small class="fw-bold text-success d-block">Hasil Pengerjaan:</small>
+                                                                <small class="text-dark">{{ $target->outcome }}</small>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <div class="text-center py-5">
+                                                <div class="bg-light rounded-circle d-inline-flex p-3 mb-3">
+                                                    <i class="mdi mdi-clipboard-text-off text-muted mdi-24px"></i>
+                                                </div>
+                                                <p class="text-muted">Belum ada target personal untuk user ini.</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="modal-footer bg-light border-top-0">
+                                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Tutup</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- END MODAL --}}
+
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center py-5 text-muted">Belum ada anggota tim.</td>
+                            <td colspan="4" class="text-center py-5 text-muted">Belum ada anggota tim di cabang ini.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -130,7 +226,7 @@
     </div>
 </div>
 
-{{-- MODAL UPDATE STATUS (Popup Hasil Kerja) --}}
+{{-- MODAL UPDATE STATUS (Popup Hasil Kerja untuk user sendiri / Section 1) --}}
 @include('job_targets.partials.modal_update')
 
 {{-- STYLE --}}
@@ -139,10 +235,6 @@
     .bg-gradient-info { background: linear-gradient(45deg, #198ae3, #4b49ac); }
     .hover-scale { transition: transform 0.2s; }
     .hover-scale:hover { transform: scale(1.02); }
-    
-    .star-badge-3 { background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); color: #000; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); border: 1px solid #d4af37; }
-    .star-badge-2 { background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%); color: #333; border: 1px solid #b0b0b0; }
-    .star-badge-1 { background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
     .nav-pills-custom .nav-link { background: #f8f9fa; color: #6c757d; border: 1px solid #e9ecef; margin-right: 5px; margin-bottom: 5px; transition: all 0.3s; }
     .nav-pills-custom .nav-link.active { background: #4b49ac; color: #fff; border-color: #4b49ac; box-shadow: 0 4px 6px rgba(75, 73, 172, 0.2); }
 </style>

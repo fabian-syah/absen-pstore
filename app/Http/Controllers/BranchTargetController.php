@@ -12,17 +12,13 @@ class BranchTargetController extends Controller
 {
     /**
      * Menampilkan daftar cabang sesuai hak akses user.
-     * Menggunakan logika Multi Branch (Many-to-Many).
      */
     public function index()
     {
         $user = Auth::user();
-        $branches = collect(); // Inisialisasi koleksi kosong
-
-        // --- LOGIKA PENGAMBILAN CABANG ---
+        $branches = collect(); 
 
         // 1. ADMIN / ADMIN GAJI
-        // Jika punya branch_id, hanya lihat cabangnya. Jika null (Pusat), lihat semua.
         if (in_array($user->role, ['admin', 'admin_gaji'])) {
             if ($user->branch_id) {
                 $branches = Branch::where('id', $user->branch_id)->withCount('users')->get();
@@ -31,39 +27,29 @@ class BranchTargetController extends Controller
             }
         }
         
-        // 2. AUDIT / LEADER (MULTI BRANCH FUNCTION)
-        // Mengambil data dari relasi 'branches' di Model User (tabel pivot branch_user)
+        // 2. AUDIT / LEADER (MULTI BRANCH)
         elseif (in_array($user->role, ['audit', 'leader'])) {
-            // Ambil dari relasi Many-to-Many
             $branches = $user->branches()->withCount('users')->get();
-
-            // FALLBACK: Jika di pivot kosong, tapi user punya branch_id utama (Homebase)
-            // Maka tampilkan branch utama tersebut.
             if ($branches->isEmpty() && $user->branch_id) {
                 $branches = Branch::where('id', $user->branch_id)->withCount('users')->get();
             }
         }
 
-        // 3. USER BIASA / SECURITY
-        // Hanya melihat cabang tempat mereka ditugaskan (Homebase)
+        // 3. USER BIASA
         else {
             if ($user->branch_id) {
                 $branches = Branch::where('id', $user->branch_id)->withCount('users')->get();
             }
         }
 
-        // Hitung statistik ringkas untuk tampilan dashboard (Opsional)
-        // Loop ini mengisi data dummy/real time ke object branch agar tidak error di view
+        // Hitung statistik ringkas untuk dashboard
         foreach ($branches as $branch) {
-            // Contoh hitungan target (sesuaikan dengan kebutuhan real-nya)
             $branch->team_daily = JobTarget::where('branch_id', $branch->id)->where('type', 'team_target')->where('period', 'daily')->count();
             $branch->team_monthly = JobTarget::where('branch_id', $branch->id)->where('type', 'team_target')->where('period', 'monthly')->count();
             $branch->team_yearly = JobTarget::where('branch_id', $branch->id)->where('type', 'team_target')->where('period', 'yearly')->count();
             
-            $branch->total_users = $branch->users_count; // Dari withCount
+            $branch->total_users = $branch->users_count;
             
-            // Hitung target personal di cabang ini
-            // Kita perlu join ke user yang ada di cabang ini
             $branch->personal_count = JobTarget::where('branch_id', $branch->id)
                 ->whereIn('type', ['personal_target'])
                 ->where('status', '!=', 'completed')
@@ -75,36 +61,24 @@ class BranchTargetController extends Controller
 
     /**
      * Menampilkan Detail Satu Cabang
-     * Termasuk validasi apakah Audit/Leader punya akses ke cabang ini.
      */
     public function show($id)
     {
         $user = Auth::user();
-        
-        // --- VALIDASI AKSES MULTI BRANCH ---
         $hasAccess = false;
 
-        // 1. Cek Admin
+        // --- VALIDASI AKSES ---
         if (in_array($user->role, ['admin', 'admin_gaji'])) {
-            // Jika admin pusat (branch_id null) boleh semua, jika admin cabang harus match
             if ($user->branch_id == null || $user->branch_id == $id) {
                 $hasAccess = true;
             }
-        }
-        // 2. Cek Audit / Leader (Cek Pivot Table)
-        elseif (in_array($user->role, ['audit', 'leader'])) {
-            // Cek apakah ID cabang ada di daftar Multi Branch user ini
+        } elseif (in_array($user->role, ['audit', 'leader'])) {
             $isInMultiBranch = $user->branches()->where('branches.id', $id)->exists();
-            
-            // Cek apakah ID cabang sama dengan Homebase user
             $isHomeBase = ($user->branch_id == $id);
-
             if ($isInMultiBranch || $isHomeBase) {
                 $hasAccess = true;
             }
-        }
-        // 3. User Lain
-        else {
+        } else {
             if ($user->branch_id == $id) {
                 $hasAccess = true;
             }
@@ -114,7 +88,7 @@ class BranchTargetController extends Controller
             return redirect()->route('branch-targets.index')->with('error', 'Akses Ditolak: Anda tidak memiliki akses ke cabang ini.');
         }
 
-        // --- AMBIL DATA SETELAH VALIDASI SUKSES ---
+        // --- AMBIL DATA ---
         $branch = Branch::withCount('users')->findOrFail($id);
 
         // Ambil Target Global Tim
@@ -124,22 +98,24 @@ class BranchTargetController extends Controller
             ->orderBy('deadline', 'asc')
             ->get();
 
-        // Ambil Anggota Tim (User yang Homebase-nya di cabang ini)
+        // Ambil Anggota Tim & Eager Load Target Personal Mereka
+        // UPDATE: Menambahkan with('jobTargets')
         $branchMembers = User::where('branch_id', $id)
             ->where('is_active', true)
+            ->with(['jobTargets' => function($q) {
+                // Urutkan status: Pending -> In Progress -> Completed
+                $q->whereIn('type', ['personal_target', 'personal_achievement'])
+                  ->orderByRaw("FIELD(status, 'pending', 'in_progress', 'completed') ASC")
+                  ->orderBy('deadline', 'asc');
+            }])
             ->orderBy('name', 'asc')
             ->get();
 
-        // Hitung target aktif per member
+        // Hitung target aktif per member (menggunakan data yang sudah di-load)
         foreach($branchMembers as $member) {
-            $member->active_targets_count = JobTarget::where('user_id', $member->id)
-                ->where('status', '!=', 'completed')
-                ->whereIn('type', ['personal_target'])
-                ->count();
+            $member->active_targets_count = $member->jobTargets->where('status', '!=', 'completed')->count();
         }
 
-        // Tentukan siapa yang boleh Manage (Create/Edit) di halaman ini
-        // Biasanya Admin, Audit, dan Leader yang punya akses
         $canManage = in_array($user->role, ['admin', 'audit', 'leader']);
 
         return view('branch_targets.show', compact('branch', 'teamData', 'branchMembers', 'canManage'));

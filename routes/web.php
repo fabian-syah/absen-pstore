@@ -106,6 +106,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::patch('/job-targets/{id}/update-outcome', [JobTargetController::class, 'updateOutcome'])->name('job-targets.update-outcome');
     Route::patch('/job-targets/{id}/toggle', [JobTargetController::class, 'toggleStatus'])->name('job-targets.toggle');
     Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
+    Route::put('/job-targets/{id}/admin-status', [JobTargetController::class, 'adminUpdateStatus'])
+        ->name('job-targets.admin-status');
 
     // === RUTE RIWAYAT PELANGGARAN ===
     // 1. Route History (Ditaruh sebelum resource/index agar tidak tertimpa)
