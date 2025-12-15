@@ -228,26 +228,9 @@
                                 <tbody>
                                     @foreach ($history as $att)
                                         @php
-                                            // --- [UPDATE LOGIC] SNAPSHOT JADWAL VS PROFILE SEKARANG ---
+                                            // Ambil Snapshot Jadwal jika ada, jika tidak pakai profile saat ini
                                             $fixedScheduleIn  = $att->scheduled_check_in ?? ($att->user->check_in_start ?? ($att->user->workSchedule->start_time ?? null));
                                             $fixedScheduleOut = $att->scheduled_check_out ?? ($att->user->check_out_start ?? ($att->user->workSchedule->end_time ?? null));
-                                            
-                                            // --- HITUNG KETERLAMBATAN (Jam Masuk) untuk Tampilan ---
-                                            $isRealLate = false;
-                                            $lateStr = ''; 
-
-                                            if ($fixedScheduleIn && $att->attendance_type != 'leave') {
-                                                $actualStr = $att->check_in_time->format('H:i');
-                                                $scheduleStr = \Carbon\Carbon::parse($fixedScheduleIn)->format('H:i');
-                                                
-                                                if ($actualStr > $scheduleStr) {
-                                                    $isRealLate = true;
-                                                    $lateMinutes = \Carbon\Carbon::parse($scheduleStr)->diffInMinutes(\Carbon\Carbon::parse($actualStr));
-                                                    $hours = floor($lateMinutes / 60);
-                                                    $mins = $lateMinutes % 60;
-                                                    $lateStr = ($hours > 0) ? "{$hours}j {$mins}m" : "{$mins}m";
-                                                }
-                                            }
                                         @endphp
                                         <tr>
                                             {{-- TANGGAL --}}
@@ -256,24 +239,25 @@
                                                 <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">{{ $att->check_in_time->format('l') }}</small>
                                             </td>
 
-                                            {{-- JAM MASUK (MODIFIED DENGAN JADWAL) --}}
+                                            {{-- JAM MASUK (LOCAL TIME) --}}
                                             <td>
                                                 <div class="d-flex flex-column">
                                                     <div class="d-flex align-items-center">
-                                                        <i class="mdi mdi-login-variant {{ $isRealLate ? 'text-danger' : 'text-success' }} me-2 fs-5"></i>
+                                                        <i class="mdi mdi-login-variant {{ $att->is_calculated_late ? 'text-danger' : 'text-success' }} me-2 fs-5"></i>
                                                         <div>
-                                                            <span class="fw-bold fs-6 {{ $isRealLate ? 'text-danger' : 'text-dark' }}">
-                                                                {{ $att->check_in_time->format('H:i') }}
+                                                            <span class="fw-bold fs-6 {{ $att->is_calculated_late ? 'text-danger' : 'text-dark' }}">
+                                                                {{-- GUNAKAN JAM LOKAL --}}
+                                                                {{ $att->check_in_local ? $att->check_in_local->format('H:i') : $att->check_in_time->format('H:i') }}
                                                             </span>
-                                                            @if ($isRealLate)
+                                                            @if ($att->is_calculated_late)
                                                                 @if($att->is_excused_late)
-                                                                    {{-- BADGE DIMAKLUMI (BARU) --}}
+                                                                    {{-- BADGE DIMAKLUMI --}}
                                                                     <span class="badge bg-soft-success text-success border border-success rounded-pill px-2 py-0 ms-1" 
                                                                           style="font-size: 0.6rem;" data-bs-toggle="tooltip" title="{{ $att->overtime_reason ?? 'Habis Lembur' }}">
                                                                         <i class="mdi mdi-check-circle-outline"></i> Dimaklumi
                                                                     </span>
                                                                 @else
-                                                                    <span class="badge bg-danger rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">+{{ $lateStr }}</span>
+                                                                    <span class="badge bg-danger rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">+{{ $att->late_duration_text }}</span>
                                                                 @endif
                                                             @endif
                                                         </div>
@@ -317,7 +301,7 @@
                                                 </div>
                                             </td>
 
-                                            {{-- JAM PULANG (MODIFIED DENGAN JADWAL) --}}
+                                            {{-- JAM PULANG (LOCAL TIME) --}}
                                             <td class="border-start bg-light bg-opacity-25">
                                                 <div class="d-flex flex-column">
                                                     @if ($att->check_out_time)
@@ -325,7 +309,8 @@
                                                             <i class="mdi mdi-logout-variant text-primary me-2 fs-5"></i>
                                                             <div>
                                                                 <span class="fw-bold fs-6 {{ $att->is_early_checkout ? 'text-warning' : 'text-dark' }}">
-                                                                    {{ $att->check_out_time->format('H:i') }}
+                                                                    {{-- GUNAKAN JAM LOKAL --}}
+                                                                    {{ $att->check_out_local ? $att->check_out_local->format('H:i') : $att->check_out_time->format('H:i') }}
                                                                 </span>
                                                                 @if ($att->is_early_checkout)
                                                                     <span class="badge bg-warning text-dark rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">Cepat</span>

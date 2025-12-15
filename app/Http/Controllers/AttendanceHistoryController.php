@@ -90,6 +90,10 @@ class AttendanceHistoryController extends Controller
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
+        // [TIMEZONE LOGIC]
+        // Ambil Timezone Cabang User
+        $branchTz = $user->branch->timezone ?? 'Asia/Jakarta';
+
         // 1. AMBIL DATA ABSENSI BULAN INI + DATA AKHIR BULAN LALU (Untuk cek lembur tgl 1)
         // Kita ambil range lebih luas sedikit untuk validasi hari sebelumnya
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->subDay(); // H-1
@@ -122,9 +126,33 @@ class AttendanceHistoryController extends Controller
             // Hanya masukkan ke history jika check_in_time masuk bulan yang dipilih
             if ($att->check_in_time->month == $selectedMonth) {
                 
+                // === [LOGIC UPDATE] KONVERSI WAKTU KE LOKAL ===
+                $att->check_in_local = Carbon::parse($att->check_in_time)->timezone($branchTz);
+                $att->check_out_local = $att->check_out_time ? Carbon::parse($att->check_out_time)->timezone($branchTz) : null;
+
+                // === LOGIKA HITUNG KETERLAMBATAN (REALTIME vs SNAPSHOT) ===
+                $fixedScheduleIn  = $att->scheduled_check_in ?? ($user->check_in_start ?? ($user->workSchedule->start_time ?? null));
+                $att->is_calculated_late = false;
+                $att->late_duration_text = '';
+
+                if ($fixedScheduleIn && $att->attendance_type != 'leave') {
+                    $actualTimeStr = $att->check_in_local->format('H:i');
+                    $scheduleTimeStr = Carbon::parse($fixedScheduleIn)->format('H:i');
+
+                    if ($actualTimeStr > $scheduleTimeStr) {
+                         $tActual = Carbon::parse($actualTimeStr);
+                         $tSched = Carbon::parse($scheduleTimeStr);
+                         $lateMinutes = $tSched->diffInMinutes($tActual);
+                         
+                         $hours = floor($lateMinutes / 60);
+                         $mins = $lateMinutes % 60;
+                         $att->late_duration_text = ($hours > 0) ? "{$hours}j {$mins}m" : "{$mins}m";
+                         $att->is_calculated_late = true;
+                    }
+                }
+
                 // === LOGIKA VALIDASI LEMBUR LINTAS HARI ===
                 // Cek record SEBELUMNYA (H-1)
-                // Jika record sebelumnya checkoutnya > jam 02:00 pagi pada hari ini
                 $att->is_excused_late = false;
                 
                 // Cari absen kemarin
@@ -135,13 +163,15 @@ class AttendanceHistoryController extends Controller
 
                 if ($prevAtt && $prevAtt->check_out_time) {
                     // Cek apakah pulang kemarin LEWAT TENGAH MALAM (Misal jam 03:00 pagi hari ini)
-                    // Ambang batas: Pulang di atas jam 02:00 pagi
                     $thresholdTime = $att->check_in_time->copy()->setTime(2, 0, 0); // Jam 2 Pagi Hari Ini
                     
                     if ($prevAtt->check_out_time->gt($thresholdTime)) {
                         // Jika pulang kemarin > Jam 2 pagi hari ini, maka telat hari ini DIMAKLUMI
                         $att->is_excused_late = true;
-                        $att->overtime_reason = "Pulang s/d " . $prevAtt->check_out_time->format('H:i');
+                        
+                        // Tampilkan jam pulang lembur (Lokal)
+                        $prevOutLocal = Carbon::parse($prevAtt->check_out_time)->timezone($branchTz);
+                        $att->overtime_reason = "Pulang s/d " . $prevOutLocal->format('H:i');
                     }
                 }
 
@@ -168,6 +198,10 @@ class AttendanceHistoryController extends Controller
                         $fakeAtt->user_id = $user->id;
                         $fakeAtt->check_in_time = $date->copy()->setTime(8, 0, 0); 
                         $fakeAtt->check_out_time = null;
+                        
+                        // Fake local time agar tidak error di view
+                        $fakeAtt->check_in_local = $fakeAtt->check_in_time;
+                        $fakeAtt->check_out_local = null;
                         
                         $typeLabel = ucfirst($leave->type); 
                         if ($leave->type == 'telat') $typeLabel = 'Izin Telat';
@@ -208,7 +242,7 @@ class AttendanceHistoryController extends Controller
             'sakit' => $history->filter(function($i) { return strtolower($i->presence_status ?? '') === 'sakit'; })->count(),
             'izin' => $history->filter(function($i) { return in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti']); })->count(),
             'alpha' => $history->filter(function($i) { return strtolower($i->presence_status ?? '') === 'alpha'; })->count(),
-            'telat' => $history->where('is_late_checkin', true)->count(),
+            'telat' => $history->where('is_calculated_late', true)->count(), // Pakai flag hitungan baru
             'pulang_cepat' => $history->where('is_early_checkout', true)->count(),
             'pending' => $history->where('status', 'pending_verification')->count(),
         ];

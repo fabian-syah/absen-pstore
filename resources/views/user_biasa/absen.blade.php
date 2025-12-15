@@ -130,7 +130,7 @@
                     </div>
 
                     {{-- LOCATION WIDGET --}}
-                    <div class="location-widget mb-4">
+                    <div class="location-widget mb-4" onclick="getLocation(true)" style="cursor: pointer;">
                         <div class="loc-icon">
                             <i class="mdi mdi-map-marker-radius"></i>
                         </div>
@@ -140,6 +140,9 @@
                         </div>
                         <div class="loc-badge">
                             <span id="gps-accuracy-badge" class="badge bg-light text-dark border">...</span>
+                        </div>
+                        <div class="ms-2">
+                             <i class="mdi mdi-refresh text-muted"></i>
                         </div>
                     </div>
 
@@ -553,7 +556,7 @@
             if (useAI && !isFaceValid) return;
             
             // Paksa update lokasi lagi sebelum capture
-            getLocation();
+            getLocation(true);
 
             captureBtn.style.transform = "scale(0.9)";
             setTimeout(() => captureBtn.style.transform = "scale(1.05)", 100);
@@ -601,14 +604,22 @@
         });
 
         // --- 5. GPS & SLIDER ---
-        function getLocation() {
+        function getLocation(highAccuracy = true) {
             if (navigator.geolocation) {
                 coordDisplay.innerText = "Mencari lokasi...";
                 accBadge.className = "badge bg-warning text-dark";
                 accBadge.innerText = "Mencari...";
                 
+                // Opsi Geolocation: Coba akurasi tinggi dulu, timeout 15 detik
+                const options = {
+                    enableHighAccuracy: highAccuracy,
+                    timeout: 15000, 
+                    maximumAge: 0
+                };
+
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
+                        // SUKSES DAPAT LOKASI
                         const { latitude, longitude, accuracy } = pos.coords;
                         latInput.value = latitude;
                         lngInput.value = longitude;
@@ -621,19 +632,36 @@
                         checkGlobalValidity();
                     },
                     (err) => {
-                        coordDisplay.innerText = "Gagal: " + err.message;
-                        accBadge.className = 'badge bg-danger text-white';
-                        checkGlobalValidity(); // Tetap cek, siapa tau foto sudah ada (walau lokasi gagal)
+                        // ERROR / TIMEOUT
+                        console.warn(`ERROR(${err.code}): ${err.message}`);
+                        
+                        // Jika timeout di High Accuracy (GPS), coba fallback ke Low Accuracy (Network)
+                        if (highAccuracy && err.code === 3) { // Code 3 = Timeout
+                             console.log("High accuracy timed out, trying low accuracy...");
+                             coordDisplay.innerText = "Mengambil lokasi (Network)...";
+                             // Panggil ulang fungsi dengan mode Low Accuracy (false)
+                             getLocation(false);
+                        } else {
+                            // Jika Low Accuracy juga gagal atau error lain (Permission Denied dll)
+                            let msg = err.message;
+                            if(err.message.includes("Timeout")) msg = "Waktu habis, coba refresh.";
+                            if(err.code === 1) msg = "Izin lokasi ditolak.";
+                            
+                            coordDisplay.innerText = "Gagal: " + msg;
+                            accBadge.className = 'badge bg-danger text-white';
+                            accBadge.innerText = "Error";
+                            checkGlobalValidity(); 
+                        }
                     },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    options
                 );
             } else {
                 coordDisplay.innerText = "Browser tidak support GPS";
             }
         }
         
-        // Panggil lokasi saat load halaman
-        getLocation();
+        // Panggil lokasi saat load halaman (Mode High Accuracy)
+        getLocation(true);
 
         function checkGlobalValidity() {
             const hasPhoto = photoInputHidden.files.length > 0;
