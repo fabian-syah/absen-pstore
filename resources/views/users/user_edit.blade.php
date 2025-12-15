@@ -170,10 +170,16 @@
                 <div class="card shadow-sm border-0 border-top border-3" style="border-top-color: #009688 !important;">
                     <div class="card-header bg-white py-3"><h5 class="mb-0 text-teal"><i class="mdi mdi-clock-outline me-2" style="color: #009688;"></i>Atur Jam Kerja Personal</h5></div>
                     <div class="card-body">
-                        <p class="text-muted small mb-4"><i class="mdi mdi-information-outline me-1"></i>Update jam di bawah ini untuk mengubah jadwal spesifik user ini. Biarkan kosong jika fleksibel.</p>
+                        {{-- NOTICE TIMEZONE --}}
+                        <div class="alert alert-info border-0 rounded-3 mb-4 shadow-sm">
+                            <i class="mdi mdi-information-outline me-2"></i>
+                            <strong>PENTING:</strong> Jam yang Anda input di sini adalah <strong>WAKTU WIB (Jakarta)</strong>. <br>
+                            Sistem akan otomatis mengkonversi ke waktu lokal cabang ({{ $user->branch->timezone ?? 'WIB' }}) saat disimpan.
+                        </div>
+
                         <div class="row">
-                            <div class="col-md-6 mb-3"><label class="form-label fw-bold">Jam Masuk (Check In)</label><input type="time" class="form-control form-control-lg" name="check_in_start" value="{{ old('check_in_start', $user->check_in_start ? date('H:i', strtotime($user->check_in_start)) : '') }}"><small class="text-muted">Batas awal mulai absen masuk</small></div>
-                            <div class="col-md-6 mb-3"><label class="form-label fw-bold">Jam Pulang (Check Out)</label><input type="time" class="form-control form-control-lg" name="check_out_start" value="{{ old('check_out_start', $user->check_out_start ? date('H:i', strtotime($user->check_out_start)) : '') }}"><small class="text-muted">Batas awal mulai absen pulang</small></div>
+                            <div class="col-md-6 mb-3"><label class="form-label fw-bold">Jam Masuk (Check In)</label><input type="time" class="form-control form-control-lg" name="check_in_start" value="{{ $displayCheckIn }}"><small class="text-muted">Batas awal mulai absen masuk (WIB)</small></div>
+                            <div class="col-md-6 mb-3"><label class="form-label fw-bold">Jam Pulang (Check Out)</label><input type="time" class="form-control form-control-lg" name="check_out_start" value="{{ $displayCheckOut }}"><small class="text-muted">Batas awal mulai absen pulang (WIB)</small></div>
                         </div>
                         <div class="mt-2 text-end"><button type="button" onclick="clearWorkHours()" class="btn btn-outline-danger btn-sm"><i class="mdi mdi-eraser me-1"></i> Reset Jam ke Kosong</button></div>
                     </div>
@@ -248,10 +254,6 @@
                     desc.textContent = 'Mode Manual: Kamera aktif tanpa deteksi wajah (untuk Cadar/Masker).';
                 }
             };
-
-            // Init state if element exists (for edit page)
-            const aiCheckbox = document.getElementById('use_face_recognition');
-            if(aiCheckbox) toggleAICard(aiCheckbox);
         });
     </script>
 @endpush

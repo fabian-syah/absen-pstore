@@ -118,7 +118,11 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold text-muted small">Cabang</label>
-                            <p class="h6">{{ $user->branch->name ?? '-' }}</p>
+                            <p class="h6">{{ $user->branch->name ?? '-' }} 
+                                @if($user->branch && $user->branch->timezone) 
+                                    <span class="badge bg-light text-muted border">{{ $user->branch->timezone }}</span>
+                                @endif
+                            </p>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold text-muted small">Divisi</label>
@@ -164,13 +168,13 @@
                                             
                                             {{-- PERBAIKAN BADGE DISINI --}}
                                             <span class="badge bg-white text-primary border border-primary rounded-pill" style="font-size: 10px;">Ongoing</span>
-                                        
-                                        </div>
+                                            
+                                            </div>
                                     @empty
-                                        <div class="text-center py-3 text-muted small border rounded bg-light">
-                                            <i class="mdi mdi-checkbox-multiple-blank-outline d-block mb-1"></i>
-                                            Tidak ada target aktif.
-                                        </div>
+                                            <div class="text-center py-3 text-muted small border rounded bg-light">
+                                                <i class="mdi mdi-checkbox-multiple-blank-outline d-block mb-1"></i>
+                                                Tidak ada target aktif.
+                                            </div>
                                     @endforelse
                                 </div>
                             </div>
@@ -198,10 +202,10 @@
                                             </div>
                                         </div>
                                     @empty
-                                        <div class="text-center py-3 text-muted small border rounded bg-light">
-                                            <i class="mdi mdi-trophy-broken d-block mb-1"></i>
-                                            Belum ada pencapaian.
-                                        </div>
+                                            <div class="text-center py-3 text-muted small border rounded bg-light">
+                                                <i class="mdi mdi-trophy-broken d-block mb-1"></i>
+                                                Belum ada pencapaian.
+                                            </div>
                                     @endforelse
                                 </div>
                             </div>
@@ -216,8 +220,8 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Tanggal</th>
-                                        <th>Masuk</th>
-                                        <th>Pulang</th>
+                                        <th>Masuk (Lokal)</th>
+                                        <th>Pulang (Lokal)</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -229,12 +233,18 @@
                                                 <small class="text-muted">{{ \Carbon\Carbon::parse($log->check_in_time)->format('l') }}</small>
                                             </td>
                                             <td>
-                                                <span class="fw-bold text-dark">{{ \Carbon\Carbon::parse($log->check_in_time)->format('H:i') }}</span>
+                                                <span class="fw-bold text-dark">
+                                                    {{-- Gunakan property check_in_local yang sudah diset di controller --}}
+                                                    {{ $log->check_in_local instanceof \Carbon\Carbon ? $log->check_in_local->format('H:i') : \Carbon\Carbon::parse($log->check_in_time)->format('H:i') }}
+                                                </span>
                                                 @if ($log->is_late_checkin) <i class="mdi mdi-alert-circle text-warning ms-1" title="Terlambat"></i> @endif
                                             </td>
                                             <td>
                                                 @if ($log->check_out_time)
-                                                    <span class="fw-bold text-dark">{{ \Carbon\Carbon::parse($log->check_out_time)->format('H:i') }}</span>
+                                                    <span class="fw-bold text-dark">
+                                                         {{-- Gunakan property check_out_local yang sudah diset di controller --}}
+                                                         {{ $log->check_out_local instanceof \Carbon\Carbon ? $log->check_out_local->format('H:i') : \Carbon\Carbon::parse($log->check_out_time)->format('H:i') }}
+                                                    </span>
                                                     @if ($log->is_early_checkout) <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">Cepat</span> @endif
                                                 @else
                                                     <span class="badge bg-secondary">Belum</span>
