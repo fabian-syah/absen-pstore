@@ -27,6 +27,7 @@ class Attendance extends Model
         'audit_photo_path',
         'audit_note',
         'scanned_by_user_id',
+        'scanned_out_by_user_id',
         'verified_by_user_id',
         'latitude',
         'longitude',
@@ -354,5 +355,11 @@ class Attendance extends Model
         } catch (\Exception $e) {
             return $this->scheduled_check_out;
         }
+    }
+
+    // Relasi untuk petugas yang scan pulang (TAMBAHAN)
+    public function scannerOut()
+    {
+        return $this->belongsTo(User::class, 'scanned_out_by_user_id');
     }
 }
