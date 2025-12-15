@@ -18,7 +18,6 @@ class AttendanceHistoryController extends Controller
     {
         $user = Auth::user();
 
-        // [FIX] Tambahkan 'leader' ke dalam array pengecekan role
         if ($request->has('employeeId') && in_array($user->role, ['audit', 'admin', 'leader'])) {
             $targetUser = User::find($request->employeeId);
             $employee = $targetUser; 
@@ -43,6 +42,7 @@ class AttendanceHistoryController extends Controller
         $nextMonth = $nextDate->month;
         $nextYear  = $nextDate->year;
 
+        // Ambil Data dengan Logic Cross-Day Validation
         $data = $this->getHistoryData($targetUser, $selectedMonth, $selectedYear);
 
         $history = $data['history'];
@@ -63,7 +63,6 @@ class AttendanceHistoryController extends Controller
     {
         $user = Auth::user();
 
-        // [FIX] Tambahkan 'leader' disini juga agar leader bisa download PDF timnya
         if ($request->has('employeeId') && in_array($user->role, ['audit', 'admin', 'leader'])) {
             $targetUser = User::find($request->employeeId);
         } else {
@@ -91,12 +90,15 @@ class AttendanceHistoryController extends Controller
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        // 1. AMBIL DATA ABSENSI ASLI
+        // 1. AMBIL DATA ABSENSI BULAN INI + DATA AKHIR BULAN LALU (Untuk cek lembur tgl 1)
+        // Kita ambil range lebih luas sedikit untuk validasi hari sebelumnya
+        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->subDay(); // H-1
+        $endDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->endOfMonth();
+
         $attendances = Attendance::with(['verifier', 'scanner', 'user']) 
             ->where('user_id', $user->id)
-            ->whereYear('check_in_time', $selectedYear)
-            ->whereMonth('check_in_time', $selectedMonth)
-            ->orderBy('check_in_time', 'desc')
+            ->whereBetween('check_in_time', [$startDate, $endDate])
+            ->orderBy('check_in_time', 'asc') // Sort ASC dulu untuk urutan validasi
             ->get();
 
         // 2. DATA IZIN
@@ -112,22 +114,55 @@ class AttendanceHistoryController extends Controller
             })
             ->get();
 
-        $historyCollection = $attendances;
+        $historyCollection = collect();
 
+        // --- PROSES DATA & DETEKSI LEMBUR ---
+        // Kita iterasi data Absensi asli
+        foreach ($attendances as $index => $att) {
+            // Hanya masukkan ke history jika check_in_time masuk bulan yang dipilih
+            if ($att->check_in_time->month == $selectedMonth) {
+                
+                // === LOGIKA VALIDASI LEMBUR LINTAS HARI ===
+                // Cek record SEBELUMNYA (H-1)
+                // Jika record sebelumnya checkoutnya > jam 02:00 pagi pada hari ini
+                $att->is_excused_late = false;
+                
+                // Cari absen kemarin
+                $yesterday = $att->check_in_time->copy()->subDay()->format('Y-m-d');
+                $prevAtt = $attendances->filter(function($a) use ($yesterday) {
+                    return $a->check_in_time->format('Y-m-d') == $yesterday;
+                })->first();
+
+                if ($prevAtt && $prevAtt->check_out_time) {
+                    // Cek apakah pulang kemarin LEWAT TENGAH MALAM (Misal jam 03:00 pagi hari ini)
+                    // Ambang batas: Pulang di atas jam 02:00 pagi
+                    $thresholdTime = $att->check_in_time->copy()->setTime(2, 0, 0); // Jam 2 Pagi Hari Ini
+                    
+                    if ($prevAtt->check_out_time->gt($thresholdTime)) {
+                        // Jika pulang kemarin > Jam 2 pagi hari ini, maka telat hari ini DIMAKLUMI
+                        $att->is_excused_late = true;
+                        $att->overtime_reason = "Pulang s/d " . $prevAtt->check_out_time->format('H:i');
+                    }
+                }
+
+                $historyCollection->push($att);
+            }
+        }
+
+        // --- PROSES DATA CUTI/IZIN (GABUNGKAN) ---
         foreach ($leaves as $leave) {
-            $startDate = Carbon::parse($leave->start_date);
-            $endDate = $leave->end_date ? Carbon::parse($leave->end_date) : $startDate;
-            $period = CarbonPeriod::create($startDate, $endDate);
+            $start = Carbon::parse($leave->start_date);
+            $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start;
+            $period = CarbonPeriod::create($start, $end);
 
             foreach ($period as $date) {
                 if ($date->month == $selectedMonth && $date->year == $selectedYear) {
-                    
-                    // Cek Conflict tanggal
-                    $alreadyAttendance = $attendances->filter(function ($att) use ($date) {
-                        return $att->check_in_time->isSameDay($date);
+                    // Cek Conflict
+                    $exists = $historyCollection->filter(function ($a) use ($date) {
+                        return $a->check_in_time->isSameDay($date);
                     })->isNotEmpty();
 
-                    if (!$alreadyAttendance) {
+                    if (!$exists) {
                         $fakeAtt = new Attendance();
                         $fakeAtt->id = 'leave_' . $leave->id . '_' . $date->timestamp; 
                         $fakeAtt->user_id = $user->id;
@@ -150,7 +185,6 @@ class AttendanceHistoryController extends Controller
                         $fakeAtt->latitude = null; 
                         $fakeAtt->longitude = null;
                         
-                        // Set Relasi
                         $fakeAtt->setRelation('leaveRequest', $leave);
                         $fakeAtt->setRelation('verifier', $leave->verifier); 
                         $fakeAtt->setRelation('user', $user);
@@ -171,15 +205,9 @@ class AttendanceHistoryController extends Controller
                 $isImplicitPresent = empty($s) && in_array($item->attendance_type, ['scan', 'self', 'manual']);
                 return $isExplicitPresent || $isImplicitPresent;
             })->count(),
-            'sakit' => $history->filter(function($i) {
-                return strtolower($i->presence_status ?? '') === 'sakit';
-            })->count(),
-            'izin' => $history->filter(function($i) {
-                return in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti']);
-            })->count(),
-            'alpha' => $history->filter(function($i) {
-                return strtolower($i->presence_status ?? '') === 'alpha';
-            })->count(),
+            'sakit' => $history->filter(function($i) { return strtolower($i->presence_status ?? '') === 'sakit'; })->count(),
+            'izin' => $history->filter(function($i) { return in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti']); })->count(),
+            'alpha' => $history->filter(function($i) { return strtolower($i->presence_status ?? '') === 'alpha'; })->count(),
             'telat' => $history->where('is_late_checkin', true)->count(),
             'pulang_cepat' => $history->where('is_early_checkout', true)->count(),
             'pending' => $history->where('status', 'pending_verification')->count(),
@@ -207,7 +235,18 @@ class AttendanceHistoryController extends Controller
 
         $originalDate = $attendance->check_in_time->format('Y-m-d');
         $newCheckIn = Carbon::parse($originalDate . ' ' . $request->check_in_time);
-        $newCheckOut = $request->check_out_time ? Carbon::parse($originalDate . ' ' . $request->check_out_time) : null;
+        
+        // Handle Cross-Day Checkout manually in Audit Edit
+        $checkOutTimeStr = $request->check_out_time;
+        $newCheckOut = null;
+
+        if ($checkOutTimeStr) {
+            $newCheckOut = Carbon::parse($originalDate . ' ' . $checkOutTimeStr);
+            // Jika jam pulang < jam masuk, asumsikan besoknya (lintas hari)
+            if ($newCheckOut->lt($newCheckIn)) {
+                $newCheckOut->addDay();
+            }
+        }
 
         $workSchedule = WorkSchedule::getScheduleForUser($attendance->user_id);
         $isLate = $attendance->is_late_checkin;

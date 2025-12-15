@@ -38,28 +38,8 @@
         .table thead th { font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; background-color: #f8f9fa; border-bottom: 2px solid #e9ecef; white-space: nowrap; }
         .border-dashed-start { border-left: 2px dashed #dee2e6; padding-left: 10px; }
         .verifier-box { background: #f8f9fa; border-radius: 8px; padding: 6px 10px; border: 1px solid #e9ecef; }
-        
-        /* Fix Select Color */
-        .form-select-custom {
-            background-color: #fff !important;
-            color: #333 !important;
-            border: 1px solid #ced4da !important;
-            font-weight: 600;
-        }
-        
-        /* Note Box Style */
-        .note-box {
-            font-size: 0.65rem;
-            line-height: 1.2;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 4px;
-            margin-top: 4px;
-            max-width: 120px;
-            word-wrap: break-word;
-            color: #495057;
-        }
+        .form-select-custom { background-color: #fff !important; color: #333 !important; border: 1px solid #ced4da !important; font-weight: 600; }
+        .note-box { font-size: 0.65rem; line-height: 1.2; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 4px; margin-top: 4px; max-width: 120px; word-wrap: break-word; color: #495057; }
     </style>
 @endpush
 
@@ -249,40 +229,20 @@
                                     @foreach ($history as $att)
                                         @php
                                             // --- [UPDATE LOGIC] SNAPSHOT JADWAL VS PROFILE SEKARANG ---
-                                            // 1. Coba ambil dari History (Snapshot) jika ada di database
-                                            $fixedScheduleIn  = $att->scheduled_check_in ?? null;
-                                            $fixedScheduleOut = $att->scheduled_check_out ?? null;
+                                            $fixedScheduleIn  = $att->scheduled_check_in ?? ($att->user->check_in_start ?? ($att->user->workSchedule->start_time ?? null));
+                                            $fixedScheduleOut = $att->scheduled_check_out ?? ($att->user->check_out_start ?? ($att->user->workSchedule->end_time ?? null));
                                             
-                                            // 2. Jika Snapshot NULL (Data Lama), ambil dari User Profile (Current)
-                                            if (!$fixedScheduleIn && $att->user) {
-                                                $fixedScheduleIn = $att->user->check_in_start;
-                                            }
-                                            if (!$fixedScheduleOut && $att->user) {
-                                                $fixedScheduleOut = $att->user->check_out_start;
-                                            }
-
-                                            // 3. Fallback ke WorkSchedule (Shift) jika user schedule juga kosong
-                                            if (!$fixedScheduleIn && $att->user && $att->user->workSchedule) {
-                                                 $fixedScheduleIn = $att->user->workSchedule->start_time;
-                                            }
-                                            if (!$fixedScheduleOut && $att->user && $att->user->workSchedule) {
-                                                 $fixedScheduleOut = $att->user->workSchedule->end_time;
-                                            }
-
                                             // --- HITUNG KETERLAMBATAN (Jam Masuk) untuk Tampilan ---
                                             $isRealLate = false;
                                             $lateStr = ''; 
 
-                                            // Hanya hitung jika bukan izin/leave dan ada jadwal
                                             if ($fixedScheduleIn && $att->attendance_type != 'leave') {
                                                 $actualStr = $att->check_in_time->format('H:i');
                                                 $scheduleStr = \Carbon\Carbon::parse($fixedScheduleIn)->format('H:i');
                                                 
                                                 if ($actualStr > $scheduleStr) {
                                                     $isRealLate = true;
-                                                    $actualCarbon = \Carbon\Carbon::parse($actualStr);
-                                                    $scheduleCarbon = \Carbon\Carbon::parse($scheduleStr);
-                                                    $lateMinutes = $scheduleCarbon->diffInMinutes($actualCarbon);
+                                                    $lateMinutes = \Carbon\Carbon::parse($scheduleStr)->diffInMinutes(\Carbon\Carbon::parse($actualStr));
                                                     $hours = floor($lateMinutes / 60);
                                                     $mins = $lateMinutes % 60;
                                                     $lateStr = ($hours > 0) ? "{$hours}j {$mins}m" : "{$mins}m";
@@ -306,11 +266,18 @@
                                                                 {{ $att->check_in_time->format('H:i') }}
                                                             </span>
                                                             @if ($isRealLate)
-                                                                <span class="badge bg-danger rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">+{{ $lateStr }}</span>
+                                                                @if($att->is_excused_late)
+                                                                    {{-- BADGE DIMAKLUMI (BARU) --}}
+                                                                    <span class="badge bg-soft-success text-success border border-success rounded-pill px-2 py-0 ms-1" 
+                                                                          style="font-size: 0.6rem;" data-bs-toggle="tooltip" title="{{ $att->overtime_reason ?? 'Habis Lembur' }}">
+                                                                        <i class="mdi mdi-check-circle-outline"></i> Dimaklumi
+                                                                    </span>
+                                                                @else
+                                                                    <span class="badge bg-danger rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">+{{ $lateStr }}</span>
+                                                                @endif
                                                             @endif
                                                         </div>
                                                     </div>
-                                                    {{-- TAMPILKAN JADWAL MASUK (SNAPSHOT/CURRENT) --}}
                                                     <small class="text-muted ps-4" style="font-size: 0.7rem;">
                                                         {{ $fixedScheduleIn ? 'Jadwal: '.\Carbon\Carbon::parse($fixedScheduleIn)->format('H:i') : '- Fleksibel -' }}
                                                     </small>
@@ -324,19 +291,8 @@
                                                     if ($att->photo_path) $displayPhoto = asset('storage/' . $att->photo_path);
                                                     elseif ($att->leaveRequest && $att->leaveRequest->file_proof) $displayPhoto = asset('storage/' . $att->leaveRequest->file_proof);
                                                     
-                                                    $labelMasuk = 'Masuk';
-                                                    if ($att->leaveRequest) $labelMasuk = 'Izin/Sakit';
-                                                    elseif ($att->presence_status) $labelMasuk = $att->presence_status;
-                                                    
-                                                    $rawNotes = $att->notes ?? '';
-                                                    $noteMasukDisplay = '';
-                                                    $noteParts = explode(' | ', $rawNotes);
-                                                    if (isset($noteParts[0])) {
-                                                        $firstPart = trim($noteParts[0]);
-                                                        if (!empty($firstPart) && !str_contains($firstPart, 'Catatan:') && !str_contains($firstPart, 'Security Scan') && !str_contains($firstPart, 'Pulang') && $firstPart != '-') {
-                                                            $noteMasukDisplay = $firstPart;
-                                                        }
-                                                    }
+                                                    $labelMasuk = $att->leaveRequest ? 'Izin/Sakit' : ($att->presence_status ?? 'Masuk');
+                                                    $noteMasukDisplay = \Illuminate\Support\Str::limit(explode(' | ', $att->notes ?? '')[0] ?? '', 25);
                                                 @endphp
 
                                                 <div class="d-flex flex-column align-items-start">
@@ -346,16 +302,16 @@
                                                             style="width: 45px; height: 45px; object-fit: cover;"
                                                             data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
                                                             data-img-src="{{ $displayPhoto }}"
-                                                            data-img-title="Masuk: {{ \Illuminate\Support\Str::limit($labelMasuk, 40) }}">
+                                                            data-img-title="Masuk: {{ $labelMasuk }}">
                                                     @else
                                                         <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted border" style="width: 45px; height: 45px;">
                                                             <i class="mdi mdi-image-off"></i>
                                                         </div>
                                                     @endif
 
-                                                    @if(!empty($noteMasukDisplay))
-                                                        <div class="note-box" title="{{ $noteMasukDisplay }}">
-                                                            <i class="mdi mdi-note-text-outline me-1"></i>{{ \Illuminate\Support\Str::limit($noteMasukDisplay, 25) }}
+                                                    @if(!empty($noteMasukDisplay) && !str_contains($noteMasukDisplay, 'Catatan:'))
+                                                        <div class="note-box" title="{{ $att->notes }}">
+                                                            <i class="mdi mdi-note-text-outline me-1"></i>{{ $noteMasukDisplay }}
                                                         </div>
                                                     @endif
                                                 </div>
@@ -374,38 +330,26 @@
                                                                 @if ($att->is_early_checkout)
                                                                     <span class="badge bg-warning text-dark rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">Cepat</span>
                                                                 @endif
+                                                                {{-- INDIKATOR PULANG SUBUH --}}
+                                                                @if($att->check_out_time->format('H') < 6 && $att->check_out_time->day != $att->check_in_time->day)
+                                                                     <span class="badge bg-dark text-white rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">
+                                                                        <i class="mdi mdi-moon-waning-crescent"></i> Subuh
+                                                                     </span>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     @else
                                                         <span class="badge bg-light text-secondary border">Belum Pulang</span>
                                                     @endif
 
-                                                    {{-- TAMPILKAN JADWAL PULANG (SNAPSHOT/CURRENT) --}}
                                                     <small class="text-muted ps-4" style="font-size: 0.7rem;">
                                                         {{ $fixedScheduleOut ? 'Jadwal: '.\Carbon\Carbon::parse($fixedScheduleOut)->format('H:i') : '- Fleksibel -' }}
                                                     </small>
                                                 </div>
                                             </td>
 
-                                            {{-- FOTO PULANG + CATATAN --}}
+                                            {{-- FOTO PULANG --}}
                                             <td class="bg-light bg-opacity-25">
-                                                @php
-                                                    $labelPulang = 'Pulang';
-                                                    if (!empty($att->notes) && str_contains($att->notes, 'Pulang')) {
-                                                        $parts = explode('Pulang', $att->notes);
-                                                        $labelPulang = 'Pulang ' . ltrim(trim(end($parts)), ': ');
-                                                    }
-
-                                                    $notePulangDisplay = '';
-                                                    $noteParts = explode(' | ', $att->notes ?? '');
-                                                    foreach ($noteParts as $part) {
-                                                        if (str_contains($part, 'Catatan:')) {
-                                                            $notePulangDisplay = trim(str_replace('Catatan:', '', $part));
-                                                            break; 
-                                                        }
-                                                    }
-                                                @endphp
-
                                                 <div class="d-flex flex-column align-items-start">
                                                     @if ($att->photo_out_path)
                                                         <img src="{{ asset('storage/' . $att->photo_out_path) }}" alt="Out"
@@ -413,16 +357,10 @@
                                                             style="width: 45px; height: 45px; object-fit: cover;"
                                                             data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
                                                             data-img-src="{{ asset('storage/' . $att->photo_out_path) }}"
-                                                            data-img-title="{{ \Illuminate\Support\Str::limit($labelPulang, 40) }}">
+                                                            data-img-title="Pulang">
                                                     @else
                                                         <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted border" style="width: 45px; height: 45px;">
                                                             <i class="mdi mdi-image-off"></i>
-                                                        </div>
-                                                    @endif
-
-                                                    @if(!empty($notePulangDisplay))
-                                                        <div class="note-box bg-white" title="{{ $notePulangDisplay }}">
-                                                            <i class="mdi mdi-note-text-outline me-1"></i>{{ \Illuminate\Support\Str::limit($notePulangDisplay, 25) }}
                                                         </div>
                                                     @endif
                                                 </div>
@@ -439,7 +377,6 @@
                                                             str_contains($statusLower, 'telat') => 'bg-warning text-dark',
                                                             $statusLower == 'sakit' => 'bg-primary',
                                                             in_array($statusLower, ['cuti', 'izin']) => 'bg-secondary',
-                                                            in_array($statusLower, ['libur', 'off day']) => 'bg-dark', 
                                                             $statusLower == 'alpha' => 'bg-danger',
                                                             default => 'bg-dark',
                                                         };
@@ -455,8 +392,6 @@
                                             {{-- LOKASI (MASUK & PULANG) --}}
                                             <td class="text-center">
                                                 <div class="d-flex flex-column gap-2">
-                                                    
-                                                    {{-- LOKASI MASUK --}}
                                                     <div class="d-flex flex-column align-items-center">
                                                         <small class="text-muted fw-bold mb-1" style="font-size: 0.6rem;">MASUK</small>
                                                         @if ($att->latitude && $att->longitude)
@@ -465,17 +400,12 @@
                                                                 <i class="mdi mdi-map-marker-radius"></i>
                                                             </a>
                                                         @elseif(in_array($att->attendance_type, ['scan', 'manual']))
-                                                            <span class="badge bg-light text-dark border">
-                                                                <i class="mdi mdi-office-building"></i> Kantor
-                                                            </span>
-                                                        @elseif($att->attendance_type == 'leave')
-                                                             <span class="text-muted small">-</span>
+                                                            <span class="badge bg-light text-dark border"><i class="mdi mdi-office-building"></i> Kantor</span>
                                                         @else
                                                             <span class="text-muted small"><i class="mdi mdi-map-marker-off"></i></span>
                                                         @endif
                                                     </div>
 
-                                                    {{-- LOKASI PULANG (JIKA ADA) --}}
                                                     @if($att->check_out_time)
                                                         <div class="border-top w-100 my-1"></div>
                                                         <div class="d-flex flex-column align-items-center">
@@ -486,9 +416,7 @@
                                                                     <i class="mdi mdi-map-marker-radius"></i>
                                                                 </a>
                                                             @elseif(in_array($att->attendance_type, ['scan', 'manual']))
-                                                                <span class="badge bg-light text-dark border">
-                                                                    <i class="mdi mdi-office-building"></i> Kantor
-                                                                </span>
+                                                                <span class="badge bg-light text-dark border"><i class="mdi mdi-office-building"></i> Kantor</span>
                                                             @else
                                                                 <span class="text-muted small"><i class="mdi mdi-map-marker-off"></i></span>
                                                             @endif
@@ -500,7 +428,6 @@
                                             {{-- VERIFIKASI & PETUGAS --}}
                                             <td>
                                                 <div class="d-flex flex-column gap-2">
-                                                    
                                                     {{-- 1. INFO MASUK / IZIN --}}
                                                     <div class="verifier-box d-flex align-items-center">
                                                         @if ($att->attendance_type == 'leave')
@@ -545,31 +472,19 @@
                                                     {{-- 2. INFO PULANG --}}
                                                     @if ($att->check_out_time)
                                                         <div class="verifier-box d-flex align-items-center mt-1">
-                                                            @if (str_contains($att->notes, 'Security Scan by'))
-                                                                <div class="badge bg-dark text-white p-1 me-2 rounded-1" style="min-width: 35px;">OUT</div>
-                                                                <div class="lh-sm">
+                                                            <div class="badge bg-dark text-white p-1 me-2 rounded-1" style="min-width: 35px;">OUT</div>
+                                                            <div class="lh-sm">
+                                                                @if (str_contains($att->notes, 'Security Scan by'))
                                                                     <span class="d-block fw-bold text-dark small">{{ Str::after($att->notes, 'Security Scan by ') }}</span>
                                                                     <small class="text-muted" style="font-size: 0.65rem;">Security</small>
-                                                                </div>
-                                                            @elseif (str_contains($att->notes, 'Security Scan'))
-                                                                <div class="badge bg-dark text-white p-1 me-2 rounded-1" style="min-width: 35px;">OUT</div>
-                                                                <div class="lh-sm">
-                                                                    <span class="d-block fw-bold text-dark small">Security</span>
-                                                                    <small class="text-muted" style="font-size: 0.65rem;">Scanner</small>
-                                                                </div>
-                                                            @elseif (str_contains($att->notes, 'Pulang (Selfie)'))
-                                                                <div class="badge bg-info text-white p-1 me-2 rounded-1" style="min-width: 35px;">OUT</div>
-                                                                <div class="lh-sm">
+                                                                @elseif (str_contains($att->notes, 'Pulang (Selfie)'))
                                                                     <span class="d-block fw-bold text-dark small">Mandiri</span>
                                                                     <small class="text-muted" style="font-size: 0.65rem;">Selfie</small>
-                                                                </div>
-                                                            @else
-                                                                <div class="badge bg-secondary text-white p-1 me-2 rounded-1" style="min-width: 35px;">OUT</div>
-                                                                <div class="lh-sm">
-                                                                    <span class="d-block fw-bold text-dark small">{{ $att->verifier->name ?? 'System' }}</span>
+                                                                @else
+                                                                    <span class="d-block fw-bold text-dark small">System</span>
                                                                     <small class="text-muted" style="font-size: 0.65rem;">Auto</small>
-                                                                </div>
-                                                            @endif
+                                                                @endif
+                                                            </div>
                                                         </div>
                                                     @endif
                                                 </div>

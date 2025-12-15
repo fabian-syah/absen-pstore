@@ -6,102 +6,33 @@
 @push('styles')
     <style>
         /* --- CARD STATISTIK MODERN --- */
-        .stat-card {
-            border: none;
-            border-radius: 16px;
-            background: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-        }
-
-        .stat-icon-box {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px; /* Kotak tumpul, terlihat lebih modern dari bulat penuh */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        /* Warna Soft UI */
+        .stat-card { border: none; border-radius: 16px; background: white; transition: all 0.3s ease; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03); }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); }
+        .stat-icon-box { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
         .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; }
         .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
         .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
         .bg-soft-danger  { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
-
-
-        /* --- Style Lama Tetap Ada --- */
-        .team-card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-
-        .team-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2rem;
-            color: white;
-        }
-
-        .team-count {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .member-card {
-            transition: all 0.3s ease;
-            border-left: 4px solid transparent;
-        }
-
-        .member-card:hover {
-            background: #f8f9ff;
-            border-left-color: #667eea;
-            transform: translateX(5px);
-        }
-
+        .team-card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); overflow: hidden; }
+        .team-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; color: white; }
+        .team-count { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .member-card { transition: all 0.3s ease; border-left: 4px solid transparent; }
+        .member-card:hover { background: #f8f9ff; border-left-color: #667eea; transform: translateX(5px); }
         .avatar-wrapper { position: relative; }
-        .avatar-wrapper::after {
-            content: ''; position: absolute; bottom: 2px; right: 2px;
-            width: 14px; height: 14px; background: #10b981;
-            border: 2px solid white; border-radius: 50%; z-index: 5;
-        }
+        .avatar-wrapper::after { content: ''; position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background: #10b981; border: 2px solid white; border-radius: 50%; z-index: 5; }
         .avatar-wrapper.offline::after { background: #94a3b8; }
-
         .status-badge { font-weight: 600; padding: 0.5rem 1rem; border-radius: 50px; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
         .status-badge i { font-size: 1rem; }
         .division-badge { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca; border: none; font-weight: 500; }
         .branch-badge { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-weight: 500; }
-        
-        /* UPDATED: Photo Preview Styles for Multiple Buttons */
         .photo-preview { width: 30px; height: 30px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.5); }
-        
-        .view-photo-btn { 
-            border: none; 
-            padding: 0.4rem 0.8rem; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            transition: all 0.2s ease; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 0.5rem; 
-            font-size: 0.75rem;
-        }
+        .view-photo-btn { border: none; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
         .view-photo-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        
         .late-message { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 8px; font-style: italic; color: #92400e; max-width: 250px; }
         .empty-state { padding: 4rem 2rem; text-align: center; }
         .empty-state-icon { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
         .audit-pill { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 50px; padding: 4px 12px; display: inline-flex; align-items: center; transition: all 0.3s ease; }
         .audit-pill:hover { background: rgba(255, 255, 255, 0.25); }
-
         .modal-content { border: none; border-radius: 20px; overflow: hidden; }
         .modal-image-wrapper { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1rem; }
     </style>
@@ -254,7 +185,16 @@
                                         $attendance = $member->attendances->first();
                                         $leave = $member->leaveRequests->first();
                                         $isWfh = $leave && $leave->type == 'wfh';
+                                        // Online jika belum checkout (termasuk yang masuk kemarin dan belum pulang)
                                         $isOnline = ($attendance && !$attendance->check_out_time) || $isWfh;
+                                        
+                                        // Cek apakah ini lembur lintas hari
+                                        $isCrossDay = false;
+                                        if ($attendance && !$attendance->check_out_time) {
+                                            if (!$attendance->check_in_time->isSameDay(now())) {
+                                                $isCrossDay = true;
+                                            }
+                                        }
                                     @endphp
                                     <tr class="member-card {{ Auth::id() == $member->id ? 'bg-light' : '' }}">
                                         <td class="ps-4 py-3">
@@ -306,7 +246,7 @@
                                         </div>
                                     </td>
                                     <td class="py-3">
-                                        {{-- LOGIC TELAT --}}
+                                        {{-- LOGIC TELAT & LINTAS HARI --}}
                                         @php
                                             $isRealLate = false; $lateText = '';
                                             if ($attendance) {
@@ -329,10 +269,17 @@
                                                     <i class="mdi mdi-home-variant"></i> <span>Pulang {{ $attendance->check_out_time->format('H:i') }}</span>
                                                 </span>
                                             @else
-                                                <span class="status-badge {{ $isRealLate ? 'bg-danger' : 'bg-success' }} text-white">
-                                                    <i class="mdi {{ $isRealLate ? 'mdi-alert-circle-outline' : 'mdi-briefcase-check' }}"></i>
-                                                    <span>Masuk {{ $attendance->check_in_time->format('H:i') }} @if ($isRealLate) <small class="fw-bold ms-1" style="font-size: 0.75rem;">({{ $lateText }})</small> @endif</span>
-                                                </span>
+                                                @if ($isCrossDay)
+                                                    <span class="status-badge bg-warning text-dark border border-warning" title="Masuk dari tanggal {{ $attendance->check_in_time->format('d M') }}">
+                                                        <i class="mdi mdi-moon-waning-crescent"></i> 
+                                                        <span>Lembur (Masih Kerja)</span>
+                                                    </span>
+                                                @else
+                                                    <span class="status-badge {{ $isRealLate ? 'bg-danger' : 'bg-success' }} text-white">
+                                                        <i class="mdi {{ $isRealLate ? 'mdi-alert-circle-outline' : 'mdi-briefcase-check' }}"></i>
+                                                        <span>Masuk {{ $attendance->check_in_time->format('H:i') }} @if ($isRealLate) <small class="fw-bold ms-1" style="font-size: 0.75rem;">({{ $lateText }})</small> @endif</span>
+                                                    </span>
+                                                @endif
                                             @endif
                                         @elseif ($leave)
                                             @if ($leave->type == 'wfh')
