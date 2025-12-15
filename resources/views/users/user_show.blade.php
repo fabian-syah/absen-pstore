@@ -161,7 +161,10 @@
                                                 <small class="text-muted">{{ $target->deadline->format('d M') }}</small>
                                             </div>
                                             <p class="mb-1 text-muted small" style="line-height: 1.2;">{{ Str::limit($target->description, 50) }}</p>
-                                            <span class="badge bg-opacity-10 bg-primary text-primary border border-primary rounded-pill" style="font-size: 10px;">Ongoing</span>
+                                            
+                                            {{-- PERBAIKAN BADGE DISINI --}}
+                                            <span class="badge bg-white text-primary border border-primary rounded-pill" style="font-size: 10px;">Ongoing</span>
+                                        
                                         </div>
                                     @empty
                                         <div class="text-center py-3 text-muted small border rounded bg-light">
