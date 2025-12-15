@@ -206,7 +206,7 @@ class AuditController extends Controller
             }
         }
 
-        $requests = $query->oldest()->paginate(10);
+        $requests = $query->latest()->paginate(10);
 
         return view('leave_requests.history', compact('requests'));
     }
