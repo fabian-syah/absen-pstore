@@ -20,10 +20,13 @@
         </p>
     </div>
     
-    {{-- Tombol Tambah Target Global (HANYA LEADER) --}}
-    @if(auth()->user()->role == 'leader')
+    {{-- TOMBOL CREATE TARGET GLOBAL (Hanya muncul jika $canManage = TRUE) --}}
+    {{-- Berlaku untuk Admin, Audit, dan Leader Cabang ini --}}
+    @if($canManage)
     <div>
-         <a href="{{ route('job-targets.create', ['branch_id' => $branch->id, 'type_preselect' => 'team']) }}" class="btn btn-dark btn-lg shadow-lg rounded-4 px-4 fw-bold hover-scale w-100 w-md-auto">
+         {{-- Param 'redirect_to_branch' memastikan setelah simpan balik lagi kesini --}}
+         <a href="{{ route('job-targets.create', ['branch_id' => $branch->id, 'type_preselect' => 'team', 'redirect_to_branch' => $branch->id]) }}" 
+            class="btn btn-dark btn-lg shadow-lg rounded-4 px-4 fw-bold hover-scale w-100 w-md-auto">
             <i class="mdi mdi-target me-1"></i> Buat Target Global Tim
         </a>
     </div>
@@ -44,15 +47,13 @@
         </div>
     </div>
     <div class="card-body p-3 p-md-4">
-        {{-- Allow edit/update status hanya jika Leader (atau Admin jika mau memantau), tapi berdasarkan request, admin hanya diri sendiri. Jadi Leader full control. --}}
-        @php
-            $isLeader = auth()->user()->role == 'leader';
-        @endphp
+        {{-- Kita panggil partial tabs --}}
+        {{-- 'allow_edit_detail' => $canManage artinya Admin/Audit/Leader boleh edit --}}
         @include('job_targets.partials.period_tabs', [
             'idPrefix' => 'branch', 
             'dataCollection' => $teamData, 
-            'allow_edit_detail' => $isLeader,
-            'allow_update_status' => $isLeader
+            'allow_edit_detail' => $canManage,
+            'allow_update_status' => $canManage
         ])
     </div>
 </div>
@@ -104,13 +105,16 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                {{-- BUTTON BERI TARGET: HANYA LEADER --}}
-                                @if(auth()->user()->role == 'leader')
-                                    <a href="{{ route('job-targets.create', ['assign_user_id' => $member->id, 'branch_id' => $branch->id]) }}" 
+                                {{-- BUTTON BERI TARGET --}}
+                                @if($canManage)
+                                    {{-- Mengirim 'assign_user_id' agar form otomatis memilih orang ini --}}
+                                    {{-- Mengirim 'redirect_to_branch' agar balik kesini --}}
+                                    <a href="{{ route('job-targets.create', ['assign_user_id' => $member->id, 'branch_id' => $branch->id, 'redirect_to_branch' => $branch->id]) }}" 
                                        class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
                                         <i class="mdi mdi-plus-circle-outline me-1"></i> Beri Target
                                     </a>
                                 @else
+                                    {{-- Untuk role lain hanya view only --}}
                                     <span class="text-muted small fst-italic">View Only</span>
                                 @endif
                             </td>
@@ -126,26 +130,24 @@
     </div>
 </div>
 
-{{-- MODAL UPDATE & STYLE SAMA SEPERTI SEBELUMNYA --}}
+{{-- MODAL UPDATE STATUS (Popup Hasil Kerja) --}}
 @include('job_targets.partials.modal_update')
 
+{{-- STYLE --}}
 <style>
     .card-rounded { border-radius: 16px; overflow: hidden; }
     .bg-gradient-info { background: linear-gradient(45deg, #198ae3, #4b49ac); }
     .hover-scale { transition: transform 0.2s; }
     .hover-scale:hover { transform: scale(1.02); }
     
-    /* Bintang & Tab Style */
     .star-badge-3 { background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); color: #000; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); border: 1px solid #d4af37; }
     .star-badge-2 { background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%); color: #333; border: 1px solid #b0b0b0; }
     .star-badge-1 { background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
-    .star-animation { animation: glow 2s infinite; }
-    @keyframes glow { 0% { box-shadow: 0 0 5px #FFD700; } 50% { box-shadow: 0 0 15px #FFD700; } 100% { box-shadow: 0 0 5px #FFD700; } }
     .nav-pills-custom .nav-link { background: #f8f9fa; color: #6c757d; border: 1px solid #e9ecef; margin-right: 5px; margin-bottom: 5px; transition: all 0.3s; }
     .nav-pills-custom .nav-link.active { background: #4b49ac; color: #fff; border-color: #4b49ac; box-shadow: 0 4px 6px rgba(75, 73, 172, 0.2); }
 </style>
 
-{{-- JAVASCRIPT FILTER --}}
+{{-- SCRIPT FILTER --}}
 <script>
     function applyFilter(containerId, periodType) {
         let filterBox = document.getElementById('filter-container-' + containerId);
