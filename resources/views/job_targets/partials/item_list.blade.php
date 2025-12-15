@@ -85,7 +85,7 @@
                 </tr>
             @endforeach
             
-            {{-- ... (Bagian No Data Message SAMA) ... --}}
+            {{-- Bagian No Data Message --}}
             <tr class="no-data-message d-none">
                 <td colspan="3" class="text-center py-4 text-muted small">
                     <i class="mdi mdi-magnify-remove mdi-24px d-block mb-1"></i>

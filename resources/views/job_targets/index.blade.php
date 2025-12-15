@@ -62,7 +62,7 @@
         @include('job_targets.partials.period_tabs', [
             'idPrefix' => 'personal', 
             'dataCollection' => $personalData,
-            'allow_edit_detail' => false,
+            'allow_edit_detail' => true,
             'allow_update_status' => true
         ])
     </div>
@@ -71,8 +71,6 @@
 {{-- MODAL UPDATE STATUS --}}
 @include('job_targets.partials.modal_update')
 
-{{-- CSS & JS SAMA SEPERTI SEBELUMNYA --}}
-{{-- ... (Sisanya tetap sama) ... --}}
 <style>
     .card-rounded { border-radius: 16px; overflow: hidden; }
     .bg-gradient-info { background: linear-gradient(45deg, #198ae3, #4b49ac); }

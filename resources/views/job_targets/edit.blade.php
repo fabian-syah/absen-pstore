@@ -4,7 +4,7 @@
 @section('content')
 <div class="row justify-content-center">
     <div class="col-12 col-lg-8">
-        <a href="{{ route('job-targets.index') }}" class="btn btn-light bg-white shadow-sm mb-3 border-0 rounded-3 text-dark fw-bold">
+        <a href="{{ url()->previous() }}" class="btn btn-light bg-white shadow-sm mb-3 border-0 rounded-3 text-dark fw-bold">
             <i class="mdi mdi-arrow-left me-1"></i> Batal Edit
         </a>
 
