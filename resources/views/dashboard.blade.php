@@ -380,16 +380,71 @@
 
                                 <div class="d-flex align-items-center position-relative z-index-1">
                                     <div class="status-icon shadow pulse-animation">
-                                        <i class="mdi {{ $isCrossDay ? 'mdi-calendar-clock' : 'mdi-clock-check' }}"></i>
+                                        <i class="mdi {{ $isCrossDay ? 'mdi-clock-alert-outline' : 'mdi-clock-check' }}"></i>
                                     </div>
                                     <div class="flex-grow-1">
                                         @if ($isCrossDay)
-                                            <h5 class="mb-1 fw-bold text-danger">Lembur Lintas Hari Detected!</h5>
-                                            <p class="mb-0 small text-dark">Masuk:
-                                                <strong>{{ $myAttendanceToday->check_in_time->format('d M, H:i') }}</strong>
-                                                via {{ $sourceLabel }}
-                                            </p>
+                                            {{-- [MODIFIKASI] SECTION LEMBUR LINTAS HARI --}}
+                                            <div class="alert alert-light border-warning mb-0 p-3" style="background-color: #fffbeb; border: 1px solid #fcd34d;">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                         <i class="mdi mdi-clock-time-eight-outline fs-4"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="text-danger fw-bold mb-0 text-uppercase" style="letter-spacing: 0.5px;">Lembur Lintas Hari Detected!</h6>
+                                                        <p class="text-muted small mb-0">
+                                                            Masuk: <span class="fw-bold text-dark">{{ $myAttendanceToday->check_in_time->format('d M, H:i') }}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <hr class="my-2" style="border-top: 1px solid #fde68a;">
+
+                                                {{-- FASE 1: SLIDER CONFIRMATION --}}
+                                                <div id="slider-view" class="text-center pt-2">
+                                                    <p class="text-muted small mb-3">Geser tombol untuk konfirmasi lembur & buka kamera.</p>
+                                                    
+                                                    <div class="position-relative w-100 rounded-pill d-flex align-items-center px-1 user-select-none shadow-sm" 
+                                                         id="slide-track" 
+                                                         style="height: 50px; background-color: #fde047; transition: all 0.2s;">
+                                                        
+                                                        <div class="position-absolute w-100 text-center" style="pointer-events: none; left:0;">
+                                                            <span class="fw-bold text-dark small opacity-75" style="letter-spacing: 1px;">GESER KE KANAN >></span>
+                                                        </div>
+
+                                                        <div id="slide-thumb" 
+                                                             class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center text-warning"
+                                                             style="width: 42px; height: 42px; cursor: pointer; position: absolute; left: 4px; z-index: 10;">
+                                                            <i class="mdi mdi-arrow-right fw-bold fs-5"></i>
+                                                        </div>
+                                                    </div>
+
+                                                    <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}" method="POST" class="mt-3">
+                                                        @csrf
+                                                        <button type="submit" 
+                                                                class="btn btn-link btn-sm text-muted text-decoration-none small" 
+                                                                style="font-size: 11px;"
+                                                                onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis tanpa foto.\nStatus kemarin akan menjadi \'Verified/Present\' tapi ada catatan skip.\n\nLanjutkan?');">
+                                                            Lewati (Tutup Sesi Kemarin Tanpa Foto)
+                                                        </button>
+                                                    </form>
+                                                </div>
+
+                                                {{-- FASE 2: CAMERA BUTTON (Muncul setelah slide) --}}
+                                                <div id="camera-view" class="d-none text-center animate-enter">
+                                                    <div class="mb-3">
+                                                        <h6 class="text-primary fw-bold">Konfirmasi Pulang</h6>
+                                                        <p class="text-muted small">Silahkan ambil foto selfie untuk validasi.</p>
+                                                    </div>
+                                                    <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}" 
+                                                       class="btn btn-primary w-100 py-3 rounded-3 shadow-sm fw-bold">
+                                                        <i class="mdi mdi-camera-party-mode me-2"></i> Ambil Foto & Pulang
+                                                    </a>
+                                                </div>
+
+                                            </div>
                                         @else
+                                            {{-- STATUS NORMAL --}}
                                             <div class="d-flex align-items-center">
                                                 <h5 class="mb-1 fw-bold">Sedang Bekerja</h5>
                                                 <span class="live-indicator ms-2"></span>
@@ -402,51 +457,17 @@
                                     </div>
                                 </div>
 
-                                {{-- TOMBOL AKSI PULANG (HYBRID) --}}
-                                <div class="mt-3 pt-3 border-top position-relative z-index-1">
-
-                                    {{-- [TAMBAHAN BARU] CEK ONLY SECURITY SCAN --}}
-                                    @if (Auth::user()->only_security_scan)
-                                        {{-- TAMPILAN JIKA DI BLOKIR --}}
-                                        <button class="btn btn-secondary btn-sm w-100 shadow-sm" disabled
-                                            style="cursor: not-allowed; opacity: 0.7;">
-                                            <i class="mdi mdi-lock me-1"></i> Absen Pulang Mandiri Dikunci
-                                        </button>
-                                        <small class="text-danger d-block text-center mt-1" style="font-size: 10px;">
-                                            Silahkan Scan QR Code ke Security untuk Pulang
-                                        </small>
-                                    @else
-                                        @if ($isCrossDay)
-                                            <p class="text-center text-muted mb-3 small">
-                                                Anda belum absen pulang dari sesi kemarin. Pilih tindakan:
-                                            </p>
-
-                                            <div class="row g-2">
-                                                <div class="col-6">
-                                                    {{-- Tombol Lembur (Slide/Button Visual) --}}
-                                                    <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
-                                                        class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 shadow-sm hover-scale"
-                                                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;">
-                                                        <i class="mdi mdi-camera-party-mode fs-4 mb-1"></i>
-                                                        <span>Konfirmasi Lembur</span>
-                                                        <small style="font-size: 0.65rem;">(Foto & Verified)</small>
-                                                    </a>
-                                                </div>
-                                                <div class="col-6">
-                                                    {{-- Tombol Lewati (Skip) --}}
-                                                    <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
-                                                        method="POST" class="h-100">
-                                                        @csrf
-                                                        <button type="submit"
-                                                            class="btn btn-warning btn-sm w-100 h-100 d-flex align-items-center justify-content-center flex-column py-2 text-dark shadow-sm hover-scale"
-                                                            onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis tanpa foto.\nStatus kemarin akan menjadi \'Verified/Present\' tapi ada catatan skip.\n\nLanjutkan?');">
-                                                            <i class="mdi mdi-skip-forward fs-4 mb-1"></i>
-                                                            <span>Lewati (Lupa)</span>
-                                                            <small style="font-size: 0.65rem;">(Tutup Sesi Kemarin)</small>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
+                                {{-- TOMBOL AKSI PULANG (NORMAL) --}}
+                                @if (!$isCrossDay)
+                                    <div class="mt-3 pt-3 border-top position-relative z-index-1">
+                                        @if (Auth::user()->only_security_scan)
+                                            <button class="btn btn-secondary btn-sm w-100 shadow-sm" disabled
+                                                style="cursor: not-allowed; opacity: 0.7;">
+                                                <i class="mdi mdi-lock me-1"></i> Absen Pulang Mandiri Dikunci
+                                            </button>
+                                            <small class="text-danger d-block text-center mt-1" style="font-size: 10px;">
+                                                Silahkan Scan QR Code ke Security untuk Pulang
+                                            </small>
                                         @else
                                             <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
                                                 class="btn btn-danger btn-sm w-100 shadow hover-scale">
@@ -454,9 +475,8 @@
                                                 Absen Pulang Mandiri
                                             </a>
                                         @endif
-                                    @endif
-
-                                </div>
+                                    </div>
+                                @endif
                             </div>
                         @endif
                     @elseif($myPendingLeave)
@@ -710,6 +730,18 @@
 
     @push('styles')
         <style>
+             /* === SLIDER LOGIC STYLES === */
+            #slide-thumb {
+                transition: transform 0.1s;
+            }
+            #slide-thumb:active {
+                cursor: grabbing !important;
+            }
+            .animate-enter {
+                animation: fadeInUp 0.5s ease-out forwards;
+            }
+
+            /* === EXISTING STYLES === */
             /* === LUXURY LEADERBOARD STYLES (NEW) === */
 
             /* 1. Card Container & Background */
@@ -1575,6 +1607,94 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+
+                // --- [BARU] SLIDER LOGIC ---
+                const track = document.getElementById('slide-track');
+                const thumb = document.getElementById('slide-thumb');
+                const sliderView = document.getElementById('slider-view');
+                const cameraView = document.getElementById('camera-view');
+
+                if (track && thumb) {
+                    let isDragging = false;
+                    let startX;
+                    let trackWidth = track.clientWidth;
+                    let thumbWidth = thumb.clientWidth;
+                    let maxMove = trackWidth - thumbWidth - 8; // 8px padding adjustment
+
+                    // Init size update
+                    window.addEventListener('resize', () => {
+                         trackWidth = track.clientWidth;
+                         maxMove = trackWidth - thumbWidth - 8;
+                    });
+
+                    // Start
+                    const startDrag = (e) => {
+                        isDragging = true;
+                        startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
+                        thumb.style.transition = 'none';
+                    };
+
+                    // Move
+                    const drag = (e) => {
+                        if (!isDragging) return;
+                        
+                        const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
+                        const deltaX = clientX - startX;
+                        
+                        // Limit 0 to maxMove
+                        let moveX = Math.max(0, Math.min(deltaX, maxMove));
+                        thumb.style.transform = `translateX(${moveX}px)`;
+
+                        // Fade text based on percentage
+                        const percentage = moveX / maxMove;
+                        const text = track.querySelector('span');
+                        if(text) text.style.opacity = 1 - percentage;
+                    };
+
+                    // End
+                    const endDrag = () => {
+                        if (!isDragging) return;
+                        isDragging = false;
+                        thumb.style.transition = 'transform 0.2s ease-out';
+
+                        const style = window.getComputedStyle(thumb);
+                        const matrix = new DOMMatrix(style.transform);
+                        const currentTranslateX = matrix.m41;
+
+                        if (currentTranslateX > (maxMove * 0.8)) {
+                            // SUCCESS
+                            thumb.style.transform = `translateX(${maxMove}px)`;
+                            finishSlide();
+                        } else {
+                            // RESET
+                            thumb.style.transform = `translateX(0px)`;
+                            const text = track.querySelector('span');
+                            if(text) text.style.opacity = 0.75;
+                        }
+                    };
+
+                    // Add Listeners
+                    thumb.addEventListener('mousedown', startDrag);
+                    thumb.addEventListener('touchstart', startDrag);
+
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('touchmove', drag);
+
+                    document.addEventListener('mouseup', endDrag);
+                    document.addEventListener('touchend', endDrag);
+
+                    function finishSlide() {
+                        // Change icon to check
+                        thumb.innerHTML = '<i class="mdi mdi-check text-success fs-4"></i>';
+                        track.style.backgroundColor = '#d1fae5'; // Light green
+                        
+                        setTimeout(() => {
+                            // Hide slider, show camera button container
+                            sliderView.classList.add('d-none');
+                            cameraView.classList.remove('d-none');
+                        }, 400);
+                    }
+                }
 
                 // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
                 function updateClock() {
