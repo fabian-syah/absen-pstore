@@ -112,15 +112,16 @@
     @elseif (auth()->user()->role == 'audit')
         {{-- WIDGET AUDIT --}}
         <div class="row mb-4">
+            {{-- CARD 1: VERIFIKASI ABSENSI (MERAH) --}}
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
                 <div class="card card-bank gradient-red">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
                         <div class="card-bank-content">
-                            <p class="card-bank-label">Perlu Verifikasi</p>
+                            <p class="card-bank-label">Verif Absensi</p>
                             <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
-                            <p class="card-bank-desc">Absensi menunggu persetujuan</p>
+                            <p class="card-bank-desc">Absensi pending (Foto/Lokasi)</p>
                             <a href="{{ route('audit.verify.list') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
                                 <i class="mdi mdi-clipboard-check me-1"></i>Lihat Daftar
                             </a>
@@ -129,29 +130,37 @@
                     </div>
                 </div>
             </div>
+
+            {{-- CARD 2: APPROVE IZIN/CUTI/TELAT (BIRU) --}}
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
                 <div class="card card-bank gradient-blue">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
-                        <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-file-document-edit-outline"></i></div>
                         <div class="card-bank-content">
-                            <p class="card-bank-label">Anggota Tim</p>
-                            <h2 class="card-bank-value count-up" data-target="{{ $myTeamMembers }}">0</h2>
-                            <p class="card-bank-desc">Total anggota dalam tim</p>
+                            <p class="card-bank-label">Approve Izin</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingLeaves }}">0</h2>
+                            <p class="card-bank-desc">Izin, Sakit, Cuti, WFH, Telat</p>
+                            {{-- Ganti route('audit.leave.list') dengan route daftar izin approval Anda --}}
+                            <a href="#" class="btn btn-sm btn-light mt-2 shadow-sm">
+                                <i class="mdi mdi-playlist-check me-1"></i>Lihat Pengajuan
+                            </a>
                         </div>
                         <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
+
+            {{-- CARD 3: ABSENSI HARI INI (HIJAU) --}}
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
                 <div class="card card-bank gradient-green">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
                         <div class="card-bank-content">
-                            <p class="card-bank-label">Absen Hari Ini</p>
+                            <p class="card-bank-label">Hadir Hari Ini</p>
                             <h2 class="card-bank-value count-up" data-target="{{ $attendancesToday }}">0</h2>
-                            <p class="card-bank-desc">Tim sudah absen hari ini</p>
+                            <p class="card-bank-desc">Total kehadiran di cabang Anda</p>
                         </div>
                         <div class="card-bank-pattern"></div>
                     </div>
@@ -889,7 +898,8 @@
                                 <form action="{{ route('leave-requests.cancel', $myPendingLeave->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" class="btn btn-danger btn-sm shadow-sm" onclick="return confirm('Batalkan pengajuan ini?')">
+                                    <button type="submit" class="btn btn-danger btn-sm shadow-sm"
+                                        onclick="return confirm('Batalkan pengajuan ini?')">
                                         <i class="mdi mdi-close-circle me-1"></i> Batalkan Pengajuan
                                     </button>
                                 </form>
@@ -939,41 +949,77 @@
                         </div>
 
                     @else
-                        {{-- 4. BELUM ABSEN (DEFAULT) --}}
-                        <div class="status-card status-info hover-shadow-lg">
-                            <div class="text-center py-4">
-                                <div class="mb-3">
-                                    <i class="mdi mdi-clock-alert display-4 text-primary pulse-text"></i>
-                                </div>
-                                <h5 class="mb-2 fw-bold">Anda Belum Absen Hari Ini</h5>
-                                <p class="text-muted mb-4">Gunakan fitur ini jika Anda bekerja WFH atau Dinas Luar.</p>
-                                <div class="d-flex justify-content-center gap-2">
-
-                                    {{-- TOMBOL ABSEN MANDIRI --}}
-                                    @if (Auth::user()->only_security_scan)
-                                        <div class="d-flex flex-column align-items-center w-100">
-                                            <button class="btn btn-secondary shadow-sm w-100" disabled
-                                                style="cursor: not-allowed; opacity: 0.7;">
-                                                <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
-                                            </button>
-                                            <small class="text-danger mt-1" style="font-size: 10px;">
-                                                <i class="mdi mdi-alert-circle"></i> Wajib Scan QR ke Security
-                                            </small>
-                                        </div>
-                                    @else
-                                        <a href="{{ route('self.attend.create') }}"
-                                            class="btn btn-dark shadow hover-scale">
-                                            <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
-                                        </a>
-                                    @endif
-
-                                    <a href="{{ route('leave-requests.create') }}"
-                                        class="btn btn-outline-dark shadow-sm hover-scale">
-                                        <i class="mdi mdi-file-document-edit-outline me-2"></i>Izin/Sakit
-                                    </a>
+                    
+                        {{-- [LOGIKA BARU] JIKA HABIS LEMBUR LINTAS HARI --}}
+                        @if(isset($justFinishedOvertime) && $justFinishedOvertime)
+                            <div class="status-card status-info mb-3 hover-shadow-lg">
+                                <div class="text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="mdi mdi-bed-clock display-4 text-info"></i>
+                                    </div>
+                                    <h5 class="mb-2 fw-bold text-info">Selamat Beristirahat!</h5>
+                                    <p class="text-muted mb-4 px-3 small">
+                                        Anda baru saja pulang lembur pukul <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>. 
+                                        <br>Sistem mencatat Anda lembur lintas hari. Anda dipersilakan masuk siang hari ini.
+                                    </p>
+                                    
+                                    {{-- Tetap tampilkan tombol absen jika dia mau masuk lagi --}}
+                                    <div class="d-flex justify-content-center gap-2">
+                                         @if (Auth::user()->only_security_scan)
+                                            <div class="d-flex flex-column align-items-center w-100">
+                                                <button class="btn btn-secondary shadow-sm w-100" disabled
+                                                    style="cursor: not-allowed; opacity: 0.7;">
+                                                    <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
+                                                </button>
+                                            </div>
+                                        @else
+                                            <a href="{{ route('self.attend.create') }}"
+                                                class="btn btn-outline-info shadow hover-scale">
+                                                <i class="mdi mdi-fingerprint me-2"></i>Absen Shift Baru
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                            
+                        @else
+                            {{-- 4. BELUM ABSEN (DEFAULT) --}}
+                            <div class="status-card status-info hover-shadow-lg">
+                                <div class="text-center py-4">
+                                    <div class="mb-3">
+                                        <i class="mdi mdi-clock-alert display-4 text-primary pulse-text"></i>
+                                    </div>
+                                    <h5 class="mb-2 fw-bold">Anda Belum Absen Hari Ini</h5>
+                                    <p class="text-muted mb-4">Gunakan fitur ini jika Anda bekerja WFH atau Dinas Luar.</p>
+                                    <div class="d-flex justify-content-center gap-2">
+
+                                        {{-- TOMBOL ABSEN MANDIRI --}}
+                                        @if (Auth::user()->only_security_scan)
+                                            <div class="d-flex flex-column align-items-center w-100">
+                                                <button class="btn btn-secondary shadow-sm w-100" disabled
+                                                    style="cursor: not-allowed; opacity: 0.7;">
+                                                    <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
+                                                </button>
+                                                <small class="text-danger mt-1" style="font-size: 10px;">
+                                                    <i class="mdi mdi-alert-circle"></i> Wajib Scan QR ke Security
+                                                </small>
+                                            </div>
+                                        @else
+                                            <a href="{{ route('self.attend.create') }}"
+                                                class="btn btn-dark shadow hover-scale">
+                                                <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
+                                            </a>
+                                        @endif
+
+                                        <a href="{{ route('leave-requests.create') }}"
+                                            class="btn btn-outline-dark shadow-sm hover-scale">
+                                            <i class="mdi mdi-file-document-edit-outline me-2"></i>Izin/Sakit
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                        
                     @endif
                 </div>
             </div>
