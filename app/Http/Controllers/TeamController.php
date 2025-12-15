@@ -47,22 +47,22 @@ class TeamController extends Controller
             });
         }
 
-        // [LOGIKA BARU - FETCH ATTENDANCE WITH TIMEZONE FIX]
+        // [LOGIKA FIX: FETCH ATTENDANCE LEMBUR & HARI INI]
         $myTeam = $query->with([
             'workSchedule',
             'attendances' => function ($q) use ($todayInBranch, $nowInBranch) {
                 $q->where(function($sq) use ($todayInBranch) {
-                    // Kasus 1: Masuk Hari Ini (Sesuai Tanggal Cabang)
+                    // 1. Masuk Hari Ini
                     $sq->whereDate('check_in_time', $todayInBranch);
                 })
                 ->orWhere(function($sq) use ($todayInBranch) {
-                    // Kasus 2: Pulang Hari Ini (tapi masuk kemarin)
+                    // 2. Pulang Hari Ini (Tapi masuk kemarin)
                     $sq->whereDate('check_out_time', $todayInBranch)
                        ->whereDate('check_in_time', '<', $todayInBranch);
                 })
                 ->orWhere(function($sq) use ($nowInBranch) {
-                    // Kasus 3: Masih Aktif dari kemarin (Lembur Belum Pulang)
-                    // Gunakan toleransi jam mundur dari jam SEKARANG DI CABANG
+                    // 3. LEMBUR AKTIF (Masuk kemarin/tadi malam, belum checkout sampai sekarang)
+                    // Ambil data check_in mundur sampai 32 jam ke belakang
                     $sq->whereNull('check_out_time')
                        ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
                 })
@@ -91,7 +91,7 @@ class TeamController extends Controller
         // Statistik Sederhana
         $stats = [
             'total' => $myTeam->count(),
-            'hadir' => 0,
+            'hadir' => 0, // Hadir + Lembur masuk sini
             'izin_sakit' => 0,
             'belum_hadir' => 0
         ];
@@ -128,6 +128,7 @@ class TeamController extends Controller
         $targetBranch = Branch::findOrFail($id);
         $branchTimezone = $targetBranch->timezone ?? 'Asia/Jakarta';
         $todayInBranch = Carbon::now($branchTimezone)->format('Y-m-d');
+        $nowInBranch = Carbon::now($branchTimezone);
 
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
@@ -147,9 +148,17 @@ class TeamController extends Controller
 
         $branch = $targetBranch;
         
+        // Query logic yang sama dengan Index untuk Branch Detail
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)
-            ->with(['division', 'attendances' => function ($q) use ($todayInBranch) { 
-                $q->whereDate('check_in_time', $todayInBranch); // Gunakan tanggal cabang
+            ->with(['division', 
+            'attendances' => function ($q) use ($todayInBranch, $nowInBranch) { 
+                $q->where(function($sq) use ($todayInBranch) {
+                    $sq->whereDate('check_in_time', $todayInBranch);
+                })
+                ->orWhere(function($sq) use ($nowInBranch) {
+                    $sq->whereNull('check_out_time')
+                       ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
+                });
             }])->get();
 
         $attendanceGroups = ['Masuk' => [], 'Izin' => [], 'Sakit' => [], 'Cuti' => [], 'WFH / Dinas Luar' => [], 'Alpha / Belum Absen' => []];
@@ -208,9 +217,6 @@ class TeamController extends Controller
         }
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
-        // Untuk list cabang, kita harus loop manual untuk query tanggal sesuai timezone masing-masing cabang
-        // Karena eager loading 'attendances' satu kali query akan menggunakan server time untuk semua
-        
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->withCount(['users' => function ($q) {
                 $q->where('is_active', true);
@@ -222,11 +228,17 @@ class TeamController extends Controller
             // Tentukan 'Hari Ini' berdasarkan Timezone Cabang
             $tz = $branch->timezone ?? 'Asia/Jakarta';
             $todayInBranch = Carbon::now($tz)->format('Y-m-d');
+            $nowInBranch = Carbon::now($tz);
 
-            // Load Users & Statistik manual per cabang
+            // Load Users & Statistik manual per cabang dengan logika Lembur
             $users = User::where('branch_id', $branch->id)->where('is_active', true)
-                ->with(['attendances' => function($q) use ($todayInBranch) {
-                    $q->whereDate('check_in_time', $todayInBranch);
+                ->with(['attendances' => function($q) use ($todayInBranch, $nowInBranch) {
+                    $q->where(function($sq) use ($todayInBranch) {
+                        $sq->whereDate('check_in_time', $todayInBranch);
+                    })->orWhere(function($sq) use ($nowInBranch) {
+                        $sq->whereNull('check_out_time')
+                           ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
+                    });
                 }, 'leaveRequests' => function($q) use ($todayInBranch) {
                     $q->where('status', 'approved')
                       ->whereDate('start_date', '<=', $todayInBranch)
