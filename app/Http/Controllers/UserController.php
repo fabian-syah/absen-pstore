@@ -7,7 +7,7 @@ use App\Models\Division;
 use App\Models\Branch;
 use App\Models\Attendance;
 use App\Models\Violation;
-use App\Models\JobTarget; // <--- PASTIKAN MODEL INI DI-IMPORT
+use App\Models\JobTarget; 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -120,6 +120,7 @@ class UserController extends Controller
         $data['only_security_scan'] = $request->has('only_security_scan') ? 1 : 0;
         $data['use_face_recognition'] = $request->input('use_face_recognition', 1);
 
+        // Jam disimpan apa adanya (Waktu Lokal Cabang)
         $data['check_in_start']  = $request->check_in_start ?: null;
         $data['check_out_start'] = $request->check_out_start ?: null;
         $data['check_in_end']    = null;
@@ -330,19 +331,13 @@ class UserController extends Controller
             ->orderBy('expires_at', 'desc')
             ->get();
 
-        // --- TAMBAHAN: DATA TARGET & PENCAPAIAN PERSONAL ---
-        
-        // 1. Target Aktif (On Going)
-        // Type: personal_target, Status: Belum Completed
         $activeTargets = JobTarget::where('user_id', $user->id)
             ->where('type', 'personal_target')
             ->where('status', '!=', 'completed')
-            ->orderBy('star_level', 'desc') // Prioritas tinggi diatas
+            ->orderBy('star_level', 'desc') 
             ->orderBy('deadline', 'asc')
             ->get();
 
-        // 2. Pencapaian (Achievements) & History Target Selesai
-        // Type: personal_achievement ATAU (personal_target AND status completed)
         $achievements = JobTarget::where('user_id', $user->id)
             ->where(function($q) {
                 $q->where('type', 'personal_achievement')
@@ -353,7 +348,7 @@ class UserController extends Controller
             })
             ->orderBy('completed_at', 'desc')
             ->orderBy('created_at', 'desc')
-            ->take(10) // Batasi 10 terakhir agar tidak terlalu panjang
+            ->take(10)
             ->get();
 
         return view('users.user_show', compact('user', 'stats', 'recentAttendance', 'activeViolations', 'historyViolations', 'activeTargets', 'achievements'));
