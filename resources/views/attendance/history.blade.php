@@ -333,7 +333,7 @@
                                                                 {{-- INDIKATOR PULANG SUBUH --}}
                                                                 @if($att->check_out_time->format('H') < 6 && $att->check_out_time->day != $att->check_in_time->day)
                                                                      <span class="badge bg-dark text-white rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">
-                                                                        <i class="mdi mdi-moon-waning-crescent"></i> Subuh
+                                                                        <i class="mdi mdi-moon-waning-crescent"></i> Lembur
                                                                      </span>
                                                                 @endif
                                                             </div>
