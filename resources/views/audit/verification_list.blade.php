@@ -19,7 +19,7 @@
             <div class="col-auto">
                 <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill shadow-sm">
                     <i class="mdi mdi-clipboard-alert-outline me-1"></i>
-                    {{ $pendingAttendances->count() }} Menunggu
+                    {{ $pendingAttendances->total() }} Menunggu
                 </span>
             </div>
         </div>
@@ -121,7 +121,7 @@
                                                         @endif
                                                     </div>
                                                 </div>
-                                        
+                                    
                                                 {{-- JAM PULANG (Merah) - Muncul jika ada --}}
                                                 @if($att->check_out_time)
                                                     <div class="border-top pt-2 mt-1 dashed-border">
@@ -203,6 +203,10 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+                {{-- Pagination Desktop --}}
+                <div class="card-footer bg-white border-top py-3">
+                    {{ $pendingAttendances->links('pagination::bootstrap-5') }}
                 </div>
             </div>
 
@@ -327,6 +331,11 @@
                         </div>
                     </div>
                 @endforeach
+                
+                {{-- Pagination Mobile --}}
+                <div class="mt-3">
+                    {{ $pendingAttendances->links('pagination::bootstrap-5') }}
+                </div>
             </div>
 
         @else
