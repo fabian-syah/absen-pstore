@@ -142,7 +142,7 @@
                             <h2 class="card-bank-value count-up" data-target="{{ $pendingLeaves }}">0</h2>
                             <p class="card-bank-desc">Izin, Sakit, Cuti, WFH, Telat</p>
                             {{-- Ganti route('audit.leave.list') dengan route daftar izin approval Anda --}}
-                            <a href="#" class="btn btn-sm btn-light mt-2 shadow-sm">
+                            <a href="{{ route('leave-requests.index') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
                                 <i class="mdi mdi-playlist-check me-1"></i>Lihat Pengajuan
                             </a>
                         </div>
