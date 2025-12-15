@@ -47,8 +47,10 @@ class JobTargetController extends Controller
         $branchMembers = [];
 
         // LOGIKA FILTER MEMBER:
-        // Hanya Leader yang boleh melihat daftar anggota tim (sesuai cabang yang dipegang)
-        if ($user->role == 'leader' && $user->branch_id) {
+        // Leader, Admin, dan Audit boleh melihat daftar anggota tim (sesuai cabang yang dipegang)
+        $allowedRoles = ['leader', 'admin', 'audit'];
+
+        if (in_array($user->role, $allowedRoles) && $user->branch_id) {
             $branchMembers = User::where('branch_id', $user->branch_id)
                 ->where('id', '!=', $user->id) // Exclude diri sendiri
                 ->where('is_active', true)
@@ -77,6 +79,8 @@ class JobTargetController extends Controller
 
         // --- LOGIKA PENENTUAN USER ID & BRANCH ID ---
         
+        $allowedRoles = ['leader', 'admin', 'audit'];
+        
         // Default: Target milik diri sendiri
         $targetUserId = $user->id; 
         $branchId     = $user->branch_id;
@@ -84,15 +88,16 @@ class JobTargetController extends Controller
         // Cek apakah ini Target Tim/Cabang?
         if (Str::contains($request->type, 'team')) {
             // Jika Target Tim:
-            // User ID tetap si pembuat (Leader), tapi type-nya 'team_target'
-            // Branch ID dipastikan ambil dari leader
+            // User ID tetap si pembuat, tapi type-nya 'team_target'
+            // Branch ID dipastikan ambil dari si pembuat (Leader/Admin/Audit)
             $targetUserId = $user->id; 
             $branchId     = $user->branch_id;
         } 
-        // Jika Target Personal dan Leader memilih orang lain
-        elseif ($user->role == 'leader' && $request->filled('assign_user_id')) {
+        // Jika Target Personal dan Role Berhak memilih orang lain
+        elseif (in_array($user->role, $allowedRoles) && $request->filled('assign_user_id')) {
             $targetUserId = $request->assign_user_id;
-            // Ambil branch dari user yang dituju (biar sinkron jika beda - meski biasanya sama)
+            
+            // Ambil branch dari user yang dituju (biar sinkron)
             $assignedUser = User::find($targetUserId);
             if($assignedUser) {
                 $branchId = $assignedUser->branch_id;
@@ -145,8 +150,9 @@ class JobTargetController extends Controller
     {
         $jobTarget = JobTarget::findOrFail($id);
         
-        // Cek Hak Akses Edit (Pemilik atau Leader/Admin)
-        if (Auth::id() != $jobTarget->user_id && !in_array(Auth::user()->role, ['admin', 'leader'])) {
+        // Cek Hak Akses Edit (Pemilik atau Leader/Admin/Audit)
+        // Admin & Audit bisa edit punya orang lain jika diperlukan, atau batasi sesuai kebutuhan
+        if (Auth::id() != $jobTarget->user_id && !in_array(Auth::user()->role, ['admin', 'leader', 'audit'])) {
             return redirect()->route('job-targets.index')->with('error', 'Akses ditolak.');
         }
 
@@ -165,7 +171,6 @@ class JobTargetController extends Controller
             'description' => 'required|string',
         ]);
 
-        // Update basic info
         $jobTarget->update([
             'title'       => $request->title,
             'description' => $request->description,

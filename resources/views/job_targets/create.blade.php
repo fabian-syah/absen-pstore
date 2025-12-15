@@ -35,8 +35,8 @@
                             <option value="personal_target" selected>🎯 Target Pekerjaan (Job Desk)</option>
                             <option value="personal_achievement">🏅 Pencapaian / Prestasi (Individu)</option>
                             
-                            {{-- Opsi TARGET CABANG/TIM (KHUSUS LEADER) --}}
-                            @if(auth()->user()->role == 'leader' && !request('assign_user_id'))
+                            {{-- Opsi TARGET CABANG/TIM (LEADER, ADMIN, AUDIT) --}}
+                            @if(in_array(auth()->user()->role, ['leader', 'admin', 'audit']) && !request('assign_user_id'))
                                 <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>🏢 Target Global Cabang (Tim)</option>
                                 <option value="team_achievement">🏆 Pencapaian Tim (Cabang)</option>
                             @endif
@@ -44,7 +44,8 @@
                     </div>
 
                     {{-- 1. BAGIAN ASSIGNMENT (Dinamis via JS) --}}
-                    @if(auth()->user()->role == 'leader' && isset($branchMembers) && count($branchMembers) > 0)
+                    {{-- Hanya tampil untuk LEADER, ADMIN, AUDIT --}}
+                    @if(in_array(auth()->user()->role, ['leader', 'admin', 'audit']) && isset($branchMembers) && count($branchMembers) > 0)
                         
                         {{-- A. Jika Target Personal -> Pilih Orang --}}
                         <div id="userAssignmentRow" class="mb-4 bg-light p-3 rounded-3 border border-primary border-opacity-25">
@@ -78,12 +79,12 @@
                                     <small class="text-muted">Target ini berlaku untuk satu tim penuh di cabang ini.</small>
                                 </div>
                             </div>
-                            {{-- Input Hidden untuk memastikan backend tahu ini untuk cabang leader --}}
+                            {{-- Input Hidden untuk memastikan backend tahu ini untuk cabang leader/admin --}}
                             <input type="hidden" name="assign_branch_id" value="{{ auth()->user()->branch_id }}">
                         </div>
 
                     @else
-                        {{-- Jika Admin / Audit / Staff (Hanya diri sendiri) --}}
+                        {{-- Jika Staff Biasa (Hanya diri sendiri) --}}
                         <input type="hidden" name="assign_user_id" value="{{ auth()->user()->id }}">
                     @endif
 
@@ -157,7 +158,7 @@
         let branchRow = document.getElementById('branchAssignmentRow');
         let starGroup = document.getElementById('starLevelGroup');
 
-        // Cek apakah userRow ada (karena hanya render untuk Leader)
+        // Cek apakah userRow ada (karena hanya render untuk Leader/Admin/Audit)
         if (userRow && branchRow) {
             if (type.includes('team')) {
                 // Jika Target Tim: Sembunyikan Pilih Orang, Tampilkan Info Cabang
