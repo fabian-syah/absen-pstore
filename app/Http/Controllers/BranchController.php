@@ -4,14 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\User;
+use App\Models\JobTarget; // <--- PASTIKAN IMPORT INI ADA
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class BranchController extends Controller
 {
-    /**
-     * Constructor: Cek Login & Role Awal
-     */
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
@@ -22,37 +20,24 @@ class BranchController extends Controller
         });
     }
 
-    /**
-     * Menampilkan daftar cabang (Difilter sesuai Role + Search).
-     */
     public function index(Request $request)
     {
         $user = Auth::user();
         $query = Branch::query();
 
-        // 1. FILTER ROLE (Logika Lama)
-        // Jika Admin Cabang -> Hanya lihat cabangnya sendiri
         if ($user->role == 'admin' && $user->branch_id != null) {
             $query->where('id', $user->branch_id);
-        }
-        // Jika Audit ATAU Leader -> Hanya lihat cabang wilayahnya (dari tabel pivot)
-        elseif (in_array($user->role, ['audit', 'leader'])) {
+        } elseif (in_array($user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $user->branches->pluck('id')->toArray();
-
-            // Tambahkan branch_id utama user jika ada (untuk safety)
             if ($user->branch_id) {
                 $allowedBranchIds[] = $user->branch_id;
             }
             $allowedBranchIds = array_unique($allowedBranchIds);
-
             $query->whereIn('id', $allowedBranchIds);
         }
-        // Jika Super Admin -> Melihat SEMUA (Tidak ada filter role)
 
-        // 2. FITUR SEARCH (Logika Baru)
         if ($request->has('search') && $request->search != null) {
             $search = $request->search;
-            // Menggunakan closure function agar logika OR tidak merusak filter Role di atas
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('address', 'LIKE', "%{$search}%")
@@ -67,14 +52,10 @@ class BranchController extends Controller
         return view('branch.branch_index', compact('branches'));
     }
 
-    /**
-     * Menampilkan Detail Cabang & Daftar Karyawannya
-     */
     public function show(Branch $branch)
     {
         $user = Auth::user();
 
-        // 1. Validasi Akses Melihat
         if ($user->role == 'admin' && $user->branch_id != null) {
             if ($branch->id != $user->branch_id) abort(403, 'Akses Ditolak.');
         } elseif (in_array($user->role, ['audit', 'leader'])) {
@@ -84,21 +65,16 @@ class BranchController extends Controller
             if (!in_array($branch->id, $allowedBranchIds)) abort(403, 'Akses Ditolak. Cabang ini bukan wilayah Anda.');
         }
 
-        // 2. Ambil User di Cabang Ini (Eager Loading Division)
-        // [UPDATE] Menggunakan nama variabel $employees agar cocok dengan blade view yang diberikan
         $employees = User::with(['division', 'attendances' => function ($q) {
-            // Ambil attendance hari ini saja untuk ditampilkan di tabel
             $q->whereDate('check_in_time', now());
         }])
             ->where('branch_id', $branch->id)
-            ->where('role', '!=', 'admin') // Opsional: Sembunyikan super admin jika ada
+            ->where('role', '!=', 'admin')
             ->latest()
             ->paginate(10);
 
-        // 3. Hitung Statistik Ringan
         $totalEmployees = User::where('branch_id', $branch->id)->count();
 
-        // 4. Ambil Audit Penanggung Jawab Cabang Ini
         $assignedAudits = User::where('role', 'audit')
             ->where('is_active', true)
             ->whereHas('branches', function ($q) use ($branch) {
@@ -106,25 +82,42 @@ class BranchController extends Controller
             })
             ->get();
 
-        return view('branch.branch_show', compact('branch', 'employees', 'totalEmployees', 'assignedAudits'));
+        // --- TAMBAHAN: DATA TARGET & PENCAPAIAN CABANG (TIM) ---
+
+        // 1. Target Tim Aktif (On Going)
+        // Type: team_target, Status: Belum Completed
+        $branchTargets = JobTarget::where('branch_id', $branch->id)
+            ->where('type', 'team_target')
+            ->where('status', '!=', 'completed')
+            ->orderBy('star_level', 'desc')
+            ->orderBy('deadline', 'asc')
+            ->get();
+
+        // 2. Pencapaian Tim & History Target Selesai
+        $branchAchievements = JobTarget::where('branch_id', $branch->id)
+            ->where(function($q) {
+                $q->where('type', 'team_achievement')
+                  ->orWhere(function($subQ) {
+                      $subQ->where('type', 'team_target')
+                           ->where('status', 'completed');
+                  });
+            })
+            ->orderBy('completed_at', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        return view('branch.branch_show', compact('branch', 'employees', 'totalEmployees', 'assignedAudits', 'branchTargets', 'branchAchievements'));
     }
 
-    /**
-     * Form tambah cabang (Hanya Super Admin).
-     */
     public function create()
     {
-        // Proteksi: Hanya Super Admin
         if (Auth::user()->role != 'admin' || Auth::user()->branch_id != null) {
             abort(403, 'Anda tidak memiliki akses untuk menambah cabang.');
         }
-
         return view('branch.branch_create');
     }
 
-    /**
-     * Simpan cabang baru.
-     */
     public function store(Request $request)
     {
         if (Auth::user()->role != 'admin' || Auth::user()->branch_id != null) abort(403);
@@ -140,17 +133,12 @@ class BranchController extends Controller
             ->with('success', 'Cabang baru berhasil ditambahkan.');
     }
 
-    /**
-     * Form edit cabang.
-     */
     public function edit(Branch $branch)
     {
         $user = Auth::user();
 
-        // Proteksi: Audit/Leader tidak boleh edit
         if (in_array($user->role, ['audit', 'leader'])) abort(403, 'Anda tidak memiliki akses edit.');
 
-        // Proteksi: Admin Cabang hanya boleh edit cabangnya sendiri
         if ($user->role == 'admin' && $user->branch_id != null) {
             if ($branch->id != $user->branch_id) abort(403);
         }
@@ -158,9 +146,6 @@ class BranchController extends Controller
         return view('branch.branch_edit', compact('branch'));
     }
 
-    /**
-     * Update data cabang.
-     */
     public function update(Request $request, Branch $branch)
     {
         $user = Auth::user();
@@ -179,9 +164,6 @@ class BranchController extends Controller
             ->with('success', 'Data cabang berhasil diperbarui.');
     }
 
-    /**
-     * Hapus cabang (Hanya Super Admin).
-     */
     public function destroy(Branch $branch)
     {
         if (Auth::user()->role != 'admin' || Auth::user()->branch_id != null) abort(403);
