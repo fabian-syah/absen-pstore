@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -198,5 +199,30 @@ class User extends Authenticatable
     public function achievements()
     {
         return $this->hasMany(LeaderboardHistory::class)->orderBy('year', 'desc')->orderBy('month', 'desc');
+    }
+
+    // User.php
+    public function getCheckInStartLocalAttribute()
+    {
+        if (!$this->check_in_start) {
+            return null;
+        }
+
+        $branchTimezone = $this->branch->timezone ?? 'Asia/Jakarta';
+        $time = Carbon::createFromFormat('H:i:s', $this->check_in_start);
+        $time->setTimezone($branchTimezone);
+        return $time->format('H:i');
+    }
+
+    public function getCheckOutStartLocalAttribute()
+    {
+        if (!$this->check_out_start) {
+            return null;
+        }
+
+        $branchTimezone = $this->branch->timezone ?? 'Asia/Jakarta';
+        $time = Carbon::createFromFormat('H:i:s', $this->check_out_start);
+        $time->setTimezone($branchTimezone);
+        return $time->format('H:i');
     }
 }

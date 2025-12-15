@@ -45,7 +45,7 @@ class Attendance extends Model
         'is_late_checkin' => 'boolean',
         'is_early_checkout' => 'boolean',
         // Casting agar format jam snapshot terbaca benar
-        'scheduled_check_in' => 'datetime:H:i:s', 
+        'scheduled_check_in' => 'datetime:H:i:s',
         'scheduled_check_out' => 'datetime:H:i:s',
     ];
 
@@ -186,10 +186,10 @@ class Attendance extends Model
     public function applyWorkScheduleValidation()
     {
         $workSchedule = WorkSchedule::getScheduleForUser($this->user_id);
-        
+
         if ($workSchedule) {
             $this->work_schedule_id = $workSchedule->id;
-            
+
             if (!$this->isValidCheckIn()) {
                 $this->is_late_checkin = true;
                 $this->status = 'late';
@@ -286,7 +286,7 @@ class Attendance extends Model
 
     public function getVerificationBadgeColorAttribute()
     {
-        return match($this->verification_status) {
+        return match ($this->verification_status) {
             'verified' => 'success',
             'pending' => 'warning',
             'default' => 'secondary'
@@ -295,7 +295,7 @@ class Attendance extends Model
 
     public function getVerificationIconAttribute()
     {
-        return match($this->verification_status) {
+        return match ($this->verification_status) {
             'verified' => 'mdi-check-circle',
             'pending' => 'mdi-clock-outline',
             'default' => 'mdi-alert-circle'
@@ -315,5 +315,44 @@ class Attendance extends Model
     public function getVerifierNameAttribute()
     {
         return $this->verifiedBy ? $this->verifiedBy->name : null;
+    }
+
+    // Attendance.php
+    public function getScheduledCheckInLocalAttribute()
+    {
+        if (!$this->scheduled_check_in) {
+            return null;
+        }
+
+        // Ambil timezone dari user yang terkait
+        $user = $this->user;
+        $branchTimezone = $user && $user->branch ? $user->branch->timezone : 'Asia/Jakarta';
+
+        try {
+            $time = Carbon::createFromFormat('H:i:s', $this->scheduled_check_in);
+            $time->setTimezone($branchTimezone);
+            return $time->format('H:i');
+        } catch (\Exception $e) {
+            return $this->scheduled_check_in;
+        }
+    }
+
+    public function getScheduledCheckOutLocalAttribute()
+    {
+        if (!$this->scheduled_check_out) {
+            return null;
+        }
+
+        // Ambil timezone dari user yang terkait
+        $user = $this->user;
+        $branchTimezone = $user && $user->branch ? $user->branch->timezone : 'Asia/Jakarta';
+
+        try {
+            $time = Carbon::createFromFormat('H:i:s', $this->scheduled_check_out);
+            $time->setTimezone($branchTimezone);
+            return $time->format('H:i');
+        } catch (\Exception $e) {
+            return $this->scheduled_check_out;
+        }
     }
 }
