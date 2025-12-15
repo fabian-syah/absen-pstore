@@ -150,109 +150,148 @@
                                                                     <p class="text-muted small mb-2">
                                                                         {{ Str::limit($target->description, 100) }}</p>
 
-                                                                    {{-- Badge Status --}}
+                                                                    {{-- Badge Status Logic --}}
                                                                     @php
-                                                                        $badgeClass = match ($target->status) {
-                                                                            'completed' => 'success',
-                                                                            'in_progress' => 'info',
-                                                                            'rejected' => 'danger',
-                                                                            default => 'warning',
+                                                                        $statusConfig = match ($target->status) {
+                                                                            'completed' => [
+                                                                                'bg' => 'success',
+                                                                                'text' => 'white',
+                                                                            ], // Hijau - Teks Putih
+                                                                            'in_progress' => [
+                                                                                'bg' => 'info',
+                                                                                'text' => 'white',
+                                                                            ], // Biru - Teks Putih
+                                                                            'rejected' => [
+                                                                                'bg' => 'danger',
+                                                                                'text' => 'white',
+                                                                            ], // Merah - Teks Putih
+                                                                            default => [
+                                                                                'bg' => 'warning',
+                                                                                'text' => 'dark',
+                                                                            ], // Kuning - TEKS HITAM (Penting!)
                                                                         };
                                                                     @endphp
+
                                                                     <div class="d-flex gap-2 mb-2">
+                                                                        {{-- Terapkan config di sini --}}
                                                                         <span
-                                                                            class="badge bg-{{ $badgeClass }} bg-opacity-10 text-{{ $badgeClass }} border border-{{ $badgeClass }} rounded-pill">
+                                                                            class="badge bg-{{ $statusConfig['bg'] }} text-{{ $statusConfig['text'] }} rounded-pill border border-{{ $statusConfig['bg'] }}">
                                                                             {{ ucfirst(str_replace('_', ' ', $target->status)) }}
                                                                         </span>
+
                                                                         <span class="badge bg-light text-muted border">
                                                                             <i class="mdi mdi-calendar-clock me-1"></i>
                                                                             {{ \Carbon\Carbon::parse($target->deadline)->format('d M Y') }}
                                                                         </span>
                                                                     </div>
+
+                                                                    {{-- Bintang --}}
+                                                                    <div class="d-flex text-nowrap ms-2">
+                                                                        @for ($i = 0; $i < $target->star_level; $i++)
+                                                                            <i class="mdi mdi-star text-warning"></i>
+                                                                        @endfor
+                                                                    </div>
                                                                 </div>
 
-                                                                {{-- Bintang --}}
-                                                                <div class="d-flex text-nowrap ms-2">
-                                                                    @for ($i = 0; $i < $target->star_level; $i++)
-                                                                        <i class="mdi mdi-star text-warning"></i>
-                                                                    @endfor
-                                                                </div>
+                                                                {{-- FORM UBAH STATUS (ADMIN/LEADER) --}}
+                                                                @if ($canManage)
+                                                                    <div
+                                                                        class="mt-3 pt-3 border-top bg-light rounded-3 p-3">
+                                                                        <form
+                                                                            action="{{ route('job-targets.admin-status', $target->id) }}"
+                                                                            method="POST"
+                                                                            class="d-flex align-items-center gap-2">
+                                                                            @csrf
+                                                                            @method('PUT')
+                                                                            <label
+                                                                                class="small fw-bold text-muted mb-0 text-nowrap">Ubah
+                                                                                Status:</label>
+
+                                                                            {{-- FORM UBAH STATUS (ADMIN/LEADER) --}}
+                                                                            @if ($canManage)
+                                                                                <div
+                                                                                    class="mt-3 pt-3 border-top bg-light rounded-3 p-3">
+                                                                                    <form
+                                                                                        action="{{ route('job-targets.admin-status', $target->id) }}"
+                                                                                        method="POST"
+                                                                                        class="d-flex align-items-center gap-2">
+                                                                                        @csrf
+                                                                                        @method('PUT')
+                                                                                        <label
+                                                                                            class="small fw-bold text-muted mb-0 text-nowrap">Ubah
+                                                                                            Status:</label>
+
+                                                                                        {{-- PERBAIKAN: Tambah style color black dan background white --}}
+                                                                                        <select name="status"
+                                                                                            class="form-select form-select-sm shadow-sm"
+                                                                                            style="width: auto; cursor: pointer; background-color: #ffffff !important; color: #000000 !important;">
+                                                                                            <option value="pending"
+                                                                                                class="text-dark"
+                                                                                                {{ $target->status == 'pending' ? 'selected' : '' }}>
+                                                                                                Pending</option>
+                                                                                            <option value="in_progress"
+                                                                                                class="text-dark"
+                                                                                                {{ $target->status == 'in_progress' ? 'selected' : '' }}>
+                                                                                                In Progress</option>
+                                                                                            <option value="completed"
+                                                                                                class="text-dark"
+                                                                                                {{ $target->status == 'completed' ? 'selected' : '' }}>
+                                                                                                Completed</option>
+                                                                                            <option value="rejected"
+                                                                                                class="text-dark"
+                                                                                                {{ $target->status == 'rejected' ? 'selected' : '' }}>
+                                                                                                Rejected</option>
+                                                                                        </select>
+
+                                                                                        <button type="submit"
+                                                                                            class="btn btn-dark btn-sm rounded-3 px-3">
+                                                                                            <i class="mdi mdi-check"></i>
+                                                                                            Simpan
+                                                                                        </button>
+                                                                                    </form>
+                                                                                </div>
+                                                                            @endif
+
+                                                                            {{-- TAMPILKAN BUKTI JIKA COMPLETED --}}
+                                                                            @if ($target->status == 'completed' && $target->outcome)
+                                                                                <div
+                                                                                    class="mt-2 p-2 bg-success bg-opacity-10 rounded border border-success border-opacity-25">
+                                                                                    <small
+                                                                                        class="fw-bold text-success d-block">Hasil
+                                                                                        Pengerjaan:</small>
+                                                                                    <small
+                                                                                        class="text-dark">{{ $target->outcome }}</small>
+                                                                                </div>
+                                                                            @endif
+                                                                    </div>
+                                                                @endforeach
                                                             </div>
-
-                                                            {{-- FORM UBAH STATUS (ADMIN/LEADER) --}}
-                                                            @if ($canManage)
-                                                                <div class="mt-3 pt-3 border-top bg-light rounded-3 p-3">
-                                                                    <form
-                                                                        action="{{ route('job-targets.admin-status', $target->id) }}"
-                                                                        method="POST"
-                                                                        class="d-flex align-items-center gap-2">
-                                                                        @csrf
-                                                                        @method('PUT')
-                                                                        <label
-                                                                            class="small fw-bold text-muted mb-0 text-nowrap">Ubah
-                                                                            Status:</label>
-
-                                                                        {{-- PERBAIKAN DI SINI: Tambah bg-white dan text-dark --}}
-                                                                        <select name="status"
-                                                                            class="form-select form-select-sm shadow-sm bg-white text-dark"
-                                                                            style="width: auto; cursor: pointer;">
-                                                                            <option value="pending"
-                                                                                {{ $target->status == 'pending' ? 'selected' : '' }}>
-                                                                                Pending</option>
-                                                                            <option value="in_progress"
-                                                                                {{ $target->status == 'in_progress' ? 'selected' : '' }}>
-                                                                                In Progress</option>
-                                                                            <option value="completed"
-                                                                                {{ $target->status == 'completed' ? 'selected' : '' }}>
-                                                                                Completed</option>
-                                                                            <option value="rejected"
-                                                                                {{ $target->status == 'rejected' ? 'selected' : '' }}>
-                                                                                Rejected</option>
-                                                                        </select>
-
-                                                                        <button type="submit"
-                                                                            class="btn btn-dark btn-sm rounded-3 px-3">
-                                                                            <i class="mdi mdi-check"></i> Simpan
-                                                                        </button>
-                                                                    </form>
-                                                                </div>
-                                                            @endif
-
-                                                            {{-- TAMPILKAN BUKTI JIKA COMPLETED --}}
-                                                            @if ($target->status == 'completed' && $target->outcome)
+                                                        @else
+                                                            <div class="text-center py-5">
                                                                 <div
-                                                                    class="mt-2 p-2 bg-success bg-opacity-10 rounded border border-success border-opacity-25">
-                                                                    <small class="fw-bold text-success d-block">Hasil
-                                                                        Pengerjaan:</small>
-                                                                    <small class="text-dark">{{ $target->outcome }}</small>
+                                                                    class="bg-light rounded-circle d-inline-flex p-3 mb-3">
+                                                                    <i
+                                                                        class="mdi mdi-clipboard-text-off text-muted mdi-24px"></i>
                                                                 </div>
-                                                            @endif
-                                                        </div>
-                                                    @endforeach
+                                                                <p class="text-muted">Belum ada target personal untuk user
+                                                                    ini.</p>
+                                                            </div>
+                                                    @endif
                                                 </div>
-                                            @else
-                                                <div class="text-center py-5">
-                                                    <div class="bg-light rounded-circle d-inline-flex p-3 mb-3">
-                                                        <i class="mdi mdi-clipboard-text-off text-muted mdi-24px"></i>
-                                                    </div>
-                                                    <p class="text-muted">Belum ada target personal untuk user ini.</p>
+                                                <div class="modal-footer bg-light border-top-0">
+                                                    <button type="button" class="btn btn-light border"
+                                                        data-bs-dismiss="modal">Tutup</button>
                                                 </div>
-                                            @endif
-                                        </div>
-                                        <div class="modal-footer bg-light border-top-0">
-                                            <button type="button" class="btn btn-light border"
-                                                data-bs-dismiss="modal">Tutup</button>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            {{-- END MODAL --}}
+                                {{-- END MODAL --}}
 
-                        @empty
-                            <tr>
-                                <td colspan="4" class="text-center py-5 text-muted">Belum ada anggota tim di cabang
-                                    ini.</td>
-                            </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">Belum ada anggota tim di cabang
+                                        ini.</td>
+                                </tr>
                         @endforelse
                     </tbody>
                 </table>
