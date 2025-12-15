@@ -730,8 +730,13 @@
                         </div>
 
                         <div class="text-end">
+                            {{-- CLOCK ELEMENT --}}
                             <h4 class="fw-bold mb-0 font-monospace text-primary" id="realtime-clock">--:--:--</h4>
-                            <small class="text-muted">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</small>
+                            {{-- TAMPILKAN TIMEZONE --}}
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">
+                                {{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }} 
+                                ({{ $current_timezone }})
+                            </small>
                         </div>
                     </div>
 
@@ -1954,36 +1959,44 @@
 @endpush
 
 @push('scripts')
-    {{-- QRCode Lib --}}
+    {{-- QRCode Lib & Chart --}}
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            // 1. [BARU] REALTIME CLOCK
+            // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
             function updateClock() {
+                // Gunakan Timezone yang dikirim dari Controller
+                const timeZone = "{{ $current_timezone }}"; 
+                
                 const now = new Date();
                 const timeString = now.toLocaleTimeString('en-US', {
+                    timeZone: timeZone, // Kunci utama: Pakai timezone cabang
                     hour12: false,
                     hour: '2-digit',
                     minute: '2-digit',
                     second: '2-digit'
                 });
+                
                 const clockElement = document.getElementById('realtime-clock');
                 if (clockElement) clockElement.innerText = timeString;
 
-                // Greeting logic
-                const hour = now.getHours();
+                // Greeting logic (Sesuai jam lokal cabang)
+                // Kita perlu ambil jam (0-23) dari string waktu lokal
+                const localHour = parseInt(timeString.split(':')[0]);
                 const greetingElement = document.getElementById('greeting-text');
+                
                 let greeting = 'Selamat Datang,';
-                if (hour >= 5 && hour < 12) greeting = 'Selamat Pagi,';
-                else if (hour >= 12 && hour < 15) greeting = 'Selamat Siang,';
-                else if (hour >= 15 && hour < 18) greeting = 'Selamat Sore,';
+                if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
+                else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
+                else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
                 else greeting = 'Selamat Malam,';
 
                 if (greetingElement) greetingElement.innerText = greeting;
             }
+            
             setInterval(updateClock, 1000);
             updateClock(); // Run immediately
 
