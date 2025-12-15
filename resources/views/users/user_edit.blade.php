@@ -170,11 +170,11 @@
                 <div class="card shadow-sm border-0 border-top border-3" style="border-top-color: #009688 !important;">
                     <div class="card-header bg-white py-3"><h5 class="mb-0 text-teal"><i class="mdi mdi-clock-outline me-2" style="color: #009688;"></i>Atur Jam Kerja Personal</h5></div>
                     <div class="card-body">
-                        {{-- NOTICE TIMEZONE --}}
-                        <div class="alert alert-info border-0 rounded-3 mb-4 shadow-sm">
+                         {{-- NOTICE TIMEZONE --}}
+                         <div class="alert alert-info border-0 rounded-3 mb-4 shadow-sm">
                             <i class="mdi mdi-information-outline me-2"></i>
                             <strong>PENTING:</strong> Jam yang Anda input di sini adalah <strong>WAKTU WIB (Jakarta)</strong>. <br>
-                            Sistem akan otomatis mengkonversi ke waktu lokal cabang ({{ $user->branch->timezone ?? 'WIB' }}) saat disimpan.
+                            Sistem akan otomatis mengkonversi ke waktu lokal cabang saat disimpan.
                         </div>
 
                         <div class="row">
