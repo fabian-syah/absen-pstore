@@ -22,9 +22,15 @@ class DashboardController extends Controller
         $branch_id = $user->branch_id;
 
         // [TIMEZONE & LIVE CLOCK SETUP]
+        // Mengambil timezone user. Jika tidak ada, default Asia/Jakarta
         $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $data['current_timezone'] = $userTimezone;
-        $todayLocal = Carbon::now($userTimezone)->startOfDay();
+        
+        // [CRITICAL FIX] 
+        // Tentukan 'HARI INI' berdasarkan lokasi user, BUKAN server.
+        // Format Y-m-d (contoh: 2023-10-25)
+        $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d'); 
+        $nowInBranch = Carbon::now($userTimezone);
 
         // =========================================================================
         // 1. LOGIKA ID CARD
@@ -54,8 +60,9 @@ class DashboardController extends Controller
             $end   = \Carbon\Carbon::parse($user->workSchedule->end_time)->format('H:i');
             $scheduleText = "$start - $end";
         } else {
+            // Gunakan $todayInBranch untuk query jadwal hari ini
             $todaysAttendance = Attendance::where('user_id', $user->id)
-                ->whereDate('check_in_time', today())
+                ->whereDate('check_in_time', $todayInBranch)
                 ->first();
             if ($todaysAttendance && $todaysAttendance->scheduled_check_in && $todaysAttendance->scheduled_check_out) {
                 $start = \Carbon\Carbon::parse($todaysAttendance->scheduled_check_in)->format('H:i');
@@ -79,24 +86,27 @@ class DashboardController extends Controller
         // =========================================================================
         // 4. DATA IZIN & ABSENSI PERSONAL
         // =========================================================================
-        $data['myLeaveToday'] = $this->getTodayLeaveRequest($user->id, 'approved');
-        $data['myPendingLeave'] = $this->getTodayLeaveRequest($user->id, 'pending');
+        // Pass $todayInBranch ke fungsi helper
+        $data['myLeaveToday'] = $this->getTodayLeaveRequest($user->id, $todayInBranch, 'approved');
+        $data['myPendingLeave'] = $this->getTodayLeaveRequest($user->id, $todayInBranch, 'pending');
 
         // A. Cek Sesi Aktif (Belum Pulang) - Termasuk yang Lintas Hari
+        // Kita gunakan $nowInBranch untuk menghitung mundur 32 jam
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', Carbon::now()->subHours(32)) // Batas toleransi sesi
+            ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32)) // Batas toleransi sesi
             ->latest('check_in_time')
             ->first();
 
-        // Convert Jam Aktif ke Lokal
+        // Convert Jam Aktif ke Lokal User
         if ($activeSession) {
             $activeSession->check_in_time = Carbon::parse($activeSession->check_in_time)->timezone($userTimezone);
         }
 
         // B. Cek Sesi Selesai Hari Ini (Normal)
+        // [FIX] Gunakan $todayInBranch, bukan today()
         $finishedSessionToday = Attendance::where('user_id', $user->id)
-            ->whereDate('check_in_time', today())
+            ->whereDate('check_in_time', $todayInBranch)
             ->whereNotNull('check_out_time')
             ->latest('check_in_time')
             ->first();
@@ -108,9 +118,10 @@ class DashboardController extends Controller
 
         // C. Cek Sesi Lembur yang BARU SAJA diselesaikan HARI INI
         // (Check in kemarin, check out hari ini)
+        // [FIX] Gunakan $todayInBranch
         $lastOvertimeSession = Attendance::where('user_id', $user->id)
-            ->whereDate('check_in_time', '<', today()) // Masuk sebelum hari ini
-            ->whereDate('check_out_time', today())     // Pulang hari ini
+            ->whereDate('check_in_time', '<', $todayInBranch) // Masuk sebelum hari ini
+            ->whereDate('check_out_time', $todayInBranch)     // Pulang hari ini
             ->latest('check_out_time')
             ->first();
 
@@ -138,6 +149,8 @@ class DashboardController extends Controller
 
         $data['myPendingCount'] = Attendance::where('user_id', $user->id)->where('status', 'pending_verification')->count();
         $data['myTeamCount'] = User::where('division_id', $user->division_id)->where('id', '!=', $user->id)->count();
+        
+        // Pass $todayInBranch ke helper stats
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
@@ -145,8 +158,8 @@ class DashboardController extends Controller
         // =========================================================================
         if ($user->role != 'security') {
             $data['leaderboard'] = Attendance::select('user_id', DB::raw('count(*) as total_attendance'), DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'), DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds'))
-                ->whereMonth('check_in_time', Carbon::now()->month)
-                ->whereYear('check_in_time', Carbon::now()->year)
+                ->whereMonth('check_in_time', $nowInBranch->month)
+                ->whereYear('check_in_time', $nowInBranch->year)
                 ->whereNotNull('check_out_time')
                 ->where('status', 'verified')
                 ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])
@@ -176,9 +189,9 @@ class DashboardController extends Controller
             }
             $securityUsers = $securityUsersQuery->get();
 
-            $scanners = $securityUsers->map(function ($sec) {
-                $scanIn = Attendance::where('scanned_by_user_id', $sec->id)->whereMonth('check_in_time', Carbon::now()->month)->whereYear('check_in_time', Carbon::now()->year)->count();
-                $scanOut = Attendance::where('scanned_out_by_user_id', $sec->id)->whereMonth('check_in_time', Carbon::now()->month)->whereYear('check_in_time', Carbon::now()->year)->count();
+            $scanners = $securityUsers->map(function ($sec) use ($nowInBranch) {
+                $scanIn = Attendance::where('scanned_by_user_id', $sec->id)->whereMonth('check_in_time', $nowInBranch->month)->whereYear('check_in_time', $nowInBranch->year)->count();
+                $scanOut = Attendance::where('scanned_out_by_user_id', $sec->id)->whereMonth('check_in_time', $nowInBranch->month)->whereYear('check_in_time', $nowInBranch->year)->count();
                 $sec->total_scans = $scanIn + $scanOut;
                 return $sec;
             });
@@ -200,21 +213,24 @@ class DashboardController extends Controller
             }
             $data['totalUsers'] = (clone $userQuery)->where('role', '!=', 'admin')->where('is_active', true)->count();
             $data['totalBranches'] = $branch_id ? 1 : Branch::count();
-            $data['attendancesToday'] = (clone $attendanceQuery)->whereDate('check_in_time', today())->count();
+            // [FIX] Gunakan $todayInBranch
+            $data['attendancesToday'] = (clone $attendanceQuery)->whereDate('check_in_time', $todayInBranch)->count();
             $data['pendingVerifications'] = (clone $attendanceQuery)->where('status', 'pending_verification')->count();
-            $data['stats'] = $this->getAdminAttendanceStats($branch_id);
+            $data['stats'] = $this->getAdminAttendanceStats($branch_id, $todayInBranch);
         } elseif ($user->role == 'audit') {
             $data['pendingVerifications'] = Attendance::whereIn('branch_id', $allBranchIds)->where('status', 'pending_verification')->count();
             $data['pendingLeaves'] = LeaveRequest::where('status', 'pending')->where('is_active', true)
                 ->whereHas('user', function ($q) use ($allBranchIds) {
                     $q->whereIn('branch_id', $allBranchIds);
                 })->count();
-            $data['attendancesToday'] = Attendance::whereIn('branch_id', $allBranchIds)->whereDate('check_in_time', today())->count();
-            $data['stats'] = $this->getAuditAttendanceStats($allBranchIds);
+            // [FIX] Gunakan $todayInBranch
+            $data['attendancesToday'] = Attendance::whereIn('branch_id', $allBranchIds)->whereDate('check_in_time', $todayInBranch)->count();
+            $data['stats'] = $this->getAuditAttendanceStats($allBranchIds, $todayInBranch);
         } elseif ($user->role == 'security') {
-            $data['myScansToday'] = Attendance::where('scanned_by_user_id', $user->id)->whereDate('check_in_time', today())->count();
+            // [FIX] Gunakan $todayInBranch
+            $data['myScansToday'] = Attendance::where('scanned_by_user_id', $user->id)->whereDate('check_in_time', $todayInBranch)->count();
             $data['totalUsers'] = User::whereIn('branch_id', $allBranchIds)->whereIn('role', ['user_biasa', 'leader'])->where('is_active', true)->count();
-            $data['stats'] = $this->getSecurityAttendanceStats($user->id, $allBranchIds);
+            $data['stats'] = $this->getSecurityAttendanceStats($user->id, $allBranchIds, $todayInBranch);
         } else {
             $data['stats'] = $personalStats;
         }
@@ -232,28 +248,28 @@ class DashboardController extends Controller
     // PRIVATE HELPER FUNCTIONS
     // =========================================================================
 
-    private function getTodayLeaveRequest($user_id, $status = 'approved')
+    private function getTodayLeaveRequest($user_id, $todayDate, $status = 'approved')
     {
         return LeaveRequest::where('user_id', $user_id)
             ->where('is_active', true)
             ->where('status', $status)
-            ->where(function ($query) {
-                $query->where(function ($q) {
+            ->where(function ($query) use ($todayDate) {
+                $query->where(function ($q) use ($todayDate) {
                     $q->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh'])
-                        ->whereDate('start_date', '<=', today())
-                        ->whereDate('end_date', '>=', today());
-                })->orWhere(function ($q) {
+                        ->whereDate('start_date', '<=', $todayDate)
+                        ->whereDate('end_date', '>=', $todayDate);
+                })->orWhere(function ($q) use ($todayDate) {
                     $q->where('type', 'telat')
-                        ->whereDate('start_date', today());
+                        ->whereDate('start_date', $todayDate);
                 });
             })
             ->latest()
             ->first();
     }
 
-    private function getAdminAttendanceStats($branch_id = null)
+    private function getAdminAttendanceStats($branch_id = null, $todayDate)
     {
-        $query = Attendance::whereDate('check_in_time', today())->where('presence_status', '!=', 'Alpha');
+        $query = Attendance::whereDate('check_in_time', $todayDate)->where('presence_status', '!=', 'Alpha');
         if ($branch_id) $query->where('branch_id', $branch_id);
         $totalUsers = User::when($branch_id, function ($q) use ($branch_id) {
             return $q->where('branch_id', $branch_id);
@@ -262,9 +278,9 @@ class DashboardController extends Controller
         return $this->calculateStats($query, $totalUsers);
     }
 
-    private function getAuditAttendanceStats($branchIds)
+    private function getAuditAttendanceStats($branchIds, $todayDate)
     {
-        $query = Attendance::whereDate('check_in_time', today())->where('presence_status', '!=', 'Alpha');
+        $query = Attendance::whereDate('check_in_time', $todayDate)->where('presence_status', '!=', 'Alpha');
         if (!empty($branchIds)) {
             $query->whereIn('branch_id', is_array($branchIds) ? $branchIds : [$branchIds]);
         }
@@ -284,9 +300,9 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getSecurityAttendanceStats($security_id, $branchIds)
+    private function getSecurityAttendanceStats($security_id, $branchIds, $todayDate)
     {
-        $query = Attendance::whereDate('check_in_time', today());
+        $query = Attendance::whereDate('check_in_time', $todayDate);
         if (!empty($branchIds)) {
             $query->whereIn('branch_id', is_array($branchIds) ? $branchIds : [$branchIds]);
         }
@@ -305,7 +321,11 @@ class DashboardController extends Controller
 
     private function getUserAttendanceStats($user_id, $branch_id = null)
     {
-        $query = Attendance::where('user_id', $user_id)->whereMonth('check_in_time', Carbon::now()->month)->whereYear('check_in_time', Carbon::now()->year)->where('presence_status', '!=', 'Alpha');
+        // Untuk statistik bulanan user, tetap gunakan bulan saat ini (bisa disesuaikan jika perlu)
+        $query = Attendance::where('user_id', $user_id)
+            ->whereMonth('check_in_time', Carbon::now()->month)
+            ->whereYear('check_in_time', Carbon::now()->year)
+            ->where('presence_status', '!=', 'Alpha');
         if ($branch_id) $query->where('branch_id', $branch_id);
         return $this->calculateStats($query, 0);
     }
@@ -340,6 +360,10 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $branch_id = $user->branch_id;
+        
+        // Timezone untuk export juga
+        $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
 
         $allBranchIds = [];
         if ($user->branch_id) $allBranchIds[] = $user->branch_id;
@@ -347,7 +371,7 @@ class DashboardController extends Controller
         $allBranchIds = array_merge($allBranchIds, $extraBranches);
         $allBranchIds = array_values(array_unique($allBranchIds));
 
-        $date = $request->get('date', today()->format('Y-m-d'));
+        $date = $request->get('date', $todayInBranch);
         $data = [];
         $data['user'] = $user;
         $data['export_date'] = now()->format('d-m-Y H:i:s');
@@ -355,17 +379,17 @@ class DashboardController extends Controller
 
         switch ($user->role) {
             case 'admin':
-                $data['stats'] = $this->getAdminAttendanceStats($branch_id);
+                $data['stats'] = $this->getAdminAttendanceStats($branch_id, $date);
                 $data['title'] = 'Laporan Statistik Harian (Admin)';
                 $data['role'] = 'Admin';
                 break;
             case 'audit':
-                $data['stats'] = $this->getAuditAttendanceStats($allBranchIds);
+                $data['stats'] = $this->getAuditAttendanceStats($allBranchIds, $date);
                 $data['title'] = 'Laporan Verifikasi Absensi';
                 $data['role'] = 'Audit';
                 break;
             case 'security':
-                $data['stats'] = $this->getSecurityAttendanceStats($user->id, $allBranchIds);
+                $data['stats'] = $this->getSecurityAttendanceStats($user->id, $allBranchIds, $date);
                 $data['title'] = 'Laporan Aktivitas Security';
                 $data['role'] = 'Security';
                 break;
