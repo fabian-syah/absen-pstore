@@ -187,12 +187,9 @@ class SelfAttendanceController extends Controller
             if (in_array($currentStatus, ['rejected', 'alpha'])) {
                 $newStatus = 'pending_verification';
             }
-            // 2. [PERMINTAAN KHUSUS] Jika Lembur & Sebelumnya 'verified' -> Tetap 'verified' (Auto Verify)
+            // 2. Jika Lembur & Sebelumnya 'verified' -> Tetap 'verified' (Auto Verify)
             if ($isCrossDay) {
                 $extraNote = "[Lembur/Lintas Hari] ";
-                // Jika status sebelumnya verified, maka pulang lembur juga verified.
-                // Jika pending, tetap pending.
-                // Jika request meminta "verif ulang jika lembur dan statusnya terverifikasi", maka:
                 if ($currentStatus == 'verified') {
                     $newStatus = 'verified'; // Tetap verified
                 }
@@ -208,8 +205,8 @@ class SelfAttendanceController extends Controller
                 'is_early_checkout' => $isEarly,
                 'status'            => $newStatus,
                 'notes'             => $finalNotes,
-                'latitude_out'      => $request->latitude,
-                'longitude_out'     => $request->longitude,
+                'latitude_out'      => $request->latitude, // Simpan Lokasi Pulang
+                'longitude_out'     => $request->longitude, // Simpan Lokasi Pulang
             ]);
 
             $message = "Berhasil absen pulang.";
@@ -313,14 +310,7 @@ class SelfAttendanceController extends Controller
 
         if ($attendance) {
             // Tutup sesi pada 23:59:59 di hari check-in tersebut
-            // Agar dianggap sudah selesai kemarin dan tidak mengganggu hari ini.
             $endOfPreviousDay = Carbon::parse($attendance->check_in_time)->endOfDay();
-
-            // Status tetap verified/present jika sebelumnya sudah verified, 
-            // tapi tandai di notes bahwa user skip checkout.
-            // Atau bisa diubah ke 'pending_verification' jika kebijakan perusahaan mengharuskan check-out.
-            // Sesuai prompt: "dia status di team saya buat yang belum absen masuk itu belum hadir / alpha"
-            // Jadi kita tutup sesi ini, sehingga DashboardController tidak mendeteksi sesi aktif lagi.
             
             $status = ($attendance->status == 'verified' || $attendance->status == 'present') 
                         ? $attendance->status 

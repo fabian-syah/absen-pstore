@@ -220,12 +220,12 @@ class ScanController extends Controller
                 }
             }
 
+            // [FIX UTAMA]: Pastikan scanned_out_by_user_id tersimpan
             $updateData = [
                 'check_out_time' => $currentTime,
                 'photo_out_path' => $imageName,
                 'is_early_checkout' => $isEarlyCheckout,
-                // TAMBAHKAN BARIS INI AGAR TIDAK NULL & LEADERBOARD JALAN:
-                'scanned_out_by_user_id' => $securityUser->id,
+                'scanned_out_by_user_id' => $securityUser->id, // INI KOLOMNYA
             ];
 
             if ($attendance->status != 'verified') {
