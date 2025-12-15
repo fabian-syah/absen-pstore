@@ -556,8 +556,7 @@
                                             <h5 class="fw-bolder text-dark text-truncate w-100 mb-0">
                                                 {{ $topScanners[0]->name }}</h5>
                                             <div class="stat-pill gold mt-2">
-                                                <i
-                                                    class="mdi mdi-qrcode-scan me-1"></i>{{ $topScanners[0]->total_scans }}
+                                                <i class="mdi mdi-qrcode-scan me-1"></i>{{ $topScanners[0]->total_scans }}
                                                 Scan
                                             </div>
                                         </div>
@@ -734,7 +733,7 @@
                             <h4 class="fw-bold mb-0 font-monospace text-primary" id="realtime-clock">--:--:--</h4>
                             {{-- TAMPILKAN TIMEZONE --}}
                             <small class="text-muted d-block" style="font-size: 0.7rem;">
-                                {{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }} 
+                                {{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}
                                 ({{ $current_timezone }})
                             </small>
                         </div>
@@ -884,7 +883,6 @@
                                 </div>
                             </div>
                         @endif
-
                     @elseif($myPendingLeave)
                         {{-- 2. JIKA ADA PENGAJUAN PENDING (KUNING) --}}
                         <div class="status-card status-warning mb-3 hover-shadow-lg">
@@ -894,7 +892,8 @@
                                 </div>
                                 <h4 class="mb-2 fw-bold text-warning">Sedang Menunggu Approve dari Audit</h4>
                                 <p class="text-muted mb-4 px-3">
-                                    Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda sedang diproses.
+                                    Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda sedang
+                                    diproses.
                                 </p>
                                 <div class="bg-white p-3 rounded border mb-3 shadow-sm mx-4">
                                     <span class="fst-italic text-dark">"{{ $myPendingLeave->reason }}"</span>
@@ -910,7 +909,6 @@
                                 </form>
                             </div>
                         </div>
-
                     @elseif(isset($myLeaveToday) && $myLeaveToday && $myLeaveToday->status == 'approved')
                         {{-- 3. JIKA SUDAH DI APPROVE (HIJAU) --}}
                         <div class="status-card status-success mb-3 hover-float">
@@ -952,11 +950,9 @@
                                 </form>
                             </div>
                         </div>
-
                     @else
-                    
                         {{-- [LOGIKA BARU] JIKA HABIS LEMBUR LINTAS HARI --}}
-                        @if(isset($justFinishedOvertime) && $justFinishedOvertime)
+                        @if (isset($justFinishedOvertime) && $justFinishedOvertime)
                             <div class="status-card status-info mb-3 hover-shadow-lg">
                                 <div class="text-center py-5">
                                     <div class="mb-3">
@@ -964,13 +960,14 @@
                                     </div>
                                     <h5 class="mb-2 fw-bold text-info">Selamat Beristirahat!</h5>
                                     <p class="text-muted mb-4 px-3 small">
-                                        Anda baru saja pulang lembur pukul <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>. 
+                                        Anda baru saja pulang lembur pukul
+                                        <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>.
                                         <br>Sistem mencatat Anda lembur lintas hari. Anda dipersilakan masuk siang hari ini.
                                     </p>
-                                    
+
                                     {{-- Tetap tampilkan tombol absen jika dia mau masuk lagi --}}
                                     <div class="d-flex justify-content-center gap-2">
-                                         @if (Auth::user()->only_security_scan)
+                                        @if (Auth::user()->only_security_scan)
                                             <div class="d-flex flex-column align-items-center w-100">
                                                 <button class="btn btn-secondary shadow-sm w-100" disabled
                                                     style="cursor: not-allowed; opacity: 0.7;">
@@ -986,7 +983,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                         @else
                             {{-- 4. BELUM ABSEN (DEFAULT) --}}
                             <div class="status-card status-info hover-shadow-lg">
@@ -1024,32 +1020,42 @@
                                 </div>
                             </div>
                         @endif
-                        
+
                     @endif
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- CHART SECTION --}}
-    <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
+    {{-- ======================================================================= --}}
+    {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS)                                 --}}
+    {{-- ======================================================================= --}}
+    <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
         <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom-0 py-3">
-                    <h4 class="card-title mb-0"><i class="mdi mdi-chart-pie me-2"></i>Statistik Absensi</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="chart-container" style="position: relative; height:300px;">
-                                <canvas id="attendancePieChart"></canvas>
+            <div class="card shadow-sm border-0" style="background: linear-gradient(to right, #ffffff, #f8f9fa);">
+                <div class="card-body py-3">
+                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
+                        <div class="d-flex align-items-center mb-3 mb-md-0">
+                            <div class="icon-box bg-light text-warning rounded-circle p-2 me-3 shadow-sm">
+                                <i class="mdi mdi-lightning-bolt fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">Menu Cepat</h5>
+                                <small class="text-muted">Butuh izin untuk hari lain? Ajukan di sini.</small>
                             </div>
                         </div>
-                        <div class="col-md-6 d-flex align-items-center justify-content-center text-muted">
-                            <div class="text-center">
-                                <i class="mdi mdi-chart-bar-stacked display-1 opacity-25"></i>
-                                <p class="mt-2">Analisis data kehadiran secara realtime</p>
-                            </div>
+                        <div class="d-flex gap-2 w-100 w-md-auto">
+                            {{-- Tombol Pengajuan Izin --}}
+                            <a href="{{ route('leave-requests.create') }}"
+                                class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold flex-grow-1 flex-md-grow-0 hover-scale">
+                                <i class="mdi mdi-file-document-edit-outline me-2"></i> Ajukan Izin / Sakit
+                            </a>
+
+                            {{-- Tombol Riwayat (Opsional, agar seimbang) --}}
+                            <a href="{{ route('attendance.history') }}"
+                                class="btn btn-outline-secondary rounded-pill px-4 shadow-sm fw-bold flex-grow-1 flex-md-grow-0 hover-scale">
+                                <i class="mdi mdi-history me-2"></i> Riwayat
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -1057,1122 +1063,1154 @@
         </div>
     </div>
 
-    {{-- MODAL POPUP FOTO PROFIL --}}
-    <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-md">
-            <div class="modal-content glass-effect border-0">
-                <div class="modal-body p-0 position-relative modal-image-wrapper text-center">
-                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow"
-                        data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
+    {{-- CHART SECTION (KODE LAMA DI BAWAH INI) --}}
+    <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
+        {{-- ... --}}
 
-                    <div class="p-3">
-                        <img src="" id="profileModalImageSrc" class="img-fluid rounded shadow-lg"
-                            alt="Profile Photo" style="max-height: 80vh; max-width: 100%; object-fit: contain;">
+        {{-- CHART SECTION --}}
+        <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div
+                        class="card-header bg-white d-flex justify-content-between align-items-center border-bottom-0 py-3">
+                        <h4 class="card-title mb-0"><i class="mdi mdi-chart-pie me-2"></i>Statistik Absensi</h4>
                     </div>
-                    <div class="mt-2 mb-3 text-white">
-                        <h5 class="mb-0">{{ Auth::user()->name }}</h5>
-                        <small class="opacity-75">Foto Profil</small>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="chart-container" style="position: relative; height:300px;">
+                                    <canvas id="attendancePieChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-center justify-content-center text-muted">
+                                <div class="text-center">
+                                    <i class="mdi mdi-chart-bar-stacked display-1 opacity-25"></i>
+                                    <p class="mt-2">Analisis data kehadiran secara realtime</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- MODAL POPUP QR CODE (Untuk Scan Security) --}}
-    <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-                <div class="modal-header border-0 pb-0 justify-content-center">
-                    <h5 class="modal-title fw-bold mt-3">QR Code Saya</h5>
-                </div>
-                <div class="modal-body text-center pt-2">
-                    <div class="p-4 bg-light rounded-circle d-inline-block mb-3 shadow-inner">
-                        <div id="qrcode-modal-display" class="d-flex justify-content-center"></div>
+        {{-- MODAL POPUP FOTO PROFIL --}}
+        <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content glass-effect border-0">
+                    <div class="modal-body p-0 position-relative modal-image-wrapper text-center">
+                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow"
+                            data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
+
+                        <div class="p-3">
+                            <img src="" id="profileModalImageSrc" class="img-fluid rounded shadow-lg"
+                                alt="Profile Photo" style="max-height: 80vh; max-width: 100%; object-fit: contain;">
+                        </div>
+                        <div class="mt-2 mb-3 text-white">
+                            <h5 class="mb-0">{{ Auth::user()->name }}</h5>
+                            <small class="opacity-75">Foto Profil</small>
+                        </div>
                     </div>
-                    <p class="text-muted small mb-3">Tunjukkan ke Security untuk Scan</p>
-                    <button type="button" class="btn btn-dark rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
-    </div>
 
-@endsection
+        {{-- MODAL POPUP QR CODE (Untuk Scan Security) --}}
+        <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                    <div class="modal-header border-0 pb-0 justify-content-center">
+                        <h5 class="modal-title fw-bold mt-3">QR Code Saya</h5>
+                    </div>
+                    <div class="modal-body text-center pt-2">
+                        <div class="p-4 bg-light rounded-circle d-inline-block mb-3 shadow-inner">
+                            <div id="qrcode-modal-display" class="d-flex justify-content-center"></div>
+                        </div>
+                        <p class="text-muted small mb-3">Tunjukkan ke Security untuk Scan</p>
+                        <button type="button" class="btn btn-dark rounded-pill px-4"
+                            data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-@push('styles')
-    <style>
-        /* === LUXURY LEADERBOARD STYLES (NEW) === */
+    @endsection
 
-        /* 1. Card Container & Background */
-        .luxury-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
-            position: relative;
-            transition: all 0.4s ease;
-        }
+    @push('styles')
+        <style>
+            /* === LUXURY LEADERBOARD STYLES (NEW) === */
 
-        .luxury-bg-glow {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 223, 0, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
-            animation: rotateGlow 20s linear infinite;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .luxury-bg-pattern {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: radial-gradient(#E1E1E1 1px, transparent 1px);
-            background-size: 20px 20px;
-            opacity: 0.3;
-            z-index: 0;
-        }
-
-        @keyframes rotateGlow {
-            0% {
-                transform: rotate(0deg);
+            /* 1. Card Container & Background */
+            .luxury-card {
+                background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
+                position: relative;
+                transition: all 0.4s ease;
             }
 
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .icon-box-luxury {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #FFF8E1, #FFF3C4);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.15);
-        }
-
-        .glass-badge {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 14px;
-            color: #444;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-        }
-
-        /* 2. Podium Layout */
-        .podium-luxury-container {
-            min-height: 280px;
-            margin-bottom: -30px;
-            /* Overlap with block below */
-        }
-
-        .podium-step-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            position: relative;
-            z-index: 2;
-        }
-
-        /* 3. Avatars & Glows */
-        .podium-avatar-wrapper {
-            position: relative;
-            margin-bottom: 15px;
-            transition: transform 0.3s ease;
-        }
-
-        .podium-avatar-wrapper:hover {
-            transform: translateY(-8px) scale(1.02);
-        }
-
-        .luxury-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #fff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .luxury-avatar-placeholder {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 4px solid #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: bold;
-            color: #fff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Winner Specifics */
-        .main-winner {
-            z-index: 10;
-        }
-
-        .main-winner .luxury-avatar,
-        .main-winner .luxury-avatar-placeholder {
-            width: 110px;
-            height: 110px;
-            border-width: 5px;
-        }
-
-        .crown-floating {
-            position: absolute;
-            top: -55px;
-            left: 50%;
-            transform: translateX(-50%) rotate(-5deg);
-            animation: floatCrown 3s ease-in-out infinite;
-            z-index: 20;
-            filter: drop-shadow(0 5px 15px rgba(255, 215, 0, 0.4));
-        }
-
-        @keyframes floatCrown {
-
-            0%,
-            100% {
-                transform: translateX(-50%) translateY(0) rotate(-5deg);
+            .luxury-bg-glow {
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255, 223, 0, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+                animation: rotateGlow 20s linear infinite;
+                z-index: 0;
+                pointer-events: none;
             }
 
-            50% {
-                transform: translateX(-50%) translateY(-10px) rotate(0deg);
-            }
-        }
-
-        /* Glow Effects */
-        .gold-glow::before {
-            content: '';
-            position: absolute;
-            inset: -10px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
-            z-index: -1;
-            animation: pulseGlow 2s infinite;
-        }
-
-        /* Gradients */
-        .gold-gradient {
-            background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
-        }
-
-        .silver-gradient {
-            background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
-        }
-
-        .bronze-gradient {
-            background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);
-        }
-
-        /* Rank Circles */
-        .rank-circle {
-            position: absolute;
-            bottom: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 14px;
-            color: white;
-            border: 2px solid white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 5;
-        }
-
-        .rank-circle.gold {
-            background: #FDB931;
-        }
-
-        .rank-circle.silver {
-            background: #A9A9A9;
-        }
-
-        .rank-circle.bronze {
-            background: #A0522D;
-        }
-
-        /* 4. Podium Blocks (The Steps) */
-        .podium-block {
-            width: 100%;
-            border-radius: 16px 16px 0 0;
-            padding: 20px 10px;
-            position: relative;
-            margin: 0 5px;
-            clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
-            /* Tapered shape */
-            backdrop-filter: blur(5px);
-        }
-
-        .gold-block {
-            height: 180px;
-            /* Sedikit lebih tinggi untuk muat info tambahan */
-            background: linear-gradient(180deg, rgba(255, 236, 179, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
-            border-top: 4px solid #FFD700;
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);
-        }
-
-        .silver-block {
-            height: 140px;
-            background: linear-gradient(180deg, rgba(245, 245, 245, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
-            border-top: 4px solid #C0C0C0;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .bronze-block {
-            height: 120px;
-            background: linear-gradient(180deg, rgba(239, 219, 207, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
-            border-top: 4px solid #CD7F32;
-            box-shadow: 0 10px 20px rgba(160, 82, 45, 0.05);
-        }
-
-        .podium-content {
-            transform: translateY(5px);
-        }
-
-        .stat-pill {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            background: #fff;
-            color: #555;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-pill.gold {
-            background: linear-gradient(45deg, #FFD700, #FDB931);
-            color: #fff;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
-        }
-
-        /* 5. Runner Up List */
-        .runner-up-container {
-            background: #fff;
-            border-radius: 16px;
-            padding: 10px;
-            /* border: 1px solid #f0f0f0; */
-        }
-
-        .runner-up-item {
-            padding: 12px 16px;
-            border-radius: 12px;
-            background: #fff;
-            border: 1px solid #f1f3f5;
-            margin-bottom: 10px;
-            transition: all 0.2s ease;
-        }
-
-        .runner-up-item:hover {
-            border-color: #FFD700;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            transform: translateX(5px);
-        }
-
-        .rank-number {
-            font-family: 'Consolas', monospace;
-            font-weight: 900;
-            font-size: 18px;
-            color: #d1d1d1;
-            width: 30px;
-        }
-
-        .runner-avatar {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-        }
-
-        .runner-avatar-placeholder {
-            width: 40px;
-            height: 40px;
-            background: #eee;
-            color: #888;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        /* 6. Sparkles */
-        .sparkle {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle 2s infinite;
-            z-index: 20;
-            box-shadow: 0 0 5px #fff, 0 0 10px #FFD700;
-        }
-
-        .s1 {
-            width: 4px;
-            height: 4px;
-            top: 0;
-            left: 10%;
-            animation-delay: 0.5s;
-        }
-
-        .s2 {
-            width: 6px;
-            height: 6px;
-            top: 10%;
-            right: 0;
-            animation-delay: 1s;
-        }
-
-        .s3 {
-            width: 3px;
-            height: 3px;
-            bottom: 10px;
-            left: -5px;
-            animation-delay: 1.5s;
-        }
-
-        @keyframes twinkle {
-
-            0%,
-            100% {
-                opacity: 0;
-                transform: scale(0.5);
+            .luxury-bg-pattern {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image: radial-gradient(#E1E1E1 1px, transparent 1px);
+                background-size: 20px 20px;
+                opacity: 0.3;
+                z-index: 0;
             }
 
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-        }
+            @keyframes rotateGlow {
+                0% {
+                    transform: rotate(0deg);
+                }
 
-        /* Small utilities */
-        .small-font {
-            font-size: 11px;
-        }
-
-
-        /* === EXISTING STYLES === */
-
-        /* 1. Entrance Animation (Slide Up Fade) */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translate3d(0, 40px, 0);
+                100% {
+                    transform: rotate(360deg);
+                }
             }
 
-            to {
-                opacity: 1;
-                transform: translate3d(0, 0, 0);
-            }
-        }
-
-        .animate-enter {
-            opacity: 0;
-            /* Awal tersembunyi */
-            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
-
-        /* 2. Pulse Animation for Status Icon */
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-            }
-
-            70% {
-                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-            }
-        }
-
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-
-        .pulse-text {
-            animation: pulseText 2s infinite;
-        }
-
-        @keyframes pulseText {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.1);
-                opacity: 0.8;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        /* 3. Live Indicator Dot */
-        .live-indicator {
-            width: 10px;
-            height: 10px;
-            background-color: #10b981;
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
-            animation: pulse 2s infinite;
-        }
-
-        /* 4. Hover Effects */
-        .hover-float {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .hover-float:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        .hover-scale {
-            transition: transform 0.2s ease;
-        }
-
-        .hover-scale:hover {
-            transform: scale(1.02);
-        }
-
-        .scale-on-hover:hover {
-            transform: scale(1.1);
-        }
-
-        .hover-shadow-lg {
-            transition: box-shadow 0.3s ease;
-        }
-
-        .hover-shadow-lg:hover {
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        /* 5. Glassmorphism for Modal */
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-
-        /* 6. Card Bank Styles */
-        .card-bank {
-            position: relative;
-            min-height: 200px;
-            border-radius: 16px;
-            overflow: hidden;
-            border: none;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
-
-        .card-bank .card-body {
-            position: relative;
-            z-index: 2;
-            padding: 24px;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .card-bank-chip {
-            width: 40px;
-            height: 30px;
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border-radius: 6px;
-            position: relative;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .card-bank-icon {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 48px;
-            opacity: 0.2;
-        }
-
-        .card-bank-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.9;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .card-bank-value {
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            line-height: 1;
-        }
-
-        .card-bank-desc {
-            font-size: 13px;
-            opacity: 0.85;
-            margin-bottom: 0;
-        }
-
-        .card-bank-pattern {
-            position: absolute;
-            bottom: -50px;
-            right: -50px;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-            z-index: 1;
-        }
-
-        /* Gradients */
-        .gradient-purple {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .gradient-blue {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .gradient-green {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-
-        .gradient-orange {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .gradient-red {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .gradient-dark {
-            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
-        }
-
-        .card-id {
-            position: relative;
-            border-radius: 16px;
-            overflow: hidden;
-            border: none;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            color: white;
-            min-height: 220px;
-            display: flex;
-            flex-direction: column;
-            font-family: 'Roboto', sans-serif;
-        }
-
-        .card-id .card-body {
-            position: relative;
-            z-index: 2;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            flex-grow: 1;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .card-id-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .card-id-photo-wrapper {
-            position: relative;
-            z-index: 5;
-        }
-
-        .id-card-img {
-            width: 60px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            transition: transform 0.2s ease-in-out;
-        }
-
-        .id-card-img:hover {
-            transform: scale(1.1);
-            border-color: #fff;
-        }
-
-        .id-card-img-placeholder {
-            width: 60px;
-            height: 70px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 8px;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-id-logo {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            font-size: 10px;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .card-id-logo i {
-            font-size: 38px;
-            margin-bottom: 4px;
-            color: #ffed4e;
-        }
-
-        .card-id-details {
-            flex-grow: 1;
-        }
-
-        .card-id-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            opacity: 0.7;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        .card-id-name {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            line-height: 1.2;
-            font-family: 'Consolas', 'Courier New', monospace;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-id-division {
-            font-size: 16px;
-            font-weight: 500;
-            opacity: 0.9;
-            font-family: 'Consolas', 'Courier New', monospace;
-        }
-
-        .card-id-footer {
-            margin-top: auto;
-        }
-
-        .card-action {
-            border-radius: 16px;
-            border: none;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            height: 100%;
-        }
-
-        .card-status {
-            border-radius: 16px;
-            border: none;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            height: 100%;
-        }
-
-        .status-card {
-            padding: 24px;
-            border-radius: 12px;
-            border: 2px solid;
-            background: #f8fafc;
-            transition: all 0.3s ease;
-        }
-
-        .status-success {
-            border-color: #10b981;
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-        }
-
-        .status-warning {
-            border-color: #f59e0b;
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-        }
-
-        .status-info {
-            border-color: #3b82f6;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        }
-
-        .status-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 20px;
-            font-size: 28px;
-            flex-shrink: 0;
-        }
-
-        .status-success .status-icon {
-            background: #10b981;
-            color: white;
-        }
-
-        .status-warning .status-icon {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .status-info .status-icon {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .badge {
-            border-radius: 8px;
-            font-weight: 600;
-            padding: 6px 12px;
-        }
-
-        .btn {
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn-dark {
-            background: #1a1a1a;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            padding: 12px 28px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-dark:hover {
-            background: #000;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-outline-dark {
-            border: 2px solid #1a1a1a;
-            color: #1a1a1a;
-            border-radius: 12px;
-            font-weight: 600;
-            padding: 12px 28px;
-        }
-
-        .btn-outline-dark:hover {
-            background: #1a1a1a;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        @media (max-width: 768px) {
-            .card-bank-value {
-                font-size: 28px;
-            }
-
-            .card-bank {
-                min-height: 180px;
-                margin-bottom: 20px;
-            }
-
-            .card-id {
-                min-height: 200px;
-            }
-
-            .card-id-name {
-                font-size: 20px;
-            }
-
-            .id-card-img,
-            .id-card-img-placeholder {
+            .icon-box-luxury {
                 width: 50px;
-                height: 60px;
+                height: 50px;
+                background: linear-gradient(135deg, #FFF8E1, #FFF3C4);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                box-shadow: 0 4px 10px rgba(255, 193, 7, 0.15);
             }
 
-            #greeting-text {
-                font-size: 0.8rem;
+            .glass-badge {
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(0, 0, 0, 0.05);
+                padding: 8px 16px;
+                border-radius: 50px;
+                font-weight: 600;
+                font-size: 14px;
+                color: #444;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
             }
 
-            h3.fw-bold {
-                font-size: 1.5rem;
+            /* 2. Podium Layout */
+            .podium-luxury-container {
+                min-height: 280px;
+                margin-bottom: -30px;
+                /* Overlap with block below */
             }
 
-            /* Responsive Podium */
-            .luxury-avatar,
+            .podium-step-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-end;
+                position: relative;
+                z-index: 2;
+            }
+
+            /* 3. Avatars & Glows */
+            .podium-avatar-wrapper {
+                position: relative;
+                margin-bottom: 15px;
+                transition: transform 0.3s ease;
+            }
+
+            .podium-avatar-wrapper:hover {
+                transform: translateY(-8px) scale(1.02);
+            }
+
+            .luxury-avatar {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 4px solid #fff;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            }
+
             .luxury-avatar-placeholder {
-                width: 60px;
-                height: 60px;
-                font-size: 20px;
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                border: 4px solid #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 28px;
+                font-weight: bold;
+                color: #fff;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+
+            /* Winner Specifics */
+            .main-winner {
+                z-index: 10;
             }
 
             .main-winner .luxury-avatar,
             .main-winner .luxury-avatar-placeholder {
-                width: 80px;
-                height: 80px;
+                width: 110px;
+                height: 110px;
+                border-width: 5px;
             }
 
             .crown-floating {
-                top: -45px;
+                position: absolute;
+                top: -55px;
+                left: 50%;
+                transform: translateX(-50%) rotate(-5deg);
+                animation: floatCrown 3s ease-in-out infinite;
+                z-index: 20;
+                filter: drop-shadow(0 5px 15px rgba(255, 215, 0, 0.4));
             }
 
-            .crown-floating img {
-                width: 40px;
+            @keyframes floatCrown {
+
+                0%,
+                100% {
+                    transform: translateX(-50%) translateY(0) rotate(-5deg);
+                }
+
+                50% {
+                    transform: translateX(-50%) translateY(-10px) rotate(0deg);
+                }
             }
 
+            /* Glow Effects */
+            .gold-glow::before {
+                content: '';
+                position: absolute;
+                inset: -10px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+                z-index: -1;
+                animation: pulseGlow 2s infinite;
+            }
+
+            /* Gradients */
+            .gold-gradient {
+                background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
+            }
+
+            .silver-gradient {
+                background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
+            }
+
+            .bronze-gradient {
+                background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);
+            }
+
+            /* Rank Circles */
+            .rank-circle {
+                position: absolute;
+                bottom: -5px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 800;
+                font-size: 14px;
+                color: white;
+                border: 2px solid white;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                z-index: 5;
+            }
+
+            .rank-circle.gold {
+                background: #FDB931;
+            }
+
+            .rank-circle.silver {
+                background: #A9A9A9;
+            }
+
+            .rank-circle.bronze {
+                background: #A0522D;
+            }
+
+            /* 4. Podium Blocks (The Steps) */
             .podium-block {
-                height: auto;
-                min-height: 80px;
+                width: 100%;
+                border-radius: 16px 16px 0 0;
+                padding: 20px 10px;
+                position: relative;
+                margin: 0 5px;
+                clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+                /* Tapered shape */
+                backdrop-filter: blur(5px);
             }
-        }
-    </style>
-@endpush
 
-@push('scripts')
-    {{-- QRCode Lib & Chart --}}
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-
-            // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
-            function updateClock() {
-                // Gunakan Timezone yang dikirim dari Controller
-                const timeZone = "{{ $current_timezone }}"; 
-                
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('en-US', {
-                    timeZone: timeZone, // Kunci utama: Pakai timezone cabang
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-                
-                const clockElement = document.getElementById('realtime-clock');
-                if (clockElement) clockElement.innerText = timeString;
-
-                // Greeting logic (Sesuai jam lokal cabang)
-                // Kita perlu ambil jam (0-23) dari string waktu lokal
-                const localHour = parseInt(timeString.split(':')[0]);
-                const greetingElement = document.getElementById('greeting-text');
-                
-                let greeting = 'Selamat Datang,';
-                if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
-                else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
-                else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
-                else greeting = 'Selamat Malam,';
-
-                if (greetingElement) greetingElement.innerText = greeting;
+            .gold-block {
+                height: 180px;
+                /* Sedikit lebih tinggi untuk muat info tambahan */
+                background: linear-gradient(180deg, rgba(255, 236, 179, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+                border-top: 4px solid #FFD700;
+                box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);
             }
-            
-            setInterval(updateClock, 1000);
-            updateClock(); // Run immediately
 
-            // 2. [BARU] COUNT UP ANIMATION (Angka naik dari 0)
-            const counters = document.querySelectorAll('.count-up');
-            counters.forEach(counter => {
-                const target = +counter.getAttribute('data-target');
-                const duration = 2000; // 2 detik
-                const increment = target / (duration / 16); // 60fps
+            .silver-block {
+                height: 140px;
+                background: linear-gradient(180deg, rgba(245, 245, 245, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+                border-top: 4px solid #C0C0C0;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            }
 
-                let current = 0;
-                const updateCounter = () => {
-                    current += increment;
-                    if (current < target) {
-                        counter.innerText = Math.ceil(current);
-                        requestAnimationFrame(updateCounter);
-                    } else {
-                        counter.innerText = target;
-                    }
-                };
-                updateCounter();
-            });
+            .bronze-block {
+                height: 120px;
+                background: linear-gradient(180deg, rgba(239, 219, 207, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+                border-top: 4px solid #CD7F32;
+                box-shadow: 0 10px 20px rgba(160, 82, 45, 0.05);
+            }
 
-            // --- SCRIPT QR CODE ---
-            @if (Auth::user()->qr_code_value)
-                const qrValue = "{{ Auth::user()->qr_code_value }}";
+            .podium-content {
+                transform: translateY(5px);
+            }
 
-                new QRCode(document.getElementById("dashboard-qrcode"), {
-                    text: qrValue,
-                    width: 64,
-                    height: 64,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
+            .stat-pill {
+                display: inline-block;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 700;
+                background: #fff;
+                color: #555;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            }
 
-                var qrModal = document.getElementById('qrModal');
-                qrModal.addEventListener('show.bs.modal', function(event) {
-                    var qrContainer = document.getElementById('qrcode-modal-display');
-                    qrContainer.innerHTML = '';
-                    new QRCode(qrContainer, {
-                        text: qrValue,
-                        width: 256,
-                        height: 256,
+            .stat-pill.gold {
+                background: linear-gradient(45deg, #FFD700, #FDB931);
+                color: #fff;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+                box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+            }
+
+            /* 5. Runner Up List */
+            .runner-up-container {
+                background: #fff;
+                border-radius: 16px;
+                padding: 10px;
+                /* border: 1px solid #f0f0f0; */
+            }
+
+            .runner-up-item {
+                padding: 12px 16px;
+                border-radius: 12px;
+                background: #fff;
+                border: 1px solid #f1f3f5;
+                margin-bottom: 10px;
+                transition: all 0.2s ease;
+            }
+
+            .runner-up-item:hover {
+                border-color: #FFD700;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+                transform: translateX(5px);
+            }
+
+            .rank-number {
+                font-family: 'Consolas', monospace;
+                font-weight: 900;
+                font-size: 18px;
+                color: #d1d1d1;
+                width: 30px;
+            }
+
+            .runner-avatar {
+                width: 40px;
+                height: 40px;
+                object-fit: cover;
+            }
+
+            .runner-avatar-placeholder {
+                width: 40px;
+                height: 40px;
+                background: #eee;
+                color: #888;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+            }
+
+            /* 6. Sparkles */
+            .sparkle {
+                position: absolute;
+                background: white;
+                border-radius: 50%;
+                animation: twinkle 2s infinite;
+                z-index: 20;
+                box-shadow: 0 0 5px #fff, 0 0 10px #FFD700;
+            }
+
+            .s1 {
+                width: 4px;
+                height: 4px;
+                top: 0;
+                left: 10%;
+                animation-delay: 0.5s;
+            }
+
+            .s2 {
+                width: 6px;
+                height: 6px;
+                top: 10%;
+                right: 0;
+                animation-delay: 1s;
+            }
+
+            .s3 {
+                width: 3px;
+                height: 3px;
+                bottom: 10px;
+                left: -5px;
+                animation-delay: 1.5s;
+            }
+
+            @keyframes twinkle {
+
+                0%,
+                100% {
+                    opacity: 0;
+                    transform: scale(0.5);
+                }
+
+                50% {
+                    opacity: 1;
+                    transform: scale(1.2);
+                }
+            }
+
+            /* Small utilities */
+            .small-font {
+                font-size: 11px;
+            }
+
+
+            /* === EXISTING STYLES === */
+
+            /* 1. Entrance Animation (Slide Up Fade) */
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translate3d(0, 40px, 0);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translate3d(0, 0, 0);
+                }
+            }
+
+            .animate-enter {
+                opacity: 0;
+                /* Awal tersembunyi */
+                animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            }
+
+            /* 2. Pulse Animation for Status Icon */
+            @keyframes pulse {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+                }
+
+                70% {
+                    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+                }
+
+                100% {
+                    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+                }
+            }
+
+            .pulse-animation {
+                animation: pulse 2s infinite;
+            }
+
+            .pulse-text {
+                animation: pulseText 2s infinite;
+            }
+
+            @keyframes pulseText {
+                0% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+
+                50% {
+                    transform: scale(1.1);
+                    opacity: 0.8;
+                }
+
+                100% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+
+            /* 3. Live Indicator Dot */
+            .live-indicator {
+                width: 10px;
+                height: 10px;
+                background-color: #10b981;
+                border-radius: 50%;
+                display: inline-block;
+                box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+                animation: pulse 2s infinite;
+            }
+
+            /* 4. Hover Effects */
+            .hover-float {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            .hover-float:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+            }
+
+            .hover-scale {
+                transition: transform 0.2s ease;
+            }
+
+            .hover-scale:hover {
+                transform: scale(1.02);
+            }
+
+            .scale-on-hover:hover {
+                transform: scale(1.1);
+            }
+
+            .hover-shadow-lg {
+                transition: box-shadow 0.3s ease;
+            }
+
+            .hover-shadow-lg:hover {
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+            }
+
+            /* 5. Glassmorphism for Modal */
+            .glass-effect {
+                background: rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+            }
+
+            /* 6. Card Bank Styles */
+            .card-bank {
+                position: relative;
+                min-height: 200px;
+                border-radius: 16px;
+                overflow: hidden;
+                border: none;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            }
+
+            .card-bank .card-body {
+                position: relative;
+                z-index: 2;
+                padding: 24px;
+                color: white;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .card-bank-chip {
+                width: 40px;
+                height: 30px;
+                background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+                border-radius: 6px;
+                position: relative;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .card-bank-icon {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                font-size: 48px;
+                opacity: 0.2;
+            }
+
+            .card-bank-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                opacity: 0.9;
+                margin-bottom: 8px;
+                font-weight: 600;
+            }
+
+            .card-bank-value {
+                font-family: 'Consolas', 'Courier New', monospace;
+                font-size: 36px;
+                font-weight: 700;
+                margin-bottom: 8px;
+                line-height: 1;
+            }
+
+            .card-bank-desc {
+                font-size: 13px;
+                opacity: 0.85;
+                margin-bottom: 0;
+            }
+
+            .card-bank-pattern {
+                position: absolute;
+                bottom: -50px;
+                right: -50px;
+                width: 200px;
+                height: 200px;
+                background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+                border-radius: 50%;
+                z-index: 1;
+            }
+
+            /* Gradients */
+            .gradient-purple {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+
+            .gradient-blue {
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            }
+
+            .gradient-green {
+                background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            }
+
+            .gradient-orange {
+                background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            }
+
+            .gradient-red {
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            }
+
+            .gradient-dark {
+                background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+            }
+
+            .card-id {
+                position: relative;
+                border-radius: 16px;
+                overflow: hidden;
+                border: none;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+                color: white;
+                min-height: 220px;
+                display: flex;
+                flex-direction: column;
+                font-family: 'Roboto', sans-serif;
+            }
+
+            .card-id .card-body {
+                position: relative;
+                z-index: 2;
+                padding: 24px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                flex-grow: 1;
+                gap: 15px;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .card-id-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .card-id-photo-wrapper {
+                position: relative;
+                z-index: 5;
+            }
+
+            .id-card-img {
+                width: 60px;
+                height: 70px;
+                object-fit: cover;
+                border-radius: 8px;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+                cursor: pointer;
+                transition: transform 0.2s ease-in-out;
+            }
+
+            .id-card-img:hover {
+                transform: scale(1.1);
+                border-color: #fff;
+            }
+
+            .id-card-img-placeholder {
+                width: 60px;
+                height: 70px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 8px;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 24px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            }
+
+            .card-id-logo {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                font-size: 10px;
+                font-weight: 700;
+                line-height: 1;
+            }
+
+            .card-id-logo i {
+                font-size: 38px;
+                margin-bottom: 4px;
+                color: #ffed4e;
+            }
+
+            .card-id-details {
+                flex-grow: 1;
+            }
+
+            .card-id-label {
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                opacity: 0.7;
+                margin-bottom: 4px;
+                font-weight: 500;
+            }
+
+            .card-id-name {
+                font-size: 24px;
+                font-weight: 700;
+                margin-bottom: 12px;
+                line-height: 1.2;
+                font-family: 'Consolas', 'Courier New', monospace;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            .card-id-division {
+                font-size: 16px;
+                font-weight: 500;
+                opacity: 0.9;
+                font-family: 'Consolas', 'Courier New', monospace;
+            }
+
+            .card-id-footer {
+                margin-top: auto;
+            }
+
+            .card-action {
+                border-radius: 16px;
+                border: none;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                transition: all 0.3s ease;
+                height: 100%;
+            }
+
+            .card-status {
+                border-radius: 16px;
+                border: none;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                height: 100%;
+            }
+
+            .status-card {
+                padding: 24px;
+                border-radius: 12px;
+                border: 2px solid;
+                background: #f8fafc;
+                transition: all 0.3s ease;
+            }
+
+            .status-success {
+                border-color: #10b981;
+                background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            }
+
+            .status-warning {
+                border-color: #f59e0b;
+                background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            }
+
+            .status-info {
+                border-color: #3b82f6;
+                background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            }
+
+            .status-icon {
+                width: 56px;
+                height: 56px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 20px;
+                font-size: 28px;
+                flex-shrink: 0;
+            }
+
+            .status-success .status-icon {
+                background: #10b981;
+                color: white;
+            }
+
+            .status-warning .status-icon {
+                background: #f59e0b;
+                color: white;
+            }
+
+            .status-info .status-icon {
+                background: #3b82f6;
+                color: white;
+            }
+
+            .badge {
+                border-radius: 8px;
+                font-weight: 600;
+                padding: 6px 12px;
+            }
+
+            .btn {
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            }
+
+            .btn:active {
+                transform: scale(0.95);
+            }
+
+            .btn-dark {
+                background: #1a1a1a;
+                border: none;
+                border-radius: 12px;
+                font-weight: 600;
+                padding: 12px 28px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            .btn-dark:hover {
+                background: #000;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            }
+
+            .btn-outline-dark {
+                border: 2px solid #1a1a1a;
+                color: #1a1a1a;
+                border-radius: 12px;
+                font-weight: 600;
+                padding: 12px 28px;
+            }
+
+            .btn-outline-dark:hover {
+                background: #1a1a1a;
+                color: white;
+                transform: translateY(-2px);
+            }
+
+            @media (max-width: 768px) {
+                .card-bank-value {
+                    font-size: 28px;
+                }
+
+                .card-bank {
+                    min-height: 180px;
+                    margin-bottom: 20px;
+                }
+
+                .card-id {
+                    min-height: 200px;
+                }
+
+                .card-id-name {
+                    font-size: 20px;
+                }
+
+                .id-card-img,
+                .id-card-img-placeholder {
+                    width: 50px;
+                    height: 60px;
+                }
+
+                #greeting-text {
+                    font-size: 0.8rem;
+                }
+
+                h3.fw-bold {
+                    font-size: 1.5rem;
+                }
+
+                /* Responsive Podium */
+                .luxury-avatar,
+                .luxury-avatar-placeholder {
+                    width: 60px;
+                    height: 60px;
+                    font-size: 20px;
+                }
+
+                .main-winner .luxury-avatar,
+                .main-winner .luxury-avatar-placeholder {
+                    width: 80px;
+                    height: 80px;
+                }
+
+                .crown-floating {
+                    top: -45px;
+                }
+
+                .crown-floating img {
+                    width: 40px;
+                }
+
+                .podium-block {
+                    height: auto;
+                    min-height: 80px;
+                }
+            }
+        </style>
+    @endpush
+
+    @push('scripts')
+        {{-- QRCode Lib & Chart --}}
+        <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+
+                // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
+                function updateClock() {
+                    // Gunakan Timezone yang dikirim dari Controller
+                    const timeZone = "{{ $current_timezone }}";
+
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('en-US', {
+                        timeZone: timeZone, // Kunci utama: Pakai timezone cabang
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
                     });
+
+                    const clockElement = document.getElementById('realtime-clock');
+                    if (clockElement) clockElement.innerText = timeString;
+
+                    // Greeting logic (Sesuai jam lokal cabang)
+                    // Kita perlu ambil jam (0-23) dari string waktu lokal
+                    const localHour = parseInt(timeString.split(':')[0]);
+                    const greetingElement = document.getElementById('greeting-text');
+
+                    let greeting = 'Selamat Datang,';
+                    if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
+                    else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
+                    else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
+                    else greeting = 'Selamat Malam,';
+
+                    if (greetingElement) greetingElement.innerText = greeting;
+                }
+
+                setInterval(updateClock, 1000);
+                updateClock(); // Run immediately
+
+                // 2. [BARU] COUNT UP ANIMATION (Angka naik dari 0)
+                const counters = document.querySelectorAll('.count-up');
+                counters.forEach(counter => {
+                    const target = +counter.getAttribute('data-target');
+                    const duration = 2000; // 2 detik
+                    const increment = target / (duration / 16); // 60fps
+
+                    let current = 0;
+                    const updateCounter = () => {
+                        current += increment;
+                        if (current < target) {
+                            counter.innerText = Math.ceil(current);
+                            requestAnimationFrame(updateCounter);
+                        } else {
+                            counter.innerText = target;
+                        }
+                    };
+                    updateCounter();
                 });
-            @endif
 
-            // --- SCRIPT CHART ---
-            const ctx = document.getElementById('attendancePieChart').getContext('2d');
+                // --- SCRIPT QR CODE ---
+                @if (Auth::user()->qr_code_value)
+                    const qrValue = "{{ Auth::user()->qr_code_value }}";
 
-            // Default Options untuk Chart agar lebih halus
-            Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+                    new QRCode(document.getElementById("dashboard-qrcode"), {
+                        text: qrValue,
+                        width: 64,
+                        height: 64,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
 
-            @if (auth()->user()->role == 'admin')
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
-                        datasets: [{
-                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                {{ $stats['early'] }}, {{ $stats['pending'] }},
-                                {{ $stats['absent'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
-                                '#8c94a3'
-                            ],
-                            borderWidth: 0,
-                            hoverOffset: 10 // Efek hover keluar
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: {
-                            animateScale: true,
-                            animateRotate: true
+                    var qrModal = document.getElementById('qrModal');
+                    qrModal.addEventListener('show.bs.modal', function(event) {
+                        var qrContainer = document.getElementById('qrcode-modal-display');
+                        qrContainer.innerHTML = '';
+                        new QRCode(qrContainer, {
+                            text: qrValue,
+                            width: 256,
+                            height: 256,
+                        });
+                    });
+                @endif
+
+                // --- SCRIPT CHART ---
+                const ctx = document.getElementById('attendancePieChart').getContext('2d');
+
+                // Default Options untuk Chart agar lebih halus
+                Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+
+                @if (auth()->user()->role == 'admin')
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
+                            datasets: [{
+                                data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                    {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                    {{ $stats['absent'] }}
+                                ],
+                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
+                                    '#8c94a3'
+                                ],
+                                borderWidth: 0,
+                                hoverOffset: 10 // Efek hover keluar
+                            }]
                         },
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    usePointStyle: true,
-                                    padding: 20
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: {
+                                animateScale: true,
+                                animateRotate: true
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        usePointStyle: true,
+                                        padding: 20
+                                    }
+                                }
+                            },
+                            cutout: '75%'
+                        }
+                    });
+                @elseif (auth()->user()->role == 'audit')
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Terverifikasi', 'Pending', 'Terlambat'],
+                            datasets: [{
+                                data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
+                                    {{ $stats['late'] }}
+                                ],
+                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
+                                borderWidth: 0,
+                                hoverOffset: 10
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '70%',
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
                                 }
                             }
+                        }
+                    });
+                @elseif (auth()->user()->role == 'security')
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Scan Masuk', 'Scan Pulang'],
+                            datasets: [{
+                                data: [{{ $stats['check_in_scans'] }},
+                                    {{ $stats['check_out_scans'] }}
+                                ],
+                                backgroundColor: ['#00d25b', '#0090e7'],
+                                borderWidth: 0,
+                                hoverOffset: 10
+                            }]
                         },
-                        cutout: '75%'
-                    }
-                });
-            @elseif (auth()->user()->role == 'audit')
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Terverifikasi', 'Pending', 'Terlambat'],
-                        datasets: [{
-                            data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
-                                {{ $stats['late'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
-                            borderWidth: 0,
-                            hoverOffset: 10
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '70%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '60%',
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
                             }
                         }
-                    }
-                });
-            @elseif (auth()->user()->role == 'security')
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Scan Masuk', 'Scan Pulang'],
-                        datasets: [{
-                            data: [{{ $stats['check_in_scans'] }},
-                                {{ $stats['check_out_scans'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#0090e7'],
-                            borderWidth: 0,
-                            hoverOffset: 10
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '60%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
+                    });
+                @else
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
+                            datasets: [{
+                                data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                    {{ $stats['early'] }}, {{ $stats['pending'] }}
+                                ],
+                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
                             }
                         }
-                    }
-                });
-            @else
-                new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
-                        datasets: [{
-                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                {{ $stats['early'] }}, {{ $stats['pending'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
-                            borderWidth: 2,
-                            borderColor: '#ffffff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
-                    }
-                });
-            @endif
+                    });
+                @endif
 
-            // --- MODAL FOTO PROFIL ---
-            var profilePhotoModal = document.getElementById('profilePhotoModal');
-            if (profilePhotoModal) {
-                profilePhotoModal.addEventListener('show.bs.modal', function(event) {
-                    var button = event.relatedTarget;
-                    var src = button.getAttribute('data-src');
-                    var modalImg = document.getElementById('profileModalImageSrc');
-                    modalImg.src = src;
-                });
-            }
-        });
-    </script>
-@endpush
+                // --- MODAL FOTO PROFIL ---
+                var profilePhotoModal = document.getElementById('profilePhotoModal');
+                if (profilePhotoModal) {
+                    profilePhotoModal.addEventListener('show.bs.modal', function(event) {
+                        var button = event.relatedTarget;
+                        var src = button.getAttribute('data-src');
+                        var modalImg = document.getElementById('profileModalImageSrc');
+                        modalImg.src = src;
+                    });
+                }
+            });
+        </script>
+    @endpush
