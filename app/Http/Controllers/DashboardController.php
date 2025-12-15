@@ -45,44 +45,38 @@ class DashboardController extends Controller
         $data['idCardNumber'] = "{$yyMasuk}{$mmMasuk}{$yyLahir} {$mmLahir}{$ddLahir}{$noUrut}";
 
         // =========================================================================
-        // 2. LOGIKA JADWAL KERJA (UPDATED: KONVERSI KE JAM CABANG)
+        // 2. LOGIKA JADWAL KERJA (FIX: PRIORITAS PROFILE TERBARU)
         // =========================================================================
         $scheduleText = 'Fleksibel / Bebas';
 
-        // Helper: Konversi data DB (WIB) ke Timezone User
-        $toLocalTime = function ($timeStr) use ($userTimezone) {
-            if (!$timeStr) return '--:--';
-            // Anggap data di DB adalah WIB/Jakarta, lalu ubah ke Timezone Cabang
-            return Carbon::parse($timeStr, 'Asia/Jakarta')
-                ->setTimezone($userTimezone)
-                ->format('H:i');
-        };
+        // PRIORITAS 1: Ambil dari Setting Profile / Shift User TERBARU (Realtime)
+        // Ini agar jika admin mengubah jadwal hari ini, dashboard langsung update (misal: ubah 14:00 jadi 10:00).
+        if ($user->check_in_start && $user->check_out_start) {
+            // Jam di DB user sudah disimpan sebagai JAM LOKAL (sesuai logic UserController)
+            $start = \Carbon\Carbon::parse($user->check_in_start)->format('H:i');
+            $end   = \Carbon\Carbon::parse($user->check_out_start)->format('H:i');
+            $scheduleText = "$start - $end";
+        } elseif ($user->workSchedule) {
+            // Jadwal Shift
+            $start = \Carbon\Carbon::parse($user->workSchedule->start_time)->format('H:i');
+            $end   = \Carbon\Carbon::parse($user->workSchedule->end_time)->format('H:i');
+            $scheduleText = "$start - $end";
+        }
+        // PRIORITAS 2: Jika Profile Kosong, baru cek Snapshot Absensi hari ini (Fallback History)
+        else {
+            // Cek apakah user sudah absen hari ini
+            $todaysAttendance = Attendance::where('user_id', $user->id)
+                ->whereDate('check_in_time', today())
+                ->first();
 
-        // A. Cek Snapshot Absensi Hari Ini (Jika sudah absen)
-        $todaysAttendance = Attendance::where('user_id', $user->id)
-            ->whereDate('check_in_time', today())
-            ->first();
-
-        if ($todaysAttendance && $todaysAttendance->scheduled_check_in && $todaysAttendance->scheduled_check_out) {
-            // Ambil snapshot yang tersimpan saat absen
-            // Pastikan ditampilkan sesuai timezone cabang juga
-            $start = Carbon::parse($todaysAttendance->scheduled_check_in)->setTimezone($userTimezone)->format('H:i');
-            $end   = Carbon::parse($todaysAttendance->scheduled_check_out)->setTimezone($userTimezone)->format('H:i');
-            $scheduleText = "$start - $end (Terekam)";
-        } else {
-            // B. Jika Belum Absen, Ambil Master Jadwal & Konversi
-            if ($user->check_in_start && $user->check_out_start) {
-                // Jadwal Personal
-                $start = $toLocalTime($user->check_in_start);
-                $end   = $toLocalTime($user->check_out_start);
-                $scheduleText = "$start - $end";
-            } elseif ($user->workSchedule) {
-                // Jadwal Shift
-                $start = $toLocalTime($user->workSchedule->start_time);
-                $end   = $toLocalTime($user->workSchedule->end_time);
-                $scheduleText = "$start - $end";
+            if ($todaysAttendance && $todaysAttendance->scheduled_check_in && $todaysAttendance->scheduled_check_out) {
+                // Jika sudah absen & profile kosong, tampilkan jadwal yang TEREKAM SAAT ITU
+                $start = \Carbon\Carbon::parse($todaysAttendance->scheduled_check_in)->format('H:i');
+                $end   = \Carbon\Carbon::parse($todaysAttendance->scheduled_check_out)->format('H:i');
+                $scheduleText = "$start - $end (Terekam)";
             }
         }
+
         $data['todaySchedule'] = $scheduleText;
 
         // =========================================================================
