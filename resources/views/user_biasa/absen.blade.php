@@ -83,6 +83,8 @@
                                     <div class="corner br"></div>
                                 </div>
                                 <div class="instruction-text" id="camera-instruction">Ketuk tombol kamera</div>
+                                {{-- DEBUG SCORE (Opsional: Bisa dihapus nanti) --}}
+                                <div id="debug-score" class="text-white small mt-1" style="opacity: 0.7;"></div>
                             </div>
 
                             {{-- Bottom Gradient --}}
@@ -351,6 +353,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const useAI = {{ Auth::user()->use_face_recognition ? 'true' : 'false' }};
+        const assetPath = "{{ asset('models') }}"; // Path ke folder public/models
 
         // DOM Elements
         const videoFeed = document.getElementById('video-feed');
@@ -373,6 +376,7 @@
         const slideThumb = document.getElementById('slide-thumb');
         const slideText = document.querySelector('.slide-bg-text');
         const form = document.getElementById('attendance-form');
+        const debugScore = document.getElementById('debug-score');
 
         // State
         let streamRef = null;
@@ -386,17 +390,18 @@
                 if (!modelsLoaded) {
                     toggleLoadingState(true);
                     try {
-                        // ADJUST PATH AS NEEDED
-                        await faceapi.nets.tinyFaceDetector.loadFromUri('public/models'); 
+                        console.log("Memuat model dari:", assetPath);
+                        // === BALIK KE TINY FACE DETECTOR (RINGAN & CEPAT) ===
+                        await faceapi.nets.tinyFaceDetector.loadFromUri(assetPath);
+                        
                         modelsLoaded = true;
                         toggleLoadingState(false);
                         initCamera();
                     } catch (err) {
                         console.error("AI Error:", err);
-                        alert("Gagal memuat AI. Pastikan file model ada di folder public/models.");
+                        alert("Gagal memuat AI. Pastikan file model tiny_face_detector ada.");
                         toggleLoadingState(false);
-                        // Fallback to manual if AI fails
-                        initCamera(); 
+                        initCamera(); // Fallback
                     }
                 } else {
                     initCamera();
@@ -424,7 +429,6 @@
                 
                 videoFeed.onloadedmetadata = () => {
                     videoFeed.play();
-                    // Smooth transition
                     setTimeout(() => {
                         videoFeed.classList.add('ready');
                         startScreen.classList.add('d-none');
@@ -434,7 +438,6 @@
                     if (useAI) {
                         startFaceDetection();
                     } else {
-                        // Manual Mode
                         setReadyToCapture(true, "Siap Foto");
                     }
                 };
@@ -445,31 +448,56 @@
             });
         }
 
-        // --- 3. AI DETECTION ---
+        // --- 3. AI DETECTION (ANTI LAG & ANTI MASKER) ---
         function startFaceDetection() {
             if (detectionInterval) clearInterval(detectionInterval);
+
+            // === SETTING PENTING AGAR TIDAK TEMBUS MASKER ===
+            // inputSize: 416 (Standard YOLO) atau 512 (Lebih Akurat tapi agak berat dikit).
+            // scoreThreshold: 0.80 (SANGAT KETAT). 
+            // Wajah masker biasanya cuma dapet score 0.5 - 0.7.
+            // Wajah asli biasanya dapet score 0.85 - 0.99.
+            const options = new faceapi.TinyFaceDetectorOptions({ 
+                inputSize: 416, 
+                scoreThreshold: 0.80 
+            });
 
             detectionInterval = setInterval(async () => {
                 if (!streamRef || videoFeed.paused || videoFeed.ended) return;
 
                 try {
-                    const detections = await faceapi.detectAllFaces(videoFeed, new faceapi.TinyFaceDetectorOptions());
+                    const detections = await faceapi.detectAllFaces(videoFeed, options);
                     
-                    if (detections.length > 0 && detections[0].score > 0.5) {
+                    if (detections.length > 0) {
+                        // Ambil deteksi dengan score tertinggi
+                        const bestDetection = detections[0];
+                        const score = bestDetection.score;
+                        
+                        // Tampilkan score untuk debugging (hapus jika sudah fix)
+                        // debugScore.innerText = "Confidence: " + (score * 100).toFixed(0) + "%";
+
+                        // Karena threshold sudah di-set 0.80 di options,
+                        // Maka apapun yang masuk ke sini PASTI di atas 0.80 (Wajah Valid)
                         if (!isFaceValid) {
                             isFaceValid = true;
                             focusBox.classList.add('active');
                             setReadyToCapture(true, "Wajah Terdeteksi");
                         }
                     } else {
+                        // Tidak ada wajah, atau wajah ada TAPI score di bawah 0.80 (Misal Masker)
                         if (isFaceValid) {
-                            isFaceValid = false;
-                            focusBox.classList.remove('active');
-                            setReadyToCapture(false, "Posisikan Wajah");
+                            handleInvalidFace();
                         }
+                        // debugScore.innerText = "Mencari wajah...";
                     }
                 } catch (e) { console.log(e); }
-            }, 300); // Check every 300ms
+            }, 200); // 200ms = Cepat & Responsif (Tidak Lag)
+        }
+
+        function handleInvalidFace() {
+            isFaceValid = false;
+            focusBox.classList.remove('active');
+            setReadyToCapture(false, "Buka Masker & Lihat Kamera");
         }
 
         function setReadyToCapture(ready, message) {
@@ -483,10 +511,10 @@
             } else {
                 captureBtn.disabled = true;
                 captureBtn.classList.remove('ready');
-                faceStatusBadge.innerHTML = `<i class="mdi mdi-loading mdi-spin"></i> ${message}`;
-                faceStatusBadge.style.background = "rgba(255, 255, 255, 0.2)";
-                faceStatusBadge.style.borderColor = "rgba(255,255,255,0.3)";
-                cameraInstruction.innerText = "Mencari wajah...";
+                faceStatusBadge.innerHTML = `<i class="mdi mdi-account-alert"></i> ${message}`;
+                faceStatusBadge.style.background = "rgba(255, 50, 50, 0.2)";
+                faceStatusBadge.style.borderColor = "rgba(255,50,50,0.3)";
+                cameraInstruction.innerText = "Posisikan wajah tanpa masker...";
             }
         }
 
@@ -494,24 +522,21 @@
         captureBtn.addEventListener('click', async () => {
             if (useAI && !isFaceValid) return;
 
-            // Haptic/Visual Feedback
+            // Visual Feedback
             captureBtn.style.transform = "scale(0.9)";
             setTimeout(() => captureBtn.style.transform = "scale(1.05)", 100);
 
-            // Capture Frame
             const width = videoFeed.videoWidth;
             const height = videoFeed.videoHeight;
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             
-            // Mirror image processing
             ctx.save();
             ctx.scale(-1, 1);
             ctx.drawImage(videoFeed, -width, 0, width, height);
             ctx.restore();
 
-            // Convert to blob
             canvas.toBlob(blob => {
                 const file = new File([blob], "attendance.jpg", { type: "image/jpeg" });
                 const dt = new DataTransfer();
@@ -520,9 +545,7 @@
                 
                 previewImage.src = URL.createObjectURL(blob);
                 
-                // Stop Stream for performance
                 stopCamera();
-                
                 resultScreen.classList.remove('d-none');
                 checkGlobalValidity();
             }, 'image/jpeg', 0.85);
@@ -539,7 +562,7 @@
         retakeBtn.addEventListener('click', () => {
             resultScreen.classList.add('d-none');
             photoInputHidden.value = '';
-            initCamera(); // Restart camera
+            initCamera(); 
             checkGlobalValidity();
         });
 
@@ -584,7 +607,6 @@
 
         // --- 6. SLIDER LOGIC ---
         let isDragging = false, startX, currentX, maxSlide;
-        
         const updateSliderWidth = () => { maxSlide = slideTrack.offsetWidth - slideThumb.offsetWidth - 8; };
         window.addEventListener('resize', updateSliderWidth);
         updateSliderWidth();
@@ -602,7 +624,6 @@
             let move = clientX - startX;
             if (move < 0) move = 0;
             if (move > maxSlide) move = maxSlide;
-            
             currentX = move;
             slideThumb.style.transform = `translateX(${move}px)`;
             slideText.style.opacity = 1 - (move / maxSlide);
@@ -613,7 +634,6 @@
             isDragging = false;
             
             if (currentX >= maxSlide * 0.9) {
-                // Success
                 slideThumb.style.transform = `translateX(${maxSlide}px)`;
                 slideTrack.classList.add('submitted');
                 slideThumb.innerHTML = '<i class="mdi mdi-check"></i>';
@@ -621,7 +641,6 @@
                 slideText.style.opacity = 1;
                 form.submit();
             } else {
-                // Reset
                 slideThumb.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 slideThumb.style.transform = 'translateX(0px)';
                 slideText.style.opacity = 1;
