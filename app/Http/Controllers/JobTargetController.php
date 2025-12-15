@@ -155,7 +155,7 @@ class JobTargetController extends Controller
         JobTarget::create([
             'user_id'     => $targetUserId,
             'branch_id'   => $branchId, 
-            'created_by'  => $user->id,
+            'creator_id'  => $user->id,
             'type'        => $request->type,
             'title'       => $request->title,
             'description' => $request->description,
