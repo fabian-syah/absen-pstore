@@ -23,10 +23,9 @@
                 <form action="{{ route('job-targets.store') }}" method="POST">
                     @csrf
                     
-                    {{-- Hidden: Redirect ke Branch jika ada --}}
+                    {{-- Hidden: Redirect ke Branch jika ada (Dari Menu Cabang) --}}
                     @if(request('branch_id'))
                         <input type="hidden" name="redirect_to_branch" value="{{ request('branch_id') }}">
-                        {{-- Jika masuk lewat menu cabang, otomatis set branch_id --}}
                         <input type="hidden" name="target_branch_id" value="{{ request('branch_id') }}">
                     @endif
 
@@ -37,16 +36,19 @@
                             <option value="personal_target" selected>🎯 Target Pekerjaan (Job Desk)</option>
                             <option value="personal_achievement">🏅 Pencapaian / Prestasi (Individu)</option>
                             
-                            {{-- Opsi TARGET CABANG/TIM (LEADER, ADMIN, AUDIT) --}}
-                            @if(in_array(auth()->user()->role, ['leader', 'admin', 'audit']) && !request('assign_user_id'))
+                            {{-- Opsi TARGET CABANG/TIM --}}
+                            {{-- LOGIKA: Muncul jika Leader, ATAU jika Admin/Audit sedang akses via Menu Cabang (ada request branch_id) --}}
+                            @if(auth()->user()->role == 'leader' || (in_array(auth()->user()->role, ['admin', 'audit']) && request('branch_id')))
                                 <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>🏢 Target Global Cabang (Tim)</option>
                                 <option value="team_achievement">🏆 Pencapaian Tim (Cabang)</option>
                             @endif
                         </select>
                     </div>
 
-                    {{-- 1. BAGIAN ASSIGNMENT (Dinamis via JS) --}}
-                    @if(in_array(auth()->user()->role, ['leader', 'admin', 'audit']) && isset($branchMembers) && count($branchMembers) > 0)
+                    {{-- 1. BAGIAN ASSIGNMENT (Dinamis) --}}
+                    {{-- LOGIKA: Hanya muncul jika Controller mengirimkan data $branchMembers --}}
+                    {{-- Controller sudah memfilter: Jika menu utama, $branchMembers dikosongkan untuk Admin/Audit --}}
+                    @if(isset($branchMembers) && count($branchMembers) > 0)
                         
                         {{-- A. Jika Target Personal -> Pilih Orang --}}
                         <div id="userAssignmentRow" class="mb-4 bg-light p-3 rounded-3 border border-primary border-opacity-25">
@@ -56,73 +58,46 @@
                             <select name="assign_user_id" class="form-select form-select-lg fw-bold border-primary shadow-none text-dark">
                                 <option value="{{ auth()->user()->id }}">👤 Saya Sendiri (Pribadi)</option>
                                 
-                                {{-- Jika Admin/Audit, Grouping berdasarkan Cabang --}}
-                                @if(in_array(auth()->user()->role, ['admin', 'audit']))
-                                    @foreach($branchMembers->groupBy('branch.name') as $branchName => $members)
-                                        <optgroup label="🏢 {{ $branchName ?: 'Tanpa Cabang' }}">
-                                            @foreach($members as $member)
-                                                {{-- Jangan tampilkan diri sendiri lagi --}}
-                                                @if($member->id != auth()->user()->id)
-                                                    <option value="{{ $member->id }}" {{ request('assign_user_id') == $member->id ? 'selected' : '' }}>
-                                                        {{ $member->name }} - {{ $member->division->name ?? 'Staff' }}
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </optgroup>
-                                    @endforeach
-                                @else
-                                    {{-- Jika Leader (Cabang Tunggal) --}}
-                                    <optgroup label="Anggota Tim">
-                                        @foreach($branchMembers as $member)
-                                            <option value="{{ $member->id }}" {{ request('assign_user_id') == $member->id ? 'selected' : '' }}>
-                                                {{ $member->name }} - {{ $member->division->name ?? 'Staff' }}
-                                            </option>
-                                        @endforeach
-                                    </optgroup>
-                                @endif
+                                {{-- Loop Members --}}
+                                @foreach($branchMembers as $member)
+                                    <option value="{{ $member->id }}" {{ request('assign_user_id') == $member->id ? 'selected' : '' }}>
+                                        {{ $member->name }} - {{ $member->division->name ?? 'Staff' }}
+                                    </option>
+                                @endforeach
                             </select>
                             <small class="text-muted mt-2 d-block fst-italic">* Target ini akan masuk ke Job Desk individu yang dipilih.</small>
                         </div>
 
-                        {{-- B. Jika Target Tim -> Otomatis ke Cabang (Tampilannya beda) --}}
+                        {{-- B. Jika Target Tim -> Info Cabang --}}
                         <div id="branchAssignmentRow" class="mb-4 bg-soft-warning p-3 rounded-3 border border-warning border-opacity-25 d-none">
                             <label class="fw-bold mb-2 text-warning text-dark small text-uppercase ls-1">
                                 <i class="mdi mdi-bank me-1"></i> Ditugaskan Ke Lingkup Cabang
                             </label>
 
-                            @if(in_array(auth()->user()->role, ['admin', 'audit']) && isset($branches))
-                                {{-- INPUT PILIH CABANG (Khusus Admin/Audit) --}}
-                                <div class="alert alert-warning border-0 small mb-2"><i class="mdi mdi-information me-1"></i> Silakan pilih cabang target.</div>
-                                <select name="target_branch_id" class="form-select fw-bold border-warning text-dark">
-                                    <option value="" disabled selected>-- Pilih Cabang --</option>
-                                    @foreach($branches as $b)
-                                        <option value="{{ $b->id }}" {{ request('branch_id') == $b->id ? 'selected' : '' }}>
-                                            {{ $b->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @else
-                                {{-- TAMPILAN FIX (Khusus Leader) --}}
-                                <div class="d-flex align-items-center bg-white p-3 rounded border">
-                                    <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3">
-                                        <i class="mdi mdi-office-building text-warning mdi-24px"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="mb-0 fw-bold text-dark">{{ auth()->user()->branch->name ?? 'Cabang Tidak Diketahui' }}</h5>
-                                        <small class="text-muted">Target ini berlaku untuk satu tim penuh di cabang ini.</small>
-                                    </div>
+                            <div class="d-flex align-items-center bg-white p-3 rounded border">
+                                <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3">
+                                    <i class="mdi mdi-office-building text-warning mdi-24px"></i>
                                 </div>
-                                {{-- Leader otomatis ke cabang sendiri --}}
-                                <input type="hidden" name="target_branch_id" value="{{ auth()->user()->branch_id }}">
-                            @endif
+                                <div>
+                                    @if(request('branch_id') && isset($branches) && $branches->first())
+                                        <h5 class="mb-0 fw-bold text-dark">{{ $branches->first()->name }}</h5>
+                                        <small class="text-muted">Target berlaku untuk seluruh tim di cabang ini.</small>
+                                    @elseif(auth()->user()->branch)
+                                        <h5 class="mb-0 fw-bold text-dark">{{ auth()->user()->branch->name }}</h5>
+                                        <small class="text-muted">Target berlaku untuk seluruh tim di cabang ini.</small>
+                                    @else
+                                        <h5 class="mb-0 fw-bold text-dark">Seluruh Tim</h5>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
 
                     @else
-                        {{-- Jika Staff Biasa (Hanya diri sendiri) --}}
+                        {{-- Jika Staff Biasa / Admin via Menu Utama (Hanya diri sendiri) --}}
                         <input type="hidden" name="assign_user_id" value="{{ auth()->user()->id }}">
                     @endif
 
-                    {{-- 3. LEVEL & PERIODE --}}
+                    {{-- 3. LEVEL & PERIODE (Sama seperti sebelumnya) --}}
                     <div class="mb-4" id="starLevelGroup">
                         <label class="fw-bold mb-2 d-block small text-uppercase ls-1">Prioritas (Level)</label>
                         <div class="row g-2">
@@ -185,27 +160,22 @@
 </style>
 
 <script>
-    // Fungsi Utama: Mengatur Tampilan berdasarkan Jenis Target
     function toggleAssignmentType() {
         let type = document.getElementById('typeSelect').value;
         let userRow = document.getElementById('userAssignmentRow');
         let branchRow = document.getElementById('branchAssignmentRow');
         let starGroup = document.getElementById('starLevelGroup');
 
-        // Cek apakah userRow ada (karena hanya render untuk Leader/Admin/Audit)
         if (userRow && branchRow) {
             if (type.includes('team')) {
-                // Jika Target Tim: Sembunyikan Pilih Orang, Tampilkan Info Cabang
                 userRow.classList.add('d-none');
                 branchRow.classList.remove('d-none');
             } else {
-                // Jika Target Personal: Tampilkan Pilih Orang, Sembunyikan Info Cabang
                 userRow.classList.remove('d-none');
                 branchRow.classList.add('d-none');
             }
         }
 
-        // Logic Sembunyikan Bintang untuk Achievement (Prestasi)
         if (type.includes('achievement')) { 
             starGroup.classList.add('d-none'); 
         } else { 
@@ -220,7 +190,6 @@
         document.getElementById('date_' + period).classList.remove('d-none');
     }
 
-    // Jalankan saat load halaman agar kondisi awal sesuai
     document.addEventListener("DOMContentLoaded", function() {
         toggleAssignmentType();
     });
