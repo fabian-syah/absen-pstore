@@ -149,7 +149,7 @@
                         <textarea name="notes" class="form-control form-control-modern" rows="2" placeholder="Sedang di lokasi klien..."></textarea>
                     </div>
 
-                    {{-- HIDDEN INPUTS --}}
+                    {{-- HIDDEN INPUTS (Fixed IDs) --}}
                     <input type="hidden" id="latitude" name="latitude">
                     <input type="hidden" id="longitude" name="longitude">
                     <input type="hidden" id="accuracy" name="accuracy">
@@ -363,8 +363,8 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // === KONFIGURASI PERFORMA HP KENTANG ===
-        const AI_INPUT_SIZE = 224; // Rendah biar cepat (128, 160, 224, 320, 416, 512, 608)
-        const AI_SCORE_THRESHOLD = 0.55; // Ambang batas deteksi (0.55 cukup toleran untuk 224)
+        const AI_INPUT_SIZE = 224; 
+        const AI_SCORE_THRESHOLD = 0.55; 
         
         const useAI = {{ Auth::user()->use_face_recognition ? 'true' : 'false' }};
         const assetPath = "{{ asset('public/models') }}"; 
@@ -379,6 +379,13 @@
         const previewImage = document.getElementById('preview-image');
         const photoInputHidden = document.getElementById('photo-input-hidden');
         const canvas = document.getElementById('capture-canvas');
+        
+        // Input Hidden Location
+        const latInput = document.getElementById('latitude');
+        const lngInput = document.getElementById('longitude');
+        const accInput = document.getElementById('accuracy');
+        const coordDisplay = document.getElementById('coordinates-display');
+        const accBadge = document.getElementById('gps-accuracy-badge');
         
         const faceStatusBadge = document.getElementById('face-status-badge');
         const focusBox = document.querySelector('.focus-box');
@@ -401,6 +408,9 @@
         startBtn.addEventListener('click', async () => {
             startBtn.disabled = true;
             
+            // Trigger GPS Update saat tombol start ditekan
+            getLocation();
+
             if (useAI) {
                 if (!modelsLoaded) {
                     toggleLoadingState(true);
@@ -430,7 +440,6 @@
 
         // --- 2. CAMERA HANDLING (VGA ONLY) ---
         function initCamera(enableAI = true) {
-            // Memaksa resolusi VGA (640x480) untuk performa
             const constraints = {
                 video: { 
                     facingMode: "user", 
@@ -475,7 +484,6 @@
             const runDetection = async () => {
                 if (!streamRef || videoFeed.paused || videoFeed.ended) return;
 
-                // Anti Lag: Jika proses sebelumnya belum kelar, skip.
                 if (isProcessingAI) {
                     animationFrameId = requestAnimationFrame(runDetection);
                     return;
@@ -506,7 +514,6 @@
 
                 isProcessingAI = false;
 
-                // Beri jeda 300ms agar CPU bisa nafas
                 setTimeout(() => {
                     animationFrameId = requestAnimationFrame(runDetection);
                 }, 300); 
@@ -544,6 +551,9 @@
         // --- 4. CAPTURE LOGIC ---
         captureBtn.addEventListener('click', () => {
             if (useAI && !isFaceValid) return;
+            
+            // Paksa update lokasi lagi sebelum capture
+            getLocation();
 
             captureBtn.style.transform = "scale(0.9)";
             setTimeout(() => captureBtn.style.transform = "scale(1.05)", 100);
@@ -571,7 +581,7 @@
                 resultScreen.classList.remove('d-none');
                 checkGlobalValidity();
 
-            }, 'image/jpeg', 0.85); // Kompresi JPEG 85%
+            }, 'image/jpeg', 0.85);
         });
 
         function stopCamera() {
@@ -591,30 +601,43 @@
         });
 
         // --- 5. GPS & SLIDER ---
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const { latitude, longitude, accuracy } = pos.coords;
-                    document.getElementById('latitude').value = latitude;
-                    document.getElementById('longitude').value = longitude;
-                    document.getElementById('accuracy').value = accuracy;
-                    
-                    document.getElementById('coordinates-display').innerText = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-                    document.getElementById('gps-accuracy-badge').innerText = `Akurasi ±${Math.round(accuracy)}m`;
-                    document.getElementById('gps-accuracy-badge').className = 'badge bg-light text-success border border-success';
-                    checkGlobalValidity();
-                },
-                (err) => {
-                    document.getElementById('coordinates-display').innerText = "Gagal: " + err.message;
-                    document.getElementById('gps-accuracy-badge').className = 'badge bg-danger text-white';
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
+        function getLocation() {
+            if (navigator.geolocation) {
+                coordDisplay.innerText = "Mencari lokasi...";
+                accBadge.className = "badge bg-warning text-dark";
+                accBadge.innerText = "Mencari...";
+                
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const { latitude, longitude, accuracy } = pos.coords;
+                        latInput.value = latitude;
+                        lngInput.value = longitude;
+                        accInput.value = accuracy;
+                        
+                        coordDisplay.innerText = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                        accBadge.innerText = `Akurasi ±${Math.round(accuracy)}m`;
+                        accBadge.className = 'badge bg-light text-success border border-success';
+                        
+                        checkGlobalValidity();
+                    },
+                    (err) => {
+                        coordDisplay.innerText = "Gagal: " + err.message;
+                        accBadge.className = 'badge bg-danger text-white';
+                        checkGlobalValidity(); // Tetap cek, siapa tau foto sudah ada (walau lokasi gagal)
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            } else {
+                coordDisplay.innerText = "Browser tidak support GPS";
+            }
         }
+        
+        // Panggil lokasi saat load halaman
+        getLocation();
 
         function checkGlobalValidity() {
             const hasPhoto = photoInputHidden.files.length > 0;
-            const hasLoc = document.getElementById('latitude').value !== '';
+            const hasLoc = latInput.value !== '';
             
             if (hasPhoto && hasLoc) {
                 slideTrack.classList.remove('disabled');
@@ -622,7 +645,8 @@
                 slideText.classList.add('text-active'); 
             } else {
                 slideTrack.classList.add('disabled');
-                slideText.innerText = "LENGKAPI FOTO & LOKASI";
+                slideText.innerText = hasPhoto ? "TUNGGU LOKASI..." : "AMBIL FOTO DULU";
+                if(hasPhoto && !hasLoc) slideText.innerText = "MENUNGGU GPS...";
                 slideText.classList.remove('text-active');
             }
         }
@@ -647,7 +671,7 @@
 
         const handleMove = (e) => {
             if (!isDragging) return;
-            // e.preventDefault(); // Optional: Aktifkan jika scroll halaman mengganggu
+            // e.preventDefault(); 
             const clientX = (e.type.includes('touch')) ? e.touches[0].clientX : e.clientX;
             let move = clientX - startX;
             if (move < 0) move = 0;
@@ -670,7 +694,17 @@
                 
                 if(!form.classList.contains('submitting')) {
                     form.classList.add('submitting');
-                    form.submit();
+                    // Pastikan input lokasi ada isinya sebelum submit
+                    if(latInput.value === '') {
+                        alert("Lokasi belum ditemukan. Coba refresh atau izinkan lokasi.");
+                        slideThumb.style.transform = 'translateX(0px)';
+                        slideTrack.classList.remove('submitted');
+                        slideThumb.innerHTML = '<i class="mdi mdi-chevron-double-right"></i>';
+                        slideText.innerText = "MENUNGGU GPS...";
+                        form.classList.remove('submitting');
+                    } else {
+                        form.submit();
+                    }
                 }
             } else {
                 slideThumb.style.transition = 'transform 0.3s ease-out';
