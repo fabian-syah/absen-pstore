@@ -20,12 +20,14 @@
         </p>
     </div>
     
-    {{-- Tombol Tambah Target Global --}}
+    {{-- Tombol Tambah Target Global (HANYA LEADER) --}}
+    @if(auth()->user()->role == 'leader')
     <div>
          <a href="{{ route('job-targets.create', ['branch_id' => $branch->id, 'type_preselect' => 'team']) }}" class="btn btn-dark btn-lg shadow-lg rounded-4 px-4 fw-bold hover-scale w-100 w-md-auto">
             <i class="mdi mdi-target me-1"></i> Buat Target Global Tim
         </a>
     </div>
+    @endif
 </div>
 
 {{-- SECTION 1: TARGET GLOBAL CABANG --}}
@@ -42,11 +44,15 @@
         </div>
     </div>
     <div class="card-body p-3 p-md-4">
+        {{-- Allow edit/update status hanya jika Leader (atau Admin jika mau memantau), tapi berdasarkan request, admin hanya diri sendiri. Jadi Leader full control. --}}
+        @php
+            $isLeader = auth()->user()->role == 'leader';
+        @endphp
         @include('job_targets.partials.period_tabs', [
             'idPrefix' => 'branch', 
             'dataCollection' => $teamData, 
-            'allow_edit_detail' => true,
-            'allow_update_status' => true
+            'allow_edit_detail' => $isLeader,
+            'allow_update_status' => $isLeader
         ])
     </div>
 </div>
@@ -98,11 +104,15 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                {{-- BUTTON BERI TARGET: Mengirim ID User & ID Cabang --}}
-                                <a href="{{ route('job-targets.create', ['assign_user_id' => $member->id, 'branch_id' => $branch->id]) }}" 
-                                   class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
-                                    <i class="mdi mdi-plus-circle-outline me-1"></i> Beri Target
-                                </a>
+                                {{-- BUTTON BERI TARGET: HANYA LEADER --}}
+                                @if(auth()->user()->role == 'leader')
+                                    <a href="{{ route('job-targets.create', ['assign_user_id' => $member->id, 'branch_id' => $branch->id]) }}" 
+                                       class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                                        <i class="mdi mdi-plus-circle-outline me-1"></i> Beri Target
+                                    </a>
+                                @else
+                                    <span class="text-muted small fst-italic">View Only</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -135,7 +145,7 @@
     .nav-pills-custom .nav-link.active { background: #4b49ac; color: #fff; border-color: #4b49ac; box-shadow: 0 4px 6px rgba(75, 73, 172, 0.2); }
 </style>
 
-{{-- JAVASCRIPT FILTER (Agar filter di Section 1 jalan) --}}
+{{-- JAVASCRIPT FILTER --}}
 <script>
     function applyFilter(containerId, periodType) {
         let filterBox = document.getElementById('filter-container-' + containerId);

@@ -16,7 +16,7 @@
                     </div>
                     <div>
                         <h4 class="fw-bold mb-0 text-dark">Beri Target Baru</h4>
-                        <small class="text-muted">Tentukan target untuk tim atau diri sendiri</small>
+                        <small class="text-muted">Tentukan target pekerjaan atau pencapaian</small>
                     </div>
                 </div>
                 
@@ -29,8 +29,9 @@
                         <input type="hidden" name="branch_id" value="{{ request('branch_id') }}">
                     @endif
 
-                    {{-- 1. PILIH PENERIMA TARGET (Otomatis Terpilih jika assign_user_id ada) --}}
-                    @if(in_array(auth()->user()->role, ['admin', 'leader', 'audit']) && isset($branchMembers) && count($branchMembers) > 0)
+                    {{-- 1. PILIH PENERIMA TARGET (HANYA LEADER) --}}
+                    {{-- Admin & Audit sekarang dianggap user biasa (hanya bisa diri sendiri) sesuai request --}}
+                    @if(auth()->user()->role == 'leader' && isset($branchMembers) && count($branchMembers) > 0)
                         <div class="mb-4 bg-light p-3 rounded-3 border border-primary border-opacity-25">
                             <label class="fw-bold mb-2 text-primary small text-uppercase ls-1">
                                 <i class="mdi mdi-account-arrow-right me-1"></i> Tugaskan Kepada (Penerima)
@@ -58,14 +59,14 @@
                             <option value="personal_target" selected>🎯 Target Pekerjaan (Job Desk)</option>
                             <option value="personal_achievement">🏅 Pencapaian / Prestasi</option>
                             
-                            {{-- Target Global hanya muncul jika Admin/Leader dan BUKAN assignment ke orang lain spesifik --}}
-                            @if((auth()->user()->role == 'leader' || auth()->user()->role == 'admin') && !request('assign_user_id'))
+                            {{-- Target Global HANYA muncul jika LEADER --}}
+                            @if(auth()->user()->role == 'leader' && !request('assign_user_id'))
                                 <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>🏢 Target Global Cabang (Tim)</option>
                             @endif
                         </select>
                     </div>
 
-                    {{-- 3. LEVEL & PERIODE (Sama seperti sebelumnya) --}}
+                    {{-- 3. LEVEL & PERIODE --}}
                     <div class="mb-4" id="starLevelGroup">
                         <label class="fw-bold mb-2 d-block small text-uppercase ls-1">Prioritas (Level)</label>
                         <div class="row g-2">

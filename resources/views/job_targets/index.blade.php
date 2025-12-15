@@ -34,12 +34,12 @@
         </div>
     </div>
     <div class="card-body p-3 p-md-4">
-        {{-- UPDATE LOGIC: allow_edit_detail = false, TAPI allow_update_status = true --}}
+        {{-- Hanya menampilkan, edit/update status dikunci untuk user biasa di section ini --}}
         @include('job_targets.partials.period_tabs', [
             'idPrefix' => 'branch', 
             'dataCollection' => $teamData,
             'allow_edit_detail' => false, 
-            'allow_update_status' => true 
+            'allow_update_status' => false
         ])
     </div>
 </div>
@@ -58,7 +58,7 @@
         </div>
     </div>
     <div class="card-body p-3 p-md-4">
-        {{-- Pribadi juga sama: Boleh Update Status, Tidak Boleh Edit Detail (kecuali lewat menu lain jika diinginkan) --}}
+        {{-- Pribadi boleh update status hasil sendiri --}}
         @include('job_targets.partials.period_tabs', [
             'idPrefix' => 'personal', 
             'dataCollection' => $personalData,

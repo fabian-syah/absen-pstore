@@ -15,9 +15,11 @@ class BranchTargetController extends Controller
         $user = Auth::user();
         $branchesQuery = Branch::query();
 
+        // Jika Leader, hanya lihat cabangnya sendiri
         if ($user->role == 'leader') {
             $branchesQuery->where('id', $user->branch_id);
         }
+        // Admin/Audit bisa lihat semua di dashboard monitoring (Read Only)
 
         $branches = $branchesQuery->orderBy('name', 'asc')->get();
 
@@ -43,6 +45,7 @@ class BranchTargetController extends Controller
         $branch = Branch::findOrFail($id);
         $user = Auth::user();
 
+        // Security check untuk Leader agar tidak melihat cabang lain
         if ($user->role == 'leader' && $user->branch_id != $branch->id) {
             return redirect()->route('branch-targets.index')->with('error', 'Akses ditolak.');
         }
@@ -56,7 +59,6 @@ class BranchTargetController extends Controller
             ->get();
 
         // 2. Daftar Karyawan di Cabang Ini
-        // Menggunakan withCount('jobTargets') yang sekarang sudah bisa karena Model User diperbaiki
         $branchMembers = User::where('branch_id', $branch->id)
             ->where('is_active', true)
             ->orderBy('role', 'asc')

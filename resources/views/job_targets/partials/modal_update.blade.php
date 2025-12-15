@@ -16,7 +16,6 @@
                             <div class="fw-bold text-dark" id="actionTargetTitle">...</div>
                         </div>
                     </div>
-                    
                     <div class="form-floating mb-3">
                         <select name="outcome" class="form-select fw-bold border-secondary text-dark" required>
                             <option value="">-- Pilih Hasil Akhir --</option>
@@ -28,12 +27,10 @@
                         </select>
                         <label>Status Pencapaian</label>
                     </div>
-
                     <div class="form-floating mb-3">
                         <textarea name="completion_description" class="form-control border-secondary" style="height: 100px" required placeholder="Ket"></textarea>
                         <label>Evaluasi / Keterangan</label>
                     </div>
-
                     <div>
                         <label class="small fw-bold text-muted mb-1">Bukti Foto (Opsional)</label>
                         <input type="file" name="evidence_photo" class="form-control border-secondary">
@@ -47,7 +44,6 @@
         </div>
     </div>
 </div>
-
 <script>
     function openActionModal(id, title) {
         document.getElementById('actionTargetTitle').innerText = title;

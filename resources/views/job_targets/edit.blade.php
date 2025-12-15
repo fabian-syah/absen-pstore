@@ -16,13 +16,11 @@
                     @csrf
                     @method('PUT')
                     
-                    {{-- 1. JENIS DATA (Readonly saat edit agar tidak merusak struktur) --}}
                     <div class="mb-4">
                         <label class="fw-bold mb-2 small text-uppercase">Jenis Data</label>
                         <input type="text" class="form-control bg-light fw-bold" value="{{ ucfirst(str_replace('_', ' ', $jobTarget->type)) }}" readonly>
                     </div>
 
-                    {{-- 2. LEVEL (Jika Target) --}}
                     @if(!Str::contains($jobTarget->type, 'achievement'))
                     <div class="mb-4">
                         <label class="fw-bold mb-2 d-block small text-uppercase">Prioritas</label>
@@ -43,11 +41,8 @@
                     </div>
                     @endif
 
-                    {{-- 3. PERIODE --}}
                     <div class="mb-4">
                         <label class="fw-bold mb-2 small text-uppercase">Periode ({{ ucfirst($jobTarget->period) }})</label>
-                        
-                        {{-- Tampilkan input sesuai data tersimpan saja --}}
                         <div class="bg-light p-3 rounded-3 border">
                             @if($jobTarget->period == 'daily')
                                 <div class="row g-2">
@@ -71,7 +66,6 @@
                         </div>
                     </div>
 
-                    {{-- 4. DETAIL --}}
                     <div class="mb-3">
                         <label class="fw-bold mb-2 small text-uppercase">Judul</label>
                         <input type="text" name="title" class="form-control form-control-lg fw-bold border-secondary" value="{{ $jobTarget->title }}" required>
@@ -90,7 +84,6 @@
     </div>
 </div>
 
-{{-- CSS Copy dari Create --}}
 <style>
     .star-option { border-width: 2px; transition: all 0.2s; }
     .level-3-label { border-color: #FFD700; color: #bfa800; }
