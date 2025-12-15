@@ -32,6 +32,16 @@
                             <input type="text" class="form-control" id="name" name="name"
                                 placeholder="Contoh: PStore Condet" value="{{ old('name') }}" required>
                         </div>
+
+                        <div class="form-group">
+                            <label for="timezone">Zona Waktu</label>
+                            <select class="form-control form-select" id="timezone" name="timezone" required>
+                                <option value="Asia/Jakarta">WIB (Jakarta/Jawa/Sumatera/Kalbar)</option>
+                                <option value="Asia/Makassar">WITA (Bali/Sulawesi/NTB/NTT/Kaltim/Kalsel)</option>
+                                <option value="Asia/Jayapura">WIT (Papua/Maluku)</option>
+                            </select>
+                        </div>
+
                         <div class="form-group">
                             <label for="address">Alamat Cabang</label>
                             <textarea class="form-control" id="address" name="address"

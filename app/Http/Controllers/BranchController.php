@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\User;
-use App\Models\JobTarget; // <--- PASTIKAN IMPORT INI ADA
+use App\Models\JobTarget; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class BranchController extends Controller
 {
@@ -85,7 +86,6 @@ class BranchController extends Controller
         // --- TAMBAHAN: DATA TARGET & PENCAPAIAN CABANG (TIM) ---
 
         // 1. Target Tim Aktif (On Going)
-        // Type: team_target, Status: Belum Completed
         $branchTargets = JobTarget::where('branch_id', $branch->id)
             ->where('type', 'team_target')
             ->where('status', '!=', 'completed')
@@ -125,6 +125,7 @@ class BranchController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:branches',
             'address' => 'nullable|string',
+            'timezone' => 'required|string|in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura', // Validasi Timezone
         ]);
 
         Branch::create($request->all());
@@ -156,6 +157,8 @@ class BranchController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:branches,name,' . $branch->id,
             'address' => 'nullable|string',
+            'timezone' => 'required|string|in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura', // Validasi Timezone
+            'is_active' => 'required|boolean',
         ]);
 
         $branch->update($request->all());

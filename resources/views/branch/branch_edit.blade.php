@@ -43,6 +43,16 @@
                                 value="{{ old('name', $branch->name) }}" placeholder="Contoh: Pstore Jakarta Selatan" required>
                         </div>
 
+                        {{-- Zona Waktu (BARU) --}}
+                        <div class="form-group mb-3">
+                            <label for="timezone" class="fw-bold mb-1">Zona Waktu</label>
+                            <select class="form-control form-select" id="timezone" name="timezone" required>
+                                <option value="Asia/Jakarta" {{ $branch->timezone == 'Asia/Jakarta' ? 'selected' : '' }}>WIB (Jakarta)</option>
+                                <option value="Asia/Makassar" {{ $branch->timezone == 'Asia/Makassar' ? 'selected' : '' }}>WITA (Makassar/Bali)</option>
+                                <option value="Asia/Jayapura" {{ $branch->timezone == 'Asia/Jayapura' ? 'selected' : '' }}>WIT (Jayapura)</option>
+                            </select>
+                        </div>
+
                         {{-- Alamat Cabang --}}
                         <div class="form-group mb-3">
                             <label for="address" class="fw-bold mb-1">Alamat Cabang</label>
@@ -50,7 +60,7 @@
                                 placeholder="Masukkan alamat lengkap cabang">{{ old('address', $branch->address) }}</textarea>
                         </div>
 
-                        {{-- STATUS OPERASIONAL (BARU) --}}
+                        {{-- STATUS OPERASIONAL --}}
                         <div class="form-group mb-4">
                             <label for="is_active" class="fw-bold mb-1">Status Operasional</label>
                             <select class="form-control form-select" id="is_active" name="is_active">

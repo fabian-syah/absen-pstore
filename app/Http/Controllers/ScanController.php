@@ -20,6 +20,11 @@ class ScanController extends Controller
         return view('security.scan');
     }
 
+    // Helper Offset
+    private function getOffset($timezone) {
+        return Carbon::now($timezone)->format('P'); 
+    }
+
     public function checkUser(Request $request)
     {
         $request->validate(['qr_code' => 'required|string']);
@@ -29,11 +34,13 @@ class ScanController extends Controller
             return response()->json(['status' => 'error', 'message' => 'QR Code tidak ditemukan.'], 404);
         }
 
-        $today = today();
-        
+        // [TIMEZONE]
+        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $todayLocal = Carbon::now($branchTimezone)->startOfDay();
+
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', Carbon::now()->subHours(32)) 
+            ->where('check_in_time', '>=', now()->subHours(32)) 
             ->latest('check_in_time')
             ->first();
 
@@ -41,8 +48,8 @@ class ScanController extends Controller
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
                 ->where('status', 'approved')
                 ->where('type', '!=', 'telat')
-                ->whereDate('start_date', '<=', $today)
-                ->whereDate('end_date', '>=', $today)
+                ->whereDate('start_date', '<=', $todayLocal)
+                ->whereDate('end_date', '>=', $todayLocal)
                 ->first();
 
             if ($isOnLeave) {
@@ -53,8 +60,9 @@ class ScanController extends Controller
                 ], 403);
             }
             
+            // Cek Sesi Hari Ini (Lokal)
             $attendanceSession = Attendance::where('user_id', $user->id)
-                ->whereDate('check_in_time', $today)
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayLocal->format('Y-m-d')])
                 ->latest('check_in_time')
                 ->first();
         }
@@ -73,8 +81,9 @@ class ScanController extends Controller
                 'attendance_status' => $attendanceSession ? [
                     'has_checked_in' => !is_null($attendanceSession->check_in_time),
                     'has_checked_out' => !is_null($attendanceSession->check_out_time),
-                    'check_in_time' => $attendanceSession->check_in_time ? Carbon::parse($attendanceSession->check_in_time)->format('H:i') : null,
-                    'check_out_time' => $attendanceSession->check_out_time ? Carbon::parse($attendanceSession->check_out_time)->format('H:i') : null,
+                    // Tampilkan di HP security sesuai timezone cabang user
+                    'check_in_time' => $attendanceSession->check_in_time ? Carbon::parse($attendanceSession->check_in_time)->timezone($branchTimezone)->format('H:i') : null,
+                    'check_out_time' => $attendanceSession->check_out_time ? Carbon::parse($attendanceSession->check_out_time)->timezone($branchTimezone)->format('H:i') : null,
                     'is_late' => $attendanceSession->is_late_checkin,
                     'type' => $attendanceSession->attendance_type
                 ] : null,
@@ -100,8 +109,12 @@ class ScanController extends Controller
         $user = User::with(['division', 'branch'])->find($request->user_id);
         $securityUser = Auth::user(); 
         $workSchedule = WorkSchedule::getScheduleForUser($user->id);
-        $currentTime = now();
-        $today = today();
+        $currentTime = now(); // WIB Server
+        
+        // [TIMEZONE]
+        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $localTime = Carbon::now($branchTimezone);
+        $todayLocal = $localTime->copy()->startOfDay();
 
         $image = $request->image;
         $image = preg_replace('/^data:image\/(jpeg|png|jpg);base64,/', '', $image);
@@ -119,15 +132,14 @@ class ScanController extends Controller
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
                 ->where('status', 'approved')
                 ->where('type', '!=', 'telat')
-                ->whereDate('start_date', '<=', $today)
-                ->whereDate('end_date', '>=', $today)
+                ->whereDate('start_date', '<=', $todayLocal)
+                ->whereDate('end_date', '>=', $todayLocal)
                 ->exists();
 
             if ($isOnLeave) {
                  return response()->json(['status' => 'error', 'message' => 'Gagal: User sedang dalam status Cuti/Izin.'], 403);
             }
 
-            // Auto-Close sesi > 32 Jam
             Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '<', $currentTime->copy()->subHours(32))
@@ -140,13 +152,20 @@ class ScanController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini masih memiliki sesi aktif (Belum Pulang)!'], 409);
             }
             
-            if (Attendance::where('user_id', $user->id)->whereDate('check_in_time', $today)->whereNotNull('check_out_time')->exists()) {
+            // Cek sudah absen hari ini (Lokal)
+             if (Attendance::where('user_id', $user->id)
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayLocal->format('Y-m-d')])
+                ->whereNotNull('check_out_time')->exists()) {
                  return response()->json(['status' => 'error', 'message' => 'Karyawan ini sudah selesai absen hari ini.'], 409);
             }
 
             $isLate = false;
             if ($workSchedule) {
-                if (Carbon::parse($currentTime)->gt(Carbon::parse($workSchedule->check_in_end))) {
+                // Convert Jadwal ke Lokal DateTime hari ini
+                $scheduleEndStr = Carbon::parse($workSchedule->check_in_end)->format('H:i:s');
+                $scheduleEndLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleEndStr, $branchTimezone);
+                
+                if ($localTime->gt($scheduleEndLocal)) {
                     $isLate = true;
                 }
             }
@@ -181,7 +200,7 @@ class ScanController extends Controller
             
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', Carbon::now()->subHours(32))
+                ->where('check_in_time', '>=', now()->subHours(32))
                 ->latest('check_in_time')
                 ->first();
 
@@ -191,13 +210,12 @@ class ScanController extends Controller
 
             $isEarlyCheckout = false;
             if ($workSchedule) {
-                 $coTime = Carbon::parse($currentTime->format('H:i:s'));
-                 $schedStart = Carbon::parse($workSchedule->check_out_start);
+                 // Logic Pulang Cepat
+                 $scheduleStartStr = Carbon::parse($workSchedule->check_out_start)->format('H:i:s');
+                 $scheduleStartLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleStartStr, $branchTimezone);
                  
-                 if (Carbon::parse($workSchedule->check_in_start)->lt($schedStart)) {
-                     if ($coTime->lt($schedStart)) $isEarlyCheckout = true;
-                 } else {
-                     if ($coTime->lt($schedStart) && $coTime->gt(Carbon::parse("00:00:00"))) $isEarlyCheckout = true;
+                 if ($localTime->lt($scheduleStartLocal)) {
+                     $isEarlyCheckout = true;
                  }
             }
 
@@ -233,8 +251,8 @@ class ScanController extends Controller
                 'profile_photo' => $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
                 'photo' => asset('storage/' . $imageName), 
                 'notes' => $manualNotes, 
-                'time' => $currentTime->format('H:i'),
-                'date' => $currentTime->format('d M Y'),
+                'time' => $localTime->format('H:i'), 
+                'date' => $localTime->format('d M Y'),
                 'is_late' => $isLate ?? false,
                 'is_early_checkout' => $isEarlyCheckout ?? false,
             ]

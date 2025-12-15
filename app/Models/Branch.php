@@ -9,7 +9,12 @@ class Branch extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'address', 'is_active'];
+    protected $fillable = [
+        'name', 
+        'address', 
+        'is_active', 
+        'timezone' // <--- KOLOM BARU DITAMBAHKAN
+    ];
 
     // Relasi: Satu cabang punya banyak user
     public function users()
@@ -21,5 +26,11 @@ class Branch extends Model
     public function divisions()
     {
         return $this->hasMany(Division::class);
+    }
+
+    // Relasi ke User (Many-to-Many untuk Audit/Leader)
+    public function audits()
+    {
+        return $this->belongsToMany(User::class, 'branch_user', 'branch_id', 'user_id');
     }
 }
