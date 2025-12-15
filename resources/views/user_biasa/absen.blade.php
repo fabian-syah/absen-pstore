@@ -353,7 +353,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const useAI = {{ Auth::user()->use_face_recognition ? 'true' : 'false' }};
-        const assetPath = "{{ asset('models') }}"; // Path ke folder public/models
+        const assetPath = "{{ asset('public/models') }}"; // Path ke folder public/models
 
         // DOM Elements
         const videoFeed = document.getElementById('video-feed');
