@@ -332,9 +332,56 @@
         </div>
     </div>
 
-    {{-- MODAL AREA (FOTO PROFIL, KTP, BUKTI) - TETAP SAMA SEPERTI KODE SEBELUMNYA --}}
-    @include('users.partials.modals') 
-    {{-- (Asumsi kode modal foto dipisah atau biarkan inline jika belum dipisah) --}}
+    {{-- MODAL FOTO PROFIL --}}
+    <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-transparent border-0 text-center">
+                @if ($user->profile_photo_path)
+                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="img-fluid rounded shadow-lg"
+                        style="max-height: 80vh;">
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL FOTO KTP --}}
+    <div class="modal fade" id="ktpPhotoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-white shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Foto KTP - {{ $user->name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-0">
+                    @if ($user->ktp_photo_path)
+                        <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" class="img-fluid"
+                            style="width: 100%; object-fit: contain;">
+                    @else
+                        <div class="p-5 text-muted">
+                            <i class="mdi mdi-image-off display-1"></i>
+                            <p class="mt-2">Tidak ada foto KTP.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL BUKTI PELANGGARAN --}}
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="violationModalTitle">Bukti Pelanggaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="$('#imagePreviewModal').modal('hide')"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="previewImageSrc" src="" class="img-fluid rounded" style="max-height: 80vh;">
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('scripts')
