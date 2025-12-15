@@ -1063,10 +1063,6 @@
         </div>
     </div>
 
-    {{-- CHART SECTION (KODE LAMA DI BAWAH INI) --}}
-    <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
-        {{-- ... --}}
-
         {{-- CHART SECTION --}}
         <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
             <div class="col-12">
