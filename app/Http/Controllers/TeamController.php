@@ -7,6 +7,7 @@ use App\Models\LeaveRequest;
 use App\Models\User;
 use App\Models\Branch;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod; // Pastikan import ini ada
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -77,7 +78,6 @@ class TeamController extends Controller
                 $att = $member->attendances->first();
                 $leave = $member->leaveRequests->first();
                 $isWfh = $leave && $leave->type == 'wfh';
-                // Hitung hadir jika ada data absen atau WFH
                 return ($att) || $isWfh; 
             })->count(),
             'izin_sakit' => $myTeam->filter(function($member) {
@@ -226,5 +226,103 @@ class TeamController extends Controller
         }
 
         return view('team.my_branches', compact('controlledBranches'));
+    }
+
+    // === METODE INI YANG SEBELUMNYA HILANG DAN MENYEBABKAN ERROR ===
+    public function showEmployeeHistory(Request $request, $branchId, $employeeId) {
+        $user = Auth::user();
+
+        // Validasi Akses
+        if ($user->role == 'audit') {
+            $allowedBranches = $user->branches->pluck('id')->toArray();
+            if ($user->branch_id) {
+                $allowedBranches[] = $user->branch_id;
+            }
+            if (!in_array($branchId, $allowedBranches)) abort(403, 'Akses Ditolak.');
+        
+        } elseif ($user->role == 'leader') {
+             if ($user->branch_id != $branchId) {
+                $pivotIds = $user->branches->pluck('id')->toArray();
+                if(!in_array($branchId, $pivotIds)) abort(403, 'Akses Ditolak.');
+            }
+        } elseif ($user->role == 'admin') {
+            if ($user->branch_id && $user->branch_id != $branchId) abort(403);
+        }
+
+        $employee = User::with(['division', 'branch'])->findOrFail($employeeId);
+        $selectedMonth = $request->get('month', date('m'));
+        $selectedYear = $request->get('year', date('Y'));
+        
+        $currentDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1);
+        $prevDate = $currentDate->copy()->subMonth();
+        $nextDate = $currentDate->copy()->addMonth();
+        $prevMonth = $prevDate->month; $prevYear = $prevDate->year;
+        $nextMonth = $nextDate->month; $nextYear = $nextDate->year;
+
+        // Reuse fungsi getHistoryData yang ada di controller ini (kita buat method private baru)
+        $data = $this->getHistoryData($employee, $selectedMonth, $selectedYear);
+        $history = $data['history'];
+        $summary = $data['summary'];
+
+        // Return ke view yang sama dengan riwayat pribadi, tapi dengan data karyawan lain
+        return view('attendance.history', compact('history', 'summary', 'selectedMonth', 'selectedYear', 'employee', 'prevMonth', 'prevYear', 'nextMonth', 'nextYear'));
+    }
+
+    // Helper Private untuk Logic History (Supaya tidak duplikat kode)
+    private function getHistoryData($user, $selectedMonth, $selectedYear) {
+        $attendances = Attendance::with('verifier')->where('user_id', $user->id)->whereYear('check_in_time', $selectedYear)->whereMonth('check_in_time', $selectedMonth)->orderBy('check_in_time', 'desc')->get();
+        $leaves = LeaveRequest::where('user_id', $user->id)->where('status', 'approved')->where('is_active', true)
+            ->where(function ($q) use ($selectedMonth, $selectedYear) {
+                $q->whereMonth('start_date', $selectedMonth)->whereYear('start_date', $selectedYear)
+                  ->orWhere(function ($subQ) use ($selectedMonth, $selectedYear) { $subQ->whereMonth('end_date', $selectedMonth)->whereYear('end_date', $selectedYear); });
+            })->get();
+
+        $historyCollection = $attendances;
+        foreach ($leaves as $leave) {
+            $startDate = Carbon::parse($leave->start_date);
+            $endDate = $leave->end_date ? Carbon::parse($leave->end_date) : $startDate;
+            $period = CarbonPeriod::create($startDate, $endDate);
+            foreach ($period as $date) {
+                if ($date->month == $selectedMonth && $date->year == $selectedYear) {
+                    $alreadyAttendance = $attendances->filter(function ($att) use ($date) { return $att->check_in_time->isSameDay($date); })->isNotEmpty();
+                    if (!$alreadyAttendance) {
+                        $fakeAtt = new Attendance();
+                        $fakeAtt->id = 'leave_' . $leave->id . '_' . $date->timestamp; 
+                        $fakeAtt->user_id = $user->id;
+                        $fakeAtt->check_in_time = $date->copy()->setTime(8, 0, 0); 
+                        $fakeAtt->check_out_time = null;
+                        $typeLabel = ucfirst($leave->type); 
+                        if ($leave->type == 'telat') $typeLabel = 'Izin Telat';
+                        if ($leave->type == 'wfh') $typeLabel = 'WFH';
+                        $fakeAtt->presence_status = $typeLabel;
+                        $fakeAtt->status = 'verified';
+                        $fakeAtt->attendance_type = 'leave'; 
+                        $fakeAtt->is_late_checkin = false;
+                        $fakeAtt->is_early_checkout = false;
+                        $fakeAtt->photo_path = null; $fakeAtt->photo_out_path = null; $fakeAtt->audit_photo_path = null;
+                        $fakeAtt->audit_note = "Pengajuan: " . $leave->reason;
+                        $fakeAtt->setRelation('leaveRequest', $leave);
+                        $historyCollection->push($fakeAtt);
+                    }
+                }
+            }
+        }
+        $history = $historyCollection->sortByDesc('check_in_time');
+        $summary = [
+            'total' => $history->count(),
+            'hadir' => $history->filter(function($item) {
+                $s = strtolower($item->presence_status ?? '');
+                $isExplicitPresent = in_array($s, ['masuk', 'wfh', 'izin telat']) || str_contains($s, 'dinas');
+                $isImplicitPresent = empty($s) && in_array($item->attendance_type, ['scan', 'self', 'manual']);
+                return $isExplicitPresent || $isImplicitPresent;
+            })->count(),
+            'sakit' => $history->filter(function($i) { return strtolower($i->presence_status ?? '') === 'sakit'; })->count(),
+            'izin' => $history->filter(function($i) { return in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti']); })->count(),
+            'alpha' => $history->filter(function($i) { return strtolower($i->presence_status ?? '') === 'alpha'; })->count(),
+            'telat' => $history->where('is_late_checkin', true)->count(),
+            'pulang_cepat' => $history->where('is_early_checkout', true)->count(),
+            'pending' => $history->where('status', 'pending_verification')->count(),
+        ];
+        return ['history' => $history, 'summary' => $summary];
     }
 }
