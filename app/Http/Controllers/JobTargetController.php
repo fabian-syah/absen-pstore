@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\JobTarget;
 use App\Models\User;
+use App\Models\Branch; // Tambahkan Model Branch
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -27,6 +28,8 @@ class JobTargetController extends Controller
 
         // 2. Ambil Data Tim/Cabang (Target Global Cabang User)
         $teamData = collect(); 
+        
+        // Jika Leader/Staff punya cabang, tampilkan target cabang mereka
         if ($user->branch_id) {
             $teamData = JobTarget::where('branch_id', $user->branch_id)
                 ->whereIn('type', ['team_target', 'team_achievement'])
@@ -34,6 +37,7 @@ class JobTargetController extends Controller
                 ->orderBy('deadline', 'asc')
                 ->get();
         }
+        // Jika Admin/Audit, mungkin logicnya beda (misal lihat semua), tapi untuk "My Target" biasanya kosong atau ikut logic di atas.
 
         return view('job_targets.index', compact('personalData', 'teamData'));
     }
@@ -45,20 +49,36 @@ class JobTargetController extends Controller
     {
         $user = Auth::user();
         $branchMembers = [];
+        $branches = []; // Variabel untuk Admin/Audit memilih cabang
 
-        // LOGIKA FILTER MEMBER:
-        // Leader, Admin, dan Audit boleh melihat daftar anggota tim (sesuai cabang yang dipegang)
-        $allowedRoles = ['leader', 'admin', 'audit'];
+        // --- LOGIKA FILTER DATA ---
 
-        if (in_array($user->role, $allowedRoles) && $user->branch_id) {
+        // 1. ADMIN & AUDIT (Akses Full / Global)
+        if (in_array($user->role, ['admin', 'audit'])) {
+            // Ambil SEMUA user yang aktif (untuk dropdown 'Tugaskan Kepada')
+            // Kita load relasi branch & division agar tampilannya rapi
+            $branchMembers = User::with(['branch', 'division'])
+                ->where('is_active', true)
+                ->orderBy('branch_id') // Urutkan berdasarkan cabang biar rapi di optgroup
+                ->orderBy('name')
+                ->get();
+
+            // Ambil daftar Cabang (untuk dropdown 'Target Tim')
+            $branches = Branch::orderBy('name', 'asc')->get();
+        } 
+        
+        // 2. LEADER (Akses Terbatas Cabang Sendiri)
+        elseif ($user->role == 'leader' && $user->branch_id) {
             $branchMembers = User::where('branch_id', $user->branch_id)
                 ->where('id', '!=', $user->id) // Exclude diri sendiri
                 ->where('is_active', true)
                 ->orderBy('name', 'asc')
                 ->get();
+            
+            // Leader tidak butuh variabel $branches karena otomatis ke cabangnya sendiri
         }
 
-        return view('job_targets.create', compact('branchMembers'));
+        return view('job_targets.create', compact('branchMembers', 'branches'));
     }
 
     /**
@@ -75,29 +95,36 @@ class JobTargetController extends Controller
             'type'        => 'required|string',
             'star_level'  => 'nullable|integer',
             'period_type' => 'required|in:daily,monthly,yearly',
+            // Validasi tambahan jika Admin memilih target tim
+            'target_branch_id' => 'nullable|exists:branches,id',
         ]);
 
         // --- LOGIKA PENENTUAN USER ID & BRANCH ID ---
         
-        $allowedRoles = ['leader', 'admin', 'audit'];
-        
-        // Default: Target milik diri sendiri
+        // Default awal: Target milik diri sendiri
         $targetUserId = $user->id; 
         $branchId     = $user->branch_id;
 
-        // Cek apakah ini Target Tim/Cabang?
+        // A. JIKA TARGET TIM / CABANG
         if (Str::contains($request->type, 'team')) {
-            // Jika Target Tim:
-            // User ID tetap si pembuat, tapi type-nya 'team_target'
-            // Branch ID dipastikan ambil dari si pembuat (Leader/Admin/Audit)
+            // User ID tetap si pembuat
             $targetUserId = $user->id; 
-            $branchId     = $user->branch_id;
+            
+            // Tentukan Branch ID Targetnya
+            if (in_array($user->role, ['admin', 'audit']) && $request->filled('target_branch_id')) {
+                // Admin/Audit bisa set manual cabang mana yang ditarget
+                $branchId = $request->target_branch_id;
+            } else {
+                // Leader otomatis ke cabangnya sendiri
+                $branchId = $user->branch_id;
+            }
         } 
-        // Jika Target Personal dan Role Berhak memilih orang lain
-        elseif (in_array($user->role, $allowedRoles) && $request->filled('assign_user_id')) {
+        
+        // B. JIKA TARGET PERSONAL (ASSIGN KE ORANG LAIN)
+        elseif (in_array($user->role, ['leader', 'admin', 'audit']) && $request->filled('assign_user_id')) {
             $targetUserId = $request->assign_user_id;
             
-            // Ambil branch dari user yang dituju (biar sinkron)
+            // Ambil branch dari user yang dituju agar sinkron
             $assignedUser = User::find($targetUserId);
             if($assignedUser) {
                 $branchId = $assignedUser->branch_id;
@@ -150,8 +177,7 @@ class JobTargetController extends Controller
     {
         $jobTarget = JobTarget::findOrFail($id);
         
-        // Cek Hak Akses Edit (Pemilik atau Leader/Admin/Audit)
-        // Admin & Audit bisa edit punya orang lain jika diperlukan, atau batasi sesuai kebutuhan
+        // Cek Hak Akses Edit
         if (Auth::id() != $jobTarget->user_id && !in_array(Auth::user()->role, ['admin', 'leader', 'audit'])) {
             return redirect()->route('job-targets.index')->with('error', 'Akses ditolak.');
         }
@@ -160,7 +186,7 @@ class JobTargetController extends Controller
     }
 
     /**
-     * Update Data Target (Judul/Deskripsi)
+     * Update Data Target
      */
     public function update(Request $request, $id)
     {
@@ -181,7 +207,7 @@ class JobTargetController extends Controller
     }
 
     /**
-     * Update Status Hasil (Modal Popup)
+     * Update Status Hasil
      */
     public function updateOutcome(Request $request, $id)
     {
@@ -193,7 +219,7 @@ class JobTargetController extends Controller
 
         $target = JobTarget::findOrFail($id);
 
-        // Upload Foto Bukti jika ada
+        // Upload Foto Bukti
         $photoPath = $target->evidence_photo_path;
         if ($request->hasFile('evidence_photo')) {
             if ($photoPath && Storage::disk('public')->exists($photoPath)) {
@@ -202,7 +228,6 @@ class JobTargetController extends Controller
             $photoPath = $request->file('evidence_photo')->store('targets/evidence', 'public');
         }
 
-        // Tentukan Status
         $status = 'completed';
         
         $target->update([

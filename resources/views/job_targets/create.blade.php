@@ -26,9 +26,11 @@
                     {{-- Hidden: Redirect ke Branch jika ada --}}
                     @if(request('branch_id'))
                         <input type="hidden" name="redirect_to_branch" value="{{ request('branch_id') }}">
+                        {{-- Jika masuk lewat menu cabang, otomatis set branch_id --}}
+                        <input type="hidden" name="target_branch_id" value="{{ request('branch_id') }}">
                     @endif
 
-                    {{-- 2. JENIS TARGET (Dipindah ke atas agar logic JS jalan duluan) --}}
+                    {{-- 2. JENIS TARGET --}}
                     <div class="mb-4">
                         <label class="fw-bold mb-2 text-dark small text-uppercase ls-1">Jenis Target</label>
                         <select name="type" id="typeSelect" class="form-select fw-bold border-secondary text-dark" onchange="toggleAssignmentType()">
@@ -44,7 +46,6 @@
                     </div>
 
                     {{-- 1. BAGIAN ASSIGNMENT (Dinamis via JS) --}}
-                    {{-- Hanya tampil untuk LEADER, ADMIN, AUDIT --}}
                     @if(in_array(auth()->user()->role, ['leader', 'admin', 'audit']) && isset($branchMembers) && count($branchMembers) > 0)
                         
                         {{-- A. Jika Target Personal -> Pilih Orang --}}
@@ -54,13 +55,31 @@
                             </label>
                             <select name="assign_user_id" class="form-select form-select-lg fw-bold border-primary shadow-none text-dark">
                                 <option value="{{ auth()->user()->id }}">👤 Saya Sendiri (Pribadi)</option>
-                                <optgroup label="Anggota Tim Cabang {{ auth()->user()->branch->name ?? '' }}">
-                                    @foreach($branchMembers as $member)
-                                        <option value="{{ $member->id }}" {{ request('assign_user_id') == $member->id ? 'selected' : '' }}>
-                                            {{ $member->name }} - {{ $member->division->name ?? 'Staff' }}
-                                        </option>
+                                
+                                {{-- Jika Admin/Audit, Grouping berdasarkan Cabang --}}
+                                @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                                    @foreach($branchMembers->groupBy('branch.name') as $branchName => $members)
+                                        <optgroup label="🏢 {{ $branchName ?: 'Tanpa Cabang' }}">
+                                            @foreach($members as $member)
+                                                {{-- Jangan tampilkan diri sendiri lagi --}}
+                                                @if($member->id != auth()->user()->id)
+                                                    <option value="{{ $member->id }}" {{ request('assign_user_id') == $member->id ? 'selected' : '' }}>
+                                                        {{ $member->name }} - {{ $member->division->name ?? 'Staff' }}
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </optgroup>
                                     @endforeach
-                                </optgroup>
+                                @else
+                                    {{-- Jika Leader (Cabang Tunggal) --}}
+                                    <optgroup label="Anggota Tim">
+                                        @foreach($branchMembers as $member)
+                                            <option value="{{ $member->id }}" {{ request('assign_user_id') == $member->id ? 'selected' : '' }}>
+                                                {{ $member->name }} - {{ $member->division->name ?? 'Staff' }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             </select>
                             <small class="text-muted mt-2 d-block fst-italic">* Target ini akan masuk ke Job Desk individu yang dipilih.</small>
                         </div>
@@ -70,17 +89,32 @@
                             <label class="fw-bold mb-2 text-warning text-dark small text-uppercase ls-1">
                                 <i class="mdi mdi-bank me-1"></i> Ditugaskan Ke Lingkup Cabang
                             </label>
-                            <div class="d-flex align-items-center bg-white p-3 rounded border">
-                                <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3">
-                                    <i class="mdi mdi-office-building text-warning mdi-24px"></i>
+
+                            @if(in_array(auth()->user()->role, ['admin', 'audit']) && isset($branches))
+                                {{-- INPUT PILIH CABANG (Khusus Admin/Audit) --}}
+                                <div class="alert alert-warning border-0 small mb-2"><i class="mdi mdi-information me-1"></i> Silakan pilih cabang target.</div>
+                                <select name="target_branch_id" class="form-select fw-bold border-warning text-dark">
+                                    <option value="" disabled selected>-- Pilih Cabang --</option>
+                                    @foreach($branches as $b)
+                                        <option value="{{ $b->id }}" {{ request('branch_id') == $b->id ? 'selected' : '' }}>
+                                            {{ $b->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            @else
+                                {{-- TAMPILAN FIX (Khusus Leader) --}}
+                                <div class="d-flex align-items-center bg-white p-3 rounded border">
+                                    <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3">
+                                        <i class="mdi mdi-office-building text-warning mdi-24px"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0 fw-bold text-dark">{{ auth()->user()->branch->name ?? 'Cabang Tidak Diketahui' }}</h5>
+                                        <small class="text-muted">Target ini berlaku untuk satu tim penuh di cabang ini.</small>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h5 class="mb-0 fw-bold text-dark">{{ auth()->user()->branch->name ?? 'Cabang Tidak Diketahui' }}</h5>
-                                    <small class="text-muted">Target ini berlaku untuk satu tim penuh di cabang ini.</small>
-                                </div>
-                            </div>
-                            {{-- Input Hidden untuk memastikan backend tahu ini untuk cabang leader/admin --}}
-                            <input type="hidden" name="assign_branch_id" value="{{ auth()->user()->branch_id }}">
+                                {{-- Leader otomatis ke cabang sendiri --}}
+                                <input type="hidden" name="target_branch_id" value="{{ auth()->user()->branch_id }}">
+                            @endif
                         </div>
 
                     @else
