@@ -12,10 +12,8 @@
         .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
         .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
         .bg-soft-danger  { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
-        /* Warna Baru untuk Status Lembur Lintas Hari */
         .bg-soft-indigo  { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; border: 1px solid rgba(102, 16, 242, 0.2); }
         .bg-soft-purple  { background-color: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.2); }
-        
         .team-card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); overflow: hidden; }
         .team-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; color: white; }
         .team-count { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
@@ -26,16 +24,8 @@
         .avatar-wrapper.offline::after { background: #94a3b8; }
         .status-badge { font-weight: 600; padding: 0.5rem 1rem; border-radius: 50px; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
         .status-badge i { font-size: 1rem; }
-        .division-badge { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca; border: none; font-weight: 500; }
-        .branch-badge { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-weight: 500; }
-        .photo-preview { width: 30px; height: 30px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.5); }
         .view-photo-btn { border: none; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
         .view-photo-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .late-message { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 8px; font-style: italic; color: #92400e; max-width: 250px; }
-        .empty-state { padding: 4rem 2rem; text-align: center; }
-        .empty-state-icon { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
-        .audit-pill { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 50px; padding: 4px 12px; display: inline-flex; align-items: center; transition: all 0.3s ease; }
-        .audit-pill:hover { background: rgba(255, 255, 255, 0.25); }
         .modal-content { border: none; border-radius: 20px; overflow: hidden; }
         .modal-image-wrapper { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1rem; }
     </style>
@@ -83,11 +73,9 @@
         <div class="col-12">
             <div class="card team-card">
                 <div class="team-header">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                    <div class="d-flex justify-content-between align-items-center gap-3">
                         <div>
-                            <h4 class="mb-2 fw-bold">
-                                <i class="mdi mdi-account-multiple-outline me-2"></i>Status Rekan Tim
-                            </h4>
+                            <h4 class="mb-2 fw-bold"><i class="mdi mdi-account-multiple-outline me-2"></i>Status Rekan Tim</h4>
                             <p class="mb-0 opacity-75 small">Monitoring kehadiran real-time.</p>
                         </div>
                         <span class="team-count badge rounded-pill px-4 py-2 fs-6">
@@ -116,7 +104,9 @@
                                         
                                         $memberTz = $member->branch->timezone ?? 'Asia/Jakarta';
                                         $now = \Carbon\Carbon::now($memberTz);
+                                        $todayDate = $now->format('Y-m-d');
                                         
+                                        // Variabel Status
                                         $isOvertimeYesterday = false;
                                         $isStillWorkingOvertime = false;
 
@@ -124,15 +114,21 @@
                                             $checkIn = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz);
                                             $checkOut = $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz) : null;
                                             
-                                            // FIXING: Gunakan isSameDay untuk akurasi tanggal, bukan string comparison
-                                            $isToday = $checkIn->isSameDay($now);
-                                            
-                                            if (!$isToday) {
-                                                if ($checkOut && $checkOut->isSameDay($now)) {
-                                                    // Masuk Kemarin, Pulang Hari Ini -> Habis Lembur
+                                            // Cek tanggal checkin
+                                            $checkInDate = $checkIn->format('Y-m-d');
+
+                                            // KONDISI 1: Checkin HARI INI
+                                            if ($checkInDate === $todayDate) {
+                                                // Normal (Masuk Hari Ini)
+                                                // Tidak lakukan apa-apa, masuk ke kondisi default normal
+                                            } 
+                                            // KONDISI 2: Checkin BUKAN HARI INI (Lembur Lintas Hari)
+                                            else {
+                                                if ($checkOut && $checkOut->format('Y-m-d') === $todayDate) {
+                                                    // Masuk Kemarin, Pulang Hari Ini
                                                     $isOvertimeYesterday = true;
                                                 } elseif (!$checkOut) {
-                                                    // Masuk Kemarin, Belum Pulang -> Sedang Lembur
+                                                    // Masuk Kemarin, Belum Pulang
                                                     $isStillWorkingOvertime = true;
                                                 }
                                             }
@@ -163,12 +159,10 @@
                                             {{-- LOGIKA STATUS TEXT --}}
                                             @if ($attendance)
                                                 @if ($isOvertimeYesterday)
-                                                    {{-- KASUS: Pulang Lembur (Data Kemarin) --}}
+                                                    {{-- Pulang Lembur (Data Kemarin) --}}
                                                     <div>
-                                                        <span class="status-badge bg-soft-indigo text-primary" 
-                                                              data-bs-toggle="tooltip" title="Lembur Lintas Hari">
-                                                            <i class="mdi mdi-bed-clock me-1"></i> 
-                                                            <span>Habis Lembur</span>
+                                                        <span class="status-badge bg-soft-indigo text-primary" data-bs-toggle="tooltip" title="Lembur Lintas Hari">
+                                                            <i class="mdi mdi-bed-clock me-1"></i> <span>Habis Lembur</span>
                                                         </span>
                                                         <div class="mt-2">
                                                             <span class="badge bg-light text-danger border border-danger" style="font-size: 0.65rem;">
@@ -178,16 +172,15 @@
                                                     </div>
 
                                                 @elseif ($isStillWorkingOvertime)
-                                                    {{-- KASUS: Masih Lembur (Data Kemarin belum checkout) --}}
+                                                    {{-- Masih Lembur (Data Kemarin belum checkout) --}}
                                                     <div>
                                                         <span class="status-badge bg-soft-purple text-dark">
-                                                            <i class="mdi mdi-moon-waning-crescent me-1"></i> 
-                                                            <span>Sedang Lembur</span>
+                                                            <i class="mdi mdi-moon-waning-crescent me-1"></i> <span>Sedang Lembur</span>
                                                         </span>
                                                     </div>
 
                                                 @else
-                                                    {{-- KASUS: Normal Hari Ini --}}
+                                                    {{-- Normal Hari Ini --}}
                                                     @if ($attendance->check_out_time)
                                                         <div>
                                                             <span class="status-badge bg-secondary text-white">
@@ -214,11 +207,6 @@
                                                 <span class="status-badge bg-info text-white">
                                                     <i class="mdi mdi-file-document me-1"></i> {{ ucfirst($leave->type) }}
                                                 </span>
-                                                @if($leave->reason)
-                                                    <div class="small text-muted mt-1" style="max-width: 200px;">
-                                                        {{ Str::limit($leave->reason, 50) }}
-                                                    </div>
-                                                @endif
                                             @else
                                                 <span class="status-badge bg-danger text-white">
                                                     <i class="mdi mdi-close-circle me-1"></i> Belum Hadir
@@ -229,7 +217,6 @@
                                             {{-- BUKTI FOTO --}}
                                             <div class="d-flex gap-2">
                                                 @if ($attendance)
-                                                    {{-- Sembunyikan foto jika itu data lembur kemarin --}}
                                                     @if(!$isOvertimeYesterday && !$isStillWorkingOvertime)
                                                         @if($attendance->photo_path)
                                                             <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}">
@@ -244,7 +231,6 @@
                                                     @endif
                                                 @endif
                                                 
-                                                {{-- Hanya tampilkan bukti WFH --}}
                                                 @if ($leave && $leave->type == 'wfh' && $leave->file_proof)
                                                     <button class="view-photo-btn bg-info text-white border-0" 
                                                             data-bs-toggle="modal" 
