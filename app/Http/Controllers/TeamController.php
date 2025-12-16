@@ -25,12 +25,13 @@ class TeamController extends Controller
         // Default Timezone
         $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
+        // Tanggal batas ambil data (H-2 dari hari ini untuk cek lembur)
+        $dateLimit = Carbon::now($userTimezone)->subDays(2)->format('Y-m-d 00:00:00');
 
         // 2. Query Team
         $query = User::where('users.is_active', true);
 
         if (empty($myBranchIds)) {
-            // User Tanpa Cabang
             if (in_array($user->role, ['user_biasa', 'security'])) {
                 $query->where('division_id', $user->division_id);
             } elseif (in_array($user->role, ['audit', 'leader'])) {
@@ -39,7 +40,6 @@ class TeamController extends Controller
                 $query->where('users.id', 0);
             }
         } else {
-            // User Punya Cabang
             $query->where(function ($q) use ($myBranchIds) {
                 $q->whereIn('users.branch_id', $myBranchIds)
                     ->orWhereHas('branches', function ($subQ) use ($myBranchIds) {
@@ -48,12 +48,13 @@ class TeamController extends Controller
             });
         }
 
-        // 3. Eager Load dengan Limit Aman (31)
+        // 3. Eager Load (FIX: Pakai Filter Tanggal, BUKAN Limit)
         $myTeam = $query->with([
             'workSchedule',
-            'attendances' => function ($q) {
-                // FIX: Limit 31 agar data hari ini pasti keambil walau banyak history
-                $q->latest('check_in_time')->limit(31); 
+            'attendances' => function ($q) use ($dateLimit) {
+                // Ambil semua absen dari 2 hari terakhir. Aman untuk banyak user.
+                $q->where('check_in_time', '>=', $dateLimit)
+                  ->orderBy('check_in_time', 'desc');
             },
             'leaveRequests' => function ($q) use ($todayInBranch) {
                 $q->where('status', 'approved')
@@ -74,10 +75,7 @@ class TeamController extends Controller
         // 4. Statistik & Logic
         $stats = [
             'total' => $myTeam->count(),
-            'hadir' => 0,
-            'izin_sakit' => 0,
-            'belum_hadir' => 0,
-            'lembur' => 0
+            'hadir' => 0, 'izin_sakit' => 0, 'belum_hadir' => 0, 'lembur' => 0
         ];
 
         foreach ($myTeam as $member) {
@@ -85,7 +83,6 @@ class TeamController extends Controller
             $todayDate = Carbon::now($memberTz)->format('Y-m-d');
             $now = Carbon::now($memberTz);
 
-            // Filter Absen Valid (PHP Logic)
             $validAttendance = $member->attendances->first(function ($att) use ($memberTz, $todayDate, $now) {
                 $checkIn = Carbon::parse($att->check_in_time)->setTimezone($memberTz);
                 $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($memberTz) : null;
@@ -93,7 +90,6 @@ class TeamController extends Controller
                 if ($checkIn->format('Y-m-d') === $todayDate) return true;
                 if ($checkOut && $checkOut->format('Y-m-d') === $todayDate && $checkIn->format('Y-m-d') < $todayDate) return true;
                 if (!$checkOut && $checkIn->diffInHours($now) < 32 && $checkIn->format('Y-m-d') < $todayDate) return true;
-
                 return false;
             });
 
@@ -112,20 +108,15 @@ class TeamController extends Controller
                 }
             }
 
-            if ($att || $isWfh || $isOvertime) {
-                $stats['hadir']++;
-            } elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti'])) {
-                $stats['izin_sakit']++;
-            }
+            if ($att || $isWfh || $isOvertime) $stats['hadir']++;
+            elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti'])) $stats['izin_sakit']++;
         }
 
         $stats['belum_hadir'] = $stats['total'] - ($stats['hadir'] + $stats['izin_sakit']);
         if ($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0;
 
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
-            ->withCount(['users' => function ($q) {
-                $q->where('is_active', true);
-            }])
+            ->withCount(['users' => function ($q) { $q->where('is_active', true); }])
             ->orderBy('name', 'asc')->get();
 
         $assignedAudits = collect();
@@ -155,11 +146,14 @@ class TeamController extends Controller
                 $tz = $branch->timezone ?? 'Asia/Jakarta';
                 $todayInBranch = Carbon::now($tz)->format('Y-m-d');
                 $nowInBranch = Carbon::now($tz);
+                // Batas waktu H-2
+                $dateLimit = Carbon::now($tz)->subDays(2)->format('Y-m-d 00:00:00');
 
-                // FIX: Gunakan latest()->limit(31) (JANGAN PAKAI whereDate DI SINI)
+                // FIX: Hapus limit(31), ganti where date >= H-2
                 $users = User::where('branch_id', $branch->id)->where('is_active', true)
-                    ->with(['attendances' => function ($q) {
-                        $q->latest('check_in_time')->limit(31); 
+                    ->with(['attendances' => function ($q) use ($dateLimit) {
+                        $q->where('check_in_time', '>=', $dateLimit)
+                          ->orderBy('check_in_time', 'desc');
                     }, 'leaveRequests' => function ($q) use ($todayInBranch) {
                         $q->where('status', 'approved')
                             ->whereDate('start_date', '<=', $todayInBranch)
@@ -170,7 +164,6 @@ class TeamController extends Controller
                 $hadir = 0; $sakit = 0; $izin_cuti = 0; $alpha = 0; $lembur = 0;
 
                 foreach ($users as $u) {
-                    // Filter PHP (Timezone Safe)
                     $validAttendance = $u->attendances->first(function ($att) use ($tz, $todayInBranch, $nowInBranch) {
                         $checkIn = Carbon::parse($att->check_in_time)->setTimezone($tz);
                         $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($tz) : null;
@@ -228,6 +221,8 @@ class TeamController extends Controller
 
         $todayInBranch = Carbon::now($branchTimezone)->format('Y-m-d');
         $nowInBranch = Carbon::now($branchTimezone);
+        // Batas waktu H-2
+        $dateLimit = Carbon::now($branchTimezone)->subDays(2)->format('Y-m-d 00:00:00');
 
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
@@ -242,10 +237,11 @@ class TeamController extends Controller
             if ($user->branch_id && $user->branch_id != $id) abort(403);
         }
 
-        // FIX: Gunakan latest()->limit(31) di sini juga
+        // FIX: Hapus limit(31), ganti dengan filter tanggal agar SEMUA karyawan ke-load datanya
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)
-            ->with(['division', 'attendances' => function ($q) {
-                $q->latest('check_in_time')->limit(31); 
+            ->with(['division', 'attendances' => function ($q) use ($dateLimit) {
+                $q->where('check_in_time', '>=', $dateLimit)
+                  ->orderBy('check_in_time', 'desc');
             }])->get();
 
         $attendanceGroups = ['Masuk' => [], 'Izin' => [], 'Sakit' => [], 'Cuti' => [], 'WFH / Dinas Luar' => [], 'Alpha / Belum Absen' => [], 'Lembur' => []];
@@ -262,7 +258,7 @@ class TeamController extends Controller
                 })->first();
             $emp->today_leave = $todayLeave;
 
-            // Filter PHP (Timezone Safe)
+            // Filter PHP (Logic sama persis dengan index)
             $validAttendance = $emp->attendances->first(function ($att) use ($branchTimezone, $todayInBranch, $nowInBranch) {
                 $checkIn = Carbon::parse($att->check_in_time)->setTimezone($branchTimezone);
                 $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($branchTimezone) : null;
