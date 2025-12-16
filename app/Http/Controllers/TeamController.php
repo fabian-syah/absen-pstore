@@ -15,7 +15,7 @@ class TeamController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         // 1. Setup Cabang & Timezone
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
         if ($user->branch_id) $myBranchIds[] = $user->branch_id;
@@ -32,11 +32,11 @@ class TeamController extends Controller
         if (empty($myBranchIds)) {
             // User Tanpa Cabang
             if (in_array($user->role, ['user_biasa', 'security'])) {
-                $query->where('division_id', $user->division_id); 
+                $query->where('division_id', $user->division_id);
             } elseif (in_array($user->role, ['audit', 'leader'])) {
-                 $query->where('users.id', $user->id);
+                $query->where('users.id', $user->id);
             } else {
-                $query->where('users.id', 0); 
+                $query->where('users.id', 0);
             }
         } else {
             // User Punya Cabang (Termasuk User Biasa) -> Melihat SEMUA di cabang
@@ -52,29 +52,34 @@ class TeamController extends Controller
         $myTeam = $query->with([
             'workSchedule',
             'attendances' => function ($q) {
-                $q->latest('check_in_time')->limit(5); 
+                $q->latest('check_in_time')->limit(5);
             },
             'leaveRequests' => function ($q) use ($todayInBranch) {
                 $q->where('status', 'approved')
-                  ->whereDate('start_date', '<=', $todayInBranch)
-                  ->whereDate('end_date', '>=', $todayInBranch);
+                    ->whereDate('start_date', '<=', $todayInBranch)
+                    ->whereDate('end_date', '>=', $todayInBranch);
             },
-            'activeLateStatus', 'divisions', 'branch'
+            'activeLateStatus',
+            'divisions',
+            'branch'
         ])
-        ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
-        ->orderByRaw("CASE WHEN users.id = {$user->id} THEN 0 ELSE 1 END") 
-        ->orderBy('branches.name', 'asc')
-        ->orderBy('users.name', 'asc')
-        ->select('users.*')
-        ->get();
+            ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
+            ->orderByRaw("CASE WHEN users.id = {$user->id} THEN 0 ELSE 1 END")
+            ->orderBy('branches.name', 'asc')
+            ->orderBy('users.name', 'asc')
+            ->select('users.*')
+            ->get();
 
         // 4. Statistik & Logic
         $stats = [
             'total' => $myTeam->count(),
-            'hadir' => 0, 'izin_sakit' => 0, 'belum_hadir' => 0, 'lembur' => 0
+            'hadir' => 0,
+            'izin_sakit' => 0,
+            'belum_hadir' => 0,
+            'lembur' => 0
         ];
 
-        foreach($myTeam as $member) {
+        foreach ($myTeam as $member) {
             $memberTz = $member->branch->timezone ?? 'Asia/Jakarta';
             $todayDate = Carbon::now($memberTz)->format('Y-m-d');
             $now = Carbon::now($memberTz);
@@ -83,7 +88,7 @@ class TeamController extends Controller
             $validAttendance = $member->attendances->first(function ($att) use ($memberTz, $todayDate, $now) {
                 $checkIn = Carbon::parse($att->check_in_time)->setTimezone($memberTz);
                 $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($memberTz) : null;
-                
+
                 if ($checkIn->format('Y-m-d') === $todayDate) return true;
                 if ($checkOut && $checkOut->format('Y-m-d') === $todayDate && $checkIn->format('Y-m-d') < $todayDate) return true;
                 if (!$checkOut && $checkIn->diffInHours($now) < 32 && $checkIn->format('Y-m-d') < $todayDate) return true;
@@ -113,24 +118,28 @@ class TeamController extends Controller
                 $stats['izin_sakit']++;
             }
         }
-        
+
         $stats['belum_hadir'] = $stats['total'] - ($stats['hadir'] + $stats['izin_sakit']);
-        if($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0;
+        if ($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0;
 
         // Sidebar Data
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
-            ->withCount(['users' => function ($q) { $q->where('is_active', true); }])
+            ->withCount(['users' => function ($q) {
+                $q->where('is_active', true);
+            }])
             ->orderBy('name', 'asc')->get();
 
         $assignedAudits = collect();
         if (!empty($myBranchIds)) {
             $assignedAudits = User::where('role', 'audit')->where('is_active', true)
-                ->whereHas('branches', function($q) use ($myBranchIds) { $q->whereIn('branches.id', $myBranchIds); })->get();
+                ->whereHas('branches', function ($q) use ($myBranchIds) {
+                    $q->whereIn('branches.id', $myBranchIds);
+                })->get();
         }
 
         return view('user_biasa.team', compact('myTeam', 'myBranchIds', 'controlledBranches', 'assignedAudits', 'stats'));
     }
-    
+
     // --- Method Lain Tetap Sama ---
     public function myBranches()
     {
@@ -150,24 +159,28 @@ class TeamController extends Controller
                 $nowInBranch = Carbon::now($tz);
 
                 $users = User::where('branch_id', $branch->id)->where('is_active', true)
-                    ->with(['attendances' => function($q) use ($todayInBranch, $nowInBranch) {
-                        $q->where(function($sq) use ($todayInBranch) {
+                    ->with(['attendances' => function ($q) use ($todayInBranch, $nowInBranch) {
+                        $q->where(function ($sq) use ($todayInBranch) {
                             $sq->whereDate('check_in_time', $todayInBranch);
-                        })->orWhere(function($sq) use ($todayInBranch) {
+                        })->orWhere(function ($sq) use ($todayInBranch) {
                             $sq->whereDate('check_out_time', $todayInBranch)
-                               ->whereDate('check_in_time', '<', $todayInBranch);
-                        })->orWhere(function($sq) use ($nowInBranch) {
+                                ->whereDate('check_in_time', '<', $todayInBranch);
+                        })->orWhere(function ($sq) use ($nowInBranch) {
                             $sq->whereNull('check_out_time')
-                               ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
+                                ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
                         });
-                    }, 'leaveRequests' => function($q) use ($todayInBranch) {
+                    }, 'leaveRequests' => function ($q) use ($todayInBranch) {
                         $q->where('status', 'approved')
-                          ->whereDate('start_date', '<=', $todayInBranch)
-                          ->whereDate('end_date', '>=', $todayInBranch);
+                            ->whereDate('start_date', '<=', $todayInBranch)
+                            ->whereDate('end_date', '>=', $todayInBranch);
                     }])->get();
 
-                $branch->users_count = $users->count(); 
-                $hadir = 0; $sakit = 0; $izin_cuti = 0; $alpha = 0; $lembur = 0;
+                $branch->users_count = $users->count();
+                $hadir = 0;
+                $sakit = 0;
+                $izin_cuti = 0;
+                $alpha = 0;
+                $lembur = 0;
 
                 foreach ($users as $u) {
                     $att = $u->attendances->first();
@@ -176,15 +189,18 @@ class TeamController extends Controller
                     if ($att) {
                         $checkInDate = \Carbon\Carbon::parse($att->check_in_time)->setTimezone($tz)->format('Y-m-d');
                         $todayDate = Carbon::now($tz)->format('Y-m-d');
-                        if ($checkInDate !== $todayDate) { $isOvertime = true; $lembur++; }
+                        if ($checkInDate !== $todayDate) {
+                            $isOvertime = true;
+                            $lembur++;
+                        }
                     }
 
                     if ($att || $isOvertime) $hadir++;
                     elseif ($leave) {
                         if ($leave->type == 'sakit') $sakit++;
-                        elseif ($leave->type == 'wfh') $hadir++; 
-                        else $izin_cuti++; 
-                    } else $alpha++; 
+                        elseif ($leave->type == 'wfh') $hadir++;
+                        else $izin_cuti++;
+                    } else $alpha++;
                 }
 
                 $branch->stats_today = ['hadir' => $hadir, 'sakit' => $sakit, 'izin' => $izin_cuti, 'alpha' => $alpha, 'lembur' => $lembur];
@@ -194,20 +210,29 @@ class TeamController extends Controller
         return view('team.my_branches', compact('controlledBranches'));
     }
 
-    public function show(User $user) { return view('team.show', compact('user')); }
+    public function show(User $user)
+    {
+        return view('team.show', compact('user'));
+    }
 
-    public function attendance(User $user) {
+    public function attendance(User $user)
+    {
         $attendances = Attendance::where('user_id', $user->id)->latest()->paginate(10);
         return view('team.attendance', compact('user', 'attendances'));
     }
 
-    public function showBranch($id) {
+    public function showBranch($id)
+    {
         $user = Auth::user();
-        $targetBranch = Branch::findOrFail($id);
-        $branchTimezone = $targetBranch->timezone ?? 'Asia/Jakarta';
+
+        // FIX: Renamed $targetBranch to $branch to match the compact() call at the end
+        $branch = Branch::findOrFail($id);
+        $branchTimezone = $branch->timezone ?? 'Asia/Jakarta';
+
         $todayInBranch = Carbon::now($branchTimezone)->format('Y-m-d');
         $nowInBranch = Carbon::now($branchTimezone);
 
+        // Permission Checks
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
             if ($user->branch_id) $allowedBranches[] = $user->branch_id;
@@ -215,33 +240,35 @@ class TeamController extends Controller
         } elseif ($user->role == 'leader') {
             if ($user->branch_id != $id) {
                 $pivotIds = $user->branches->pluck('id')->toArray();
-                if(!in_array($id, $pivotIds)) abort(403);
+                if (!in_array($id, $pivotIds)) abort(403);
             }
         } elseif ($user->role == 'admin') {
             if ($user->branch_id && $user->branch_id != $id) abort(403);
         }
 
+        // Query Employees
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)
-            ->with(['division', 'attendances' => function ($q) use ($todayInBranch, $nowInBranch) { 
-                $q->where(function($sq) use ($todayInBranch) {
+            ->with(['division', 'attendances' => function ($q) use ($todayInBranch, $nowInBranch) {
+                $q->where(function ($sq) use ($todayInBranch) {
                     $sq->whereDate('check_in_time', $todayInBranch);
-                })->orWhere(function($sq) use ($todayInBranch) {
+                })->orWhere(function ($sq) use ($todayInBranch) {
                     $sq->whereDate('check_out_time', $todayInBranch)->whereDate('check_in_time', '<', $todayInBranch);
-                })->orWhere(function($sq) use ($nowInBranch) {
+                })->orWhere(function ($sq) use ($nowInBranch) {
                     $sq->whereNull('check_out_time')->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
                 });
             }])->get();
 
         $attendanceGroups = ['Masuk' => [], 'Izin' => [], 'Sakit' => [], 'Cuti' => [], 'WFH / Dinas Luar' => [], 'Alpha / Belum Absen' => [], 'Lembur' => []];
 
+        // Logic for grouping (remains the same)
         foreach ($employees as $emp) {
             $todayLeave = LeaveRequest::where('user_id', $emp->id)->where('status', 'approved')->where('is_active', true)
                 ->where(function ($q) use ($todayInBranch) {
-                    $q->where(function ($sub) use ($todayInBranch) { 
+                    $q->where(function ($sub) use ($todayInBranch) {
                         $sub->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh'])
-                            ->whereDate('start_date', '<=', $todayInBranch)->whereDate('end_date', '>=', $todayInBranch); 
-                    })->orWhere(function ($sub) use ($todayInBranch) { 
-                        $sub->where('type', 'telat')->whereDate('start_date', $todayInBranch); 
+                            ->whereDate('start_date', '<=', $todayInBranch)->whereDate('end_date', '>=', $todayInBranch);
+                    })->orWhere(function ($sub) use ($todayInBranch) {
+                        $sub->where('type', 'telat')->whereDate('start_date', $todayInBranch);
                     });
                 })->first();
             $emp->today_leave = $todayLeave;
@@ -254,14 +281,14 @@ class TeamController extends Controller
             }
 
             if ($isOvertime) $attendanceGroups['Lembur'][] = $emp;
-            elseif ($attendance) $attendanceGroups['Masuk'][] = $emp; 
+            elseif ($attendance) $attendanceGroups['Masuk'][] = $emp;
             elseif ($todayLeave) {
                 if ($todayLeave->type == 'sakit') $attendanceGroups['Sakit'][] = $emp;
                 elseif ($todayLeave->type == 'izin') $attendanceGroups['Izin'][] = $emp;
                 elseif ($todayLeave->type == 'cuti') $attendanceGroups['Cuti'][] = $emp;
                 elseif ($todayLeave->type == 'wfh') $attendanceGroups['WFH / Dinas Luar'][] = $emp;
                 else $attendanceGroups['Alpha / Belum Absen'][] = $emp;
-            } else $attendanceGroups['Alpha / Belum Absen'][] = $emp; 
+            } else $attendanceGroups['Alpha / Belum Absen'][] = $emp;
         }
 
         $statsCounts = [
@@ -274,17 +301,21 @@ class TeamController extends Controller
             'Lembur' => count($attendanceGroups['Lembur']),
         ];
 
+        // Now $branch exists, so compact('branch') will work
         return view('user_biasa.branch_detail', compact('branch', 'employees', 'attendanceGroups', 'statsCounts'));
     }
 
-    public function showEmployeeHistory(Request $request, $branchId, $employeeId) {
+    public function showEmployeeHistory(Request $request, $branchId, $employeeId)
+    {
         $employee = User::with(['division', 'branch'])->findOrFail($employeeId);
         $selectedMonth = $request->get('month', date('m'));
         $selectedYear = $request->get('year', date('Y'));
         $data = $this->getHistoryData($employee, $selectedMonth, $selectedYear);
         return view('attendance.history', [
-            'history' => $data['history'], 'summary' => $data['summary'],
-            'selectedMonth' => $selectedMonth, 'selectedYear' => $selectedYear,
+            'history' => $data['history'],
+            'summary' => $data['summary'],
+            'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear,
             'employee' => $employee,
             'prevMonth' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->subMonth()->month,
             'prevYear' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->subMonth()->year,
@@ -293,14 +324,15 @@ class TeamController extends Controller
         ]);
     }
 
-    private function getHistoryData($user, $selectedMonth, $selectedYear) {
+    private function getHistoryData($user, $selectedMonth, $selectedYear)
+    {
         $attendances = Attendance::with('verifier')->where('user_id', $user->id)->whereYear('check_in_time', $selectedYear)->whereMonth('check_in_time', $selectedMonth)->orderBy('check_in_time', 'desc')->get();
-        $leaves = LeaveRequest::where('user_id', $user->id)->where('status', 'approved')->where('is_active', true)->where(function ($q) use ($selectedMonth, $selectedYear) { 
-            $q->whereMonth('start_date', $selectedMonth)->whereYear('start_date', $selectedYear)->orWhere(function ($subQ) use ($selectedMonth, $selectedYear) { 
-                $subQ->whereMonth('end_date', $selectedMonth)->whereYear('end_date', $selectedYear); 
-            }); 
+        $leaves = LeaveRequest::where('user_id', $user->id)->where('status', 'approved')->where('is_active', true)->where(function ($q) use ($selectedMonth, $selectedYear) {
+            $q->whereMonth('start_date', $selectedMonth)->whereYear('start_date', $selectedYear)->orWhere(function ($subQ) use ($selectedMonth, $selectedYear) {
+                $subQ->whereMonth('end_date', $selectedMonth)->whereYear('end_date', $selectedYear);
+            });
         })->get();
-        
+
         foreach ($attendances as $attendance) {
             $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time)->format('Y-m-d');
             $checkOutDate = $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->format('Y-m-d') : null;
