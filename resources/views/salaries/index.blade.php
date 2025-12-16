@@ -6,7 +6,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="card-title">Manajemen Gaji Cabang</h4>
+                    <h4 class="card-title">Manajemen Gaji</h4>
                     
                     {{-- TOMBOL CREATE: HANYA MUNCUL JIKA ROLE ADMIN_GAJI --}}
                     @if(auth()->user()->role == 'admin_gaji')
