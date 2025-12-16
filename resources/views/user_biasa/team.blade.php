@@ -189,7 +189,7 @@
                                             {{-- LOGIKA STATUS TEXT --}}
                                             @if ($attendance)
                                                 @if ($isOvertimeYesterday)
-                                                    {{-- KASUS: Pulang Lembur (Data Kemarin) --}}
+                                                    {{-- PERUBAHAN: Tampilan Bersih untuk Habis Lembur --}}
                                                     <div>
                                                         <span class="status-badge bg-soft-indigo text-primary" 
                                                               data-bs-toggle="tooltip" 
@@ -199,23 +199,7 @@
                                                             <span>Habis Lembur</span>
                                                         </span>
                                                         
-                                                        <div class="lembur-info mt-2">
-                                                            <div class="lembur-time">
-                                                                <i class="mdi mdi-clock-outline me-1"></i>
-                                                                <strong>Masuk:</strong> {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('d M, H:i') }}
-                                                            </div>
-                                                            <div class="lembur-time">
-                                                                <i class="mdi mdi-home-outline me-1"></i>
-                                                                <strong>Pulang:</strong> {{ \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz)->format('d M, H:i') }}
-                                                            </div>
-                                                            @if($overtimeDuration)
-                                                                <div class="lembur-time">
-                                                                    <i class="mdi mdi-timer-outline me-1"></i>
-                                                                    <strong>Durasi:</strong> {{ $overtimeDuration->format('%h jam %i menit') }}
-                                                                    <span class="lembur-badge">Lembur</span>
-                                                                </div>
-                                                            @endif
-                                                        </div>
+                                                        {{-- Detail jam dihapus di sini --}}
                                                         
                                                         <div class="mt-2">
                                                             <span class="badge bg-light text-danger border border-danger" style="font-size: 0.65rem;">
@@ -288,8 +272,9 @@
                                         </td>
                                         <td class="py-3">
                                             {{-- BUKTI FOTO --}}
+                                            {{-- PERUBAHAN: Hanya tampilkan foto jika BUKAN "Habis Lembur" (isOvertimeYesterday = false) --}}
                                             <div class="d-flex gap-2">
-                                                @if ($attendance)
+                                                @if ($attendance && !$isOvertimeYesterday)
                                                     @if($attendance->photo_path)
                                                         <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}">
                                                             <i class="mdi mdi-camera"></i> Masuk
@@ -301,6 +286,7 @@
                                                         </button>
                                                     @endif
                                                 @endif
+                                                
                                                 @if ($leave && $leave->file_proof)
                                                     <button class="view-photo-btn bg-info text-white border-0" onclick="window.open('{{ Storage::url($leave->file_proof) }}', '_blank')">
                                                         <i class="mdi mdi-file-document"></i> Bukti
@@ -321,8 +307,6 @@
             </div>
         </div>
     </div>
-
-    
 
     {{-- Modal Image --}}
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
