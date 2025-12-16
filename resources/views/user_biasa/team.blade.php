@@ -38,16 +38,6 @@
         .audit-pill:hover { background: rgba(255, 255, 255, 0.25); }
         .modal-content { border: none; border-radius: 20px; overflow: hidden; }
         .modal-image-wrapper { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1rem; }
-        /* Style untuk lembur info (Badge saja) */
-        .lembur-badge {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            color: white;
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 12px;
-            display: inline-block;
-            margin-left: 0.5rem;
-        }
     </style>
 @endpush
 
@@ -124,30 +114,29 @@
                                         $leave = $member->leaveRequests->first();
                                         $isWfh = $leave && $leave->type == 'wfh';
                                         
-                                        // Ambil Timezone Cabang Member
                                         $memberTz = $member->branch->timezone ?? 'Asia/Jakarta';
+                                        $now = \Carbon\Carbon::now($memberTz);
                                         
-                                        // Cek apakah data absensi ini adalah "Sisa Kemarin" (Lembur)
                                         $isOvertimeYesterday = false;
                                         $isStillWorkingOvertime = false;
 
                                         if ($attendance) {
-                                            $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('Y-m-d');
-                                            $todayDate = \Carbon\Carbon::now($memberTz)->format('Y-m-d');
-
-                                            // Jika tanggal checkin BUKAN hari ini
-                                            if ($checkInDate !== $todayDate) {
-                                                if ($attendance->check_out_time) {
-                                                    // Sudah pulang (tapi pulangnya hari ini) -> INI TARGET KITA
+                                            $checkIn = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz);
+                                            $checkOut = $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz) : null;
+                                            
+                                            // FIXING: Gunakan isSameDay untuk akurasi tanggal, bukan string comparison
+                                            $isToday = $checkIn->isSameDay($now);
+                                            
+                                            if (!$isToday) {
+                                                if ($checkOut && $checkOut->isSameDay($now)) {
+                                                    // Masuk Kemarin, Pulang Hari Ini -> Habis Lembur
                                                     $isOvertimeYesterday = true;
-                                                } else {
-                                                    // Belum pulang (masih lembur dari kemarin)
+                                                } elseif (!$checkOut) {
+                                                    // Masuk Kemarin, Belum Pulang -> Sedang Lembur
                                                     $isStillWorkingOvertime = true;
                                                 }
                                             }
                                         }
-
-                                        // Online status
                                         $isOnline = ($attendance && !$attendance->check_out_time) || $isWfh;
                                     @endphp
 
@@ -177,14 +166,10 @@
                                                     {{-- KASUS: Pulang Lembur (Data Kemarin) --}}
                                                     <div>
                                                         <span class="status-badge bg-soft-indigo text-primary" 
-                                                              data-bs-toggle="tooltip" 
-                                                              data-bs-placement="top"
-                                                              title="Lembur Lintas Hari">
+                                                              data-bs-toggle="tooltip" title="Lembur Lintas Hari">
                                                             <i class="mdi mdi-bed-clock me-1"></i> 
                                                             <span>Habis Lembur</span>
                                                         </span>
-                                                        {{-- Detail Waktu Dihilangkan sesuai request --}}
-                                                        
                                                         <div class="mt-2">
                                                             <span class="badge bg-light text-danger border border-danger" style="font-size: 0.65rem;">
                                                                 <i class="mdi mdi-clock-alert me-1"></i>Belum Absen Shift Baru
@@ -199,7 +184,6 @@
                                                             <i class="mdi mdi-moon-waning-crescent me-1"></i> 
                                                             <span>Sedang Lembur</span>
                                                         </span>
-                                                        {{-- Detail Waktu Dihilangkan sesuai request --}}
                                                     </div>
 
                                                 @else
@@ -245,7 +229,7 @@
                                             {{-- BUKTI FOTO --}}
                                             <div class="d-flex gap-2">
                                                 @if ($attendance)
-                                                    {{-- Logic: Jangan tampilkan foto jika itu data lembur kemarin --}}
+                                                    {{-- Sembunyikan foto jika itu data lembur kemarin --}}
                                                     @if(!$isOvertimeYesterday && !$isStillWorkingOvertime)
                                                         @if($attendance->photo_path)
                                                             <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}">
@@ -260,9 +244,8 @@
                                                     @endif
                                                 @endif
                                                 
-                                                {{-- Logic: Hanya tampilkan bukti foto jika statusnya WFH --}}
+                                                {{-- Hanya tampilkan bukti WFH --}}
                                                 @if ($leave && $leave->type == 'wfh' && $leave->file_proof)
-                                                    {{-- Logic: Gunakan Modal Popup (bukan window.open/tab baru) --}}
                                                     <button class="view-photo-btn bg-info text-white border-0" 
                                                             data-bs-toggle="modal" 
                                                             data-bs-target="#imageModal" 
@@ -311,8 +294,6 @@
                 modalImg.src = src;
             });
         }
-
-        // Initialize tooltips
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
