@@ -48,11 +48,11 @@ class TeamController extends Controller
             });
         }
 
-        // 3. Eager Load dengan Limit Lebih Besar
+        // 3. Eager Load dengan Limit Aman (31)
         $myTeam = $query->with([
             'workSchedule',
             'attendances' => function ($q) {
-                // FIX: Naikkan limit dari 5 ke 31 agar data hari ini tidak tertendang jika history banyak
+                // FIX: Limit 31 agar data hari ini pasti keambil walau banyak history
                 $q->latest('check_in_time')->limit(31); 
             },
             'leaveRequests' => function ($q) use ($todayInBranch) {
@@ -85,16 +85,13 @@ class TeamController extends Controller
             $todayDate = Carbon::now($memberTz)->format('Y-m-d');
             $now = Carbon::now($memberTz);
 
-            // Filter Absen Valid
+            // Filter Absen Valid (PHP Logic)
             $validAttendance = $member->attendances->first(function ($att) use ($memberTz, $todayDate, $now) {
                 $checkIn = Carbon::parse($att->check_in_time)->setTimezone($memberTz);
                 $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($memberTz) : null;
 
-                // 1. Masuk Hari Ini
                 if ($checkIn->format('Y-m-d') === $todayDate) return true;
-                // 2. Pulang Hari Ini (tapi masuk kemarin)
                 if ($checkOut && $checkOut->format('Y-m-d') === $todayDate && $checkIn->format('Y-m-d') < $todayDate) return true;
-                // 3. Masih Lembur (belum checkout dari kemarin)
                 if (!$checkOut && $checkIn->diffInHours($now) < 32 && $checkIn->format('Y-m-d') < $todayDate) return true;
 
                 return false;
@@ -102,7 +99,6 @@ class TeamController extends Controller
 
             $member->setRelation('attendances', $validAttendance ? collect([$validAttendance]) : collect([]));
 
-            // Hitung Stats
             $att = $validAttendance;
             $leave = $member->leaveRequests->first();
             $isWfh = $leave && $leave->type == 'wfh';
@@ -126,7 +122,6 @@ class TeamController extends Controller
         $stats['belum_hadir'] = $stats['total'] - ($stats['hadir'] + $stats['izin_sakit']);
         if ($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0;
 
-        // Sidebar Data
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->withCount(['users' => function ($q) {
                 $q->where('is_active', true);
@@ -161,10 +156,10 @@ class TeamController extends Controller
                 $todayInBranch = Carbon::now($tz)->format('Y-m-d');
                 $nowInBranch = Carbon::now($tz);
 
+                // FIX: Gunakan latest()->limit(31) (JANGAN PAKAI whereDate DI SINI)
                 $users = User::where('branch_id', $branch->id)->where('is_active', true)
                     ->with(['attendances' => function ($q) {
-                        // FIX: Limit diperbesar ke 31
-                        $q->latest('check_in_time')->limit(31);
+                        $q->latest('check_in_time')->limit(31); 
                     }, 'leaveRequests' => function ($q) use ($todayInBranch) {
                         $q->where('status', 'approved')
                             ->whereDate('start_date', '<=', $todayInBranch)
@@ -175,7 +170,7 @@ class TeamController extends Controller
                 $hadir = 0; $sakit = 0; $izin_cuti = 0; $alpha = 0; $lembur = 0;
 
                 foreach ($users as $u) {
-                    // Filter PHP yang Konsisten
+                    // Filter PHP (Timezone Safe)
                     $validAttendance = $u->attendances->first(function ($att) use ($tz, $todayInBranch, $nowInBranch) {
                         $checkIn = Carbon::parse($att->check_in_time)->setTimezone($tz);
                         $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($tz) : null;
@@ -188,7 +183,6 @@ class TeamController extends Controller
 
                     $u->setRelation('attendances', $validAttendance ? collect([$validAttendance]) : collect([]));
                     $att = $validAttendance;
-
                     $leave = $u->leaveRequests->first();
                     $isOvertime = false;
                     
@@ -235,7 +229,6 @@ class TeamController extends Controller
         $todayInBranch = Carbon::now($branchTimezone)->format('Y-m-d');
         $nowInBranch = Carbon::now($branchTimezone);
 
-        // Permission Checks
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
             if ($user->branch_id) $allowedBranches[] = $user->branch_id;
@@ -249,7 +242,7 @@ class TeamController extends Controller
             if ($user->branch_id && $user->branch_id != $id) abort(403);
         }
 
-        // FIX: Limit diperbesar ke 31 untuk detail cabang juga
+        // FIX: Gunakan latest()->limit(31) di sini juga
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)
             ->with(['division', 'attendances' => function ($q) {
                 $q->latest('check_in_time')->limit(31); 
@@ -269,7 +262,7 @@ class TeamController extends Controller
                 })->first();
             $emp->today_leave = $todayLeave;
 
-            // Filter PHP Konsisten
+            // Filter PHP (Timezone Safe)
             $validAttendance = $emp->attendances->first(function ($att) use ($branchTimezone, $todayInBranch, $nowInBranch) {
                 $checkIn = Carbon::parse($att->check_in_time)->setTimezone($branchTimezone);
                 $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($branchTimezone) : null;
