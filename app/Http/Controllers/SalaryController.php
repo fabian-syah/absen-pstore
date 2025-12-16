@@ -32,49 +32,49 @@ class SalaryController extends Controller
     // Menampilkan Form Buat Gaji
     public function create(Request $request)
     {
-        // Ambil User ID dari URL (dikirim dari menu Gaji Cabang)
         $selectedUserId = $request->query('user_id');
         $selectedUser = null;
-        $remainingDebt = 0; // Sisa Hutang
+        $remainingDebt = 0;
         $alphaCount = 0;
         $lateCount = 0;
 
-        if ($selectedUserId) {
-            $selectedUser = User::with(['branch', 'division'])->find($selectedUserId);
+        // VARIABLE BARU UNTUK MENAMPUNG MASTER GAJI
+        $masterSalary = null;
 
-            // 1. HITUNG SISA HUTANG (KASBON)
-            // Cari kasbon 'approved' yang belum lunas (total_paid < amount)
-            $activeLoans = CashAdvance::where('user_id', $selectedUserId)
+        if ($selectedUserId) {
+            $selectedUser = User::with(['branch', 'division', 'employeeSalary'])->find($selectedUserId);
+
+            // AMBIL DATA MASTER GAJI (Template)
+            if ($selectedUser->employeeSalary) {
+                $masterSalary = $selectedUser->employeeSalary;
+            }
+
+            // ... Logic Hitung Hutang & Absensi (Tetap Sama seperti sebelumnya) ...
+            $activeLoans = \App\Models\CashAdvance::where('user_id', $selectedUserId)
                 ->where('status', 'approved')
                 ->whereRaw('total_paid < amount')
                 ->get();
-            
-            foreach($activeLoans as $loan) {
+            foreach ($activeLoans as $loan) {
                 $remainingDebt += ($loan->amount - $loan->total_paid);
             }
 
-            // 2. HITUNG ABSENSI BULAN INI
             $month = date('m');
             $year = date('Y');
-            
-            // Hitung Telat (Status 'late' atau presence_status 'Telat')
-            $lateCount = Attendance::where('user_id', $selectedUserId)
+            $lateCount = \App\Models\Attendance::where('user_id', $selectedUserId)
                 ->whereMonth('check_in_time', $month)
                 ->whereYear('check_in_time', $year)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->where('status', 'late')->orWhere('presence_status', 'Telat');
                 })->count();
 
-            // Hitung Alpha (Disini saya set 0 agar Admin input manual berdasarkan rekap, 
-            // tapi jika mau otomatis query 'status' = 'alpha' bisa ditambahkan disini)
-            $alphaCount = 0; 
+            $alphaCount = 0;
         }
 
         $users = User::where('is_active', true)->orderBy('name')->get();
 
-        return view('salaries.create', compact('users', 'selectedUser', 'remainingDebt', 'alphaCount', 'lateCount'));
+        // Kirim $masterSalary ke View
+        return view('salaries.create', compact('users', 'selectedUser', 'remainingDebt', 'alphaCount', 'lateCount', 'masterSalary'));
     }
-
     // Menyimpan Gaji
     public function store(Request $request)
     {
@@ -98,7 +98,7 @@ class SalaryController extends Controller
             return back()->with('error', 'Gaji untuk karyawan ini di periode tersebut sudah dibuat!');
         }
 
-        DB::transaction(function() use ($request) {
+        DB::transaction(function () use ($request) {
             // 1. Siapkan Data
             $data = $request->except(['_token']);
             $data['created_by'] = Auth::id();
@@ -137,7 +137,7 @@ class SalaryController extends Controller
                         'user_id' => $userId,
                         'amount_paid' => $bayar,
                         'received_by' => 'SYSTEM (Potong Gaji)', // Penanda otomatis
-                        'payment_proof' => null, 
+                        'payment_proof' => null,
                         'status' => 'approved',
                         'note' => 'Potongan Payroll Bulan ' . $request->month . '/' . $request->year
                     ]);
@@ -154,17 +154,17 @@ class SalaryController extends Controller
 
             // 3. HITUNG ULANG TOTAL (Server Side Verification)
             // Income
-            $income = ($request->employee_basic_salary ?? 0) + 
-                      ($request->employee_position_allowance ?? 0) + 
-                      ($request->employee_owner_privilege ?? 0) + 
-                      ($request->promotor_bonus ?? 0) + 
-                      ($request->dispensation_amount ?? 0);
+            $income = ($request->employee_basic_salary ?? 0) +
+                ($request->employee_position_allowance ?? 0) +
+                ($request->employee_owner_privilege ?? 0) +
+                ($request->promotor_bonus ?? 0) +
+                ($request->dispensation_amount ?? 0);
 
             // Deduction
-            $deduction = ($request->alpha_deduction ?? 0) + 
-                         ($request->late_deduction ?? 0) + 
-                         ($request->kasbon_deduction ?? 0) + 
-                         ($request->other_deduction ?? 0);
+            $deduction = ($request->alpha_deduction ?? 0) +
+                ($request->late_deduction ?? 0) +
+                ($request->kasbon_deduction ?? 0) +
+                ($request->other_deduction ?? 0);
 
             // Take Home Pay
             $data['total_amount'] = $income - $deduction;
@@ -205,7 +205,7 @@ class SalaryController extends Controller
     }
 
     // API Helper absensi (opsional jika masih dipakai di create blade lama)
-     public function checkAttendance(Request $request)
+    public function checkAttendance(Request $request)
     {
         $userId = $request->user_id;
         $month = $request->month;

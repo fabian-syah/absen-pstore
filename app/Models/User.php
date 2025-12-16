@@ -230,4 +230,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Salary::class);
     }
+
+    public function employeeSalary()
+    {
+        return $this->hasOne(EmployeeSalary::class, 'user_id');
+    }
 }

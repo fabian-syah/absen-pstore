@@ -24,7 +24,7 @@ class LeaveRequestController extends Controller
 
         // Hanya ambil yang status = 'pending' untuk verifikasi
         $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
-            ->where('status', 'pending') 
+            ->where('status', 'pending')
             ->latest();
 
         if ($user->role == 'admin') {
@@ -174,7 +174,7 @@ class LeaveRequestController extends Controller
         ]);
 
         $msg = $leaveRequest->type == 'telat' ? 'Izin telat dibatalkan.' : 'Pengajuan izin dibatalkan.';
-        
+
         // Redirect back agar fleksibel (bisa dari dashboard atau list)
         return redirect()->back()->with('success', $msg);
     }
@@ -182,17 +182,27 @@ class LeaveRequestController extends Controller
     /**
      * ACTION: FINISH EARLY (Masuk kantor sebelum izin selesai)
      */
+    // app/Http/Controllers/LeaveRequestController.php
+
     public function finishEarly(LeaveRequest $leaveRequest)
     {
         if ($leaveRequest->user_id != Auth::id()) abort(403);
+
+        // FIX: Khusus Izin Telat, jangan "batalkan" tanggalnya.
+        // Biarkan request tetap aktif sebagai catatan history,
+        // tapi arahkan user untuk melakukan Absen Masuk (Attendance).
+        if ($leaveRequest->type === 'telat') {
+            return redirect()->route('self.attend.create')
+                ->with('info', 'Izin telat tercatat. Silahkan lakukan foto selfie untuk jam masuk kehadiran.');
+        }
 
         if (!in_array($leaveRequest->type, ['sakit', 'izin', 'cuti', 'wfh'])) {
             return back()->with('error', 'Tipe izin ini tidak bisa diselesaikan lebih awal.');
         }
 
-        // Set tanggal selesai menjadi KEMARIN, otomatis hari ini dianggap masuk
+        // Logic lama untuk Sakit/Cuti (dimana user sembuh/masuk lebih cepat)
         $leaveRequest->update(['end_date' => Carbon::yesterday()]);
-        
+
         return redirect()->route('dashboard')->with('success', 'Status izin dibatalkan. Silahkan absen mandiri.');
     }
 
@@ -204,7 +214,7 @@ class LeaveRequestController extends Controller
         $requests = LeaveRequest::with(['approver'])
             ->where('user_id', Auth::id())
             // Ambil yang statusnya sudah final (Approved/Rejected/Cancelled)
-            ->whereIn('status', ['approved', 'rejected', 'cancelled']) 
+            ->whereIn('status', ['approved', 'rejected', 'cancelled'])
             ->latest()
             ->paginate(10);
 
