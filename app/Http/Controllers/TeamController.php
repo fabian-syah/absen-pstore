@@ -39,7 +39,7 @@ class TeamController extends Controller
                 $query->where('users.id', 0);
             }
         } else {
-            // User Punya Cabang (Termasuk User Biasa) -> Melihat SEMUA di cabang
+            // User Punya Cabang
             $query->where(function ($q) use ($myBranchIds) {
                 $q->whereIn('users.branch_id', $myBranchIds)
                     ->orWhereHas('branches', function ($subQ) use ($myBranchIds) {
@@ -157,17 +157,10 @@ class TeamController extends Controller
                 $todayInBranch = Carbon::now($tz)->format('Y-m-d');
                 $nowInBranch = Carbon::now($tz);
 
+                // FIX: Ubah logika query agar sama dengan index() (Ambil 5 terakhir)
                 $users = User::where('branch_id', $branch->id)->where('is_active', true)
-                    ->with(['attendances' => function ($q) use ($todayInBranch, $nowInBranch) {
-                        $q->where(function ($sq) use ($todayInBranch) {
-                            $sq->whereDate('check_in_time', $todayInBranch);
-                        })->orWhere(function ($sq) use ($todayInBranch) {
-                            $sq->whereDate('check_out_time', $todayInBranch)
-                                ->whereDate('check_in_time', '<', $todayInBranch);
-                        })->orWhere(function ($sq) use ($nowInBranch) {
-                            $sq->whereNull('check_out_time')
-                                ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
-                        });
+                    ->with(['attendances' => function ($q) {
+                        $q->latest('check_in_time')->limit(5); // <-- KUNCI PERBAIKAN
                     }, 'leaveRequests' => function ($q) use ($todayInBranch) {
                         $q->where('status', 'approved')
                             ->whereDate('start_date', '<=', $todayInBranch)
@@ -175,20 +168,30 @@ class TeamController extends Controller
                     }])->get();
 
                 $branch->users_count = $users->count();
-                $hadir = 0;
-                $sakit = 0;
-                $izin_cuti = 0;
-                $alpha = 0;
-                $lembur = 0;
+                $hadir = 0; $sakit = 0; $izin_cuti = 0; $alpha = 0; $lembur = 0;
 
                 foreach ($users as $u) {
-                    $att = $u->attendances->first();
+                    // FIX: Gunakan filter PHP (sama dengan index)
+                    $validAttendance = $u->attendances->first(function ($att) use ($tz, $todayInBranch, $nowInBranch) {
+                        $checkIn = Carbon::parse($att->check_in_time)->setTimezone($tz);
+                        $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($tz) : null;
+                        
+                        if ($checkIn->format('Y-m-d') === $todayInBranch) return true;
+                        if ($checkOut && $checkOut->format('Y-m-d') === $todayInBranch && $checkIn->format('Y-m-d') < $todayInBranch) return true;
+                        if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 32 && $checkIn->format('Y-m-d') < $todayInBranch) return true;
+                        return false;
+                    });
+
+                    // Timpa relation
+                    $u->setRelation('attendances', $validAttendance ? collect([$validAttendance]) : collect([]));
+                    $att = $validAttendance;
+
                     $leave = $u->leaveRequests->first();
                     $isOvertime = false;
+                    
                     if ($att) {
-                        $checkInDate = \Carbon\Carbon::parse($att->check_in_time)->setTimezone($tz)->format('Y-m-d');
-                        $todayDate = Carbon::now($tz)->format('Y-m-d');
-                        if ($checkInDate !== $todayDate) {
+                        $checkInDate = Carbon::parse($att->check_in_time)->setTimezone($tz)->format('Y-m-d');
+                        if ($checkInDate !== $todayInBranch) {
                             $isOvertime = true;
                             $lembur++;
                         }
@@ -223,7 +226,6 @@ class TeamController extends Controller
     public function showBranch($id)
     {
         $user = Auth::user();
-
         $branch = Branch::findOrFail($id);
         $branchTimezone = $branch->timezone ?? 'Asia/Jakarta';
 
@@ -244,21 +246,14 @@ class TeamController extends Controller
             if ($user->branch_id && $user->branch_id != $id) abort(403);
         }
 
-        // Query Employees
+        // FIX: Ubah query SQL kaku menjadi ambil 5 terakhir (limit 5)
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)
-            ->with(['division', 'attendances' => function ($q) use ($todayInBranch, $nowInBranch) {
-                $q->where(function ($sq) use ($todayInBranch) {
-                    $sq->whereDate('check_in_time', $todayInBranch);
-                })->orWhere(function ($sq) use ($todayInBranch) {
-                    $sq->whereDate('check_out_time', $todayInBranch)->whereDate('check_in_time', '<', $todayInBranch);
-                })->orWhere(function ($sq) use ($nowInBranch) {
-                    $sq->whereNull('check_out_time')->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32));
-                });
+            ->with(['division', 'attendances' => function ($q) {
+                $q->latest('check_in_time')->limit(5); // <-- KUNCI PERBAIKAN
             }])->get();
 
         $attendanceGroups = ['Masuk' => [], 'Izin' => [], 'Sakit' => [], 'Cuti' => [], 'WFH / Dinas Luar' => [], 'Alpha / Belum Absen' => [], 'Lembur' => []];
 
-        // Logic for grouping
         foreach ($employees as $emp) {
             $todayLeave = LeaveRequest::where('user_id', $emp->id)->where('status', 'approved')->where('is_active', true)
                 ->where(function ($q) use ($todayInBranch) {
@@ -270,7 +265,21 @@ class TeamController extends Controller
                     });
                 })->first();
             $emp->today_leave = $todayLeave;
-            $attendance = $emp->attendances->first();
+
+            // FIX: Gunakan Filter PHP (Sama seperti index)
+            $validAttendance = $emp->attendances->first(function ($att) use ($branchTimezone, $todayInBranch, $nowInBranch) {
+                $checkIn = Carbon::parse($att->check_in_time)->setTimezone($branchTimezone);
+                $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($branchTimezone) : null;
+
+                if ($checkIn->format('Y-m-d') === $todayInBranch) return true;
+                if ($checkOut && $checkOut->format('Y-m-d') === $todayInBranch && $checkIn->format('Y-m-d') < $todayInBranch) return true;
+                if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 32 && $checkIn->format('Y-m-d') < $todayInBranch) return true;
+                return false;
+            });
+
+            // Timpa relation agar data di View benar
+            $emp->setRelation('attendances', $validAttendance ? collect([$validAttendance]) : collect([]));
+            $attendance = $validAttendance;
 
             $isOvertime = false;
             if ($attendance) {
