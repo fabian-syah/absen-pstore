@@ -294,7 +294,7 @@
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
             <li class="nav-item nav-category">Pembayaran</li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('branch-salary.index') }}">
+                {{-- <a class="nav-link" href="{{ route('branch-salary.index') }}"> --}}
                     <i class="menu-icon mdi mdi-cash-register"></i>
                     <span class="menu-title">Gaji Cabang</span>
                 </a>
