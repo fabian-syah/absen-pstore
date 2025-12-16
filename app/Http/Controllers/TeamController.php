@@ -342,6 +342,17 @@ class TeamController extends Controller
                 $attendance->overtime_duration = \Carbon\Carbon::parse($attendance->check_in_time)->diff(\Carbon\Carbon::parse($attendance->check_out_time));
             }
         }
-        return ['history' => $attendances, 'summary' => []];
+        $summary = [
+            'total' => $attendances->count(),
+            'hadir' => $attendances->count(),
+            'sakit' => $leaves->where('type', 'sakit')->count(),
+            'izin'  => $leaves->whereIn('type', ['izin', 'cuti'])->count(),
+            'alpha' => 0,
+            'telat' => 0,
+            'pulang_cepat' => 0,
+            'pending' => $attendances->where('status', 'pending_verification')->count(),
+        ];
+
+        return ['history' => $attendances, 'summary' => $summary];
     }
 }
