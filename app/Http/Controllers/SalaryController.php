@@ -27,7 +27,7 @@ class SalaryController extends Controller
 
     public function create()
     {
-        // Ambil semua user kecuali admin/super admin jika perlu, urutkan nama
+        // Ambil semua user aktif, urutkan nama
         $users = User::where('is_active', true)
             ->orderBy('name', 'asc')
             ->get();
@@ -35,17 +35,26 @@ class SalaryController extends Controller
         return view('salaries.create', compact('users'));
     }
 
-    // Helper untuk AJAX cek absensi freelance
+    // =========================================================================
+    // [PERBAIKAN] LOGIKA HITUNG ABSENSI LEBIH LUAS
+    // =========================================================================
     public function checkAttendance(Request $request)
     {
         $userId = $request->user_id;
         $month = $request->month;
         $year = $request->year;
 
+        // Hitung semua yang check_in_time nya ada di bulan tsb
+        // Dan statusnya dianggap hadir (Masuk, Telat, WFH, Verified, dll)
         $count = Attendance::where('user_id', $userId)
-            ->whereMonth('created_at', $month)
-            ->whereYear('created_at', $year)
-            ->whereIn('status', ['present', 'wfh']) // Menghitung Present dan WFH
+            ->whereMonth('check_in_time', $month) // Gunakan check_in_time, lebih akurat dr created_at
+            ->whereYear('check_in_time', $year)
+            ->where(function($query) {
+                // Cek kolom 'status' (teknis)
+                $query->whereIn('status', ['present', 'late', 'verified', 'pending_verification', 'wfh'])
+                // ATAU Cek kolom 'presence_status' (label yang tampil di UI kamu: "Masuk", "Telat")
+                      ->orWhereIn('presence_status', ['Masuk', 'WFH / Dinas Luar', 'Telat']);
+            })
             ->count();
 
         return response()->json(['count' => $count]);
@@ -96,11 +105,14 @@ class SalaryController extends Controller
                 'freelance_daily_salary' => 'required|numeric',
             ]);
 
-            // Hitung Absensi Otomatis (Present + WFH)
+            // [PERBAIKAN] LOGIKA HITUNG ULANG SAAT SAVE (SAMA SEPERTI DI ATAS)
             $attendanceCount = Attendance::where('user_id', $request->user_id)
-                ->whereMonth('created_at', $request->month)
-                ->whereYear('created_at', $request->year)
-                ->whereIn('status', ['present', 'wfh'])
+                ->whereMonth('check_in_time', $request->month)
+                ->whereYear('check_in_time', $request->year)
+                ->where(function($query) {
+                    $query->whereIn('status', ['present', 'late', 'verified', 'pending_verification', 'wfh'])
+                          ->orWhereIn('presence_status', ['Masuk', 'WFH / Dinas Luar', 'Telat']);
+                })
                 ->count();
 
             $data['freelance_daily_salary'] = $request->freelance_daily_salary;
@@ -142,7 +154,6 @@ class SalaryController extends Controller
 
     public function update(Request $request, Salary $salary)
     {
-        // Logika update mirip store, tapi tanpa validasi duplikasi user+bulan (karena sedang edit record yg sama)
         $request->validate([
             'category' => 'required|in:promotor,freelance,employee',
         ]);
@@ -153,7 +164,6 @@ class SalaryController extends Controller
             'notes' => $request->notes,
         ];
 
-        // LOGIKA PERHITUNGAN ULANG
         if ($request->category == 'promotor') {
             $request->validate([
                 'promotor_basic_salary' => 'required|numeric',
@@ -161,7 +171,8 @@ class SalaryController extends Controller
             ]);
             $data['promotor_basic_salary'] = $request->promotor_basic_salary;
             $data['promotor_bonus'] = $request->promotor_bonus ?? 0;
-            // Reset field lain agar bersih
+            
+            // Reset field lain
             $data['freelance_daily_salary'] = null;
             $data['freelance_attendance_count'] = null;
             $data['employee_basic_salary'] = null;
@@ -175,12 +186,14 @@ class SalaryController extends Controller
                 'freelance_daily_salary' => 'required|numeric',
             ]);
 
-            // Hitung ulang absensi jika mau (atau pakai nilai lama jika tidak mau berubah)
-            // Disini kita hitung ulang untuk memastikan akurasi realtime saat edit
+            // [PERBAIKAN] HITUNG ULANG ABSENSI SAAT UPDATE
             $attendanceCount = Attendance::where('user_id', $salary->user_id)
-                ->whereMonth('created_at', $salary->month)
-                ->whereYear('created_at', $salary->year)
-                ->whereIn('status', ['present', 'wfh'])
+                ->whereMonth('check_in_time', $salary->month)
+                ->whereYear('check_in_time', $salary->year)
+                ->where(function($query) {
+                    $query->whereIn('status', ['present', 'late', 'verified', 'pending_verification', 'wfh'])
+                          ->orWhereIn('presence_status', ['Masuk', 'WFH / Dinas Luar', 'Telat']);
+                })
                 ->count();
 
             $data['freelance_daily_salary'] = $request->freelance_daily_salary;
