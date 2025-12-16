@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttendanceCorrectionController;
+use App\Http\Controllers\BranchSalaryController;
 use App\Http\Controllers\EmploymentHistoryController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\SalarySummaryController;
@@ -272,6 +273,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/salaries/{salary}/edit', [SalaryController::class, 'edit'])->name('salaries.edit');
         Route::put('/salaries/{salary}', [SalaryController::class, 'update'])->name('salaries.update');
         Route::delete('/salaries/{salary}', [SalaryController::class, 'destroy'])->name('salaries.destroy');
+        // RUTE GAJI PER CABANG
+        Route::get('/gaji-cabang', [BranchSalaryController::class, 'index'])->name('branch-salary.index');
+        Route::get('/gaji-cabang/{id}', [BranchSalaryController::class, 'show'])->name('branch-salary.show');
 
         // API Helper
         Route::get('/api/check-attendance', [SalaryController::class, 'checkAttendance'])->name('api.check-attendance');
