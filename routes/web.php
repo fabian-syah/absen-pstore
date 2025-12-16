@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttendanceCorrectionController;
 use App\Http\Controllers\EmploymentHistoryController;
 use App\Http\Controllers\SalaryController;
+use App\Http\Controllers\SalarySummaryController;
 use App\Models\User;
 use App\Traits\SendFcmNotification;
 use Illuminate\Support\Facades\Route;
@@ -62,6 +63,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // --- Rute Search Global ---
     Route::get('/search', [GlobalSearchController::class, 'search'])->name('search');
+
+    Route::get('/salary-summary', [SalarySummaryController::class, 'index'])->name('salary-summary.index');
 
     Route::get('/my-wrapped-2025', [App\Http\Controllers\AttendanceRecapController::class, 'index'])->name('attendance.recap');
 

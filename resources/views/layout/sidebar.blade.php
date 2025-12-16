@@ -68,7 +68,7 @@
 
         {{-- BARU: Ringkasan Gaji Tahunan (Akses Semua Role) --}}
         <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="{{ route('salary-summary.index') }}">
                 <i class="menu-icon mdi mdi-file-chart-outline"></i>
                 <span class="menu-title">Ringkasan Gaji Tahunan</span>
             </a>
