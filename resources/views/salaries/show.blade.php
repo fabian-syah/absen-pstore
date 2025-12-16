@@ -1,4 +1,4 @@
-@extends('layout.master')
+@extends('layouts.app')
 
 @section('content')
 <div class="row justify-content-center">
@@ -7,6 +7,7 @@
             <div class="card-body">
                 <h4 class="card-title">Detail Gaji</h4>
                 
+                {{-- Bagian Header User (Sama seperti sebelumnya) --}}
                 <div class="d-flex align-items-center mb-4 border-bottom pb-3">
                     @if($salary->user->profile_photo_path)
                         <img src="{{ asset('storage/' . $salary->user->profile_photo_path) }}" alt="profile" class="img-lg rounded-circle me-3">
@@ -21,6 +22,7 @@
                     </div>
                 </div>
 
+                {{-- Detail Uang (Sama seperti sebelumnya) --}}
                 <div class="row mb-3">
                     <div class="col-6 text-muted">Periode</div>
                     <div class="col-6 fw-bold">{{ $salary->month }} / {{ $salary->year }}</div>
@@ -74,7 +76,11 @@
                 
                 <div class="mt-4">
                     <a href="{{ route('salaries.index') }}" class="btn btn-secondary">Kembali</a>
-                    <a href="{{ route('salaries.edit', $salary->id) }}" class="btn btn-warning text-dark">Edit</a>
+                    
+                    {{-- TOMBOL EDIT HANYA MUNCUL UNTUK ADMIN_GAJI --}}
+                    @if(auth()->user()->role == 'admin_gaji')
+                        <a href="{{ route('salaries.edit', $salary->id) }}" class="btn btn-warning text-dark">Edit</a>
+                    @endif
                 </div>
             </div>
         </div>

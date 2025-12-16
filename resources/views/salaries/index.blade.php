@@ -1,4 +1,4 @@
-@extends('layout.master')
+@extends('layouts.app')
 
 @section('content')
 <div class="row">
@@ -6,10 +6,14 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="card-title">Manajemen Gaji</h4>
-                    <a href="{{ route('salaries.create') }}" class="btn btn-primary text-white">
-                        <i class="mdi mdi-plus"></i> Buat Gaji Baru
-                    </a>
+                    <h4 class="card-title">Manajemen Gaji Cabang</h4>
+                    
+                    {{-- TOMBOL CREATE: HANYA MUNCUL JIKA ROLE ADMIN_GAJI --}}
+                    @if(auth()->user()->role == 'admin_gaji')
+                        <a href="{{ route('salaries.create') }}" class="btn btn-primary text-white">
+                            <i class="mdi mdi-plus"></i> Buat Gaji Baru
+                        </a>
+                    @endif
                 </div>
 
                 {{-- Filter --}}
@@ -78,13 +82,18 @@
                                     <td>{{ $salary->month }} / {{ $salary->year }}</td>
                                     <td class="fw-bold text-success">Rp {{ number_format($salary->total_amount, 0, ',', '.') }}</td>
                                     <td>
-                                        <a href="{{ route('salaries.show', $salary->id) }}" class="btn btn-sm btn-info icon-btn"><i class="mdi mdi-eye"></i></a>
-                                        <a href="{{ route('salaries.edit', $salary->id) }}" class="btn btn-sm btn-warning icon-btn"><i class="mdi mdi-pencil"></i></a>
-                                        <form action="{{ route('salaries.destroy', $salary->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus data ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger icon-btn"><i class="mdi mdi-delete"></i></button>
-                                        </form>
+                                        {{-- SEMUA BISA LIHAT DETAIL --}}
+                                        <a href="{{ route('salaries.show', $salary->id) }}" class="btn btn-sm btn-info icon-btn" title="Lihat Detail"><i class="mdi mdi-eye"></i></a>
+                                        
+                                        {{-- TOMBOL EDIT & DELETE: HANYA MUNCUL JIKA ROLE ADMIN_GAJI --}}
+                                        @if(auth()->user()->role == 'admin_gaji')
+                                            <a href="{{ route('salaries.edit', $salary->id) }}" class="btn btn-sm btn-warning icon-btn" title="Edit"><i class="mdi mdi-pencil"></i></a>
+                                            <form action="{{ route('salaries.destroy', $salary->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus data ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger icon-btn" title="Hapus"><i class="mdi mdi-delete"></i></button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

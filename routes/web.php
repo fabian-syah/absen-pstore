@@ -257,19 +257,29 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             ->name('admin.monitoring.daily');
     });
 
+    // ==========================================================
+    // 1. GRUP VIEW ONLY (Bisa Diakses ADMIN & ADMIN_GAJI)
+    // ==========================================================
     Route::middleware(['auth', 'role:admin,admin_gaji'])->group(function () {
+        // Hanya bisa melihat daftar dan detail
         Route::get('/salaries', [SalaryController::class, 'index'])->name('salaries.index');
+        Route::get('/salaries/{salary}', [SalaryController::class, 'show'])->name('salaries.show');
+    });
+
+    // ==========================================================
+    // 2. GRUP EKSEKUTOR (HANYA ADMIN_GAJI)
+    // ==========================================================
+    Route::middleware(['auth', 'role:admin_gaji'])->group(function () {
+        // Create, Store, Edit, Update, Delete hanya untuk admin_gaji
         Route::get('/salaries/create', [SalaryController::class, 'create'])->name('salaries.create');
         Route::post('/salaries', [SalaryController::class, 'store'])->name('salaries.store');
-        Route::get('/salaries/{salary}', [SalaryController::class, 'show'])->name('salaries.show');
         Route::get('/salaries/{salary}/edit', [SalaryController::class, 'edit'])->name('salaries.edit');
         Route::put('/salaries/{salary}', [SalaryController::class, 'update'])->name('salaries.update');
         Route::delete('/salaries/{salary}', [SalaryController::class, 'destroy'])->name('salaries.destroy');
 
-        // Route Helper untuk mengambil jumlah kehadiran freelance via AJAX (Opsional tapi bagus)
+        // API Helper untuk hitung absen (Hanya dibutuhkan saat create/edit)
         Route::get('/api/check-attendance', [SalaryController::class, 'checkAttendance'])->name('api.check-attendance');
     });
-
     // ====================================================================================================
     //  [PERBAIKAN] GRUP 1: ADMIN, AUDIT, & ADMIN GAJI MANAGEMENT (PINDAHKAN KE ATAS!)
     //  Agar route seperti /users/create dibaca LEBIH DULU daripada /users/{user}
