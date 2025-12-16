@@ -29,7 +29,7 @@
         </li>
 
         {{-- =================================== --}}
-        {{--    MENU UMUM (SEMUA ROLE)           --}}
+        {{--     MENU UMUM (SEMUA ROLE)          --}}
         {{-- =================================== --}}
         <li class="nav-item nav-category">Menu Umum</li>
         <li class="nav-item">
@@ -57,6 +57,24 @@
                 <span class="menu-title">Riwayat Pelanggaran</span>
             </a>
         </li>
+
+        {{-- BARU: Gaji Ku (Akses Semua Role) --}}
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="menu-icon mdi mdi-cash-usd-outline"></i>
+                <span class="menu-title">Gaji Ku</span>
+            </a>
+        </li>
+
+        {{-- BARU: Ringkasan Gaji Tahunan (Akses Semua Role) --}}
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="menu-icon mdi mdi-file-chart-outline"></i>
+                <span class="menu-title">Ringkasan Gaji Tahunan</span>
+            </a>
+        </li>
+
+        {{-- EXISTING: Kasbon (Kecuali Leader) --}}
         @if (auth()->user()->role != 'leader')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('kasbon.index') }}">
@@ -66,8 +84,18 @@
             </li>
         @endif
 
+        {{-- BARU: Manajemen Gaji (Hanya Admin & Admin Gaji) --}}
+        @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="menu-icon mdi mdi-bank-outline"></i>
+                    <span class="menu-title">Gaji</span>
+                </a>
+            </li>
+        @endif
+
         {{-- =================================== --}}
-        {{--    MENU KHUSUS SUPER ADMIN          --}}
+        {{--     MENU KHUSUS SUPER ADMIN         --}}
         {{-- =================================== --}}
 
         {{-- Menu Cabang (Admin & Audit Boleh Lihat) --}}
