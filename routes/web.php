@@ -258,27 +258,28 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // ==========================================================
-    // 1. GRUP VIEW ONLY (Bisa Diakses ADMIN & ADMIN_GAJI)
+    //  MANAJEMEN GAJI (SALARY) - URUTAN PENTING!
     // ==========================================================
-    Route::middleware(['auth', 'role:admin,admin_gaji'])->group(function () {
-        // Hanya bisa melihat daftar dan detail
-        Route::get('/salaries', [SalaryController::class, 'index'])->name('salaries.index');
-        Route::get('/salaries/{salary}', [SalaryController::class, 'show'])->name('salaries.show');
-    });
 
-    // ==========================================================
-    // 2. GRUP EKSEKUTOR (HANYA ADMIN_GAJI)
-    // ==========================================================
+    // 1. GRUP EKSEKUTOR (KHUSUS ADMIN_GAJI) - WAJIB DI ATAS!
+    // Agar /salaries/create terbaca duluan sebelum /salaries/{salary}
     Route::middleware(['auth', 'role:admin_gaji'])->group(function () {
-        // Create, Store, Edit, Update, Delete hanya untuk admin_gaji
         Route::get('/salaries/create', [SalaryController::class, 'create'])->name('salaries.create');
         Route::post('/salaries', [SalaryController::class, 'store'])->name('salaries.store');
         Route::get('/salaries/{salary}/edit', [SalaryController::class, 'edit'])->name('salaries.edit');
         Route::put('/salaries/{salary}', [SalaryController::class, 'update'])->name('salaries.update');
         Route::delete('/salaries/{salary}', [SalaryController::class, 'destroy'])->name('salaries.destroy');
 
-        // API Helper untuk hitung absen (Hanya dibutuhkan saat create/edit)
+        // API Helper
         Route::get('/api/check-attendance', [SalaryController::class, 'checkAttendance'])->name('api.check-attendance');
+    });
+
+    // 2. GRUP VIEW ONLY (Bisa Diakses ADMIN & ADMIN_GAJI) - TARUH DI BAWAH
+    Route::middleware(['auth', 'role:admin,admin_gaji'])->group(function () {
+        Route::get('/salaries', [SalaryController::class, 'index'])->name('salaries.index');
+
+        // Route SHOW menangkap semua ID, jadi harus ditaruh paling bawah di section salary
+        Route::get('/salaries/{salary}', [SalaryController::class, 'show'])->name('salaries.show');
     });
     // ====================================================================================================
     //  [PERBAIKAN] GRUP 1: ADMIN, AUDIT, & ADMIN GAJI MANAGEMENT (PINDAHKAN KE ATAS!)
