@@ -60,7 +60,7 @@
 
         {{-- BARU: Gaji Ku (Akses Semua Role) --}}
         <li class="nav-item">
-            <a class="nav-link" href="{{ route('salaries.index') }}">
+            <a class="nav-link" href="#">
                 <i class="menu-icon mdi mdi-wallet-outline"></i>
                 <span class="menu-title">Gaji Ku</span>
             </a>
@@ -87,7 +87,7 @@
         {{-- BARU: Manajemen Gaji (Hanya Admin & Admin Gaji) --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{{ route('salaries.index') }}">
                     <i class="menu-icon mdi mdi-bank-outline"></i>
                     <span class="menu-title">Gaji</span>
                 </a>
