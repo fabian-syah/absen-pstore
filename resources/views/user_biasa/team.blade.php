@@ -322,6 +322,8 @@
         </div>
     </div>
 
+    
+
     {{-- Modal Image --}}
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
