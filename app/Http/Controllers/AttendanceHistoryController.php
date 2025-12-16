@@ -133,7 +133,6 @@ class AttendanceHistoryController extends Controller
             if ($att->check_in_time->month == $selectedMonth) {
                 
                 // === LOGIKA VALIDASI LEMBUR LINTAS HARI ===
-                // Cek apakah user pulang telat malam sebelumnya, sehingga telat hari ini dimaklumi
                 $att->is_excused_late = false;
                 
                 // Cari absen kemarin
@@ -185,8 +184,9 @@ class AttendanceHistoryController extends Controller
                         $fakeAtt->status = 'verified';
                         $fakeAtt->attendance_type = 'leave'; 
                         
-                        // [FIX]: Set is_late_checkin TRUE jika tipe izinnya 'telat'
-                        // Agar terhitung di summary
+                        // [FIXING DISINI]
+                        // Jika izinnya tipe 'telat', set is_late_checkin = true
+                        // Agar terhitung di summary bawah
                         $fakeAtt->is_late_checkin = ($leave->type == 'telat'); 
 
                         $fakeAtt->is_early_checkout = false;
@@ -222,7 +222,7 @@ class AttendanceHistoryController extends Controller
             'izin' => $history->filter(function($i) { return in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti']); })->count(),
             'alpha' => $history->filter(function($i) { return strtolower($i->presence_status ?? '') === 'alpha'; })->count(),
             
-            // Hitung Telat (Termasuk Izin Telat karena flag is_late_checkin sudah di-set true di atas)
+            // Perhitungan Telat (Sekarang akan menghitung Izin Telat juga)
             'telat' => $history->where('is_late_checkin', true)->count(),
             
             'pulang_cepat' => $history->where('is_early_checkout', true)->count(),
@@ -255,13 +255,11 @@ class AttendanceHistoryController extends Controller
         $originalDate = $attendance->check_in_time->format('Y-m-d');
         $newCheckIn = Carbon::parse($originalDate . ' ' . $request->check_in_time);
         
-        // Handle Cross-Day Checkout manually in Audit Edit
         $checkOutTimeStr = $request->check_out_time;
         $newCheckOut = null;
 
         if ($checkOutTimeStr) {
             $newCheckOut = Carbon::parse($originalDate . ' ' . $checkOutTimeStr);
-            // Jika jam pulang < jam masuk, asumsikan besoknya (lintas hari)
             if ($newCheckOut->lt($newCheckIn)) {
                 $newCheckOut->addDay();
             }
@@ -270,7 +268,7 @@ class AttendanceHistoryController extends Controller
         $workSchedule = WorkSchedule::getScheduleForUser($attendance->user_id);
         $isLate = $attendance->is_late_checkin;
         
-        // Logic hitung telat manual (hanya berlaku mulai tanggal tertentu jika perlu)
+        // Logic hitung telat manual saat edit
         if ($newCheckIn->format('Y-m-d') >= '2025-12-01') {
             if ($workSchedule && $request->presence_status == 'Masuk') {
                 $scheduleStart = Carbon::parse($originalDate . ' ' . $workSchedule->check_in_end);
