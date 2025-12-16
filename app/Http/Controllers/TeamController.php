@@ -9,6 +9,7 @@ use App\Models\Branch;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str; // Pastikan Str diimport
 
 class TeamController extends Controller
 {
@@ -22,7 +23,7 @@ class TeamController extends Controller
         if ($user->role == 'admin' && $user->branch_id == null) $myBranchIds = Branch::pluck('id')->toArray();
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
-        // Default Timezone jika user tidak punya cabang (misal Audit Pusat)
+        // Default Timezone jika user tidak punya cabang
         $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
 
@@ -30,12 +31,10 @@ class TeamController extends Controller
         $query = User::where('users.is_active', true);
 
         if (empty($myBranchIds)) {
-            // Logika User Tanpa Cabang (User Biasa/Audit Pusat)
+            // Logika User Tanpa Cabang
             if (in_array($user->role, ['user_biasa', 'security'])) {
                 $query->where('division_id', $user->division_id); 
-                // Note: Filter (!= $user->id) SUDAH DIHAPUS agar akun sendiri muncul
             } elseif (in_array($user->role, ['audit', 'leader'])) {
-                 // Audit/Leader tanpa cabang spesifik melihat diri sendiri (atau tambah logika divisi jika perlu)
                  $query->where('users.id', $user->id);
             } else {
                 $query->where('users.id', 0); 
@@ -48,14 +47,12 @@ class TeamController extends Controller
                         $subQ->whereIn('branches.id', $myBranchIds);
                     });
             });
-            // Opsi: User biasa hanya lihat divisinya
             if ($user->role == 'user_biasa') {
                 $query->where('division_id', $user->division_id);
             }
         }
 
-        // 3. Eager Load "Longgar" (Fix Masalah Timezone)
-        // Kita ambil 5 absen terakhir, nanti difilter pakai PHP biar akurat
+        // 3. Eager Load
         $myTeam = $query->with([
             'workSchedule',
             'attendances' => function ($q) {
@@ -69,7 +66,6 @@ class TeamController extends Controller
             'activeLateStatus', 'divisions', 'branch'
         ])
         ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
-        // Trik: Taruh akun "Saya" di urutan paling atas
         ->orderByRaw("CASE WHEN users.id = {$user->id} THEN 0 ELSE 1 END") 
         ->orderBy('branches.name', 'asc')
         ->orderBy('users.name', 'asc')
@@ -82,44 +78,31 @@ class TeamController extends Controller
             'hadir' => 0, 'izin_sakit' => 0, 'belum_hadir' => 0, 'lembur' => 0
         ];
 
-        // LOOPING UTAMA (DISINI KUNCI PERBAIKANNYA)
         foreach($myTeam as $member) {
-            // Ambil Timezone spesifik member tersebut (Penting!)
             $memberTz = $member->branch->timezone ?? 'Asia/Jakarta';
             $todayDate = Carbon::now($memberTz)->format('Y-m-d');
             $now = Carbon::now($memberTz);
 
-            // Cari Absen yang Valid dari 5 data terakhir (Logic PHP)
-            // Kita replace collection 'attendances' member dengan SATU record yang valid saja
+            // Filter Absensi Valid
             $validAttendance = $member->attendances->first(function ($att) use ($memberTz, $todayDate, $now) {
-                
                 $checkIn = Carbon::parse($att->check_in_time)->setTimezone($memberTz);
                 $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($memberTz) : null;
                 
-                // Kondisi 1: Masuk Hari Ini (Normal)
-                if ($checkIn->format('Y-m-d') === $todayDate) {
-                    return true;
-                }
+                // Masuk Hari Ini
+                if ($checkIn->format('Y-m-d') === $todayDate) return true;
 
-                // Kondisi 2: Pulang Hari Ini tapi Masuk Kemarin (Habis Lembur)
-                if ($checkOut && $checkOut->format('Y-m-d') === $todayDate && $checkIn->format('Y-m-d') < $todayDate) {
-                    return true;
-                }
+                // Pulang Hari Ini tapi Masuk Kemarin (Lembur)
+                if ($checkOut && $checkOut->format('Y-m-d') === $todayDate && $checkIn->format('Y-m-d') < $todayDate) return true;
 
-                // Kondisi 3: Masih Checkin dari Kemarin (Sedang Lembur > 24 jam belum checkout atau lupa)
-                // Kita batasi max mundur 32 jam biar data tahun lalu gak kebawa
-                if (!$checkOut && $checkIn->diffInHours($now) < 32 && $checkIn->format('Y-m-d') < $todayDate) {
-                    return true;
-                }
+                // Masih Checkin dari Kemarin (Sedang Lembur < 32 jam)
+                if (!$checkOut && $checkIn->diffInHours($now) < 32 && $checkIn->format('Y-m-d') < $todayDate) return true;
 
                 return false;
             });
 
-            // Timpa collection attendances dengan 1 object hasil filter (atau null)
-            // Supaya di Blade tinggal panggil $member->attendances->first() dan isinya PASTI benar
             $member->setRelation('attendances', $validAttendance ? collect([$validAttendance]) : collect([]));
 
-            // --- Hitung Statistik ---
+            // Hitung Stats
             $att = $validAttendance;
             $leave = $member->leaveRequests->first();
             $isWfh = $leave && $leave->type == 'wfh';
@@ -143,7 +126,7 @@ class TeamController extends Controller
         $stats['belum_hadir'] = $stats['total'] - ($stats['hadir'] + $stats['izin_sakit']);
         if($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0;
 
-        // Data Statistik Sidebar (Biarkan default)
+        // Data Sidebar
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->withCount(['users' => function ($q) { $q->where('is_active', true); }])
             ->orderBy('name', 'asc')->get();
@@ -156,6 +139,8 @@ class TeamController extends Controller
 
         return view('user_biasa.team', compact('myTeam', 'myBranchIds', 'controlledBranches', 'assignedAudits', 'stats'));
     }
+
+    // Method lain tetap sama, saya sertakan agar file lengkap
     public function myBranches()
     {
         $user = Auth::user();
@@ -173,21 +158,16 @@ class TeamController extends Controller
         }
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
-        // FIX ERROR CRASH: Menggunakan map() untuk memproses data
-        // Agar stats_today benar-benar menempel pada object branch
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->orderBy('name', 'asc')
             ->get()
             ->map(function ($branch) {
-                // Timezone per cabang
                 $tz = $branch->timezone ?? 'Asia/Jakarta';
                 $todayInBranch = Carbon::now($tz)->format('Y-m-d');
                 $nowInBranch = Carbon::now($tz);
 
-                // Hitung User Aktif
                 $users = User::where('branch_id', $branch->id)->where('is_active', true)
                     ->with(['attendances' => function($q) use ($todayInBranch, $nowInBranch) {
-                        // Logika Absensi yang SAMA dengan index()
                         $q->where(function($sq) use ($todayInBranch) {
                             $sq->whereDate('check_in_time', $todayInBranch);
                         })->orWhere(function($sq) use ($todayInBranch) {
@@ -203,21 +183,17 @@ class TeamController extends Controller
                           ->whereDate('end_date', '>=', $todayInBranch);
                     }])->get();
 
-                $branch->users_count = $users->count(); // Set manual count
+                $branch->users_count = $users->count();
 
-                $hadir = 0; $sakit = 0; $izin_cuti = 0; $alpha = 0;
-                $lembur = 0;
+                $hadir = 0; $sakit = 0; $izin_cuti = 0; $alpha = 0; $lembur = 0;
 
                 foreach ($users as $u) {
                     $att = $u->attendances->first();
                     $leave = $u->leaveRequests->first();
-
-                    // Cek lembur lintas hari
                     $isOvertime = false;
                     if ($att) {
                         $checkInDate = \Carbon\Carbon::parse($att->check_in_time)->setTimezone($tz)->format('Y-m-d');
                         $todayDate = Carbon::now($tz)->format('Y-m-d');
-                        
                         if ($checkInDate !== $todayDate) {
                             $isOvertime = true;
                             $lembur++;
@@ -227,27 +203,18 @@ class TeamController extends Controller
                     if ($att || $isOvertime) {
                         $hadir++;
                     } elseif ($leave) {
-                        if ($leave->type == 'sakit') {
-                            $sakit++;
-                        } elseif ($leave->type == 'wfh') {
-                            $hadir++; 
-                        } else {
-                            $izin_cuti++; 
-                        }
+                        if ($leave->type == 'sakit') $sakit++;
+                        elseif ($leave->type == 'wfh') $hadir++; 
+                        else $izin_cuti++; 
                     } else {
                         $alpha++; 
                     }
                 }
 
-                // Pasang data ke object branch
                 $branch->stats_today = [
-                    'hadir' => $hadir,
-                    'sakit' => $sakit,
-                    'izin' => $izin_cuti,
-                    'alpha' => $alpha,
-                    'lembur' => $lembur
+                    'hadir' => $hadir, 'sakit' => $sakit, 'izin' => $izin_cuti,
+                    'alpha' => $alpha, 'lembur' => $lembur
                 ];
-
                 return $branch;
             });
 
@@ -315,7 +282,6 @@ class TeamController extends Controller
             $emp->today_leave = $todayLeave;
             $attendance = $emp->attendances->first();
 
-            // Cek apakah ini lembur
             $isOvertime = false;
             if ($attendance) {
                 $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($branchTimezone)->format('Y-m-d');
@@ -376,7 +342,6 @@ class TeamController extends Controller
             }); 
         })->get();
         
-        // Tambahkan logika untuk identifikasi lembur
         foreach ($attendances as $attendance) {
             $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time)->format('Y-m-d');
             $checkOutDate = $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->format('Y-m-d') : null;

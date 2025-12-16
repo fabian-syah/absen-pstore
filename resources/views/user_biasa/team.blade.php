@@ -38,19 +38,7 @@
         .audit-pill:hover { background: rgba(255, 255, 255, 0.25); }
         .modal-content { border: none; border-radius: 20px; overflow: hidden; }
         .modal-image-wrapper { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1rem; }
-        .lembur-info { 
-            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); 
-            border-left: 4px solid #8b5cf6; 
-            padding: 0.5rem 0.75rem; 
-            border-radius: 8px; 
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-        }
-        .lembur-time {
-            font-size: 0.75rem;
-            color: #6d28d9;
-            font-weight: 500;
-        }
+        /* Style untuk lembur info (Badge saja) */
         .lembur-badge {
             background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
             color: white;
@@ -142,7 +130,6 @@
                                         // Cek apakah data absensi ini adalah "Sisa Kemarin" (Lembur)
                                         $isOvertimeYesterday = false;
                                         $isStillWorkingOvertime = false;
-                                        $overtimeDuration = null;
 
                                         if ($attendance) {
                                             $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('Y-m-d');
@@ -153,11 +140,9 @@
                                                 if ($attendance->check_out_time) {
                                                     // Sudah pulang (tapi pulangnya hari ini) -> INI TARGET KITA
                                                     $isOvertimeYesterday = true;
-                                                    $overtimeDuration = \Carbon\Carbon::parse($attendance->check_in_time)->diff(\Carbon\Carbon::parse($attendance->check_out_time));
                                                 } else {
                                                     // Belum pulang (masih lembur dari kemarin)
                                                     $isStillWorkingOvertime = true;
-                                                    $overtimeDuration = \Carbon\Carbon::parse($attendance->check_in_time)->diff(now());
                                                 }
                                             }
                                         }
@@ -198,24 +183,7 @@
                                                             <i class="mdi mdi-bed-clock me-1"></i> 
                                                             <span>Habis Lembur</span>
                                                         </span>
-                                                        
-                                                        <div class="lembur-info mt-2">
-                                                            <div class="lembur-time">
-                                                                <i class="mdi mdi-clock-outline me-1"></i>
-                                                                <strong>Masuk:</strong> {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('d M, H:i') }}
-                                                            </div>
-                                                            <div class="lembur-time">
-                                                                <i class="mdi mdi-home-outline me-1"></i>
-                                                                <strong>Pulang:</strong> {{ \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz)->format('d M, H:i') }}
-                                                            </div>
-                                                            @if($overtimeDuration)
-                                                                <div class="lembur-time">
-                                                                    <i class="mdi mdi-timer-outline me-1"></i>
-                                                                    <strong>Durasi:</strong> {{ $overtimeDuration->format('%h jam %i menit') }}
-                                                                    <span class="lembur-badge">Lembur</span>
-                                                                </div>
-                                                            @endif
-                                                        </div>
+                                                        {{-- Detail Waktu Dihilangkan sesuai request --}}
                                                         
                                                         <div class="mt-2">
                                                             <span class="badge bg-light text-danger border border-danger" style="font-size: 0.65rem;">
@@ -231,20 +199,7 @@
                                                             <i class="mdi mdi-moon-waning-crescent me-1"></i> 
                                                             <span>Sedang Lembur</span>
                                                         </span>
-                                                        
-                                                        <div class="lembur-info mt-2">
-                                                            <div class="lembur-time">
-                                                                <i class="mdi mdi-clock-start me-1"></i>
-                                                                <strong>Masuk sejak:</strong> {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('d M, H:i') }}
-                                                            </div>
-                                                            @if($overtimeDuration)
-                                                                <div class="lembur-time">
-                                                                    <i class="mdi mdi-timer-sand me-1"></i>
-                                                                    <strong>Sudah:</strong> {{ $overtimeDuration->format('%h jam %i menit') }}
-                                                                    <span class="lembur-badge">Aktif</span>
-                                                                </div>
-                                                            @endif
-                                                        </div>
+                                                        {{-- Detail Waktu Dihilangkan sesuai request --}}
                                                     </div>
 
                                                 @else
@@ -290,20 +245,29 @@
                                             {{-- BUKTI FOTO --}}
                                             <div class="d-flex gap-2">
                                                 @if ($attendance)
-                                                    @if($attendance->photo_path)
-                                                        <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}">
-                                                            <i class="mdi mdi-camera"></i> Masuk
-                                                        </button>
-                                                    @endif
-                                                    @if($attendance->photo_out_path)
-                                                        <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_out_path) }}">
-                                                            <i class="mdi mdi-camera"></i> Pulang
-                                                        </button>
+                                                    {{-- Logic: Jangan tampilkan foto jika itu data lembur kemarin --}}
+                                                    @if(!$isOvertimeYesterday && !$isStillWorkingOvertime)
+                                                        @if($attendance->photo_path)
+                                                            <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}">
+                                                                <i class="mdi mdi-camera"></i> Masuk
+                                                            </button>
+                                                        @endif
+                                                        @if($attendance->photo_out_path)
+                                                            <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_out_path) }}">
+                                                                <i class="mdi mdi-camera"></i> Pulang
+                                                            </button>
+                                                        @endif
                                                     @endif
                                                 @endif
-                                                @if ($leave && $leave->file_proof)
-                                                    <button class="view-photo-btn bg-info text-white border-0" onclick="window.open('{{ Storage::url($leave->file_proof) }}', '_blank')">
-                                                        <i class="mdi mdi-file-document"></i> Bukti
+                                                
+                                                {{-- Logic: Hanya tampilkan bukti foto jika statusnya WFH --}}
+                                                @if ($leave && $leave->type == 'wfh' && $leave->file_proof)
+                                                    {{-- Logic: Gunakan Modal Popup (bukan window.open/tab baru) --}}
+                                                    <button class="view-photo-btn bg-info text-white border-0" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#imageModal" 
+                                                            data-src="{{ Storage::url($leave->file_proof) }}">
+                                                        <i class="mdi mdi-file-document"></i> Bukti WFH
                                                     </button>
                                                 @endif
                                             </div>
