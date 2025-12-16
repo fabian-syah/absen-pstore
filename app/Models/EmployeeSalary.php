@@ -10,9 +10,16 @@ class EmployeeSalary extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'category', 'basic_salary', 
-        'position_allowance', 'owner_privilege', 
-        'daily_salary', 'updated_by'
+        'user_id', 
+        'category', 
+        'basic_salary',      // Dipakai untuk Gaji Pokok (Karyawan) & Gaji Bulanan (Promotor)
+        'position_allowance', 
+        'owner_privilege', 
+        'daily_salary',      // Dipakai untuk Freelance
+        'promotor_bonus',    // Khusus Promotor
+        'bank_account_number', 
+        'bank_name',
+        'updated_by'
     ];
 
     public function user()
