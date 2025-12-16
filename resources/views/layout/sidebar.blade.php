@@ -87,7 +87,7 @@
         {{-- BARU: Manajemen Gaji (Hanya Admin & Admin Gaji) --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('salaries.index') }}">
+                <a class="nav-link" href="{{ route('employee-salaries.index') }}">
                     <i class="menu-icon mdi mdi-bank-outline"></i>
                     <span class="menu-title">Gaji</span>
                 </a>

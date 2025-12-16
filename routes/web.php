@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AttendanceCorrectionController;
 use App\Http\Controllers\BranchSalaryController;
+use App\Http\Controllers\EmployeeSalaryController;
 use App\Http\Controllers\EmploymentHistoryController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\SalarySummaryController;
@@ -268,6 +269,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // 1. GRUP EKSEKUTOR (KHUSUS ADMIN_GAJI) - WAJIB DI ATAS!
     // Agar /salaries/create terbaca duluan sebelum /salaries/{salary}
     Route::middleware(['auth', 'role:admin_gaji'])->group(function () {
+
+        Route::get('/master-gaji', [EmployeeSalaryController::class, 'index'])->name('employee-salaries.index');
+        Route::get('/master-gaji/{id}/edit', [EmployeeSalaryController::class, 'edit'])->name('employee-salaries.edit');
+        Route::put('/master-gaji/{id}', [EmployeeSalaryController::class, 'update'])->name('employee-salaries.update');
         Route::get('/salaries/create', [SalaryController::class, 'create'])->name('salaries.create');
         Route::post('/salaries', [SalaryController::class, 'store'])->name('salaries.store');
         Route::get('/salaries/{salary}/edit', [SalaryController::class, 'edit'])->name('salaries.edit');
