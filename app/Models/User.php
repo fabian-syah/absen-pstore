@@ -225,4 +225,9 @@ class User extends Authenticatable
         $time->setTimezone($branchTimezone);
         return $time->format('H:i');
     }
+
+    public function salaries()
+    {
+        return $this->hasMany(Salary::class);
+    }
 }

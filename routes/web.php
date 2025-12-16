@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AttendanceCorrectionController;
 use App\Http\Controllers\EmploymentHistoryController;
+use App\Http\Controllers\SalaryController;
 use App\Models\User;
 use App\Traits\SendFcmNotification;
 use Illuminate\Support\Facades\Route;
@@ -254,6 +255,19 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/monitoring/daily-attendance', [AdminMonitoringController::class, 'dailyAttendance'])
             ->name('admin.monitoring.daily');
+    });
+
+    Route::middleware(['auth', 'role:admin,admin_gaji'])->group(function () {
+        Route::get('/salaries', [SalaryController::class, 'index'])->name('salaries.index');
+        Route::get('/salaries/create', [SalaryController::class, 'create'])->name('salaries.create');
+        Route::post('/salaries', [SalaryController::class, 'store'])->name('salaries.store');
+        Route::get('/salaries/{salary}', [SalaryController::class, 'show'])->name('salaries.show');
+        Route::get('/salaries/{salary}/edit', [SalaryController::class, 'edit'])->name('salaries.edit');
+        Route::put('/salaries/{salary}', [SalaryController::class, 'update'])->name('salaries.update');
+        Route::delete('/salaries/{salary}', [SalaryController::class, 'destroy'])->name('salaries.destroy');
+
+        // Route Helper untuk mengambil jumlah kehadiran freelance via AJAX (Opsional tapi bagus)
+        Route::get('/api/check-attendance', [SalaryController::class, 'checkAttendance'])->name('api.check-attendance');
     });
 
     // ====================================================================================================

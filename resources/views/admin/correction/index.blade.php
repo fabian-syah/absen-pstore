@@ -1,5 +1,5 @@
 @extends('layout.master') 
-{{-- Pastikan layout utamanya sesuai (misal: layout.master atau layouts.app) --}}
+{{-- Pastikan layout utamanya sesuai (misal: layout.master atau layout.master) --}}
 
 @section('content')
 <div class="row">
