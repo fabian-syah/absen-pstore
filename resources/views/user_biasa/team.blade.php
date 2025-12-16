@@ -12,7 +12,7 @@
         .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
         .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
         .bg-soft-danger  { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
-        /* Warna Baru untuk Status Lembur Lintas Hari */
+        
         .bg-soft-indigo  { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; border: 1px solid rgba(102, 16, 242, 0.2); }
         .bg-soft-purple  { background-color: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.2); }
         
@@ -136,10 +136,8 @@
                                         $leave = $member->leaveRequests->first();
                                         $isWfh = $leave && $leave->type == 'wfh';
                                         
-                                        // Ambil Timezone Cabang Member
                                         $memberTz = $member->branch->timezone ?? 'Asia/Jakarta';
                                         
-                                        // Cek apakah data absensi ini adalah "Sisa Kemarin" (Lembur)
                                         $isOvertimeYesterday = false;
                                         $isStillWorkingOvertime = false;
                                         $overtimeDuration = null;
@@ -148,21 +146,16 @@
                                             $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('Y-m-d');
                                             $todayDate = \Carbon\Carbon::now($memberTz)->format('Y-m-d');
 
-                                            // Jika tanggal checkin BUKAN hari ini
                                             if ($checkInDate !== $todayDate) {
                                                 if ($attendance->check_out_time) {
-                                                    // Sudah pulang (tapi pulangnya hari ini) -> INI TARGET KITA
                                                     $isOvertimeYesterday = true;
                                                     $overtimeDuration = \Carbon\Carbon::parse($attendance->check_in_time)->diff(\Carbon\Carbon::parse($attendance->check_out_time));
                                                 } else {
-                                                    // Belum pulang (masih lembur dari kemarin)
                                                     $isStillWorkingOvertime = true;
                                                     $overtimeDuration = \Carbon\Carbon::parse($attendance->check_in_time)->diff(now());
                                                 }
                                             }
                                         }
-
-                                        // Online status
                                         $isOnline = ($attendance && !$attendance->check_out_time) || $isWfh;
                                     @endphp
 
@@ -186,36 +179,23 @@
                                             </div>
                                         </td>
                                         <td class="py-3">
-                                            {{-- LOGIKA STATUS TEXT --}}
                                             @if ($attendance)
                                                 @if ($isOvertimeYesterday)
-                                                    {{-- PERUBAHAN: Tampilan Bersih untuk Habis Lembur --}}
                                                     <div>
-                                                        <span class="status-badge bg-soft-indigo text-primary" 
-                                                              data-bs-toggle="tooltip" 
-                                                              data-bs-placement="top"
-                                                              title="Lembur Lintas Hari">
-                                                            <i class="mdi mdi-bed-clock me-1"></i> 
-                                                            <span>Habis Lembur</span>
+                                                        <span class="status-badge bg-soft-indigo text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Lembur Lintas Hari">
+                                                            <i class="mdi mdi-bed-clock me-1"></i> <span>Habis Lembur</span>
                                                         </span>
-                                                        
-                                                        {{-- Detail jam dihapus di sini --}}
-                                                        
                                                         <div class="mt-2">
                                                             <span class="badge bg-light text-danger border border-danger" style="font-size: 0.65rem;">
                                                                 <i class="mdi mdi-clock-alert me-1"></i>Belum Absen Shift Baru
                                                             </span>
                                                         </div>
                                                     </div>
-
                                                 @elseif ($isStillWorkingOvertime)
-                                                    {{-- KASUS: Masih Lembur (Data Kemarin belum checkout) --}}
                                                     <div>
                                                         <span class="status-badge bg-soft-purple text-dark">
-                                                            <i class="mdi mdi-moon-waning-crescent me-1"></i> 
-                                                            <span>Sedang Lembur</span>
+                                                            <i class="mdi mdi-moon-waning-crescent me-1"></i> <span>Sedang Lembur</span>
                                                         </span>
-                                                        
                                                         <div class="lembur-info mt-2">
                                                             <div class="lembur-time">
                                                                 <i class="mdi mdi-clock-start me-1"></i>
@@ -230,31 +210,23 @@
                                                             @endif
                                                         </div>
                                                     </div>
-
                                                 @else
-                                                    {{-- KASUS: Normal Hari Ini --}}
                                                     @if ($attendance->check_out_time)
                                                         <div>
-                                                            <span class="status-badge bg-secondary text-white">
-                                                                <i class="mdi mdi-home me-1"></i> Sudah Pulang
-                                                            </span>
+                                                            <span class="status-badge bg-secondary text-white"><i class="mdi mdi-home me-1"></i> Sudah Pulang</span>
                                                             <div class="small text-muted mt-1">
-                                                                Masuk: {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('H:i') }}
-                                                                | Pulang: {{ \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz)->format('H:i') }}
+                                                                Masuk: {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('H:i') }} | Pulang: {{ \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz)->format('H:i') }}
                                                             </div>
                                                         </div>
                                                     @else
                                                         <div>
-                                                            <span class="status-badge bg-success text-white">
-                                                                <i class="mdi mdi-briefcase-check me-1"></i> Sedang Bekerja
-                                                            </span>
+                                                            <span class="status-badge bg-success text-white"><i class="mdi mdi-briefcase-check me-1"></i> Sedang Bekerja</span>
                                                             <div class="small text-muted mt-1">
                                                                 Masuk: {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('H:i') }}
                                                             </div>
                                                         </div>
                                                     @endif
                                                 @endif
-
                                             @elseif ($leave)
                                                 <span class="status-badge bg-info text-white">
                                                     <i class="mdi mdi-file-document me-1"></i> {{ ucfirst($leave->type) }}
@@ -265,14 +237,11 @@
                                                     </div>
                                                 @endif
                                             @else
-                                                <span class="status-badge bg-danger text-white">
-                                                    <i class="mdi mdi-close-circle me-1"></i> Belum Hadir
-                                                </span>
+                                                <span class="status-badge bg-danger text-white"><i class="mdi mdi-close-circle me-1"></i> Belum Hadir</span>
                                             @endif
                                         </td>
                                         <td class="py-3">
                                             {{-- BUKTI FOTO --}}
-                                            {{-- PERUBAHAN: Hanya tampilkan foto jika BUKAN "Habis Lembur" (isOvertimeYesterday = false) --}}
                                             <div class="d-flex gap-2">
                                                 @if ($attendance && !$isOvertimeYesterday)
                                                     @if($attendance->photo_path)
@@ -287,7 +256,8 @@
                                                     @endif
                                                 @endif
                                                 
-                                                @if ($leave && $leave->file_proof)
+                                                {{-- PERUBAHAN DISINI: Hanya tampilkan bukti jika tipe cuti adalah 'wfh' --}}
+                                                @if ($leave && $leave->file_proof && $leave->type == 'wfh')
                                                     <button class="view-photo-btn bg-info text-white border-0" onclick="window.open('{{ Storage::url($leave->file_proof) }}', '_blank')">
                                                         <i class="mdi mdi-file-document"></i> Bukti
                                                     </button>
@@ -333,8 +303,6 @@
                 modalImg.src = src;
             });
         }
-
-        // Initialize tooltips
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
