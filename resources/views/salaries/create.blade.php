@@ -1,204 +1,275 @@
-@extends('layout.master')
+@extends('layouts.app')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-md-8 grid-margin stretch-card">
-        <div class="card">
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="mdi mdi-calculator"></i> Input Payroll Karyawan</h4>
+                <span class="badge badge-light text-dark fs-6">{{ date('F Y') }}</span>
+            </div>
             <div class="card-body">
-                <h4 class="card-title">Buat Data Gaji Baru</h4>
-                <p class="card-description">
-                    Input data gaji untuk Promotor, Freelance, atau Karyawan Biasa.
-                </p>
-
-                @if(session('error'))
-                    <div class="alert alert-danger">{{ session('error') }}</div>
-                @endif
-
-                <form action="{{ route('salaries.store') }}" method="POST">
+                
+                {{-- Form Start --}}
+                <form action="{{ route('salaries.store') }}" method="POST" id="payrollForm">
                     @csrf
                     
-                    {{-- Pilihan Periode --}}
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Bulan</label>
-                            <select name="month" id="month" class="form-control" required>
-                                @for ($i = 1; $i <= 12; $i++)
-                                    <option value="{{ sprintf('%02d', $i) }}" {{ date('m') == sprintf('%02d', $i) ? 'selected' : '' }}>
-                                        {{ DateTime::createFromFormat('!m', $i)->format('F') }}
-                                    </option>
-                                @endfor
+                    {{-- SECTION 1: PILIH USER --}}
+                    <div class="row mb-4 bg-light p-3 rounded">
+                        <div class="col-md-5">
+                            <label class="fw-bold">Pilih Karyawan</label>
+                            @if($selectedUser)
+                                {{-- Jika user sudah dipilih dari menu sebelumnya --}}
+                                <input type="hidden" name="user_id" value="{{ $selectedUser->id }}">
+                                <input type="text" class="form-control fw-bold border-0 bg-white" 
+                                       value="{{ $selectedUser->name }} ({{ $selectedUser->branch->name ?? '-' }})" readonly>
+                            @else
+                                {{-- Dropdown Search --}}
+                                <select name="user_id" class="form-control" onchange="window.location.href='{{ route('salaries.create') }}?user_id='+this.value">
+                                    <option value="">-- Cari Karyawan --</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }} - {{ $user->branch->name ?? '' }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
+                        </div>
+                        <div class="col-md-3">
+                            <label class="fw-bold">Bulan & Tahun</label>
+                            <div class="d-flex">
+                                <input type="text" name="month" class="form-control me-1" value="{{ date('m') }}" readonly>
+                                <input type="text" name="year" class="form-control" value="{{ date('Y') }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="fw-bold">Kategori Karyawan</label>
+                            <select name="category" class="form-control">
+                                <option value="employee" selected>Karyawan Tetap</option>
+                                <option value="promotor">Promotor</option>
+                                <option value="freelance">Freelance</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="row">
+                        {{-- SECTION 2: PENDAPATAN (INCOME) --}}
+                        <div class="col-md-6 border-end">
+                            <h5 class="text-success mb-3 fw-bold"><i class="mdi mdi-arrow-up-circle"></i> PENDAPATAN</h5>
+                            
+                            <div class="mb-3">
+                                <label>Gaji Pokok</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" name="employee_basic_salary" id="basic_salary" class="form-control income-input" placeholder="0" value="0">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Tunjangan Jabatan</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" name="employee_position_allowance" id="allowance" class="form-control income-input" placeholder="0" value="0">
+                                </div>
+                            </div>
+
+                            <div class="mb-3 p-2 border rounded" style="background-color: #f8f9fa;">
+                                <label>Privilege Owner</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" name="employee_owner_privilege" id="privilege" class="form-control income-input" placeholder="0" value="0">
+                                </div>
+                                {{-- CHECKBOX ABAIKAN ABSENSI --}}
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="override_attendance">
+                                    <label class="form-check-label text-muted small fw-bold" for="override_attendance">
+                                        <i class="mdi mdi-shield-check"></i> Privilege User (Jangan Potong Absensi)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Bonus / Insentif</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" name="promotor_bonus" id="bonus" class="form-control income-input" placeholder="0" value="0">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Dispensasi (Manual)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" name="dispensation_amount" id="dispensation" class="form-control income-input" placeholder="0" value="0">
+                                </div>
+                                <input type="text" name="dispensation_note" class="form-control form-control-sm mt-1" placeholder="Catatan dispensasi...">
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center alert alert-success">
+                                <span class="fw-bold">Total Pendapatan</span>
+                                <h4 class="mb-0 fw-bold" id="total_income_display">Rp 0</h4>
+                            </div>
+                        </div>
+
+                        {{-- SECTION 3: POTONGAN (DEDUCTION) --}}
                         <div class="col-md-6">
-                            <label class="form-label">Tahun</label>
-                            <select name="year" id="year" class="form-control" required>
-                                <option value="{{ date('Y') }}">{{ date('Y') }}</option>
-                                <option value="{{ date('Y') - 1 }}">{{ date('Y') - 1 }}</option>
-                            </select>
-                        </div>
-                    </div>
+                            <h5 class="text-danger mb-3 fw-bold"><i class="mdi mdi-arrow-down-circle"></i> POTONGAN</h5>
 
-                    {{-- Pilih Karyawan --}}
-                    <div class="form-group">
-                        <label for="user_id">Pilih Karyawan (Cari Nama/Cabang)</label>
-                        {{-- Gunakan class 'select2' jika template Anda punya plugin select2, jika tidak, browser modern tetap bisa search sederhana --}}
-                        <select name="user_id" id="user_id" class="form-control" required style="width:100%">
-                            <option value="">-- Pilih Karyawan --</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}">
-                                    {{ $user->name }} - {{ $user->branch->name ?? 'No Branch' }} ({{ $user->division->name ?? 'No Div' }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Pilih Kategori --}}
-                    <div class="form-group">
-                        <label for="category">Kategori Gaji</label>
-                        <select name="category" id="category" class="form-control" required>
-                            <option value="">-- Pilih Kategori --</option>
-                            <option value="promotor">Promotor</option>
-                            <option value="freelance">Freelance</option>
-                            <option value="employee">Karyawan Biasa</option>
-                        </select>
-                    </div>
-
-                    <hr>
-
-                    {{-- FORM PROMOTOR --}}
-                    <div id="form-promotor" style="display: none;">
-                        <h5 class="text-info">Detail Promotor</h5>
-                        <div class="form-group">
-                            <label>Gaji Pokok 1 Bulan</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                <input type="number" name="promotor_basic_salary" class="form-control" placeholder="0">
+                            {{-- ABSENSI: ALPHA --}}
+                            <div class="row mb-2 align-items-center bg-light p-2 rounded mx-0">
+                                <div class="col-4">
+                                    <label class="small fw-bold">Alpha (Hari)</label>
+                                    <input type="number" name="alpha_days" id="alpha_days" class="form-control" value="{{ $alphaCount ?? 0 }}">
+                                </div>
+                                <div class="col-8">
+                                    <label class="small text-muted fst-italic">Rumus: (Fixed / 31) x Alpha</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text text-danger bg-white">Rp</span>
+                                        <input type="number" name="alpha_deduction" id="alpha_deduction" class="form-control deduction-input" readonly>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Bonus</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                <input type="number" name="promotor_bonus" class="form-control" placeholder="0">
+
+                            {{-- ABSENSI: TELAT --}}
+                            <div class="row mb-3 align-items-center bg-light p-2 rounded mx-0">
+                                <div class="col-4">
+                                    <label class="small fw-bold">Telat (Kali)</label>
+                                    <input type="number" name="late_days" id="late_days" class="form-control" value="{{ $lateCount ?? 0 }}">
+                                </div>
+                                <div class="col-8">
+                                    <label class="small text-muted fst-italic">Rumus: (Fixed / 93) x Telat</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text text-danger bg-white">Rp</span>
+                                        <input type="number" name="late_deduction" id="late_deduction" class="form-control deduction-input" readonly>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {{-- FORM FREELANCE --}}
-                    <div id="form-freelance" style="display: none;">
-                        <h5 class="text-warning">Detail Freelance</h5>
-                        <div class="alert alert-warning">
-                            <i class="mdi mdi-information-outline"></i> 
-                            Sistem akan otomatis menghitung jumlah kehadiran (Masuk & WFH) pada bulan & tahun yang dipilih.
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Total Kehadiran Terdeteksi (Otomatis)</label>
-                            <input type="text" id="attendance_preview" class="form-control" readonly value="Pilih user & bulan dulu...">
-                        </div>
+                            {{-- KASBON --}}
+                            <div class="mb-3 p-3 border border-warning rounded" style="background-color: #fffbf0;">
+                                <label class="fw-bold text-warning"><i class="mdi mdi-bank"></i> Potong Hutang (Kasbon)</label>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <small class="text-dark">Sisa Hutang Karyawan:</small>
+                                    <span class="badge badge-danger fs-6">Rp {{ number_format($remainingDebt ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-text text-danger">Rp</span>
+                                    <input type="number" name="kasbon_deduction" id="kasbon_deduction" class="form-control deduction-input" 
+                                           max="{{ $remainingDebt ?? 0 }}" placeholder="0" value="0">
+                                </div>
+                                <small class="text-muted d-block mt-1">*Otomatis buat history cicilan jika diisi</small>
+                            </div>
 
-                        <div class="form-group">
-                            <label>Gaji Per Hari</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                <input type="number" name="freelance_daily_salary" class="form-control" placeholder="Contoh: 100000">
+                            <div class="mb-3">
+                                <label>Potongan Lainnya</label>
+                                <div class="input-group">
+                                    <span class="input-group-text text-danger">Rp</span>
+                                    <input type="number" name="other_deduction" id="other_deduction" class="form-control deduction-input" placeholder="0" value="0">
+                                </div>
+                                <input type="text" name="other_deduction_note" class="form-control form-control-sm mt-1" placeholder="Keterangan potongan...">
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center alert alert-danger">
+                                <span class="fw-bold">Total Potongan</span>
+                                <h4 class="mb-0 fw-bold" id="total_deduction_display">Rp 0</h4>
                             </div>
                         </div>
                     </div>
 
-                    {{-- FORM KARYAWAN BIASA --}}
-                    <div id="form-employee" style="display: none;">
-                        <h5 class="text-success">Detail Karyawan Biasa</h5>
-                        <div class="form-group">
-                            <label>Gaji Pokok (Maksimal Rp 6.000.000)</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                <input type="number" name="employee_basic_salary" class="form-control" max="6000000" placeholder="0">
-                            </div>
-                            <small class="text-danger">* Maksimal 6 Juta</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Tunjangan Jabatan</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                <input type="number" name="employee_position_allowance" class="form-control" placeholder="0">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Previlage Owner</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                <input type="number" name="employee_owner_privilege" class="form-control" placeholder="0">
-                            </div>
+                    <hr class="my-4">
+
+                    {{-- TOTAL AKHIR --}}
+                    <div class="row justify-content-center text-center">
+                        <div class="col-md-8">
+                            <h5 class="text-muted mb-2">TAKE HOME PAY (GAJI BERSIH)</h5>
+                            <h1 class="display-3 fw-bold text-primary mb-4" id="take_home_pay">Rp 0</h1>
+                            
+                            <button type="submit" class="btn btn-lg btn-primary w-50 fw-bold shadow">
+                                <i class="mdi mdi-content-save"></i> SIMPAN & PROSES
+                            </button>
                         </div>
                     </div>
 
-                    <div class="form-group mt-3">
-                        <label>Catatan (Opsional)</label>
-                        <textarea name="notes" class="form-control" rows="3"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary me-2">Simpan Gaji</button>
-                    <a href="{{ route('salaries.index') }}" class="btn btn-light">Batal</a>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-{{-- SCRIPT PENGATUR TAMPILAN & AJAX --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const categorySelect = document.getElementById('category');
-        const formPromotor = document.getElementById('form-promotor');
-        const formFreelance = document.getElementById('form-freelance');
-        const formEmployee = document.getElementById('form-employee');
+        // Elements Inputs
+        const inputs = document.querySelectorAll('input[type="number"]');
+        const basicSalary = document.getElementById('basic_salary');
+        const allowance = document.getElementById('allowance');
+        const privilege = document.getElementById('privilege');
         
-        const userIdSelect = document.getElementById('user_id');
-        const monthSelect = document.getElementById('month');
-        const yearSelect = document.getElementById('year');
-        const attendancePreview = document.getElementById('attendance_preview');
+        // Elements Alpha & Late
+        const alphaDays = document.getElementById('alpha_days');
+        const alphaDed = document.getElementById('alpha_deduction');
+        const lateDays = document.getElementById('late_days');
+        const lateDed = document.getElementById('late_deduction');
+        
+        // Checkbox
+        const overrideCheck = document.getElementById('override_attendance');
 
-        // Fungsi Ganti Form
-        categorySelect.addEventListener('change', function() {
-            const val = this.value;
-            formPromotor.style.display = 'none';
-            formFreelance.style.display = 'none';
-            formEmployee.style.display = 'none';
+        // Fungsi Kalkulasi Utama
+        function calculate() {
+            // 1. Ambil Nilai Gaji Tetap (Gaji Pokok + Jabatan + Privilege)
+            let basic = parseFloat(basicSalary.value) || 0;
+            let allow = parseFloat(allowance.value) || 0;
+            let priv = parseFloat(privilege.value) || 0;
+            
+            // Base Salary untuk pembagi rumus
+            let totalFixed = basic + allow + priv;
 
-            if(val === 'promotor') formPromotor.style.display = 'block';
-            if(val === 'freelance') {
-                formFreelance.style.display = 'block';
-                checkAttendance(); // Cek absen pas pilih freelance
+            // 2. Hitung Potongan Absensi
+            if (overrideCheck.checked) {
+                // Jika Privilege User dicentang, Nol-kan potongan absen
+                alphaDed.value = 0;
+                lateDed.value = 0;
+            } else {
+                // RUMUS ALPHA: (Total Fixed / 31) * Jml Hari
+                let alphaVal = (totalFixed / 31) * (parseFloat(alphaDays.value) || 0);
+                alphaDed.value = Math.floor(alphaVal); 
+
+                // RUMUS TELAT: (Total Fixed / 93) * Jml Kali
+                let lateVal = (totalFixed / 93) * (parseFloat(lateDays.value) || 0);
+                lateDed.value = Math.floor(lateVal);
             }
-            if(val === 'employee') formEmployee.style.display = 'block';
-        });
 
-        // Fungsi Cek Absensi (AJAX)
-        function checkAttendance() {
-            const userId = userIdSelect.value;
-            const month = monthSelect.value;
-            const year = yearSelect.value;
+            // 3. Hitung Total Pendapatan
+            let totalIncome = 0;
+            document.querySelectorAll('.income-input').forEach(el => {
+                totalIncome += parseFloat(el.value) || 0;
+            });
 
-            if(userId && month && year && categorySelect.value === 'freelance') {
-                attendancePreview.value = "Sedang menghitung...";
-                
-                fetch(`{{ route('api.check-attendance') }}?user_id=${userId}&month=${month}&year=${year}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        attendancePreview.value = data.count + " Hari (Present + WFH)";
-                    })
-                    .catch(error => {
-                        attendancePreview.value = "Gagal mengambil data";
-                        console.error('Error:', error);
-                    });
-            }
+            // 4. Hitung Total Potongan
+            let totalDeduction = 0;
+            document.querySelectorAll('.deduction-input').forEach(el => {
+                totalDeduction += parseFloat(el.value) || 0;
+            });
+
+            // 5. Update Tampilan
+            document.getElementById('total_income_display').innerText = formatRupiah(totalIncome);
+            document.getElementById('total_deduction_display').innerText = formatRupiah(totalDeduction);
+            
+            // Hitung Gaji Bersih
+            let thp = totalIncome - totalDeduction;
+            document.getElementById('take_home_pay').innerText = formatRupiah(thp);
         }
 
-        // Trigger cek absen jika user/bulan/tahun berubah saat mode freelance aktif
-        userIdSelect.addEventListener('change', checkAttendance);
-        monthSelect.addEventListener('change', checkAttendance);
-        yearSelect.addEventListener('change', checkAttendance);
+        // Helper Format Rupiah JS
+        function formatRupiah(angka) {
+            return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        // Event Listeners: Jalankan calculate saat ada angka berubah
+        inputs.forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+        overrideCheck.addEventListener('change', calculate);
+
+        // Jalankan sekali saat load
+        calculate();
     });
 </script>
 @endsection

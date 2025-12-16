@@ -1,89 +1,211 @@
-@extends('layout.master')
+@extends('layouts.app')
 
 @section('content')
 <div class="row justify-content-center">
-    <div class="col-md-6 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Detail Gaji</h4>
+    <div class="col-md-9">
+        
+        {{-- AREA PRINT --}}
+        <div class="card shadow" id="printableArea">
+            <div class="card-body p-5 border">
                 
-                {{-- Bagian Header User (Sama seperti sebelumnya) --}}
-                <div class="d-flex align-items-center mb-4 border-bottom pb-3">
-                    @if($salary->user->profile_photo_path)
-                        <img src="{{ asset('storage/' . $salary->user->profile_photo_path) }}" alt="profile" class="img-lg rounded-circle me-3">
-                    @else
-                        <div class="img-lg rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3 text-white fs-4">
-                            {{ substr($salary->user->name, 0, 1) }}
-                        </div>
-                    @endif
+                {{-- HEADER PERUSAHAAN --}}
+                <div class="d-flex justify-content-between border-bottom pb-4 mb-4">
                     <div>
-                        <h3 class="mb-0">{{ $salary->user->name }}</h3>
-                        <p class="text-muted mb-0">{{ $salary->user->branch->name ?? '-' }} | {{ ucfirst($salary->category) }}</p>
+                        <h2 class="fw-bold text-dark mb-1">PSTORE</h2>
+                        <p class="text-muted mb-0">Divisi Finance & HRD</p>
+                    </div>
+                    <div class="text-end">
+                        <h4 class="mb-1 text-uppercase fw-bold">Slip Gaji Karyawan</h4>
+                        <p class="mb-0 text-muted">Periode: {{ \Carbon\Carbon::createFromDate($salary->year, $salary->month, 1)->isoFormat('MMMM Y') }}</p>
                     </div>
                 </div>
 
-                {{-- Detail Uang (Sama seperti sebelumnya) --}}
-                <div class="row mb-3">
-                    <div class="col-6 text-muted">Periode</div>
-                    <div class="col-6 fw-bold">{{ $salary->month }} / {{ $salary->year }}</div>
+                {{-- INFO KARYAWAN --}}
+                <div class="row mb-5">
+                    <div class="col-6">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td class="text-secondary ps-0" width="120">Nama</td>
+                                <td class="fw-bold text-dark">: {{ $salary->user->name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-secondary ps-0">ID Karyawan</td>
+                                <td class="fw-bold text-dark">: {{ $salary->user->login_id ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-secondary ps-0">Jabatan</td>
+                                <td class="fw-bold text-dark">: {{ $salary->user->division->name ?? '-' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-6">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td class="text-secondary" width="120">Cabang</td>
+                                <td class="fw-bold text-dark">: {{ $salary->user->branch->name ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-secondary">Status</td>
+                                <td class="fw-bold text-success">: LUNAS / DIBAYARKAN</td>
+                            </tr>
+                            <tr>
+                                <td class="text-secondary">Tgl Cetak</td>
+                                <td class="fw-bold text-dark">: {{ date('d F Y') }}</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
 
-                @if($salary->category == 'promotor')
-                    <div class="row mb-2">
-                        <div class="col-6">Gaji Pokok</div>
-                        <div class="col-6 text-end">Rp {{ number_format($salary->promotor_basic_salary, 0, ',', '.') }}</div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-6">Bonus</div>
-                        <div class="col-6 text-end">Rp {{ number_format($salary->promotor_bonus, 0, ',', '.') }}</div>
-                    </div>
+                {{-- TABEL RINCIAN --}}
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered">
+                        <thead style="background-color: #f3f3f3;">
+                            <tr>
+                                <th class="text-center py-3" width="50%">PENERIMAAN (INCOME)</th>
+                                <th class="text-center py-3" width="50%">POTONGAN (DEDUCTION)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                {{-- KOLOM KIRI: INCOMES --}}
+                                <td class="align-top p-4">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Gaji Pokok</span>
+                                        <span class="fw-bold">Rp {{ number_format($salary->employee_basic_salary, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Tunjangan Jabatan</span>
+                                        <span class="fw-bold">Rp {{ number_format($salary->employee_position_allowance, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Privilege Owner</span>
+                                        <span class="fw-bold">Rp {{ number_format($salary->employee_owner_privilege, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Bonus / Insentif</span>
+                                        <span class="fw-bold text-success">Rp {{ number_format($salary->promotor_bonus, 0, ',', '.') }}</span>
+                                    </div>
+                                    @if($salary->dispensation_amount > 0)
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Dispensasi (Lain-lain)</span>
+                                        <span class="fw-bold text-primary">Rp {{ number_format($salary->dispensation_amount, 0, ',', '.') }}</span>
+                                    </div>
+                                    @endif
+                                </td>
 
-                @elseif($salary->category == 'freelance')
-                    <div class="row mb-2">
-                        <div class="col-6">Kehadiran (Valid)</div>
-                        <div class="col-6 text-end">{{ $salary->freelance_attendance_count }} Hari</div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-6">Gaji Per Hari</div>
-                        <div class="col-6 text-end">Rp {{ number_format($salary->freelance_daily_salary, 0, ',', '.') }}</div>
-                    </div>
-
-                @elseif($salary->category == 'employee')
-                    <div class="row mb-2">
-                        <div class="col-6">Gaji Pokok</div>
-                        <div class="col-6 text-end">Rp {{ number_format($salary->employee_basic_salary, 0, ',', '.') }}</div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-6">Tunjangan Jabatan</div>
-                        <div class="col-6 text-end">Rp {{ number_format($salary->employee_position_allowance, 0, ',', '.') }}</div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-6">Previlage Owner</div>
-                        <div class="col-6 text-end">Rp {{ number_format($salary->employee_owner_privilege, 0, ',', '.') }}</div>
-                    </div>
-                @endif
-
-                <hr>
-                <div class="row mb-4">
-                    <div class="col-6 fs-5 fw-bold text-black">Total Terima</div>
-                    <div class="col-6 fs-4 fw-bold text-success text-end">Rp {{ number_format($salary->total_amount, 0, ',', '.') }}</div>
+                                {{-- KOLOM KANAN: DEDUCTIONS --}}
+                                <td class="align-top p-4">
+                                    <div class="d-flex justify-content-between mb-2 text-danger">
+                                        <span>Alpha ({{ $salary->alpha_days }} Hari)</span>
+                                        <span>(Rp {{ number_format($salary->alpha_deduction, 0, ',', '.') }})</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2 text-danger">
+                                        <span>Telat ({{ $salary->late_days }} Kali)</span>
+                                        <span>(Rp {{ number_format($salary->late_deduction, 0, ',', '.') }})</span>
+                                    </div>
+                                    @if($salary->kasbon_deduction > 0)
+                                    <div class="d-flex justify-content-between mb-2 text-danger fw-bold">
+                                        <span>Potongan Kasbon</span>
+                                        <span>(Rp {{ number_format($salary->kasbon_deduction, 0, ',', '.') }})</span>
+                                    </div>
+                                    @endif
+                                    @if($salary->other_deduction > 0)
+                                    <div class="d-flex justify-content-between mb-2 text-danger">
+                                        <span>Potongan Lain</span>
+                                        <span>(Rp {{ number_format($salary->other_deduction, 0, ',', '.') }})</span>
+                                    </div>
+                                    <small class="text-muted d-block text-end fst-italic">{{ $salary->other_deduction_note }}</small>
+                                    @endif
+                                </td>
+                            </tr>
+                            
+                            {{-- SUB TOTAL --}}
+                            <tr style="background-color: #fafafa;">
+                                <td class="text-end fw-bold py-3">
+                                    @php
+                                        $totalIncome = $salary->employee_basic_salary + $salary->employee_position_allowance + $salary->employee_owner_privilege + $salary->promotor_bonus + $salary->dispensation_amount;
+                                    @endphp
+                                    Total: Rp {{ number_format($totalIncome, 0, ',', '.') }}
+                                </td>
+                                <td class="text-end fw-bold py-3 text-danger">
+                                    @php
+                                        $totalDeduction = $salary->alpha_deduction + $salary->late_deduction + $salary->kasbon_deduction + $salary->other_deduction;
+                                    @endphp
+                                    Total: Rp {{ number_format($totalDeduction, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
-                <div class="bg-light p-3 rounded">
-                    <small class="text-muted d-block">Catatan:</small>
-                    <p class="mb-0">{{ $salary->notes ?? '-' }}</p>
+                {{-- TAKE HOME PAY --}}
+                <div class="row justify-content-center mb-5">
+                    <div class="col-md-10 text-center">
+                        <div class="p-4 border border-primary rounded bg-light">
+                            <h5 class="text-primary fw-bold mb-2">TAKE HOME PAY (DITERIMA BERSIH)</h5>
+                            <h1 class="display-4 fw-bold text-dark mb-0">Rp {{ number_format($salary->total_amount, 0, ',', '.') }}</h1>
+                            <p class="text-muted fst-italic mt-2 text-capitalize">
+                                Terbilang: {{ NumberFormatter::create('id', NumberFormatter::SPELLOUT)->format($salary->total_amount) }} Rupiah
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="mt-4">
-                    <a href="{{ route('salaries.index') }}" class="btn btn-secondary">Kembali</a>
-                    
-                    {{-- TOMBOL EDIT HANYA MUNCUL UNTUK ADMIN_GAJI --}}
-                    @if(auth()->user()->role == 'admin_gaji')
-                        <a href="{{ route('salaries.edit', $salary->id) }}" class="btn btn-warning text-dark">Edit</a>
-                    @endif
+
+                {{-- TANDA TANGAN --}}
+                <div class="row mt-5 pt-4">
+                    <div class="col-4 text-center">
+                        <p class="mb-5">Diterima Oleh,</p>
+                        <br><br>
+                        <p class="fw-bold text-decoration-underline">{{ $salary->user->name }}</p>
+                    </div>
+                    <div class="col-4"></div>
+                    <div class="col-4 text-center">
+                        <p class="mb-5">Disetujui Oleh,</p>
+                        <br><br>
+                        <p class="fw-bold text-decoration-underline">{{ auth()->user()->name }}</p>
+                        <small>Finance / HRD</small>
+                    </div>
                 </div>
+
             </div>
         </div>
+
+        {{-- TOMBOL AKSI --}}
+        <div class="d-flex justify-content-center mt-4 gap-2 no-print">
+            <button onclick="window.print()" class="btn btn-dark btn-lg shadow">
+                <i class="mdi mdi-printer"></i> Cetak PDF
+            </button>
+            <a href="{{ route('branch-salary.index') }}" class="btn btn-light btn-lg border">
+                Kembali ke Menu
+            </a>
+        </div>
+        
     </div>
 </div>
+
+<style>
+    @media print {
+        /* Sembunyikan elemen navigasi saat print */
+        .no-print, nav, .navbar, .sidebar, footer, .container-scroller > .container-fluid > .row > .col-md-3 {
+            display: none !important;
+        }
+        body {
+            background-color: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .content-wrapper {
+            background: white !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        /* Pastikan background color tercetak (misal baris selang-seling) */
+        -webkit-print-color-adjust: exact; 
+        print-color-adjust: exact;
+    }
+</style>
 @endsection
