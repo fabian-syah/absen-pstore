@@ -28,24 +28,12 @@
         .view-photo-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .modal-content { border: none; border-radius: 20px; overflow: hidden; }
         .modal-image-wrapper { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1rem; }
-        
-        /* Tambahan Style untuk Header Zona Waktu */
-        .timezone-header {
-            background-color: #f1f5f9;
-            color: #475569;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.8rem;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 10px 24px;
-        }
+        .timezone-header { background-color: #f1f5f9; color: #475569; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem; border-bottom: 1px solid #e2e8f0; padding: 10px 24px; }
     </style>
 @endpush
 
 @section('content')
 
-    {{-- STATISTIK PANEL --}}
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
             <div class="card stat-card h-100">
@@ -87,14 +75,10 @@
                 <div class="team-header">
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                         <div>
-                            <h4 class="mb-2 fw-bold">
-                                <i class="mdi mdi-account-multiple-outline me-2"></i>Status Rekan Tim
-                            </h4>
+                            <h4 class="mb-2 fw-bold"><i class="mdi mdi-account-multiple-outline me-2"></i>Status Rekan Tim</h4>
                             <p class="mb-0 opacity-75 small">Monitoring kehadiran real-time sesuai zona waktu cabang.</p>
                         </div>
-                        <span class="team-count badge rounded-pill px-4 py-2 fs-6">
-                            <i class="mdi mdi-account-group me-2"></i>{{ $stats['total'] }} Orang
-                        </span>
+                        <span class="team-count badge rounded-pill px-4 py-2 fs-6"><i class="mdi mdi-account-group me-2"></i>{{ $stats['total'] }} Orang</span>
                     </div>
                 </div>
 
@@ -110,57 +94,26 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {{-- LOOPING PER ZONA WAKTU --}}
                                 @forelse ($groupedTeam as $timezone => $members)
-                                    
-                                    {{-- HEADER ZONA WAKTU --}}
                                     <tr>
                                         <td colspan="4" class="timezone-header">
                                             <i class="mdi mdi-map-clock me-1"></i> ZONA WAKTU: {{ $timezone }} 
-                                            <span class="float-end fw-normal small">
-                                                Waktu Sekarang: {{ \Carbon\Carbon::now($timezone)->format('H:i') }}
-                                            </span>
+                                            <span class="float-end fw-normal small">Waktu Sekarang: {{ \Carbon\Carbon::now($timezone)->format('H:i') }}</span>
                                         </td>
                                     </tr>
-
-                                    {{-- LOOPING MEMBER DI ZONA TERSEBUT --}}
                                     @foreach ($members as $key => $member)
                                         @php
+                                            // Semua logic status sudah dihitung di Controller, View tinggal ambil
+                                            $status = $member->attendance_status;
                                             $attendance = $member->attendances->first();
                                             $leave = $member->leaveRequests->first();
-                                            $isWfh = $leave && $leave->type == 'wfh';
-                                            
-                                            $memberTz = $timezone; // Pasti sesuai grup
-                                            $now = \Carbon\Carbon::now($memberTz);
-                                            $todayDate = $now->format('Y-m-d');
-                                            
-                                            // Variabel Status
-                                            $isOvertimeYesterday = false;
-                                            $isStillWorkingOvertime = false;
-
-                                            if ($attendance) {
-                                                $checkIn = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz);
-                                                $checkOut = $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz) : null;
-                                                
-                                                // Gunakan isSameDay
-                                                $isToday = $checkIn->isSameDay($now);
-                                                
-                                                if (!$isToday) {
-                                                    if ($checkOut && $checkOut->isSameDay($now)) {
-                                                        $isOvertimeYesterday = true;
-                                                    } elseif (!$checkOut) {
-                                                        $isStillWorkingOvertime = true;
-                                                    }
-                                                }
-                                            }
-                                            $isOnline = ($attendance && !$attendance->check_out_time) || $isWfh;
+                                            $isOnline = in_array($status, ['hadir', 'sedang_lembur', 'wfh']);
+                                            $tz = $timezone;
                                         @endphp
 
                                         <tr class="member-card {{ Auth::id() == $member->id ? 'bg-light' : '' }}">
                                             <td class="ps-4 py-3">
-                                                <span class="badge bg-light text-dark rounded-circle" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600;">
-                                                    {{ $loop->parent->iteration }}.{{ $loop->iteration }}
-                                                </span>
+                                                <span class="badge bg-light text-dark rounded-circle" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600;">{{ $loop->parent->iteration }}.{{ $loop->iteration }}</span>
                                             </td>
                                             <td class="py-3">
                                                 <div class="d-flex align-items-center">
@@ -178,98 +131,59 @@
                                                 </div>
                                             </td>
                                             <td class="py-3">
-                                                {{-- LOGIKA STATUS TEXT --}}
-                                                @if ($attendance)
-                                                    @if ($isOvertimeYesterday)
-                                                        {{-- Pulang Lembur (Data Kemarin) --}}
-                                                        <div>
-                                                            <span class="status-badge bg-soft-indigo text-primary" data-bs-toggle="tooltip" title="Lembur Lintas Hari">
-                                                                <i class="mdi mdi-bed-clock me-1"></i> <span>Habis Lembur</span>
-                                                            </span>
-                                                            <div class="mt-2">
-                                                                <span class="badge bg-light text-danger border border-danger" style="font-size: 0.65rem;">
-                                                                    <i class="mdi mdi-clock-alert me-1"></i>Belum Absen Shift Baru
-                                                                </span>
-                                                            </div>
+                                                @if ($status == 'habis_lembur')
+                                                    <div>
+                                                        <span class="status-badge bg-soft-indigo text-primary" data-bs-toggle="tooltip" title="Lembur Lintas Hari">
+                                                            <i class="mdi mdi-bed-clock me-1"></i> <span>Habis Lembur</span>
+                                                        </span>
+                                                        <div class="mt-2"><span class="badge bg-light text-danger border border-danger" style="font-size: 0.65rem;"><i class="mdi mdi-clock-alert me-1"></i>Belum Absen Shift Baru</span></div>
+                                                    </div>
+                                                @elseif ($status == 'sedang_lembur')
+                                                    <div>
+                                                        <span class="status-badge bg-soft-purple text-dark">
+                                                            <i class="mdi mdi-moon-waning-crescent me-1"></i> <span>Sedang Lembur</span>
+                                                        </span>
+                                                    </div>
+                                                @elseif ($status == 'pulang')
+                                                    <div>
+                                                        <span class="status-badge bg-secondary text-white"><i class="mdi mdi-home me-1"></i> Sudah Pulang</span>
+                                                        <div class="small text-muted mt-1">
+                                                            Masuk: {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($tz)->format('H:i') }} | 
+                                                            Pulang: {{ \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($tz)->format('H:i') }}
                                                         </div>
-
-                                                    @elseif ($isStillWorkingOvertime)
-                                                        {{-- Masih Lembur --}}
-                                                        <div>
-                                                            <span class="status-badge bg-soft-purple text-dark">
-                                                                <i class="mdi mdi-moon-waning-crescent me-1"></i> <span>Sedang Lembur</span>
-                                                            </span>
-                                                        </div>
-
-                                                    @else
-                                                        {{-- Normal Hari Ini --}}
-                                                        @if ($attendance->check_out_time)
-                                                            <div>
-                                                                <span class="status-badge bg-secondary text-white">
-                                                                    <i class="mdi mdi-home me-1"></i> Sudah Pulang
-                                                                </span>
-                                                                <div class="small text-muted mt-1">
-                                                                    Masuk: {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('H:i') }}
-                                                                    | Pulang: {{ \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz)->format('H:i') }}
-                                                                </div>
-                                                            </div>
-                                                        @else
-                                                            <div>
-                                                                <span class="status-badge bg-success text-white">
-                                                                    <i class="mdi mdi-briefcase-check me-1"></i> Sedang Bekerja
-                                                                </span>
-                                                                <div class="small text-muted mt-1">
-                                                                    Masuk: {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('H:i') }}
-                                                                </div>
-                                                            </div>
-                                                        @endif
-                                                    @endif
-
-                                                @elseif ($leave)
-                                                    <span class="status-badge bg-info text-white">
-                                                        <i class="mdi mdi-file-document me-1"></i> {{ ucfirst($leave->type) }}
-                                                    </span>
+                                                    </div>
+                                                @elseif ($status == 'hadir')
+                                                    <div>
+                                                        <span class="status-badge bg-success text-white"><i class="mdi mdi-briefcase-check me-1"></i> Sedang Bekerja</span>
+                                                        <div class="small text-muted mt-1">Masuk: {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($tz)->format('H:i') }}</div>
+                                                    </div>
+                                                @elseif ($status == 'wfh')
+                                                    <span class="status-badge bg-info text-white"><i class="mdi mdi-home-city me-1"></i> WFH</span>
+                                                @elseif ($status == 'izin_sakit')
+                                                    <span class="status-badge bg-info text-white"><i class="mdi mdi-file-document me-1"></i> {{ ucfirst($leave->type) }}</span>
                                                 @else
-                                                    <span class="status-badge bg-danger text-white">
-                                                        <i class="mdi mdi-close-circle me-1"></i> Belum Hadir
-                                                    </span>
+                                                    <span class="status-badge bg-danger text-white"><i class="mdi mdi-close-circle me-1"></i> Belum Hadir</span>
                                                 @endif
                                             </td>
                                             <td class="py-3">
-                                                {{-- BUKTI FOTO --}}
                                                 <div class="d-flex gap-2">
-                                                    @if ($attendance)
-                                                        @if(!$isOvertimeYesterday && !$isStillWorkingOvertime)
-                                                            @if($attendance->photo_path)
-                                                                <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}">
-                                                                    <i class="mdi mdi-camera"></i> Masuk
-                                                                </button>
-                                                            @endif
-                                                            @if($attendance->photo_out_path)
-                                                                <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_out_path) }}">
-                                                                    <i class="mdi mdi-camera"></i> Pulang
-                                                                </button>
-                                                            @endif
+                                                    @if ($attendance && !in_array($status, ['habis_lembur', 'sedang_lembur']))
+                                                        @if($attendance->photo_path)
+                                                            <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}"><i class="mdi mdi-camera"></i> Masuk</button>
+                                                        @endif
+                                                        @if($attendance->photo_out_path)
+                                                            <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_out_path) }}"><i class="mdi mdi-camera"></i> Pulang</button>
                                                         @endif
                                                     @endif
-                                                    
-                                                    @if ($leave && $leave->type == 'wfh' && $leave->file_proof)
-                                                        <button class="view-photo-btn bg-info text-white border-0" 
-                                                                data-bs-toggle="modal" 
-                                                                data-bs-target="#imageModal" 
-                                                                data-src="{{ Storage::url($leave->file_proof) }}">
-                                                            <i class="mdi mdi-file-document"></i> Bukti WFH
-                                                        </button>
+                                                    @if ($status == 'wfh' && $leave && $leave->file_proof)
+                                                        <button class="view-photo-btn bg-info text-white border-0" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($leave->file_proof) }}"><i class="mdi mdi-file-document"></i> Bukti WFH</button>
                                                     @endif
                                                 </div>
                                             </td>
                                         </tr>
                                     @endforeach
-
                                 @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center py-5 text-muted">Tidak ada data tim.</td>
-                                    </tr>
+                                    <tr><td colspan="4" class="text-center py-5 text-muted">Tidak ada data tim.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -279,7 +193,6 @@
         </div>
     </div>
 
-    {{-- Modal Image --}}
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
