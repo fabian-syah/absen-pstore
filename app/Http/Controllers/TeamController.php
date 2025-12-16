@@ -140,7 +140,6 @@ class TeamController extends Controller
         return view('user_biasa.team', compact('myTeam', 'myBranchIds', 'controlledBranches', 'assignedAudits', 'stats'));
     }
 
-    // --- Method Lain Tetap Sama ---
     public function myBranches()
     {
         $user = Auth::user();
@@ -225,7 +224,6 @@ class TeamController extends Controller
     {
         $user = Auth::user();
 
-        // FIX: Renamed $targetBranch to $branch to match the compact() call at the end
         $branch = Branch::findOrFail($id);
         $branchTimezone = $branch->timezone ?? 'Asia/Jakarta';
 
@@ -260,7 +258,7 @@ class TeamController extends Controller
 
         $attendanceGroups = ['Masuk' => [], 'Izin' => [], 'Sakit' => [], 'Cuti' => [], 'WFH / Dinas Luar' => [], 'Alpha / Belum Absen' => [], 'Lembur' => []];
 
-        // Logic for grouping (remains the same)
+        // Logic for grouping
         foreach ($employees as $emp) {
             $todayLeave = LeaveRequest::where('user_id', $emp->id)->where('status', 'approved')->where('is_active', true)
                 ->where(function ($q) use ($todayInBranch) {
@@ -301,7 +299,6 @@ class TeamController extends Controller
             'Lembur' => count($attendanceGroups['Lembur']),
         ];
 
-        // Now $branch exists, so compact('branch') will work
         return view('user_biasa.branch_detail', compact('branch', 'employees', 'attendanceGroups', 'statsCounts'));
     }
 
