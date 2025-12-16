@@ -61,8 +61,8 @@
         {{-- BARU: Gaji Ku (Akses Semua Role) --}}
         <li class="nav-item">
             <a class="nav-link" href="#">
-            <i class="menu-icon mdi mdi-wallet-outline"></i>
-            <span class="menu-title">Gaji Ku</span>
+                <i class="menu-icon mdi mdi-wallet-outline"></i>
+                <span class="menu-title">Gaji Ku</span>
             </a>
         </li>
 
@@ -284,6 +284,19 @@
                 <a class="nav-link" href="{{ route('branch-targets.index') }}">
                     <i class="menu-icon mdi mdi-target"></i>
                     <span class="menu-title">Target Cabang</span>
+                </a>
+            </li>
+        @endif
+
+        {{-- =================================== --}}
+        {{--    GAJI CABANG (ADMIN & GAJI)       --}}
+        {{-- =================================== --}}
+        @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
+            <li class="nav-item nav-category">Pembayaran</li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="menu-icon mdi mdi-cash-register"></i>
+                    <span class="menu-title">Gaji Cabang</span>
                 </a>
             </li>
         @endif
