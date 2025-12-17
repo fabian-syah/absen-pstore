@@ -24,7 +24,7 @@
     input:checked + .slider { background-color: #4B49AC; border-color: #4B49AC; }
     input:checked + .slider:before { -webkit-transform: translateX(24px); -ms-transform: translateX(24px); transform: translateX(24px); }
     
-    /* Privilege Box */
+    /* Privilege Box Style */
     .privilege-box { background: #f8f9fa; border: 1px dashed #ced4da; border-radius: 12px; padding: 15px; transition: all 0.3s; }
     .privilege-box.active { background: #eef2ff; border-color: #4B49AC; }
 </style>
@@ -41,7 +41,7 @@
 
         <div class="card shadow-sm border-0 rounded-4">
             
-            {{-- Header --}}
+            {{-- Header User Info --}}
             <div class="card-header-clean d-flex justify-content-between align-items-start">
                 <div>
                     <h3 class="fw-bold text-dark mb-1">Setting Master Gaji</h3>
@@ -71,7 +71,7 @@
 
                     <div class="row g-5">
                         
-                        {{-- KIRI: KATEGORI --}}
+                        {{-- KIRI: KATEGORI & REKENING --}}
                         <div class="col-md-5 border-end">
                             <div class="mb-4">
                                 <h6 class="fw-bold text-uppercase text-secondary small ls-1 mb-3">Kategori & Pembayaran</h6>
@@ -105,7 +105,7 @@
                         {{-- KANAN: FORM NOMINAL --}}
                         <div class="col-md-7">
                             
-                            {{-- 1. KARYAWAN TETAP --}}
+                            {{-- 1. FORM KARYAWAN TETAP --}}
                             <div id="form_employee" class="salary-section">
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="icon-box bg-success-light text-success rounded-circle me-2 p-1"><i class="mdi mdi-briefcase-check"></i></div>
@@ -113,17 +113,18 @@
                                 </div>
                                 
                                 <div class="mb-4">
-                                    <label class="form-label">Gaji Pokok</label>
+                                    <label class="form-label fw-bold">Gaji Pokok</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
                                         <input type="text" name="basic_salary" class="form-control rupiahe fw-bold form-control-lg" 
                                                value="{{ number_format($user->employeeSalary->basic_salary ?? 0, 0, ',', '.') }}" placeholder="0">
                                     </div>
+                                    <div class="form-text text-danger">* Maksimal Rp 6.000.000</div>
                                 </div>
 
                                 <div class="row g-3 mb-4">
                                     <div class="col-md-6">
-                                        <label class="form-label small text-muted">Tunjangan Jabatan</label>
+                                        <label class="form-label small fw-bold">Tunjangan Jabatan</label>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text">Rp</span>
                                             <input type="text" name="position_allowance" class="form-control rupiahe" 
@@ -131,7 +132,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label small text-muted">Privilege Owner</label>
+                                        <label class="form-label small fw-bold">Privilege (Nominal)</label>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text">Rp</span>
                                             <input type="text" name="owner_privilege" class="form-control rupiahe" 
@@ -155,30 +156,30 @@
                                 </div>
                             </div>
 
-                            {{-- 2. PROMOTOR --}}
+                            {{-- 2. FORM PROMOTOR --}}
                             <div id="form_promotor" class="salary-section" style="display: none;">
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="icon-box bg-info-light text-info rounded-circle me-2 p-1"><i class="mdi mdi-bullhorn"></i></div>
-                                    <h6 class="fw-bold text-dark mb-0">Komponen Promotor</h6>
+                                    <h6 class="fw-bold text-dark mb-0">Komponen Promotor / JCS</h6>
                                 </div>
                                 <div class="alert alert-info border-0 bg-soft-info py-2 px-3 mb-4 rounded-3 d-flex align-items-center">
                                     <i class="mdi mdi-information-outline fs-5 me-2"></i>
-                                    <span class="small text-dark">Hanya menerima <strong>Bonus / Insentif</strong>.</span>
+                                    <span class="small text-dark">Kategori ini hanya menerima <strong>Bonus / Insentif</strong>.</span>
                                 </div>
                                 
                                 <input type="hidden" name="promotor_monthly_salary" value="0">
                                 <div class="mb-3">
-                                    <label class="form-label">Insentif / Bonus (Estimasi)</label>
+                                    <label class="form-label fw-bold">Insentif / Bonus (Estimasi)</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
                                         <input type="text" name="promotor_bonus" class="form-control rupiahe fw-bold form-control-lg" 
                                                value="{{ number_format($user->employeeSalary->promotor_bonus ?? 0, 0, ',', '.') }}" placeholder="0">
                                     </div>
-                                    <div class="form-text mt-1">Nominal ini akan muncul otomatis saat Payroll.</div>
+                                    <div class="form-text mt-1">Nominal ini akan muncul otomatis saat Payroll (dapat diedit).</div>
                                 </div>
                             </div>
 
-                            {{-- 3. FREELANCE --}}
+                            {{-- 3. FORM FREELANCE --}}
                             <div id="form_freelance" class="salary-section" style="display: none;">
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="icon-box bg-warning-light text-warning rounded-circle me-2 p-1"><i class="mdi mdi-account-clock"></i></div>
@@ -190,7 +191,7 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label class="form-label">Rate Gaji Per Hari</label>
+                                    <label class="form-label fw-bold">Rate Gaji Per Hari</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
                                         <input type="text" name="daily_salary" class="form-control rupiahe fw-bold form-control-lg" 
@@ -219,6 +220,7 @@
 
 {{-- SCRIPT --}}
 <script>
+    // Fungsi Toggle Style Switch
     function togglePrivilegeStyle(checkbox) {
         const box = document.getElementById('privilegeBox');
         if (checkbox.checked) {
@@ -239,6 +241,7 @@
             'freelance': 'Dibayar harian berdasarkan kehadiran.'
         };
 
+        // Fungsi Ganti Form
         function toggleForm() {
             const val = categorySelect.value;
             sections.forEach(el => el.style.display = 'none');
@@ -253,7 +256,7 @@
         categorySelect.addEventListener('change', toggleForm);
         toggleForm(); 
 
-        // FORMAT RUPIAH
+        // FORMAT RUPIAH AUTO
         const rupiahInputs = document.querySelectorAll('.rupiahe');
         rupiahInputs.forEach(input => {
             input.value = formatRupiah(input.value);
@@ -276,6 +279,13 @@
             }
             return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
         }
+        
+        // Handle Submit: Clean titik sebelum kirim ke server
+        document.getElementById('salaryForm').addEventListener('submit', function(e) {
+            rupiahInputs.forEach(input => {
+                input.value = input.value.replace(/\./g, '');
+            });
+        });
     });
 </script>
 @endsection

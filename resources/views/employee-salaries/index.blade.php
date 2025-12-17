@@ -1,7 +1,7 @@
 @extends('layout.master')
 
 @section('content')
-{{-- Custom CSS --}}
+{{-- Custom Style --}}
 <style>
     .card-modern { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); background: #fff; }
     .text-dark-contrast { color: #111 !important; }
@@ -24,7 +24,7 @@
 <div class="row">
     <div class="col-12">
         
-        {{-- HEADER --}}
+        {{-- HEADER HALAMAN --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h3 class="fw-bold text-dark-contrast mb-1">Master Data Gaji</h3>
@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        {{-- FILTER --}}
+        {{-- FILTER PENCARIAN --}}
         <div class="card card-modern mb-4">
             <div class="card-body">
                 <form action="{{ route('employee-salaries.index') }}" method="GET">
@@ -77,9 +77,10 @@
             </div>
         </div>
 
-        {{-- MAIN CONTENT --}}
+        {{-- MAIN CONTENT: TABEL GAJI --}}
         <div class="card card-modern">
             <div class="card-body p-0">
+                {{-- TAB NAVIGASI KATEGORI --}}
                 <div class="px-4 pt-3">
                     <ul class="nav nav-tabs nav-tabs-custom">
                         <li class="nav-item"><a class="nav-link {{ !request('category') ? 'active' : '' }}" href="{{ route('employee-salaries.index') }}">Semua</a></li>
@@ -97,7 +98,7 @@
                                 <th class="ps-4">PROFIL KARYAWAN</th>
                                 <th>LOKASI KERJA</th>
                                 <th>KATEGORI GAJI</th>
-                                <th>GAJI UTAMA / INSENTIF</th> {{-- Header disesuaikan --}}
+                                <th>GAJI UTAMA / INSENTIF</th>
                                 <th>DETAIL TUNJANGAN</th>
                                 <th class="text-center pe-4">AKSI</th>
                             </tr>
@@ -140,21 +141,21 @@
                                     @endif
                                 </td>
 
-                                {{-- KOLOM GAJI UTAMA --}}
+                                {{-- LOGIKA TAMPILAN GAJI UTAMA --}}
                                 <td>
                                     @if($user->employeeSalary)
                                         @if($user->employeeSalary->category == 'freelance')
-                                            {{-- Freelance: Gaji Harian --}}
+                                            {{-- Freelance: Tampilkan Gaji Harian --}}
                                             <h6 class="mb-0 fw-800 text-dark-contrast">Rp {{ number_format($user->employeeSalary->daily_salary, 0, ',', '.') }}</h6>
                                             <small class="text-muted">/ kehadiran</small>
                                         
                                         @elseif($user->employeeSalary->category == 'promotor')
-                                            {{-- [LOGIC FIX] Promotor: Tampilkan Bonus sebagai Gaji Utama --}}
+                                            {{-- Promotor: Tampilkan Bonus/Insentif (karena Gaji Pokok 0) --}}
                                             <h6 class="mb-0 fw-800 text-dark-contrast">Rp {{ number_format($user->employeeSalary->promotor_bonus, 0, ',', '.') }}</h6>
                                             <small class="text-success fw-bold">/ bulan (Insentif)</small>
 
                                         @else
-                                            {{-- Employee: Gaji Pokok --}}
+                                            {{-- Employee: Tampilkan Gaji Pokok --}}
                                             <h6 class="mb-0 fw-800 text-dark-contrast">Rp {{ number_format($user->employeeSalary->basic_salary, 0, ',', '.') }}</h6>
                                             <small class="text-muted">/ bulan</small>
                                         @endif
@@ -163,19 +164,21 @@
                                     @endif
                                 </td>
 
-                                {{-- KOLOM DETAIL --}}
+                                {{-- LOGIKA DETAIL TUNJANGAN --}}
                                 <td>
                                     @if($user->employeeSalary)
                                         @if($user->employeeSalary->category == 'employee')
                                             <div class="d-flex flex-column gap-1">
                                                 <small class="text-dark fw-bold">Jabatan: <span class="text-secondary fw-normal">Rp {{ number_format($user->employeeSalary->position_allowance, 0, ',', '.') }}</span></small>
                                                 <small class="text-dark fw-bold">Privilege: <span class="text-secondary fw-normal">Rp {{ number_format($user->employeeSalary->owner_privilege, 0, ',', '.') }}</span></small>
+                                                {{-- Indikator Mode Privilege --}}
+                                                @if($user->employeeSalary->use_privilege_mode)
+                                                    <span class="badge bg-success mt-1" style="width: fit-content; font-size: 0.6rem;"><i class="mdi mdi-shield-check"></i> Bebas Potongan</span>
+                                                @endif
                                             </div>
                                         
                                         @elseif($user->employeeSalary->category == 'promotor')
-                                            {{-- Promotor: Tampilkan Info Tambahan --}}
                                             <small class="text-muted fw-bold"><i class="mdi mdi-check-circle"></i> Tanpa Gaji Pokok</small>
-                                        
                                         @else
                                             <small class="text-muted">-</small>
                                         @endif
@@ -200,6 +203,7 @@
                     </table>
                 </div>
 
+                {{-- PAGINATION --}}
                 <div class="d-flex justify-content-between align-items-center p-4 border-top bg-light" style="border-radius: 0 0 16px 16px;">
                     <span class="text-dark fw-bold small">Halaman {{ $users->currentPage() }} dari {{ $users->lastPage() }}</span>
                     <div>{{ $users->links('pagination::bootstrap-4') }}</div>
