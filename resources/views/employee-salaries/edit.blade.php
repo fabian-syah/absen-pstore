@@ -45,8 +45,10 @@
                             <label>Gaji Pokok (Maksimal Rp 6.000.000)</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
+                                {{-- Format angka dari server langsung dengan titik --}}
                                 <input type="text" name="basic_salary" class="form-control rupiahe" 
-                                       value="{{ $user->employeeSalary->basic_salary ?? 0 }}" placeholder="0">
+                                       value="{{ number_format($user->employeeSalary->basic_salary ?? 0, 0, ',', '.') }}" 
+                                       placeholder="0">
                             </div>
                             <small class="text-danger">* Wajib diisi (Max 6 Juta)</small>
                         </div>
@@ -56,7 +58,8 @@
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="text" name="position_allowance" class="form-control rupiahe" 
-                                       value="{{ $user->employeeSalary->position_allowance ?? 0 }}" placeholder="0">
+                                       value="{{ number_format($user->employeeSalary->position_allowance ?? 0, 0, ',', '.') }}" 
+                                       placeholder="0">
                             </div>
                         </div>
 
@@ -65,7 +68,8 @@
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="text" name="owner_privilege" class="form-control rupiahe" 
-                                       value="{{ $user->employeeSalary->owner_privilege ?? 0 }}" placeholder="0">
+                                       value="{{ number_format($user->employeeSalary->owner_privilege ?? 0, 0, ',', '.') }}" 
+                                       placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -77,7 +81,9 @@
                             <i class="mdi mdi-information-outline"></i> Kategori ini hanya menerima <strong>Bonus / Insentif</strong> (Gaji Pokok dari Vendor).
                         </div>
                         
-                        {{-- Hidden input basic_salary agar tidak null di database --}}
+                        {{-- Hidden Input: Set Basic Salary 0 untuk Promotor agar tidak double --}}
+                        {{-- Note: name="promotor_monthly_salary" ini akan ditangkap controller dan dimasukkan ke basic_salary --}}
+                        {{-- Jika Anda ingin basic salary promotor = 0, biarkan value="0" --}}
                         <input type="hidden" name="promotor_monthly_salary" value="0">
 
                         <div class="form-group mb-3">
@@ -85,7 +91,8 @@
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="text" name="promotor_bonus" class="form-control rupiahe" 
-                                       value="{{ $user->employeeSalary->promotor_bonus ?? 0 }}" placeholder="0">
+                                       value="{{ number_format($user->employeeSalary->promotor_bonus ?? 0, 0, ',', '.') }}" 
+                                       placeholder="0">
                             </div>
                             <small class="text-muted">Nominal ini akan muncul otomatis saat Payroll (bisa diubah nanti).</small>
                         </div>
@@ -103,7 +110,8 @@
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="text" name="daily_salary" class="form-control rupiahe" 
-                                       value="{{ $user->employeeSalary->daily_salary ?? 0 }}" placeholder="0">
+                                       value="{{ number_format($user->employeeSalary->daily_salary ?? 0, 0, ',', '.') }}" 
+                                       placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -164,7 +172,7 @@
         const rupiahInputs = document.querySelectorAll('.rupiahe');
         
         rupiahInputs.forEach(input => {
-            input.value = formatRupiah(input.value);
+            // Format saat ketik
             input.addEventListener('keyup', function(e) {
                 this.value = formatRupiah(this.value);
             });
