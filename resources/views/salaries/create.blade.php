@@ -13,9 +13,7 @@
                 <form action="{{ route('salaries.store') }}" method="POST" id="payrollForm">
                     @csrf
                     
-                    {{-- ==================================================== --}}
-                    {{-- SECTION 1: HEADER (USER, PERIODE, KATEGORI) --}}
-                    {{-- ==================================================== --}}
+                    {{-- HEADER --}}
                     <div class="row mb-4 bg-light p-3 rounded border">
                         <div class="col-md-5">
                             <label class="fw-bold mb-1">Pilih Karyawan</label>
@@ -63,9 +61,7 @@
 
                         <div class="col-md-4">
                             <label class="fw-bold mb-1">Kategori</label>
-                            @php
-                                $currentCat = $masterSalary->category ?? 'employee'; 
-                            @endphp
+                            @php $currentCat = $masterSalary->category ?? 'employee'; @endphp
                             
                             @if(isset($masterSalary) && $masterSalary->category)
                                 <div class="input-group">
@@ -88,7 +84,7 @@
                     @if($selectedUser)
                     <div class="row mb-4">
                         <div class="col-12">
-                            <h6 class="fw-bold text-secondary mb-2"><i class="mdi mdi-information-outline"></i> Informasi Kehadiran (Bulan Ini)</h6>
+                            <h6 class="fw-bold text-secondary mb-2"><i class="mdi mdi-information-outline"></i> Informasi Kehadiran & Cuti (Bulan Ini)</h6>
                             <div class="row g-2">
                                 <div class="col-6 col-md-3"><div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm"><span class="text-muted small fw-bold">Cuti</span><span class="badge bg-secondary rounded-pill px-3">{{ $cutiCount ?? 0 }} Hari</span></div></div>
                                 <div class="col-6 col-md-3"><div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm"><span class="text-muted small fw-bold">Sakit</span><span class="badge bg-info rounded-pill px-3">{{ $sakitCount ?? 0 }} Hari</span></div></div>
@@ -136,7 +132,9 @@
                                                placeholder="0" value="{{ number_format($masterSalary->owner_privilege ?? 0, 0, ',', '.') }}">
                                     </div>
                                     <div class="form-check mt-2">
-                                        <input class="form-check-input" type="checkbox" id="override_attendance">
+                                        {{-- LOGIC OTOMATIS CENTANG --}}
+                                        <input class="form-check-input" type="checkbox" id="override_attendance"
+                                               {{ ($masterSalary->owner_privilege ?? 0) > 0 ? 'checked' : '' }}>
                                         <label class="form-check-label text-muted small fw-bold cursor-pointer" for="override_attendance">
                                             <i class="mdi mdi-shield-check"></i> Privilege User (Abaikan Potongan Absen)
                                         </label>
@@ -267,7 +265,6 @@
                     <div class="row justify-content-center">
                         <div class="col-md-10">
                             
-                            {{-- CARD CATATAN TAMBAHAN (BARU) --}}
                             <div class="card bg-light border mb-4">
                                 <div class="card-body p-3">
                                     <label class="fw-bold mb-2 text-secondary"><i class="mdi mdi-note-text-outline"></i> Catatan Payroll (Opsional)</label>
@@ -275,7 +272,6 @@
                                 </div>
                             </div>
 
-                            {{-- CARD PAYMENT --}}
                             <div class="card bg-white border mb-4">
                                 <div class="card-body p-4">
                                     <h5 class="fw-bold text-dark mb-4 border-bottom pb-2">Konfirmasi Pembayaran</h5>
