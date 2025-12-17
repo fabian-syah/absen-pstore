@@ -21,7 +21,6 @@
                         <div class="col-md-5">
                             <label class="fw-bold mb-1">Pilih Karyawan</label>
                             @if($selectedUser)
-                                {{-- Jika user sudah dipilih --}}
                                 <input type="hidden" name="user_id" value="{{ $selectedUser->id }}">
                                 <div class="input-group">
                                     <span class="input-group-text bg-primary text-white"><i class="mdi mdi-account"></i></span>
@@ -33,7 +32,6 @@
                                     <a href="{{ route('salaries.create') }}" class="small text-decoration-none"><i class="mdi mdi-refresh"></i> Reset Pilihan</a>
                                 </div>
                             @else
-                                {{-- Dropdown Search --}}
                                 <select name="user_id" class="form-control text-dark" onchange="updateParams('user_id', this.value)">
                                     <option value="">-- Cari Karyawan --</option>
                                     @foreach($users as $user)
@@ -46,7 +44,6 @@
                         <div class="col-md-3">
                             <label class="fw-bold mb-1">Periode Gaji (Cek Absensi)</label>
                             <div class="d-flex gap-2">
-                                {{-- Dropdown Bulan (Perbaikan Tampilan NYARU) --}}
                                 <select name="month" class="form-select text-center fw-bold text-dark bg-white border-secondary" 
                                         onchange="updateParams('month', this.value)" style="color: #000 !important; opacity: 1;">
                                     @for($m=1; $m<=12; $m++)
@@ -55,8 +52,6 @@
                                         </option>
                                     @endfor
                                 </select>
-                                
-                                {{-- Dropdown Tahun (Perbaikan Tampilan NYARU) --}}
                                 <select name="year" class="form-select text-center fw-bold text-dark bg-white border-secondary" 
                                         onchange="updateParams('year', this.value)" style="color: #000 !important; opacity: 1;">
                                     @for($y=date('Y'); $y>=date('Y')-1; $y--)
@@ -69,8 +64,6 @@
 
                         <div class="col-md-4">
                             <label class="fw-bold mb-1">Kategori Karyawan</label>
-                            
-                            {{-- LOGIKA BARU: Jika Master Gaji Ada, Lock Input --}}
                             @if(isset($masterSalary) && $masterSalary->category)
                                 @php
                                     $catLabel = match($masterSalary->category) {
@@ -80,15 +73,12 @@
                                         default => ucfirst($masterSalary->category)
                                     };
                                 @endphp
-                                {{-- Tampilan Readonly --}}
                                 <div class="input-group">
                                     <span class="input-group-text bg-success text-white"><i class="mdi mdi-check-circle"></i></span>
                                     <input type="text" class="form-control fw-bold bg-white text-success" value="{{ $catLabel }}" readonly>
                                 </div>
-                                {{-- Hidden Input untuk kirim data --}}
                                 <input type="hidden" name="category" value="{{ $masterSalary->category }}">
                             @else
-                                {{-- Fallback jika belum set master gaji --}}
                                 <select name="category" class="form-select text-dark">
                                     <option value="employee">Karyawan Tetap</option>
                                     <option value="promotor">Promotor</option>
@@ -101,7 +91,7 @@
 
                     <div class="row">
                         {{-- ==================================================== --}}
-                        {{-- SECTION 2: PENDAPATAN (INCOME) --}}
+                        {{-- SECTION 2: PENDAPATAN --}}
                         {{-- ==================================================== --}}
                         <div class="col-md-6 border-end">
                             <h5 class="text-success mb-3 fw-bold border-bottom pb-2">
@@ -113,11 +103,11 @@
                                 <label class="fw-bold">Gaji Pokok</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" name="employee_basic_salary" id="basic_salary" 
-                                           class="form-control income-input fw-bold text-dark" 
+                                    {{-- Menggunakan type="text" dan number_format agar ada titiknya --}}
+                                    <input type="text" name="employee_basic_salary" id="basic_salary" 
+                                           class="form-control income-input fw-bold text-dark rupiah-input" 
                                            placeholder="0" 
-                                           value="{{ $masterSalary->basic_salary ?? 0 }}"
-                                           {{-- Readonly jika promotor/freelance agar sesuai master --}}
+                                           value="{{ number_format($masterSalary->basic_salary ?? 0, 0, ',', '.') }}"
                                            {{ (isset($masterSalary) && $masterSalary->category != 'employee') ? 'readonly' : '' }}>
                                 </div>
                             </div>
@@ -127,10 +117,10 @@
                                 <label>Tunjangan Jabatan</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" name="employee_position_allowance" id="allowance" 
-                                           class="form-control income-input" 
+                                    <input type="text" name="employee_position_allowance" id="allowance" 
+                                           class="form-control income-input rupiah-input" 
                                            placeholder="0" 
-                                           value="{{ $masterSalary->position_allowance ?? 0 }}">
+                                           value="{{ number_format($masterSalary->position_allowance ?? 0, 0, ',', '.') }}">
                                 </div>
                             </div>
 
@@ -139,10 +129,10 @@
                                 <label>Privilege Owner</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" name="employee_owner_privilege" id="privilege" 
-                                           class="form-control income-input" 
+                                    <input type="text" name="employee_owner_privilege" id="privilege" 
+                                           class="form-control income-input rupiah-input" 
                                            placeholder="0" 
-                                           value="{{ $masterSalary->owner_privilege ?? 0 }}">
+                                           value="{{ number_format($masterSalary->owner_privilege ?? 0, 0, ',', '.') }}">
                                 </div>
                                 <div class="form-check mt-2">
                                     <input class="form-check-input" type="checkbox" id="override_attendance">
@@ -156,8 +146,8 @@
                                 <label>Bonus / Insentif</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" name="promotor_bonus" id="bonus" class="form-control income-input" 
-                                           placeholder="0" value="{{ $masterSalary->promotor_bonus ?? 0 }}">
+                                    <input type="text" name="promotor_bonus" id="bonus" class="form-control income-input rupiah-input" 
+                                           placeholder="0" value="{{ number_format($masterSalary->promotor_bonus ?? 0, 0, ',', '.') }}">
                                 </div>
                             </div>
 
@@ -165,7 +155,7 @@
                                 <label>Dispensasi (Manual)</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" name="dispensation_amount" id="dispensation" class="form-control income-input" placeholder="0" value="0">
+                                    <input type="text" name="dispensation_amount" id="dispensation" class="form-control income-input rupiah-input" placeholder="0" value="0">
                                 </div>
                                 <input type="text" name="dispensation_note" class="form-control form-control-sm mt-1" placeholder="Catatan untuk dispensasi...">
                             </div>
@@ -177,14 +167,14 @@
                         </div>
 
                         {{-- ==================================================== --}}
-                        {{-- SECTION 3: POTONGAN (DEDUCTION) --}}
+                        {{-- SECTION 3: POTONGAN --}}
                         {{-- ==================================================== --}}
                         <div class="col-md-6">
                             <h5 class="text-danger mb-3 fw-bold border-bottom pb-2">
                                 <i class="mdi mdi-arrow-down-circle"></i> POTONGAN
                             </h5>
 
-                            {{-- ABSENSI: ALPHA (OTOMATIS DARI DB) --}}
+                            {{-- ABSENSI: ALPHA --}}
                             <div class="row mb-2 align-items-center bg-light p-2 rounded mx-0 border">
                                 <div class="col-4">
                                     <label class="small fw-bold mb-0">Alpha (Hari)</label>
@@ -196,12 +186,12 @@
                                     <label class="small text-muted fst-italic mb-0" style="font-size: 0.75rem">Rumus: (Total Fixed / 31) x Alpha</label>
                                     <div class="input-group input-group-sm mt-1">
                                         <span class="input-group-text text-danger bg-white">Rp</span>
-                                        <input type="number" name="alpha_deduction" id="alpha_deduction" class="form-control deduction-input fw-bold text-danger" readonly>
+                                        <input type="text" name="alpha_deduction" id="alpha_deduction" class="form-control deduction-input fw-bold text-danger" readonly>
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- ABSENSI: TELAT (OTOMATIS DARI DB) --}}
+                            {{-- ABSENSI: TELAT --}}
                             <div class="row mb-3 align-items-center bg-light p-2 rounded mx-0 border">
                                 <div class="col-4">
                                     <label class="small fw-bold mb-0">Telat (Kali)</label>
@@ -213,7 +203,7 @@
                                     <label class="small text-muted fst-italic mb-0" style="font-size: 0.75rem">Rumus: (Total Fixed / 93) x Telat</label>
                                     <div class="input-group input-group-sm mt-1">
                                         <span class="input-group-text text-danger bg-white">Rp</span>
-                                        <input type="number" name="late_deduction" id="late_deduction" class="form-control deduction-input fw-bold text-danger" readonly>
+                                        <input type="text" name="late_deduction" id="late_deduction" class="form-control deduction-input fw-bold text-danger" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -226,9 +216,9 @@
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-text text-danger">Rp</span>
-                                    <input type="number" name="kasbon_deduction" id="kasbon_deduction" 
-                                           class="form-control deduction-input" 
-                                           max="{{ $remainingDebt ?? 0 }}" 
+                                    <input type="text" name="kasbon_deduction" id="kasbon_deduction" 
+                                           class="form-control deduction-input rupiah-input" 
+                                           data-max="{{ $remainingDebt ?? 0 }}" 
                                            placeholder="0" value="0">
                                 </div>
                                 @if(($remainingDebt ?? 0) > 0)
@@ -242,7 +232,7 @@
                                 <label>Potongan Lainnya</label>
                                 <div class="input-group">
                                     <span class="input-group-text text-danger">Rp</span>
-                                    <input type="number" name="other_deduction" id="other_deduction" class="form-control deduction-input" placeholder="0" value="0">
+                                    <input type="text" name="other_deduction" id="other_deduction" class="form-control deduction-input rupiah-input" placeholder="0" value="0">
                                 </div>
                                 <input type="text" name="other_deduction_note" class="form-control form-control-sm mt-1" placeholder="Keterangan potongan lain...">
                             </div>
@@ -279,7 +269,6 @@
 
 {{-- SCRIPT --}}
 <script>
-    // 1. Helper Reload Halaman (Agar data Alpha/Telat ter-refresh dari DB saat bulan diganti)
     function updateParams(key, value) {
         let url = new URL(window.location.href);
         url.searchParams.set(key, value);
@@ -287,69 +276,94 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('input[type="number"]');
+        // --- 1. Definisi Elemen ---
+        // Kita select class 'rupiah-input'
+        const rupiahInputs = document.querySelectorAll('.rupiah-input');
+        
         const basicSalary = document.getElementById('basic_salary');
         const allowance = document.getElementById('allowance');
         const privilege = document.getElementById('privilege');
+        
         const alphaDays = document.getElementById('alpha_days');
         const alphaDed = document.getElementById('alpha_deduction');
         const lateDays = document.getElementById('late_days');
         const lateDed = document.getElementById('late_deduction');
+        
         const overrideCheck = document.getElementById('override_attendance');
 
+        // --- 2. Helper Bersihkan Titik (String -> Float) ---
+        function cleanNumber(value) {
+            if(!value) return 0;
+            // Hapus karakter selain angka
+            return parseFloat(value.toString().replace(/\./g, '')) || 0;
+        }
+
+        // --- 3. Helper Format Rupiah (Float -> String "2.000.000") ---
+        function formatRupiah(angka) {
+            var number_string = angka.toString().replace(/[^,\d]/g, ''),
+                split = number_string.split(','),
+                sisa  = split[0].length % 3,
+                rupiah = split[0].substr(0, sisa),
+                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if(ribuan){
+                separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+            
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah;
+        }
+
+        // --- 4. Event Listener Input (Format Saat Ketik) ---
+        rupiahInputs.forEach(input => {
+            input.addEventListener('keyup', function(e) {
+                // Saat user ngetik, format valuenya jadi ada titik
+                this.value = formatRupiah(this.value);
+                calculate(); // Hitung ulang
+            });
+        });
+
+        // --- 5. Fungsi Kalkulasi Utama ---
         function calculate() {
-            // A. Base Salary
-            let basic = parseFloat(basicSalary.value) || 0;
-            let allow = parseFloat(allowance.value) || 0;
-            let priv = parseFloat(privilege.value) || 0;
+            let basic = cleanNumber(basicSalary.value);
+            let allow = cleanNumber(allowance.value);
+            let priv = cleanNumber(privilege.value);
+            
             let totalFixed = basic + allow + priv;
 
-            // B. Deduction Formulas
+            // Hitung Potongan Absen
             if (overrideCheck.checked) {
-                alphaDed.value = 0;
-                lateDed.value = 0;
+                alphaDed.value = "0";
+                lateDed.value = "0";
             } else {
-                // Rumus Alpha: (Total Fixed / 31) * Alpha
                 let alphaVal = 0;
                 if(totalFixed > 0) alphaVal = (totalFixed / 31) * (parseFloat(alphaDays.value) || 0);
-                alphaDed.value = Math.floor(alphaVal); 
+                alphaDed.value = formatRupiah(Math.floor(alphaVal)); // Tampilkan dengan titik
 
-                // Rumus Telat: (Total Fixed / 93) * Telat
                 let lateVal = 0;
                 if(totalFixed > 0) lateVal = (totalFixed / 93) * (parseFloat(lateDays.value) || 0);
-                lateDed.value = Math.floor(lateVal);
+                lateDed.value = formatRupiah(Math.floor(lateVal)); // Tampilkan dengan titik
             }
 
-            // C. Sum Income
+            // Hitung Total Income
             let totalIncome = 0;
-            document.querySelectorAll('.income-input').forEach(el => totalIncome += parseFloat(el.value) || 0);
+            document.querySelectorAll('.income-input').forEach(el => totalIncome += cleanNumber(el.value));
 
-            // D. Sum Deduction
+            // Hitung Total Deduction
             let totalDeduction = 0;
-            document.querySelectorAll('.deduction-input').forEach(el => totalDeduction += parseFloat(el.value) || 0);
+            document.querySelectorAll('.deduction-input').forEach(el => totalDeduction += cleanNumber(el.value));
 
-            // E. Display
-            document.getElementById('total_income_display').innerText = formatRupiah(totalIncome);
-            document.getElementById('total_deduction_display').innerText = formatRupiah(totalDeduction);
-            document.getElementById('take_home_pay').innerText = formatRupiah(totalIncome - totalDeduction);
+            // Display
+            document.getElementById('total_income_display').innerText = "Rp " + formatRupiah(totalIncome);
+            document.getElementById('total_deduction_display').innerText = "Rp " + formatRupiah(totalDeduction);
+            document.getElementById('take_home_pay').innerText = "Rp " + formatRupiah(totalIncome - totalDeduction);
         }
 
-        function formatRupiah(angka) {
-            return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        }
-
-        inputs.forEach(input => input.addEventListener('input', calculate));
         overrideCheck.addEventListener('change', calculate);
+        
+        // Initial Run
         calculate();
     });
 </script>
-
-<style>
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { 
-        -webkit-appearance: none; margin: 0; 
-    }
-    input[type=number] { -moz-appearance: textfield; }
-    .ls-1 { letter-spacing: 1px; }
-</style>
 @endsection
