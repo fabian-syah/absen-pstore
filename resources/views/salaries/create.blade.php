@@ -133,12 +133,13 @@
                             {{-- FORM PROMOTOR --}}
                             <div id="form_promotor" class="category-section" style="display: none;">
                                 <div class="mb-3">
-                                    <label class="fw-bold">Gaji 1 Bulan</label>
+                                    <label class="fw-bold">Insentif Tetap (Base Fee)</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
                                         <input type="text" id="promotor_basic" class="form-control income-input fw-bold text-dark rupiah-input" 
                                                placeholder="0" value="{{ number_format($masterSalary->basic_salary ?? 0, 0, ',', '.') }}">
                                     </div>
+                                    <small class="text-muted">Gaji dasar bulanan dari perusahaan (jika ada).</small>
                                 </div>
                             </div>
 
@@ -165,7 +166,7 @@
                             {{-- GLOBAL INCOME --}}
                             <div id="global_income">
                                 <div class="mb-3">
-                                    <label>Bonus / Insentif</label>
+                                    <label>Bonus / Insentif Tambahan</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
                                         <input type="text" name="promotor_bonus" id="bonus" class="form-control income-input rupiah-input" 
@@ -173,7 +174,7 @@
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label>Dispensasi</label>
+                                    <label>Dispensasi (Manual)</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
                                         <input type="text" name="dispensation_amount" id="dispensation" class="form-control income-input rupiah-input" placeholder="0" value="0">
@@ -263,7 +264,7 @@
                     <hr class="my-4 border-2">
 
                     {{-- ==================================================== --}}
-                    {{-- SECTION 4: PEMBAYARAN & JADWAL (LANGSUNG DISINI) --}}
+                    {{-- SECTION 4: PEMBAYARAN & JADWAL --}}
                     {{-- ==================================================== --}}
                     <div class="row justify-content-center">
                         <div class="col-md-10">
@@ -273,7 +274,7 @@
                                     <h5 class="fw-bold text-dark mb-4 border-bottom pb-2">Konfirmasi Pembayaran</h5>
                                     
                                     <div class="row g-4">
-                                        {{-- Metode --}}
+                                        {{-- Metode Pembayaran --}}
                                         <div class="col-md-6">
                                             <label class="fw-bold mb-2">Metode Pembayaran</label>
                                             <div class="btn-group w-100" role="group">
@@ -289,7 +290,7 @@
                                             </div>
                                         </div>
 
-                                        {{-- Jadwal --}}
+                                        {{-- Jadwal Kirim --}}
                                         <div class="col-md-6">
                                             <label class="fw-bold mb-2">Waktu Pengiriman</label>
                                             <div class="d-flex flex-column gap-2">
@@ -352,7 +353,7 @@
         const categoryInput = document.getElementById('category');
         const sections = document.querySelectorAll('.category-section');
         
-        // --- LOGIC GANTI FORM ---
+        // --- 1. LOGIC GANTI FORM ---
         function toggleCategoryForms() {
             if(!categoryInput) return;
             const cat = categoryInput.value;
@@ -362,6 +363,7 @@
             else if(cat === 'promotor') document.getElementById('form_promotor').style.display = 'block';
             else if(cat === 'freelance') document.getElementById('form_freelance').style.display = 'block';
             
+            // Sync Logic: Promotor Basic -> Employee Basic (Hidden)
             if(cat === 'promotor') {
                 const promoBasic = document.getElementById('promotor_basic');
                 const empBasic = document.getElementById('employee_basic');
@@ -381,13 +383,13 @@
         }
         toggleCategoryForms();
 
-        // --- HELPER FORMAT ---
+        // --- 2. HELPER FORMAT ---
         function cleanNumber(value) {
             if(!value) return 0;
             return parseFloat(value.toString().replace(/\./g, '')) || 0;
         }
 
-        // [FIX] Format Rupiah Support Minus
+        // FORMAT RUPIAH SUPPORT MINUS
         function formatRupiah(angka) {
             let isNegative = false;
             if(angka < 0) { isNegative = true; angka = Math.abs(angka); }
@@ -410,19 +412,20 @@
             });
         });
 
-        // --- CALCULATION LOGIC ---
+        // --- 3. CORE CALCULATION LOGIC ---
         function calculate() {
             if(!categoryInput) return;
             let cat = categoryInput.value;
             let totalIncome = 0;
-            let totalFixed = 0; 
+            let totalFixed = 0;
 
             if (cat === 'freelance') {
                 let daily = cleanNumber(document.getElementById('daily_salary').value);
                 let days = parseFloat(document.getElementById('freelance_attendance').value) || 0;
+                
                 totalIncome = daily * days;
                 document.getElementById('freelance_total').value = totalIncome;
-                // Freelance: Alpha tidak dipotong (set 0 atau logic lain jika perlu)
+                // Freelance: Alpha tidak dipotong (set 0)
                 totalFixed = 0; 
             } else if (cat === 'promotor') {
                 let promoBasic = cleanNumber(document.getElementById('promotor_basic').value);
@@ -495,6 +498,7 @@
         const overrideCheck = document.getElementById('override_attendance');
         if(overrideCheck) overrideCheck.addEventListener('change', calculate);
         
+        // Auto run
         setTimeout(calculate, 500);
     });
 </script>
