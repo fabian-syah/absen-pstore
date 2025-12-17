@@ -12,12 +12,12 @@ class EmployeeSalary extends Model
     protected $fillable = [
         'user_id', 
         'category', 
-        'basic_salary',      // Dipakai untuk Gaji Pokok (Karyawan) & Gaji Bulanan (Promotor)
+        'basic_salary', 
         'position_allowance', 
         'owner_privilege', 
-        'use_privilege_mode', // Mode Privilege: 'fixed' atau 'percentage'
-        'daily_salary',      // Dipakai untuk Freelance
-        'promotor_bonus',    // Khusus Promotor
+        'use_privilege_mode', // <--- WAJIB ADA
+        'daily_salary', 
+        'promotor_bonus', 
         'bank_account_number', 
         'bank_name',
         'updated_by'

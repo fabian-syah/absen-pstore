@@ -13,23 +13,16 @@ class EmployeeSalaryController extends Controller
 {
     public function index(Request $request)
     {
+        // (Kode index sama seperti sebelumnya)
         $branches = Branch::orderBy('name')->get();
         $divisions = Division::orderBy('name')->get();
 
         $query = User::with(['branch', 'division', 'employeeSalary'])
             ->where('is_active', true);
 
-        if ($request->filled('search')) {
-            $query->where('name', 'like', "%{$request->search}%");
-        }
-
-        if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
-        }
-
-        if ($request->filled('division_id')) {
-            $query->where('division_id', $request->division_id);
-        }
+        if ($request->filled('search')) $query->where('name', 'like', "%{$request->search}%");
+        if ($request->filled('branch_id')) $query->where('branch_id', $request->branch_id);
+        if ($request->filled('division_id')) $query->where('division_id', $request->division_id);
 
         if ($request->filled('category')) {
             if ($request->category == 'unset') {
@@ -42,7 +35,6 @@ class EmployeeSalaryController extends Controller
         }
 
         $users = $query->orderBy('name')->paginate(10)->withQueryString();
-
         return view('employee-salaries.index', compact('users', 'branches', 'divisions'));
     }
 
@@ -58,40 +50,34 @@ class EmployeeSalaryController extends Controller
             return str_replace('.', '', $val);
         };
 
-        $request->validate([
-            'category' => 'required',
-        ]);
+        $request->validate(['category' => 'required']);
 
-        if ($request->category == 'employee') {
-            $request->merge(['basic_salary' => $clean($request->basic_salary)]);
-            $request->validate(['basic_salary' => 'required|numeric|max:6000000']);
-        }
-
-        // Siapkan Data Dasar
+        // Data Default (Reset)
         $data = [
             'category' => $request->category,
             'bank_account_number' => $request->bank_account_number,
             'bank_name' => $request->bank_name,
             'updated_by' => Auth::id(),
-            // Default nilai 0 agar bersih jika ganti kategori
             'basic_salary' => 0, 
             'position_allowance' => 0, 
             'owner_privilege' => 0, 
             'daily_salary' => 0, 
             'promotor_bonus' => 0,
-            'use_privilege_mode' => 0 // Default False
+            'use_privilege_mode' => 0 // Default Mati
         ];
 
-        // Isi Data Sesuai Kategori
+        // Logic Pengisian Data
         if ($request->category == 'employee') {
             $data['basic_salary'] = $clean($request->basic_salary);
             $data['position_allowance'] = $clean($request->position_allowance);
             $data['owner_privilege'] = $clean($request->owner_privilege);
-            // [FIX] Simpan status Checkbox Privilege
+            
+            // [FIX] Cek apakah checkbox dicentang
+            // Jika dicentang, request akan mengirim 'use_privilege_mode' = "1"
+            // Jika tidak, request tidak mengirim key ini sama sekali.
             $data['use_privilege_mode'] = $request->has('use_privilege_mode') ? 1 : 0;
             
         } elseif ($request->category == 'promotor') {
-            $data['basic_salary'] = 0; // Promotor tidak ada gaji pokok di sistem kita
             $data['promotor_bonus'] = $clean($request->promotor_bonus);
             
         } elseif ($request->category == 'freelance') {
