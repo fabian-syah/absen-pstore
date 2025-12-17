@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Branch;   // Pastikan Import
-use App\Models\Division; // Pastikan Import
+use App\Models\Branch;
+use App\Models\Division;
 use App\Models\EmployeeSalary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,26 +17,23 @@ class EmployeeSalaryController extends Controller
         $branches = Branch::orderBy('name')->get();
         $divisions = Division::orderBy('name')->get();
 
-        // 2. Query Utama dengan Filter
+        // 2. Query Utama
         $query = User::with(['branch', 'division', 'employeeSalary'])
             ->where('is_active', true);
 
-        // Filter: Search Nama
+        // --- Logic Filter ---
         if ($request->filled('search')) {
             $query->where('name', 'like', "%{$request->search}%");
         }
 
-        // Filter: Cabang
         if ($request->filled('branch_id')) {
             $query->where('branch_id', $request->branch_id);
         }
 
-        // Filter: Divisi
         if ($request->filled('division_id')) {
             $query->where('division_id', $request->division_id);
         }
 
-        // Filter: Kategori (Dari Tab atau Dropdown)
         if ($request->filled('category')) {
             if ($request->category == 'unset') {
                 $query->doesntHave('employeeSalary');
@@ -47,12 +44,14 @@ class EmployeeSalaryController extends Controller
             }
         }
 
-        $users = $query->orderBy('name')->get(); // Bisa diganti ->paginate(10) jika data banyak
+        // 3. Pagination Max 10 per halaman
+        // append($request->all()) agar parameter filter tidak hilang saat pindah halaman
+        $users = $query->orderBy('name')->paginate(10)->withQueryString();
 
         return view('employee-salaries.index', compact('users', 'branches', 'divisions'));
     }
 
-    // ... method edit dan update tetap sama seperti sebelumnya ...
+    // ... method edit dan update tetap sama, tidak perlu diubah ...
     public function edit($userId)
     {
         $user = User::with('employeeSalary')->findOrFail($userId);
@@ -61,9 +60,7 @@ class EmployeeSalaryController extends Controller
 
     public function update(Request $request, $userId)
     {
-        // ... (Kode update Anda yang sebelumnya, tidak berubah) ...
-        // Copy paste logic update dari jawaban sebelumnya
-         $clean = function($val) {
+        $clean = function($val) {
             return str_replace('.', '', $val);
         };
 
