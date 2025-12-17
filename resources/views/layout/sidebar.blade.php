@@ -76,14 +76,14 @@
         </li>
 
         {{-- RINGKASAN GAJI TAHUNAN (KECUALI ADMIN GAJI) --}}
-        @if (auth()->user()->role != 'admin_gaji')
+        
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('salary-summary.index') }}">
                     <i class="menu-icon mdi mdi-file-chart-outline"></i>
                     <span class="menu-title">Ringkasan Gaji Tahunan</span>
                 </a>
             </li>
-        @endif
+        
 
         {{-- KASBON (Update: Admin Gaji BISA AKSES, Leader TIDAK BISA) --}}
         {{-- Saya menghapus pengecualian '&& auth()->user()->role != 'admin_gaji'' --}}
