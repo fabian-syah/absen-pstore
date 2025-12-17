@@ -14,7 +14,7 @@
                     @csrf
                     
                     {{-- ==================================================== --}}
-                    {{-- SECTION 1: HEADER (USER, PERIODE, KATEGORI) --}}
+                    {{-- SECTION 1: PILIH USER & PERIODE --}}
                     {{-- ==================================================== --}}
                     <div class="row mb-4 bg-light p-3 rounded border">
                         <div class="col-md-5">
@@ -86,7 +86,7 @@
 
                     <div class="row">
                         {{-- ==================================================== --}}
-                        {{-- SECTION 2: PENDAPATAN --}}
+                        {{-- SECTION 2: PENDAPATAN (DINAMIS) --}}
                         {{-- ==================================================== --}}
                         <div class="col-md-6 border-end">
                             <h5 class="text-success mb-3 fw-bold border-bottom pb-2">
@@ -189,7 +189,7 @@
                         </div>
 
                         {{-- ==================================================== --}}
-                        {{-- SECTION 3: POTONGAN --}}
+                        {{-- SECTION 3: POTONGAN (DEDUCTION) --}}
                         {{-- ==================================================== --}}
                         <div class="col-md-6">
                             <h5 class="text-danger mb-3 fw-bold border-bottom pb-2">
@@ -238,7 +238,8 @@
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-text text-danger">Rp</span>
-                                    <input type="text" name="kasbon_deduction" id="kasbon_deduction" class="form-control deduction-input rupiah-input" 
+                                    <input type="text" name="kasbon_deduction" id="kasbon_deduction" 
+                                           class="form-control deduction-input rupiah-input" 
                                            data-max="{{ $remainingDebt ?? 0 }}" placeholder="0" value="0">
                                 </div>
                             </div>
@@ -262,7 +263,7 @@
                     <hr class="my-4 border-2">
 
                     {{-- ==================================================== --}}
-                    {{-- SECTION 4: PEMBAYARAN & JADWAL --}}
+                    {{-- SECTION 4: PEMBAYARAN --}}
                     {{-- ==================================================== --}}
                     <div class="row justify-content-center">
                         <div class="col-md-10">
@@ -272,7 +273,6 @@
                                     <h5 class="fw-bold text-dark mb-4 border-bottom pb-2">Konfirmasi Pembayaran</h5>
                                     
                                     <div class="row g-4">
-                                        {{-- Metode Pembayaran --}}
                                         <div class="col-md-6">
                                             <label class="fw-bold mb-2">Metode Pembayaran</label>
                                             <div class="btn-group w-100" role="group">
@@ -288,7 +288,6 @@
                                             </div>
                                         </div>
 
-                                        {{-- Jadwal Kirim --}}
                                         <div class="col-md-6">
                                             <label class="fw-bold mb-2">Waktu Pengiriman</label>
                                             <div class="d-flex flex-column gap-2">
@@ -304,7 +303,6 @@
                                                     <label class="form-check-label fw-bold w-100 cursor-pointer" for="send_later">
                                                         <i class="mdi mdi-calendar-clock text-warning me-1"></i> Jadwalkan
                                                     </label>
-                                                    
                                                     <div id="schedule_input_box" class="mt-2" style="display: none;">
                                                         <input type="date" name="scheduled_date" class="form-control">
                                                     </div>
@@ -352,7 +350,7 @@
         const categoryInput = document.getElementById('category');
         const sections = document.querySelectorAll('.category-section');
         
-        // --- LOGIC GANTI FORM ---
+        // LOGIC GANTI FORM
         function toggleCategoryForms() {
             if(!categoryInput) return;
             const cat = categoryInput.value;
@@ -381,23 +379,34 @@
         }
         toggleCategoryForms();
 
-        // --- HELPER FORMAT ---
+        // HELPER NUMBERS
         function cleanNumber(value) {
             if(!value) return 0;
+            // Hapus titik, lalu parse float
             return parseFloat(value.toString().replace(/\./g, '')) || 0;
         }
 
+        // [FIXED] FORMAT RUPIAH SUPPORT MINUS
         function formatRupiah(angka) {
+            let isNegative = false;
+            if(angka < 0) {
+                isNegative = true;
+                angka = Math.abs(angka);
+            }
+
             var number_string = angka.toString().replace(/[^,\d]/g, ''),
                 split = number_string.split(','),
                 sisa  = split[0].length % 3,
                 rupiah = split[0].substr(0, sisa),
                 ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
             if(ribuan){
                 separator = sisa ? '.' : '';
                 rupiah += separator + ribuan.join('.');
             }
-            return rupiah;
+            
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            return (isNegative ? '-' : '') + rupiah;
         }
 
         document.querySelectorAll('.rupiah-input').forEach(input => {
@@ -407,12 +416,12 @@
             });
         });
 
-        // --- CALCULATION LOGIC ---
+        // CORE CALCULATION LOGIC
         function calculate() {
             if(!categoryInput) return;
             let cat = categoryInput.value;
             let totalIncome = 0;
-            let totalFixed = 0; // Base pengali untuk alpha
+            let totalFixed = 0;
 
             if (cat === 'freelance') {
                 let daily = cleanNumber(document.getElementById('daily_salary').value);
@@ -421,7 +430,7 @@
                 totalIncome = daily * days;
                 document.getElementById('freelance_total').value = totalIncome;
                 
-                // [FIX] Freelance Base = Daily * 31 (Agar rumus alpha jalan)
+                // Fixed Base untuk Freelance = Gaji Harian x 31 (Agar rumus alpha jalan)
                 totalFixed = daily * 31; 
 
             } else if (cat === 'promotor') {
@@ -440,39 +449,53 @@
             totalIncome += cleanNumber(document.getElementById('bonus').value);
             totalIncome += cleanNumber(document.getElementById('dispensation').value);
 
-            // --- HITUNG POTONGAN ---
+            // Hitung Potongan
             const alphaDed = document.getElementById('alpha_deduction');
             const lateDed = document.getElementById('late_deduction');
             const overrideCheck = document.getElementById('override_attendance');
 
             if (overrideCheck && overrideCheck.checked) {
-                alphaDed.value = "0";
-                lateDed.value = "0";
+                if(alphaDed) alphaDed.value = "0";
+                if(lateDed) lateDed.value = "0";
             } else {
                 let aDays = parseFloat(document.getElementById('alpha_days').value) || 0;
                 let lDays = parseFloat(document.getElementById('late_days').value) || 0;
                 
                 let alphaVal = 0;
                 if(totalFixed > 0 && aDays > 0) alphaVal = (totalFixed / 31) * aDays;
-                alphaDed.value = formatRupiah(Math.floor(alphaVal)); 
+                if(alphaDed) alphaDed.value = formatRupiah(Math.floor(alphaVal)); 
 
                 let lateVal = 0;
                 if(totalFixed > 0 && lDays > 0) lateVal = (totalFixed / 93) * lDays;
-                lateDed.value = formatRupiah(Math.floor(lateVal)); 
+                if(lateDed) lateDed.value = formatRupiah(Math.floor(lateVal)); 
             }
 
-            // --- SUM DEDUCTION ---
-            let totalDeduction = cleanNumber(alphaDed.value) + cleanNumber(lateDed.value);
+            // Sum Deductions
+            let totalDeduction = cleanNumber(alphaDed ? alphaDed.value : 0) + cleanNumber(lateDed ? lateDed.value : 0);
+            
             document.querySelectorAll('.deduction-input').forEach(el => {
                 if(el.id !== 'alpha_deduction' && el.id !== 'late_deduction') {
                     totalDeduction += cleanNumber(el.value);
                 }
             });
 
-            // --- UPDATE UI ---
+            // Final Calculation
+            let takeHomePay = totalIncome - totalDeduction;
+
+            // Update UI
             document.getElementById('total_income_display').innerText = "Rp " + formatRupiah(totalIncome);
             document.getElementById('total_deduction_display').innerText = "Rp " + formatRupiah(totalDeduction);
-            document.getElementById('take_home_pay').innerText = "Rp " + formatRupiah(totalIncome - totalDeduction);
+            
+            // Logic Warna Merah
+            const thpEl = document.getElementById('take_home_pay');
+            thpEl.innerText = "Rp " + formatRupiah(takeHomePay);
+            if(takeHomePay < 0) {
+                thpEl.classList.remove('text-primary');
+                thpEl.classList.add('text-danger');
+            } else {
+                thpEl.classList.remove('text-danger');
+                thpEl.classList.add('text-primary');
+            }
         }
 
         const overrideCheck = document.getElementById('override_attendance');
