@@ -1,7 +1,7 @@
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <ul class="nav">
         {{-- =================================== --}}
-        {{--       DASHBOARD & RIWAYAT           --}}
+        {{--       DASHBOARD (SEMUA ROLE)        --}}
         {{-- =================================== --}}
         <li class="nav-item">
             <a class="nav-link" href="/">
@@ -9,56 +9,65 @@
                 <span class="menu-title">Dashboard</span>
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('attendance.history') }}">
-                <i class="mdi mdi-history menu-icon"></i>
-                <span class="menu-title">Riwayat Absensi</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('attendance.summary') }}">
-                <i class="mdi mdi-text-box-multiple-outline menu-icon"></i>
-                <span class="menu-title">Ringkasan Tahunan</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('leave-requests.personal-history') }}">
-                <i class="mdi mdi-history menu-icon"></i>
-                <span class="menu-title">Riwayat Izin</span>
-            </a>
-        </li>
 
         {{-- =================================== --}}
-        {{--     MENU UMUM (SEMUA ROLE)          --}}
+        {{--   RIWAYAT ABSENSI (EXCEPT GAJI)     --}}
         {{-- =================================== --}}
-        <li class="nav-item nav-category">Menu Umum</li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('inventory.index') }}">
-                <i class="menu-icon mdi mdi-package-variant"></i>
-                <span class="menu-title">Inventaris</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('job-targets.index') }}">
-                <i class="menu-icon mdi mdi-clipboard-list"></i>
-                <span class="menu-title">Job Desk / Target</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            {{-- Link ini membuka halaman history TANPA parameter 'edit_mode', jadi tombol Edit akan hilang --}}
-            <a class="nav-link" href="{{ route('employment-history.index') }}">
-                <i class="menu-icon mdi mdi-history"></i>
-                <span class="menu-title">Riwayat Divisi / Cabang</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('violations.index') }}">
-                <i class="menu-icon mdi mdi-alert-circle-outline"></i>
-                <span class="menu-title">Riwayat Pelanggaran</span>
-            </a>
-        </li>
+        @if(auth()->user()->role != 'admin_gaji')
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('attendance.history') }}">
+                    <i class="mdi mdi-history menu-icon"></i>
+                    <span class="menu-title">Riwayat Absensi</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('attendance.summary') }}">
+                    <i class="mdi mdi-text-box-multiple-outline menu-icon"></i>
+                    <span class="menu-title">Ringkasan Tahunan</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('leave-requests.personal-history') }}">
+                    <i class="mdi mdi-history menu-icon"></i>
+                    <span class="menu-title">Riwayat Izin</span>
+                </a>
+            </li>
+        @endif
 
-        {{-- BARU: Gaji Ku (Akses Semua Role) --}}
+        {{-- =================================== --}}
+        {{--    MENU UMUM (EXCEPT ADMIN GAJI)    --}}
+        {{-- =================================== --}}
+        @if(auth()->user()->role != 'admin_gaji')
+            <li class="nav-item nav-category">Menu Umum</li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('inventory.index') }}">
+                    <i class="menu-icon mdi mdi-package-variant"></i>
+                    <span class="menu-title">Inventaris</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('job-targets.index') }}">
+                    <i class="menu-icon mdi mdi-clipboard-list"></i>
+                    <span class="menu-title">Job Desk / Target</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('employment-history.index') }}">
+                    <i class="menu-icon mdi mdi-history"></i>
+                    <span class="menu-title">Riwayat Divisi / Cabang</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('violations.index') }}">
+                    <i class="menu-icon mdi mdi-alert-circle-outline"></i>
+                    <span class="menu-title">Riwayat Pelanggaran</span>
+                </a>
+            </li>
+        @endif
+
+        {{-- =================================== --}}
+        {{--        GAJI KU (SEMUA ROLE)         --}}
+        {{-- =================================== --}}
         <li class="nav-item">
             <a class="nav-link" href="#">
                 <i class="menu-icon mdi mdi-wallet-outline"></i>
@@ -66,16 +75,18 @@
             </a>
         </li>
 
-        {{-- BARU: Ringkasan Gaji Tahunan (Akses Semua Role) --}}
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('salary-summary.index') }}">
-                <i class="menu-icon mdi mdi-file-chart-outline"></i>
-                <span class="menu-title">Ringkasan Gaji Tahunan</span>
-            </a>
-        </li>
+        {{-- RINGKASAN GAJI TAHUNAN (KECUALI ADMIN GAJI) --}}
+        @if(auth()->user()->role != 'admin_gaji')
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('salary-summary.index') }}">
+                    <i class="menu-icon mdi mdi-file-chart-outline"></i>
+                    <span class="menu-title">Ringkasan Gaji Tahunan</span>
+                </a>
+            </li>
+        @endif
 
-        {{-- EXISTING: Kasbon (Kecuali Leader) --}}
-        @if (auth()->user()->role != 'leader')
+        {{-- KASBON (Kecuali Leader DAN Admin Gaji) --}}
+        @if (auth()->user()->role != 'leader' && auth()->user()->role != 'admin_gaji')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('kasbon.index') }}">
                     <i class="menu-icon mdi mdi-cash-multiple"></i>
@@ -84,7 +95,9 @@
             </li>
         @endif
 
-        {{-- BARU: Manajemen Gaji (Hanya Admin & Admin Gaji) --}}
+        {{-- =================================== --}}
+        {{--   MANAJEMEN GAJI (ADMIN & GAJI)     --}}
+        {{-- =================================== --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('employee-salaries.index') }}">
@@ -97,8 +110,6 @@
         {{-- =================================== --}}
         {{--     MENU KHUSUS SUPER ADMIN         --}}
         {{-- =================================== --}}
-
-        {{-- Menu Cabang (Admin & Audit Boleh Lihat) --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Menu Cabang</li>
             <li class="nav-item">
@@ -109,7 +120,6 @@
             </li>
         @endif
 
-        {{-- Menu Koreksi Absensi (HANYA ADMIN YANG BISA LIHAT) --}}
         @if (auth()->user()->role == 'admin')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin.correction.index') }}">
@@ -121,23 +131,19 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MANAJEMEN TIM (ADMIN & GAJI)     --}}
+        {{--     MANAJEMEN TIM (ADMIN ONLY)      --}}
         {{-- =================================== --}}
-        {{-- UPDATE: Menambahkan admin_gaji di sini --}}
-        @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
+        {{-- Admin Gaji di-remove dari sini sesuai request --}}
+        @if (auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Manajemen Tim</li>
 
-            {{-- Hanya Admin yang bisa lihat Divisi (Opsional, jika admin gaji butuh, hapus if nya) --}}
-            @if (auth()->user()->role == 'admin')
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('divisions.index') }}">
-                        <i class="menu-icon mdi mdi-sitemap"></i>
-                        <span class="menu-title">Data Divisi</span>
-                    </a>
-                </li>
-            @endif
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('divisions.index') }}">
+                    <i class="menu-icon mdi mdi-sitemap"></i>
+                    <span class="menu-title">Data Divisi</span>
+                </a>
+            </li>
 
-            {{-- Admin Gaji BISA lihat Data User --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('users.index') }}">
                     <i class="menu-icon mdi mdi-account-group"></i>
@@ -160,7 +166,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--     VERIFIKASI (ADMIN & AUDIT)      --}}
+        {{--    VERIFIKASI (ADMIN & AUDIT)       --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Verifikasi</li>
@@ -178,7 +184,7 @@
                 </a>
             </li>
 
-            {{-- Menu KHUSUS ADMIN (Audit tidak bisa lihat) --}}
+            {{-- Menu KHUSUS ADMIN --}}
             @if (auth()->user()->role == 'admin')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('users.photo-requests') }}">
@@ -213,7 +219,6 @@
         @if (auth()->user()->role == 'security' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Menu Security</li>
 
-            {{-- Menu Scan (Hanya untuk Role Security) --}}
             @if (auth()->user()->role == 'security')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('security.scan') }}">
@@ -223,7 +228,6 @@
                 </li>
             @endif
 
-            {{-- Menu Riwayat Scan (Security & Admin) --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('security.history') }}">
                     <i class="menu-icon mdi mdi-history"></i>
@@ -233,8 +237,9 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MENU TIM (ADMIN, LEADER, DLL)    --}}
+        {{--   MENU PENGGUNA (TEAM/BRANCH)       --}}
         {{-- =================================== --}}
+        {{-- Pastikan admin_gaji TIDAK masuk sini --}}
         @if (auth()->user()->role == 'user_biasa' ||
                 auth()->user()->role == 'leader' ||
                 auth()->user()->role == 'audit' ||
@@ -261,7 +266,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MONITORING (ADMIN, AUDIT, LEADER) --}}
+        {{--   MONITORING (ADMIN, AUDIT, LEADER) --}}
         {{-- =================================== --}}
         @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
             <li class="nav-item nav-category">Monitoring Wilayah</li>
