@@ -13,7 +13,7 @@
         {{-- =================================== --}}
         {{--   RIWAYAT ABSENSI (EXCEPT GAJI)     --}}
         {{-- =================================== --}}
-        @if(auth()->user()->role != 'admin_gaji')
+        @if (auth()->user()->role != 'admin_gaji')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('attendance.history') }}">
                     <i class="mdi mdi-history menu-icon"></i>
@@ -37,7 +37,7 @@
         {{-- =================================== --}}
         {{--    MENU UMUM (EXCEPT ADMIN GAJI)    --}}
         {{-- =================================== --}}
-        @if(auth()->user()->role != 'admin_gaji')
+        @if (auth()->user()->role != 'admin_gaji')
             <li class="nav-item nav-category">Menu Umum</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('inventory.index') }}">
@@ -69,14 +69,14 @@
         {{--        GAJI KU (SEMUA ROLE)         --}}
         {{-- =================================== --}}
         <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="{{ route('my-salary.index') }}">
                 <i class="menu-icon mdi mdi-wallet-outline"></i>
                 <span class="menu-title">Gaji Ku</span>
             </a>
         </li>
 
         {{-- RINGKASAN GAJI TAHUNAN (KECUALI ADMIN GAJI) --}}
-        @if(auth()->user()->role != 'admin_gaji')
+        @if (auth()->user()->role != 'admin_gaji')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('salary-summary.index') }}">
                     <i class="menu-icon mdi mdi-file-chart-outline"></i>

@@ -4,6 +4,7 @@ use App\Http\Controllers\AttendanceCorrectionController;
 use App\Http\Controllers\BranchSalaryController;
 use App\Http\Controllers\EmployeeSalaryController;
 use App\Http\Controllers\EmploymentHistoryController;
+use App\Http\Controllers\MySalaryController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\SalarySummaryController;
 use App\Models\User;
@@ -67,6 +68,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/search', [GlobalSearchController::class, 'search'])->name('search');
 
     Route::get('/salary-summary', [SalarySummaryController::class, 'index'])->name('salary-summary.index');
+
+    Route::get('/my-salary', [MySalaryController::class, 'index'])->name('my-salary.index');
+    Route::get('/my-salary/{id}', [MySalaryController::class, 'show'])->name('my-salary.show');
 
     Route::get('/my-wrapped-2025', [App\Http\Controllers\AttendanceRecapController::class, 'index'])->name('attendance.recap');
 
