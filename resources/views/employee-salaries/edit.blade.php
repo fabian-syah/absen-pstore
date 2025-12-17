@@ -3,33 +3,63 @@
 @section('content')
 {{-- Custom Style --}}
 <style>
-    .form-label { font-weight: 600; color: #343a40; font-size: 0.9rem; }
-    .input-group-text { background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; }
-    .form-control:focus, .form-select:focus { box-shadow: none; border-color: #4B49AC; }
-    .card-header-clean { background: transparent; border-bottom: 1px solid #f0f0f0; padding: 20px 25px; }
-    .section-title { font-size: 1rem; font-weight: 700; color: #4B49AC; margin-bottom: 15px; display: flex; align-items: center; }
-    .section-title i { margin-right: 8px; font-size: 1.2rem; }
-    .bg-privilege { background-color: #f0fdf4; border: 1px solid #bbf7d0; }
-    .form-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; }
+    .form-label { font-weight: 600; color: #495057; font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .input-group-text { background-color: #f8f9fa; border: 1px solid #ced4da; border-right: none; color: #6c757d; font-weight: 500; }
+    .form-control, .form-select { border: 1px solid #ced4da; padding: 0.6rem 1rem; font-size: 0.95rem; border-radius: 8px; transition: all 0.2s; }
+    .form-control:focus, .form-select:focus { border-color: #4B49AC; box-shadow: 0 0 0 3px rgba(75, 73, 172, 0.1); }
+    
+    /* Input Rupiah Style */
+    .input-group .form-control { border-left: none; }
+    .input-group:focus-within .input-group-text { border-color: #4B49AC; }
+    
+    /* Card Header Clean */
+    .card-header-clean { background: transparent; padding: 25px 30px 10px; border: none; }
+    .card-body-clean { padding: 10px 30px 30px; }
+    
+    /* Custom Switch Modern (iOS Style) */
+    .switch { position: relative; display: inline-block; width: 50px; height: 26px; vertical-align: middle; margin-right: 10px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e9ecef; -webkit-transition: .4s; transition: .4s; border-radius: 34px; border: 1px solid #ced4da; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; -webkit-transition: .4s; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    input:checked + .slider { background-color: #4B49AC; border-color: #4B49AC; }
+    input:checked + .slider:before { -webkit-transform: translateX(24px); -ms-transform: translateX(24px); transform: translateX(24px); }
+    
+    /* Privilege Box */
+    .privilege-box { background: #f8f9fa; border: 1px dashed #ced4da; border-radius: 12px; padding: 15px; transition: all 0.3s; }
+    .privilege-box.active { background: #eef2ff; border-color: #4B49AC; }
 </style>
 
 <div class="row justify-content-center">
-    <div class="col-md-9">
+    <div class="col-lg-9 col-md-11">
+        
+        {{-- Tombol Kembali --}}
+        <div class="mb-4">
+            <a href="{{ route('employee-salaries.index') }}" class="text-decoration-none text-muted fw-bold small">
+                <i class="mdi mdi-arrow-left me-1"></i> Kembali ke Daftar Gaji
+            </a>
+        </div>
+
         <div class="card shadow-sm border-0 rounded-4">
             
-            <div class="card-header-clean d-flex justify-content-between align-items-center">
+            {{-- Header --}}
+            <div class="card-header-clean d-flex justify-content-between align-items-start">
                 <div>
-                    <h4 class="mb-1 fw-bold text-dark"><i class="mdi mdi-account-cash me-2"></i>Setting Master Gaji</h4>
-                    <p class="text-muted mb-0 small">Atur komponen gaji untuk: <strong>{{ $user->name }}</strong></p>
+                    <h3 class="fw-bold text-dark mb-1">Setting Master Gaji</h3>
+                    <p class="text-muted mb-0">Atur komponen gaji untuk karyawan ini.</p>
                 </div>
-                <span class="badge bg-primary rounded-pill px-3 py-2">ID: {{ $user->login_id ?? '-' }}</span>
+                <div class="text-end">
+                    <h5 class="fw-bold text-primary mb-0">{{ $user->name }}</h5>
+                    <span class="badge bg-light text-dark border mt-1">ID: {{ $user->login_id ?? '-' }}</span>
+                </div>
             </div>
 
-            <div class="card-body p-4">
-                
+            <div class="card-body-clean">
+                <hr class="my-4 text-muted opacity-25">
+
+                {{-- Alert Error --}}
                 @if ($errors->any())
-                    <div class="alert alert-danger rounded-3 mb-4">
-                        <ul class="mb-0 small">
+                    <div class="alert alert-danger rounded-3 mb-4 border-0 shadow-sm">
+                        <ul class="mb-0 small ps-3">
                             @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
                         </ul>
                     </div>
@@ -41,30 +71,32 @@
 
                     <div class="row g-5">
                         
-                        {{-- KIRI: KATEGORI & BANK --}}
+                        {{-- KIRI: KATEGORI --}}
                         <div class="col-md-5 border-end">
                             <div class="mb-4">
-                                <h6 class="section-title"><i class="mdi mdi-shape"></i> Kategori & Pembayaran</h6>
+                                <h6 class="fw-bold text-uppercase text-secondary small ls-1 mb-3">Kategori & Pembayaran</h6>
                                 
-                                <div class="mb-3">
-                                    <label class="form-label">Kategori Karyawan</label>
-                                    <select name="category" id="category" class="form-select form-select-lg shadow-sm border-primary">
+                                <div class="mb-4">
+                                    <label class="form-label">Jenis Karyawan</label>
+                                    <select name="category" id="category" class="form-select form-select-lg shadow-none">
                                         <option value="employee" {{ ($user->employeeSalary->category ?? '') == 'employee' ? 'selected' : '' }}>Karyawan Tetap</option>
                                         <option value="promotor" {{ ($user->employeeSalary->category ?? '') == 'promotor' ? 'selected' : '' }}>Promotor / JCS</option>
                                         <option value="freelance" {{ ($user->employeeSalary->category ?? '') == 'freelance' ? 'selected' : '' }}>Freelance</option>
                                     </select>
-                                    <div class="form-text text-small" id="cat_desc">Pilih jenis kontrak kerja.</div>
+                                    <div class="form-text text-muted mt-2 small lh-sm" id="cat_desc">Pilih jenis kontrak kerja untuk menentukan komponen gaji.</div>
                                 </div>
 
-                                <div class="p-3 bg-light rounded-3 border">
-                                    <label class="form-label text-muted mb-2"><i class="mdi mdi-bank me-1"></i> Informasi Rekening</label>
-                                    <div class="mb-2">
+                                <div class="bg-light p-4 rounded-3 border">
+                                    <h6 class="fw-bold text-dark mb-3 small"><i class="mdi mdi-bank me-1"></i> Data Rekening</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted mb-1">Nama Bank</label>
                                         <input type="text" name="bank_name" class="form-control form-control-sm" 
-                                               value="{{ $user->employeeSalary->bank_name ?? '' }}" placeholder="Nama Bank (BCA/BRI)">
+                                               value="{{ $user->employeeSalary->bank_name ?? '' }}" placeholder="Contoh: BCA">
                                     </div>
-                                    <div>
+                                    <div class="mb-0">
+                                        <label class="form-label small text-muted mb-1">Nomor Rekening</label>
                                         <input type="number" name="bank_account_number" class="form-control form-control-sm" 
-                                               value="{{ $user->employeeSalary->bank_account_number ?? '' }}" placeholder="No. Rekening">
+                                               value="{{ $user->employeeSalary->bank_account_number ?? '' }}" placeholder="Contoh: 1234567890">
                                     </div>
                                 </div>
                             </div>
@@ -75,20 +107,23 @@
                             
                             {{-- 1. KARYAWAN TETAP --}}
                             <div id="form_employee" class="salary-section">
-                                <h6 class="section-title text-success"><i class="mdi mdi-briefcase-check"></i> Komponen Karyawan Tetap</h6>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-success-light text-success rounded-circle me-2 p-1"><i class="mdi mdi-briefcase-check"></i></div>
+                                    <h6 class="fw-bold text-dark mb-0">Komponen Gaji Tetap</h6>
+                                </div>
                                 
-                                <div class="mb-3">
+                                <div class="mb-4">
                                     <label class="form-label">Gaji Pokok</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
-                                        <input type="text" name="basic_salary" class="form-control rupiahe fw-bold" 
+                                        <input type="text" name="basic_salary" class="form-control rupiahe fw-bold form-control-lg" 
                                                value="{{ number_format($user->employeeSalary->basic_salary ?? 0, 0, ',', '.') }}" placeholder="0">
                                     </div>
                                 </div>
 
-                                <div class="row g-2 mb-4">
+                                <div class="row g-3 mb-4">
                                     <div class="col-md-6">
-                                        <label class="form-label small">Tunjangan Jabatan</label>
+                                        <label class="form-label small text-muted">Tunjangan Jabatan</label>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text">Rp</span>
                                             <input type="text" name="position_allowance" class="form-control rupiahe" 
@@ -96,7 +131,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label small">Privilege (Nominal)</label>
+                                        <label class="form-label small text-muted">Privilege Owner</label>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text">Rp</span>
                                             <input type="text" name="owner_privilege" class="form-control rupiahe" 
@@ -105,52 +140,60 @@
                                     </div>
                                 </div>
 
-                                {{-- SWITCH PRIVILEGE (FIXED) --}}
-                                <div class="p-3 bg-privilege rounded-3 d-flex align-items-start">
-                                    <div class="form-check form-switch pt-1">
-                                        {{-- Input Checkbox harus punya value="1" agar dikirim sebagai 1 saat dicentang --}}
-                                        <input class="form-check-input" type="checkbox" name="use_privilege_mode" value="1" id="privilegeSwitch"
-                                               {{ ($user->employeeSalary->use_privilege_mode ?? 0) == 1 ? 'checked' : '' }}>
-                                    </div>
-                                    <div class="ms-3">
-                                        <label class="form-check-label fw-bold text-success mb-1" for="privilegeSwitch" style="cursor: pointer;">
-                                            Aktifkan Mode Privilege
-                                        </label>
-                                        <p class="mb-0 small text-muted lh-sm">
-                                            Jika aktif, karyawan ini <strong>bebas potongan absensi</strong> (Alpha/Telat) saat proses Payroll.
-                                        </p>
+                                {{-- SWITCH PRIVILEGE MODERN --}}
+                                <div class="privilege-box d-flex align-items-center {{ ($user->employeeSalary->use_privilege_mode ?? 0) ? 'active' : '' }}" id="privilegeBox">
+                                    <label class="switch">
+                                        <input type="checkbox" name="use_privilege_mode" value="1" id="privilegeSwitch"
+                                               {{ ($user->employeeSalary->use_privilege_mode ?? 0) ? 'checked' : '' }}
+                                               onchange="togglePrivilegeStyle(this)">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <div class="ms-2">
+                                        <label class="fw-bold text-dark mb-0 d-block cursor-pointer" for="privilegeSwitch">Aktifkan Mode Privilege</label>
+                                        <small class="text-muted lh-1 d-block mt-1" style="font-size: 0.75rem;">Bebas potongan absensi (Alpha/Telat) otomatis.</small>
                                     </div>
                                 </div>
                             </div>
 
                             {{-- 2. PROMOTOR --}}
                             <div id="form_promotor" class="salary-section" style="display: none;">
-                                <h6 class="section-title text-info"><i class="mdi mdi-bullhorn"></i> Komponen Promotor / JCS</h6>
-                                <div class="alert alert-info py-2 small mb-3">
-                                    <i class="mdi mdi-information-outline"></i> Hanya menerima <strong>Bonus / Insentif</strong>.
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-info-light text-info rounded-circle me-2 p-1"><i class="mdi mdi-bullhorn"></i></div>
+                                    <h6 class="fw-bold text-dark mb-0">Komponen Promotor</h6>
                                 </div>
+                                <div class="alert alert-info border-0 bg-soft-info py-2 px-3 mb-4 rounded-3 d-flex align-items-center">
+                                    <i class="mdi mdi-information-outline fs-5 me-2"></i>
+                                    <span class="small text-dark">Hanya menerima <strong>Bonus / Insentif</strong>.</span>
+                                </div>
+                                
                                 <input type="hidden" name="promotor_monthly_salary" value="0">
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Insentif / Bonus (Estimasi)</label>
+                                    <label class="form-label">Insentif / Bonus (Estimasi)</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-white">Rp</span>
-                                        <input type="text" name="promotor_bonus" class="form-control rupiahe fw-bold" 
+                                        <span class="input-group-text">Rp</span>
+                                        <input type="text" name="promotor_bonus" class="form-control rupiahe fw-bold form-control-lg" 
                                                value="{{ number_format($user->employeeSalary->promotor_bonus ?? 0, 0, ',', '.') }}" placeholder="0">
                                     </div>
+                                    <div class="form-text mt-1">Nominal ini akan muncul otomatis saat Payroll.</div>
                                 </div>
                             </div>
 
                             {{-- 3. FREELANCE --}}
                             <div id="form_freelance" class="salary-section" style="display: none;">
-                                <h6 class="section-title text-warning"><i class="mdi mdi-account-clock"></i> Komponen Freelance</h6>
-                                <div class="alert alert-warning py-2 small mb-3">
-                                    <i class="mdi mdi-clock-outline"></i> Hitungan <strong>Harian</strong> (No Work No Pay).
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-warning-light text-warning rounded-circle me-2 p-1"><i class="mdi mdi-account-clock"></i></div>
+                                    <h6 class="fw-bold text-dark mb-0">Komponen Freelance</h6>
                                 </div>
+                                <div class="alert alert-warning border-0 bg-soft-warning py-2 px-3 mb-4 rounded-3 d-flex align-items-center">
+                                    <i class="mdi mdi-clock-outline fs-5 me-2"></i>
+                                    <span class="small text-dark">Dibayar <strong>Harian</strong> (No Work No Pay).</span>
+                                </div>
+                                
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Rate Gaji Per Hari</label>
+                                    <label class="form-label">Rate Gaji Per Hari</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-white">Rp</span>
-                                        <input type="text" name="daily_salary" class="form-control rupiahe fw-bold" 
+                                        <span class="input-group-text">Rp</span>
+                                        <input type="text" name="daily_salary" class="form-control rupiahe fw-bold form-control-lg" 
                                                value="{{ number_format($user->employeeSalary->daily_salary ?? 0, 0, ',', '.') }}" placeholder="0">
                                     </div>
                                 </div>
@@ -159,29 +202,40 @@
                         </div>
                     </div>
 
-                    <hr class="my-4">
+                    <hr class="my-5 opacity-25">
 
-                    <div class="d-flex justify-content-end gap-2">
-                        <a href="{{ route('employee-salaries.index') }}" class="btn btn-light px-4">Batal</a>
-                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm">
-                            <i class="mdi mdi-content-save-check me-1"></i> Simpan Perubahan
+                    <div class="d-flex justify-content-end gap-3">
+                        <a href="{{ route('employee-salaries.index') }}" class="btn btn-light btn-lg px-4 fw-bold border" style="border-radius: 10px;">Batal</a>
+                        <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm text-white" style="border-radius: 10px;">
+                            <i class="mdi mdi-content-save-check me-2"></i> Simpan Data
                         </button>
                     </div>
+
                 </form>
             </div>
         </div>
     </div>
 </div>
 
+{{-- SCRIPT --}}
 <script>
+    function togglePrivilegeStyle(checkbox) {
+        const box = document.getElementById('privilegeBox');
+        if (checkbox.checked) {
+            box.classList.add('active');
+        } else {
+            box.classList.remove('active');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const categorySelect = document.getElementById('category');
         const sections = document.querySelectorAll('.salary-section');
         const catDesc = document.getElementById('cat_desc');
         
         const descriptions = {
-            'employee': 'Gaji Pokok + Tunjangan Bulanan.',
-            'promotor': 'Hanya Insentif/Bonus Bulanan.',
+            'employee': 'Mendapatkan Gaji Pokok + Tunjangan Bulanan.',
+            'promotor': 'Hanya mendapatkan Insentif/Bonus Bulanan.',
             'freelance': 'Dibayar harian berdasarkan kehadiran.'
         };
 
@@ -193,12 +247,13 @@
             if (val === 'promotor') document.getElementById('form_promotor').style.display = 'block';
             if (val === 'freelance') document.getElementById('form_freelance').style.display = 'block';
 
-            if(catDesc) catDesc.innerText = descriptions[val] || '';
+            if(catDesc) catDesc.innerText = descriptions[val];
         }
 
         categorySelect.addEventListener('change', toggleForm);
         toggleForm(); 
 
+        // FORMAT RUPIAH
         const rupiahInputs = document.querySelectorAll('.rupiahe');
         rupiahInputs.forEach(input => {
             input.value = formatRupiah(input.value);
@@ -207,7 +262,7 @@
             });
         });
 
-        function formatRupiah(angka) {
+        function formatRupiah(angka, prefix) {
             if(!angka) return '';
             var number_string = angka.toString().replace(/[^,\d]/g, '').toString(),
                 split   = number_string.split(','),
