@@ -63,17 +63,30 @@
                             
                             @if(auth()->user()->role == 'admin_gaji')
                                 {{-- MENU KHUSUS ADMIN GAJI --}}
+                                
+                                {{-- 1. Riwayat Absensi (Bulanan) --}}
+                                <a href="{{ route('attendance.history', ['employeeId' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                                    <span><i class="mdi mdi-calendar-month text-info me-2"></i> Riwayat Absen Bulanan</span><i class="mdi mdi-chevron-right text-muted"></i>
+                                </a>
+
+                                {{-- 2. Ringkasan Absensi (Tahunan) --}}
+                                <a href="{{ route('attendance.summary', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                                    <span><i class="mdi mdi-chart-bar text-warning me-2"></i> Riwayat Absen Tahunan</span><i class="mdi mdi-chevron-right text-muted"></i>
+                                </a>
+
+                                {{-- 3. Ringkasan Gaji Tahunan --}}
                                 <a href="{{ route('salary-summary.index', ['user_id' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                                     <span><i class="mdi mdi-file-chart text-success me-2"></i> Ringkasan Gaji Tahunan</span><i class="mdi mdi-chevron-right text-muted"></i>
                                 </a>
                                 
-                                {{-- Link ke daftar slip gaji user ini (bisa pakai my-salary tapi difilter user id jika logic controller mendukung, atau ke salary-branch show) --}}
+                                {{-- 4. Riwayat Slip Gaji --}}
                                 <a href="{{ route('branch-salary.show', $user->branch_id ?? 0) }}?search={{ $user->name }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                                     <span><i class="mdi mdi-cash-register text-primary me-2"></i> Riwayat Slip Gaji</span><i class="mdi mdi-chevron-right text-muted"></i>
                                 </a>
 
+                                {{-- 5. Setting Master Gaji --}}
                                 <a href="{{ route('employee-salaries.edit', $user->id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
-                                    <span><i class="mdi mdi-cog text-warning me-2"></i> Setting Master Gaji</span><i class="mdi mdi-chevron-right text-muted"></i>
+                                    <span><i class="mdi mdi-cog text-secondary me-2"></i> Setting Master Gaji</span><i class="mdi mdi-chevron-right text-muted"></i>
                                 </a>
 
                             @else
