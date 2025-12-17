@@ -148,7 +148,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/{id}/detail', [App\Http\Controllers\CashAdvanceController::class, 'show'])->name('show');
         Route::post('/{id}/cicil', [App\Http\Controllers\CashAdvanceController::class, 'storeInstallment'])->name('installment.store');
 
-        Route::middleware(['role:admin'])->group(function () {
+        Route::middleware(['role:admin,admin_gaji'])->group(function () {
             Route::delete('/{id}', [App\Http\Controllers\CashAdvanceController::class, 'destroy'])->name('destroy');
             Route::patch('/{id}/status', [App\Http\Controllers\CashAdvanceController::class, 'changeStatus'])->name('status');
             Route::post('/installment/{id}/approve', [App\Http\Controllers\CashAdvanceController::class, 'approveInstallment'])->name('installment.approve');
