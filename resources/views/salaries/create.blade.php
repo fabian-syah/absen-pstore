@@ -13,7 +13,9 @@
                 <form action="{{ route('salaries.store') }}" method="POST" id="payrollForm">
                     @csrf
                     
-                    {{-- SECTION 1: PILIH USER & PERIODE (Tetap Sama) --}}
+                    {{-- ==================================================== --}}
+                    {{-- SECTION 1: PILIH USER & PERIODE --}}
+                    {{-- ==================================================== --}}
                     <div class="row mb-4 bg-light p-3 rounded border">
                         <div class="col-md-5">
                             <label class="fw-bold mb-1">Pilih Karyawan</label>
@@ -62,7 +64,7 @@
                         <div class="col-md-4">
                             <label class="fw-bold mb-1">Kategori</label>
                             @php
-                                $currentCat = $masterSalary->category ?? 'employee'; // Default employee
+                                $currentCat = $masterSalary->category ?? 'employee'; 
                             @endphp
                             
                             @if(isset($masterSalary) && $masterSalary->category)
@@ -83,7 +85,9 @@
                     </div>
 
                     <div class="row">
+                        {{-- ==================================================== --}}
                         {{-- SECTION 2: PENDAPATAN (DINAMIS) --}}
+                        {{-- ==================================================== --}}
                         <div class="col-md-6 border-end">
                             <h5 class="text-success mb-3 fw-bold border-bottom pb-2">
                                 <i class="mdi mdi-arrow-up-circle"></i> PENDAPATAN
@@ -129,7 +133,6 @@
                                     <label class="fw-bold">Gaji 1 Bulan</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
-                                        {{-- Gunakan name yg sama (basic_salary) agar controller logic sederhana, atau bedakan --}}
                                         <input type="text" id="promotor_basic" class="form-control income-input fw-bold text-dark rupiah-input" 
                                                placeholder="0" value="{{ number_format($masterSalary->basic_salary ?? 0, 0, ',', '.') }}">
                                     </div>
@@ -153,7 +156,6 @@
                                     <label>Jumlah Kehadiran (Realtime)</label>
                                     <input type="text" id="freelance_attendance" class="form-control bg-light" value="{{ $freelanceAttendance ?? 0 }}" readonly>
                                 </div>
-                                {{-- Hidden input hasil kali untuk masuk ke Total Income --}}
                                 <input type="hidden" id="freelance_total" class="income-input" value="0">
                             </div>
 
@@ -183,7 +185,9 @@
                             </div>
                         </div>
 
+                        {{-- ==================================================== --}}
                         {{-- SECTION 3: POTONGAN (DEDUCTION) --}}
+                        {{-- ==================================================== --}}
                         <div class="col-md-6">
                             <h5 class="text-danger mb-3 fw-bold border-bottom pb-2">
                                 <i class="mdi mdi-arrow-down-circle"></i> POTONGAN
@@ -254,9 +258,73 @@
 
                     <hr class="my-4 border-2">
 
-                    {{-- SECTION 4: PEMBAYARAN (Sama Seperti Sebelumnya) --}}
-                    @include('salaries.partials.payment_section') 
-                    {{-- (Saya singkat bagian ini agar muat, gunakan kode Payment Section dari jawaban sebelumnya) --}}
+                    {{-- ==================================================== --}}
+                    {{-- SECTION 4: OPSI PEMBAYARAN (INTEGRATED) --}}
+                    {{-- ==================================================== --}}
+                    <div class="row justify-content-center">
+                        <div class="col-md-10">
+                            
+                            <div class="card bg-white border mb-4">
+                                <div class="card-body p-4">
+                                    <h5 class="fw-bold text-dark mb-4 border-bottom pb-2">Konfirmasi Pembayaran</h5>
+                                    
+                                    <div class="row g-4">
+                                        {{-- 1. Metode Pembayaran --}}
+                                        <div class="col-md-6">
+                                            <label class="fw-bold mb-2">Metode Pembayaran</label>
+                                            <div class="btn-group w-100" role="group">
+                                                <input type="radio" class="btn-check" name="payment_method" id="pay_cash" value="cash">
+                                                <label class="btn btn-outline-success p-3 fw-bold" for="pay_cash">
+                                                    <i class="mdi mdi-cash-multiple fs-4 d-block mb-1"></i> TUNAI
+                                                </label>
+                                              
+                                                <input type="radio" class="btn-check" name="payment_method" id="pay_transfer" value="transfer" checked>
+                                                <label class="btn btn-outline-primary p-3 fw-bold" for="pay_transfer">
+                                                    <i class="mdi mdi-bank fs-4 d-block mb-1"></i> TRANSFER
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {{-- 2. Jadwal Kirim --}}
+                                        <div class="col-md-6">
+                                            <label class="fw-bold mb-2">Waktu Pengiriman</label>
+                                            <div class="d-flex flex-column gap-2">
+                                                <div class="form-check card-radio p-3 border rounded">
+                                                    <input class="form-check-input" type="radio" name="send_type" id="send_now" value="now" checked onclick="toggleDateInput(false)">
+                                                    <label class="form-check-label fw-bold w-100 cursor-pointer" for="send_now">
+                                                        <i class="mdi mdi-send text-primary me-1"></i> Kirim Sekarang
+                                                    </label>
+                                                </div>
+
+                                                <div class="form-check card-radio p-3 border rounded">
+                                                    <input class="form-check-input" type="radio" name="send_type" id="send_later" value="later" onclick="toggleDateInput(true)">
+                                                    <label class="form-check-label fw-bold w-100 cursor-pointer" for="send_later">
+                                                        <i class="mdi mdi-calendar-clock text-warning me-1"></i> Jadwalkan
+                                                    </label>
+                                                    <div id="schedule_input_box" class="mt-2" style="display: none;">
+                                                        <input type="date" name="scheduled_date" class="form-control">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <h5 class="text-muted mb-2 text-uppercase ls-1">Take Home Pay (Gaji Bersih)</h5>
+                                <h1 class="display-3 fw-bold text-primary mb-4" id="take_home_pay">Rp 0</h1>
+                                
+                                <div class="d-grid gap-2 col-md-6 mx-auto">
+                                    <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-lg p-3 rounded-pill">
+                                        PROSES PAYROLL
+                                    </button>
+                                    <a href="{{ route('branch-salary.index') }}" class="btn btn-light text-muted">Batal</a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
 
                 </form>
             </div>
@@ -289,21 +357,16 @@
             else if(cat === 'promotor') document.getElementById('form_promotor').style.display = 'block';
             else if(cat === 'freelance') document.getElementById('form_freelance').style.display = 'block';
             
-            // Sync input Promotor ke Employee Basic agar kalkulasi tetap jalan
-            // (Promotor pakai field basic_salary di backend, di frontend kita mapping)
             if(cat === 'promotor') {
                 const promoBasic = document.getElementById('promotor_basic');
-                // Kita "pinjam" input basic_salary milik employee yg hidden
                 const empBasic = document.getElementsByName('employee_basic_salary')[0];
                 promoBasic.addEventListener('input', function() { empBasic.value = this.value; calculate(); });
-                // Init value
                 empBasic.value = promoBasic.value;
             }
             
             calculate();
         }
         
-        // Init toggle
         if(categoryInput.tagName === 'SELECT') {
             categoryInput.addEventListener('change', toggleCategoryForms);
         }
@@ -316,8 +379,6 @@
         const lateDays = document.getElementById('late_days');
         const lateDed = document.getElementById('late_deduction');
         const overrideCheck = document.getElementById('override_attendance');
-        
-        // Freelance Elements
         const dailySalary = document.getElementById('daily_salary');
         const freelanceAtt = document.getElementById('freelance_attendance');
         const freelanceTotal = document.getElementById('freelance_total');
@@ -353,28 +414,22 @@
             let totalFixed = 0;
 
             if (cat === 'freelance') {
-                // Hitung Freelance
                 let daily = cleanNumber(dailySalary.value);
                 let days = parseFloat(freelanceAtt.value) || 0;
                 let total = daily * days;
-                freelanceTotal.value = total; // Simpan di hidden input
-                totalIncome = total; // Base income freelance
+                freelanceTotal.value = total;
+                totalIncome = total;
             } else {
-                // Hitung Employee / Promotor
-                // Ambil dari input visible di form employee
                 let basic = cleanNumber(document.getElementsByName('employee_basic_salary')[0].value);
                 let allow = cleanNumber(document.getElementsByName('employee_position_allowance')[0].value);
                 let priv = cleanNumber(document.getElementsByName('employee_owner_privilege')[0].value);
-                
                 totalFixed = basic + allow + priv;
                 totalIncome = totalFixed;
             }
 
-            // Tambah Bonus & Dispensasi (Global)
             totalIncome += cleanNumber(document.getElementsByName('promotor_bonus')[0].value);
             totalIncome += cleanNumber(document.getElementsByName('dispensation_amount')[0].value);
 
-            // Hitung Potongan Absensi (Hanya jika Employee/Promotor, Freelance biasanya tidak dipotong alpha karena dibayar per hadir)
             if (cat !== 'freelance') {
                 if (overrideCheck && overrideCheck.checked) {
                     alphaDed.value = "0";
@@ -389,11 +444,10 @@
                     lateDed.value = formatRupiah(Math.floor(lateVal)); 
                 }
             } else {
-                alphaDed.value = "0"; // Freelance tidak ada potongan alpha (karena no work no pay)
+                alphaDed.value = "0";
                 lateDed.value = "0";
             }
 
-            // Sum Deduction
             let totalDeduction = cleanNumber(alphaDed.value) + cleanNumber(lateDed.value);
             document.querySelectorAll('.deduction-input').forEach(el => {
                 if(el.id !== 'alpha_deduction' && el.id !== 'late_deduction') {
@@ -401,7 +455,6 @@
                 }
             });
 
-            // Display
             document.getElementById('total_income_display').innerText = "Rp " + formatRupiah(totalIncome);
             document.getElementById('total_deduction_display').innerText = "Rp " + formatRupiah(totalDeduction);
             document.getElementById('take_home_pay').innerText = "Rp " + formatRupiah(totalIncome - totalDeduction);
