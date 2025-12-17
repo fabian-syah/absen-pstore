@@ -7,34 +7,36 @@
 @section('content')
     <div class="row">
         <div class="col-lg-12 grid-margin stretch-card">
-            <div class="card">
+            <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="card-title">Riwayat Izin Saya (Selesai)</h4>
+                        <div>
+                            <h4 class="card-title mb-1">Riwayat Izin Saya</h4>
+                            <p class="text-muted small">Daftar pengajuan izin, sakit, cuti, dan keterlambatan.</p>
+                        </div>
                         
-                        {{-- Tombol kembali ke Dashboard atau Halaman Utama --}}
-                        <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm">
-                            <i class="mdi mdi-home"></i> Kembali ke Dashboard
+                        {{-- Tombol kembali --}}
+                        <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm shadow-sm">
+                            <i class="mdi mdi-arrow-left"></i> Kembali ke Dashboard
                         </a>
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
                                 <tr>
-                                    {{-- Kolom User dihapus karena ini riwayat pribadi --}}
-                                    <th>Tipe</th>
-                                    <th>Waktu / Tanggal</th>
-                                    <th>Alasan</th>
-                                    <th>Bukti</th>
-                                    <th>Status & Approver</th>
+                                    <th class="py-3 ps-3 rounded-start">Tipe Izin</th>
+                                    <th class="py-3">Waktu / Tanggal</th>
+                                    <th class="py-3">Alasan</th>
+                                    <th class="py-3">Bukti</th>
+                                    <th class="py-3 rounded-end">Status & Approver</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($requests as $req)
                                     <tr>
                                         {{-- KOLOM TIPE --}}
-                                        <td>
+                                        <td class="ps-3">
                                             @php
                                                 $badgeClass = match($req->type) {
                                                     'sakit' => 'bg-danger text-white',
@@ -44,34 +46,51 @@
                                                     'wfh' => 'bg-success text-white',
                                                     default => 'bg-secondary text-white'
                                                 };
+                                                
+                                                // Label khusus untuk telat
+                                                $typeLabel = $req->type == 'telat' ? 'Izin Telat' : ucfirst($req->type);
                                             @endphp
-                                            <span class="badge {{ $badgeClass }} border">
-                                                {{ ucfirst($req->type) }}
+                                            <span class="badge {{ $badgeClass }} border px-3 py-2 rounded-pill">
+                                                {{ $typeLabel }}
                                             </span>
                                         </td>
 
-                                        {{-- KOLOM TANGGAL --}}
+                                        {{-- KOLOM WAKTU / TANGGAL (PERBAIKAN UTAMA DISINI) --}}
                                         <td>
-                                            @if ($req->type == 'telat')
-                                                {{ $req->start_date->format('d/m/Y') }} 
-                                                <br>
-                                                <span class="text-muted" style="font-size: 11px;">
-                                                    Jam: {{ \Carbon\Carbon::parse($req->start_time)->format('H:i') }}
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-bold text-dark">
+                                                    {{ \Carbon\Carbon::parse($req->start_date)->translatedFormat('d M Y') }}
                                                 </span>
-                                            @else
-                                                {{ $req->start_date->format('d M Y') }}
-                                                @if($req->end_date)
-                                                    <br><small class="text-muted">s/d {{ \Carbon\Carbon::parse($req->end_date)->format('d M Y') }}</small>
+                                                
+                                                {{-- Jika Telat, Tampilkan Jam --}}
+                                                @if ($req->type == 'telat')
+                                                    <small class="text-muted mt-1">
+                                                        <i class="mdi mdi-clock-outline me-1"></i>
+                                                        {{-- Cek apakah start_time ada isinya --}}
+                                                        @if(!empty($req->start_time))
+                                                            {{ \Carbon\Carbon::parse($req->start_time)->format('H:i') }} WIB
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </small>
+                                                
+                                                {{-- Jika Cuti/Sakit/Izin > 1 Hari, Tampilkan Sampai Tanggal --}}
+                                                @elseif($req->end_date && $req->end_date != $req->start_date)
+                                                    <small class="text-muted mt-1">
+                                                        s/d {{ \Carbon\Carbon::parse($req->end_date)->translatedFormat('d M Y') }}
+                                                    </small>
                                                 @endif
-                                            @endif
+                                            </div>
                                         </td>
 
                                         {{-- KOLOM ALASAN --}}
-                                        <td class="text-muted" style="max-width: 250px; white-space: normal; line-height: 1.2;">
-                                            {{ $req->reason }}
+                                        <td>
+                                            <p class="mb-0 text-muted text-wrap" style="max-width: 250px; line-height: 1.4;">
+                                                {{ $req->reason }}
+                                            </p>
                                             @if($req->rejection_reason)
-                                                <div class="mt-1 text-danger small">
-                                                    <strong>Catatan:</strong> {{ $req->rejection_reason }}
+                                                <div class="mt-2 p-2 bg-light rounded border border-danger text-danger small">
+                                                    <strong>Note:</strong> {{ $req->rejection_reason }}
                                                 </div>
                                             @endif
                                         </td>
@@ -79,51 +98,54 @@
                                         {{-- KOLOM BUKTI --}}
                                         <td>
                                             @if($req->file_proof)
-                                                <a href="javascript:void(0)" 
-                                                   class="text-primary" 
-                                                   style="text-decoration: none; cursor: pointer;"
+                                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
                                                    data-bs-toggle="modal" 
                                                    data-bs-target="#imageModal"
-                                                   data-src="{{ asset('storage/' . $req->file_proof) }}"
-                                                   title="Lihat Bukti">
-                                                    <i class="mdi mdi-image"></i> Lihat
-                                                </a>
+                                                   data-src="{{ asset('storage/' . $req->file_proof) }}">
+                                                    <i class="mdi mdi-image-area me-1"></i> Lihat
+                                                </button>
                                             @else 
-                                                - 
+                                                <span class="text-muted small fst-italic">- Tidak ada -</span>
                                             @endif
                                         </td>
 
-                                        {{-- KOLOM STATUS & APPROVER --}}
+                                        {{-- KOLOM STATUS --}}
                                         <td>
                                             @if ($req->status == 'approved')
-                                                <div class="d-flex flex-column">
-                                                    <span class="badge badge-opacity-success mb-1" style="width: fit-content;">
-                                                        <i class="mdi mdi-check-circle"></i> Disetujui
-                                                    </span>
-                                                    <small class="text-muted" style="font-size: 10px;">
-                                                        Oleh: {{ $req->approver->name ?? 'System' }}
-                                                    </small>
+                                                <div class="d-flex align-items-center text-success fw-bold">
+                                                    <i class="mdi mdi-check-circle fs-5 me-2"></i> Disetujui
                                                 </div>
+                                                <small class="text-muted d-block mt-1">
+                                                    Oleh: {{ $req->approver->name ?? 'System' }}
+                                                </small>
                                             @elseif($req->status == 'rejected')
-                                                <div class="d-flex flex-column">
-                                                    <span class="badge badge-opacity-danger mb-1" style="width: fit-content;">
-                                                        <i class="mdi mdi-close-circle"></i> Ditolak
-                                                    </span>
-                                                    <small class="text-muted" style="font-size: 10px;">
-                                                        Oleh: {{ $req->approver->name ?? 'System' }}
-                                                    </small>
+                                                <div class="d-flex align-items-center text-danger fw-bold">
+                                                    <i class="mdi mdi-close-circle fs-5 me-2"></i> Ditolak
                                                 </div>
+                                                <small class="text-muted d-block mt-1">
+                                                    Oleh: {{ $req->approver->name ?? 'System' }}
+                                                </small>
                                             @elseif($req->status == 'cancelled')
-                                                <span class="badge badge-opacity-secondary">Dibatalkan</span>
+                                                <span class="badge bg-secondary text-white">Dibatalkan</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark">Menunggu</span>
                                             @endif
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="5" class="text-center py-4">Belum ada riwayat izin.</td></tr>
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <i class="mdi mdi-file-document-outline text-muted" style="font-size: 3rem;"></i>
+                                                <p class="text-muted mt-2">Belum ada riwayat pengajuan izin.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
-                        <div class="mt-4 d-flex justify-content-end">
+                        
+                        <div class="mt-4 px-3 d-flex justify-content-end">
                             {{ $requests->links('pagination::bootstrap-5') }}
                         </div>
                     </div>
@@ -132,16 +154,16 @@
         </div>
     </div>
 
-    {{-- MODAL UNTUK PREVIEW GAMBAR (SAMA SEPERTI SEBELUMNYA) --}}
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    {{-- MODAL PREVIEW GAMBAR --}}
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imageModalLabel">Bukti Lampiran</h5>
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Bukti Lampiran</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center bg-light">
-                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+                <div class="modal-body text-center bg-light p-4">
+                    <img id="modalImagePreview" src="" class="img-fluid rounded shadow-sm" style="max-height: 500px; object-fit: contain;">
                 </div>
             </div>
         </div>
