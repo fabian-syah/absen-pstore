@@ -18,7 +18,7 @@ class AttendanceSummaryController extends Controller
         $selectedYear = $request->get('year', date('Y'));
         $targetUserId = $request->get('user_id');
 
-        // --- 1. LOGIKA SEARCH & SCOPE KARYAWAN (Admin & Audit) ---
+        // --- 1. SEARCH & SCOPE KARYAWAN ---
         $employees = collect([]);
         $targetUser = $currentUser;
 
@@ -32,14 +32,8 @@ class AttendanceSummaryController extends Controller
 
             if ($targetUserId) {
                 $foundUser = $employees->where('id', $targetUserId)->first();
-                if ($foundUser) {
-                    $targetUser = $foundUser;
-                } else {
-                    if($currentUser->role === 'audit') {
-                         return redirect()->route('attendance.summary')->with('error', 'Karyawan tidak ditemukan di cabang anda.');
-                    }
-                    $targetUser = User::find($targetUserId) ?? $currentUser;
-                }
+                if ($foundUser) $targetUser = $foundUser;
+                else $targetUser = User::find($targetUserId) ?? $currentUser;
             }
         } 
 
@@ -56,43 +50,57 @@ class AttendanceSummaryController extends Controller
             })
             ->get();
 
-        // --- 3. INISIALISASI VARIABEL ---
+        // --- 3. INISIALISASI ---
         $monthsData = [];
         $grandTotal = [
             'total_hari' => 0, 'masuk' => 0, 'wfh' => 0, 'sakit' => 0,
             'izin' => 0, 'cuti' => 0, 'alpha' => 0, 'telat' => 0, 'pulang_cepat' => 0
         ];
 
-        // --- 4. LOOPING 12 BULAN ---
+        // --- 4. LOOPING ---
         for ($m = 1; $m <= 12; $m++) {
             $monthAtt = $attendances->filter(fn($q) => $q->check_in_time->month == $m);
 
-            // LOGIKA PERBAIKAN DI SINI
-            
-            // 1. Hitung Masuk (Status Masuk, WFH, Dinas, atau Scan normal)
-            $masukCount = $monthAtt->filter(function($row) {
-                $status = strtolower($row->presence_status ?? '');
-                // Masukkan 'telat' sebagai hadir juga (tapi nanti dihitung telatnya terpisah)
-                return in_array($status, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat']) 
-                        || (in_array($row->attendance_type, ['scan', 'self', 'manual']) && !in_array($status, ['sakit', 'izin', 'cuti', 'alpha']));
-            })->count();
+            // ==========================================
+            // LOGIKA PERHITUNGAN YANG DIPERBAIKI
+            // ==========================================
 
-            $wfhCount = $monthAtt->filter(fn($q) => str_contains(strtolower($q->presence_status), 'wfh'))->count();
-            
-            // 2. Hitung Alpha (Status Alpha)
-            $alphaCount = $monthAtt->filter(fn($q) => strtolower($q->presence_status) == 'alpha' || $q->status == 'alpha')->count();
-            
-            // 3. Hitung Telat (PERBAIKAN UTAMA)
-            // Cek kolom 'is_late_checkin' ATAU status string 'Telat' / 'late'
+            // A. TELAT (Prioritas Cek ini Dulu)
+            // Cek 3 Kemungkinan:
+            // 1. Boolean is_late_checkin bernilai true
+            // 2. Status teknis ('status') adalah 'late'
+            // 3. Label tampilan ('presence_status') mengandung kata 'Telat'
             $telatCount = $monthAtt->filter(function($row) {
                 return $row->is_late_checkin == true 
-                       || strtolower($row->presence_status) == 'telat' 
-                       || $row->status == 'late';
+                       || strtolower($row->status) === 'late'
+                       || str_contains(strtolower($row->presence_status), 'telat');
             })->count();
 
+            // B. ALPHA
+            $alphaCount = $monthAtt->filter(function($q) {
+                return strtolower($q->status) === 'alpha' 
+                       || strtolower($q->presence_status) === 'alpha';
+            })->count();
+
+            // C. MASUK (Hadir Tepat Waktu + Telat + WFH)
+            // Catatan: Telat biasanya tetap dihitung sebagai kehadiran (Masuk), tapi dicatat di kolom telat terpisah.
+            $masukCount = $monthAtt->filter(function($row) {
+                $st = strtolower($row->presence_status ?? '');
+                $type = strtolower($row->attendance_type ?? '');
+                
+                // Dianggap masuk jika statusnya wajar (masuk/wfh/dinas/telat) 
+                // ATAU tipenya scan/self tapi bukan sakit/izin/cuti/alpha
+                return in_array($st, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat']) 
+                       || (in_array($type, ['scan', 'self', 'manual']) && !in_array($st, ['sakit', 'izin', 'cuti', 'alpha']));
+            })->count();
+
+            // D. WFH
+            $wfhCount = $monthAtt->filter(fn($q) => str_contains(strtolower($q->presence_status), 'wfh'))->count();
+            
+            // E. PULANG CEPAT
             $pulangCepatCount = $monthAtt->where('is_early_checkout', true)->count();
 
-            // Hitung Data Leave (Cuti/Sakit/Izin)
+            // F. DATA CUTI/SAKIT DARI LEAVE REQUESTS
             $cutiCount = 0; $sakitCount = 0; $izinCount = 0; $wfhFromLeaveCount = 0; 
 
             foreach ($leaves as $leave) {
@@ -102,20 +110,25 @@ class AttendanceSummaryController extends Controller
 
                 foreach ($period as $date) {
                     if ($date->month == $m && $date->year == $selectedYear) {
+                        // Cek apakah tanggal ini sudah ada absen (misal WFH absen masuk)
                         $alreadyInAttendance = $monthAtt->filter(fn($att) => $att->check_in_time->isSameDay($date))->isNotEmpty();
 
                         if ($leave->type == 'cuti') $cutiCount++;
                         elseif ($leave->type == 'sakit') $sakitCount++;
                         elseif (strtolower($leave->type) == 'wfh') {
                             if (!$alreadyInAttendance) $wfhFromLeaveCount++;
-                        } else $izinCount++;
+                        } else $izinCount++; // Izin biasa
                     }
                 }
             }
 
+            // G. AGGREGASI
             $totalWfhBulanIni = $wfhCount + $wfhFromLeaveCount;
+            // Total Masuk (Hadir Fisik + Telat + WFH)
             $totalMasukBulanIni = $masukCount + $wfhFromLeaveCount;
-            // Total Hari = Masuk + Sakit + Izin + Cuti + Alpha (Telat sudah termasuk di Masuk, jadi jangan ditambah lagi)
+            
+            // Total Hari = (Masuk + WFH) + Sakit + Izin + Cuti + Alpha
+            // Perhatikan: Telat sudah termasuk di dalam "Masuk", jadi tidak dijumlah lagi ke Total Hari
             $totalHariBulanIni = $totalMasukBulanIni + $sakitCount + $izinCount + $cutiCount + $alphaCount;
 
             $monthsData[$m] = [
@@ -131,6 +144,7 @@ class AttendanceSummaryController extends Controller
                 'pulang_cepat' => $pulangCepatCount
             ];
 
+            // Akumulasi ke Grand Total
             $grandTotal['total_hari'] += $totalHariBulanIni;
             $grandTotal['masuk'] += $totalMasukBulanIni;
             $grandTotal['wfh'] += $totalWfhBulanIni;
