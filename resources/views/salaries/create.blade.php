@@ -13,7 +13,7 @@
                 <form action="{{ route('salaries.store') }}" method="POST" id="payrollForm">
                     @csrf
                     
-                    {{-- HEADER --}}
+                    {{-- HEADER (USER, PERIODE, KATEGORI) --}}
                     <div class="row mb-4 bg-light p-3 rounded border">
                         <div class="col-md-5">
                             <label class="fw-bold mb-1">Pilih Karyawan</label>
@@ -86,16 +86,19 @@
                                 <i class="mdi mdi-arrow-up-circle"></i> PENDAPATAN
                             </h5>
                             
-                            {{-- EMPLOYEE FORM --}}
+                            {{-- FORM EMPLOYEE --}}
                             <div id="form_employee" class="category-section">
                                 <div class="mb-3">
-                                    <label class="fw-bold">Gaji Pokok</label>
+                                    <label class="fw-bold">Gaji Pokok (Master)</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">Rp</span>
+                                        <span class="input-group-text bg-light">Rp</span>
+                                        {{-- READONLY --}}
                                         <input type="text" name="employee_basic_salary" id="employee_basic" 
-                                               class="form-control income-input fw-bold text-dark rupiah-input" 
-                                               placeholder="0" value="{{ number_format($masterSalary->basic_salary ?? 0, 0, ',', '.') }}">
+                                               class="form-control income-input fw-bold text-dark rupiah-input bg-light" 
+                                               readonly
+                                               value="{{ number_format($masterSalary->basic_salary ?? 0, 0, ',', '.') }}">
                                     </div>
+                                    <small class="text-muted">*Mengacu pada Master Gaji</small>
                                 </div>
                                 <div class="mb-3">
                                     <label>Tunjangan Jabatan</label>
@@ -123,49 +126,47 @@
                                 </div>
                             </div>
 
-                            {{-- PROMOTOR FORM --}}
+                            {{-- FORM PROMOTOR --}}
                             <div id="form_promotor" class="category-section" style="display: none;">
                                 <div class="mb-3">
-                                    <label class="fw-bold">Insentif Tetap (Base Fee)</label>
+                                    <label class="fw-bold">Insentif Tetap (Master)</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">Rp</span>
-                                        {{-- [FIX] Gunakan field BONUS dari master salary untuk mengisi field INI --}}
-                                        <input type="text" id="promotor_basic" class="form-control income-input fw-bold text-dark rupiah-input" 
-                                               placeholder="0" value="{{ number_format($masterSalary->promotor_bonus ?? 0, 0, ',', '.') }}">
+                                        <span class="input-group-text bg-light">Rp</span>
+                                        {{-- READONLY --}}
+                                        <input type="text" id="promotor_basic" class="form-control income-input fw-bold text-dark rupiah-input bg-light" 
+                                               readonly
+                                               value="{{ number_format($masterSalary->basic_salary ?? 0, 0, ',', '.') }}">
                                     </div>
-                                    <small class="text-muted">Gaji dasar dari Master Gaji (Insentif).</small>
                                 </div>
                             </div>
 
-                            {{-- FREELANCE FORM --}}
+                            {{-- FORM FREELANCE --}}
                             <div id="form_freelance" class="category-section" style="display: none;">
                                 <div class="alert alert-info py-2 small border-info bg-soft-info text-dark">
-                                    <i class="mdi mdi-information-outline me-1"></i> Mode Freelance: Tidak ada potongan Alpha.
+                                    <i class="mdi mdi-information-outline me-1"></i> Pembayaran Harian (Tanpa Perkalian Kehadiran).
                                 </div>
                                 <div class="mb-3">
-                                    <label class="fw-bold">Bayaran Per Hari</label>
+                                    <label class="fw-bold">Bayaran Hari Ini (Master)</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">Rp</span>
-                                        <input type="text" name="freelance_daily_salary" id="daily_salary" class="form-control rupiah-input" 
-                                               placeholder="0" value="{{ number_format($masterSalary->daily_salary ?? 0, 0, ',', '.') }}">
+                                        <span class="input-group-text bg-light">Rp</span>
+                                        {{-- READONLY --}}
+                                        <input type="text" name="freelance_daily_salary" id="daily_salary" 
+                                               class="form-control rupiah-input fw-bold text-dark bg-light" 
+                                               readonly
+                                               value="{{ number_format($masterSalary->daily_salary ?? 0, 0, ',', '.') }}">
                                     </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label>Total Hari Masuk</label>
-                                    <input type="text" id="freelance_attendance" class="form-control bg-light fw-bold" value="{{ $freelanceAttendance ?? 0 }}" readonly>
-                                </div>
-                                <input type="hidden" id="freelance_total" class="income-input" value="0">
+                                {{-- Hapus Input Jumlah Kehadiran karena tidak dipakai perkalian --}}
                             </div>
 
-                            {{-- GLOBAL --}}
+                            {{-- GLOBAL INCOME --}}
                             <div id="global_income">
                                 <div class="mb-3">
                                     <label>Bonus / Insentif Tambahan</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
-                                        {{-- [FIX] Kosongkan field ini untuk Promotor agar bisa diisi manual, atau isi 0 --}}
                                         <input type="text" name="promotor_bonus" id="bonus" class="form-control income-input rupiah-input" 
-                                               placeholder="0" value="{{ ($currentCat == 'promotor') ? 0 : number_format($masterSalary->promotor_bonus ?? 0, 0, ',', '.') }}">
+                                               placeholder="0" value="{{ number_format($masterSalary->promotor_bonus ?? 0, 0, ',', '.') }}">
                                     </div>
                                 </div>
                                 <div class="mb-3">
@@ -187,7 +188,7 @@
                         <div class="col-md-6">
                             <h5 class="text-danger mb-3 fw-bold border-bottom pb-2"><i class="mdi mdi-arrow-down-circle"></i> POTONGAN</h5>
 
-                            {{-- Alpha --}}
+                            {{-- ALPHA --}}
                             <div class="row mb-2 align-items-center bg-light p-2 rounded mx-0 border">
                                 <div class="col-4">
                                     <label class="small fw-bold mb-0">Alpha (Hari)</label>
@@ -202,7 +203,7 @@
                                 </div>
                             </div>
 
-                            {{-- Telat --}}
+                            {{-- TELAT --}}
                             <div class="row mb-3 align-items-center bg-light p-2 rounded mx-0 border">
                                 <div class="col-4">
                                     <label class="small fw-bold mb-0">Telat (Kali)</label>
@@ -217,7 +218,7 @@
                                 </div>
                             </div>
 
-                            {{-- Kasbon --}}
+                            {{-- KASBON --}}
                             <div class="mb-3 p-3 border border-warning rounded" style="background-color: #fffbf0;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <label class="fw-bold text-warning mb-0">Potong Hutang</label>
@@ -336,6 +337,7 @@
                 const promoBasic = document.getElementById('promotor_basic');
                 const empBasic = document.getElementById('employee_basic');
                 if(promoBasic && empBasic) {
+                    // Sync value agar saat submit tetap terkirim
                     promoBasic.addEventListener('input', function() { 
                         empBasic.value = this.value; 
                         calculate(); 
@@ -385,15 +387,17 @@
             let totalFixed = 0; 
 
             if (cat === 'freelance') {
+                // Freelance: Income = Gaji Hari Ini (Input)
                 let daily = cleanNumber(document.getElementById('daily_salary').value);
-                let days = parseFloat(document.getElementById('freelance_attendance').value) || 0;
-                totalIncome = daily * days;
-                document.getElementById('freelance_total').value = totalIncome;
+                totalIncome = daily; 
+                // Freelance: Tidak ada fixed base untuk alpha/telat (0)
                 totalFixed = 0; 
+
             } else if (cat === 'promotor') {
                 let promoBasic = cleanNumber(document.getElementById('promotor_basic').value);
                 totalFixed = promoBasic;
                 totalIncome = promoBasic;
+
             } else {
                 let basic = cleanNumber(document.getElementById('employee_basic').value);
                 let allow = cleanNumber(document.getElementById('allowance').value);
@@ -411,6 +415,7 @@
             const overrideCheck = document.getElementById('override_attendance');
 
             if (cat === 'freelance') {
+                // Freelance: Potongan Alpha & Telat = 0 (Kecuali denda manual)
                 if(alphaDed) alphaDed.value = "0";
                 if(lateDed) lateDed.value = "0";
             } else {
@@ -464,7 +469,6 @@
 </script>
 
 <style>
-    .bg-soft-info { background-color: rgba(13,202,240,0.15); }
     .card-radio { transition: all 0.2s; cursor: pointer; }
     .card-radio:hover { background-color: #f8f9fa; }
     .btn-check:checked + .btn-outline-primary { background-color: #0d6efd; color: white; }
