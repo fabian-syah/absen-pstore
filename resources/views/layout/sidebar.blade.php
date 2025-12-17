@@ -87,14 +87,14 @@
 
         {{-- KASBON (Update: Admin Gaji BISA AKSES, Leader TIDAK BISA) --}}
         {{-- Saya menghapus pengecualian '&& auth()->user()->role != 'admin_gaji'' --}}
-        @if (auth()->user()->role != 'leader')
+        {{-- @if (auth()->user()->role != 'leader') --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('kasbon.index') }}">
                     <i class="menu-icon mdi mdi-cash-multiple"></i>
                     <span class="menu-title">Kasbon</span>
                 </a>
             </li>
-        @endif
+        {{-- @endif --}}
 
         {{-- =================================== --}}
         {{--   MANAJEMEN GAJI (ADMIN & GAJI)     --}}
