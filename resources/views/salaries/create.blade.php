@@ -1,6 +1,24 @@
 @extends('layout.master')
 
 @section('content')
+{{-- Custom Style Modern --}}
+<style>
+    /* Switch iOS Style */
+    .switch { position: relative; display: inline-block; width: 42px; height: 24px; vertical-align: middle; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; -webkit-transition: .4s; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; -webkit-transition: .4s; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #198754; } /* Green Success */
+    input:checked + .slider:before { -webkit-transform: translateX(18px); -ms-transform: translateX(18px); transform: translateX(18px); }
+    
+    /* Disabled State */
+    input:disabled + .slider { opacity: 0.6; cursor: not-allowed; }
+    
+    /* Box Styling */
+    .bg-soft-success { background-color: #d1e7dd; border: 1px solid #badbcc; }
+    .bg-soft-secondary { background-color: #e9ecef; border: 1px solid #ced4da; }
+</style>
+
 <div class="row">
     <div class="col-12">
         <div class="card shadow-sm border-0">
@@ -112,7 +130,6 @@
                                                readonly
                                                value="{{ number_format($masterSalary->basic_salary ?? 0, 0, ',', '.') }}">
                                     </div>
-                                    <small class="text-muted">*Mengacu pada Master Gaji</small>
                                 </div>
                                 <div class="mb-3">
                                     <label>Tunjangan Jabatan</label>
@@ -131,13 +148,28 @@
                                                class="form-control income-input rupiah-input" 
                                                placeholder="0" value="{{ number_format($masterSalary->owner_privilege ?? 0, 0, ',', '.') }}">
                                     </div>
-                                    <div class="form-check mt-2">
-                                        {{-- LOGIC OTOMATIS CENTANG --}}
-                                        <input class="form-check-input" type="checkbox" id="override_attendance"
-                                               {{ ($masterSalary->owner_privilege ?? 0) > 0 ? 'checked' : '' }}>
-                                        <label class="form-check-label text-muted small fw-bold cursor-pointer" for="override_attendance">
-                                            <i class="mdi mdi-shield-check"></i> Privilege User (Abaikan Potongan Absen)
+
+                                    {{-- SWITCH PRIVILEGE MODERN (LOCKED SESUAI MASTER GAJI) --}}
+                                    <div class="mt-3 p-2 rounded d-flex align-items-center {{ ($masterSalary->use_privilege_mode ?? 0) ? 'bg-soft-success' : 'bg-soft-secondary' }}">
+                                        {{-- Checkbox Disabled untuk tampilan --}}
+                                        <label class="switch me-2">
+                                            <input type="checkbox" disabled {{ ($masterSalary->use_privilege_mode ?? 0) ? 'checked' : '' }}>
+                                            <span class="slider"></span>
                                         </label>
+                                        
+                                        {{-- Hidden Checkbox untuk Logic JS Hitungan --}}
+                                        <input type="checkbox" id="override_attendance" style="display: none;" 
+                                               {{ ($masterSalary->use_privilege_mode ?? 0) ? 'checked' : '' }}>
+
+                                        <div class="lh-sm">
+                                            <span class="fw-bold {{ ($masterSalary->use_privilege_mode ?? 0) ? 'text-success' : 'text-muted' }}" style="font-size: 0.9rem;">
+                                                {{ ($masterSalary->use_privilege_mode ?? 0) ? 'Privilege AKTIF' : 'Privilege NON-AKTIF' }}
+                                            </span>
+                                            <small class="d-block text-muted" style="font-size: 0.7rem;">
+                                                {{ ($masterSalary->use_privilege_mode ?? 0) ? 'Bebas potongan absensi.' : 'Mengikuti aturan potongan.' }}
+                                                (Set di Master Gaji)
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -429,7 +461,7 @@
             // Hitung Potongan
             const alphaDed = document.getElementById('alpha_deduction');
             const lateDed = document.getElementById('late_deduction');
-            const overrideCheck = document.getElementById('override_attendance');
+            const overrideCheck = document.getElementById('override_attendance'); // Checkbox Hidden
 
             if (cat === 'freelance') {
                 if(alphaDed) alphaDed.value = "0";
@@ -476,7 +508,8 @@
                 thpEl.classList.add('text-primary');
             }
         }
-
+        
+        // Cek logic override attendance
         const overrideCheck = document.getElementById('override_attendance');
         if(overrideCheck) overrideCheck.addEventListener('change', calculate);
         
