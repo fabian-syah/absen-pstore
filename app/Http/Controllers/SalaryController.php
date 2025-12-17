@@ -30,10 +30,9 @@ class SalaryController extends Controller
 
     public function create(Request $request)
     {
-        // 1. AMBIL PARAMETER (Agar data dinamis saat bulan/tahun diganti)
         $selectedUserId = $request->query('user_id');
-        $month = $request->query('month', date('m')); // Default bulan ini
-        $year = $request->query('year', date('Y'));   // Default tahun ini
+        $month = $request->query('month', date('m'));
+        $year = $request->query('year', date('Y'));
 
         $selectedUser = null;
         $remainingDebt = 0;
@@ -41,18 +40,17 @@ class SalaryController extends Controller
         $lateCount = 0;
         $masterSalary = null;
 
-        // List User untuk Dropdown
         $users = User::where('is_active', true)->orderBy('name')->get();
 
         if ($selectedUserId) {
             $selectedUser = User::with(['branch', 'division', 'employeeSalary'])->find($selectedUserId);
 
-            // A. Ambil Master Gaji (Template)
+            // A. Ambil Master Gaji
             if ($selectedUser->employeeSalary) {
                 $masterSalary = $selectedUser->employeeSalary;
             }
 
-            // B. HITUNG SISA HUTANG (KASBON)
+            // B. Hitung Sisa Hutang
             $activeLoans = CashAdvance::where('user_id', $selectedUserId)
                 ->where('status', 'approved')
                 ->whereRaw('total_paid < amount')
@@ -62,12 +60,8 @@ class SalaryController extends Controller
                 $remainingDebt += ($loan->amount - $loan->total_paid);
             }
 
-            // ==========================================================
-            // C. HITUNG OTOMATIS ABSENSI (ALPHA & TELAT)
-            // ==========================================================
-            
-            // 1. Hitung TELAT (Berdasarkan Bulan & Tahun yang dipilih)
-            // Logic: Cek kolom 'is_late_checkin' = 1 ATAU status string mengandung 'late'/'Telat'
+            // C. Hitung Absensi Otomatis
+            // 1. Telat
             $lateCount = Attendance::where('user_id', $selectedUserId)
                 ->whereMonth('check_in_time', $month)
                 ->whereYear('check_in_time', $year)
@@ -78,9 +72,7 @@ class SalaryController extends Controller
                 })
                 ->count();
 
-            // 2. Hitung ALPHA
-            // Logic: Cek kolom status = 'alpha' ATAU presence_status = 'Alpha'
-            // Menggunakan created_at karena biasanya Alpha tidak punya check_in_time
+            // 2. Alpha
             $alphaCount = Attendance::where('user_id', $selectedUserId)
                 ->whereMonth('created_at', $month)
                 ->whereYear('created_at', $year)
@@ -92,44 +84,64 @@ class SalaryController extends Controller
         }
 
         return view('salaries.create', compact(
-            'users', 
-            'selectedUser', 
-            'remainingDebt', 
-            'alphaCount', 
-            'lateCount', 
-            'masterSalary',
-            'month',
-            'year'
+            'users', 'selectedUser', 'remainingDebt', 
+            'alphaCount', 'lateCount', 'masterSalary', 
+            'month', 'year'
         ));
     }
 
     public function store(Request $request)
     {
+        // 1. Bersihkan Titik Rupiah sebelum Validasi
+        $inputsToClean = [
+            'employee_basic_salary', 'employee_position_allowance', 
+            'employee_owner_privilege', 'promotor_bonus', 
+            'dispensation_amount', 'alpha_deduction', 
+            'late_deduction', 'kasbon_deduction', 'other_deduction'
+        ];
+
+        foreach ($inputsToClean as $field) {
+            if ($request->has($field)) {
+                $cleanValue = str_replace('.', '', $request->input($field));
+                $request->merge([$field => $cleanValue]);
+            }
+        }
+
+        // 2. Validasi Input
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'month' => 'required',
             'year' => 'required',
             'category' => 'required',
-            'employee_basic_salary' => 'nullable|numeric|min:0',
-            'kasbon_deduction' => 'nullable|numeric|min:0',
+            'payment_method' => 'required|in:cash,transfer',
+            'send_type' => 'required|in:now,later',
+            'scheduled_date' => 'required_if:send_type,later',
         ]);
 
-        // Cek Double Data
+        // Cek Duplikasi
         $exists = Salary::where('user_id', $request->user_id)
             ->where('month', $request->month)
             ->where('year', $request->year)
             ->exists();
 
         if ($exists) {
-            return back()->with('error', 'Gaji untuk karyawan ini di periode tersebut sudah dibuat! Silakan edit data yang ada.');
+            return back()->with('error', 'Gaji untuk periode ini sudah dibuat!');
         }
 
         DB::transaction(function() use ($request) {
-            // 1. Siapkan Data Dasar
-            $data = $request->except(['_token']);
+            $data = $request->except(['_token', 'send_type', 'scheduled_date']);
             $data['created_by'] = Auth::id();
 
-            // 2. PROSES POTONG KASBON OTOMATIS
+            // 3. Logika Jadwal & Status
+            if ($request->send_type == 'now') {
+                $data['published_at'] = now();
+                $data['status'] = 'paid'; // Langsung Lunas
+            } else {
+                $data['published_at'] = $request->scheduled_date;
+                $data['status'] = 'pending'; // Menunggu Jadwal
+            }
+
+            // 4. Proses Potong Kasbon
             if ($request->kasbon_deduction > 0) {
                 $deductionAmount = $request->kasbon_deduction;
                 $userId = $request->user_id;
@@ -137,35 +149,26 @@ class SalaryController extends Controller
                 $activeLoans = CashAdvance::where('user_id', $userId)
                     ->where('status', 'approved')
                     ->whereRaw('total_paid < amount')
-                    ->orderBy('due_date', 'asc') // Bayar hutang terlama dulu
+                    ->orderBy('due_date', 'asc')
                     ->get();
 
                 foreach ($activeLoans as $loan) {
                     if ($deductionAmount <= 0) break;
 
-                    $sisaHutangIni = $loan->amount - $loan->total_paid;
-                    $bayar = 0;
+                    $sisa = $loan->amount - $loan->total_paid;
+                    $bayar = ($deductionAmount >= $sisa) ? $sisa : $deductionAmount;
+                    $deductionAmount -= $bayar;
 
-                    if ($deductionAmount >= $sisaHutangIni) {
-                        $bayar = $sisaHutangIni;
-                        $deductionAmount -= $sisaHutangIni;
-                    } else {
-                        $bayar = $deductionAmount;
-                        $deductionAmount = 0;
-                    }
-
-                    // Buat Record Cicilan
                     CashAdvanceInstallment::create([
                         'cash_advance_id' => $loan->id,
                         'user_id' => $userId,
                         'amount_paid' => $bayar,
-                        'received_by' => 'SYSTEM (Potong Gaji)',
+                        'received_by' => 'SYSTEM (Payroll)',
                         'payment_proof' => null,
                         'status' => 'approved',
-                        'note' => 'Potongan Payroll Bulan ' . $request->month . '/' . $request->year
+                        'note' => 'Potongan Gaji ' . $request->month . '/' . $request->year
                     ]);
 
-                    // Update Saldo Kasbon
                     $loan->total_paid += $bayar;
                     if ($loan->total_paid >= $loan->amount) {
                         $loan->status = 'paid';
@@ -175,15 +178,13 @@ class SalaryController extends Controller
                 }
             }
 
-            // 3. HITUNG FINAL TOTAL (Server Side Verification)
-            // Income
+            // 5. Hitung Total Akhir
             $income = ($request->employee_basic_salary ?? 0) + 
                       ($request->employee_position_allowance ?? 0) + 
                       ($request->employee_owner_privilege ?? 0) + 
                       ($request->promotor_bonus ?? 0) + 
                       ($request->dispensation_amount ?? 0);
 
-            // Deduction
             $deduction = ($request->alpha_deduction ?? 0) + 
                          ($request->late_deduction ?? 0) + 
                          ($request->kasbon_deduction ?? 0) + 
@@ -194,32 +195,29 @@ class SalaryController extends Controller
             Salary::create($data);
         });
 
-        return redirect()->route('salaries.index')->with('success', 'Payroll berhasil disimpan.');
+        return redirect()->route('branch-salary.show', User::find($request->user_id)->branch_id)
+            ->with('success', 'Payroll berhasil disimpan.');
     }
 
-    public function show($id)
-    {
+    public function show($id) {
         $salary = Salary::with(['user.branch', 'user.division'])->findOrFail($id);
         return view('salaries.show', compact('salary'));
     }
 
-    public function edit(Salary $salary)
-    {
+    public function edit(Salary $salary) {
         $users = User::orderBy('name')->get();
-        // Saat edit, kita tidak load otomatis Alpha/Telat baru, pakai data tersimpan saja
         return view('salaries.edit', compact('salary', 'users'));
     }
 
-    public function update(Request $request, Salary $salary)
-    {
-        // Update sederhana (hanya kategori/catatan), karena hitungan uang kompleks jika diedit
-        $salary->update($request->only(['category', 'notes']));
-        return redirect()->route('salaries.index')->with('success', 'Data gaji diperbarui.');
+    public function update(Request $request, Salary $salary) {
+        $salary->update($request->only(['notes']));
+        return redirect()->route('salaries.index')->with('success', 'Data updated.');
     }
 
-    public function destroy(Salary $salary)
-    {
+    public function destroy(Salary $salary) {
         $salary->delete();
-        return redirect()->route('salaries.index')->with('success', 'Data gaji dihapus.');
+        return redirect()->route('salaries.index')->with('success', 'Deleted.');
     }
+    
+    public function checkAttendance(Request $request) {}
 }

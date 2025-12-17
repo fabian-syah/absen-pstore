@@ -3,25 +3,8 @@
 @section('content')
 <div class="content-wrapper">
     
-    {{-- HEADER & TITLE --}}
+    {{-- STATS DASHBOARD --}}
     <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <div>
-                <h3 class="fw-bold text-dark"><i class="mdi mdi-cash-register me-2"></i>Payroll Cabang</h3>
-                <p class="text-muted mb-0">Periode Pembayaran: <strong>{{ date('F Y') }}</strong></p>
-            </div>
-            <div>
-                {{-- Tanggal Hari Ini --}}
-                <span class="badge badge-outline-primary p-2 fs-6">
-                    <i class="mdi mdi-calendar"></i> {{ date('d M Y') }}
-                </span>
-            </div>
-        </div>
-    </div>
-
-    {{-- STATISTIK DASHBOARD MINI --}}
-    <div class="row mb-4">
-        {{-- Total Cabang --}}
         <div class="col-md-4 grid-margin stretch-card">
             <div class="card bg-primary text-white card-stats shadow-sm">
                 <div class="card-body">
@@ -37,14 +20,12 @@
                 </div>
             </div>
         </div>
-
-        {{-- Total Karyawan --}}
         <div class="col-md-4 grid-margin stretch-card">
             <div class="card bg-info text-white card-stats shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="card-text mb-1 opacity-75">Total Karyawan Aktif</p>
+                            <p class="card-text mb-1 opacity-75">Karyawan Aktif</p>
                             <h2 class="fw-bold mb-0">{{ $globalTotalEmployees }}</h2>
                         </div>
                         <div class="icon-box bg-white text-info rounded-circle p-3">
@@ -54,14 +35,12 @@
                 </div>
             </div>
         </div>
-
-        {{-- Total Pengeluaran Gaji --}}
         <div class="col-md-4 grid-margin stretch-card">
             <div class="card bg-success text-white card-stats shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="card-text mb-1 opacity-75">Total Gaji (Bulan Ini)</p>
+                            <p class="card-text mb-1 opacity-75">Total Gaji ({{ date('F') }})</p>
                             <h3 class="fw-bold mb-0">Rp {{ number_format($globalTotalSalary, 0, ',', '.') }}</h3>
                         </div>
                         <div class="icon-box bg-white text-success rounded-circle p-3">
@@ -79,20 +58,19 @@
             <form action="{{ route('branch-salary.index') }}" method="GET">
                 <div class="input-group shadow-sm">
                     <span class="input-group-text bg-white border-0"><i class="mdi mdi-magnify fs-4"></i></span>
-                    <input type="text" name="search" class="form-control border-0 py-3" placeholder="Cari nama cabang atau alamat..." value="{{ $search }}">
+                    <input type="text" name="search" class="form-control border-0 py-3" placeholder="Cari cabang..." value="{{ $search }}">
                     <button class="btn btn-dark" type="submit">Cari Data</button>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- LIST CABANG (GRID) --}}
+    {{-- GRID CABANG --}}
     <div class="row">
         @forelse($branches as $branch)
             <div class="col-md-4 grid-margin stretch-card">
                 <div class="card border-0 shadow-sm card-branch h-100">
                     <div class="card-body d-flex flex-column">
-                        {{-- Header Cabang --}}
                         <div class="d-flex align-items-start mb-3">
                             <div class="branch-icon bg-light text-primary rounded p-3 me-3">
                                 <i class="mdi mdi-office-building fs-2"></i>
@@ -102,10 +80,7 @@
                                 <p class="text-muted small mb-0"><i class="mdi mdi-map-marker"></i> {{ Str::limit($branch->address, 35) }}</p>
                             </div>
                         </div>
-
                         <hr class="my-2">
-
-                        {{-- Info Statistik Cabang --}}
                         <div class="row mt-2 mb-3">
                             <div class="col-6 border-end">
                                 <small class="text-muted d-block">Karyawan</small>
@@ -118,26 +93,7 @@
                                 </span>
                             </div>
                         </div>
-
-                        {{-- Progress Visual (Opsional: Menunjukkan rasio sudah digaji atau belum, disini statis dulu sbg hiasan) --}}
-                        @if($branch->total_salary_expense > 0)
-                            <div class="mt-auto">
-                                <small class="text-muted">Status: <span class="text-success fw-bold">Sedang Berjalan</span></small>
-                                <div class="progress progress-sm mt-1">
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
-                                </div>
-                            </div>
-                        @else
-                            <div class="mt-auto">
-                                <small class="text-muted">Status: <span class="text-secondary">Belum ada data gaji</span></small>
-                                <div class="progress progress-sm mt-1">
-                                    <div class="progress-bar bg-secondary" role="progressbar" style="width: 5%"></div>
-                                </div>
-                            </div>
-                        @endif
-
-                        {{-- Action Button --}}
-                        <a href="{{ route('branch-salary.show', $branch->id) }}" class="btn btn-outline-primary btn-lg w-100 mt-3 fw-bold">
+                        <a href="{{ route('branch-salary.show', $branch->id) }}" class="btn btn-outline-primary btn-lg w-100 mt-auto fw-bold">
                             Kelola Gaji <i class="mdi mdi-arrow-right ms-1"></i>
                         </a>
                     </div>
@@ -145,53 +101,17 @@
             </div>
         @empty
             <div class="col-12 text-center py-5">
-                <div class="bg-light p-5 rounded-3 d-inline-block">
-                    <i class="mdi mdi-database-off text-muted" style="font-size: 4rem;"></i>
-                    <h5 class="mt-3 text-muted">Data Cabang Tidak Ditemukan</h5>
-                </div>
+                <h5 class="text-muted">Data Cabang Tidak Ditemukan</h5>
             </div>
         @endforelse
     </div>
-
 </div>
 
-{{-- CUSTOM CSS --}}
 <style>
-    .card-stats {
-        border-radius: 15px;
-        transition: transform 0.2s;
-    }
-    .card-stats:hover {
-        transform: translateY(-3px);
-    }
-    .icon-box {
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .card-branch {
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        border: 1px solid #f0f0f0 !important;
-    }
-    .card-branch:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
-        border-color: #bfa15f !important; /* Warna PStore Gold Opsional */
-    }
-    .branch-icon {
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .badge-outline-primary {
-        border: 1px solid #4B49AC;
-        color: #4B49AC;
-        background: transparent;
-    }
+    .card-stats { border-radius: 15px; transition: transform 0.2s; }
+    .card-stats:hover { transform: translateY(-3px); }
+    .card-branch { border-radius: 12px; transition: all 0.3s ease; border: 1px solid #f0f0f0 !important; }
+    .card-branch:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important; border-color: #bfa15f !important; }
+    .branch-icon { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
 </style>
 @endsection

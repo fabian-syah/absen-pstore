@@ -15,26 +15,31 @@
                     </a>
                 </div>
 
-                {{-- Search Karyawan di Cabang Ini --}}
                 <form action="{{ route('branch-salary.show', $branch->id) }}" method="GET" class="mb-4">
                     <div class="input-group">
-                        <input type="text" name="search" class="form-control" placeholder="Cari karyawan di cabang ini..." value="{{ $search }}">
+                        <input type="text" name="search" class="form-control" placeholder="Cari karyawan..." value="{{ $search }}">
                         <button class="btn btn-info text-white" type="submit">Cari</button>
                     </div>
                 </form>
 
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
                                 <th>Nama Karyawan</th>
                                 <th>Divisi</th>
                                 <th>Status Gaji ({{ date('F Y') }})</th>
+                                <th>Gaji Terakhir</th>
+                                <th>Status Payroll</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($users as $user)
+                                @php
+                                    $salaryThisMonth = $user->salaries->where('month', date('m'))->where('year', date('Y'))->first();
+                                    $latestSalary = $user->salaries->first(); // Sudah diurutkan desc di controller
+                                @endphp
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
@@ -51,19 +56,12 @@
                                             </div>
                                         </div>
                                     </td>
+                                    <td><span class="badge badge-opacity-info">{{ $user->division->name ?? '-' }}</span></td>
+                                    
+                                    {{-- Status Bulan Ini --}}
                                     <td>
-                                        <span class="badge badge-opacity-info">{{ $user->division->name ?? '-' }}</span>
-                                    </td>
-                                    <td>
-                                        @php
-                                            // Cek apakah sudah ada gaji bulan ini
-                                            $salaryThisMonth = $user->salaries->first();
-                                        @endphp
-                                        
                                         @if($salaryThisMonth)
-                                            <span class="badge badge-success">
-                                                <i class="mdi mdi-check-circle"></i> Sudah Digaji
-                                            </span>
+                                            <span class="badge badge-success">Sudah Digaji</span>
                                             <small class="d-block text-muted mt-1">
                                                 Rp {{ number_format($salaryThisMonth->total_amount, 0, ',', '.') }}
                                             </small>
@@ -71,8 +69,31 @@
                                             <span class="badge badge-warning">Belum Digaji</span>
                                         @endif
                                     </td>
+
+                                    {{-- Gaji Terakhir --}}
+                                    <td>
+                                        @if($latestSalary)
+                                            <div class="fw-bold text-dark">Rp {{ number_format($latestSalary->total_amount, 0, ',', '.') }}</div>
+                                            <small class="text-muted">{{ $latestSalary->month }}/{{ $latestSalary->year }}</small>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+
+                                    {{-- Status Payroll Terakhir --}}
+                                    <td>
+                                        @if($latestSalary)
+                                            @if($latestSalary->status == 'paid')
+                                                <span class="badge badge-outline-success"><i class="mdi mdi-check"></i> Paid</span>
+                                            @else
+                                                <span class="badge badge-outline-warning"><i class="mdi mdi-clock"></i> Pending</span>
+                                            @endif
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+
                                     <td class="text-center">
-                                        {{-- TOMBOL PAYROLL (Link ke Create Salary dengan User ID Terpilih) --}}
                                         @if(!$salaryThisMonth)
                                             <a href="{{ route('salaries.create', ['user_id' => $user->id]) }}" class="btn btn-sm btn-success text-white">
                                                 <i class="mdi mdi-cash-register"></i> Payroll
@@ -82,16 +103,14 @@
                                                 <i class="mdi mdi-pencil"></i> Edit
                                             </a>
                                         @endif
-
-                                        {{-- TOMBOL LIHAT HISTORY --}}
-                                        <a href="{{ route('attendance.summary.user', $user->id) }}" class="btn btn-sm btn-info text-white icon-btn" title="Lihat History Absen & Gaji">
+                                        <a href="{{ route('attendance.summary.user', $user->id) }}" class="btn btn-sm btn-info text-white icon-btn">
                                             <i class="mdi mdi-eye"></i>
                                         </a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-4">Tidak ada karyawan ditemukan di cabang ini.</td>
+                                    <td colspan="6" class="text-center py-4">Tidak ada karyawan.</td>
                                 </tr>
                             @endforelse
                         </tbody>
