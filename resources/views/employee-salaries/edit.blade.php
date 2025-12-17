@@ -29,7 +29,7 @@
                         <label class="fw-bold">Kategori Karyawan</label>
                         <select name="category" id="category" class="form-control form-select-lg">
                             <option value="employee" {{ ($user->employeeSalary->category ?? '') == 'employee' ? 'selected' : '' }}>Karyawan Tetap</option>
-                            <option value="promotor" {{ ($user->employeeSalary->category ?? '') == 'promotor' ? 'selected' : '' }}>Promotor</option>
+                            <option value="promotor" {{ ($user->employeeSalary->category ?? '') == 'promotor' ? 'selected' : '' }}>Promotor / JCS Security</option>
                             <option value="freelance" {{ ($user->employeeSalary->category ?? '') == 'freelance' ? 'selected' : '' }}>Freelance</option>
                         </select>
                         <small class="text-muted fst-italic" id="cat_desc">Form akan menyesuaikan kategori yang dipilih.</small>
@@ -70,27 +70,32 @@
                         </div>
                     </div>
 
-                    {{-- 3. FORM PROMOTOR --}}
+                    {{-- 3. FORM PROMOTOR (UPDATED LABELS) --}}
                     <div id="form_promotor" class="salary-section" style="display: none;">
                         <h5 class="text-info mb-3">Detail Promotor</h5>
+                        <div class="alert alert-info py-2 small">
+                            <i class="mdi mdi-information-outline"></i> Promotor dibayar berdasarkan <strong>Insentif Tetap</strong> dan <strong>Komisi Tambahan</strong>.
+                        </div>
                         
                         <div class="form-group mb-3">
-                            <label>Gaji 1 Bulan (Basic Salary)</label>
+                            <label>Insentif Tetap (Base Fee Bulanan)</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
-                                {{-- Promotor pakai field basic_salary di DB, tapi name input beda biar ga conflict --}}
+                                {{-- Menggunakan field basic_salary di database --}}
                                 <input type="text" name="promotor_monthly_salary" class="form-control rupiahe" 
                                        value="{{ ($user->employeeSalary->category ?? '') == 'promotor' ? ($user->employeeSalary->basic_salary ?? 0) : 0 }}" placeholder="0">
                             </div>
+                            <small class="text-muted">Uang kehadiran/transport tetap bulanan (jika ada).</small>
                         </div>
 
                         <div class="form-group mb-3">
-                            <label>Bonus Promotor</label>
+                            <label>Insentif Tambahan (Target / Komisi)</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="text" name="promotor_bonus" class="form-control rupiahe" 
                                        value="{{ $user->employeeSalary->promotor_bonus ?? 0 }}" placeholder="0">
                             </div>
+                            <small class="text-muted">Estimasi komisi bulanan (bisa disesuaikan saat payroll).</small>
                         </div>
                     </div>
 
@@ -102,7 +107,7 @@
                         </div>
                         
                         <div class="form-group mb-3">
-                            <label>Gaji Per Hari</label>
+                            <label>Gaji Per Hari (Daily Rate)</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="text" name="daily_salary" class="form-control rupiahe" 
@@ -113,7 +118,7 @@
 
                     <hr>
 
-                    {{-- 5. INFO REKENING (SEMUA KATEGORI) --}}
+                    {{-- 5. INFO REKENING --}}
                     <div class="mb-4">
                         <h5 class="text-secondary mb-3">Informasi Pembayaran</h5>
                         <div class="row">
@@ -146,37 +151,28 @@
     </div>
 </div>
 
-{{-- JAVASCRIPT LOGIC --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const categorySelect = document.getElementById('category');
         const sections = document.querySelectorAll('.salary-section');
         
-        // Fungsi Ganti Form
         function toggleForm() {
             const val = categorySelect.value;
-            
-            // Sembunyikan semua form
             sections.forEach(el => el.style.display = 'none');
 
-            // Tampilkan form yang sesuai
             if (val === 'employee') document.getElementById('form_employee').style.display = 'block';
             if (val === 'promotor') document.getElementById('form_promotor').style.display = 'block';
             if (val === 'freelance') document.getElementById('form_freelance').style.display = 'block';
         }
 
-        // Jalankan saat load & change
         categorySelect.addEventListener('change', toggleForm);
-        toggleForm(); // Init state
+        toggleForm(); 
 
-        // --- FORMAT RUPIAH OTOMATIS (Input Masking Sederhana) ---
+        // FORMAT RUPIAH
         const rupiahInputs = document.querySelectorAll('.rupiahe');
         
         rupiahInputs.forEach(input => {
-            // Format awal saat load
             input.value = formatRupiah(input.value);
-
-            // Event saat mengetik
             input.addEventListener('keyup', function(e) {
                 this.value = formatRupiah(this.value);
             });
@@ -184,7 +180,6 @@
 
         function formatRupiah(angka, prefix) {
             if(!angka) return '';
-            // Hapus karakter selain angka
             var number_string = angka.toString().replace(/[^,\d]/g, '').toString(),
                 split   = number_string.split(','),
                 sisa    = split[0].length % 3,
