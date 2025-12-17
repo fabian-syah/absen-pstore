@@ -15,12 +15,13 @@ class EmployeeSalary extends Model
         'basic_salary', 
         'position_allowance', 
         'owner_privilege', 
-        'use_privilege_mode', // <--- WAJIB ADA
+        'use_privilege_mode', 
         'daily_salary', 
         'promotor_bonus', 
         'bank_account_number', 
         'bank_name',
-        'updated_by'
+        'updated_by',
+        'notes' // <--- TAMBAHKAN INI (Supaya catatan bisa disimpan)
     ];
 
     public function user()
