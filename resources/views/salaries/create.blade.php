@@ -19,13 +19,13 @@
                     {{-- ==================================================== --}}
                     <div class="row mb-4 bg-light p-3 rounded border">
                         <div class="col-md-5">
-                            <label class="fw-bold">Pilih Karyawan</label>
+                            <label class="fw-bold mb-1">Pilih Karyawan</label>
                             @if($selectedUser)
                                 {{-- Jika user sudah dipilih --}}
                                 <input type="hidden" name="user_id" value="{{ $selectedUser->id }}">
                                 <div class="input-group">
                                     <span class="input-group-text bg-primary text-white"><i class="mdi mdi-account"></i></span>
-                                    <input type="text" class="form-control fw-bold bg-white" 
+                                    <input type="text" class="form-control fw-bold bg-white text-dark" 
                                            value="{{ $selectedUser->name }} ({{ $selectedUser->branch->name ?? '-' }})" readonly>
                                 </div>
                                 <div class="d-flex justify-content-between mt-1">
@@ -34,7 +34,7 @@
                                 </div>
                             @else
                                 {{-- Dropdown Search --}}
-                                <select name="user_id" class="form-control" onchange="updateParams('user_id', this.value)">
+                                <select name="user_id" class="form-control text-dark" onchange="updateParams('user_id', this.value)">
                                     <option value="">-- Cari Karyawan --</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }} - {{ $user->branch->name ?? '' }}</option>
@@ -44,10 +44,11 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label class="fw-bold">Periode Gaji (Cek Absensi)</label>
+                            <label class="fw-bold mb-1">Periode Gaji (Cek Absensi)</label>
                             <div class="d-flex gap-2">
-                                {{-- Dropdown Bulan --}}
-                                <select name="month" class="form-control text-center" onchange="updateParams('month', this.value)">
+                                {{-- Dropdown Bulan (Perbaikan Tampilan NYARU) --}}
+                                <select name="month" class="form-select text-center fw-bold text-dark bg-white border-secondary" 
+                                        onchange="updateParams('month', this.value)" style="color: #000 !important; opacity: 1;">
                                     @for($m=1; $m<=12; $m++)
                                         <option value="{{ sprintf('%02d', $m) }}" {{ $month == sprintf('%02d', $m) ? 'selected' : '' }}>
                                             {{ \Carbon\Carbon::create()->month($m)->isoFormat('MMMM') }}
@@ -55,8 +56,9 @@
                                     @endfor
                                 </select>
                                 
-                                {{-- Dropdown Tahun --}}
-                                <select name="year" class="form-control text-center" onchange="updateParams('year', this.value)">
+                                {{-- Dropdown Tahun (Perbaikan Tampilan NYARU) --}}
+                                <select name="year" class="form-select text-center fw-bold text-dark bg-white border-secondary" 
+                                        onchange="updateParams('year', this.value)" style="color: #000 !important; opacity: 1;">
                                     @for($y=date('Y'); $y>=date('Y')-1; $y--)
                                         <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                                     @endfor
@@ -66,12 +68,34 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="fw-bold">Kategori Karyawan</label>
-                            <select name="category" class="form-control">
-                                <option value="employee" {{ ($masterSalary->category ?? '') == 'employee' ? 'selected' : '' }}>Karyawan Tetap</option>
-                                <option value="promotor" {{ ($masterSalary->category ?? '') == 'promotor' ? 'selected' : '' }}>Promotor</option>
-                                <option value="freelance" {{ ($masterSalary->category ?? '') == 'freelance' ? 'selected' : '' }}>Freelance</option>
-                            </select>
+                            <label class="fw-bold mb-1">Kategori Karyawan</label>
+                            
+                            {{-- LOGIKA BARU: Jika Master Gaji Ada, Lock Input --}}
+                            @if(isset($masterSalary) && $masterSalary->category)
+                                @php
+                                    $catLabel = match($masterSalary->category) {
+                                        'employee' => 'Karyawan Tetap',
+                                        'promotor' => 'Promotor',
+                                        'freelance' => 'Freelance',
+                                        default => ucfirst($masterSalary->category)
+                                    };
+                                @endphp
+                                {{-- Tampilan Readonly --}}
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success text-white"><i class="mdi mdi-check-circle"></i></span>
+                                    <input type="text" class="form-control fw-bold bg-white text-success" value="{{ $catLabel }}" readonly>
+                                </div>
+                                {{-- Hidden Input untuk kirim data --}}
+                                <input type="hidden" name="category" value="{{ $masterSalary->category }}">
+                            @else
+                                {{-- Fallback jika belum set master gaji --}}
+                                <select name="category" class="form-select text-dark">
+                                    <option value="employee">Karyawan Tetap</option>
+                                    <option value="promotor">Promotor</option>
+                                    <option value="freelance">Freelance</option>
+                                </select>
+                                <small class="text-danger" style="font-size: 0.7rem">*User ini belum atur Master Gaji</small>
+                            @endif
                         </div>
                     </div>
 
@@ -92,7 +116,9 @@
                                     <input type="number" name="employee_basic_salary" id="basic_salary" 
                                            class="form-control income-input fw-bold text-dark" 
                                            placeholder="0" 
-                                           value="{{ $masterSalary->basic_salary ?? 0 }}">
+                                           value="{{ $masterSalary->basic_salary ?? 0 }}"
+                                           {{-- Readonly jika promotor/freelance agar sesuai master --}}
+                                           {{ (isset($masterSalary) && $masterSalary->category != 'employee') ? 'readonly' : '' }}>
                                 </div>
                             </div>
 
@@ -240,7 +266,7 @@
                                 <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm p-3">
                                     <i class="mdi mdi-content-save-check me-1"></i> SIMPAN & PROSES PAYROLL
                                 </button>
-                                <a href="{{ route('salaries.index') }}" class="btn btn-light text-muted">Batal</a>
+                                <a href="{{ route('branch-salary.index') }}" class="btn btn-light text-muted">Batal</a>
                             </div>
                         </div>
                     </div>
