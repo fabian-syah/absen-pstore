@@ -13,7 +13,9 @@
                 <form action="{{ route('salaries.store') }}" method="POST" id="payrollForm">
                     @csrf
                     
-                    {{-- HEADER (USER, PERIODE, KATEGORI) --}}
+                    {{-- ==================================================== --}}
+                    {{-- SECTION 1: HEADER (USER, PERIODE, KATEGORI) --}}
+                    {{-- ==================================================== --}}
                     <div class="row mb-4 bg-light p-3 rounded border">
                         <div class="col-md-5">
                             <label class="fw-bold mb-1">Pilih Karyawan</label>
@@ -56,12 +58,14 @@
                                     @endfor
                                 </select>
                             </div>
-                            <small class="text-muted fst-italic" style="font-size: 0.7rem">*Ubah untuk refresh data</small>
+                            <small class="text-muted fst-italic" style="font-size: 0.7rem">*Ubah untuk refresh absensi</small>
                         </div>
 
                         <div class="col-md-4">
                             <label class="fw-bold mb-1">Kategori</label>
-                            @php $currentCat = $masterSalary->category ?? 'employee'; @endphp
+                            @php
+                                $currentCat = $masterSalary->category ?? 'employee'; 
+                            @endphp
                             
                             @if(isset($masterSalary) && $masterSalary->category)
                                 <div class="input-group">
@@ -80,36 +84,16 @@
                         </div>
                     </div>
 
-                    {{-- INFO KEHADIRAN (BARU) --}}
+                    {{-- INFO KEHADIRAN --}}
                     @if($selectedUser)
                     <div class="row mb-4">
                         <div class="col-12">
-                            <h6 class="fw-bold text-secondary mb-2"><i class="mdi mdi-information-outline"></i> Informasi Kehadiran & Cuti (Bulan Ini)</h6>
+                            <h6 class="fw-bold text-secondary mb-2"><i class="mdi mdi-information-outline"></i> Informasi Kehadiran (Bulan Ini)</h6>
                             <div class="row g-2">
-                                <div class="col-6 col-md-3">
-                                    <div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm">
-                                        <span class="text-muted small fw-bold">Cuti</span>
-                                        <span class="badge bg-secondary rounded-pill px-3">{{ $cutiCount ?? 0 }} Hari</span>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm">
-                                        <span class="text-muted small fw-bold">Sakit</span>
-                                        <span class="badge bg-info rounded-pill px-3">{{ $sakitCount ?? 0 }} Hari</span>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm">
-                                        <span class="text-muted small fw-bold">Izin</span>
-                                        <span class="badge bg-warning text-dark rounded-pill px-3">{{ $izinCount ?? 0 }} Kali</span>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm">
-                                        <span class="text-muted small fw-bold">WFH</span>
-                                        <span class="badge bg-success rounded-pill px-3">{{ $wfhCount ?? 0 }} Hari</span>
-                                    </div>
-                                </div>
+                                <div class="col-6 col-md-3"><div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm"><span class="text-muted small fw-bold">Cuti</span><span class="badge bg-secondary rounded-pill px-3">{{ $cutiCount ?? 0 }} Hari</span></div></div>
+                                <div class="col-6 col-md-3"><div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm"><span class="text-muted small fw-bold">Sakit</span><span class="badge bg-info rounded-pill px-3">{{ $sakitCount ?? 0 }} Hari</span></div></div>
+                                <div class="col-6 col-md-3"><div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm"><span class="text-muted small fw-bold">Izin</span><span class="badge bg-warning text-dark rounded-pill px-3">{{ $izinCount ?? 0 }} Kali</span></div></div>
+                                <div class="col-6 col-md-3"><div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm"><span class="text-muted small fw-bold">WFH</span><span class="badge bg-success rounded-pill px-3">{{ $wfhCount ?? 0 }} Hari</span></div></div>
                             </div>
                         </div>
                     </div>
@@ -121,7 +105,7 @@
                                 <i class="mdi mdi-arrow-up-circle"></i> PENDAPATAN
                             </h5>
                             
-                            {{-- FORM EMPLOYEE --}}
+                            {{-- EMPLOYEE --}}
                             <div id="form_employee" class="category-section">
                                 <div class="mb-3">
                                     <label class="fw-bold">Gaji Pokok (Master)</label>
@@ -160,7 +144,7 @@
                                 </div>
                             </div>
 
-                            {{-- FORM PROMOTOR --}}
+                            {{-- PROMOTOR --}}
                             <div id="form_promotor" class="category-section" style="display: none;">
                                 <div class="mb-3">
                                     <label class="fw-bold">Insentif Tetap (Master)</label>
@@ -173,7 +157,7 @@
                                 </div>
                             </div>
 
-                            {{-- FORM FREELANCE --}}
+                            {{-- FREELANCE --}}
                             <div id="form_freelance" class="category-section" style="display: none;">
                                 <div class="alert alert-info py-2 small border-info bg-soft-info text-dark">
                                     <i class="mdi mdi-information-outline me-1"></i> Pembayaran Harian (Tanpa Perkalian Kehadiran).
@@ -279,12 +263,23 @@
 
                     <hr class="my-4 border-2">
                     
-                    {{-- PAYMENT --}}
+                    {{-- CATATAN & PEMBAYARAN --}}
                     <div class="row justify-content-center">
                         <div class="col-md-10">
+                            
+                            {{-- CARD CATATAN TAMBAHAN (BARU) --}}
+                            <div class="card bg-light border mb-4">
+                                <div class="card-body p-3">
+                                    <label class="fw-bold mb-2 text-secondary"><i class="mdi mdi-note-text-outline"></i> Catatan Payroll (Opsional)</label>
+                                    <textarea name="notes" class="form-control" rows="2" placeholder="Contoh: Bonus Target Lebaran, Potongan Kerusakan Alat, dll..."></textarea>
+                                </div>
+                            </div>
+
+                            {{-- CARD PAYMENT --}}
                             <div class="card bg-white border mb-4">
                                 <div class="card-body p-4">
                                     <h5 class="fw-bold text-dark mb-4 border-bottom pb-2">Konfirmasi Pembayaran</h5>
+                                    
                                     <div class="row g-4">
                                         <div class="col-md-6">
                                             <label class="fw-bold mb-2">Metode Pembayaran</label>
