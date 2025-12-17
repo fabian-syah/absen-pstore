@@ -15,6 +15,7 @@ class EmployeeSalary extends Model
         'basic_salary',      // Dipakai untuk Gaji Pokok (Karyawan) & Gaji Bulanan (Promotor)
         'position_allowance', 
         'owner_privilege', 
+        'use_privilege_mode', // Mode Privilege: 'fixed' atau 'percentage'
         'daily_salary',      // Dipakai untuk Freelance
         'promotor_bonus',    // Khusus Promotor
         'bank_account_number', 

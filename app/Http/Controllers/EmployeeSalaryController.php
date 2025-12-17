@@ -13,15 +13,12 @@ class EmployeeSalaryController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Ambil Data untuk Filter Dropdown
         $branches = Branch::orderBy('name')->get();
         $divisions = Division::orderBy('name')->get();
 
-        // 2. Query Utama
         $query = User::with(['branch', 'division', 'employeeSalary'])
             ->where('is_active', true);
 
-        // --- Logic Filter ---
         if ($request->filled('search')) {
             $query->where('name', 'like', "%{$request->search}%");
         }
@@ -44,14 +41,11 @@ class EmployeeSalaryController extends Controller
             }
         }
 
-        // 3. Pagination Max 10 per halaman
-        // append($request->all()) agar parameter filter tidak hilang saat pindah halaman
         $users = $query->orderBy('name')->paginate(10)->withQueryString();
 
         return view('employee-salaries.index', compact('users', 'branches', 'divisions'));
     }
 
-    // ... method edit dan update tetap sama, tidak perlu diubah ...
     public function edit($userId)
     {
         $user = User::with('employeeSalary')->findOrFail($userId);
@@ -73,27 +67,39 @@ class EmployeeSalaryController extends Controller
             $request->validate(['basic_salary' => 'required|numeric|max:6000000']);
         }
 
+        // Siapkan Data Dasar
         $data = [
             'category' => $request->category,
             'bank_account_number' => $request->bank_account_number,
             'bank_name' => $request->bank_name,
             'updated_by' => Auth::id(),
-            'basic_salary' => 0, 'position_allowance' => 0, 'owner_privilege' => 0, 
-            'daily_salary' => 0, 'promotor_bonus' => 0,
+            // Default nilai 0 agar bersih jika ganti kategori
+            'basic_salary' => 0, 
+            'position_allowance' => 0, 
+            'owner_privilege' => 0, 
+            'daily_salary' => 0, 
+            'promotor_bonus' => 0,
+            'use_privilege_mode' => 0 // Default False
         ];
 
+        // Isi Data Sesuai Kategori
         if ($request->category == 'employee') {
             $data['basic_salary'] = $clean($request->basic_salary);
             $data['position_allowance'] = $clean($request->position_allowance);
             $data['owner_privilege'] = $clean($request->owner_privilege);
+            // [FIX] Simpan status Checkbox Privilege
+            $data['use_privilege_mode'] = $request->has('use_privilege_mode') ? 1 : 0;
+            
         } elseif ($request->category == 'promotor') {
-            $data['basic_salary'] = $clean($request->promotor_monthly_salary); 
+            $data['basic_salary'] = 0; // Promotor tidak ada gaji pokok di sistem kita
             $data['promotor_bonus'] = $clean($request->promotor_bonus);
+            
         } elseif ($request->category == 'freelance') {
             $data['daily_salary'] = $clean($request->daily_salary);
         }
 
         EmployeeSalary::updateOrCreate(['user_id' => $userId], $data);
+
         return redirect()->route('employee-salaries.index')->with('success', 'Master gaji berhasil disimpan.');
     }
 }
