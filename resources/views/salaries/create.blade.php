@@ -24,9 +24,9 @@
                                     <input type="text" class="form-control fw-bold bg-white text-dark" 
                                            value="{{ $selectedUser->name }} ({{ $selectedUser->branch->name ?? '-' }})" readonly>
                                     
-                                    {{-- [FIX] TOMBOL LINK KE PROFIL USER --}}
-                                    <a href="{{ route('users.show', $selectedUser->id) }}" target="_blank" class="btn btn-outline-primary d-flex align-items-center" title="Lihat Profil Lengkap">
-                                        <i class="mdi mdi-open-in-new"></i>
+                                    {{-- [FIX] LINK KE PROFIL USER (TAB SAMA) --}}
+                                    <a href="{{ route('users.show', $selectedUser->id) }}" class="btn btn-outline-primary d-flex align-items-center" title="Lihat Profil Lengkap">
+                                        <i class="mdi mdi-account-details"></i>
                                     </a>
                                 </div>
                                 <div class="d-flex justify-content-between mt-1">
