@@ -98,7 +98,7 @@
                                 <th>LOKASI KERJA</th>
                                 <th>KATEGORI GAJI</th>
                                 <th>GAJI UTAMA / INSENTIF</th>
-                                <th>DETAIL TUNJANGAN</th>
+                                <th>DETAIL TUNJANGAN & CATATAN</th>
                                 <th class="text-center pe-4">AKSI</th>
                             </tr>
                         </thead>
@@ -157,21 +157,28 @@
                                     @endif
                                 </td>
 
-                                <td>
+                                {{-- DETAIL TUNJANGAN & CATATAN --}}
+                                <td style="min-width: 200px;">
                                     @if($user->employeeSalary)
-                                        @if($user->employeeSalary->category == 'employee')
-                                            <div class="d-flex flex-column gap-1">
+                                        <div class="d-flex flex-column gap-1">
+                                            @if($user->employeeSalary->category == 'employee')
                                                 <small class="text-dark fw-bold">Jabatan: <span class="text-secondary fw-normal">Rp {{ number_format($user->employeeSalary->position_allowance, 0, ',', '.') }}</span></small>
                                                 <small class="text-dark fw-bold">Privilege: <span class="text-secondary fw-normal">Rp {{ number_format($user->employeeSalary->owner_privilege, 0, ',', '.') }}</span></small>
                                                 @if($user->employeeSalary->use_privilege_mode)
                                                     <span class="badge bg-success mt-1" style="width: fit-content; font-size: 0.6rem;"><i class="mdi mdi-shield-check"></i> Bebas Potongan</span>
                                                 @endif
-                                            </div>
-                                        @elseif($user->employeeSalary->category == 'promotor')
-                                            <small class="text-muted fw-bold"><i class="mdi mdi-check-circle"></i> Tanpa Gaji Pokok</small>
-                                        @else
-                                            <small class="text-muted">-</small>
-                                        @endif
+                                            @endif
+                                            
+                                            {{-- TAMPILKAN CATATAN JIKA ADA --}}
+                                            @if($user->employeeSalary->notes)
+                                                <div class="mt-2 p-2 bg-light rounded border border-light">
+                                                    <small class="text-muted d-block fw-bold" style="font-size: 0.7rem;"><i class="mdi mdi-note-text-outline"></i> Catatan:</small>
+                                                    <small class="text-dark fst-italic" style="font-size: 0.75rem; display: block; line-height: 1.2;">
+                                                        "{{ Str::limit($user->employeeSalary->notes, 50) }}"
+                                                    </small>
+                                                </div>
+                                            @endif
+                                        </div>
                                     @else
                                         <small class="text-muted">-</small>
                                     @endif
