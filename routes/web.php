@@ -141,7 +141,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::delete('/job-targets/{id}', [JobTargetController::class, 'destroy'])->name('job-targets.destroy');
 
     // === RUTE KASBON ===
-    Route::middleware(['role:admin,audit,security,user_biasa,admin_gaji'])->prefix('kasbon')->name('kasbon.')->group(function () {
+    Route::middleware(['role:admin,audit,security,user_biasa,admin_gaji,leader'])->prefix('kasbon')->name('kasbon.')->group(function () {
         Route::get('/', [App\Http\Controllers\CashAdvanceController::class, 'index'])->name('index');
         Route::get('/create', [App\Http\Controllers\CashAdvanceController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\CashAdvanceController::class, 'store'])->name('store');
