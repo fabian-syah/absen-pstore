@@ -13,7 +13,9 @@
                 <form action="{{ route('salaries.store') }}" method="POST" id="payrollForm">
                     @csrf
                     
+                    {{-- ==================================================== --}}
                     {{-- SECTION 1: PILIH USER & PERIODE --}}
+                    {{-- ==================================================== --}}
                     <div class="row mb-4 bg-light p-3 rounded border">
                         <div class="col-md-5">
                             <label class="fw-bold mb-1">Pilih Karyawan</label>
@@ -83,7 +85,9 @@
                     </div>
 
                     <div class="row">
+                        {{-- ==================================================== --}}
                         {{-- SECTION 2: PENDAPATAN --}}
+                        {{-- ==================================================== --}}
                         <div class="col-md-6 border-end">
                             <h5 class="text-success mb-3 fw-bold border-bottom pb-2">
                                 <i class="mdi mdi-arrow-up-circle"></i> PENDAPATAN
@@ -169,10 +173,10 @@
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label>Dispensasi (Manual)</label>
+                                    <label>Dispensasi</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
-                                        <input type="text" name="dispensation_amount" class="form-control income-input rupiah-input" placeholder="0" value="0">
+                                        <input type="text" name="dispensation_amount" id="dispensation" class="form-control income-input rupiah-input" placeholder="0" value="0">
                                     </div>
                                     <input type="text" name="dispensation_note" class="form-control form-control-sm mt-1" placeholder="Catatan...">
                                 </div>
@@ -202,9 +206,7 @@
                                     <label class="small text-muted fst-italic mb-0">Rumus: (Fixed / 31) x Alpha</label>
                                     <div class="input-group input-group-sm mt-1">
                                         <span class="input-group-text text-danger bg-white">Rp</span>
-                                        {{-- NOTE: name, id, dan class deduction-input penting untuk JS --}}
-                                        <input type="text" name="alpha_deduction" id="alpha_deduction" 
-                                               class="form-control deduction-input fw-bold text-danger" readonly>
+                                        <input type="text" name="alpha_deduction" id="alpha_deduction" class="form-control deduction-input fw-bold text-danger" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -221,8 +223,7 @@
                                     <label class="small text-muted fst-italic mb-0">Rumus: (Fixed / 93) x Telat</label>
                                     <div class="input-group input-group-sm mt-1">
                                         <span class="input-group-text text-danger bg-white">Rp</span>
-                                        <input type="text" name="late_deduction" id="late_deduction" 
-                                               class="form-control deduction-input fw-bold text-danger" readonly>
+                                        <input type="text" name="late_deduction" id="late_deduction" class="form-control deduction-input fw-bold text-danger" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -235,7 +236,8 @@
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-text text-danger">Rp</span>
-                                    <input type="text" name="kasbon_deduction" class="form-control deduction-input rupiah-input" 
+                                    <input type="text" name="kasbon_deduction" id="kasbon_deduction" 
+                                           class="form-control deduction-input rupiah-input" 
                                            data-max="{{ $remainingDebt ?? 0 }}" placeholder="0" value="0">
                                 </div>
                             </div>
@@ -244,7 +246,7 @@
                                 <label>Potongan Lainnya</label>
                                 <div class="input-group">
                                     <span class="input-group-text text-danger">Rp</span>
-                                    <input type="text" name="other_deduction" class="form-control deduction-input rupiah-input" placeholder="0" value="0">
+                                    <input type="text" name="other_deduction" id="other_deduction" class="form-control deduction-input rupiah-input" placeholder="0" value="0">
                                 </div>
                                 <input type="text" name="other_deduction_note" class="form-control form-control-sm mt-1" placeholder="Keterangan...">
                             </div>
@@ -264,23 +266,20 @@
                             <div class="card bg-white border mb-4">
                                 <div class="card-body p-4">
                                     <h5 class="fw-bold text-dark mb-4 border-bottom pb-2">Konfirmasi Pembayaran</h5>
-                                    
                                     <div class="row g-4">
                                         <div class="col-md-6">
                                             <label class="fw-bold mb-2">Metode Pembayaran</label>
                                             <div class="btn-group w-100" role="group">
                                                 <input type="radio" class="btn-check" name="payment_method" id="pay_cash" value="cash">
                                                 <label class="btn btn-outline-success p-3 fw-bold" for="pay_cash">
-                                                    <i class="mdi mdi-cash-multiple fs-4 d-block mb-1"></i> TUNAI
+                                                    <i class="mdi mdi-cash-multiple fs-4 d-block"></i> TUNAI
                                                 </label>
-                                              
                                                 <input type="radio" class="btn-check" name="payment_method" id="pay_transfer" value="transfer" checked>
                                                 <label class="btn btn-outline-primary p-3 fw-bold" for="pay_transfer">
-                                                    <i class="mdi mdi-bank fs-4 d-block mb-1"></i> TRANSFER
+                                                    <i class="mdi mdi-bank fs-4 d-block"></i> TRANSFER
                                                 </label>
                                             </div>
                                         </div>
-
                                         <div class="col-md-6">
                                             <label class="fw-bold mb-2">Waktu Pengiriman</label>
                                             <div class="d-flex flex-column gap-2">
@@ -290,7 +289,6 @@
                                                         <i class="mdi mdi-send text-primary me-1"></i> Kirim Sekarang
                                                     </label>
                                                 </div>
-
                                                 <div class="form-check card-radio p-3 border rounded">
                                                     <input class="form-check-input" type="radio" name="send_type" id="send_later" value="later" onclick="toggleDateInput(true)">
                                                     <label class="form-check-label fw-bold w-100 cursor-pointer" for="send_later">
@@ -309,15 +307,10 @@
                             <div class="text-center">
                                 <h5 class="text-muted mb-2 text-uppercase ls-1">Take Home Pay (Gaji Bersih)</h5>
                                 <h1 class="display-3 fw-bold text-primary mb-4" id="take_home_pay">Rp 0</h1>
-                                
-                                <div class="d-grid gap-2 col-md-6 mx-auto">
-                                    <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-lg p-3 rounded-pill">
-                                        PROSES PAYROLL
-                                    </button>
-                                    <a href="{{ route('branch-salary.index') }}" class="btn btn-light text-muted">Batal</a>
-                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-lg p-3 rounded-pill">
+                                    PROSES PAYROLL
+                                </button>
                             </div>
-
                         </div>
                     </div>
 
@@ -340,11 +333,33 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // DEFINISI ELEMENT (Menggunakan getElementById untuk keamanan)
         const categoryInput = document.getElementById('category');
         const sections = document.querySelectorAll('.category-section');
         
-        // LOGIC GANTI FORM
+        // Income Elements
+        const basicSalary = document.getElementById('basic_salary');
+        const allowance = document.getElementById('allowance');
+        const privilege = document.getElementById('privilege');
+        const promotorBasic = document.getElementById('promotor_basic');
+        const dailySalary = document.getElementById('daily_salary');
+        const bonus = document.getElementById('bonus');
+        const dispensation = document.getElementById('dispensation');
+        
+        // Deduction Elements
+        const alphaDays = document.getElementById('alpha_days');
+        const alphaDed = document.getElementById('alpha_deduction');
+        const lateDays = document.getElementById('late_days');
+        const lateDed = document.getElementById('late_deduction');
+        const overrideCheck = document.getElementById('override_attendance');
+        
+        // Freelance
+        const freelanceAtt = document.getElementById('freelance_attendance');
+        const freelanceTotal = document.getElementById('freelance_total');
+
+        // FUNGSI GANTI FORM
         function toggleCategoryForms() {
+            if(!categoryInput) return;
             const cat = categoryInput.value;
             sections.forEach(el => el.style.display = 'none');
             
@@ -352,36 +367,26 @@
             else if(cat === 'promotor') document.getElementById('form_promotor').style.display = 'block';
             else if(cat === 'freelance') document.getElementById('form_freelance').style.display = 'block';
             
-            if(cat === 'promotor') {
-                const promoBasic = document.getElementById('promotor_basic');
-                const empBasic = document.getElementsByName('employee_basic_salary')[0];
-                promoBasic.addEventListener('input', function() { empBasic.value = this.value; calculate(); });
-                empBasic.value = promoBasic.value;
+            // Sync logic untuk promotor (copy value ke hidden employee basic)
+            if(cat === 'promotor' && promotorBasic && basicSalary) {
+                promotorBasic.addEventListener('input', function() { 
+                    basicSalary.value = this.value; 
+                    calculate(); 
+                });
+                basicSalary.value = promotorBasic.value;
             }
             calculate();
         }
         
-        if(categoryInput.tagName === 'SELECT') {
+        if(categoryInput && categoryInput.tagName === 'SELECT') {
             categoryInput.addEventListener('change', toggleCategoryForms);
         }
         toggleCategoryForms();
 
-        // --- CORE LOGIC KALKULASI ---
-        const rupiahInputs = document.querySelectorAll('.rupiah-input');
-        const alphaDays = document.getElementById('alpha_days');
-        const alphaDed = document.getElementById('alpha_deduction');
-        const lateDays = document.getElementById('late_days');
-        const lateDed = document.getElementById('late_deduction');
-        const overrideCheck = document.getElementById('override_attendance');
-        
-        const dailySalary = document.getElementById('daily_salary');
-        const freelanceAtt = document.getElementById('freelance_attendance');
-        const freelanceTotal = document.getElementById('freelance_total');
-
-        // [PENTING] Fungsi ini membersihkan titik sebelum parsing float
+        // HELPER NUMBERS
         function cleanNumber(value) {
             if(!value) return 0;
-            // Hapus titik, lalu parse float
+            // Hapus titik, lalu parse
             return parseFloat(value.toString().replace(/\./g, '')) || 0;
         }
 
@@ -398,81 +403,91 @@
             return rupiah;
         }
 
-        rupiahInputs.forEach(input => {
+        // EVENT LISTENER FORMAT RUPIAH
+        document.querySelectorAll('.rupiah-input').forEach(input => {
             input.addEventListener('keyup', function(e) {
                 this.value = formatRupiah(this.value);
                 calculate();
             });
         });
 
+        // CORE CALCULATION LOGIC
         function calculate() {
+            if(!categoryInput) return;
             let cat = categoryInput.value;
             let totalIncome = 0;
             let totalFixed = 0;
 
+            // 1. Hitung Income Dasar
             if (cat === 'freelance') {
-                let daily = cleanNumber(dailySalary.value);
-                let days = parseFloat(freelanceAtt.value) || 0;
+                let daily = cleanNumber(dailySalary ? dailySalary.value : 0);
+                let days = parseFloat(freelanceAtt ? freelanceAtt.value : 0) || 0;
                 let total = daily * days;
-                freelanceTotal.value = total;
+                if(freelanceTotal) freelanceTotal.value = total;
                 totalIncome = total;
             } else {
-                // [PENTING] Pakai cleanNumber agar input "2.000.000" terbaca sebagai integer 2000000
-                let basic = cleanNumber(document.getElementsByName('employee_basic_salary')[0].value);
-                let allow = cleanNumber(document.getElementsByName('employee_position_allowance')[0].value);
-                let priv = cleanNumber(document.getElementsByName('employee_owner_privilege')[0].value);
-                
+                let basic = cleanNumber(basicSalary ? basicSalary.value : 0);
+                let allow = cleanNumber(allowance ? allowance.value : 0);
+                let priv = cleanNumber(privilege ? privilege.value : 0);
                 totalFixed = basic + allow + priv;
                 totalIncome = totalFixed;
             }
 
-            totalIncome += cleanNumber(document.getElementsByName('promotor_bonus')[0].value);
-            totalIncome += cleanNumber(document.getElementsByName('dispensation_amount')[0].value);
+            // 2. Tambah Bonus & Dispensasi
+            totalIncome += cleanNumber(bonus ? bonus.value : 0);
+            totalIncome += cleanNumber(dispensation ? dispensation.value : 0);
 
-            // Hitung Potongan Absen
+            // 3. Hitung Potongan Absen (Alpha/Telat)
             if (cat !== 'freelance') {
                 if (overrideCheck && overrideCheck.checked) {
-                    alphaDed.value = "0";
-                    lateDed.value = "0";
+                    if(alphaDed) alphaDed.value = "0";
+                    if(lateDed) lateDed.value = "0";
                 } else {
-                    let aDays = parseFloat(alphaDays.value) || 0;
-                    let lDays = parseFloat(lateDays.value) || 0;
+                    let aDays = parseFloat(alphaDays ? alphaDays.value : 0) || 0;
+                    let lDays = parseFloat(lateDays ? lateDays.value : 0) || 0;
                     
                     let alphaVal = 0;
                     // Rumus: (Total Fixed / 31) * Alpha
                     if(totalFixed > 0 && aDays > 0) {
                         alphaVal = (totalFixed / 31) * aDays;
                     }
-                    alphaDed.value = formatRupiah(Math.floor(alphaVal)); 
+                    if(alphaDed) alphaDed.value = formatRupiah(Math.floor(alphaVal)); 
 
                     let lateVal = 0;
                     // Rumus: (Total Fixed / 93) * Telat
                     if(totalFixed > 0 && lDays > 0) {
                         lateVal = (totalFixed / 93) * lDays;
                     }
-                    lateDed.value = formatRupiah(Math.floor(lateVal)); 
+                    if(lateDed) lateDed.value = formatRupiah(Math.floor(lateVal)); 
                 }
             } else {
-                alphaDed.value = "0";
-                lateDed.value = "0";
+                if(alphaDed) alphaDed.value = "0";
+                if(lateDed) lateDed.value = "0";
             }
 
-            // Hitung Total Potongan
-            let totalDeduction = cleanNumber(alphaDed.value) + cleanNumber(lateDed.value);
+            // 4. Hitung Total Potongan
+            let totalDeduction = cleanNumber(alphaDed ? alphaDed.value : 0) + cleanNumber(lateDed ? lateDed.value : 0);
+            
             document.querySelectorAll('.deduction-input').forEach(el => {
+                // Jangan hitung alpha/late lagi karena sudah diambil valuenya diatas
                 if(el.id !== 'alpha_deduction' && el.id !== 'late_deduction') {
                     totalDeduction += cleanNumber(el.value);
                 }
             });
 
-            document.getElementById('total_income_display').innerText = "Rp " + formatRupiah(totalIncome);
-            document.getElementById('total_deduction_display').innerText = "Rp " + formatRupiah(totalDeduction);
-            document.getElementById('take_home_pay').innerText = "Rp " + formatRupiah(totalIncome - totalDeduction);
+            // 5. Update UI
+            const elIncome = document.getElementById('total_income_display');
+            const elDeduction = document.getElementById('total_deduction_display');
+            const elThp = document.getElementById('take_home_pay');
+
+            if(elIncome) elIncome.innerText = "Rp " + formatRupiah(totalIncome);
+            if(elDeduction) elDeduction.innerText = "Rp " + formatRupiah(totalDeduction);
+            if(elThp) elThp.innerText = "Rp " + formatRupiah(totalIncome - totalDeduction);
         }
 
         if(overrideCheck) overrideCheck.addEventListener('change', calculate);
         
-        // Jalankan sedikit delay agar value terisi sempurna
+        // JALANKAN SAAT LOAD (Diberi delay agar value ter-render)
         setTimeout(calculate, 500);
     });
 </script>
