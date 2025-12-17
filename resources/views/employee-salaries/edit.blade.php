@@ -70,32 +70,24 @@
                         </div>
                     </div>
 
-                    {{-- 3. FORM PROMOTOR (UPDATED LABELS) --}}
+                    {{-- 3. FORM PROMOTOR (HANYA SATU FIELD BONUS) --}}
                     <div id="form_promotor" class="salary-section" style="display: none;">
-                        <h5 class="text-info mb-3">Detail Promotor</h5>
+                        <h5 class="text-info mb-3">Detail Promotor / JCS</h5>
                         <div class="alert alert-info py-2 small">
-                            <i class="mdi mdi-information-outline"></i> Promotor dibayar berdasarkan <strong>Insentif Tetap</strong> dan <strong>Komisi Tambahan</strong>.
+                            <i class="mdi mdi-information-outline"></i> Kategori ini hanya menerima <strong>Bonus / Insentif</strong> (Gaji Pokok dari Vendor).
                         </div>
                         
-                        <div class="form-group mb-3">
-                            <label>Insentif Tetap (Base Fee Bulanan)</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                {{-- Menggunakan field basic_salary di database --}}
-                                <input type="text" name="promotor_monthly_salary" class="form-control rupiahe" 
-                                       value="{{ ($user->employeeSalary->category ?? '') == 'promotor' ? ($user->employeeSalary->basic_salary ?? 0) : 0 }}" placeholder="0">
-                            </div>
-                            <small class="text-muted">Uang kehadiran/transport tetap bulanan (jika ada).</small>
-                        </div>
+                        {{-- Hidden input basic_salary agar tidak null di database --}}
+                        <input type="hidden" name="promotor_monthly_salary" value="0">
 
                         <div class="form-group mb-3">
-                            <label>Insentif Tambahan (Target / Komisi)</label>
+                            <label class="fw-bold">Insentif / Bonus (Estimasi)</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="text" name="promotor_bonus" class="form-control rupiahe" 
                                        value="{{ $user->employeeSalary->promotor_bonus ?? 0 }}" placeholder="0">
                             </div>
-                            <small class="text-muted">Estimasi komisi bulanan (bisa disesuaikan saat payroll).</small>
+                            <small class="text-muted">Nominal ini akan muncul otomatis saat Payroll (bisa diubah nanti).</small>
                         </div>
                     </div>
 
