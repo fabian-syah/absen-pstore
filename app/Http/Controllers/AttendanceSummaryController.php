@@ -19,40 +19,22 @@ class AttendanceSummaryController extends Controller
         $targetUserId = $request->get('user_id');
 
         // --- 1. LOGIKA SEARCH & SCOPE KARYAWAN (Admin & Audit) ---
-        $employees = collect([]); // Default kosong
-        $targetUser = $currentUser; // Default lihat diri sendiri
+        $employees = collect([]);
+        $targetUser = $currentUser;
 
-        // Cek apakah user memiliki hak akses untuk melihat orang lain
         if (in_array($currentUser->role, ['admin', 'audit'])) {
-            
             if ($currentUser->role === 'audit') {
-                // LOGIKA AUDIT: HANYA CABANG YANG DIPEGANG
-                // Asumsi: Ada tabel relasi user_branch atau method branches() pada model User
-                // Jika error, pastikan User model punya relasi: public function branches() { return $this->belongsToMany(Branch::class); }
-                
-                // Ambil ID cabang yang dipegang Audit
-                // Gunakan pluck('id') jika relasi many-to-many, atau sesuaikan jika kolom manual
                 $handledBranchIds = $currentUser->branches ? $currentUser->branches->pluck('id')->toArray() : [];
-                
-                // Ambil user yang ada di cabang tersebut (kecuali user itu sendiri jika perlu, disini kita tampilkan semua)
-                $employees = User::whereIn('branch_id', $handledBranchIds)
-                                 ->orderBy('name', 'asc')
-                                 ->get();
-
+                $employees = User::whereIn('branch_id', $handledBranchIds)->orderBy('name', 'asc')->get();
             } else {
-                // LOGIKA ADMIN: LIHAT SEMUA
                 $employees = User::orderBy('name', 'asc')->get();
             }
 
-            // Jika ada request user_id dari dropdown
             if ($targetUserId) {
-                // Validasi Keamanan: Pastikan Audit tidak mengintip user di luar cabangnya lewat URL
                 $foundUser = $employees->where('id', $targetUserId)->first();
-                
                 if ($foundUser) {
                     $targetUser = $foundUser;
                 } else {
-                    // Jika user tidak ditemukan dalam scope (misal audit coba ganti ID manual), kembalikan ke diri sendiri/error
                     if($currentUser->role === 'audit') {
                          return redirect()->route('attendance.summary')->with('error', 'Karyawan tidak ditemukan di cabang anda.');
                     }
@@ -62,13 +44,10 @@ class AttendanceSummaryController extends Controller
         } 
 
         // --- 2. AMBIL DATA ---
-        
-        // Ambil Data Kehadiran Real
         $attendances = Attendance::where('user_id', $targetUser->id)
             ->whereYear('check_in_time', $selectedYear)
             ->get();
 
-        // Ambil Data Izin/Cuti/Sakit Approved
         $leaves = LeaveRequest::where('user_id', $targetUser->id)
             ->where('status', 'approved')
             ->where(function($q) use ($selectedYear) {
@@ -80,38 +59,41 @@ class AttendanceSummaryController extends Controller
         // --- 3. INISIALISASI VARIABEL ---
         $monthsData = [];
         $grandTotal = [
-            'total_hari' => 0,
-            'masuk'      => 0, 
-            'wfh'        => 0, 
-            'sakit'      => 0,
-            'izin'       => 0, 
-            'cuti'       => 0,
-            'alpha'      => 0,
-            'telat'      => 0,
-            'pulang_cepat' => 0
+            'total_hari' => 0, 'masuk' => 0, 'wfh' => 0, 'sakit' => 0,
+            'izin' => 0, 'cuti' => 0, 'alpha' => 0, 'telat' => 0, 'pulang_cepat' => 0
         ];
 
         // --- 4. LOOPING 12 BULAN ---
         for ($m = 1; $m <= 12; $m++) {
             $monthAtt = $attendances->filter(fn($q) => $q->check_in_time->month == $m);
 
-            // Hitung Masuk Dasar
+            // LOGIKA PERBAIKAN DI SINI
+            
+            // 1. Hitung Masuk (Status Masuk, WFH, Dinas, atau Scan normal)
             $masukCount = $monthAtt->filter(function($row) {
                 $status = strtolower($row->presence_status ?? '');
-                return in_array($status, ['masuk', 'wfh', 'dinas', 'izin telat']) 
+                // Masukkan 'telat' sebagai hadir juga (tapi nanti dihitung telatnya terpisah)
+                return in_array($status, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat']) 
                         || (in_array($row->attendance_type, ['scan', 'self', 'manual']) && !in_array($status, ['sakit', 'izin', 'cuti', 'alpha']));
             })->count();
 
             $wfhCount = $monthAtt->filter(fn($q) => str_contains(strtolower($q->presence_status), 'wfh'))->count();
-            $alphaCount = $monthAtt->filter(fn($q) => strtolower($q->presence_status) == 'alpha')->count();
-            $telatCount = $monthAtt->where('is_late_checkin', true)->count();
+            
+            // 2. Hitung Alpha (Status Alpha)
+            $alphaCount = $monthAtt->filter(fn($q) => strtolower($q->presence_status) == 'alpha' || $q->status == 'alpha')->count();
+            
+            // 3. Hitung Telat (PERBAIKAN UTAMA)
+            // Cek kolom 'is_late_checkin' ATAU status string 'Telat' / 'late'
+            $telatCount = $monthAtt->filter(function($row) {
+                return $row->is_late_checkin == true 
+                       || strtolower($row->presence_status) == 'telat' 
+                       || $row->status == 'late';
+            })->count();
+
             $pulangCepatCount = $monthAtt->where('is_early_checkout', true)->count();
 
-            // Hitung Data Leave
-            $cutiCount = 0;
-            $sakitCount = 0;
-            $izinCount = 0;
-            $wfhFromLeaveCount = 0; 
+            // Hitung Data Leave (Cuti/Sakit/Izin)
+            $cutiCount = 0; $sakitCount = 0; $izinCount = 0; $wfhFromLeaveCount = 0; 
 
             foreach ($leaves as $leave) {
                 $start = Carbon::parse($leave->start_date);
@@ -133,9 +115,9 @@ class AttendanceSummaryController extends Controller
 
             $totalWfhBulanIni = $wfhCount + $wfhFromLeaveCount;
             $totalMasukBulanIni = $masukCount + $wfhFromLeaveCount;
+            // Total Hari = Masuk + Sakit + Izin + Cuti + Alpha (Telat sudah termasuk di Masuk, jadi jangan ditambah lagi)
             $totalHariBulanIni = $totalMasukBulanIni + $sakitCount + $izinCount + $cutiCount + $alphaCount;
 
-            // Masukkan ke Array
             $monthsData[$m] = [
                 'name' => Carbon::create()->month($m)->translatedFormat('F'),
                 'total_hari' => $totalHariBulanIni,
@@ -149,7 +131,6 @@ class AttendanceSummaryController extends Controller
                 'pulang_cepat' => $pulangCepatCount
             ];
 
-            // Akumulasi Grand Total
             $grandTotal['total_hari'] += $totalHariBulanIni;
             $grandTotal['masuk'] += $totalMasukBulanIni;
             $grandTotal['wfh'] += $totalWfhBulanIni;
@@ -166,8 +147,8 @@ class AttendanceSummaryController extends Controller
             'selectedYear' => $selectedYear,
             'monthsData' => $monthsData,
             'grandTotal' => $grandTotal,
-            'employees' => $employees, // Kirim daftar karyawan untuk dropdown
-            'isAccessGranted' => in_array($currentUser->role, ['admin', 'audit']) // Flag untuk view
+            'employees' => $employees,
+            'isAccessGranted' => in_array($currentUser->role, ['admin', 'audit'])
         ]);
     }
 }
