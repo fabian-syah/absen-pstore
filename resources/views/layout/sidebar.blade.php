@@ -85,8 +85,9 @@
             </li>
         @endif
 
-        {{-- KASBON (Kecuali Leader DAN Admin Gaji) --}}
-        @if (auth()->user()->role != 'leader' && auth()->user()->role != 'admin_gaji')
+        {{-- KASBON (Update: Admin Gaji BISA AKSES, Leader TIDAK BISA) --}}
+        {{-- Saya menghapus pengecualian '&& auth()->user()->role != 'admin_gaji'' --}}
+        @if (auth()->user()->role != 'leader')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('kasbon.index') }}">
                     <i class="menu-icon mdi mdi-cash-multiple"></i>
@@ -133,7 +134,6 @@
         {{-- =================================== --}}
         {{--     MANAJEMEN TIM (ADMIN ONLY)      --}}
         {{-- =================================== --}}
-        {{-- Admin Gaji di-remove dari sini sesuai request --}}
         @if (auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Manajemen Tim</li>
 
@@ -214,7 +214,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--         MENU SECURITY               --}}
+        {{--        MENU SECURITY                --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'security' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Menu Security</li>
@@ -239,7 +239,6 @@
         {{-- =================================== --}}
         {{--   MENU PENGGUNA (TEAM/BRANCH)       --}}
         {{-- =================================== --}}
-        {{-- Pastikan admin_gaji TIDAK masuk sini --}}
         @if (auth()->user()->role == 'user_biasa' ||
                 auth()->user()->role == 'leader' ||
                 auth()->user()->role == 'audit' ||
