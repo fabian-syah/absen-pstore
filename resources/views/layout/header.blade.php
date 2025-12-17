@@ -35,9 +35,9 @@
                 </a>
             </li>
 
-            {{-- Search - Untuk Admin, Audit, DAN LEADER --}}
-            {{-- [UPDATE] Leader ditambahkan di sini --}}
-            @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
+            {{-- Search - Untuk Admin, Audit, LEADER, dan ADMIN GAJI --}}
+            {{-- [UPDATE] Menambahkan admin_gaji agar input search muncul --}}
+            @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'admin_gaji']))
                 <li class="nav-item">
                     <div class="search-form position-relative">
                         <i class="icon-search position-absolute search-icon"></i>
@@ -174,7 +174,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // ==========================================
-        // 1. GLOBAL SEARCH LOGIC (ADMIN, AUDIT, LEADER)
+        // 1. GLOBAL SEARCH LOGIC
         // ==========================================
         const searchInput = document.getElementById('globalSearch');
         const searchResults = document.getElementById('searchResults');

@@ -29,9 +29,9 @@ class GlobalSearchController extends Controller
              return response()->json(['results' => []], 401);
         }
 
-        // 3. Validasi Role (Admin, Audit, DAN LEADER)
-        // [UPDATE] Tambahkan 'leader' ke dalam array
-        if (!in_array($user->role, ['admin', 'audit', 'leader'])) {
+        // 3. Validasi Role (Admin, Audit, LEADER, dan ADMIN GAJI)
+        // [UPDATE] Tambahkan 'admin_gaji' agar lolos validasi awal
+        if (!in_array($user->role, ['admin', 'audit', 'leader', 'admin_gaji'])) {
              return response()->json(['results' => []]); 
         }
 
@@ -46,27 +46,28 @@ class GlobalSearchController extends Controller
 
         try {
             // ==========================================
-            // SEARCH 1: USERS (Semua Role Boleh, tapi difilter)
+            // SEARCH 1: USERS (Semua Role Boleh)
             // ==========================================
             $userQuery = User::where(function($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                   ->orWhere('email', 'like', "%{$query}%");
             });
 
-            // FILTER:
+            // FILTER LOGIC:
             if ($user->role == 'audit') {
                 // Audit: Hanya user di cabang pegangannya
                 $userQuery->whereIn('branch_id', $auditBranchIds);
             
             } elseif ($user->role == 'leader') {
-                // [UPDATE] Leader: Hanya user di cabang dia sendiri
-                // Asumsi leader terikat pada 1 cabang di kolom branch_id
+                // Leader: Hanya user di cabang dia sendiri
                 $userQuery->where('branch_id', $user->branch_id);
 
             } elseif ($user->role == 'admin' && $user->branch_id != null) {
                 // Admin Cabang: Batasi ke cabangnya
                 $userQuery->where('branch_id', $user->branch_id);
-            }
+            } 
+            // [NOTE] admin_gaji dan admin pusat (branch_id null) 
+            // tidak masuk blok IF diatas, jadi otomatis mencari ke SEMUA cabang (Global).
 
             $users = $userQuery->with(['division', 'branch'])
                 ->limit(5)
@@ -88,8 +89,8 @@ class GlobalSearchController extends Controller
             // ==========================================
             // SEARCH 2: BROADCASTS (Hanya Admin & Audit)
             // ==========================================
-            // [UPDATE] Leader tidak boleh melihat hasil broadcast via search ini
-            if ($user->role != 'leader') {
+            // [UPDATE] Leader DAN admin_gaji DILARANG melihat ini
+            if (!in_array($user->role, ['leader', 'admin_gaji'])) {
                 $broadcasts = Broadcast::where('title', 'like', "%{$query}%")
                     ->orWhere('message', 'like', "%{$query}%")
                     ->orderBy('created_at', 'desc')
@@ -113,15 +114,9 @@ class GlobalSearchController extends Controller
             // ==========================================
             // SEARCH 3: DIVISIONS (Hanya Admin & Audit)
             // ==========================================
-            // [UPDATE] Leader tidak perlu cari divisi
-            if ($user->role != 'leader') {
+            // [UPDATE] Leader DAN admin_gaji DILARANG melihat ini
+            if (!in_array($user->role, ['leader', 'admin_gaji'])) {
                 $divQuery = Division::where('name', 'like', "%{$query}%");
-
-                // Filter Divisi berdasarkan cabang (jika divisi terikat cabang)
-                if ($user->role == 'audit') {
-                    // Cek dulu apakah tabel divisions punya kolom branch_id
-                    // $divQuery->whereIn('branch_id', $auditBranchIds); 
-                }
 
                 $divisions = $divQuery->with('branch')
                     ->limit(5)
@@ -142,8 +137,8 @@ class GlobalSearchController extends Controller
             // ==========================================
             // SEARCH 4: BRANCHES (Hanya Admin & Audit)
             // ==========================================
-            // [UPDATE] Leader tidak perlu cari cabang
-            if ($user->role != 'leader') {
+            // [UPDATE] Leader DAN admin_gaji DILARANG melihat ini
+            if (!in_array($user->role, ['leader', 'admin_gaji'])) {
                 $branchQuery = Branch::where(function($q) use ($query) {
                     $q->where('name', 'like', "%{$query}%")
                       ->orWhere('address', 'like', "%{$query}%");
