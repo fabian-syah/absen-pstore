@@ -13,31 +13,58 @@
                     @csrf
                     @method('PUT')
                     
-                    <div class="alert alert-info d-flex align-items-center">
+                    <div class="alert alert-info d-flex align-items-center mb-4">
                         <i class="mdi mdi-information-outline fs-4 me-2"></i>
                         <div>
-                            <strong>Mode Edit:</strong> Anda hanya dapat mengubah <b>Metode Pembayaran</b> dan <b>Jadwal Pengiriman</b>. 
-                            <br>Untuk mengubah nominal gaji/potongan, silakan Hapus data ini dan buat Payroll baru.
+                            <strong>Mode Edit:</strong> Anda hanya dapat mengubah <b>Metode Pembayaran</b>, <b>Jadwal Pengiriman</b>, dan <b>Catatan</b>. 
+                            <br>Nominal gaji tidak dapat diubah di sini. Jika salah nominal, silakan Hapus data ini dan buat Payroll baru.
                         </div>
                     </div>
 
                     <div class="row justify-content-center">
                         <div class="col-md-8">
-                            {{-- Info Gaji (Readonly) --}}
+                            
+                            {{-- CARD INFO GAJI (READONLY) --}}
                             <div class="card bg-light border mb-4">
-                                <div class="card-body text-center">
-                                    <h5 class="text-muted mb-1">Total Take Home Pay</h5>
-                                    <h2 class="display-4 fw-bold text-primary mb-0">Rp {{ number_format($salary->total_amount, 0, ',', '.') }}</h2>
-                                    <p class="text-muted mt-2 mb-0">
-                                        Karyawan: <strong>{{ $salary->user->name }}</strong> | Periode: {{ $salary->month }}/{{ $salary->year }}
-                                    </p>
+                                <div class="card-body">
+                                    <h5 class="fw-bold mb-3 text-secondary">Rincian Gaji (Readonly)</h5>
+                                    
+                                    <div class="mb-3">
+                                        <label class="small text-muted fw-bold">Total Take Home Pay</label>
+                                        <h2 class="display-5 fw-bold text-primary mb-0">Rp {{ number_format($salary->total_amount, 0, ',', '.') }}</h2>
+                                        <p class="text-muted small mt-1 mb-0">
+                                            Karyawan: <strong>{{ $salary->user->name }}</strong> | Periode: {{ $salary->month }}/{{ $salary->year }}
+                                        </p>
+                                    </div>
+
+                                    <hr>
+
+                                    {{-- FIELD YANG DISABLED / READONLY --}}
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="small text-muted">Gaji Pokok / Insentif</label>
+                                            <input type="text" class="form-control fw-bold bg-white" value="Rp {{ number_format($salary->employee_basic_salary, 0, ',', '.') }}" disabled>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="small text-muted">Tunjangan Jabatan</label>
+                                            <input type="text" class="form-control fw-bold bg-white" value="Rp {{ number_format($salary->employee_position_allowance, 0, ',', '.') }}" disabled>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="small text-muted">Privilege Owner</label>
+                                            <input type="text" class="form-control fw-bold bg-white" value="Rp {{ number_format($salary->employee_owner_privilege, 0, ',', '.') }}" disabled>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="small text-muted">Bonus / Tambahan</label>
+                                            <input type="text" class="form-control fw-bold bg-white" value="Rp {{ number_format($salary->promotor_bonus, 0, ',', '.') }}" disabled>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {{-- Form Edit --}}
+                            {{-- CARD FORM EDIT (YANG BISA DIEDIT) --}}
                             <div class="card bg-white border mb-4">
                                 <div class="card-body p-4">
-                                    <h5 class="fw-bold mb-4 border-bottom pb-2">Update Pengaturan</h5>
+                                    <h5 class="fw-bold mb-4 border-bottom pb-2 text-dark">Update Pengaturan</h5>
                                     
                                     {{-- 1. Metode Pembayaran --}}
                                     <div class="mb-4">
@@ -58,7 +85,7 @@
                                     </div>
 
                                     {{-- 2. Jadwal --}}
-                                    <div class="mb-2">
+                                    <div class="mb-4">
                                         <label class="fw-bold mb-2">Status & Jadwal</label>
                                         <div class="d-flex flex-column gap-2">
                                             {{-- Opsi Paid --}}
@@ -87,6 +114,13 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    {{-- 3. Catatan (Bisa Diedit) --}}
+                                    <div class="mb-2">
+                                        <label class="fw-bold mb-2">Catatan Tambahan</label>
+                                        <textarea name="notes" class="form-control" rows="2" placeholder="Catatan opsional...">{{ $salary->notes }}</textarea>
+                                    </div>
+
                                 </div>
                             </div>
 
@@ -113,5 +147,7 @@
     .card-radio:hover { background-color: #f8f9fa; }
     .btn-check:checked + .btn-outline-primary { background-color: #0d6efd; color: white; }
     .btn-check:checked + .btn-outline-success { background-color: #198754; color: white; }
+    /* Style untuk Readonly Inputs agar terlihat seperti teks biasa yang tegas */
+    input:disabled { background-color: #e9ecef !important; opacity: 1; color: #495057; cursor: not-allowed; }
 </style>
 @endsection
