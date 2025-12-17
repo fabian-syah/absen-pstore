@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Salary;
 use App\Models\User;
 use App\Models\Attendance;
-use App\Models\LeaveRequest;
+use App\Models\LeaveRequest; // Pastikan Model ini di-import
 use App\Models\CashAdvance;
 use App\Models\CashAdvanceInstallment;
 use Illuminate\Http\Request;
@@ -40,8 +40,13 @@ class SalaryController extends Controller
         $alphaCount = 0;
         $lateCount = 0;
         $masterSalary = null;
-        // Freelance attendance tidak lagi dibutuhkan untuk pengali, tapi bisa ditampilkan sebagai info
-        $freelanceAttendance = 0; 
+        $freelanceAttendance = 0;
+        
+        // Variabel Info Tambahan (Default 0)
+        $cutiCount = 0;
+        $sakitCount = 0;
+        $izinCount = 0;
+        $wfhCount = 0;
 
         $users = User::where('is_active', true)->orderBy('name')->get();
 
@@ -90,18 +95,42 @@ class SalaryController extends Controller
                     $q->where('status', 'alpha')
                       ->orWhere('presence_status', 'Alpha');
                 })->count();
+
+            // 3. Freelance Attendance
+            $freelanceAttendance = Attendance::where('user_id', $selectedUserId)
+                ->whereMonth('check_in_time', $month)
+                ->whereYear('check_in_time', $year)
+                ->where(function($q) {
+                    $q->whereIn('presence_status', ['Masuk', 'WFH', 'Telat', 'Izin Telat', 'Dinas Luar'])
+                      ->orWhereIn('status', ['present', 'late', 'wfh']);
+                })->count();
+
+            // ==========================================
+            // 4. HITUNG INFO CUTI/IZIN/SAKIT/WFH (INFO ONLY)
+            // ==========================================
+            $approvedLeaves = LeaveRequest::where('user_id', $selectedUserId)
+                ->where('status', 'approved')
+                ->whereMonth('start_date', $month)
+                ->whereYear('start_date', $year)
+                ->get();
+
+            $cutiCount = $approvedLeaves->where('type', 'cuti')->count();
+            $sakitCount = $approvedLeaves->where('type', 'sakit')->count();
+            $izinCount = $approvedLeaves->where('type', 'izin')->count(); // Izin biasa (bukan telat)
+            $wfhCount = $approvedLeaves->where('type', 'wfh')->count();
         }
 
         return view('salaries.create', compact(
             'users', 'selectedUser', 'remainingDebt', 
             'alphaCount', 'lateCount', 'masterSalary', 
-            'month', 'year'
+            'month', 'year', 'freelanceAttendance',
+            'cutiCount', 'sakitCount', 'izinCount', 'wfhCount' // Kirim ke View
         ));
     }
 
     public function store(Request $request)
     {
-        // 1. Clean Rupiah Inputs
+        // 1. Clean Rupiah
         $inputsToClean = [
             'employee_basic_salary', 'employee_position_allowance', 
             'employee_owner_privilege', 'promotor_bonus', 
@@ -128,8 +157,6 @@ class SalaryController extends Controller
             'scheduled_date' => 'required_if:send_type,later',
         ]);
 
-        // Cek Duplikasi (Kecuali Freelance mungkin boleh berkali-kali dalam sebulan? 
-        // Jika freelance boleh input berkali-kali dalam sebulan, hapus blok cek exists ini khusus freelance)
         if($request->category != 'freelance') {
             $exists = Salary::where('user_id', $request->user_id)
                 ->where('month', $request->month)
@@ -166,11 +193,8 @@ class SalaryController extends Controller
                     $deductionAmount -= $bayar;
 
                     CashAdvanceInstallment::create([
-                        'cash_advance_id' => $loan->id,
-                        'user_id' => $request->user_id,
-                        'amount_paid' => $bayar,
-                        'received_by' => 'SYSTEM',
-                        'status' => 'approved',
+                        'cash_advance_id' => $loan->id, 'user_id' => $request->user_id,
+                        'amount_paid' => $bayar, 'received_by' => 'SYSTEM', 'status' => 'approved',
                         'note' => 'Potongan Gaji ' . $request->month . '/' . $request->year
                     ]);
 
@@ -180,25 +204,18 @@ class SalaryController extends Controller
                 }
             }
 
-            // --- HITUNG INCOME SESUAI KATEGORI ---
+            // Hitung Income
             $income = 0;
-
             if ($request->category == 'employee') {
                 $income = ($request->employee_basic_salary ?? 0) + 
                           ($request->employee_position_allowance ?? 0) + 
                           ($request->employee_owner_privilege ?? 0);
-            
             } elseif ($request->category == 'promotor') {
-                // Promotor: Base Fee (Insentif Tetap) diambil dari field basic_salary
                 $income = ($request->employee_basic_salary ?? 0); 
-            
             } elseif ($request->category == 'freelance') {
-                // Freelance: Pembayaran Harian Langsung (Tanpa Pengali Kehadiran)
-                // Income = Nominal Gaji Harian yang diinput (Fixed dari Master)
                 $income = ($request->freelance_daily_salary ?? 0);
             }
 
-            // Tambahan Income Global
             $income += ($request->promotor_bonus ?? 0);
             $income += ($request->dispensation_amount ?? 0);
 
@@ -209,7 +226,6 @@ class SalaryController extends Controller
                          ($request->other_deduction ?? 0);
 
             $data['total_amount'] = $income - $deduction;
-
             Salary::create($data);
         });
 
@@ -217,10 +233,9 @@ class SalaryController extends Controller
             ->with('success', 'Payroll disimpan.');
     }
 
-    // ... method lain (show, edit, update, destroy) ...
     public function show($id) { $salary = Salary::with(['user.branch', 'user.division'])->findOrFail($id); return view('salaries.show', compact('salary')); }
     public function edit(Salary $salary) { $users = User::orderBy('name')->get(); return view('salaries.edit', compact('salary', 'users')); }
     public function update(Request $request, Salary $salary) { $salary->update($request->only(['notes'])); return redirect()->route('salaries.index')->with('success', 'Data updated.'); }
     public function destroy(Salary $salary) { $salary->delete(); return back()->with('success', 'Deleted.'); }
     public function checkAttendance(Request $request) {}
-}
+}   

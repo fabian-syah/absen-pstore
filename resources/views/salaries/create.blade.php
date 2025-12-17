@@ -56,7 +56,7 @@
                                     @endfor
                                 </select>
                             </div>
-                            <small class="text-muted fst-italic" style="font-size: 0.7rem">*Ubah untuk refresh absensi</small>
+                            <small class="text-muted fst-italic" style="font-size: 0.7rem">*Ubah untuk refresh data</small>
                         </div>
 
                         <div class="col-md-4">
@@ -80,6 +80,41 @@
                         </div>
                     </div>
 
+                    {{-- INFO KEHADIRAN (BARU) --}}
+                    @if($selectedUser)
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold text-secondary mb-2"><i class="mdi mdi-information-outline"></i> Informasi Kehadiran & Cuti (Bulan Ini)</h6>
+                            <div class="row g-2">
+                                <div class="col-6 col-md-3">
+                                    <div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm">
+                                        <span class="text-muted small fw-bold">Cuti</span>
+                                        <span class="badge bg-secondary rounded-pill px-3">{{ $cutiCount ?? 0 }} Hari</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm">
+                                        <span class="text-muted small fw-bold">Sakit</span>
+                                        <span class="badge bg-info rounded-pill px-3">{{ $sakitCount ?? 0 }} Hari</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm">
+                                        <span class="text-muted small fw-bold">Izin</span>
+                                        <span class="badge bg-warning text-dark rounded-pill px-3">{{ $izinCount ?? 0 }} Kali</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm">
+                                        <span class="text-muted small fw-bold">WFH</span>
+                                        <span class="badge bg-success rounded-pill px-3">{{ $wfhCount ?? 0 }} Hari</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     <div class="row">
                         <div class="col-md-6 border-end">
                             <h5 class="text-success mb-3 fw-bold border-bottom pb-2">
@@ -92,7 +127,6 @@
                                     <label class="fw-bold">Gaji Pokok (Master)</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light">Rp</span>
-                                        {{-- READONLY --}}
                                         <input type="text" name="employee_basic_salary" id="employee_basic" 
                                                class="form-control income-input fw-bold text-dark rupiah-input bg-light" 
                                                readonly
@@ -132,7 +166,6 @@
                                     <label class="fw-bold">Insentif Tetap (Master)</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light">Rp</span>
-                                        {{-- READONLY --}}
                                         <input type="text" id="promotor_basic" class="form-control income-input fw-bold text-dark rupiah-input bg-light" 
                                                readonly
                                                value="{{ number_format($masterSalary->basic_salary ?? 0, 0, ',', '.') }}">
@@ -149,14 +182,12 @@
                                     <label class="fw-bold">Bayaran Hari Ini (Master)</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light">Rp</span>
-                                        {{-- READONLY --}}
                                         <input type="text" name="freelance_daily_salary" id="daily_salary" 
                                                class="form-control rupiah-input fw-bold text-dark bg-light" 
                                                readonly
                                                value="{{ number_format($masterSalary->daily_salary ?? 0, 0, ',', '.') }}">
                                     </div>
                                 </div>
-                                {{-- Hapus Input Jumlah Kehadiran karena tidak dipakai perkalian --}}
                             </div>
 
                             {{-- GLOBAL INCOME --}}
@@ -337,7 +368,6 @@
                 const promoBasic = document.getElementById('promotor_basic');
                 const empBasic = document.getElementById('employee_basic');
                 if(promoBasic && empBasic) {
-                    // Sync value agar saat submit tetap terkirim
                     promoBasic.addEventListener('input', function() { 
                         empBasic.value = this.value; 
                         calculate(); 
@@ -387,17 +417,13 @@
             let totalFixed = 0; 
 
             if (cat === 'freelance') {
-                // Freelance: Income = Gaji Hari Ini (Input)
                 let daily = cleanNumber(document.getElementById('daily_salary').value);
                 totalIncome = daily; 
-                // Freelance: Tidak ada fixed base untuk alpha/telat (0)
                 totalFixed = 0; 
-
             } else if (cat === 'promotor') {
                 let promoBasic = cleanNumber(document.getElementById('promotor_basic').value);
                 totalFixed = promoBasic;
                 totalIncome = promoBasic;
-
             } else {
                 let basic = cleanNumber(document.getElementById('employee_basic').value);
                 let allow = cleanNumber(document.getElementById('allowance').value);
@@ -415,7 +441,6 @@
             const overrideCheck = document.getElementById('override_attendance');
 
             if (cat === 'freelance') {
-                // Freelance: Potongan Alpha & Telat = 0 (Kecuali denda manual)
                 if(alphaDed) alphaDed.value = "0";
                 if(lateDed) lateDed.value = "0";
             } else {
@@ -469,6 +494,7 @@
 </script>
 
 <style>
+    .bg-soft-info { background-color: rgba(13,202,240,0.15); }
     .card-radio { transition: all 0.2s; cursor: pointer; }
     .card-radio:hover { background-color: #f8f9fa; }
     .btn-check:checked + .btn-outline-primary { background-color: #0d6efd; color: white; }
