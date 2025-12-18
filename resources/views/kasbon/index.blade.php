@@ -1,12 +1,23 @@
 @extends('layout.master')
 
 @section('content')
+@php
+    // Cek apakah user adalah Admin atau Admin Gaji
+    $isAdmin = in_array(auth()->user()->role, ['admin', 'admin_gaji']);
+@endphp
+
 <div class="container-fluid">
     
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1">Manajemen Kasbon</h2>
-            <p class="text-muted mb-0">Monitor pengajuan, sisa hutang, dan pembayaran karyawan.</p>
+            <p class="text-muted mb-0">
+                @if($isAdmin)
+                    Overview data peminjaman seluruh karyawan.
+                @else
+                    Riwayat peminjaman dan sisa kewajiban Anda.
+                @endif
+            </p>
         </div>
         <a href="{{ route('kasbon.create') }}" class="btn btn-primary btn-lg px-4 rounded-pill shadow-sm fw-bold">
             <i class="mdi mdi-plus-circle-outline me-2"></i> Buat Pengajuan
@@ -14,30 +25,51 @@
     </div>
 
     <div class="row g-3 mb-4">
+        
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-warning text-white h-100 rounded-4 overflow-hidden">
-                <div class="card-body position-relative">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="badge bg-white bg-opacity-25 text-white">Need Action</span>
-                        <i class="mdi mdi-clock-alert-outline fs-2 text-white opacity-50"></i>
+            @if($isAdmin)
+                {{-- TAMPILAN ADMIN: Menunggu Approval (Kuning) --}}
+                <div class="card border-0 shadow-sm bg-warning text-white h-100 rounded-4 overflow-hidden">
+                    <div class="card-body position-relative">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-white bg-opacity-25 text-white">Need Action</span>
+                            <i class="mdi mdi-clock-alert-outline fs-2 text-white opacity-50"></i>
+                        </div>
+                        <h2 class="mb-0 fw-bold">{{ $stats['pending'] }}</h2>
+                        <small class="text-white opacity-75">Menunggu Approval</small>
                     </div>
-                    <h2 class="mb-0 fw-bold">{{ $stats['pending'] }}</h2>
-                    <small class="text-white opacity-75">Menunggu Approval</small>
                 </div>
-            </div>
+            @else
+                {{-- TAMPILAN USER: Total Riwayat (Ungu) --}}
+                <div class="card border-0 shadow-sm text-white h-100 rounded-4 overflow-hidden" style="background-color: #6f42c1;">
+                    <div class="card-body position-relative">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-white bg-opacity-25 text-white">History</span>
+                            <i class="mdi mdi-file-document-multiple-outline fs-2 text-white opacity-50"></i>
+                        </div>
+                        {{-- Mengambil total data dari pagination --}}
+                        <h2 class="mb-0 fw-bold">{{ $kasbons->total() }}</h2>
+                        <small class="text-white opacity-75">Total Riwayat Transaksi</small>
+                    </div>
+                </div>
+            @endif
         </div>
+
         <div class="col-md-3">
             <div class="card border-0 shadow-sm bg-primary text-white h-100 rounded-4 overflow-hidden">
                 <div class="card-body position-relative">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="badge bg-white bg-opacity-25 text-white">Active Loans</span>
+                        <span class="badge bg-white bg-opacity-25 text-white">Active</span>
                         <i class="mdi mdi-wallet-outline fs-2 text-white opacity-50"></i>
                     </div>
                     <h2 class="mb-0 fw-bold">{{ $stats['active'] }}</h2>
-                    <small class="text-white opacity-75">Karyawan Sedang Mencicil</small>
+                    <small class="text-white opacity-75">
+                        {{ $isAdmin ? 'Karyawan Mencicil' : 'Pinjaman Aktif Anda' }}
+                    </small>
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
             <div class="card border-0 shadow-sm bg-success text-white h-100 rounded-4 overflow-hidden">
                 <div class="card-body position-relative">
@@ -46,24 +78,30 @@
                         <i class="mdi mdi-check-decagram-outline fs-2 text-white opacity-50"></i>
                     </div>
                     <h2 class="mb-0 fw-bold">{{ $stats['paid'] }}</h2>
-                    <small class="text-white opacity-75">Pinjaman Lunas</small>
+                    <small class="text-white opacity-75">
+                        {{ $isAdmin ? 'Total Lunas' : 'Riwayat Lunas Anda' }}
+                    </small>
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
             <div class="card border-0 shadow-sm bg-white border-start border-4 border-info h-100 rounded-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small class="text-muted fw-bold text-uppercase">Total Piutang Aktif</small>
+                        <small class="text-muted fw-bold text-uppercase">
+                            {{ $isAdmin ? 'Total Piutang Aktif' : 'Sisa Kewajiban Anda' }}
+                        </small>
                         <i class="mdi mdi-chart-line fs-3 text-info"></i>
                     </div>
                     <h3 class="mb-0 fw-bold text-dark">Rp {{ number_format($stats['total_active_amount'], 0, ',', '.') }}</h3>
-                    <small class="text-muted">Uang perusahaan di luar</small>
+                    <small class="text-muted">{{ $isAdmin ? 'Uang perusahaan di luar' : 'Total yang belum dibayar' }}</small>
                 </div>
             </div>
         </div>
     </div>
 
+    @if($isAdmin)
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
             <form action="{{ route('kasbon.index') }}" method="GET">
@@ -105,6 +143,7 @@
             </form>
         </div>
     </div>
+    @endif
 
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-0">
@@ -123,7 +162,7 @@
                     <tbody>
                         @forelse($kasbons as $k)
                             @php
-                                // JSON Decode Divisi & Cabang
+                                // Logic Decode JSON Divisi/Cabang
                                 $divisionName = $k->division;
                                 $decodedDiv = json_decode($divisionName);
                                 if (json_last_error() === JSON_ERROR_NONE && isset($decodedDiv->name)) {
@@ -219,7 +258,11 @@
                                     <div class="d-flex flex-column align-items-center justify-content-center opacity-50">
                                         <i class="mdi mdi-clipboard-text-off-outline fs-1 mb-2"></i>
                                         <h6 class="fw-bold">Tidak ada data ditemukan</h6>
-                                        <p class="small">Coba ubah filter pencarian Anda.</p>
+                                        @if($isAdmin)
+                                            <p class="small">Coba ubah filter pencarian Anda.</p>
+                                        @else
+                                            <p class="small">Anda belum memiliki riwayat pengajuan kasbon.</p>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -240,7 +283,7 @@
 </div>
 
 <style>
-    /* Styling Tambahan agar terlihat premium */
+    /* Styling Tambahan */
     .hover-shadow:hover {
         transform: translateY(-1px);
         box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
@@ -249,7 +292,6 @@
     .letter-spacing-1 { letter-spacing: 1px; }
     .badge { font-size: 0.75rem; letter-spacing: 0.5px; }
     
-    /* Perbaikan Link Pagination agar rapi */
     .pagination { margin-bottom: 0; }
     .page-item.active .page-link {
         background-color: #4b49ac;
