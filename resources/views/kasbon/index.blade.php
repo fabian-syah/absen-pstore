@@ -6,14 +6,13 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1">Manajemen Kasbon</h2>
-            <p class="text-muted mb-0">Overview data peminjaman dan status pembayaran karyawan.</p>
+            <p class="text-muted mb-0">Monitor pengajuan, sisa hutang, dan pembayaran karyawan.</p>
         </div>
         <a href="{{ route('kasbon.create') }}" class="btn btn-primary btn-lg px-4 rounded-pill shadow-sm fw-bold">
             <i class="mdi mdi-plus-circle-outline me-2"></i> Buat Pengajuan
         </a>
     </div>
 
-    @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
     <div class="row g-3 mb-4">
         <div class="col-md-3">
             <div class="card border-0 shadow-sm bg-warning text-white h-100 rounded-4 overflow-hidden">
@@ -64,7 +63,6 @@
             </div>
         </div>
     </div>
-    @endif
 
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
@@ -74,7 +72,7 @@
                         <label class="form-label small text-muted fw-bold">Pencarian</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0"><i class="mdi mdi-magnify"></i></span>
-                            <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Cari data..." value="{{ request('search') }}">
+                            <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Nama karyawan / Ket..." value="{{ request('search') }}">
                         </div>
                     </div>
                     <div class="col-md-2">
@@ -242,7 +240,7 @@
 </div>
 
 <style>
-    /* Styling Tambahan */
+    /* Styling Tambahan agar terlihat premium */
     .hover-shadow:hover {
         transform: translateY(-1px);
         box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
@@ -251,6 +249,7 @@
     .letter-spacing-1 { letter-spacing: 1px; }
     .badge { font-size: 0.75rem; letter-spacing: 0.5px; }
     
+    /* Perbaikan Link Pagination agar rapi */
     .pagination { margin-bottom: 0; }
     .page-item.active .page-link {
         background-color: #4b49ac;
