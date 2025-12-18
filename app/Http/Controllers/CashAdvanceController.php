@@ -48,8 +48,8 @@ class CashAdvanceController extends Controller
             'amount' => 'required|numeric|min:10000',
             'description' => 'required|string',
             'payment_method' => 'required|in:cash,transfer',
-            'photo_1' => 'required|image|max:2048',
-            'photo_2' => 'required|image|max:2048',
+            'photo_1' => 'required|image|max:10240',
+            'photo_2' => 'required|image|max:10240',
             // Validasi Transfer
             'bank_name' => 'required_if:payment_method,transfer',
             'account_number' => 'required_if:payment_method,transfer',
