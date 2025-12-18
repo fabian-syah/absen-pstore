@@ -22,6 +22,28 @@
     .thumb-box { position: relative; overflow: hidden; border-radius: 12px; height: 100px; cursor: pointer; }
     .thumb-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
     .thumb-box:hover img { transform: scale(1.1); }
+
+    /* Tombol Back Bulat Sempurna */
+    .btn-back {
+        width: 45px; height: 45px; 
+        border-radius: 50%; 
+        background: #fff; 
+        border: 1px solid #eee;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+        color: #333;
+    }
+    .btn-back:hover { background: #f8f9fa; transform: translateX(-2px); color: #4b49ac; }
+
+    /* Badge Status Solid (Supaya Jelas) */
+    .badge-status { padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; }
+    .badge-pending { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .badge-active { background-color: #cff4fc; color: #055160; border: 1px solid #b6effb; } /* Biru Muda tapi Teks Gelap */
+    .badge-paid { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+    .badge-rejected { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
 </style>
 
 @php
@@ -57,17 +79,25 @@
     {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center">
-            <a href="{{ route('kasbon.index') }}" class="btn btn-white shadow-sm border rounded-circle me-3" style="width: 45px; height: 45px; display: grid; place-items: center;"><i class="mdi mdi-arrow-left fs-5"></i></a>
+            {{-- Tombol Back Diperbaiki --}}
+            <a href="{{ route('kasbon.index') }}" class="btn-back me-3">
+                <i class="mdi mdi-arrow-left fs-5"></i>
+            </a>
             <div>
                 <h4 class="fw-bold text-dark mb-0">Detail Transaksi #{{ str_pad($kasbon->id, 5, '0', STR_PAD_LEFT) }}</h4>
                 <small class="text-muted">Dibuat pada {{ $kasbon->created_at->format('d F Y, H:i') }}</small>
             </div>
         </div>
         <div>
-            @if($kasbon->status == 'pending') <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill border border-warning">PENDING APPROVAL</span>
-            @elseif($kasbon->status == 'approved') <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill border border-primary">AKTIF BERJALAN</span>
-            @elseif($kasbon->status == 'paid') <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success">LUNAS</span>
-            @else <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill border border-danger">DITOLAK</span> @endif
+            @if($kasbon->status == 'pending') 
+                <span class="badge badge-status badge-pending">PENDING APPROVAL</span>
+            @elseif($kasbon->status == 'approved') 
+                <span class="badge badge-status badge-active">AKTIF BERJALAN</span>
+            @elseif($kasbon->status == 'paid') 
+                <span class="badge badge-status badge-paid">LUNAS</span>
+            @else 
+                <span class="badge badge-status badge-rejected">DITOLAK</span> 
+            @endif
         </div>
     </div>
 
