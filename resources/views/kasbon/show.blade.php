@@ -2,270 +2,196 @@
 
 @section('content')
 <style>
-    @media print {
-        body * { visibility: hidden; }
-        #printableArea, #printableArea * { visibility: visible; }
-        #printableArea { position: absolute; left: 0; top: 0; width: 100%; }
-        .no-print { display: none !important; }
-    }
-    /* Styling Progress Bar */
-    .progress-custom {
-        height: 25px;
-        background-color: #e9ecef;
-        border-radius: 5px;
-        overflow: hidden;
-        margin-bottom: 10px;
-    }
-    .progress-bar-custom {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-        background: linear-gradient(90deg, #4b49ac 0%, #908ce9 100%);
-        transition: width 0.6s ease;
-    }
+    .progress-bar-striped { background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent); background-size: 1rem 1rem; }
 </style>
 
-<div class="row justify-content-center">
-    
-    {{-- BAGIAN KIRI: DETAIL INVOICE & PROGRESS --}}
-    <div class="col-md-5 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body" id="printableArea">
-                {{-- HEADER --}}
-                <div class="text-center mb-4 border-bottom pb-3">
-                    <h3 class="font-weight-bold text-primary">DETAIL KASBON</h3>
-                    <h6 class="text-muted">ID: #KB-{{ str_pad($kasbon->id, 5, '0', STR_PAD_LEFT) }}</h6>
-                    <div class="mt-2">
-                        @if($kasbon->status == 'paid') 
-                            <span class="badge badge-success px-3 py-2" style="font-size: 1em">LUNAS SELESAI</span>
-                        @elseif($kasbon->status == 'approved') 
-                            <span class="badge badge-info px-3 py-2">SEDANG BERJALAN</span>
-                        @elseif($kasbon->status == 'rejected')
-                            <span class="badge badge-danger px-3 py-2">DITOLAK</span>
-                        @else 
-                            <span class="badge badge-warning px-3 py-2">MENUNGGU KONFIRMASI</span> 
-                        @endif
+<div class="container-fluid">
+    <div class="row">
+        {{-- PANEL KIRI: Detail Hutang --}}
+        <div class="col-md-5 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body position-relative">
+                    {{-- Status Badge Pojok --}}
+                    <div class="position-absolute top-0 end-0 m-3">
+                        @if($kasbon->status == 'paid') <span class="badge bg-success fs-6">LUNAS</span>
+                        @elseif($kasbon->status == 'approved') <span class="badge bg-primary fs-6">AKTIF</span>
+                        @elseif($kasbon->status == 'rejected') <span class="badge bg-danger fs-6">DITOLAK</span>
+                        @else <span class="badge bg-warning text-dark fs-6">PENDING</span> @endif
                     </div>
-                </div>
 
-                {{-- INFO UTAMA --}}
-                <div class="mb-4">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span class="text-muted">Peminjam</span> 
-                            <strong class="text-dark">{{ $kasbon->user->name }}</strong>
-                        </li>
-                        <li class="list-group-item">
-                            <span class="text-muted">Keperluan</span><br>
-                            <strong>{{ $kasbon->title }}</strong>
-                        </li>
-                    </ul>
-                </div>
+                    <h5 class="card-title fw-bold text-muted mb-4">DETAIL KASBON</h5>
 
-                {{-- PROGRESS BAR KEUANGAN (KONSEP BARU) --}}
-                <div class="mb-4 p-3 bg-light rounded border">
-                    @php
-                        $persen = $kasbon->amount > 0 ? ($kasbon->total_paid / $kasbon->amount) * 100 : 0;
-                        $persen = min($persen, 100); // Mentok di 100%
+                    {{-- Profil User --}}
+                    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style="width:50px; height:50px; font-size:1.2em">
+                            {{ substr($kasbon->user_name, 0, 1) }}
+                        </div>
+                        <div class="ms-3">
+                            <h5 class="mb-0 fw-bold">{{ $kasbon->user_name }}</h5>
+                            <small class="text-muted">{{ $kasbon->division }} - {{ $kasbon->branch }}</small>
+                        </div>
+                    </div>
+
+                    {{-- Angka Keuangan --}}
+                    <div class="row text-center mb-4">
+                        <div class="col-6 border-end">
+                            <small class="text-muted text-uppercase">Total Pinjam</small>
+                            <h4 class="fw-bold text-dark">Rp {{ number_format($kasbon->amount, 0,',','.') }}</h4>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted text-uppercase">Sisa Hutang</small>
+                            <h4 class="fw-bold text-danger">Rp {{ number_format($kasbon->remaining_amount, 0,',','.') }}</h4>
+                        </div>
+                    </div>
+
+                    {{-- Progress Bar --}}
+                    @php 
+                        $percent = ($kasbon->total_paid / $kasbon->amount) * 100;
                     @endphp
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Progress Bayar</small>
+                            <small class="fw-bold">{{ number_format($percent,0) }}%</small>
+                        </div>
+                        <div class="progress" style="height: 15px;">
+                            <div class="progress-bar bg-success progress-bar-striped" role="progressbar" style="width: {{ $percent }}%"></div>
+                        </div>
+                    </div>
+
+                    {{-- Detail Lain --}}
+                    <div class="bg-light p-3 rounded mb-3">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td class="text-muted" width="35%">Tgl Pengajuan</td>
+                                <td class="fw-bold">{{ $kasbon->created_at->format('d M Y') }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Metode Cair</td>
+                                <td class="fw-bold text-uppercase">{{ $kasbon->payment_method }}</td>
+                            </tr>
+                            @if($kasbon->payment_method == 'transfer')
+                            <tr>
+                                <td class="text-muted">Rekening</td>
+                                <td>{{ $kasbon->account_details }}</td>
+                            </tr>
+                            @endif
+                            <tr>
+                                <td class="text-muted">Ket.</td>
+                                <td>{{ $kasbon->description }}</td>
+                            </tr>
+                        </table>
+                    </div>
                     
-                    <div class="d-flex justify-content-between mb-1">
-                        <small>Progress Pelunasan</small>
-                        <small class="font-weight-bold">{{ number_format($persen, 0) }}%</small>
-                    </div>
-                    <div class="progress-custom">
-                        <div class="progress-bar-custom" style="width: {{ $persen }}%">
-                            {{ number_format($persen, 0) }}%
-                        </div>
+                    {{-- Bukti Foto --}}
+                    <div class="d-flex gap-2">
+                        <a href="{{ asset('storage/'.$kasbon->photo_1) }}" target="_blank" class="btn btn-sm btn-outline-secondary w-50">Lihat Foto 1</a>
+                        <a href="{{ asset('storage/'.$kasbon->photo_2) }}" target="_blank" class="btn btn-sm btn-outline-secondary w-50">Lihat Foto 2</a>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-3">
-                        <div class="text-start">
-                            <small class="text-muted d-block">Total Pinjaman</small>
-                            <h5 class="font-weight-bold text-dark">Rp {{ number_format($kasbon->amount, 0, ',', '.') }}</h5>
-                        </div>
-                        <div class="text-end">
-                            <small class="text-muted d-block">Sisa Hutang</small>
-                            <h5 class="font-weight-bold text-danger">Rp {{ number_format($kasbon->remaining_amount, 0, ',', '.') }}</h5>
-                        </div>
+                    {{-- TOMBOL ACTION ADMIN --}}
+                    @if(auth()->user()->role == 'admin' && $kasbon->status == 'pending')
+                    <div class="mt-4 pt-3 border-top">
+                        <form action="{{ route('kasbon.status', $kasbon->id) }}" method="POST">
+                            @csrf
+                            <button name="status" value="approved" class="btn btn-success w-100 mb-2 fw-bold">APPROVE (Setujui)</button>
+                            <button name="status" value="rejected" class="btn btn-danger w-100">REJECT (Tolak)</button>
+                        </form>
                     </div>
+                    @endif
+
                 </div>
+            </div>
+        </div>
 
-                {{-- TABEL ESTIMASI (LEBIH SANTAI) --}}
-                <div class="mb-3">
-                    <h6 class="text-muted font-weight-bold mb-3"><i class="mdi mdi-calendar-text"></i> Estimasi / Target Rencana</h6>
+        {{-- PANEL KANAN: Form Bayar & History --}}
+        <div class="col-md-7">
+            
+            {{-- FORM BAYAR (Hanya muncul jika Status Approved & Belum Lunas) --}}
+            @if($kasbon->status == 'approved' && $kasbon->remaining_amount > 0)
+            <div class="card border-0 shadow-sm mb-4 bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3"><i class="mdi mdi-wallet"></i> FORM BAYAR HUTANG</h5>
+                    <form action="{{ route('kasbon.pay', $kasbon->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-5">
+                                <label class="small mb-1 text-white-50">Nominal Bayar (Rp)</label>
+                                <input type="text" name="amount_paid" class="form-control fw-bold text-dark" placeholder="Contoh: 500.000" id="bayar_rp" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="small mb-1 text-white-50">Bukti Transfer / Catatan</label>
+                                <input type="file" name="payment_proof" class="form-control" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-light text-primary fw-bold w-100">BAYAR</button>
+                            </div>
+                        </div>
+                        <input type="text" name="note" class="form-control mt-2 form-control-sm bg-primary border-0 text-white placeholder-white" placeholder="Catatan opsional (misal: Potong Gaji Bulan ini)...">
+                    </form>
+                </div>
+            </div>
+            @endif
+
+            {{-- HISTORY TABLE --}}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">Riwayat Pembayaran Masuk</h5>
+                </div>
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-sm table-borderless">
-                            <thead class="text-muted border-bottom">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
                                 <tr>
-                                    <th>Cicilan</th>
-                                    <th>Target Tanggal</th>
-                                    <th class="text-end">Nominal</th>
-                                    <th class="text-center">Status</th>
+                                    <th class="ps-4">Tanggal</th>
+                                    <th>Nominal Masuk</th>
+                                    <th>Oleh</th>
+                                    <th>Bukti</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @php $accumulated = 0; @endphp
-                                @foreach($kasbon->plans as $plan)
-                                    @php 
-                                        $accumulated += $plan->amount; 
-                                        // Cek apakah target ini sudah tertutup oleh total bayar
-                                        $isCovered = $kasbon->total_paid >= $accumulated;
-                                    @endphp
-                                    <tr style="border-bottom: 1px dashed #eee;">
-                                        <td class="py-2">Ke-{{ $plan->installment_order }}</td>
-                                        <td class="py-2 text-muted">{{ \Carbon\Carbon::parse($plan->due_date)->format('d M Y') }}</td>
-                                        <td class="py-2 text-end">Rp {{ number_format($plan->amount, 0, ',', '.') }}</td>
-                                        <td class="py-2 text-center">
-                                            @if($isCovered) 
-                                                <i class="mdi mdi-checkbox-marked-circle text-success" title="Sudah Tertutup"></i>
-                                            @else 
-                                                <i class="mdi mdi-checkbox-blank-circle-outline text-muted" title="Belum"></i>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
+                                @forelse($kasbon->installments as $ins)
+                                <tr>
+                                    <td class="ps-4">{{ $ins->created_at->format('d M Y H:i') }}</td>
+                                    <td class="fw-bold text-success">+ Rp {{ number_format($ins->amount_paid, 0,',','.') }}</td>
+                                    <td>{{ $ins->user->name }}</td>
+                                    <td>
+                                        <a href="{{ asset('storage/'.$ins->payment_proof) }}" target="_blank" class="btn btn-xs btn-light border"><i class="mdi mdi-image"></i></a>
+                                        @if($ins->note) <i class="mdi mdi-information text-muted" title="{{ $ins->note }}"></i> @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">Belum ada pembayaran masuk.</td>
+                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
-                    <small class="text-muted d-block mt-2 fst-italic text-center">* Tabel di atas hanya estimasi. Pembayaran bersifat fleksibel selama lunas sebelum tanggal jatuh tempo akhir.</small>
-                </div>
-
-                {{-- INFO TAMBAHAN --}}
-                <table class="table table-bordered table-sm mb-3 mt-4">
-                    <tr>
-                        <td class="bg-light" width="40%">Jatuh Tempo Akhir</td>
-                        <td class="font-weight-bold text-danger">{{ \Carbon\Carbon::parse($kasbon->due_date)->format('d F Y') }}</td>
-                    </tr>
-                    <tr>
-                        <td class="bg-light">Metode Terima</td>
-                        <td>{{ $kasbon->payment_method == 'transfer' ? 'Transfer Bank' : 'Tunai' }}</td>
-                    </tr>
-                </table>
-
-            </div>
-            <div class="card-footer no-print d-flex justify-content-between align-items-center">
-                <a href="{{ route('kasbon.index') }}" class="btn btn-light">Kembali</a>
-                <button onclick="window.print()" class="btn btn-secondary"><i class="mdi mdi-printer"></i> Cetak</button>
-            </div>
-        </div>
-    </div>
-
-    {{-- BAGIAN KANAN: INPUT & RIWAYAT REAL --}}
-    <div class="col-md-7 grid-margin stretch-card no-print">
-        <div class="card">
-            <div class="card-body">
-                
-                {{-- HEADER KANAN --}}
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="card-title mb-0">Catatan Pembayaran Masuk</h4>
-                    {{-- TOMBOL BAYAR (Hanya muncul jika belum lunas & User ybs) --}}
-                    @if($kasbon->remaining_amount > 0 && auth()->id() == $kasbon->user_id)
-                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#payModalGlobal">
-                            <i class="mdi mdi-plus-circle"></i> Tambah Pembayaran
-                        </button>
-                    @endif
-                </div>
-                
-                {{-- ALERT --}}
-                @if(session('success')) <div class="alert alert-success border-0 shadow-sm"><i class="mdi mdi-check-circle"></i> {{ session('success') }}</div> @endif
-                @if(session('error')) <div class="alert alert-danger border-0 shadow-sm"><i class="mdi mdi-alert-circle"></i> {{ session('error') }}</div> @endif
-
-                {{-- TABEL RIWAYAT --}}
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="bg-light">
-                            <tr>
-                                <th>Tanggal Bayar</th>
-                                <th>Penerima</th>
-                                <th>Nominal</th>
-                                <th>Status</th>
-                                @if(auth()->user()->role == 'admin') <th class="text-center">Aksi</th> @endif
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($kasbon->installments as $ins)
-                                <tr>
-                                    <td>
-                                        <div class="font-weight-bold">{{ $ins->created_at->format('d M Y') }}</div>
-                                        <small class="text-muted">{{ $ins->created_at->format('H:i') }}</small>
-                                    </td>
-                                    <td>{{ $ins->received_by }}</td>
-                                    <td>
-                                        <span class="text-success font-weight-bold">+ Rp {{ number_format($ins->amount_paid, 0, ',', '.') }}</span>
-                                    </td>
-                                    <td>
-                                        @if($ins->status == 'pending') 
-                                            <span class="badge badge-warning">Verifikasi</span>
-                                        @elseif($ins->status == 'approved') 
-                                            <span class="badge badge-success">Diterima</span>
-                                        @else 
-                                            <span class="badge badge-danger">Ditolak</span> 
-                                        @endif
-                                        
-                                        <div class="mt-1">
-                                            <a href="{{ asset('storage/'.$ins->payment_proof) }}" target="_blank" class="text-decoration-none text-primary" style="font-size: 0.8em;">
-                                                <i class="mdi mdi-image"></i> Lihat Bukti
-                                            </a>
-                                        </div>
-                                    </td>
-                                    
-                                    @if(auth()->user()->role == 'admin')
-                                        <td class="text-center">
-                                            <div class="btn-group">
-                                                @if($ins->status == 'pending')
-                                                    <form action="{{ route('kasbon.installment.approve', $ins->id) }}" method="POST">
-                                                        @csrf 
-                                                        <button class="btn btn-success btn-sm" title="Terima"><i class="mdi mdi-check"></i></button>
-                                                    </form>
-                                                    <form action="{{ route('kasbon.installment.reject', $ins->id) }}" method="POST" class="ms-1">
-                                                        @csrf 
-                                                        <button class="btn btn-danger btn-sm" title="Tolak"><i class="mdi mdi-close"></i></button>
-                                                    </form>
-                                                @endif
-                                                <a href="{{ route('kasbon.installment.edit', $ins->id) }}" class="btn btn-warning btn-sm ms-1" title="Edit"><i class="mdi mdi-pencil"></i></a>
-                                            </div>
-                                        </td>
-                                    @endif
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-5 text-muted">
-                                        <i class="mdi mdi-cash-remove" style="font-size: 3em;"></i><br>
-                                        Belum ada riwayat pembayaran cicilan.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-{{-- INCLUDE MODAL BAYAR (Agar tombol Tambah Pembayaran berfungsi) --}}
-{{-- Kita gunakan variabel $loan = $kasbon agar kompatibel dengan partial --}}
-@include('kasbon.partials.pay_modal', ['loan' => $kasbon])
-
-{{-- SCRIPT FORMAT RUPIAH GLOBAL (Untuk Modal di halaman ini) --}}
 <script>
-    function formatRupiahModal(input) {
-        var angka = input.value.replace(/[^,\d]/g, '').toString();
-        var split = angka.split(',');
-        var sisa = split[0].length % 3;
-        var rupiah = split[0].substr(0, sisa);
-        var ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-        if (ribuan) {
+    const inputBayar = document.getElementById('bayar_rp');
+    if(inputBayar){
+        inputBayar.addEventListener('keyup', function(e){
+            this.value = formatRupiah(this.value);
+        });
+    }
+    // Fungsi formatRupiah sama dengan di create
+    function formatRupiah(angka){
+        var number_string = angka.replace(/[^,\d]/g, '').toString(),
+        split   = number_string.split(','),
+        sisa    = split[0].length % 3,
+        rupiah  = split[0].substr(0, sisa),
+        ribuan  = split[0].substr(sisa).match(/\d{3}/gi);
+        if(ribuan){
             separator = sisa ? '.' : '';
             rupiah += separator + ribuan.join('.');
         }
-
-        rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-        input.value = rupiah;
+        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
     }
 </script>
 @endsection

@@ -1,115 +1,111 @@
 @extends('layout.master')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Form Pengajuan Kasbon</h4>
-                
-                {{-- ERROR HANDLING --}}
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                <form action="{{ route('kasbon.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    
-                    <div class="form-group">
-                        <label>Nama Peminjam</label>
-                        <select name="user_id" class="form-control select2">
-                            @foreach($users as $u)
-                                <option value="{{ $u->id }}" {{ (old('user_id') == $u->id || $u->id == auth()->id()) ? 'selected' : '' }}>{{ $u->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Judul Kasbon</label>
-                        <input type="text" name="title" class="form-control" value="{{ old('title') }}" placeholder="Keperluan..." required>
-                    </div>
-
-                    {{-- NOMINAL (MAXLENGTH untuk mencegah error DB) --}}
-                    <div class="form-group">
-                        <label>Total Pinjaman (Rp)</label>
-                        <div class="input-group">
-                            <span class="input-group-text">Rp</span>
-                            {{-- Maxlength 15 digit (sekitar 999 Triliun), Controller max 1 Milyar --}}
-                            <input type="text" name="amount" id="rupiah" class="form-control" value="{{ old('amount') }}" placeholder="0" required maxlength="15">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow rounded-lg">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 fw-bold">Form Pengajuan Kasbon</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ route('kasbon.store') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        
+                        {{-- Identitas --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted text-uppercase small">Informasi Peminjam</label>
+                            @if(auth()->user()->role == 'admin')
+                                <select name="user_id" class="form-select form-select-lg mb-2">
+                                    @foreach($users as $u)
+                                        <option value="{{ $u->id }}">{{ $u->name }} - {{ $u->division ?? 'Divisi Umum' }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-info">*Admin Mode: Pilih karyawan yang mengajukan.</small>
+                            @else
+                                <input type="text" class="form-control form-control-lg bg-light" value="{{ auth()->user()->name }} ({{ auth()->user()->division ?? 'Umum' }} - {{ auth()->user()->branch ?? 'Pusat' }})" readonly>
+                                <input type="hidden" name="user_id" value="{{ auth()->user()->id }}">
+                            @endif
                         </div>
-                        <small class="text-muted">Maksimal Rp 1.000.000.000</small>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Tenor (Kali Cicil)</label>
-                                <div class="input-group">
-                                    <input type="number" name="tenor" class="form-control" value="{{ old('tenor', 1) }}" min="1" max="24" required>
-                                    <span class="input-group-text">Bulan</span>
+                        {{-- Nominal --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Total Uang Yang Diajukan</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-primary text-white fw-bold">Rp</span>
+                                <input type="text" name="amount" id="rupiah" class="form-control fw-bold text-primary" placeholder="0" required autocomplete="off">
+                            </div>
+                            <small class="text-muted">Masukkan nominal tanpa titik.</small>
+                        </div>
+
+                        {{-- Keterangan --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Keterangan / Keperluan</label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="Contoh: Biaya berobat sakit gigi, service motor dinas, dll..." required></textarea>
+                        </div>
+
+                        {{-- Metode Terima Uang --}}
+                        <div class="mb-4 bg-light p-3 rounded border">
+                            <label class="form-label fw-bold d-block mb-2">Metode Pencairan Dana</label>
+                            
+                            <div class="d-flex gap-4 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="methodCash" value="cash" checked onclick="toggleBank(false)">
+                                    <label class="form-check-label" for="methodCash">Tunai (Cash)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="methodTransfer" value="transfer" onclick="toggleBank(true)">
+                                    <label class="form-check-label" for="methodTransfer">Transfer Bank</label>
+                                </div>
+                            </div>
+
+                            {{-- Form Bank (Hidden by default) --}}
+                            <div id="bankDetails" style="display: none;">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <input type="text" name="bank_name" class="form-control" placeholder="Nama Bank (BCA/Mandiri)">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <input type="text" name="account_number" class="form-control" placeholder="Nomor Rekening">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="text" name="account_name" class="form-control" placeholder="Atas Nama">
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Jatuh Tempo</label>
-                                <input type="date" name="start_date" class="form-control" value="{{ old('start_date') }}" required>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label>Metode Penerimaan</label>
-                        <div>
-                            <input type="radio" name="payment_method" value="cash" onclick="toggleBank(false)" {{ old('payment_method', 'cash') == 'cash' ? 'checked' : '' }}> Tunai
-                            <input type="radio" name="payment_method" value="transfer" onclick="toggleBank(true)" class="ms-3" {{ old('payment_method') == 'transfer' ? 'checked' : '' }}> Transfer
-                        </div>
-                    </div>
-
-                    <div class="form-group" id="bankDetails" style="display: {{ old('payment_method') == 'transfer' ? 'block' : 'none' }}">
-                        <label>Info Rekening</label>
-                        <input type="text" name="payment_details" class="form-control" value="{{ old('payment_details') }}" placeholder="Nama Bank - No Rek - Atas Nama">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Keterangan</label>
-                        <textarea name="description_1" class="form-control" required>{{ old('description_1') }}</textarea>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Bukti Foto 1 (Wajib)</label>
+                        {{-- Bukti Foto --}}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Foto Bukti 1 (Wajib)</label>
                                 <input type="file" name="photo_1" class="form-control" required>
-                                <small class="text-info">Bukti utama pengajuan.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Foto Bukti 2 (Wajib)</label>
+                                <input type="file" name="photo_2" class="form-control" required>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Bukti Foto 2 (Opsional)</label>
-                                <input type="file" name="photo_2" class="form-control">
-                                <small class="text-muted">Bukti pendukung (jika ada).</small>
-                            </div>
-                        </div>
-                    </div>
 
-                    <button type="submit" class="btn btn-primary">Ajukan & Buat Rencana</button>
-                    <a href="{{ route('kasbon.index') }}" class="btn btn-light">Batal</a>
-                </form>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold">AJUKAN KASBON</button>
+                            <a href="{{ route('kasbon.index') }}" class="btn btn-light text-muted">Batal</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // Format Rupiah
     const rupiah = document.getElementById('rupiah');
-    rupiah.addEventListener('keyup', function(e){ rupiah.value = formatRupiah(this.value); });
+    rupiah.addEventListener('keyup', function(e){
+        rupiah.value = formatRupiah(this.value);
+    });
 
-    function formatRupiah(angka){
+    function formatRupiah(angka, prefix){
         var number_string = angka.replace(/[^,\d]/g, '').toString(),
         split   = number_string.split(','),
         sisa    = split[0].length % 3,
@@ -123,9 +119,17 @@
         return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
     }
 
-    function toggleBank(isTransfer) {
-        document.getElementById('bankDetails').style.display = isTransfer ? 'block' : 'none';
-        document.querySelector('input[name="payment_details"]').required = isTransfer;
+    // Toggle Bank
+    function toggleBank(show) {
+        const el = document.getElementById('bankDetails');
+        const inputs = el.querySelectorAll('input');
+        if(show) {
+            el.style.display = 'block';
+            inputs.forEach(i => i.required = true);
+        } else {
+            el.style.display = 'none';
+            inputs.forEach(i => i.required = false);
+        }
     }
 </script>
 @endsection

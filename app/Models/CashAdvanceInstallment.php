@@ -9,23 +9,13 @@ class CashAdvanceInstallment extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'cash_advance_id',
-        'user_id',
-        'amount_paid',
-        'received_by', // <--- TAMBAHAN BARU
-        'payment_proof',
-        'status',
-        'note'
-    ];
+    protected $guarded = ['id'];
 
-    public function cashAdvance()
-    {
+    public function cashAdvance() {
         return $this->belongsTo(CashAdvance::class);
     }
 
-    public function user()
-    {
+    public function user() {
         return $this->belongsTo(User::class);
     }
-}
+}   
