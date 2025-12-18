@@ -4,7 +4,7 @@
 @php
     // Cek Role Admin / Admin Gaji
     $isAdmin = in_array(auth()->user()->role, ['admin', 'admin_gaji']);
-    $currentView = request('view_type', 'active');
+    $currentView = request('view_type', 'active'); // Ambil parameter active/history
 @endphp
 
 <div class="container-fluid">
@@ -26,10 +26,9 @@
     </div>
 
     <div class="row g-3 mb-4">
-        
         <div class="col-md-3">
             @if($isAdmin)
-                {{-- TAMPILAN ADMIN: Menunggu Approval (Kuning) --}}
+                {{-- ADMIN: Menunggu Approval --}}
                 <div class="card border-0 shadow-sm bg-warning text-white h-100 rounded-4 overflow-hidden">
                     <div class="card-body position-relative">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -41,14 +40,14 @@
                     </div>
                 </div>
             @else
-                {{-- TAMPILAN USER: Total Riwayat (Ungu) --}}
+                {{-- USER: Total Transaksi --}}
                 <div class="card border-0 shadow-sm text-white h-100 rounded-4 overflow-hidden" style="background-color: #6f42c1;">
                     <div class="card-body position-relative">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="badge bg-white bg-opacity-25 text-white">History</span>
                             <i class="mdi mdi-file-document-multiple-outline fs-2 text-white opacity-50"></i>
                         </div>
-                        {{-- Mengambil total data dari pagination --}}
+                        {{-- Mengambil total dari pagination sebagai total records --}}
                         <h2 class="mb-0 fw-bold">{{ $kasbons->total() }}</h2>
                         <small class="text-white opacity-75">Total Transaksi Anda</small>
                     </div>
@@ -106,7 +105,6 @@
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
             <form action="{{ route('kasbon.index') }}" method="GET">
-                {{-- Pertahankan view_type saat filter --}}
                 <input type="hidden" name="view_type" value="{{ $currentView }}">
                 
                 <div class="row g-3 align-items-end">
@@ -139,7 +137,6 @@
                         <button type="submit" class="btn btn-dark fw-bold flex-grow-1">
                             <i class="mdi mdi-filter-variant me-1"></i> Filter
                         </button>
-                        {{-- Tombol Export menggunakan Query yang sedang aktif --}}
                         <a href="{{ route('kasbon.export', request()->query()) }}" class="btn btn-outline-success fw-bold flex-grow-1">
                             <i class="mdi mdi-microsoft-excel me-1"></i> Excel
                         </a>
@@ -185,7 +182,6 @@
                     <tbody>
                         @forelse($kasbons as $k)
                             @php
-                                // Decode JSON Divisi/Cabang
                                 $divisionName = $k->division;
                                 $decodedDiv = json_decode($divisionName);
                                 if (json_last_error() === JSON_ERROR_NONE && isset($decodedDiv->name)) $divisionName = $decodedDiv->name;
@@ -194,7 +190,6 @@
                                 $decodedBranch = json_decode($branchName);
                                 if (json_last_error() === JSON_ERROR_NONE && isset($decodedBranch->name)) $branchName = $decodedBranch->name;
                                 
-                                // Progress Bar Calculation
                                 $percent = $k->amount > 0 ? ($k->total_paid / $k->amount) * 100 : 0;
                             @endphp
 
@@ -237,7 +232,7 @@
                                     <h6 class="mb-0 fw-bold {{ $k->remaining_amount > 0 ? 'text-danger' : 'text-success' }}">
                                         Rp {{ number_format($k->remaining_amount, 0, ',', '.') }}
                                     </h6>
-                                    @if($k->amount > 0)
+                                    @if($k->amount > 0 && $k->remaining_amount > 0)
                                     <div class="d-flex align-items-center justify-content-end mt-1">
                                         <div class="progress" style="height: 4px; width: 80px;">
                                             <div class="progress-bar {{ $percent >= 100 ? 'bg-success' : 'bg-primary' }}" 
@@ -281,11 +276,7 @@
                                     <div class="d-flex flex-column align-items-center justify-content-center opacity-50">
                                         <i class="mdi mdi-clipboard-text-off-outline fs-1 mb-2"></i>
                                         <h6 class="fw-bold">Tidak ada data ditemukan</h6>
-                                        @if($isAdmin)
-                                            <p class="small">Coba ubah filter pencarian Anda.</p>
-                                        @else
-                                            <p class="small">Belum ada data pada kategori ini.</p>
-                                        @endif
+                                        <p class="small">Belum ada data pada tab ini.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -306,7 +297,6 @@
 </div>
 
 <style>
-    /* Styling Tambahan */
     .hover-shadow:hover { transform: translateY(-1px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; transition: all .2s; }
     .letter-spacing-1 { letter-spacing: 1px; }
     .badge { font-size: 0.75rem; letter-spacing: 0.5px; }

@@ -16,16 +16,28 @@ class CashAdvanceController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        $isAdmin = in_array($user->role, ['admin', 'admin_gaji']);
 
         // 1. Base Query
         $query = CashAdvance::with('user')->latest();
 
-        // 2. Filter Role: Izinkan Admin DAN Admin Gaji melihat semua
-        if (!in_array($user->role, ['admin', 'admin_gaji'])) {
+        // 2. Filter Role (User Biasa cuma lihat punya sendiri)
+        if (!$isAdmin) {
             $query->where('user_id', $user->id);
         }
 
-        // 3. LOGIKA FILTER
+        // 3. FILTER TAMPILAN: AKTIF vs RIWAYAT (LUNAS/TOLAK)
+        $viewType = $request->get('view_type', 'active'); // Default ke Active
+
+        if ($viewType == 'history') {
+            // Tampilkan HANYA yang Lunas atau Ditolak
+            $query->whereIn('status', ['paid', 'rejected']);
+        } else {
+            // Tampilkan yang Pending atau Approved (Masih Punya Hutang)
+            $query->whereIn('status', ['pending', 'approved']);
+        }
+
+        // 4. FILTER PENCARIAN & TANGGAL
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -46,30 +58,32 @@ class CashAdvanceController extends Controller
             $query->whereDate('created_at', '<=', $request->end_date);
         }
 
-        // 4. Hitung Statistik
-        $statsQuery = clone $query;
+        // 5. HITUNG STATISTIK (GLOBAL - Tidak terpengaruh filter tab)
+        // Kita buat query baru agar angkanya tetap total keseluruhan
+        $globalQuery = CashAdvance::query();
+        if (!$isAdmin) {
+            $globalQuery->where('user_id', $user->id);
+        }
 
         $stats = [
-            'pending' => (clone $statsQuery)->where('status', 'pending')->count(),
-            'active' => (clone $statsQuery)->where('status', 'approved')->where('total_paid', '<', DB::raw('amount'))->count(),
-            'paid' => (clone $statsQuery)->where('status', 'paid')->count(),
-            'total_active_amount' => (clone $statsQuery)->where('status', 'approved')->get()->sum('remaining_amount'),
+            'pending' => (clone $globalQuery)->where('status', 'pending')->count(),
+            'active' => (clone $globalQuery)->where('status', 'approved')->where('total_paid', '<', DB::raw('amount'))->count(),
+            'paid' => (clone $globalQuery)->where('status', 'paid')->count(),
+            'total_active_amount' => (clone $globalQuery)->where('status', 'approved')->get()->sum('remaining_amount'),
         ];
 
-        // 5. Pagination
+        // 6. Pagination
         $kasbons = $query->paginate(10)->withQueryString();
 
-        return view('kasbon.index', compact('kasbons', 'stats'));
+        return view('kasbon.index', compact('kasbons', 'stats', 'viewType'));
     }
 
     // --- FUNGSI EXPORT KE EXCEL (CSV) ---
     public function export(Request $request)
     {
         $fileName = 'laporan-kasbon-' . date('Y-m-d') . '.csv';
-
         $query = CashAdvance::with('user')->latest();
 
-        // Filter Role untuk Export
         if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) {
             $query->where('user_id', auth()->user()->id);
         }
@@ -146,7 +160,6 @@ class CashAdvanceController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $cleanAmount) {
-            // Admin & Admin Gaji bisa pilih user lain
             $isAdmin = in_array(auth()->user()->role, ['admin', 'admin_gaji']);
             $targetUser = $isAdmin ? User::find($request->user_id) : auth()->user();
 
@@ -182,13 +195,10 @@ class CashAdvanceController extends Controller
         return view('kasbon.show', compact('kasbon'));
     }
 
-    // --- 5. APPROVE / REJECT (ADMIN & ADMIN GAJI) ---
+    // --- 5. UPDATE STATUS (APPROVE/REJECT) ---
     public function updateStatus(Request $request, $id)
     {
-        // Cek Hak Akses
-        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) {
-            abort(403, 'Anda tidak memiliki akses.');
-        }
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) abort(403);
 
         $kasbon = CashAdvance::findOrFail($id);
         $kasbon->update([
@@ -202,7 +212,6 @@ class CashAdvanceController extends Controller
     // --- 6. BAYAR CICILAN ---
     public function storeInstallment(Request $request, $id)
     {
-        // 1. BERSIHKAN DATA
         $input = $request->all();
         if ($request->has('amount_paid')) {
             $input['amount_paid'] = str_replace('.', '', $request->amount_paid);
@@ -211,17 +220,11 @@ class CashAdvanceController extends Controller
 
         $kasbon = CashAdvance::findOrFail($id);
 
-        // 2. VALIDASI (MAX PAYMENT CHECK)
         $request->validate([
-            'amount_paid' => 'required|numeric|min:1000|max:' . $kasbon->remaining_amount, // GABOLEH LEBIH DARI SISA
+            'amount_paid' => 'required|numeric|min:1000|max:' . $kasbon->remaining_amount,
             'payment_proof' => 'required|image|max:10240'
-        ], [
-            'amount_paid.max' => 'Nominal pembayaran melebihi sisa hutang (Maks: Rp ' . number_format($kasbon->remaining_amount, 0, ',', '.') . ').',
-            'amount_paid.min' => 'Nominal pembayaran minimal Rp 1.000.',
-            'payment_proof.required' => 'Bukti transfer wajib diupload.',
         ]);
 
-        // 3. PROSES SIMPAN (STATUS PENDING)
         DB::transaction(function () use ($request, $id) {
             $path = $request->file('payment_proof')->store('kasbon/installments', 'public');
 
@@ -230,7 +233,7 @@ class CashAdvanceController extends Controller
                 'user_id' => auth()->id(),
                 'amount_paid' => $request->amount_paid,
                 'payment_proof' => $path,
-                'status' => 'pending', // <--- PENDING DULU (Tunggu Admin)
+                'status' => 'pending', 
                 'note' => $request->note
             ]);
         });
@@ -238,25 +241,21 @@ class CashAdvanceController extends Controller
         return back()->with('success', 'Pembayaran berhasil dikirim. Menunggu verifikasi Admin.');
     }
 
-    // --- 7. APPROVE CICILAN (ADMIN ONLY) ---
+    // --- 7. APPROVE CICILAN ---
     public function approveInstallment($installmentId)
     {
         if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) abort(403);
 
         DB::transaction(function () use ($installmentId) {
             $ins = CashAdvanceInstallment::with('cashAdvance')->findOrFail($installmentId);
-
-            // Cek Double Approve
             if ($ins->status == 'approved') return;
 
-            // Update Status Cicilan
             $ins->update(['status' => 'approved']);
 
-            // Update Saldo Induk
             $kasbon = $ins->cashAdvance;
             $kasbon->total_paid += $ins->amount_paid;
 
-            // Cek Lunas
+            // Jika lunas, update status induk jadi 'paid'
             if ($kasbon->total_paid >= $kasbon->amount) {
                 $kasbon->status = 'paid';
             }
@@ -266,7 +265,7 @@ class CashAdvanceController extends Controller
         return back()->with('success', 'Pembayaran telah disetujui. Saldo hutang berkurang.');
     }
 
-    // --- 8. REJECT CICILAN (ADMIN ONLY) ---
+    // --- 8. REJECT CICILAN ---
     public function rejectInstallment(Request $request, $installmentId)
     {
         if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) abort(403);
@@ -274,7 +273,7 @@ class CashAdvanceController extends Controller
         $ins = CashAdvanceInstallment::findOrFail($installmentId);
         $ins->update([
             'status' => 'rejected',
-            'note' => $ins->note . ' [DITOLAK ADMIN: ' . $request->reason . ']' // Tambahkan alasan ke note
+            'note' => $ins->note . ' [DITOLAK: ' . $request->reason . ']'
         ]);
 
         return back()->with('success', 'Pembayaran ditolak.');
