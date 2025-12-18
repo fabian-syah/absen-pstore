@@ -19,9 +19,7 @@
 
 @section('content')
 
-    {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: ATTENDANCE WRAPPED BANNER (Desember Only)                  --}}
-    {{-- ======================================================================= --}}
+    {{-- BAGIAN BARU: ATTENDANCE WRAPPED (Desember Only) --}}
     @if (\Carbon\Carbon::now()->month == 12)
         <div class="row mb-4 animate-enter">
             <div class="col-12">
@@ -50,9 +48,7 @@
         </div>
     @endif
 
-    {{-- ======================================================================= --}}
-    {{-- BAGIAN 1: DASHBOARD STATISTIK (ADMIN/AUDIT/SECURITY)                    --}}
-    {{-- ======================================================================= --}}
+    {{-- BAGIAN 1: DASHBOARD STATISTIK (ADMIN/AUDIT/SECURITY) --}}
     @if (auth()->user()->role == 'admin')
         {{-- WIDGET ADMIN --}}
         <div class="row mb-4">
@@ -204,155 +200,213 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN 2: LEADERBOARD (TOP 5) - FITUR BARU                              --}}
+    {{-- BAGIAN 2: LEADERBOARD PODIUM MEWAH (TOP 3)                              --}}
     {{-- ======================================================================= --}}
-    <div class="row mb-4">
+    
+    <div class="row mb-5 animate-enter" style="animation-delay: 0.4s">
         
-        {{-- 1. TOP 5 ABSENSI (Muncul untuk Admin & User Biasa/Leader/Audit) --}}
+        {{-- 1. TOP 3 ABSENSI (USER/ADMIN/AUDIT/LEADER) --}}
         @if(auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
-        <div class="col-lg-{{ (auth()->user()->role == 'admin' || auth()->user()->role == 'security') ? '6' : '12' }} grid-margin stretch-card animate-enter" style="animation-delay: 0.4s">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-white py-3 border-bottom-0">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="fw-bold text-dark mb-1"><i class="mdi mdi-trophy text-warning me-2"></i>Top 5 Rajin Absen</h5>
-                            <p class="text-muted small mb-0">
-                                @if(auth()->user()->role == 'admin') Global @else Cabang Anda @endif 
-                                - Bulan {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
-                            </p>
-                        </div>
-                        <span class="badge bg-light text-dark border">Terverifikasi Only</span>
+        <div class="col-12">
+            <div class="card border-0 shadow-lg luxury-card overflow-hidden">
+                <div class="luxury-bg-glow"></div>
+                <div class="luxury-bg-pattern"></div>
+                
+                <div class="card-body p-4 position-relative z-index-1">
+                    <div class="text-center mb-5">
+                        <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
+                            <i class="mdi mdi-trophy text-warning me-2"></i>Top Rajin Absen
+                        </h3>
+                        <p class="text-muted small">
+                            {{ auth()->user()->role == 'admin' ? 'Global' : 'Cabang Anda' }} - Bulan {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                        </p>
                     </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr class="text-uppercase small text-muted">
-                                    <th class="ps-4">Rank</th>
-                                    <th>Karyawan</th>
-                                    <th class="text-center">Total Hadir</th>
-                                    <th class="text-center">Rata-rata Masuk</th>
-                                    <th class="pe-4 text-end">Total Jam Kerja</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($leaderboard as $index => $lb)
-                                    <tr>
-                                        <td class="ps-4">
-                                            @if($index == 0)
-                                                <div class="icon-box-luxury gold-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">1</div>
-                                            @elseif($index == 1)
-                                                <div class="icon-box-luxury silver-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">2</div>
-                                            @elseif($index == 2)
-                                                <div class="icon-box-luxury bronze-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">3</div>
-                                            @else
-                                                <span class="fw-bold ms-2 text-muted">#{{ $index + 1 }}</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                @if($lb->user->profile_photo_path)
-                                                    <img src="{{ asset('storage/'.$lb->user->profile_photo_path) }}" class="rounded-circle me-2" width="35" height="35" style="object-fit: cover;">
-                                                @else
-                                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2 text-primary fw-bold" style="width:35px; height:35px;">
-                                                        {{ substr($lb->user->name, 0, 1) }}
-                                                    </div>
-                                                @endif
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">{{ Str::limit($lb->user->name, 15) }}</h6>
-                                                    <small class="text-muted" style="font-size: 10px;">{{ $lb->user->division->name ?? '-' }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-success bg-opacity-10 text-success border border-success fw-bold px-3">
-                                                {{ $lb->total_attendance }} Hari
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="fw-bold text-primary">{{ $lb->avg_arrival_display }}</span>
-                                        </td>
-                                        <td class="pe-4 text-end">
-                                            <span class="fw-bold text-dark">
-                                                {{ floor($lb->total_work_seconds / 3600) }} Jam 
-                                                {{ floor(($lb->total_work_seconds % 3600) / 60) }} Menit
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+
+                    {{-- PODIUM CONTAINER --}}
+                    <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
+                        
+                        {{-- JUARA 2 (KIRI) --}}
+                        @if(isset($leaderboard[1]))
+                            <div class="podium-step-container animate-enter" style="animation-delay: 0.6s">
+                                <div class="podium-avatar-wrapper">
+                                    @if($leaderboard[1]->user->profile_photo_path)
+                                        <img src="{{ asset('storage/'.$leaderboard[1]->user->profile_photo_path) }}" class="luxury-avatar">
+                                    @else
+                                        <div class="luxury-avatar-placeholder bg-secondary">
+                                            {{ substr($leaderboard[1]->user->name, 0, 1) }}
+                                        </div>
+                                    @endif
+                                    <div class="rank-circle silver">2</div>
+                                </div>
+                                <div class="podium-block silver-block text-center">
+                                    <div class="podium-content">
+                                        <h6 class="fw-bold text-dark mb-1">{{ Str::limit($leaderboard[1]->user->name, 12) }}</h6>
+                                        <p class="small text-muted mb-2">{{ $leaderboard[1]->user->division->name ?? '-' }}</p>
+                                        <div class="stat-pill mb-1">
+                                            <i class="mdi mdi-check-circle text-success me-1"></i>{{ $leaderboard[1]->total_attendance }} Hadir
+                                        </div>
+                                        <div class="stat-pill">
+                                            <i class="mdi mdi-clock-outline text-primary me-1"></i>{{ $leaderboard[1]->avg_arrival_display }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- JUARA 1 (TENGAH - TERTINGGI) --}}
+                        @if(isset($leaderboard[0]))
+                            <div class="podium-step-container main-winner animate-enter" style="animation-delay: 0.5s">
+                                <div class="crown-floating">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown" width="50">
+                                </div>
+                                <div class="podium-avatar-wrapper gold-glow">
+                                    @if($leaderboard[0]->user->profile_photo_path)
+                                        <img src="{{ asset('storage/'.$leaderboard[0]->user->profile_photo_path) }}" class="luxury-avatar">
+                                    @else
+                                        <div class="luxury-avatar-placeholder gold-gradient">
+                                            {{ substr($leaderboard[0]->user->name, 0, 1) }}
+                                        </div>
+                                    @endif
+                                    <div class="rank-circle gold">1</div>
+                                </div>
+                                <div class="podium-block gold-block text-center">
+                                    <div class="sparkle s1"></div>
+                                    <div class="sparkle s2"></div>
+                                    <div class="sparkle s3"></div>
+                                    <div class="podium-content pt-3">
+                                        <h5 class="fw-bold text-dark mb-1">{{ Str::limit($leaderboard[0]->user->name, 15) }}</h5>
+                                        <p class="small text-muted mb-2">{{ $leaderboard[0]->user->division->name ?? '-' }}</p>
+                                        <div class="stat-pill gold mb-2">
+                                            <i class="mdi mdi-star me-1"></i>{{ $leaderboard[0]->total_attendance }} Kehadiran
+                                        </div>
+                                        <div class="stat-pill">
+                                            <i class="mdi mdi-timer-sand me-1"></i>Avg: {{ $leaderboard[0]->avg_arrival_display }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- JUARA 3 (KANAN) --}}
+                        @if(isset($leaderboard[2]))
+                            <div class="podium-step-container animate-enter" style="animation-delay: 0.7s">
+                                <div class="podium-avatar-wrapper">
+                                    @if($leaderboard[2]->user->profile_photo_path)
+                                        <img src="{{ asset('storage/'.$leaderboard[2]->user->profile_photo_path) }}" class="luxury-avatar">
+                                    @else
+                                        <div class="luxury-avatar-placeholder" style="background: #CD7F32;">
+                                            {{ substr($leaderboard[2]->user->name, 0, 1) }}
+                                        </div>
+                                    @endif
+                                    <div class="rank-circle bronze">3</div>
+                                </div>
+                                <div class="podium-block bronze-block text-center">
+                                    <div class="podium-content">
+                                        <h6 class="fw-bold text-dark mb-1">{{ Str::limit($leaderboard[2]->user->name, 12) }}</h6>
+                                        <p class="small text-muted mb-2">{{ $leaderboard[2]->user->division->name ?? '-' }}</p>
+                                        <div class="stat-pill mb-1">
+                                            <i class="mdi mdi-check me-1"></i>{{ $leaderboard[2]->total_attendance }} Hadir
+                                        </div>
+                                        <div class="stat-pill">
+                                            {{ $leaderboard[2]->avg_arrival_display }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                     </div>
                 </div>
             </div>
         </div>
         @endif
-
-        {{-- 2. TOP 5 SCANNERS (Muncul untuk Admin & Security) --}}
+        
+        {{-- 2. TOP SCANNER (ADMIN & SECURITY) -- SAME PODIUM STYLE --}}
         @if((auth()->user()->role == 'admin' || auth()->user()->role == 'security') && isset($topScanners) && count($topScanners) > 0)
-        <div class="col-lg-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.5s">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-white py-3 border-bottom-0">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="fw-bold text-dark mb-1"><i class="mdi mdi-qrcode-scan text-primary me-2"></i>Top Security Scanner</h5>
-                            <p class="text-muted small mb-0">
-                                Total scan (Masuk + Pulang) bulan ini
-                            </p>
-                        </div>
+        <div class="col-12 mt-4">
+             <div class="card border-0 shadow-lg luxury-card overflow-hidden">
+                <div class="luxury-bg-pattern"></div>
+                <div class="card-body p-4 position-relative z-index-1">
+                    <div class="text-center mb-5">
+                        <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
+                            <i class="mdi mdi-qrcode-scan text-primary me-2"></i>Top Security Scanner
+                        </h3>
+                        <p class="text-muted small">Total Scan Terbanyak Bulan Ini</p>
                     </div>
+
+                     {{-- PODIUM CONTAINER --}}
+                     <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
+                        
+                        {{-- JUARA 2 --}}
+                        @if(isset($topScanners[1]))
+                            <div class="podium-step-container">
+                                <div class="podium-avatar-wrapper">
+                                     @if($topScanners[1]->profile_photo_path)
+                                        <img src="{{ asset('storage/'.$topScanners[1]->profile_photo_path) }}" class="luxury-avatar">
+                                    @else
+                                        <div class="luxury-avatar-placeholder bg-secondary">{{ substr($topScanners[1]->name, 0, 1) }}</div>
+                                    @endif
+                                    <div class="rank-circle silver">2</div>
+                                </div>
+                                <div class="podium-block silver-block text-center">
+                                    <div class="podium-content">
+                                        <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[1]->name, 12) }}</h6>
+                                        <div class="stat-pill mt-2">
+                                            {{ $topScanners[1]->total_scans }} Scan
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- JUARA 1 --}}
+                        @if(isset($topScanners[0]))
+                            <div class="podium-step-container main-winner">
+                                <div class="crown-floating"><img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown" width="50"></div>
+                                <div class="podium-avatar-wrapper gold-glow">
+                                    @if($topScanners[0]->profile_photo_path)
+                                        <img src="{{ asset('storage/'.$topScanners[0]->profile_photo_path) }}" class="luxury-avatar">
+                                    @else
+                                        <div class="luxury-avatar-placeholder gold-gradient">{{ substr($topScanners[0]->name, 0, 1) }}</div>
+                                    @endif
+                                    <div class="rank-circle gold">1</div>
+                                </div>
+                                <div class="podium-block gold-block text-center">
+                                    <div class="podium-content pt-3">
+                                        <h5 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[0]->name, 15) }}</h5>
+                                        <div class="stat-pill gold mt-2">
+                                            <i class="mdi mdi-star me-1"></i>{{ $topScanners[0]->total_scans }} Scan
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- JUARA 3 --}}
+                        @if(isset($topScanners[2]))
+                            <div class="podium-step-container">
+                                <div class="podium-avatar-wrapper">
+                                     @if($topScanners[2]->profile_photo_path)
+                                        <img src="{{ asset('storage/'.$topScanners[2]->profile_photo_path) }}" class="luxury-avatar">
+                                    @else
+                                        <div class="luxury-avatar-placeholder" style="background: #CD7F32;">{{ substr($topScanners[2]->name, 0, 1) }}</div>
+                                    @endif
+                                    <div class="rank-circle bronze">3</div>
+                                </div>
+                                <div class="podium-block bronze-block text-center">
+                                    <div class="podium-content">
+                                        <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[2]->name, 12) }}</h6>
+                                        <div class="stat-pill mt-2">
+                                            {{ $topScanners[2]->total_scans }} Scan
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr class="text-uppercase small text-muted">
-                                    <th class="ps-4">Rank</th>
-                                    <th>Petugas</th>
-                                    <th class="pe-4 text-end">Total Scan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($topScanners as $index => $sec)
-                                    <tr>
-                                        <td class="ps-4">
-                                            @if($index == 0)
-                                                <div class="icon-box-luxury gold-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">1</div>
-                                            @elseif($index == 1)
-                                                <div class="icon-box-luxury silver-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">2</div>
-                                            @elseif($index == 2)
-                                                <div class="icon-box-luxury bronze-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">3</div>
-                                            @else
-                                                <span class="fw-bold ms-2 text-muted">#{{ $index + 1 }}</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                @if($sec->profile_photo_path)
-                                                    <img src="{{ asset('storage/'.$sec->profile_photo_path) }}" class="rounded-circle me-2" width="35" height="35" style="object-fit: cover;">
-                                                @else
-                                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2 text-dark fw-bold" style="width:35px; height:35px;">
-                                                        {{ substr($sec->name, 0, 1) }}
-                                                    </div>
-                                                @endif
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">{{ Str::limit($sec->name, 20) }}</h6>
-                                                    <small class="text-muted" style="font-size: 10px;">{{ $sec->branch->name ?? '-' }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="pe-4 text-end">
-                                            <h5 class="fw-bold text-primary mb-0">{{ $sec->total_scans }}</h5>
-                                            <small class="text-muted">Aktivitas</small>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+             </div>
         </div>
         @endif
 

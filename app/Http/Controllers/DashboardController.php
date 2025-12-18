@@ -139,7 +139,7 @@ class DashboardController extends Controller
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
-        // 5. DATA UNTUK WIDGET & LEADERBOARD
+        // 5. DATA UNTUK WIDGET & LEADERBOARD (MODIFIED FOR TOP 3)
         // =========================================================================
         
         // --- LEADERBOARD ABSENSI (KECUALI SECURITY) ---
@@ -147,48 +147,39 @@ class DashboardController extends Controller
             $data['leaderboard'] = Attendance::select(
                     'user_id', 
                     DB::raw('count(*) as total_attendance'), 
-                    // Menghitung rata-rata jam masuk (dikonversi ke detik dulu)
                     DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'), 
-                    // Menghitung total durasi kerja (detik)
                     DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds')
                 )
-                ->whereMonth('check_in_time', $nowInBranch->month) // Bulan ini
-                ->whereYear('check_in_time', $nowInBranch->year)   // Tahun ini
-                ->whereNotNull('check_out_time') // Harus sudah pulang (selesai siklus)
-                ->where('status', 'verified') // Harus terverifikasi
-                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar']) // Hanya tipe kehadiran kerja
-                ->where('presence_status', '!=', 'Alpha') // Alpha tidak dihitung
-                ->whereTime('check_in_time', '!=', '00:00:00') // Abaikan jam dummy 00:00
-                ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0') // Durasi harus positif
+                ->whereMonth('check_in_time', $nowInBranch->month) 
+                ->whereYear('check_in_time', $nowInBranch->year)   
+                ->whereNotNull('check_out_time') 
+                ->where('status', 'verified') 
+                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar']) 
+                ->where('presence_status', '!=', 'Alpha') 
+                ->whereTime('check_in_time', '!=', '00:00:00') 
+                ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0') 
                 ->whereHas('user', function ($q) use ($user, $allBranchIds) {
                     $q->where('is_active', true)
-                      ->whereNotIn('role', ['admin', 'security']); // Exclude admin & security
+                      ->whereNotIn('role', ['admin', 'security']); 
 
-                    // Filter Cabang (Kecuali Admin)
                     if ($user->role !== 'admin') {
                         $q->whereIn('branch_id', $allBranchIds);
                     }
                 })
                 ->groupBy('user_id')
-                ->orderBy('total_attendance', 'desc') // 1. Jumlah kehadiran terbanyak
-                ->orderBy('total_work_seconds', 'desc') // 2. Total jam kerja terbanyak
-                ->orderBy('avg_arrival_time', 'asc') // 3. Rata-rata jam masuk paling pagi
-                ->take(5)
+                ->orderBy('total_attendance', 'desc') 
+                ->orderBy('total_work_seconds', 'desc') 
+                ->orderBy('avg_arrival_time', 'asc') 
+                ->take(3) // <--- AMBIL CUMA 3 TOP
                 ->with(['user', 'user.division', 'user.branch'])
                 ->get()
                 ->map(function ($item) {
-                    // Konversi Waktu Rata-rata Masuk ke Timezone Cabang User Tersebut
-                    $userTz = $item->user->branch->timezone ?? 'Asia/Jakarta';
-                    // Kita anggap avg_arrival_time dari DB masih UTC/Server time, perlu adjust offset manual atau parsing ulang
-                    // Namun untuk penyederhanaan display:
                     $item->avg_arrival_display = Carbon::parse($item->avg_arrival_time)->format('H:i');
-                    
                     return $item;
                 });
         }
 
         // --- LEADERBOARD SCANNER (SECURITY & ADMIN) ---
-        // Menghitung siapa security yang paling rajin scan (Masuk + Pulang)
         if ($user->role == 'admin' || $user->role == 'security') {
             $securityUsersQuery = User::where('is_active', true)->whereIn('role', ['security', 'admin']);
             
@@ -201,13 +192,11 @@ class DashboardController extends Controller
             $securityUsers = $securityUsersQuery->get();
 
             $scanners = $securityUsers->map(function ($sec) use ($nowInBranch) {
-                // Hitung Scan Masuk
                 $scanIn = Attendance::where('scanned_by_user_id', $sec->id)
                     ->whereMonth('check_in_time', $nowInBranch->month)
                     ->whereYear('check_in_time', $nowInBranch->year)
                     ->count();
                 
-                // Hitung Scan Pulang
                 $scanOut = Attendance::where('scanned_out_by_user_id', $sec->id)
                     ->whereMonth('check_in_time', $nowInBranch->month)
                     ->whereYear('check_in_time', $nowInBranch->year)
@@ -217,8 +206,7 @@ class DashboardController extends Controller
                 return $sec;
             });
             
-            // Urutkan dan Ambil Top 5
-            $data['topScanners'] = $scanners->sortByDesc('total_scans')->take(5)->values();
+            $data['topScanners'] = $scanners->sortByDesc('total_scans')->take(3)->values(); // Top 3 Security
         }
 
         // =========================================================================
@@ -393,13 +381,11 @@ class DashboardController extends Controller
 
     public function getRecentActivities(Request $request)
     {
-        // ... (Optional: Logic for recent activities if needed for AJAX)
         return response()->json([]);
     }
 
     public function getAttendanceChart(Request $request)
     {
-        // ... (Optional: Logic for chart if needed for AJAX)
         return response()->json([]);
     }
 
