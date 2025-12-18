@@ -2,8 +2,9 @@
 
 @section('content')
 @php
-    // Cek Role Admin
+    // Cek Role Admin / Admin Gaji
     $isAdmin = in_array(auth()->user()->role, ['admin', 'admin_gaji']);
+    $currentView = request('view_type', 'active');
 @endphp
 
 <div class="container-fluid">
@@ -25,8 +26,10 @@
     </div>
 
     <div class="row g-3 mb-4">
+        
         <div class="col-md-3">
             @if($isAdmin)
+                {{-- TAMPILAN ADMIN: Menunggu Approval (Kuning) --}}
                 <div class="card border-0 shadow-sm bg-warning text-white h-100 rounded-4 overflow-hidden">
                     <div class="card-body position-relative">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -38,14 +41,16 @@
                     </div>
                 </div>
             @else
+                {{-- TAMPILAN USER: Total Riwayat (Ungu) --}}
                 <div class="card border-0 shadow-sm text-white h-100 rounded-4 overflow-hidden" style="background-color: #6f42c1;">
                     <div class="card-body position-relative">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="badge bg-white bg-opacity-25 text-white">History</span>
                             <i class="mdi mdi-file-document-multiple-outline fs-2 text-white opacity-50"></i>
                         </div>
+                        {{-- Mengambil total data dari pagination --}}
                         <h2 class="mb-0 fw-bold">{{ $kasbons->total() }}</h2>
-                        <small class="text-white opacity-75">Total Riwayat Transaksi</small>
+                        <small class="text-white opacity-75">Total Transaksi Anda</small>
                     </div>
                 </div>
             @endif
@@ -59,7 +64,9 @@
                         <i class="mdi mdi-wallet-outline fs-2 text-white opacity-50"></i>
                     </div>
                     <h2 class="mb-0 fw-bold">{{ $stats['active'] }}</h2>
-                    <small class="text-white opacity-75">{{ $isAdmin ? 'Karyawan Mencicil' : 'Pinjaman Aktif Anda' }}</small>
+                    <small class="text-white opacity-75">
+                        {{ $isAdmin ? 'Karyawan Mencicil' : 'Pinjaman Aktif Anda' }}
+                    </small>
                 </div>
             </div>
         </div>
@@ -72,7 +79,9 @@
                         <i class="mdi mdi-check-decagram-outline fs-2 text-white opacity-50"></i>
                     </div>
                     <h2 class="mb-0 fw-bold">{{ $stats['paid'] }}</h2>
-                    <small class="text-white opacity-75">{{ $isAdmin ? 'Total Lunas' : 'Riwayat Lunas Anda' }}</small>
+                    <small class="text-white opacity-75">
+                        {{ $isAdmin ? 'Total Lunas' : 'Riwayat Lunas Anda' }}
+                    </small>
                 </div>
             </div>
         </div>
@@ -81,7 +90,9 @@
             <div class="card border-0 shadow-sm bg-white border-start border-4 border-info h-100 rounded-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small class="text-muted fw-bold text-uppercase">{{ $isAdmin ? 'Total Piutang Aktif' : 'Sisa Kewajiban Anda' }}</small>
+                        <small class="text-muted fw-bold text-uppercase">
+                            {{ $isAdmin ? 'Total Piutang Aktif' : 'Sisa Kewajiban Anda' }}
+                        </small>
                         <i class="mdi mdi-chart-line fs-3 text-info"></i>
                     </div>
                     <h3 class="mb-0 fw-bold text-dark">Rp {{ number_format($stats['total_active_amount'], 0, ',', '.') }}</h3>
@@ -95,6 +106,9 @@
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
             <form action="{{ route('kasbon.index') }}" method="GET">
+                {{-- Pertahankan view_type saat filter --}}
+                <input type="hidden" name="view_type" value="{{ $currentView }}">
+                
                 <div class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label small text-muted fw-bold">Pencarian</label>
@@ -125,6 +139,7 @@
                         <button type="submit" class="btn btn-dark fw-bold flex-grow-1">
                             <i class="mdi mdi-filter-variant me-1"></i> Filter
                         </button>
+                        {{-- Tombol Export menggunakan Query yang sedang aktif --}}
                         <a href="{{ route('kasbon.export', request()->query()) }}" class="btn btn-outline-success fw-bold flex-grow-1">
                             <i class="mdi mdi-microsoft-excel me-1"></i> Excel
                         </a>
@@ -135,6 +150,23 @@
     </div>
     @endif
 
+    <div class="mb-3">
+        <ul class="nav nav-pills nav-fill bg-white p-2 rounded-4 shadow-sm" style="max-width: 400px;">
+            <li class="nav-item">
+                <a class="nav-link fw-bold {{ $currentView == 'active' ? 'active shadow-sm' : 'text-muted' }}" 
+                   href="{{ route('kasbon.index', ['view_type' => 'active']) }}">
+                   <i class="mdi mdi-format-list-bulleted me-1"></i> Aktif / Berjalan
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-bold {{ $currentView == 'history' ? 'active shadow-sm bg-secondary' : 'text-muted' }}" 
+                   href="{{ route('kasbon.index', ['view_type' => 'history']) }}">
+                   <i class="mdi mdi-history me-1"></i> Riwayat (Lunas)
+                </a>
+            </li>
+        </ul>
+    </div>
+
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -142,8 +174,8 @@
                     <thead class="bg-light border-bottom">
                         <tr class="text-uppercase small text-muted letter-spacing-1">
                             <th class="py-4 ps-4">Karyawan</th>
-                            <th class="py-4">Tanggal Pengajuan</th> {{-- KOLOM BARU --}}
-                            <th class="py-4">Keterangan</th> {{-- KOLOM BARU --}}
+                            <th class="py-4">Tanggal Pengajuan</th>
+                            <th class="py-4">Keterangan</th>
                             <th class="py-4 text-end">Total Pinjam</th>
                             <th class="py-4 text-end">Sisa Hutang</th>
                             <th class="py-4 text-center">Status</th>
@@ -153,20 +185,16 @@
                     <tbody>
                         @forelse($kasbons as $k)
                             @php
-                                // Decode JSON
+                                // Decode JSON Divisi/Cabang
                                 $divisionName = $k->division;
                                 $decodedDiv = json_decode($divisionName);
-                                if (json_last_error() === JSON_ERROR_NONE && isset($decodedDiv->name)) {
-                                    $divisionName = $decodedDiv->name;
-                                }
+                                if (json_last_error() === JSON_ERROR_NONE && isset($decodedDiv->name)) $divisionName = $decodedDiv->name;
 
                                 $branchName = $k->branch;
                                 $decodedBranch = json_decode($branchName);
-                                if (json_last_error() === JSON_ERROR_NONE && isset($decodedBranch->name)) {
-                                    $branchName = $decodedBranch->name;
-                                }
+                                if (json_last_error() === JSON_ERROR_NONE && isset($decodedBranch->name)) $branchName = $decodedBranch->name;
                                 
-                                // Progress
+                                // Progress Bar Calculation
                                 $percent = $k->amount > 0 ? ($k->total_paid / $k->amount) * 100 : 0;
                             @endphp
 
@@ -196,7 +224,7 @@
                                 </td>
 
                                 <td>
-                                    <span class="fw-bold text-dark d-block text-truncate" style="max-width: 200px;" title="{{ $k->description }}">
+                                    <span class="text-muted small d-block text-truncate" style="max-width: 200px;" title="{{ $k->description }}">
                                         {{ Str::limit($k->description, 35) }}
                                     </span>
                                 </td>
@@ -256,7 +284,7 @@
                                         @if($isAdmin)
                                             <p class="small">Coba ubah filter pencarian Anda.</p>
                                         @else
-                                            <p class="small">Anda belum memiliki riwayat pengajuan kasbon.</p>
+                                            <p class="small">Belum ada data pada kategori ini.</p>
                                         @endif
                                     </div>
                                 </td>
@@ -278,11 +306,18 @@
 </div>
 
 <style>
+    /* Styling Tambahan */
     .hover-shadow:hover { transform: translateY(-1px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; transition: all .2s; }
     .letter-spacing-1 { letter-spacing: 1px; }
     .badge { font-size: 0.75rem; letter-spacing: 0.5px; }
+    
     .pagination { margin-bottom: 0; }
     .page-item.active .page-link { background-color: #4b49ac; border-color: #4b49ac; }
     .page-link { color: #4b49ac; }
+    
+    /* Nav Pills Style */
+    .nav-pills .nav-link { border-radius: 50rem; transition: all 0.2s; }
+    .nav-pills .nav-link.active { background-color: #4b49ac; color: white; }
+    .nav-pills .nav-link.bg-secondary { background-color: #6c757d !important; color: white; }
 </style>
 @endsection
