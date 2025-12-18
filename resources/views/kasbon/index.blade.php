@@ -292,7 +292,7 @@
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li><a class="dropdown-item" href="{{ route('kasbon.show', $k->id) }}"><i class="mdi mdi-eye-outline me-2"></i> Lihat Detail</a></li>
-                                            <li><a class="dropdown-item" href="{{ route('kasbon.edit', $k->id) }}"><i class="mdi mdi-pencil-outline me-2"></i> Edit</a></li>
+                                            {{-- <li><a class="dropdown-item" href="{{ route('kasbon.edit', $k->id) }}"><i class="mdi mdi-pencil-outline me-2"></i> Edit</a></li> --}}
                                             <li><hr class="dropdown-divider"></li>
                                             <li><a class="dropdown-item text-danger" href="#" onclick="return confirm('Hapus pengajuan ini?')"><i class="mdi mdi-delete-outline me-2"></i> Hapus</a></li>
                                         </ul>
