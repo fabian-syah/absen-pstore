@@ -21,7 +21,7 @@ class CashAdvanceController extends Controller
         $query = CashAdvance::with('user')->latest();
 
         // 2. Filter Role (Sama seperti sebelumnya)
-        if ($user->role !== 'admin') {
+        if ($user->role !== 'admin,admin_gaji') {
             $query->where('user_id', $user->id);
         }
 
@@ -79,7 +79,7 @@ class CashAdvanceController extends Controller
         $query = CashAdvance::with('user')->latest();
 
         // (Copy logika filter dari index ke sini agar hasil export sesuai tampilan)
-        if (auth()->user()->role !== 'admin') {
+        if (auth()->user()->role !== 'admin,admin_gaji') {
             $query->where('user_id', auth()->user()->id);
         }
         if ($request->filled('search')) {
@@ -159,7 +159,7 @@ class CashAdvanceController extends Controller
 
         DB::transaction(function () use ($request, $cleanAmount) {
             // Tentukan User (Jika admin submit buat orang lain, atau user submit sendiri)
-            $targetUser = auth()->user()->role == 'admin' ? User::find($request->user_id) : auth()->user();
+            $targetUser = auth()->user()->role == 'admin,admin_gaji' ? User::find($request->user_id) : auth()->user();
 
             // Simpan Data
             $data = [
@@ -199,7 +199,7 @@ class CashAdvanceController extends Controller
     // --- 5. APPROVE / REJECT OLEH ADMIN ---
     public function updateStatus(Request $request, $id)
     {
-        if (auth()->user()->role !== 'admin') abort(403);
+        if (auth()->user()->role !== 'admin,admin_gaji') abort(403);
 
         $kasbon = CashAdvance::findOrFail($id);
         $kasbon->update([

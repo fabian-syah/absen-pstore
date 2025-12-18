@@ -157,7 +157,7 @@
             </div>
 
             {{-- ADMIN ACTIONS --}}
-            @if(auth()->user()->role == 'admin' && $kasbon->status == 'pending')
+            @if(auth()->user()->role == 'admin,admin_gaji' && $kasbon->status == 'pending')
             <div class="card mt-3 border-warning">
                 <div class="card-body">
                     <h6 class="fw-bold text-warning mb-3">Tindakan Admin</h6>
