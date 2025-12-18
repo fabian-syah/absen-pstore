@@ -8,30 +8,127 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
 
 class CashAdvanceController extends Controller
 {
     // --- 1. HALAMAN UTAMA (INDEX) ---
-    // --- 1. HALAMAN UTAMA (INDEX) ---
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
-        // Query Dasar
+        // 1. Base Query
         $query = CashAdvance::with('user')->latest();
 
-        // Jika bukan Admin, hanya lihat punya sendiri
+        // 2. Filter Role (Sama seperti sebelumnya)
         if ($user->role !== 'admin') {
             $query->where('user_id', $user->id);
         }
 
-        // GANTI INI:
-        // $kasbons = $query->get(); 
+        // 3. LOGIKA FILTER (Baru)
+        // Filter Search (Nama Karyawan / Keterangan)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('user_name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
 
-        // MENJADI INI (Angka 10 adalah jumlah baris per halaman):
-        $kasbons = $query->paginate(10);
+        // Filter Status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
-        return view('kasbon.index', compact('kasbons'));
+        // Filter Tanggal (Start Date)
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+
+        // Filter Tanggal (End Date)
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // 4. Hitung Statistik (Untuk Kartu di Atas) - Dihitung sebelum paginate
+        // Clone query agar filter tetap berlaku pada statistik
+        $statsQuery = clone $query;
+
+        // Jika user memfilter, statistik akan mengikuti hasil filter. 
+        // Jika ingin statistik global (abaikan filter), ganti $statsQuery dengan CashAdvance::query()
+
+        $stats = [
+            'pending' => (clone $statsQuery)->where('status', 'pending')->count(),
+            'active' => (clone $statsQuery)->where('status', 'approved')->where('total_paid', '<', \DB::raw('amount'))->count(),
+            'paid' => (clone $statsQuery)->where('status', 'paid')->count(),
+            'total_active_amount' => (clone $statsQuery)->where('status', 'approved')->get()->sum('remaining_amount'),
+        ];
+
+        // 5. Eksekusi Pagination (Append query string agar filter tidak hilang saat pindah halaman)
+        $kasbons = $query->paginate(10)->withQueryString();
+
+        return view('kasbon.index', compact('kasbons', 'stats'));
+    }
+
+    // --- FUNGSI EXPORT KE EXCEL (CSV) ---
+    public function export(Request $request)
+    {
+        $fileName = 'laporan-kasbon-' . date('Y-m-d') . '.csv';
+
+        // Ambil data sesuai filter yang dikirim dari Index
+        $query = CashAdvance::with('user')->latest();
+
+        // (Copy logika filter dari index ke sini agar hasil export sesuai tampilan)
+        if (auth()->user()->role !== 'admin') {
+            $query->where('user_id', auth()->user()->id);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('user_name', 'like', "%{$search}%")->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        if ($request->filled('status')) $query->where('status', $request->status);
+        if ($request->filled('start_date')) $query->whereDate('created_at', '>=', $request->start_date);
+        if ($request->filled('end_date')) $query->whereDate('created_at', '<=', $request->end_date);
+
+        $kasbons = $query->get();
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['Tanggal', 'Nama Karyawan', 'Divisi', 'Cabang', 'Nominal Pinjam', 'Sudah Bayar', 'Sisa Hutang', 'Status', 'Keterangan'];
+
+        $callback = function () use ($kasbons, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($kasbons as $k) {
+                // Parsing JSON manual seperti di View
+                $div = json_decode($k->division)->name ?? $k->division;
+                $branch = json_decode($k->branch)->name ?? $k->branch;
+
+                fputcsv($file, [
+                    $k->created_at->format('Y-m-d'),
+                    $k->user_name,
+                    $div,
+                    $branch,
+                    $k->amount,
+                    $k->total_paid,
+                    $k->remaining_amount,
+                    strtoupper($k->status),
+                    $k->description
+                ]);
+            }
+            fclose($file);
+        };
+
+        return Response::stream($callback, 200, $headers);
     }
 
     // --- 2. FORM PENGAJUAN (CREATE) ---

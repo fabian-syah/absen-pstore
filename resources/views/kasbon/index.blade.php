@@ -2,315 +2,224 @@
 
 @section('content')
 <div class="container-fluid">
-    <!-- HEADER & ACTION -->
+    
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h2 fw-bold text-dark mb-1">Manajemen Kasbon</h1>
-            <p class="text-muted mb-0">Overview data peminjaman dan status pembayaran karyawan.</p>
+            <h2 class="fw-bold text-dark mb-1">Manajemen Kasbon</h2>
+            <p class="text-muted mb-0">Monitor pengajuan, sisa hutang, dan pembayaran karyawan.</p>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary btn-lg shadow-sm px-4 fw-semibold rounded-pill d-flex align-items-center">
-                <i class="mdi mdi-filter-outline me-2 fs-5"></i> Filter
-            </button>
-            <button class="btn btn-outline-primary btn-lg shadow-sm px-4 fw-semibold rounded-pill d-flex align-items-center">
-                <i class="mdi mdi-export me-2 fs-5"></i> Ekspor
-            </button>
-            <a href="{{ route('kasbon.create') }}" class="btn btn-primary btn-lg shadow-sm px-4 fw-bold rounded-pill d-flex align-items-center">
-                <i class="mdi mdi-plus me-2 fs-5"></i> Buat Pengajuan
-            </a>
-        </div>
+        <a href="{{ route('kasbon.create') }}" class="btn btn-primary btn-lg px-4 rounded-pill shadow-sm fw-bold">
+            <i class="mdi mdi-plus-circle-outline me-2"></i> Buat Pengajuan
+        </a>
     </div>
 
-    <!-- STATISTICS CARDS -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100 hover-lift">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-1 small text-uppercase fw-bold">Menunggu Approval</p>
-                            <h4 class="mb-0 fw-bold text-dark">{{ $kasbons->where('status', 'pending')->count() }}</h4>
-                            <small class="text-muted">Pengajuan</small>
-                        </div>
-                        <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
-                            <i class="mdi mdi-clock-outline fs-3 text-warning"></i>
-                        </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-warning text-white h-100 rounded-4 overflow-hidden">
+                <div class="card-body position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-white bg-opacity-25 text-white">Need Action</span>
+                        <i class="mdi mdi-clock-alert-outline fs-2 text-white opacity-50"></i>
                     </div>
-                    <div class="mt-3">
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ ($kasbons->where('status', 'pending')->count() / max($kasbons->count(), 1)) * 100 }}%"></div>
-                        </div>
-                    </div>
+                    <h2 class="mb-0 fw-bold">{{ $stats['pending'] }}</h2>
+                    <small class="text-white opacity-75">Menunggu Approval</small>
                 </div>
             </div>
         </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100 hover-lift">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-1 small text-uppercase fw-bold">Aktif Berjalan</p>
-                            <h4 class="mb-0 fw-bold text-dark">{{ $kasbons->where('status', 'approved')->where('remaining_amount', '>', 0)->count() }}</h4>
-                            <small class="text-muted">Karyawan</small>
-                        </div>
-                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
-                            <i class="mdi mdi-cash-multiple fs-3 text-primary"></i>
-                        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-primary text-white h-100 rounded-4 overflow-hidden">
+                <div class="card-body position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-white bg-opacity-25 text-white">Active Loans</span>
+                        <i class="mdi mdi-wallet-outline fs-2 text-white opacity-50"></i>
                     </div>
-                    <div class="mt-3">
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ ($kasbons->where('status', 'approved')->where('remaining_amount', '>', 0)->count() / max($kasbons->count(), 1)) * 100 }}%"></div>
-                        </div>
-                    </div>
+                    <h2 class="mb-0 fw-bold">{{ $stats['active'] }}</h2>
+                    <small class="text-white opacity-75">Karyawan Sedang Mencicil</small>
                 </div>
             </div>
         </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100 hover-lift">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-1 small text-uppercase fw-bold">Total Lunas</p>
-                            <h4 class="mb-0 fw-bold text-dark">{{ $kasbons->where('status', 'paid')->count() }}</h4>
-                            <small class="text-muted">Selesai</small>
-                        </div>
-                        <div class="bg-success bg-opacity-10 p-3 rounded-circle">
-                            <i class="mdi mdi-check-decagram fs-3 text-success"></i>
-                        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-success text-white h-100 rounded-4 overflow-hidden">
+                <div class="card-body position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-white bg-opacity-25 text-white">Completed</span>
+                        <i class="mdi mdi-check-decagram-outline fs-2 text-white opacity-50"></i>
                     </div>
-                    <div class="mt-3">
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ ($kasbons->where('status', 'paid')->count() / max($kasbons->count(), 1)) * 100 }}%"></div>
-                        </div>
-                    </div>
+                    <h2 class="mb-0 fw-bold">{{ $stats['paid'] }}</h2>
+                    <small class="text-white opacity-75">Pinjaman Lunas</small>
                 </div>
             </div>
         </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100 hover-lift">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-white border-start border-4 border-info h-100 rounded-4">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-1 small text-uppercase fw-bold">Total Nilai Aktif</p>
-                            <h4 class="mb-0 fw-bold text-dark">Rp {{ number_format($kasbons->where('status', 'approved')->where('remaining_amount', '>', 0)->sum('remaining_amount'), 0, ',', '.') }}</h4>
-                            <small class="text-muted">Sisa Kewajiban</small>
-                        </div>
-                        <div class="bg-info bg-opacity-10 p-3 rounded-circle">
-                            <i class="mdi mdi-chart-line fs-3 text-info"></i>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted fw-bold text-uppercase">Total Piutang Aktif</small>
+                        <i class="mdi mdi-chart-line fs-3 text-info"></i>
                     </div>
-                    <div class="mt-3">
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-info" role="progressbar" style="width: 75%"></div>
-                        </div>
-                    </div>
+                    <h3 class="mb-0 fw-bold text-dark">Rp {{ number_format($stats['total_active_amount'], 0, ',', '.') }}</h3>
+                    <small class="text-muted">Uang perusahaan di luar</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SEARCH & FILTER BAR -->
-    <div class="card border-0 shadow-sm rounded-lg mb-4">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <span class="input-group-text bg-transparent border-end-0">
-                            <i class="mdi mdi-magnify text-muted"></i>
-                        </span>
-                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Cari berdasarkan nama karyawan, divisi, atau keterangan...">
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <form action="{{ route('kasbon.index') }}" method="GET">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted fw-bold">Pencarian</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="mdi mdi-magnify"></i></span>
+                            <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Nama karyawan / Ket..." value="{{ request('search') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted fw-bold">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="">Semua Status</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Aktif</option>
+                            <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Lunas</option>
+                            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted fw-bold">Dari Tanggal</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted fw-bold">Sampai Tanggal</label>
+                        <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-dark fw-bold flex-grow-1">
+                            <i class="mdi mdi-filter-variant me-1"></i> Filter
+                        </button>
+                        <a href="{{ route('kasbon.export', request()->query()) }}" class="btn btn-outline-success fw-bold flex-grow-1">
+                            <i class="mdi mdi-microsoft-excel me-1"></i> Excel
+                        </a>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <select class="form-select">
-                        <option value="">Semua Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Aktif</option>
-                        <option value="paid">Lunas</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select">
-                        <option value="">Semua Divisi</option>
-                        <!-- Dynamic options would go here -->
-                    </select>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
-    <!-- MAIN TABLE -->
-    <div class="card border-0 shadow-sm rounded-lg">
+    <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                    <thead class="bg-light border-bottom">
                         <tr class="text-uppercase small text-muted letter-spacing-1">
-                            <th class="py-3 ps-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="">
-                                </div>
-                            </th>
-                            <th class="py-3">Karyawan</th>
-                            <th class="py-3">Detail Pengajuan</th>
-                            <th class="py-3 text-end">Nominal</th>
-                            <th class="py-3 text-end">Sisa</th>
-                            <th class="py-3 text-center">Status</th>
-                            <th class="py-3 text-end pe-4">Aksi</th>
+                            <th class="py-4 ps-4">Karyawan</th>
+                            <th class="py-4">Tanggal & Keterangan</th>
+                            <th class="py-4 text-end">Total Pinjam</th>
+                            <th class="py-4 text-end">Sisa Hutang</th>
+                            <th class="py-4 text-center">Status</th>
+                            <th class="py-4 text-center pe-4" style="width: 100px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($kasbons as $k)
                             @php
-                                // Decode JSON data for division and branch
+                                // JSON Decode Divisi & Cabang
                                 $divisionName = $k->division;
-                                $branchName = $k->branch;
-                                
                                 $decodedDiv = json_decode($divisionName);
                                 if (json_last_error() === JSON_ERROR_NONE && isset($decodedDiv->name)) {
                                     $divisionName = $decodedDiv->name;
                                 }
-                                
+
+                                $branchName = $k->branch;
                                 $decodedBranch = json_decode($branchName);
                                 if (json_last_error() === JSON_ERROR_NONE && isset($decodedBranch->name)) {
                                     $branchName = $decodedBranch->name;
                                 }
                                 
-                                // Calculate percentage for progress bar[citation:3]
+                                // Progress Calculation
                                 $percent = $k->amount > 0 ? ($k->total_paid / $k->amount) * 100 : 0;
                             @endphp
 
-                            <tr class="hover-highlight">
-                                <!-- Checkbox -->
+                            <tr>
                                 <td class="ps-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="">
-                                    </div>
-                                </td>
-                                
-                                <!-- Employee Info -->
-                                <td>
                                     <div class="d-flex align-items-center">
-                                        <div class="avatar-initials rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center me-3" 
-                                             style="width: 40px; height: 40px;">
+                                        <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center fw-bold me-3 shadow-sm" 
+                                             style="width: 42px; height: 42px; font-size: 14px;">
                                             {{ substr($k->user_name, 0, 2) }}
                                         </div>
                                         <div>
                                             <h6 class="mb-0 fw-bold text-dark">{{ $k->user_name }}</h6>
-                                            <div class="small text-muted d-flex align-items-center flex-wrap mt-1">
-                                                <span class="d-flex align-items-center me-2">
-                                                    <i class="mdi mdi-briefcase-outline me-1 fs-6"></i> {{ $divisionName }}
-                                                </span>
-                                                <span class="d-flex align-items-center">
-                                                    <i class="mdi mdi-map-marker-outline me-1 fs-6"></i> {{ $branchName }}
-                                                </span>
+                                            <div class="small text-muted d-flex align-items-center mt-1">
+                                                <i class="mdi mdi-domain me-1"></i> {{ $divisionName }}
+                                                <span class="mx-2 text-secondary">|</span>
+                                                <span class="text-truncate" style="max-width: 120px;">{{ $branchName }}</span>
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                
-                                <!-- Submission Details -->
+
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <div class="d-flex align-items-center mb-1">
-                                            <i class="mdi mdi-calendar-blank text-muted me-1 fs-6"></i>
-                                            <span class="text-dark fw-semibold">{{ $k->created_at->format('d M Y') }}</span>
-                                            <span class="badge bg-light text-dark ms-2">ID: {{ $k->id }}</span>
+                                        <span class="fw-bold text-dark fs-6">{{ $k->created_at->format('d M Y') }}</span>
+                                        <span class="text-muted small text-truncate mt-1" style="max-width: 250px;">
+                                            {{ Str::limit($k->description, 50) }}
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td class="text-end">
+                                    <h6 class="mb-0 fw-bold text-dark">Rp {{ number_format($k->amount, 0, ',', '.') }}</h6>
+                                </td>
+
+                                <td class="text-end">
+                                    <h6 class="mb-0 fw-bold {{ $k->remaining_amount > 0 ? 'text-danger' : 'text-success' }}">
+                                        Rp {{ number_format($k->remaining_amount, 0, ',', '.') }}
+                                    </h6>
+                                    @if($k->amount > 0)
+                                    <div class="d-flex align-items-center justify-content-end mt-1">
+                                        <div class="progress" style="height: 4px; width: 80px;">
+                                            <div class="progress-bar {{ $percent >= 100 ? 'bg-success' : 'bg-primary' }}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ min($percent, 100) }}%"></div>
                                         </div>
-                                        <small class="text-muted text-truncate" style="max-width: 250px;">
-                                            {{ Str::limit($k->description, 40) }}
-                                        </small>
+                                        <span class="ms-2 small text-muted" style="font-size: 10px;">{{ number_format($percent, 0) }}%</span>
                                     </div>
+                                    @endif
                                 </td>
-                                
-                                <!-- Amount -->
-                                <td class="text-end">
-                                    <div class="d-flex flex-column align-items-end">
-                                        <h6 class="mb-0 fw-bold text-dark">Rp {{ number_format($k->amount, 0, ',', '.') }}</h6>
-                                        <small class="text-muted">Total Pinjaman</small>
-                                    </div>
-                                </td>
-                                
-                                <!-- Remaining Amount -->
-                                <td class="text-end">
-                                    <div class="d-flex flex-column align-items-end">
-                                        <h6 class="mb-0 fw-bold {{ $k->remaining_amount > 0 ? 'text-danger' : 'text-success' }}">
-                                            Rp {{ number_format($k->remaining_amount, 0, ',', '.') }}
-                                        </h6>
-                                        <small class="text-muted">Sisa Kewajiban</small>
-                                        
-                                        @if($k->amount > 0)
-                                            <div class="mt-2">
-                                                <div class="progress" style="height: 6px; width: 100px;">
-                                                    <div class="progress-bar {{ $percent >= 100 ? 'bg-success' : 'bg-primary' }}" 
-                                                         role="progressbar" 
-                                                         style="width: {{ min($percent, 100) }}%"
-                                                         aria-valuenow="{{ $percent }}" 
-                                                         aria-valuemin="0" 
-                                                         aria-valuemax="100"></div>
-                                                </div>
-                                                <small class="text-muted d-block mt-1">{{ number_format($percent, 1) }}% Terbayar</small>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </td>
-                                
-                                <!-- Status -->
+
                                 <td class="text-center">
                                     @if($k->status == 'pending')
-                                        <span class="badge bg-warning bg-opacity-15 text-warning px-3 py-2 rounded-pill fw-semibold d-inline-flex align-items-center">
-                                            <i class="mdi mdi-clock-outline me-1 fs-6"></i> Pending
+                                        <span class="badge rounded-pill bg-warning text-dark px-3 py-2 fw-bold border border-warning">
+                                            <i class="mdi mdi-timer-sand me-1"></i> MENUNGGU
                                         </span>
                                     @elseif($k->status == 'approved')
-                                        <span class="badge bg-primary bg-opacity-15 text-primary px-3 py-2 rounded-pill fw-semibold d-inline-flex align-items-center">
-                                            <i class="mdi mdi-run me-1 fs-6"></i> Aktif
+                                        <span class="badge rounded-pill bg-white text-primary px-3 py-2 fw-bold border border-primary shadow-sm">
+                                            <i class="mdi mdi-run me-1"></i> AKTIF
                                         </span>
                                     @elseif($k->status == 'paid')
-                                        <span class="badge bg-success bg-opacity-15 text-success px-3 py-2 rounded-pill fw-semibold d-inline-flex align-items-center">
-                                            <i class="mdi mdi-check-circle-outline me-1 fs-6"></i> Lunas
+                                        <span class="badge rounded-pill bg-success text-white px-3 py-2 fw-bold shadow-sm">
+                                            <i class="mdi mdi-check-all me-1"></i> LUNAS
                                         </span>
                                     @else
-                                        <span class="badge bg-danger bg-opacity-15 text-danger px-3 py-2 rounded-pill fw-semibold d-inline-flex align-items-center">
-                                            <i class="mdi mdi-close-circle-outline me-1 fs-6"></i> Ditolak
+                                        <span class="badge rounded-pill bg-danger text-white px-3 py-2 fw-bold shadow-sm">
+                                            <i class="mdi mdi-close me-1"></i> DITOLAK
                                         </span>
                                     @endif
                                 </td>
-                                
-                                <!-- Actions -->
-                                <td class="text-end pe-4">
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('kasbon.show', $k->id) }}" 
-                                           class="btn btn-light btn-sm rounded-start-pill px-3 fw-semibold text-primary d-flex align-items-center">
-                                            <i class="mdi mdi-eye-outline me-1"></i> Detail
-                                        </a>
-                                        <button type="button" class="btn btn-light btn-sm rounded-end-pill px-3 dropdown-toggle dropdown-toggle-split" 
-                                                data-bs-toggle="dropdown" aria-expanded="false">
-                                            <span class="visually-hidden">Toggle Dropdown</span>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="{{ route('kasbon.show', $k->id) }}"><i class="mdi mdi-eye-outline me-2"></i> Lihat Detail</a></li>
-                                            {{-- <li><a class="dropdown-item" href="{{ route('kasbon.edit', $k->id) }}"><i class="mdi mdi-pencil-outline me-2"></i> Edit</a></li> --}}
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item text-danger" href="#" onclick="return confirm('Hapus pengajuan ini?')"><i class="mdi mdi-delete-outline me-2"></i> Hapus</a></li>
-                                        </ul>
-                                    </div>
+
+                                <td class="pe-4 text-center">
+                                    <a href="{{ route('kasbon.show', $k->id) }}" class="btn btn-sm btn-light border fw-bold text-dark rounded-pill px-3 hover-shadow">
+                                        Detail
+                                    </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-5">
-                                    <div class="d-flex flex-column align-items-center justify-content-center">
-                                        <div class="bg-light rounded-circle p-4 mb-3">
-                                            <i class="mdi mdi-file-document-outline fs-1 text-muted"></i>
-                                        </div>
-                                        <h5 class="fw-bold text-dark mb-2">Belum ada data kasbon</h5>
-                                        <p class="text-muted mb-4">Silakan buat pengajuan baru untuk memulai.</p>
-                                        <a href="{{ route('kasbon.create') }}" class="btn btn-primary rounded-pill px-4">
-                                            <i class="mdi mdi-plus me-2"></i> Buat Pengajuan
-                                        </a>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="d-flex flex-column align-items-center justify-content-center opacity-50">
+                                        <i class="mdi mdi-clipboard-text-off-outline fs-1 mb-2"></i>
+                                        <h6 class="fw-bold">Tidak ada data ditemukan</h6>
+                                        <p class="small">Coba ubah filter pencarian Anda.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -319,51 +228,33 @@
                 </table>
             </div>
             
-            <!-- Pagination & Summary -->
-            @if($kasbons->count() > 0)
-                <div class="card-footer bg-transparent border-0 py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-muted small">
-                            Menampilkan {{ $kasbons->firstItem() ?? 0 }}-{{ $kasbons->lastItem() ?? 0 }} dari {{ $kasbons->total() }} entri
-                        </div>
-                        <div>
-                            {{ $kasbons->links() }}
-                        </div>
-                        <div class="text-muted small">
-                            <i class="mdi mdi-information-outline me-1"></i>
-                            Total Aktif: Rp {{ number_format($kasbons->where('status', 'approved')->where('remaining_amount', '>', 0)->sum('remaining_amount'), 0, ',', '.') }}
-                        </div>
-                    </div>
+            @if($kasbons->hasPages())
+            <div class="card-footer bg-white border-0 py-3">
+                <div class="d-flex justify-content-end">
+                    {{ $kasbons->links() }}
                 </div>
+            </div>
             @endif
         </div>
     </div>
 </div>
 
-<!-- Custom CSS for Enhancements -->
 <style>
-    .hover-lift {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    /* Styling Tambahan agar terlihat premium */
+    .hover-shadow:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        transition: all .2s;
     }
-    .hover-lift:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .badge { font-size: 0.75rem; letter-spacing: 0.5px; }
+    
+    /* Perbaikan Link Pagination agar rapi */
+    .pagination { margin-bottom: 0; }
+    .page-item.active .page-link {
+        background-color: #4b49ac;
+        border-color: #4b49ac;
     }
-    .hover-highlight:hover {
-        background-color: rgba(13, 110, 253, 0.02) !important;
-    }
-    .avatar-initials {
-        font-size: 0.9rem;
-    }
-    .letter-spacing-1 {
-        letter-spacing: 0.5px;
-    }
-    .progress {
-        border-radius: 3px;
-        overflow: hidden;
-    }
-    .progress-bar {
-        transition: width 0.6s ease;
-    }
+    .page-link { color: #4b49ac; }
 </style>
 @endsection
