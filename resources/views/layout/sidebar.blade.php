@@ -68,6 +68,7 @@
         {{-- =================================== --}}
         {{--        GAJI KU (SEMUA ROLE)         --}}
         {{-- =================================== --}}
+        @if (auth()->user()->role != 'admin')
         <li class="nav-item nav-category">Keuangan</li>
         
         <li class="nav-item">
@@ -76,8 +77,9 @@
                 <span class="menu-title">Gaji Ku</span>
             </a>
         </li>
+        @endif
 
-        @if (auth()->user()->role != 'admin_gaji')
+        @if (auth()->user()->role != 'admin')
         <li class="nav-item">
             <a class="nav-link" href="{{ route('salary-summary.index') }}">
                 <i class="menu-icon mdi mdi-file-chart-outline"></i>
