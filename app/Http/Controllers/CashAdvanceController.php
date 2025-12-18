@@ -202,37 +202,49 @@ class CashAdvanceController extends Controller
     // --- 6. BAYAR CICILAN ---
     public function storeInstallment(Request $request, $id)
     {
-        $cleanAmount = str_replace('.', '', $request->amount_paid);
-        $request->merge(['amount_paid' => $cleanAmount]);
+        // 1. BERSIHKAN DATA SEBELUM VALIDASI
+        $input = $request->all();
+        if ($request->has('amount_paid')) {
+            $input['amount_paid'] = str_replace('.', '', $request->amount_paid);
+        }
+        $request->replace($input);
 
+        // 2. VALIDASI (Sekarang amount_paid sudah bersih jadi bisa divalidasi numeric)
         $request->validate([
             'amount_paid' => 'required|numeric|min:1000',
-            'payment_proof' => 'required|image|max:2048'
+            'payment_proof' => 'required|image|max:10240' // Max 10MB
+        ], [
+            'amount_paid.required' => 'Nominal pembayaran wajib diisi.',
+            'amount_paid.numeric' => 'Format nominal salah.',
+            'payment_proof.required' => 'Bukti transfer wajib diupload.',
+            'payment_proof.image' => 'File harus berupa gambar.',
         ]);
 
-        DB::transaction(function () use ($request, $id, $cleanAmount) {
+        // 3. PROSES SIMPAN
+        DB::transaction(function () use ($request, $id) {
             $kasbon = CashAdvance::findOrFail($id);
+
+            // Cek agar tidak bayar lebih (Opsional)
+            // if ($request->amount_paid > $kasbon->remaining_amount) { ... }
 
             $path = $request->file('payment_proof')->store('kasbon/installments', 'public');
 
             CashAdvanceInstallment::create([
                 'cash_advance_id' => $kasbon->id,
                 'user_id' => auth()->id(),
-                'amount_paid' => $cleanAmount,
+                'amount_paid' => $request->amount_paid,
                 'payment_proof' => $path,
-                'status' => 'approved', 
+                'status' => 'approved',
                 'note' => $request->note
             ]);
 
-            $kasbon->total_paid += $cleanAmount;
-
+            $kasbon->total_paid += $request->amount_paid;
             if ($kasbon->total_paid >= $kasbon->amount) {
                 $kasbon->status = 'paid';
             }
-
             $kasbon->save();
         });
 
-        return back()->with('success', 'Pembayaran berhasil diterima. Saldo hutang berkurang.');
+        return back()->with('success', 'Pembayaran berhasil diterima.');
     }
 }
