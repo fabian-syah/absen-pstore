@@ -89,6 +89,15 @@
                                     <span><i class="mdi mdi-cog text-secondary me-2"></i> Setting Master Gaji</span><i class="mdi mdi-chevron-right text-muted"></i>
                                 </a>
 
+                                {{-- 6. SISA KASBON (BARU) --}}
+                                <a href="{{ route('kasbon.index') }}?search={{ $user->name }}&status=approved" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="mdi mdi-wallet-outline text-danger me-2"></i> 
+                                        <span>Sisa Kasbon Karyawan</span>
+                                    </div>
+                                    <span class="badge bg-danger rounded-pill">Rp {{ number_format($totalKasbon ?? 0, 0, ',', '.') }}</span>
+                                </a>
+
                             @else
                                 {{-- MENU STANDAR (ADMIN / LEADER / AUDIT) --}}
                                 <a href="{{ route('attendance.history', ['employeeId' => $user->id]) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">

@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Attendance;
 use App\Models\Violation;
 use App\Models\JobTarget; 
+use App\Models\CashAdvance; // [BARU] Tambahkan Model CashAdvance
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -123,24 +124,18 @@ class UserController extends Controller
         $data['only_security_scan'] = $request->has('only_security_scan') ? 1 : 0;
         $data['use_face_recognition'] = $request->input('use_face_recognition', 1);
 
-        // --- [LOGIKA KONVERSI TIMEZONE: WIB -> CABANG] ---
-        // Admin input Jam WIB -> Sistem konversi ke Jam Lokal Cabang untuk disimpan di DB
         if ($request->branch_id) {
             $branch = Branch::find($request->branch_id);
             $targetTz = $branch->timezone ?? $this->adminTimezone;
 
-            // Proses Jam Masuk
             if ($request->check_in_start) {
-                // Anggap inputan admin adalah WIB
                 $timeIn = Carbon::createFromFormat('H:i', $request->check_in_start, $this->adminTimezone);
-                // Konversi ke Timezone Cabang (Misal WITA/WIT)
                 $timeIn->setTimezone($targetTz);
                 $data['check_in_start'] = $timeIn->format('H:i:s');
             } else {
                 $data['check_in_start'] = null;
             }
 
-            // Proses Jam Pulang
             if ($request->check_out_start) {
                 $timeOut = Carbon::createFromFormat('H:i', $request->check_out_start, $this->adminTimezone);
                 $timeOut->setTimezone($targetTz);
@@ -149,7 +144,6 @@ class UserController extends Controller
                 $data['check_out_start'] = null;
             }
         } else {
-            // Jika tidak ada cabang, simpan apa adanya
             $data['check_in_start']  = $request->check_in_start ?: null;
             $data['check_out_start'] = $request->check_out_start ?: null;
         }
@@ -195,7 +189,6 @@ class UserController extends Controller
         $user->load(['branches', 'divisions', 'branch']);
         $auth_user = Auth::user();
 
-        // Validasi Akses
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
             if ($auth_user->branch_id) $allowedBranchIds[] = $auth_user->branch_id;
@@ -207,7 +200,6 @@ class UserController extends Controller
             if ($user->branch_id != $auth_user->branch_id) abort(403);
         }
 
-        // List Branches & Divisions
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $branches = $auth_user->branches;
             if ($branches->isEmpty() && $auth_user->branch_id) {
@@ -221,8 +213,6 @@ class UserController extends Controller
         $divisions = Division::all();
         $allowedRoles = ['admin', 'admin_gaji', 'audit', 'leader', 'security', 'user_biasa'];
 
-        // --- [LOGIKA KONVERSI BALIK: CABANG -> WIB] UNTUK FORM EDIT ---
-        // Agar admin melihat jam dalam WIB (sesuai inputan awal), bukan jam lokal (WITA/WIT)
         $displayCheckIn = '';
         $displayCheckOut = '';
         
@@ -230,9 +220,7 @@ class UserController extends Controller
             $branchTz = $user->branch->timezone ?? $this->adminTimezone;
 
             if ($user->check_in_start) {
-                // Ambil jam database (Timezone Cabang)
                 $timeIn = Carbon::createFromFormat('H:i:s', $user->check_in_start, $branchTz);
-                // Konversi tampilannya ke WIB (Admin)
                 $timeIn->setTimezone($this->adminTimezone);
                 $displayCheckIn = $timeIn->format('H:i');
             }
@@ -287,7 +275,6 @@ class UserController extends Controller
 
         $data['hire_date'] = $request->hire_date ?? null;
 
-        // --- [LOGIKA KONVERSI TIMEZONE: WIB -> CABANG] ---
         $targetBranchId = $request->branch_id ?? $user->branch_id;
         
         if ($targetBranchId) {
@@ -295,7 +282,6 @@ class UserController extends Controller
             $targetTz = $branch->timezone ?? $this->adminTimezone;
 
             if ($request->check_in_start) {
-                // Input Admin (WIB) -> DB (Lokal Cabang)
                 $timeIn = Carbon::createFromFormat('H:i', $request->check_in_start, $this->adminTimezone);
                 $timeIn->setTimezone($targetTz);
                 $data['check_in_start'] = $timeIn->format('H:i:s');
@@ -304,7 +290,6 @@ class UserController extends Controller
             }
 
             if ($request->check_out_start) {
-                // Input Admin (WIB) -> DB (Lokal Cabang)
                 $timeOut = Carbon::createFromFormat('H:i', $request->check_out_start, $this->adminTimezone);
                 $timeOut->setTimezone($targetTz);
                 $data['check_out_start'] = $timeOut->format('H:i:s');
@@ -371,6 +356,7 @@ class UserController extends Controller
         }
     }
 
+    // --- [BARU: TAMBAHAN HITUNGAN KASBON] ---
     public function show(User $user)
     {
         $auth_user = Auth::user();
@@ -405,7 +391,6 @@ class UserController extends Controller
         
         foreach($recentAttendance as $att) {
             if($user->branch && $user->branch->timezone) {
-                // Tampilkan jam lokal cabang di view
                 $att->check_in_local = Carbon::parse($att->check_in_time)->timezone($user->branch->timezone);
                 if($att->check_out_time) {
                     $att->check_out_local = Carbon::parse($att->check_out_time)->timezone($user->branch->timezone);
@@ -446,7 +431,16 @@ class UserController extends Controller
             ->take(10)
             ->get();
 
-        return view('users.user_show', compact('user', 'stats', 'recentAttendance', 'activeViolations', 'historyViolations', 'activeTargets', 'achievements'));
+        // --- HITUNG TOTAL SISA UTANG (KHUSUS ADMIN GAJI) ---
+        $totalKasbon = 0;
+        if(in_array($auth_user->role, ['admin_gaji', 'admin'])) {
+            $totalKasbon = CashAdvance::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->get()
+                ->sum('remaining_amount');
+        }
+
+        return view('users.user_show', compact('user', 'stats', 'recentAttendance', 'activeViolations', 'historyViolations', 'activeTargets', 'achievements', 'totalKasbon'));
     }
 
     public function verifyUser(User $user)
