@@ -133,7 +133,7 @@
         {{-- =================================== --}}
         {{--   MANAJEMEN GAJI (ADMIN & GAJI)     --}}
         {{-- =================================== --}}
-        @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
+        @if (auth()->user()->role == 'admin_gaji')
             <li class="nav-item nav-category">Admin Gaji</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('employee-salaries.index') }}">
