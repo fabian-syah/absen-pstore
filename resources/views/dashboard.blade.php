@@ -10,6 +10,10 @@
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
             <h3 class="fw-bold mb-0">{{ Auth::user()->name }}!</h3>
         </div>
+        <div class="text-end d-none d-md-block">
+            <h5 class="fw-bold mb-0 text-primary" id="header-clock">--:--:--</h5>
+            <small class="text-muted">{{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}</small>
+        </div>
     </div>
 @endsection
 
@@ -47,7 +51,7 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN 1: DASHBOARD PEKERJAAN (WIDGET ADMIN/AUDIT/SECURITY)             --}}
+    {{-- BAGIAN 1: DASHBOARD STATISTIK (ADMIN/AUDIT/SECURITY)                    --}}
     {{-- ======================================================================= --}}
     @if (auth()->user()->role == 'admin')
         {{-- WIDGET ADMIN --}}
@@ -112,7 +116,6 @@
     @elseif (auth()->user()->role == 'audit')
         {{-- WIDGET AUDIT --}}
         <div class="row mb-4">
-            {{-- CARD 1: VERIFIKASI ABSENSI (MERAH) --}}
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
                 <div class="card card-bank gradient-red">
                     <div class="card-body">
@@ -130,8 +133,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- CARD 2: APPROVE IZIN/CUTI/TELAT (BIRU) --}}
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
                 <div class="card card-bank gradient-blue">
                     <div class="card-body">
@@ -149,8 +150,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- CARD 3: ABSENSI HARI INI (HIJAU) --}}
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
                 <div class="card card-bank gradient-green">
                     <div class="card-body">
@@ -205,7 +204,163 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN 2: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI)                  --}}
+    {{-- BAGIAN 2: LEADERBOARD (TOP 5) - FITUR BARU                              --}}
+    {{-- ======================================================================= --}}
+    <div class="row mb-4">
+        
+        {{-- 1. TOP 5 ABSENSI (Muncul untuk Admin & User Biasa/Leader/Audit) --}}
+        @if(auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
+        <div class="col-lg-{{ (auth()->user()->role == 'admin' || auth()->user()->role == 'security') ? '6' : '12' }} grid-margin stretch-card animate-enter" style="animation-delay: 0.4s">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1"><i class="mdi mdi-trophy text-warning me-2"></i>Top 5 Rajin Absen</h5>
+                            <p class="text-muted small mb-0">
+                                @if(auth()->user()->role == 'admin') Global @else Cabang Anda @endif 
+                                - Bulan {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                            </p>
+                        </div>
+                        <span class="badge bg-light text-dark border">Terverifikasi Only</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr class="text-uppercase small text-muted">
+                                    <th class="ps-4">Rank</th>
+                                    <th>Karyawan</th>
+                                    <th class="text-center">Total Hadir</th>
+                                    <th class="text-center">Rata-rata Masuk</th>
+                                    <th class="pe-4 text-end">Total Jam Kerja</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($leaderboard as $index => $lb)
+                                    <tr>
+                                        <td class="ps-4">
+                                            @if($index == 0)
+                                                <div class="icon-box-luxury gold-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">1</div>
+                                            @elseif($index == 1)
+                                                <div class="icon-box-luxury silver-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">2</div>
+                                            @elseif($index == 2)
+                                                <div class="icon-box-luxury bronze-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">3</div>
+                                            @else
+                                                <span class="fw-bold ms-2 text-muted">#{{ $index + 1 }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                @if($lb->user->profile_photo_path)
+                                                    <img src="{{ asset('storage/'.$lb->user->profile_photo_path) }}" class="rounded-circle me-2" width="35" height="35" style="object-fit: cover;">
+                                                @else
+                                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2 text-primary fw-bold" style="width:35px; height:35px;">
+                                                        {{ substr($lb->user->name, 0, 1) }}
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold text-dark">{{ Str::limit($lb->user->name, 15) }}</h6>
+                                                    <small class="text-muted" style="font-size: 10px;">{{ $lb->user->division->name ?? '-' }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success fw-bold px-3">
+                                                {{ $lb->total_attendance }} Hari
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-bold text-primary">{{ $lb->avg_arrival_display }}</span>
+                                        </td>
+                                        <td class="pe-4 text-end">
+                                            <span class="fw-bold text-dark">
+                                                {{ floor($lb->total_work_seconds / 3600) }} Jam 
+                                                {{ floor(($lb->total_work_seconds % 3600) / 60) }} Menit
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- 2. TOP 5 SCANNERS (Muncul untuk Admin & Security) --}}
+        @if((auth()->user()->role == 'admin' || auth()->user()->role == 'security') && isset($topScanners) && count($topScanners) > 0)
+        <div class="col-lg-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.5s">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1"><i class="mdi mdi-qrcode-scan text-primary me-2"></i>Top Security Scanner</h5>
+                            <p class="text-muted small mb-0">
+                                Total scan (Masuk + Pulang) bulan ini
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr class="text-uppercase small text-muted">
+                                    <th class="ps-4">Rank</th>
+                                    <th>Petugas</th>
+                                    <th class="pe-4 text-end">Total Scan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($topScanners as $index => $sec)
+                                    <tr>
+                                        <td class="ps-4">
+                                            @if($index == 0)
+                                                <div class="icon-box-luxury gold-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">1</div>
+                                            @elseif($index == 1)
+                                                <div class="icon-box-luxury silver-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">2</div>
+                                            @elseif($index == 2)
+                                                <div class="icon-box-luxury bronze-gradient text-white rounded-circle shadow-sm" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center; font-weight:bold;">3</div>
+                                            @else
+                                                <span class="fw-bold ms-2 text-muted">#{{ $index + 1 }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                @if($sec->profile_photo_path)
+                                                    <img src="{{ asset('storage/'.$sec->profile_photo_path) }}" class="rounded-circle me-2" width="35" height="35" style="object-fit: cover;">
+                                                @else
+                                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2 text-dark fw-bold" style="width:35px; height:35px;">
+                                                        {{ substr($sec->name, 0, 1) }}
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold text-dark">{{ Str::limit($sec->name, 20) }}</h6>
+                                                    <small class="text-muted" style="font-size: 10px;">{{ $sec->branch->name ?? '-' }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="pe-4 text-end">
+                                            <h5 class="fw-bold text-primary mb-0">{{ $sec->total_scans }}</h5>
+                                            <small class="text-muted">Aktivitas</small>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+    </div>
+
+
+    {{-- ======================================================================= --}}
+    {{-- BAGIAN 3: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI)                  --}}
     {{-- ======================================================================= --}}
 
     <div class="row animate-enter" style="animation-delay: 0.5s">
@@ -657,7 +812,7 @@
     </div>
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS)                                 --}}
+    {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS)                               --}}
     {{-- ======================================================================= --}}
     <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
         <div class="col-12">
@@ -1269,6 +1424,9 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            flex-grow: 1;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .card-bank-chip {
