@@ -28,7 +28,7 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('leave-requests.personal-history') }}">
-                    <i class="mdi mdi-history menu-icon"></i>
+                    <i class="mdi mdi-calendar-check menu-icon"></i>
                     <span class="menu-title">Riwayat Izin</span>
                 </a>
             </li>
@@ -68,6 +68,8 @@
         {{-- =================================== --}}
         {{--        GAJI KU (SEMUA ROLE)         --}}
         {{-- =================================== --}}
+        <li class="nav-item nav-category">Keuangan</li>
+        
         <li class="nav-item">
             <a class="nav-link" href="{{ route('my-salary.index') }}">
                 <i class="menu-icon mdi mdi-wallet-outline"></i>
@@ -75,35 +77,63 @@
             </a>
         </li>
 
-        {{-- RINGKASAN GAJI TAHUNAN (KECUALI ADMIN GAJI) --}}
-        
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('salary-summary.index') }}">
-                    <i class="menu-icon mdi mdi-file-chart-outline"></i>
-                    <span class="menu-title">Ringkasan Gaji Tahunan</span>
-                </a>
-            </li>
-        
+        @if (auth()->user()->role != 'admin_gaji')
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('salary-summary.index') }}">
+                <i class="menu-icon mdi mdi-file-chart-outline"></i>
+                <span class="menu-title">Ringkasan Gaji Tahunan</span>
+            </a>
+        </li>
+        @endif
 
-        {{-- KASBON (Update: Admin Gaji BISA AKSES, Leader TIDAK BISA) --}}
-        {{-- Saya menghapus pengecualian '&& auth()->user()->role != 'admin_gaji'' --}}
-        {{-- @if (auth()->user()->role != 'leader') --}}
+        {{-- =================================== --}}
+        {{--           MENU KASBON               --}}
+        {{-- =================================== --}}
+        
+        {{-- 1. Menu Utama Kasbon (Semua Role bisa akses untuk pengajuan/lihat data) --}}
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('kasbon.index') }}">
+                <i class="menu-icon mdi mdi-cash-multiple"></i>
+                <span class="menu-title">
+                    {{ in_array(auth()->user()->role, ['admin', 'admin_gaji']) ? 'Data Kasbon' : 'Kasbon Saya' }}
+                </span>
+            </a>
+        </li>
+
+        {{-- 2. Menu Verifikasi Pembayaran (HANYA ADMIN & ADMIN GAJI) --}}
+        @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+            @php
+                // Hitung jumlah cicilan yang statusnya 'pending'
+                $pendingCount = \App\Models\CashAdvanceInstallment::where('status', 'pending')->count();
+            @endphp
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('kasbon.index') }}">
-                    <i class="menu-icon mdi mdi-cash-multiple"></i>
-                    <span class="menu-title">Kasbon</span>
+                <a class="nav-link" href="{{ route('kasbon.verification') }}">
+                    <i class="menu-icon mdi mdi-cash-check"></i>
+                    <span class="menu-title">Verifikasi Bayar</span>
+                    
+                    {{-- Badge Merah jika ada yang pending --}}
+                    @if($pendingCount > 0)
+                        <span class="badge badge-danger rounded-pill ms-auto">{{ $pendingCount }}</span>
+                    @endif
                 </a>
             </li>
-        {{-- @endif --}}
+        @endif
 
         {{-- =================================== --}}
         {{--   MANAJEMEN GAJI (ADMIN & GAJI)     --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
+            <li class="nav-item nav-category">Admin Gaji</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('employee-salaries.index') }}">
                     <i class="menu-icon mdi mdi-bank-outline"></i>
-                    <span class="menu-title">Gaji</span>
+                    <span class="menu-title">Master Gaji User</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('branch-salary.index') }}">
+                    <i class="menu-icon mdi mdi-cash-register"></i>
+                    <span class="menu-title">Penggajian Cabang</span>
                 </a>
             </li>
         @endif
@@ -239,11 +269,7 @@
         {{-- =================================== --}}
         {{--   MENU PENGGUNA (TEAM/BRANCH)       --}}
         {{-- =================================== --}}
-        @if (auth()->user()->role == 'user_biasa' ||
-                auth()->user()->role == 'leader' ||
-                auth()->user()->role == 'audit' ||
-                auth()->user()->role == 'security' ||
-                auth()->user()->role == 'admin')
+        @if (in_array(auth()->user()->role, ['user_biasa', 'leader', 'audit', 'security', 'admin']))
 
             <li class="nav-item nav-category">Menu Pengguna</li>
 
@@ -254,7 +280,7 @@
                 </a>
             </li>
 
-            @if (auth()->user()->role == 'audit' || auth()->user()->role == 'leader' || auth()->user()->role == 'admin')
+            @if (in_array(auth()->user()->role, ['audit', 'leader', 'admin']))
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('team.my-branches') }}">
                         <i class="menu-icon mdi mdi-office-building-marker"></i>
@@ -288,19 +314,6 @@
                 <a class="nav-link" href="{{ route('branch-targets.index') }}">
                     <i class="menu-icon mdi mdi-target"></i>
                     <span class="menu-title">Target Cabang</span>
-                </a>
-            </li>
-        @endif
-
-        {{-- =================================== --}}
-        {{--    GAJI CABANG (ADMIN & GAJI)       --}}
-        {{-- =================================== --}}
-        @if (auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
-            <li class="nav-item nav-category">Pembayaran</li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('branch-salary.index') }}">
-                    <i class="menu-icon mdi mdi-cash-register"></i>
-                    <span class="menu-title">Gaji Cabang</span>
                 </a>
             </li>
         @endif
