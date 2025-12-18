@@ -165,6 +165,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::post('/installment/{id}/reject', [App\Http\Controllers\CashAdvanceController::class, 'rejectInstallment'])->name('installment.reject');
             Route::get('/installment/{id}/edit', [App\Http\Controllers\CashAdvanceController::class, 'editInstallment'])->name('installment.edit');
             Route::put('/installment/{id}', [App\Http\Controllers\CashAdvanceController::class, 'updateInstallment'])->name('installment.update');
+            Route::get('/verifikasi-pembayaran', [App\Http\Controllers\CashAdvanceController::class, 'incomingInstallments'])->name('kasbon.verification');
             Route::delete('/installment/{id}', [App\Http\Controllers\CashAdvanceController::class, 'destroyInstallment'])->name('installment.destroy');
         });
     });

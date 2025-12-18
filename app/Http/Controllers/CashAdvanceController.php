@@ -233,7 +233,7 @@ class CashAdvanceController extends Controller
                 'user_id' => auth()->id(),
                 'amount_paid' => $request->amount_paid,
                 'payment_proof' => $path,
-                'status' => 'pending', 
+                'status' => 'pending',
                 'note' => $request->note
             ]);
         });
@@ -277,5 +277,20 @@ class CashAdvanceController extends Controller
         ]);
 
         return back()->with('success', 'Pembayaran ditolak.');
+    }
+
+    // --- HALAMAN VERIFIKASI PEMBAYARAN MASUK ---
+    public function incomingInstallments()
+    {
+        // Hanya Admin & Admin Gaji
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) abort(403);
+
+        // Ambil semua cicilan yang statusnya PENDING
+        $pendingInstallments = CashAdvanceInstallment::with(['user', 'cashAdvance'])
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        return view('kasbon.verification', compact('pendingInstallments'));
     }
 }
