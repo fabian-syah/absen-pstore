@@ -202,49 +202,81 @@ class CashAdvanceController extends Controller
     // --- 6. BAYAR CICILAN ---
     public function storeInstallment(Request $request, $id)
     {
-        // 1. BERSIHKAN DATA SEBELUM VALIDASI
+        // 1. BERSIHKAN DATA
         $input = $request->all();
         if ($request->has('amount_paid')) {
             $input['amount_paid'] = str_replace('.', '', $request->amount_paid);
         }
         $request->replace($input);
 
-        // 2. VALIDASI (Sekarang amount_paid sudah bersih jadi bisa divalidasi numeric)
+        $kasbon = CashAdvance::findOrFail($id);
+
+        // 2. VALIDASI (MAX PAYMENT CHECK)
         $request->validate([
-            'amount_paid' => 'required|numeric|min:1000',
-            'payment_proof' => 'required|image|max:10240' // Max 10MB
+            'amount_paid' => 'required|numeric|min:1000|max:' . $kasbon->remaining_amount, // GABOLEH LEBIH DARI SISA
+            'payment_proof' => 'required|image|max:10240'
         ], [
-            'amount_paid.required' => 'Nominal pembayaran wajib diisi.',
-            'amount_paid.numeric' => 'Format nominal salah.',
+            'amount_paid.max' => 'Nominal pembayaran melebihi sisa hutang (Maks: Rp ' . number_format($kasbon->remaining_amount, 0, ',', '.') . ').',
+            'amount_paid.min' => 'Nominal pembayaran minimal Rp 1.000.',
             'payment_proof.required' => 'Bukti transfer wajib diupload.',
-            'payment_proof.image' => 'File harus berupa gambar.',
         ]);
 
-        // 3. PROSES SIMPAN
+        // 3. PROSES SIMPAN (STATUS PENDING)
         DB::transaction(function () use ($request, $id) {
-            $kasbon = CashAdvance::findOrFail($id);
-
-            // Cek agar tidak bayar lebih (Opsional)
-            // if ($request->amount_paid > $kasbon->remaining_amount) { ... }
-
             $path = $request->file('payment_proof')->store('kasbon/installments', 'public');
 
             CashAdvanceInstallment::create([
-                'cash_advance_id' => $kasbon->id,
+                'cash_advance_id' => $id,
                 'user_id' => auth()->id(),
                 'amount_paid' => $request->amount_paid,
                 'payment_proof' => $path,
-                'status' => 'approved',
+                'status' => 'pending', // <--- PENDING DULU (Tunggu Admin)
                 'note' => $request->note
             ]);
+        });
 
-            $kasbon->total_paid += $request->amount_paid;
+        return back()->with('success', 'Pembayaran berhasil dikirim. Menunggu verifikasi Admin.');
+    }
+
+    // --- 7. APPROVE CICILAN (ADMIN ONLY) ---
+    public function approveInstallment($installmentId)
+    {
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) abort(403);
+
+        DB::transaction(function () use ($installmentId) {
+            $ins = CashAdvanceInstallment::with('cashAdvance')->findOrFail($installmentId);
+
+            // Cek Double Approve
+            if ($ins->status == 'approved') return;
+
+            // Update Status Cicilan
+            $ins->update(['status' => 'approved']);
+
+            // Update Saldo Induk
+            $kasbon = $ins->cashAdvance;
+            $kasbon->total_paid += $ins->amount_paid;
+
+            // Cek Lunas
             if ($kasbon->total_paid >= $kasbon->amount) {
                 $kasbon->status = 'paid';
             }
             $kasbon->save();
         });
 
-        return back()->with('success', 'Pembayaran berhasil diterima.');
+        return back()->with('success', 'Pembayaran telah disetujui. Saldo hutang berkurang.');
+    }
+
+    // --- 8. REJECT CICILAN (ADMIN ONLY) ---
+    public function rejectInstallment(Request $request, $installmentId)
+    {
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) abort(403);
+
+        $ins = CashAdvanceInstallment::findOrFail($installmentId);
+        $ins->update([
+            'status' => 'rejected',
+            'note' => $ins->note . ' [DITOLAK ADMIN: ' . $request->reason . ']' // Tambahkan alasan ke note
+        ]);
+
+        return back()->with('success', 'Pembayaran ditolak.');
     }
 }

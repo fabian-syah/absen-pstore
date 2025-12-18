@@ -10,8 +10,12 @@
     .timeline-wrapper { position: relative; padding-left: 20px; }
     .timeline-item { position: relative; padding-bottom: 2.5rem; border-left: 2px solid #e9ecef; padding-left: 25px; }
     .timeline-item:last-child { border-left: transparent; padding-bottom: 0; }
-    .timeline-item::before { content: ''; position: absolute; left: -9px; top: 0; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 4px solid #4b49ac; box-shadow: 0 0 0 3px rgba(75, 73, 172, 0.1); }
-    .timeline-item.success::before { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+    .timeline-item::before { content: ''; position: absolute; left: -9px; top: 0; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 4px solid #e9ecef; box-shadow: 0 0 0 3px rgba(233, 236, 239, 0.3); }
+    
+    /* Timeline Colors */
+    .timeline-item.approved::before { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+    .timeline-item.pending::before { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
+    .timeline-item.rejected::before { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
     
     /* Input Nominal Modern */
     .input-nominal-group { background: #f8f9fa; border-radius: 12px; padding: 5px 15px; border: 1px solid #dee2e6; display: flex; align-items: center; transition: all 0.3s; }
@@ -24,24 +28,13 @@
     .thumb-box:hover img { transform: scale(1.1); }
 
     /* Tombol Back Bulat Sempurna */
-    .btn-back {
-        width: 45px; height: 45px; 
-        border-radius: 50%; 
-        background: #fff; 
-        border: 1px solid #eee;
-        display: flex; 
-        align-items: center; 
-        justify-content: center;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        transition: all 0.2s;
-        color: #333;
-    }
+    .btn-back { width: 45px; height: 45px; border-radius: 50%; background: #fff; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s; color: #333; }
     .btn-back:hover { background: #f8f9fa; transform: translateX(-2px); color: #4b49ac; }
 
-    /* Badge Status Solid (Supaya Jelas) */
+    /* Badge Status Solid */
     .badge-status { padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; }
     .badge-pending { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-    .badge-active { background-color: #cff4fc; color: #055160; border: 1px solid #b6effb; } /* Biru Muda tapi Teks Gelap */
+    .badge-active { background-color: #cff4fc; color: #055160; border: 1px solid #b6effb; }
     .badge-paid { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
     .badge-rejected { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
 </style>
@@ -79,32 +72,23 @@
     {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center">
-            {{-- Tombol Back Diperbaiki --}}
-            <a href="{{ route('kasbon.index') }}" class="btn-back me-3">
-                <i class="mdi mdi-arrow-left fs-5"></i>
-            </a>
+            <a href="{{ route('kasbon.index') }}" class="btn-back me-3"><i class="mdi mdi-arrow-left fs-5"></i></a>
             <div>
                 <h4 class="fw-bold text-dark mb-0">Detail Transaksi #{{ str_pad($kasbon->id, 5, '0', STR_PAD_LEFT) }}</h4>
                 <small class="text-muted">Dibuat pada {{ $kasbon->created_at->format('d F Y, H:i') }}</small>
             </div>
         </div>
         <div>
-            @if($kasbon->status == 'pending') 
-                <span class="badge badge-status badge-pending">PENDING APPROVAL</span>
-            @elseif($kasbon->status == 'approved') 
-                <span class="badge badge-status badge-active">AKTIF BERJALAN</span>
-            @elseif($kasbon->status == 'paid') 
-                <span class="badge badge-status badge-paid">LUNAS</span>
-            @else 
-                <span class="badge badge-status badge-rejected">DITOLAK</span> 
-            @endif
+            @if($kasbon->status == 'pending') <span class="badge badge-status badge-pending">PENDING APPROVAL</span>
+            @elseif($kasbon->status == 'approved') <span class="badge badge-status badge-active">AKTIF BERJALAN</span>
+            @elseif($kasbon->status == 'paid') <span class="badge badge-status badge-paid">LUNAS</span>
+            @else <span class="badge badge-status badge-rejected">DITOLAK</span> @endif
         </div>
     </div>
 
     <div class="row g-4">
         {{-- KOLOM KIRI --}}
         <div class="col-lg-4">
-            {{-- CARD INFO USER --}}
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-4">
@@ -114,7 +98,6 @@
                             <small class="text-muted">{{ $divisi }} <span class="mx-1">•</span> {{ $cabang }}</small>
                         </div>
                     </div>
-                    
                     <div class="p-3 bg-light rounded-3 border border-dashed mb-3">
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted small fw-bold">TOTAL PINJAMAN</span>
@@ -132,8 +115,6 @@
                             </span>
                         </div>
                     </div>
-
-                    {{-- Progress --}}
                     <div>
                         <div class="d-flex justify-content-between small mb-1">
                             <span class="text-muted fw-bold">Progress</span> 
@@ -146,22 +127,13 @@
                 </div>
             </div>
 
-            {{-- CARD DOKUMEN --}}
             <div class="card">
                 <div class="card-body">
                     <h6 class="fw-bold text-dark mb-3">Dokumen & Keterangan</h6>
                     <p class="text-muted small bg-light p-3 rounded-3 mb-3">{{ $kasbon->description }}</p>
                     <div class="row g-2">
-                        <div class="col-6">
-                            <div class="thumb-box" onclick="openModal('{{ asset('storage/'.$kasbon->photo_1) }}')">
-                                <img src="{{ asset('storage/'.$kasbon->photo_1) }}">
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="thumb-box" onclick="openModal('{{ asset('storage/'.$kasbon->photo_2) }}')">
-                                <img src="{{ asset('storage/'.$kasbon->photo_2) }}">
-                            </div>
-                        </div>
+                        <div class="col-6"><div class="thumb-box" onclick="openModal('{{ asset('storage/'.$kasbon->photo_1) }}')"><img src="{{ asset('storage/'.$kasbon->photo_1) }}"></div></div>
+                        <div class="col-6"><div class="thumb-box" onclick="openModal('{{ asset('storage/'.$kasbon->photo_2) }}')"><img src="{{ asset('storage/'.$kasbon->photo_2) }}"></div></div>
                     </div>
                     @if($kasbon->payment_method == 'transfer')
                         <div class="mt-3">
@@ -173,7 +145,6 @@
                 </div>
             </div>
 
-            {{-- ADMIN APPROVAL --}}
             @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']) && $kasbon->status == 'pending')
             <div class="card mt-4 border-2 border-warning border-start-0 border-end-0 border-bottom-0">
                 <div class="card-body">
@@ -181,12 +152,8 @@
                     <form action="{{ route('kasbon.status', $kasbon->id) }}" method="POST">
                         @csrf
                         <div class="row g-2">
-                            <div class="col-6">
-                                <button name="status" value="approved" class="btn btn-dark w-100 fw-bold py-2">SETUJUI</button>
-                            </div>
-                            <div class="col-6">
-                                <button name="status" value="rejected" class="btn btn-outline-danger w-100 fw-bold py-2">TOLAK</button>
-                            </div>
+                            <div class="col-6"><button name="status" value="approved" class="btn btn-dark w-100 fw-bold py-2">SETUJUI</button></div>
+                            <div class="col-6"><button name="status" value="rejected" class="btn btn-outline-danger w-100 fw-bold py-2">TOLAK</button></div>
                         </div>
                     </form>
                 </div>
@@ -197,20 +164,15 @@
         {{-- KOLOM KANAN --}}
         <div class="col-lg-8">
             
-            {{-- FORM BAYAR (MODERN UI) --}}
+            {{-- FORM BAYAR (USER INPUT) --}}
             @if($kasbon->status == 'approved' && $kasbon->remaining_amount > 0)
             <div class="card mb-4 bg-primary text-white overflow-hidden position-relative">
                 <div style="position: absolute; top: -20px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
                 
                 <div class="card-body p-4 position-relative">
                     <div class="d-flex align-items-center mb-4">
-                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
-                            <i class="mdi mdi-wallet-plus fs-4 text-white"></i>
-                        </div>
-                        <div>
-                            <h5 class="fw-bold mb-0 text-white">Input Pembayaran Cicilan</h5>
-                            <small class="text-white text-opacity-75">Masukkan nominal pembayaran yang diterima.</small>
-                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3"><i class="mdi mdi-wallet-plus fs-4 text-white"></i></div>
+                        <div><h5 class="fw-bold mb-0 text-white">Input Pembayaran Cicilan</h5><small class="text-white text-opacity-75">Masukkan nominal pembayaran yang diterima.</small></div>
                     </div>
 
                     <form action="{{ route('kasbon.pay', $kasbon->id) }}" method="POST" enctype="multipart/form-data">
@@ -232,7 +194,7 @@
                             </div>
                             <div class="col-12 text-end mt-3">
                                 <button class="btn btn-light text-primary fw-bold px-5 py-3 shadow-lg rounded-pill transform-hover">
-                                    <i class="mdi mdi-send me-2"></i> KIRIM PEMBAYARAN
+                                    <i class="mdi mdi-send me-2"></i> KIRIM KONFIRMASI
                                 </button>
                             </div>
                         </div>
@@ -241,7 +203,7 @@
             </div>
             @endif
 
-            {{-- TIMELINE HISTORY --}}
+            {{-- TIMELINE HISTORY (WITH ACTION) --}}
             <div class="card">
                 <div class="card-header bg-white py-4 border-bottom">
                     <h5 class="fw-bold text-dark mb-0">Riwayat Transaksi</h5>
@@ -249,23 +211,55 @@
                 <div class="card-body p-4">
                     <div class="timeline-wrapper">
                         @forelse($kasbon->installments as $ins)
-                            <div class="timeline-item success">
+                            <div class="timeline-item {{ $ins->status }}">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <h6 class="fw-bold text-dark mb-1">Pembayaran Diterima</h6>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <h6 class="fw-bold text-dark mb-0 me-2">Pembayaran Cicilan</h6>
+                                            @if($ins->status == 'pending') <span class="badge bg-warning text-dark small">Menunggu Verifikasi</span>
+                                            @elseif($ins->status == 'approved') <span class="badge bg-success small">Diterima</span>
+                                            @elseif($ins->status == 'rejected') <span class="badge bg-danger small">Ditolak</span> @endif
+                                        </div>
                                         <div class="d-flex align-items-center text-muted small mb-2">
                                             <i class="mdi mdi-calendar-blank me-1"></i> {{ $ins->created_at->format('d M Y, H:i') }}
                                             <span class="mx-2">•</span>
                                             <i class="mdi mdi-account-circle-outline me-1"></i> {{ $ins->user->name }}
                                         </div>
                                         @if($ins->note)
-                                            <div class="d-inline-block bg-light px-3 py-1 rounded-pill small border text-muted">
-                                                {{ $ins->note }}
+                                            <div class="d-inline-block bg-light px-3 py-1 rounded-pill small border text-muted">{{ $ins->note }}</div>
+                                        @endif
+                                        
+                                        {{-- ADMIN ACTION BUTTONS --}}
+                                        @if($ins->status == 'pending' && in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                                            <div class="mt-2 d-flex gap-2">
+                                                <form action="{{ route('kasbon.installment.approve', $ins->id) }}" method="POST">
+                                                    @csrf <button class="btn btn-sm btn-success fw-bold px-3 rounded-pill"><i class="mdi mdi-check me-1"></i> Terima</button>
+                                                </form>
+                                                
+                                                <button type="button" class="btn btn-sm btn-outline-danger fw-bold px-3 rounded-pill" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $ins->id }}">
+                                                    <i class="mdi mdi-close me-1"></i> Tolak
+                                                </button>
+                                                
+                                                <div class="modal fade" id="rejectModal{{ $ins->id }}" tabindex="-1">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <form action="{{ route('kasbon.installment.reject', $ins->id) }}" method="POST" class="modal-content">
+                                                            @csrf
+                                                            <div class="modal-body p-4 text-center">
+                                                                <h6 class="fw-bold mb-3">Tolak Pembayaran Ini?</h6>
+                                                                <input type="text" name="reason" class="form-control mb-3" placeholder="Alasan penolakan..." required>
+                                                                <div class="d-flex justify-content-center gap-2">
+                                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                                                                    <button type="submit" class="btn btn-danger">Tolak Permanen</button>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
                                             </div>
                                         @endif
                                     </div>
                                     <div class="text-end">
-                                        <h5 class="fw-bold text-success mb-1">+ Rp {{ number_format($ins->amount_paid, 0, ',', '.') }}</h5>
+                                        <h5 class="fw-bold text-dark mb-1">+ Rp {{ number_format($ins->amount_paid, 0, ',', '.') }}</h5>
                                         <button class="btn btn-light btn-sm text-muted border rounded-pill px-3 mt-1" onclick="openModal('{{ asset('storage/'.$ins->payment_proof) }}')">
                                             <i class="mdi mdi-image-outline me-1"></i> Bukti
                                         </button>
