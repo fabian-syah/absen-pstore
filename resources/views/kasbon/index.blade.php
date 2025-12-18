@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1">Manajemen Kasbon</h2>
-            <p class="text-muted mb-0">Monitor pengajuan dan riwayat pembayaran.</p>
+            <p class="text-muted mb-0">Overview data peminjaman dan status pembayaran karyawan.</p>
         </div>
         <a href="{{ route('kasbon.create') }}" class="btn btn-primary btn-lg px-4 rounded-pill shadow-sm fw-bold">
             <i class="mdi mdi-plus-circle-outline me-2"></i> Buat Pengajuan
@@ -242,7 +242,7 @@
 </div>
 
 <style>
-    /* Styling Tambahan agar terlihat premium */
+    /* Styling Tambahan */
     .hover-shadow:hover {
         transform: translateY(-1px);
         box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
@@ -251,7 +251,6 @@
     .letter-spacing-1 { letter-spacing: 1px; }
     .badge { font-size: 0.75rem; letter-spacing: 0.5px; }
     
-    /* Perbaikan Link Pagination agar rapi */
     .pagination { margin-bottom: 0; }
     .page-item.active .page-link {
         background-color: #4b49ac;
