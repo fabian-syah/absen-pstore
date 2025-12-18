@@ -8,7 +8,7 @@ use App\Models\Branch;
 use App\Models\Attendance;
 use App\Models\Violation;
 use App\Models\JobTarget; 
-use App\Models\CashAdvance; // [BARU] Tambahkan Model CashAdvance
+use App\Models\CashAdvance; 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -356,7 +356,6 @@ class UserController extends Controller
         }
     }
 
-    // --- [BARU: TAMBAHAN HITUNGAN KASBON] ---
     public function show(User $user)
     {
         $auth_user = Auth::user();
@@ -431,14 +430,12 @@ class UserController extends Controller
             ->take(10)
             ->get();
 
-        // --- HITUNG TOTAL SISA UTANG (KHUSUS ADMIN GAJI) ---
-        $totalKasbon = 0;
-        if(in_array($auth_user->role, ['admin_gaji', 'admin'])) {
-            $totalKasbon = CashAdvance::where('user_id', $user->id)
-                ->where('status', 'approved')
-                ->get()
-                ->sum('remaining_amount');
-        }
+        // --- HITUNG TOTAL SISA UTANG (UNTUK SEMUA ROLE YANG BISA AKSES SHOW) ---
+        // Kita hitung untuk semua, nanti di View baru dibatasi link-nya.
+        $totalKasbon = CashAdvance::where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->get()
+            ->sum('remaining_amount');
 
         return view('users.user_show', compact('user', 'stats', 'recentAttendance', 'activeViolations', 'historyViolations', 'activeTargets', 'achievements', 'totalKasbon'));
     }
