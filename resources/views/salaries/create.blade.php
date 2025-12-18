@@ -13,7 +13,7 @@
                 <form action="{{ route('salaries.store') }}" method="POST" id="payrollForm">
                     @csrf
                     
-                    {{-- HEADER (USER, PERIODE, KATEGORI) --}}
+                    {{-- HEADER --}}
                     <div class="row mb-4 bg-light p-3 rounded border">
                         <div class="col-md-5">
                             <label class="fw-bold mb-1">Pilih Karyawan</label>
@@ -24,7 +24,6 @@
                                     <input type="text" class="form-control fw-bold bg-white text-dark" 
                                            value="{{ $selectedUser->name }} ({{ $selectedUser->branch->name ?? '-' }})" readonly>
                                     
-                                    {{-- [FIX] LINK KE PROFIL USER (TAB SAMA) --}}
                                     <a href="{{ route('users.show', $selectedUser->id) }}" class="btn btn-outline-primary d-flex align-items-center" title="Lihat Profil Lengkap">
                                         <i class="mdi mdi-account-details"></i>
                                     </a>
@@ -236,16 +235,42 @@
                                 </div>
                             </div>
 
-                            {{-- KASBON --}}
+                            {{-- [MODIFIKASI] PILIH BAYAR HUTANG KASBON --}}
                             <div class="mb-3 p-3 border border-warning rounded" style="background-color: #fffbf0;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="fw-bold text-warning mb-0">Potong Hutang</label>
-                                    <span class="badge badge-outline-danger">Sisa: Rp {{ number_format($remainingDebt ?? 0, 0, ',', '.') }}</span>
+                                    <label class="fw-bold text-warning mb-0"><i class="mdi mdi-wallet"></i> Bayar Hutang (Kasbon)</label>
+                                    <span class="badge badge-outline-danger">Total Sisa: Rp {{ number_format($totalRemainingDebt ?? 0, 0, ',', '.') }}</span>
                                 </div>
-                                <div class="input-group">
-                                    <span class="input-group-text text-danger">Rp</span>
-                                    <input type="text" name="kasbon_deduction" id="kasbon_deduction" class="form-control deduction-input rupiah-input" data-max="{{ $remainingDebt ?? 0 }}" placeholder="0" value="0">
-                                </div>
+                                
+                                @if($activeLoans && $activeLoans->count() > 0)
+                                    <div class="list-group list-group-flush border rounded bg-white mb-2" style="max-height: 200px; overflow-y: auto;">
+                                        @foreach($activeLoans as $loan)
+                                            <div class="list-group-item d-flex justify-content-between align-items-center px-2 py-2">
+                                                <div style="flex: 1;">
+                                                    <small class="d-block fw-bold text-dark">{{ $loan->description }}</small>
+                                                    <small class="text-muted" style="font-size: 10px;">{{ \Carbon\Carbon::parse($loan->created_at)->format('d M Y') }}</small>
+                                                </div>
+                                                <div class="text-end" style="width: 140px;">
+                                                    <small class="d-block text-danger mb-1">Sisa: Rp {{ number_format($loan->remaining_amount, 0, ',', '.') }}</small>
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text">Rp</span>
+                                                        {{-- Input Array: name="selected_loans[ID_LOAN]" --}}
+                                                        <input type="text" name="selected_loans[{{ $loan->id }}]" 
+                                                               class="form-control loan-input rupiah-input text-end" 
+                                                               placeholder="0" 
+                                                               data-max="{{ $loan->remaining_amount }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <small class="text-muted fst-italic" style="font-size: 0.7rem">*Isi nominal pada hutang yang ingin dibayar.</small>
+                                @else
+                                    <div class="alert alert-secondary py-2 small text-center mb-0">Tidak ada hutang aktif.</div>
+                                @endif
+                                
+                                {{-- Total Potongan Kasbon Display (Readonly untuk JS) --}}
+                                <input type="hidden" name="kasbon_deduction" id="kasbon_deduction" value="0">
                             </div>
 
                             <div class="mb-3">
@@ -280,7 +305,6 @@
                             <div class="card bg-white border mb-4">
                                 <div class="card-body p-4">
                                     <h5 class="fw-bold text-dark mb-4 border-bottom pb-2">Konfirmasi Pembayaran</h5>
-                                    
                                     <div class="row g-4">
                                         <div class="col-md-6">
                                             <label class="fw-bold mb-2">Metode Pembayaran</label>
@@ -406,6 +430,23 @@
             });
         });
 
+        // [BARU] EVENT LISTENER UNTUK INPUT HUTANG (MULTI)
+        document.querySelectorAll('.loan-input').forEach(input => {
+            input.addEventListener('keyup', function(e) {
+                // Auto format rupiah
+                this.value = formatRupiah(this.value);
+                
+                // Validasi agar tidak melebihi sisa
+                let max = parseFloat(this.getAttribute('data-max'));
+                let current = cleanNumber(this.value);
+                if(current > max) {
+                    this.value = formatRupiah(max);
+                }
+
+                calculate();
+            });
+        });
+
         function calculate() {
             if(!categoryInput) return;
             let cat = categoryInput.value;
@@ -431,7 +472,14 @@
             totalIncome += cleanNumber(document.getElementById('bonus').value);
             totalIncome += cleanNumber(document.getElementById('dispensation').value);
 
-            // Hitung Potongan
+            // Hitung Total Potongan Hutang dari List
+            let totalKasbon = 0;
+            document.querySelectorAll('.loan-input').forEach(input => {
+                totalKasbon += cleanNumber(input.value);
+            });
+            document.getElementById('kasbon_deduction').value = totalKasbon;
+
+            // Hitung Potongan Lain
             const alphaDed = document.getElementById('alpha_deduction');
             const lateDed = document.getElementById('late_deduction');
             const overrideCheck = document.getElementById('override_attendance');
@@ -457,10 +505,14 @@
                 }
             }
 
-            // Sum Deduction
-            let totalDeduction = cleanNumber(alphaDed ? alphaDed.value : 0) + cleanNumber(lateDed ? lateDed.value : 0);
+            // Sum Deduction (Termasuk Kasbon dari Loop)
+            let totalDeduction = cleanNumber(alphaDed ? alphaDed.value : 0) + 
+                                 cleanNumber(lateDed ? lateDed.value : 0) + 
+                                 totalKasbon; // Gunakan hasil loop
+
             document.querySelectorAll('.deduction-input').forEach(el => {
-                if(el.id !== 'alpha_deduction' && el.id !== 'late_deduction') {
+                // Skip field kasbon_deduction karena sudah dihitung diatas, dan alpha/late
+                if(el.id !== 'alpha_deduction' && el.id !== 'late_deduction' && el.id !== 'kasbon_deduction') {
                     totalDeduction += cleanNumber(el.value);
                 }
             });
