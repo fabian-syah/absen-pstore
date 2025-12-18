@@ -2,7 +2,7 @@
 
 @section('content')
 @php
-    // Cek apakah user adalah Admin atau Admin Gaji
+    // Cek Role Admin
     $isAdmin = in_array(auth()->user()->role, ['admin', 'admin_gaji']);
 @endphp
 
@@ -25,10 +25,8 @@
     </div>
 
     <div class="row g-3 mb-4">
-        
         <div class="col-md-3">
             @if($isAdmin)
-                {{-- TAMPILAN ADMIN: Menunggu Approval (Kuning) --}}
                 <div class="card border-0 shadow-sm bg-warning text-white h-100 rounded-4 overflow-hidden">
                     <div class="card-body position-relative">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -40,14 +38,12 @@
                     </div>
                 </div>
             @else
-                {{-- TAMPILAN USER: Total Riwayat (Ungu) --}}
                 <div class="card border-0 shadow-sm text-white h-100 rounded-4 overflow-hidden" style="background-color: #6f42c1;">
                     <div class="card-body position-relative">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="badge bg-white bg-opacity-25 text-white">History</span>
                             <i class="mdi mdi-file-document-multiple-outline fs-2 text-white opacity-50"></i>
                         </div>
-                        {{-- Mengambil total data dari pagination --}}
                         <h2 class="mb-0 fw-bold">{{ $kasbons->total() }}</h2>
                         <small class="text-white opacity-75">Total Riwayat Transaksi</small>
                     </div>
@@ -63,9 +59,7 @@
                         <i class="mdi mdi-wallet-outline fs-2 text-white opacity-50"></i>
                     </div>
                     <h2 class="mb-0 fw-bold">{{ $stats['active'] }}</h2>
-                    <small class="text-white opacity-75">
-                        {{ $isAdmin ? 'Karyawan Mencicil' : 'Pinjaman Aktif Anda' }}
-                    </small>
+                    <small class="text-white opacity-75">{{ $isAdmin ? 'Karyawan Mencicil' : 'Pinjaman Aktif Anda' }}</small>
                 </div>
             </div>
         </div>
@@ -78,9 +72,7 @@
                         <i class="mdi mdi-check-decagram-outline fs-2 text-white opacity-50"></i>
                     </div>
                     <h2 class="mb-0 fw-bold">{{ $stats['paid'] }}</h2>
-                    <small class="text-white opacity-75">
-                        {{ $isAdmin ? 'Total Lunas' : 'Riwayat Lunas Anda' }}
-                    </small>
+                    <small class="text-white opacity-75">{{ $isAdmin ? 'Total Lunas' : 'Riwayat Lunas Anda' }}</small>
                 </div>
             </div>
         </div>
@@ -89,9 +81,7 @@
             <div class="card border-0 shadow-sm bg-white border-start border-4 border-info h-100 rounded-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small class="text-muted fw-bold text-uppercase">
-                            {{ $isAdmin ? 'Total Piutang Aktif' : 'Sisa Kewajiban Anda' }}
-                        </small>
+                        <small class="text-muted fw-bold text-uppercase">{{ $isAdmin ? 'Total Piutang Aktif' : 'Sisa Kewajiban Anda' }}</small>
                         <i class="mdi mdi-chart-line fs-3 text-info"></i>
                     </div>
                     <h3 class="mb-0 fw-bold text-dark">Rp {{ number_format($stats['total_active_amount'], 0, ',', '.') }}</h3>
@@ -152,7 +142,8 @@
                     <thead class="bg-light border-bottom">
                         <tr class="text-uppercase small text-muted letter-spacing-1">
                             <th class="py-4 ps-4">Karyawan</th>
-                            <th class="py-4">Tanggal & Keterangan</th>
+                            <th class="py-4">Tanggal Pengajuan</th> {{-- KOLOM BARU --}}
+                            <th class="py-4">Keterangan</th> {{-- KOLOM BARU --}}
                             <th class="py-4 text-end">Total Pinjam</th>
                             <th class="py-4 text-end">Sisa Hutang</th>
                             <th class="py-4 text-center">Status</th>
@@ -162,7 +153,7 @@
                     <tbody>
                         @forelse($kasbons as $k)
                             @php
-                                // Logic Decode JSON Divisi/Cabang
+                                // Decode JSON
                                 $divisionName = $k->division;
                                 $decodedDiv = json_decode($divisionName);
                                 if (json_last_error() === JSON_ERROR_NONE && isset($decodedDiv->name)) {
@@ -175,7 +166,7 @@
                                     $branchName = $decodedBranch->name;
                                 }
                                 
-                                // Progress Calculation
+                                // Progress
                                 $percent = $k->amount > 0 ? ($k->total_paid / $k->amount) * 100 : 0;
                             @endphp
 
@@ -198,12 +189,16 @@
                                 </td>
 
                                 <td>
-                                    <div class="d-flex flex-column">
-                                        <span class="fw-bold text-dark fs-6">{{ $k->created_at->format('d M Y') }}</span>
-                                        <span class="text-muted small text-truncate mt-1" style="max-width: 250px;">
-                                            {{ Str::limit($k->description, 50) }}
-                                        </span>
+                                    <div class="d-flex align-items-center">
+                                        <i class="mdi mdi-calendar-blank text-muted me-2 fs-5"></i>
+                                        <span class="fw-bold text-dark">{{ $k->created_at->format('d M Y') }}</span>
                                     </div>
+                                </td>
+
+                                <td>
+                                    <span class="text-muted small d-block text-truncate" style="max-width: 200px;" title="{{ $k->description }}">
+                                        {{ Str::limit($k->description, 35) }}
+                                    </span>
                                 </td>
 
                                 <td class="text-end">
@@ -254,7 +249,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="7" class="text-center py-5">
                                     <div class="d-flex flex-column align-items-center justify-content-center opacity-50">
                                         <i class="mdi mdi-clipboard-text-off-outline fs-1 mb-2"></i>
                                         <h6 class="fw-bold">Tidak ada data ditemukan</h6>
@@ -283,20 +278,11 @@
 </div>
 
 <style>
-    /* Styling Tambahan */
-    .hover-shadow:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-        transition: all .2s;
-    }
+    .hover-shadow:hover { transform: translateY(-1px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; transition: all .2s; }
     .letter-spacing-1 { letter-spacing: 1px; }
     .badge { font-size: 0.75rem; letter-spacing: 0.5px; }
-    
     .pagination { margin-bottom: 0; }
-    .page-item.active .page-link {
-        background-color: #4b49ac;
-        border-color: #4b49ac;
-    }
+    .page-item.active .page-link { background-color: #4b49ac; border-color: #4b49ac; }
     .page-link { color: #4b49ac; }
 </style>
 @endsection
