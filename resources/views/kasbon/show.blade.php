@@ -3,18 +3,25 @@
 @section('content')
 <style>
     /* UI Customization */
-    .card { border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
-    .avatar-square { width: 60px; height: 60px; border-radius: 8px; background-color: #f0f2f5; color: #4b49ac; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid #dee2e6; }
+    .card { border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border-radius: 16px; transition: transform 0.2s; }
+    .avatar-square { width: 64px; height: 64px; border-radius: 12px; background-color: #eef2ff; color: #4b49ac; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
     
-    /* Timeline */
-    .timeline-steps { border-left: 2px solid #e0e0e0; margin-left: 12px; padding-left: 30px; padding-bottom: 30px; position: relative; }
-    .timeline-steps:last-child { border-left: none; padding-bottom: 0; }
-    .timeline-steps::before { content: ''; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; background: #fff; border: 3px solid #4b49ac; border-radius: 50%; }
-    .timeline-steps.active::before { background: #4b49ac; border-color: #4b49ac; }
+    /* Timeline Modern */
+    .timeline-wrapper { position: relative; padding-left: 20px; }
+    .timeline-item { position: relative; padding-bottom: 2.5rem; border-left: 2px solid #e9ecef; padding-left: 25px; }
+    .timeline-item:last-child { border-left: transparent; padding-bottom: 0; }
+    .timeline-item::before { content: ''; position: absolute; left: -9px; top: 0; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 4px solid #4b49ac; box-shadow: 0 0 0 3px rgba(75, 73, 172, 0.1); }
+    .timeline-item.success::before { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+    
+    /* Input Nominal Modern */
+    .input-nominal-group { background: #f8f9fa; border-radius: 12px; padding: 5px 15px; border: 1px solid #dee2e6; display: flex; align-items: center; transition: all 0.3s; }
+    .input-nominal-group:focus-within { background: #fff; border-color: #4b49ac; box-shadow: 0 0 0 4px rgba(75, 73, 172, 0.1); }
+    .input-nominal-field { border: none; background: transparent; font-weight: 800; color: #333; font-size: 1.5rem; padding: 10px 0; outline: none; width: 100%; }
     
     /* Thumbnail */
-    .thumb-img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid #eee; transition: transform 0.2s; }
-    .thumb-img:hover { transform: scale(1.02); border-color: #4b49ac; }
+    .thumb-box { position: relative; overflow: hidden; border-radius: 12px; height: 100px; cursor: pointer; }
+    .thumb-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .thumb-box:hover img { transform: scale(1.1); }
 </style>
 
 @php
@@ -27,107 +34,129 @@
 
 <div class="container-fluid">
     
-    {{-- ALERT ERROR --}}
+    {{-- ALERTS --}}
     @if ($errors->any())
-        <div class="alert alert-danger shadow-sm border-0 mb-4">
-            <h5 class="fw-bold mb-1"><i class="mdi mdi-alert-circle-outline me-2"></i>Gagal Memproses Data</h5>
-            <ul class="mb-0 ps-3">
-                @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
-            </ul>
+        <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center">
+            <i class="mdi mdi-alert-circle fs-4 me-3"></i>
+            <div>
+                <strong class="d-block">Gagal Memproses Data</strong>
+                <ul class="mb-0 ps-3 small">
+                    @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
+                </ul>
+            </div>
         </div>
     @endif
 
-    {{-- ALERT SUCCESS --}}
     @if(session('success'))
-        <div class="alert alert-success shadow-sm border-0 mb-4 fw-bold">
-            <i class="mdi mdi-check-circle-outline me-2"></i> {{ session('success') }}
+        <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center">
+            <i class="mdi mdi-check-circle fs-4 me-3"></i>
+            <span class="fw-bold">{{ session('success') }}</span>
         </div>
     @endif
 
     {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center">
-            <a href="{{ route('kasbon.index') }}" class="btn btn-white border me-3 rounded-2 px-3"><i class="mdi mdi-arrow-left me-1"></i> Kembali</a>
+            <a href="{{ route('kasbon.index') }}" class="btn btn-white shadow-sm border rounded-circle me-3" style="width: 45px; height: 45px; display: grid; place-items: center;"><i class="mdi mdi-arrow-left fs-5"></i></a>
             <div>
-                <h4 class="fw-bold text-dark mb-0">Transaksi #{{ str_pad($kasbon->id, 5, '0', STR_PAD_LEFT) }}</h4>
-                <small class="text-muted">Diajukan: {{ $kasbon->created_at->format('d F Y, H:i') }}</small>
+                <h4 class="fw-bold text-dark mb-0">Detail Transaksi #{{ str_pad($kasbon->id, 5, '0', STR_PAD_LEFT) }}</h4>
+                <small class="text-muted">Dibuat pada {{ $kasbon->created_at->format('d F Y, H:i') }}</small>
             </div>
         </div>
         <div>
-            @if($kasbon->status == 'pending') <span class="badge bg-warning text-dark px-3 py-2 rounded-2">MENUNGGU APPROVAL</span>
-            @elseif($kasbon->status == 'approved') <span class="badge bg-primary px-3 py-2 rounded-2">AKTIF</span>
-            @elseif($kasbon->status == 'paid') <span class="badge bg-success px-3 py-2 rounded-2">LUNAS</span>
-            @else <span class="badge bg-danger px-3 py-2 rounded-2">DITOLAK</span> @endif
+            @if($kasbon->status == 'pending') <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill border border-warning">PENDING APPROVAL</span>
+            @elseif($kasbon->status == 'approved') <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill border border-primary">AKTIF BERJALAN</span>
+            @elseif($kasbon->status == 'paid') <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success">LUNAS</span>
+            @else <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill border border-danger">DITOLAK</span> @endif
         </div>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
         {{-- KOLOM KIRI --}}
-        <div class="col-md-4">
-            <div class="card mb-3">
+        <div class="col-lg-4">
+            {{-- CARD INFO USER --}}
+            <div class="card mb-4">
                 <div class="card-body">
-                    <h6 class="fw-bold text-uppercase text-muted small mb-3 letter-spacing-1">Peminjam</h6>
-                    <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center mb-4">
                         <div class="avatar-square me-3">{{ substr($kasbon->user_name, 0, 1) }}</div>
                         <div>
                             <h5 class="fw-bold text-dark mb-0">{{ $kasbon->user_name }}</h5>
-                            <small class="text-muted">{{ $divisi }} • {{ $cabang }}</small>
+                            <small class="text-muted">{{ $divisi }} <span class="mx-1">•</span> {{ $cabang }}</small>
                         </div>
                     </div>
                     
-                    <div class="bg-light p-3 rounded-2 border">
-                        <div class="d-flex justify-content-between mb-2 small">
-                            <span>Total Pinjaman</span> <span class="fw-bold text-dark">Rp {{ number_format($kasbon->amount, 0, ',', '.') }}</span>
+                    <div class="p-3 bg-light rounded-3 border border-dashed mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">TOTAL PINJAMAN</span>
+                            <span class="fw-bold text-dark">Rp {{ number_format($kasbon->amount, 0, ',', '.') }}</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2 small text-success">
-                            <span>Sudah Dibayar</span> <span>- Rp {{ number_format($kasbon->total_paid, 0, ',', '.') }}</span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">SUDAH DIBAYAR</span>
+                            <span class="fw-bold text-success">- Rp {{ number_format($kasbon->total_paid, 0, ',', '.') }}</span>
                         </div>
                         <hr class="my-2">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-bold text-dark small">Sisa Hutang</span> 
-                            <span class="fw-bold {{ $kasbon->remaining_amount > 0 ? 'text-danger' : 'text-success' }} fs-5">
+                            <span class="text-dark fw-bold">SISA HUTANG</span> 
+                            <span class="fw-bolder {{ $kasbon->remaining_amount > 0 ? 'text-danger' : 'text-success' }} fs-5">
                                 Rp {{ number_format($kasbon->remaining_amount, 0, ',', '.') }}
                             </span>
                         </div>
                     </div>
 
-                    <div class="mt-3">
-                        <div class="d-flex justify-content-between small mb-1"><span>Status Pelunasan</span> <span class="fw-bold">{{ number_format($percent, 0) }}%</span></div>
-                        <div class="progress" style="height: 6px;"><div class="progress-bar bg-success" style="width: {{ $percent }}%"></div></div>
+                    {{-- Progress --}}
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-muted fw-bold">Progress</span> 
+                            <span class="fw-bold text-primary">{{ number_format($percent, 0) }}%</span>
+                        </div>
+                        <div class="progress" style="height: 8px; border-radius: 4px;">
+                            <div class="progress-bar bg-primary" style="width: {{ $percent }}%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {{-- DOKUMEN --}}
-            <div class="card mb-3">
+            {{-- CARD DOKUMEN --}}
+            <div class="card">
                 <div class="card-body">
-                    <h6 class="fw-bold text-uppercase text-muted small mb-3 letter-spacing-1">Dokumen & Bukti</h6>
-                    <p class="small text-dark mb-3"><i class="mdi mdi-format-quote-close me-1 text-muted"></i> {{ $kasbon->description }}</p>
+                    <h6 class="fw-bold text-dark mb-3">Dokumen & Keterangan</h6>
+                    <p class="text-muted small bg-light p-3 rounded-3 mb-3">{{ $kasbon->description }}</p>
                     <div class="row g-2">
-                        <div class="col-6"><img src="{{ asset('storage/'.$kasbon->photo_1) }}" class="thumb-img" onclick="openModal(this.src)" alt="Foto 1"></div>
-                        <div class="col-6"><img src="{{ asset('storage/'.$kasbon->photo_2) }}" class="thumb-img" onclick="openModal(this.src)" alt="Foto 2"></div>
+                        <div class="col-6">
+                            <div class="thumb-box" onclick="openModal('{{ asset('storage/'.$kasbon->photo_1) }}')">
+                                <img src="{{ asset('storage/'.$kasbon->photo_1) }}">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="thumb-box" onclick="openModal('{{ asset('storage/'.$kasbon->photo_2) }}')">
+                                <img src="{{ asset('storage/'.$kasbon->photo_2) }}">
+                            </div>
+                        </div>
                     </div>
                     @if($kasbon->payment_method == 'transfer')
-                        <div class="mt-3 pt-2 border-top">
-                            <label class="small fw-bold text-muted d-block">Info Transfer:</label>
-                            <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-1 p-2 d-block text-start text-truncate">
-                                <i class="mdi mdi-bank me-1"></i> {{ $kasbon->account_details }}
-                            </span>
+                        <div class="mt-3">
+                            <div class="d-flex align-items-center p-2 bg-info bg-opacity-10 text-info rounded-3 small fw-bold">
+                                <i class="mdi mdi-bank me-2 fs-5"></i> {{ $kasbon->account_details }}
+                            </div>
                         </div>
                     @endif
                 </div>
             </div>
 
-            {{-- ACTION ADMIN --}}
+            {{-- ADMIN APPROVAL --}}
             @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']) && $kasbon->status == 'pending')
-            <div class="card border-warning bg-warning bg-opacity-10">
+            <div class="card mt-4 border-2 border-warning border-start-0 border-end-0 border-bottom-0">
                 <div class="card-body">
                     <h6 class="fw-bold text-dark mb-3">Konfirmasi Pengajuan</h6>
                     <form action="{{ route('kasbon.status', $kasbon->id) }}" method="POST">
                         @csrf
-                        <div class="d-flex gap-2">
-                            <button name="status" value="approved" class="btn btn-primary fw-bold flex-fill shadow-sm">SETUJUI</button>
-                            <button name="status" value="rejected" class="btn btn-danger fw-bold flex-fill shadow-sm">TOLAK</button>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button name="status" value="approved" class="btn btn-dark w-100 fw-bold py-2">SETUJUI</button>
+                            </div>
+                            <div class="col-6">
+                                <button name="status" value="rejected" class="btn btn-outline-danger w-100 fw-bold py-2">TOLAK</button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -136,35 +165,45 @@
         </div>
 
         {{-- KOLOM KANAN --}}
-        <div class="col-md-8">
+        <div class="col-lg-8">
             
-            {{-- FORM PEMBAYARAN (DIPERBAIKI) --}}
+            {{-- FORM BAYAR (MODERN UI) --}}
             @if($kasbon->status == 'approved' && $kasbon->remaining_amount > 0)
-            <div class="card mb-4 border-primary shadow-sm" style="border-width: 2px;">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h5 class="fw-bold text-primary mb-0"><i class="mdi mdi-cash-plus me-2"></i>Input Pembayaran Cicilan</h5>
-                </div>
-                <div class="card-body">
+            <div class="card mb-4 bg-primary text-white overflow-hidden position-relative">
+                <div style="position: absolute; top: -20px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                            <i class="mdi mdi-wallet-plus fs-4 text-white"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-white">Input Pembayaran Cicilan</h5>
+                            <small class="text-white text-opacity-75">Masukkan nominal pembayaran yang diterima.</small>
+                        </div>
+                    </div>
+
                     <form action="{{ route('kasbon.pay', $kasbon->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="row g-3">
-                            <div class="col-md-5">
-                                <label class="form-label small fw-bold text-muted">Nominal Bayar (Rp)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-primary text-white fw-bold">Rp</span>
-                                    {{-- Input dibuat Standard Putih agar terbaca --}}
-                                    <input type="text" name="amount_paid" id="rupiah" class="form-control form-control-lg fw-bold" placeholder="0" required autocomplete="off">
+                            <div class="col-md-6">
+                                <label class="text-white text-opacity-75 small fw-bold mb-2">Nominal Pembayaran (Rp)</label>
+                                <div class="input-nominal-group bg-white">
+                                    <span class="text-dark fw-bold me-2">Rp</span>
+                                    <input type="text" name="amount_paid" id="rupiah" class="input-nominal-field" placeholder="0" autocomplete="off" required>
                                 </div>
                             </div>
-                            <div class="col-md-5">
-                                <label class="form-label small fw-bold text-muted">Bukti Transfer</label>
-                                <input type="file" name="payment_proof" class="form-control form-control-lg" required>
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">KIRIM</button>
+                            <div class="col-md-6">
+                                <label class="text-white text-opacity-75 small fw-bold mb-2">Bukti Transfer</label>
+                                <input type="file" name="payment_proof" class="form-control form-control-lg border-0" style="padding: 13px;" required>
                             </div>
                             <div class="col-12">
-                                <input type="text" name="note" class="form-control border-0 border-bottom rounded-0 px-0" placeholder="Tambahkan catatan opsional (cth: Potong Gaji November)...">
+                                <input type="text" name="note" class="form-control border-0 bg-white bg-opacity-10 text-white placeholder-white py-3" placeholder="Catatan opsional (Contoh: Potong Gaji Bulan November)...">
+                            </div>
+                            <div class="col-12 text-end mt-3">
+                                <button class="btn btn-light text-primary fw-bold px-5 py-3 shadow-lg rounded-pill transform-hover">
+                                    <i class="mdi mdi-send me-2"></i> KIRIM PEMBAYARAN
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -172,43 +211,54 @@
             </div>
             @endif
 
-            {{-- TIMELINE --}}
+            {{-- TIMELINE HISTORY --}}
             <div class="card">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="fw-bold text-dark mb-0">Riwayat Transaksi</h6>
+                <div class="card-header bg-white py-4 border-bottom">
+                    <h5 class="fw-bold text-dark mb-0">Riwayat Transaksi</h5>
                 </div>
-                <div class="card-body pt-4">
-                    @forelse($kasbon->installments as $ins)
-                        <div class="timeline-steps active">
-                            <div class="d-flex justify-content-between align-items-start">
+                <div class="card-body p-4">
+                    <div class="timeline-wrapper">
+                        @forelse($kasbon->installments as $ins)
+                            <div class="timeline-item success">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Pembayaran Diterima</h6>
+                                        <div class="d-flex align-items-center text-muted small mb-2">
+                                            <i class="mdi mdi-calendar-blank me-1"></i> {{ $ins->created_at->format('d M Y, H:i') }}
+                                            <span class="mx-2">•</span>
+                                            <i class="mdi mdi-account-circle-outline me-1"></i> {{ $ins->user->name }}
+                                        </div>
+                                        @if($ins->note)
+                                            <div class="d-inline-block bg-light px-3 py-1 rounded-pill small border text-muted">
+                                                {{ $ins->note }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="fw-bold text-success mb-1">+ Rp {{ number_format($ins->amount_paid, 0, ',', '.') }}</h5>
+                                        <button class="btn btn-light btn-sm text-muted border rounded-pill px-3 mt-1" onclick="openModal('{{ asset('storage/'.$ins->payment_proof) }}')">
+                                            <i class="mdi mdi-image-outline me-1"></i> Bukti
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-5">
+                                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" class="mb-3 opacity-50" alt="Empty">
+                                <p class="text-muted fw-bold">Belum ada riwayat pembayaran.</p>
+                            </div>
+                        @endforelse
+
+                        {{-- START POINT --}}
+                        <div class="timeline-item">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="fw-bold text-dark mb-1">Pembayaran Diterima</h6>
-                                    <p class="small text-muted mb-1">{{ $ins->created_at->format('d M Y, H:i') }} • Oleh <strong>{{ $ins->user->name }}</strong></p>
-                                    @if($ins->note) <span class="badge bg-light text-dark fw-normal border">{{ $ins->note }}</span> @endif
+                                    <h6 class="fw-bold text-dark mb-0">Pengajuan Dibuat</h6>
+                                    <small class="text-muted">{{ $kasbon->created_at->format('d F Y, H:i') }}</small>
                                 </div>
                                 <div class="text-end">
-                                    <h5 class="fw-bold text-success mb-1">+ Rp {{ number_format($ins->amount_paid, 0, ',', '.') }}</h5>
-                                    <button class="btn btn-xs btn-outline-secondary rounded-pill px-3" onclick="openModal('{{ asset('storage/'.$ins->payment_proof) }}')">
-                                        <i class="mdi mdi-eye me-1"></i> Bukti
-                                    </button>
+                                    <span class="badge bg-light text-dark border">Rp {{ number_format($kasbon->amount, 0, ',', '.') }}</span>
                                 </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="text-center py-5">
-                            <div class="bg-light rounded-circle d-inline-flex p-3 mb-3 text-muted"><i class="mdi mdi-receipt-text-remove-outline fs-2"></i></div>
-                            <p class="text-muted mb-0">Belum ada riwayat pembayaran.</p>
-                        </div>
-                    @endforelse
-
-                    <div class="timeline-steps active">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold text-dark mb-0">Pengajuan Disetujui</h6>
-                                <small class="text-muted">{{ $kasbon->created_at->format('d M Y') }}</small>
-                            </div>
-                            <div class="text-end">
-                                <span class="fw-bold text-primary">Rp {{ number_format($kasbon->amount, 0, ',', '.') }}</span>
                             </div>
                         </div>
                     </div>
@@ -218,19 +268,20 @@
     </div>
 </div>
 
-{{-- MODAL --}}
+{{-- MODAL LIGHTBOX --}}
 <div class="modal fade" id="imgModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content bg-transparent border-0 shadow-none">
             <div class="modal-body text-center p-0 position-relative">
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 bg-dark p-2 rounded-circle shadow" data-bs-dismiss="modal" aria-label="Close"></button>
-                <img id="modalImage" src="" class="img-fluid rounded shadow-lg" style="max-height: 85vh;">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 bg-dark rounded-circle p-2 shadow" data-bs-dismiss="modal"></button>
+                <img id="modalImage" src="" class="img-fluid rounded-3 shadow-lg" style="max-height: 85vh;">
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // Format Rupiah
     const rupiah = document.getElementById('rupiah');
     if(rupiah){ rupiah.addEventListener('keyup', function(e){ this.value = formatRupiah(this.value); }); }
     function formatRupiah(angka){
@@ -238,6 +289,8 @@
         if(ribuan){ separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
         return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
     }
+    
+    // Modal Image
     function openModal(src) { document.getElementById('modalImage').src = src; var myModal = new bootstrap.Modal(document.getElementById('imgModal')); myModal.show(); }
 </script>
 @endsection
