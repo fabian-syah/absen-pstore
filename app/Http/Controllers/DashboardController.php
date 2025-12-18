@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf; // Pastikan package PDF terinstall
+use Barryvdh\DomPDF\Facade\Pdf; 
 
 class DashboardController extends Controller
 {
@@ -27,12 +27,11 @@ class DashboardController extends Controller
         $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $data['current_timezone'] = $userTimezone;
         
-        // Tentukan 'Hari Ini' & 'Sekarang' berdasarkan lokasi user
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d'); 
         $nowInBranch = Carbon::now($userTimezone);
 
         // =========================================================================
-        // 1. DATA UMUM (ID CARD & PERSONAL) - UNTUK SEMUA ROLE
+        // 1. DATA UMUM (ID CARD)
         // =========================================================================
         $hireDate = $user->hire_date ? Carbon::parse($user->hire_date) : Carbon::now();
         $birthDate = $user->birth_date ? Carbon::parse($user->birth_date) : Carbon::parse('1999-05-12');
@@ -45,8 +44,8 @@ class DashboardController extends Controller
         $noUrut  = str_pad($user->id, 3, '0', STR_PAD_LEFT);
 
         $data['idCardNumber'] = "{$yyMasuk}{$mmMasuk}{$yyLahir} {$mmLahir}{$ddLahir}{$noUrut}";
-
-        // Jadwal Kerja Hari Ini
+        
+        // Jadwal Kerja Hari Ini (Default String)
         $scheduleText = 'Fleksibel / Bebas';
         if ($user->check_in_start && $user->check_out_start) {
             $start = Carbon::parse($user->check_in_start)->format('H:i');
@@ -83,7 +82,6 @@ class DashboardController extends Controller
             $data['pendingPayrollCount'] = Salary::where('status', 'pending')->count();
 
             // --- B. Statistik Kasbon ---
-            // Total sisa hutang aktif (Approved dan belum lunas sepenuhnya)
             $data['activeCashAdvanceTotal'] = CashAdvance::where('status', 'approved')
                 ->whereRaw('total_paid < amount')
                 ->sum(DB::raw('amount - total_paid'));
@@ -101,16 +99,24 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
 
-            // Return view khusus atau view yang sama dengan logic blade if
+            // [FIX ERROR UNDEFINED VARIABLE]
+            // Kita isi variabel ini dengan null/array kosong agar view tidak error saat compile @if
+            $data['stats'] = null; 
+            $data['attendanceStats'] = [];
+            $data['leaderboard'] = [];
+            $data['topScanners'] = [];
+            $data['myAttendanceToday'] = null;
+            $data['myLeaveToday'] = null;
+            $data['myPendingLeave'] = null;
+
             return view('dashboard', $data);
         }
 
 
         // =========================================================================
-        // 3. DASHBOARD UMUM (ADMIN UTAMA, AUDIT, SECURITY, USER, LEADER)
+        // 3. DASHBOARD UMUM (ADMIN, AUDIT, SECURITY, USER, LEADER)
         // =========================================================================
         
-        // Scope Branch IDs
         $allBranchIds = [];
         if ($user->branch_id) {
             $allBranchIds[] = $user->branch_id;
@@ -123,22 +129,18 @@ class DashboardController extends Controller
         $data['myLeaveToday'] = $this->getTodayLeaveRequest($user->id, $todayInBranch, 'approved');
         $data['myPendingLeave'] = $this->getTodayLeaveRequest($user->id, $todayInBranch, 'pending');
 
-        // Logic Sesi Absensi (Masuk/Pulang/Lembur)
+        // Logic Sesi
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32))
-            ->latest('check_in_time')
-            ->first();
+            ->latest('check_in_time')->first();
 
-        if ($activeSession) {
-            $activeSession->check_in_time = Carbon::parse($activeSession->check_in_time)->timezone($userTimezone);
-        }
+        if ($activeSession) $activeSession->check_in_time = Carbon::parse($activeSession->check_in_time)->timezone($userTimezone);
 
         $finishedSessionToday = Attendance::where('user_id', $user->id)
             ->whereDate('check_in_time', $todayInBranch)
             ->whereNotNull('check_out_time')
-            ->latest('check_in_time')
-            ->first();
+            ->latest('check_in_time')->first();
 
         if ($finishedSessionToday) {
             $finishedSessionToday->check_in_time = Carbon::parse($finishedSessionToday->check_in_time)->timezone($userTimezone);
@@ -148,33 +150,28 @@ class DashboardController extends Controller
         $lastOvertimeSession = Attendance::where('user_id', $user->id)
             ->whereDate('check_in_time', '<', $todayInBranch)
             ->whereDate('check_out_time', $todayInBranch)
-            ->latest('check_out_time')
-            ->first();
+            ->latest('check_out_time')->first();
 
-        if ($lastOvertimeSession) {
-            $lastOvertimeSession->check_out_time = Carbon::parse($lastOvertimeSession->check_out_time)->timezone($userTimezone);
-        }
+        if ($lastOvertimeSession) $lastOvertimeSession->check_out_time = Carbon::parse($lastOvertimeSession->check_out_time)->timezone($userTimezone);
 
         $data['justFinishedOvertime'] = false;
         $data['lastOvertimeSession'] = null;
+        $data['myAttendanceToday'] = null;
 
         if ($activeSession) {
             $data['myAttendanceToday'] = $activeSession;
         } elseif ($finishedSessionToday) {
             $data['myAttendanceToday'] = $finishedSessionToday;
         } elseif ($lastOvertimeSession) {
-            $data['myAttendanceToday'] = null;
             $data['justFinishedOvertime'] = true;
             $data['lastOvertimeSession'] = $lastOvertimeSession;
-        } else {
-            $data['myAttendanceToday'] = null;
         }
 
         $data['myPendingCount'] = Attendance::where('user_id', $user->id)->where('status', 'pending_verification')->count();
         $data['myTeamCount'] = User::where('division_id', $user->division_id)->where('id', '!=', $user->id)->count();
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
-        // --- Data Statistik Global / Role Based ---
+        // --- Role Based Stats ---
         $data['totalUsers'] = 0; 
         $data['totalBranches'] = 0;
         $data['attendancesToday'] = 0;
@@ -193,9 +190,7 @@ class DashboardController extends Controller
                 ->whereTime('check_in_time', '!=', '00:00:00')
                 ->whereHas('user', function ($q) use ($user, $allBranchIds) {
                     $q->where('is_active', true)->whereNotIn('role', ['admin', 'security']);
-                    if ($user->role !== 'admin') {
-                        $q->whereIn('branch_id', $allBranchIds);
-                    }
+                    if ($user->role !== 'admin') $q->whereIn('branch_id', $allBranchIds);
                 })
                 ->groupBy('user_id')
                 ->orderBy('total_attendance', 'desc')
@@ -207,13 +202,10 @@ class DashboardController extends Controller
 
         if ($user->role == 'admin' || $user->role == 'security') {
             $securityUsersQuery = User::where('is_active', true)->whereIn('role', ['security', 'admin']);
-            if ($user->role != 'admin') {
-                $securityUsersQuery->whereIn('branch_id', $allBranchIds);
-            } elseif ($user->role == 'admin' && $branch_id != null) {
-                $securityUsersQuery->where('branch_id', $branch_id);
-            }
+            if ($user->role != 'admin') $securityUsersQuery->whereIn('branch_id', $allBranchIds);
+            elseif ($user->role == 'admin' && $branch_id != null) $securityUsersQuery->where('branch_id', $branch_id);
+            
             $securityUsers = $securityUsersQuery->get();
-
             $scanners = $securityUsers->map(function ($sec) use ($nowInBranch) {
                 $scanIn = Attendance::where('scanned_by_user_id', $sec->id)->whereMonth('check_in_time', $nowInBranch->month)->whereYear('check_in_time', $nowInBranch->year)->count();
                 $scanOut = Attendance::where('scanned_out_by_user_id', $sec->id)->whereMonth('check_in_time', $nowInBranch->month)->whereYear('check_in_time', $nowInBranch->year)->count();
@@ -223,27 +215,20 @@ class DashboardController extends Controller
             $data['topScanners'] = $scanners->sortByDesc('total_scans')->take(5)->values();
         }
 
-        // Widget Stats
-        $attendanceQuery = Attendance::query();
-        $userQuery = User::query();
-
+        // Main Stats Switch
         if ($user->role == 'admin') {
-            if ($branch_id) {
-                $attendanceQuery->where('branch_id', $branch_id);
-                $userQuery->where('branch_id', $branch_id);
-            }
-            $data['totalUsers'] = (clone $userQuery)->where('role', '!=', 'admin')->where('is_active', true)->count();
+            $attQ = Attendance::query(); $usrQ = User::query();
+            if ($branch_id) { $attQ->where('branch_id', $branch_id); $usrQ->where('branch_id', $branch_id); }
+            
+            $data['totalUsers'] = (clone $usrQ)->where('role', '!=', 'admin')->where('is_active', true)->count();
             $data['totalBranches'] = $branch_id ? 1 : Branch::count();
-            $data['attendancesToday'] = (clone $attendanceQuery)->whereDate('check_in_time', $todayInBranch)->count();
-            $data['pendingVerifications'] = (clone $attendanceQuery)->where('status', 'pending_verification')->count();
+            $data['attendancesToday'] = (clone $attQ)->whereDate('check_in_time', $todayInBranch)->count();
+            $data['pendingVerifications'] = (clone $attQ)->where('status', 'pending_verification')->count();
             $data['stats'] = $this->getAdminAttendanceStats($branch_id, $todayInBranch);
         
         } elseif ($user->role == 'audit') {
             $data['pendingVerifications'] = Attendance::whereIn('branch_id', $allBranchIds)->where('status', 'pending_verification')->count();
-            $data['pendingLeaves'] = LeaveRequest::where('status', 'pending')->where('is_active', true)
-                ->whereHas('user', function ($q) use ($allBranchIds) {
-                    $q->whereIn('branch_id', $allBranchIds);
-                })->count();
+            $data['pendingLeaves'] = LeaveRequest::where('status', 'pending')->where('is_active', true)->whereHas('user', fn($q)=>$q->whereIn('branch_id', $allBranchIds))->count();
             $data['attendancesToday'] = Attendance::whereIn('branch_id', $allBranchIds)->whereDate('check_in_time', $todayInBranch)->count();
             $data['stats'] = $this->getAuditAttendanceStats($allBranchIds, $todayInBranch);
         
@@ -262,114 +247,61 @@ class DashboardController extends Controller
         return view('dashboard', $data);
     }
 
-    // =========================================================================
-    // PRIVATE HELPER FUNCTIONS
-    // =========================================================================
-
-    private function getTodayLeaveRequest($user_id, $todayDate, $status = 'approved')
-    {
-        return LeaveRequest::where('user_id', $user_id)
-            ->where('is_active', true)
-            ->where('status', $status)
+    // Helper functions
+    private function getTodayLeaveRequest($user_id, $todayDate, $status = 'approved') {
+        return LeaveRequest::where('user_id', $user_id)->where('is_active', true)->where('status', $status)
             ->where(function ($query) use ($todayDate) {
                 $query->where(function ($q) use ($todayDate) {
-                    $q->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh'])
-                        ->whereDate('start_date', '<=', $todayDate)
-                        ->whereDate('end_date', '>=', $todayDate);
+                    $q->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh'])->whereDate('start_date', '<=', $todayDate)->whereDate('end_date', '>=', $todayDate);
                 })->orWhere(function ($q) use ($todayDate) {
-                    $q->where('type', 'telat')
-                        ->whereDate('start_date', $todayDate);
+                    $q->where('type', 'telat')->whereDate('start_date', $todayDate);
                 });
-            })
-            ->latest()
-            ->first();
+            })->latest()->first();
     }
 
-    private function getAdminAttendanceStats($branch_id = null, $todayDate)
-    {
+    private function getAdminAttendanceStats($branch_id = null, $todayDate) {
         $query = Attendance::whereDate('check_in_time', $todayDate)->where('presence_status', '!=', 'Alpha');
         if ($branch_id) $query->where('branch_id', $branch_id);
-        $totalUsers = User::when($branch_id, function ($q) use ($branch_id) {
-            return $q->where('branch_id', $branch_id);
-        })->where('role', '!=', 'admin')->where('is_active', true)->count();
-
+        $totalUsers = User::when($branch_id, fn($q)=>$q->where('branch_id', $branch_id))->where('role', '!=', 'admin')->where('is_active', true)->count();
         return $this->calculateStats($query, $totalUsers);
     }
 
-    private function getAuditAttendanceStats($branchIds, $todayDate)
-    {
+    private function getAuditAttendanceStats($branchIds, $todayDate) {
         $query = Attendance::whereDate('check_in_time', $todayDate)->where('presence_status', '!=', 'Alpha');
-        if (!empty($branchIds)) {
-            $query->whereIn('branch_id', is_array($branchIds) ? $branchIds : [$branchIds]);
-        }
-        $totalToday = (clone $query)->count();
+        if (!empty($branchIds)) $query->whereIn('branch_id', $branchIds);
+        $total = (clone $query)->count();
         $verified = (clone $query)->whereNotNull('verified_by_user_id')->count();
         $pending = (clone $query)->where('status', 'pending_verification')->count();
         $late = (clone $query)->where('is_late_checkin', true)->count();
-
-        return [
-            'total' => $totalToday,
-            'verified' => $verified,
-            'pending' => $pending,
-            'late' => $late,
-            'verified_percentage' => $totalToday > 0 ? round(($verified / $totalToday) * 100) : 0,
-            'pending_percentage' => $totalToday > 0 ? round(($pending / $totalToday) * 100) : 0,
-            'late_percentage' => $totalToday > 0 ? round(($late / $totalToday) * 100) : 0,
-        ];
+        return ['total' => $total, 'verified' => $verified, 'pending' => $pending, 'late' => $late, 'verified_percentage' => $total>0?round(($verified/$total)*100):0, 'pending_percentage' => $total>0?round(($pending/$total)*100):0, 'late_percentage' => $total>0?round(($late/$total)*100):0];
     }
 
-    private function getSecurityAttendanceStats($security_id, $branchIds, $todayDate)
-    {
+    private function getSecurityAttendanceStats($security_id, $branchIds, $todayDate) {
         $query = Attendance::whereDate('check_in_time', $todayDate);
-        if (!empty($branchIds)) {
-            $query->whereIn('branch_id', is_array($branchIds) ? $branchIds : [$branchIds]);
-        }
+        if (!empty($branchIds)) $query->whereIn('branch_id', $branchIds);
         $scanQuery = (clone $query)->where('attendance_type', 'scan');
-        $checkInScans = (clone $scanQuery)->count();
-        $checkOutScans = (clone $scanQuery)->whereNotNull('check_out_time')->count();
-
-        return [
-            'total_scans' => $checkInScans + $checkOutScans,
-            'check_in_scans' => $checkInScans,
-            'check_out_scans' => $checkOutScans,
-            'check_in_percentage' => 100,
-            'check_out_percentage' => 100,
-        ];
+        $in = (clone $scanQuery)->count(); $out = (clone $scanQuery)->whereNotNull('check_out_time')->count();
+        return ['total_scans'=>$in+$out, 'check_in_scans'=>$in, 'check_out_scans'=>$out, 'check_in_percentage'=>100, 'check_out_percentage'=>100];
     }
 
-    private function getUserAttendanceStats($user_id, $branch_id = null)
-    {
-        $query = Attendance::where('user_id', $user_id)
-            ->whereMonth('check_in_time', Carbon::now()->month)
-            ->whereYear('check_in_time', Carbon::now()->year)
-            ->where('presence_status', '!=', 'Alpha');
+    private function getUserAttendanceStats($user_id, $branch_id = null) {
+        $query = Attendance::where('user_id', $user_id)->whereMonth('check_in_time', Carbon::now()->month)->whereYear('check_in_time', Carbon::now()->year)->where('presence_status', '!=', 'Alpha');
         if ($branch_id) $query->where('branch_id', $branch_id);
         return $this->calculateStats($query, 0);
     }
 
-    private function calculateStats($query, $totalUsers)
-    {
-        $presentCount = (clone $query)->count();
-        $lateCount = (clone $query)->where('is_late_checkin', true)->count();
-        $earlyCount = (clone $query)->where('is_early_checkout', true)->count();
-        $pendingCount = (clone $query)->where('status', 'pending_verification')->count();
-        $onTimeCount = max($presentCount - $lateCount, 0);
-        $divider = $totalUsers > 0 ? $totalUsers : ($presentCount > 0 ? $presentCount : 1);
-        $absentCount = max($totalUsers - $presentCount, 0);
-
+    private function calculateStats($query, $totalUsers) {
+        $present = (clone $query)->count();
+        $late = (clone $query)->where('is_late_checkin', true)->count();
+        $early = (clone $query)->where('is_early_checkout', true)->count();
+        $pending = (clone $query)->where('status', 'pending_verification')->count();
+        $onTime = max($present - $late, 0);
+        $divider = $totalUsers > 0 ? $totalUsers : ($present > 0 ? $present : 1);
+        $absent = max($totalUsers - $present, 0);
         return [
-            'total' => $presentCount,
-            'present' => $presentCount,
-            'late' => $lateCount,
-            'early' => $earlyCount,
-            'pending' => $pendingCount,
-            'on_time' => $onTimeCount,
-            'absent' => $absentCount,
-            'present_percentage' => round(($presentCount / $divider) * 100),
-            'late_percentage' => $presentCount > 0 ? round(($lateCount / $presentCount) * 100) : 0,
-            'on_time_percentage' => $presentCount > 0 ? round(($onTimeCount / $presentCount) * 100) : 0,
-            'pending_percentage' => $presentCount > 0 ? round(($pendingCount / $presentCount) * 100) : 0,
-            'absent_percentage' => $totalUsers > 0 ? round(($absentCount / $totalUsers) * 100) : 0,
+            'total' => $present, 'present' => $present, 'late' => $late, 'early' => $early, 'pending' => $pending, 'on_time' => $onTime, 'absent' => $absent,
+            'present_percentage' => round(($present/$divider)*100), 'late_percentage' => $present>0?round(($late/$present)*100):0,
+            'on_time_percentage' => $present>0?round(($onTime/$present)*100):0, 'pending_percentage' => $present>0?round(($pending/$present)*100):0, 'absent_percentage' => $totalUsers>0?round(($absent/$totalUsers)*100):0
         ];
     }
 
