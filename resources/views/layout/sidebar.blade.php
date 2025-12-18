@@ -95,13 +95,13 @@
             <a class="nav-link" href="{{ route('kasbon.index') }}">
                 <i class="menu-icon mdi mdi-cash-multiple"></i>
                 <span class="menu-title">
-                    {{ in_array(auth()->user()->role, ['admin', 'admin_gaji']) ? 'Data Kasbon' : 'Kasbon Saya' }}
+                    {{ in_array(auth()->user()->role, ['admin_gaji']) ? 'Data Kasbon' : 'Kasbon Saya' }}
                 </span>
             </a>
         </li>
 
         {{-- 2. Menu Verifikasi Pembayaran (HANYA ADMIN & ADMIN GAJI) --}}
-        @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+        @if(in_array(auth()->user()->role, ['admin_gaji']))
             @php
                 // Hitung jumlah cicilan yang statusnya 'pending'
                 $pendingCount = \App\Models\CashAdvanceInstallment::where('status', 'pending')->count();
