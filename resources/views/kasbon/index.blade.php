@@ -196,7 +196,7 @@
                                 </td>
 
                                 <td>
-                                    <span class="text-muted small d-block text-truncate" style="max-width: 200px;" title="{{ $k->description }}">
+                                    <span class="fw-bold text-dark d-block text-truncate" style="max-width: 200px;" title="{{ $k->description }}">
                                         {{ Str::limit($k->description, 35) }}
                                     </span>
                                 </td>
