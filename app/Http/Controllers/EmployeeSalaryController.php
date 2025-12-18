@@ -16,23 +16,34 @@ class EmployeeSalaryController extends Controller
         $branches = Branch::orderBy('name')->get();
         $divisions = Division::orderBy('name')->get();
 
-        // [FIX] Filter: HANYA TAMPILKAN USER SELAIN ADMIN & ADMIN GAJI
+        // 1. QUERY DASAR: WAJIB EXCLUDE ADMIN & ADMIN GAJI
+        // Kita kunci di awal query agar tidak bisa ditembus oleh search
         $query = User::with(['branch', 'division', 'employeeSalary'])
             ->where('is_active', true)
-            ->whereNotIn('role', ['admin', 'admin_gaji']); // <--- INI KUNCINYA
+            ->whereNotIn('role', ['admin', 'admin_gaji']); 
 
+        // 2. FILTER PENCARIAN (DENGAN GROUPING)
+        // Grouping function($q) penting agar logika "OR" tidak membatalkan "whereNotIn" di atas
         if ($request->filled('search')) {
-            $query->where('name', 'like', "%{$request->search}%");
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('login_id', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
         }
 
+        // 3. FILTER CABANG
         if ($request->filled('branch_id')) {
             $query->where('branch_id', $request->branch_id);
         }
 
+        // 4. FILTER DIVISI
         if ($request->filled('division_id')) {
             $query->where('division_id', $request->division_id);
         }
 
+        // 5. FILTER KATEGORI GAJI
         if ($request->filled('category')) {
             if ($request->category == 'unset') {
                 $query->doesntHave('employeeSalary');
@@ -50,11 +61,11 @@ class EmployeeSalaryController extends Controller
 
     public function edit($userId)
     {
-        // [FIX] Validasi Edit: Cegah akses edit gaji admin
         $user = User::with('employeeSalary')->findOrFail($userId);
         
+        // PROTEKSI: Jika url ditembak manual untuk ID admin, tendang balik
         if (in_array($user->role, ['admin', 'admin_gaji'])) {
-            return redirect()->route('employee-salaries.index')->with('error', 'Gaji Admin & Admin Gaji tidak dapat diedit di sini (Rahasia).');
+            return redirect()->route('employee-salaries.index')->with('error', 'Akses Ditolak: Data gaji Admin bersifat rahasia.');
         }
 
         return view('employee-salaries.edit', compact('user'));
@@ -62,10 +73,11 @@ class EmployeeSalaryController extends Controller
 
     public function update(Request $request, $userId)
     {
-        // [FIX] Validasi Update: Cegah update gaji admin via request langsung
         $user = User::findOrFail($userId);
+        
+        // PROTEKSI UPDATE
         if (in_array($user->role, ['admin', 'admin_gaji'])) {
-            abort(403, 'Akses Ditolak: Anda tidak dapat mengubah gaji Admin.');
+            abort(403, 'Anda tidak diizinkan mengubah data gaji Admin.');
         }
 
         $clean = function($val) {
@@ -78,7 +90,7 @@ class EmployeeSalaryController extends Controller
 
         if ($request->category == 'employee') {
             $request->merge(['basic_salary' => $clean($request->basic_salary)]);
-            $request->validate(['basic_salary' => 'required|numeric|max:6000000']);
+            $request->validate(['basic_salary' => 'required|numeric|max:100000000']);
         }
 
         // Siapkan Data Dasar
@@ -102,11 +114,9 @@ class EmployeeSalaryController extends Controller
             $data['basic_salary'] = $clean($request->basic_salary);
             $data['position_allowance'] = $clean($request->position_allowance);
             $data['owner_privilege'] = $clean($request->owner_privilege);
-            // Simpan status Checkbox Privilege
             $data['use_privilege_mode'] = $request->has('use_privilege_mode') ? 1 : 0;
             
         } elseif ($request->category == 'promotor') {
-            // Promotor pakai field promotor_bonus
             $data['promotor_bonus'] = $clean($request->promotor_bonus);
             
         } elseif ($request->category == 'freelance') {

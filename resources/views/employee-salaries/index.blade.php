@@ -37,10 +37,16 @@
             </div>
         </div>
 
-        {{-- ALERT JIKA ADA ERROR --}}
+        {{-- ALERT ERROR --}}
         @if(session('error'))
             <div class="alert alert-danger shadow-sm border-0 mb-4">
                 <i class="mdi mdi-alert-circle me-2"></i> {{ session('error') }}
+            </div>
+        @endif
+        
+        @if(session('success'))
+            <div class="alert alert-success shadow-sm border-0 mb-4">
+                <i class="mdi mdi-check-circle me-2"></i> {{ session('success') }}
             </div>
         @endif
 
@@ -201,7 +207,7 @@
                                     <h5 class="text-muted fw-bold">Tidak ada data ditemukan</h5>
                                     <p class="text-muted small">
                                         @if(request('search'))
-                                            User "<strong>{{ request('search') }}</strong>" tidak ditemukan atau merupakan Admin.
+                                            User "<strong>{{ request('search') }}</strong>" tidak ditemukan.
                                         @else
                                             Belum ada data karyawan.
                                         @endif
