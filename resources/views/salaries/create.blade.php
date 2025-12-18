@@ -10,12 +10,15 @@
             </div>
             <div class="card-body">
                 
+                {{-- FORM FILTER UTAMA (GET REQUEST UNTUK REFRESH DATA) --}}
+                {{-- Kita gunakan JS untuk handle refresh parameter --}}
+                
                 <form action="{{ route('salaries.store') }}" method="POST" id="payrollForm">
                     @csrf
                     
                     {{-- HEADER --}}
                     <div class="row mb-4 bg-light p-3 rounded border">
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <label class="fw-bold mb-1">Pilih Karyawan</label>
                             @if($selectedUser)
                                 <input type="hidden" name="user_id" value="{{ $selectedUser->id }}">
@@ -23,8 +26,7 @@
                                     <span class="input-group-text bg-primary text-white"><i class="mdi mdi-account"></i></span>
                                     <input type="text" class="form-control fw-bold bg-white text-dark" 
                                            value="{{ $selectedUser->name }} ({{ $selectedUser->branch->name ?? '-' }})" readonly>
-                                    
-                                    <a href="{{ route('users.show', $selectedUser->id) }}" class="btn btn-outline-primary d-flex align-items-center" title="Lihat Profil Lengkap">
+                                    <a href="{{ route('users.show', $selectedUser->id) }}" class="btn btn-outline-primary d-flex align-items-center" title="Lihat Profil">
                                         <i class="mdi mdi-account-details"></i>
                                     </a>
                                 </div>
@@ -42,28 +44,28 @@
                             @endif
                         </div>
 
+                        {{-- PERIODE BULAN (UNTUK EMPLOYEE/PROMOTOR) --}}
                         <div class="col-md-3">
-                            <label class="fw-bold mb-1">Periode Gaji</label>
+                            <label class="fw-bold mb-1">Periode Gaji (Bulanan)</label>
                             <div class="d-flex gap-2">
-                                <select name="month" class="form-select text-center fw-bold text-dark bg-white border-secondary" 
-                                        onchange="updateParams('month', this.value)" style="color: #000 !important; opacity: 1;">
+                                <select name="month" class="form-select text-center fw-bold text-dark border-secondary" 
+                                        onchange="updateParams('month', this.value)">
                                     @for($m=1; $m<=12; $m++)
                                         <option value="{{ sprintf('%02d', $m) }}" {{ $month == sprintf('%02d', $m) ? 'selected' : '' }}>
                                             {{ \Carbon\Carbon::create()->month($m)->isoFormat('MMMM') }}
                                         </option>
                                     @endfor
                                 </select>
-                                <select name="year" class="form-select text-center fw-bold text-dark bg-white border-secondary" 
-                                        onchange="updateParams('year', this.value)" style="color: #000 !important; opacity: 1;">
+                                <select name="year" class="form-select text-center fw-bold text-dark border-secondary" 
+                                        onchange="updateParams('year', this.value)">
                                     @for($y=date('Y'); $y>=date('Y')-1; $y--)
                                         <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                                     @endfor
                                 </select>
                             </div>
-                            <small class="text-muted fst-italic" style="font-size: 0.7rem">*Ubah untuk refresh data</small>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <label class="fw-bold mb-1">Kategori</label>
                             @php $currentCat = $masterSalary->category ?? 'employee'; @endphp
                             
@@ -79,25 +81,20 @@
                                     <option value="promotor">Promotor</option>
                                     <option value="freelance">Freelance</option>
                                 </select>
-                                <small class="text-danger" style="font-size: 0.7rem">*Master Gaji belum diatur</small>
                             @endif
                         </div>
-                    </div>
-
-                    {{-- INFO KEHADIRAN --}}
-                    @if($selectedUser)
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="fw-bold text-secondary mb-2"><i class="mdi mdi-information-outline"></i> Informasi Kehadiran & Cuti (Bulan Ini)</h6>
-                            <div class="row g-2">
-                                <div class="col-6 col-md-3"><div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm"><span class="text-muted small fw-bold">Cuti</span><span class="badge bg-secondary rounded-pill px-3">{{ $cutiCount ?? 0 }} Hari</span></div></div>
-                                <div class="col-6 col-md-3"><div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm"><span class="text-muted small fw-bold">Sakit</span><span class="badge bg-info rounded-pill px-3">{{ $sakitCount ?? 0 }} Hari</span></div></div>
-                                <div class="col-6 col-md-3"><div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm"><span class="text-muted small fw-bold">Izin</span><span class="badge bg-warning text-dark rounded-pill px-3">{{ $izinCount ?? 0 }} Kali</span></div></div>
-                                <div class="col-6 col-md-3"><div class="p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm"><span class="text-muted small fw-bold">WFH</span><span class="badge bg-success rounded-pill px-3">{{ $wfhCount ?? 0 }} Hari</span></div></div>
+                        
+                        {{-- RANGE TANGGAL (KHUSUS FREELANCE) --}}
+                        <div class="col-md-3" id="freelance_date_range" style="display: {{ $currentCat == 'freelance' ? 'block' : 'none' }};">
+                            <label class="fw-bold mb-1 text-warning"><i class="mdi mdi-calendar-range"></i> Periode Kerja</label>
+                            <div class="input-group input-group-sm">
+                                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ $startDate->format('Y-m-d') }}">
+                                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ $endDate->format('Y-m-d') }}">
+                                <button type="button" class="btn btn-warning text-dark" onclick="updateDateRange()">Cek</button>
                             </div>
+                            <small class="text-muted" style="font-size: 0.65rem">Klik 'Cek' hitung kehadiran.</small>
                         </div>
                     </div>
-                    @endif
 
                     <div class="row">
                         <div class="col-md-6 border-end">
@@ -105,7 +102,7 @@
                                 <i class="mdi mdi-arrow-up-circle"></i> PENDAPATAN
                             </h5>
                             
-                            {{-- FORM EMPLOYEE --}}
+                            {{-- EMPLOYEE --}}
                             <div id="form_employee" class="category-section">
                                 <div class="mb-3">
                                     <label class="fw-bold">Gaji Pokok (Master)</label>
@@ -116,7 +113,6 @@
                                                readonly
                                                value="{{ number_format($masterSalary->basic_salary ?? 0, 0, ',', '.') }}">
                                     </div>
-                                    <small class="text-muted">*Mengacu pada Master Gaji</small>
                                 </div>
                                 <div class="mb-3">
                                     <label>Tunjangan Jabatan</label>
@@ -136,7 +132,6 @@
                                                placeholder="0" value="{{ number_format($masterSalary->owner_privilege ?? 0, 0, ',', '.') }}">
                                     </div>
                                     <div class="form-check mt-2">
-                                        {{-- LOGIC OTOMATIS CENTANG --}}
                                         <input class="form-check-input" type="checkbox" id="override_attendance"
                                                {{ ($masterSalary->use_privilege_mode ?? 0) > 0 ? 'checked' : '' }}>
                                         <label class="form-check-label text-muted small fw-bold cursor-pointer" for="override_attendance">
@@ -146,7 +141,7 @@
                                 </div>
                             </div>
 
-                            {{-- FORM PROMOTOR --}}
+                            {{-- PROMOTOR --}}
                             <div id="form_promotor" class="category-section" style="display: none;">
                                 <div class="mb-3">
                                     <label class="fw-bold">Insentif Tetap (Master)</label>
@@ -159,24 +154,42 @@
                                 </div>
                             </div>
 
-                            {{-- FORM FREELANCE --}}
+                            {{-- FREELANCE --}}
                             <div id="form_freelance" class="category-section" style="display: none;">
-                                <div class="alert alert-info py-2 small border-info bg-soft-info text-dark">
-                                    <i class="mdi mdi-information-outline me-1"></i> Pembayaran Harian (Tanpa Perkalian Kehadiran).
+                                <div class="alert alert-warning py-2 small border-warning bg-soft-warning text-dark mb-3">
+                                    <i class="mdi mdi-information-outline me-1"></i> <strong>Mode Freelance:</strong> Gaji dihitung dari jumlah kehadiran dalam rentang tanggal yang dipilih di atas.
                                 </div>
-                                <div class="mb-3">
-                                    <label class="fw-bold">Bayaran Hari Ini (Master)</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">Rp</span>
-                                        <input type="text" name="freelance_daily_salary" id="daily_salary" 
-                                               class="form-control rupiah-input fw-bold text-dark bg-light" 
-                                               readonly
-                                               value="{{ number_format($masterSalary->daily_salary ?? 0, 0, ',', '.') }}">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="fw-bold small">Rate Harian</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">Rp</span>
+                                            <input type="text" name="freelance_daily_salary" id="daily_salary" 
+                                                   class="form-control rupiah-input fw-bold text-dark bg-light" 
+                                                   readonly
+                                                   value="{{ number_format($masterSalary->daily_salary ?? 0, 0, ',', '.') }}">
+                                        </div>
                                     </div>
+                                    <div class="col-6">
+                                        <label class="fw-bold small">Jml Hadir</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" id="freelance_days_count" class="form-control fw-bold text-center text-primary" 
+                                                   value="{{ $freelanceAttendance }}" readonly>
+                                            <span class="input-group-text">Hari</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {{-- Hidden input untuk total income freelance yang akan disubmit --}}
+                                <input type="hidden" name="freelance_total_income" id="freelance_total_income" value="0">
+                                
+                                <div class="mb-3 p-2 bg-light rounded border text-center">
+                                    <small class="text-muted">Total Gaji Pokok (Rate x Hari)</small>
+                                    <h4 class="fw-bold text-primary mb-0" id="freelance_calc_display">Rp 0</h4>
                                 </div>
                             </div>
 
-                            {{-- GLOBAL INCOME --}}
+                            {{-- GLOBAL --}}
                             <div id="global_income">
                                 <div class="mb-3">
                                     <label>Bonus / Insentif Tambahan</label>
@@ -235,7 +248,7 @@
                                 </div>
                             </div>
 
-                            {{-- [MODIFIKASI] PILIH BAYAR HUTANG KASBON --}}
+                            {{-- LIST HUTANG --}}
                             <div class="mb-3 p-3 border border-warning rounded" style="background-color: #fffbf0;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <label class="fw-bold text-warning mb-0"><i class="mdi mdi-wallet"></i> Bayar Hutang (Kasbon)</label>
@@ -254,7 +267,6 @@
                                                     <small class="d-block text-danger mb-1">Sisa: Rp {{ number_format($loan->remaining_amount, 0, ',', '.') }}</small>
                                                     <div class="input-group input-group-sm">
                                                         <span class="input-group-text">Rp</span>
-                                                        {{-- Input Array: name="selected_loans[ID_LOAN]" --}}
                                                         <input type="text" name="selected_loans[{{ $loan->id }}]" 
                                                                class="form-control loan-input rupiah-input text-end" 
                                                                placeholder="0" 
@@ -269,7 +281,6 @@
                                     <div class="alert alert-secondary py-2 small text-center mb-0">Tidak ada hutang aktif.</div>
                                 @endif
                                 
-                                {{-- Total Potongan Kasbon Display (Readonly untuk JS) --}}
                                 <input type="hidden" name="kasbon_deduction" id="kasbon_deduction" value="0">
                             </div>
 
@@ -294,7 +305,6 @@
                     {{-- CATATAN & PEMBAYARAN --}}
                     <div class="row justify-content-center">
                         <div class="col-md-10">
-                            
                             <div class="card bg-light border mb-4">
                                 <div class="card-body p-3">
                                     <label class="fw-bold mb-2 text-secondary"><i class="mdi mdi-note-text-outline"></i> Catatan Payroll (Opsional)</label>
@@ -366,6 +376,19 @@
         window.location.href = url.toString();
     }
     
+    // Fungsi khusus untuk refresh range tanggal
+    function updateDateRange() {
+        let url = new URL(window.location.href);
+        let start = document.getElementById('start_date').value;
+        let end = document.getElementById('end_date').value;
+        
+        if(start && end) {
+            url.searchParams.set('start_date', start);
+            url.searchParams.set('end_date', end);
+            window.location.href = url.toString();
+        }
+    }
+    
     function toggleDateInput(show) { 
         const box = document.getElementById('schedule_input_box');
         if(box) box.style.display = show ? 'block' : 'none'; 
@@ -374,6 +397,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const categoryInput = document.getElementById('category');
         const sections = document.querySelectorAll('.category-section');
+        const dateRangeBox = document.getElementById('freelance_date_range');
         
         function toggleCategoryForms() {
             if(!categoryInput) return;
@@ -383,6 +407,11 @@
             if(cat === 'employee') document.getElementById('form_employee').style.display = 'block';
             else if(cat === 'promotor') document.getElementById('form_promotor').style.display = 'block';
             else if(cat === 'freelance') document.getElementById('form_freelance').style.display = 'block';
+            
+            // Show/Hide Range Date
+            if(dateRangeBox) {
+                dateRangeBox.style.display = (cat === 'freelance') ? 'block' : 'none';
+            }
             
             if(cat === 'promotor') {
                 const promoBasic = document.getElementById('promotor_basic');
@@ -430,19 +459,15 @@
             });
         });
 
-        // [BARU] EVENT LISTENER UNTUK INPUT HUTANG (MULTI)
+        // Event Listener untuk Loan List (Multi)
         document.querySelectorAll('.loan-input').forEach(input => {
             input.addEventListener('keyup', function(e) {
-                // Auto format rupiah
                 this.value = formatRupiah(this.value);
-                
-                // Validasi agar tidak melebihi sisa
                 let max = parseFloat(this.getAttribute('data-max'));
                 let current = cleanNumber(this.value);
                 if(current > max) {
                     this.value = formatRupiah(max);
                 }
-
                 calculate();
             });
         });
@@ -455,7 +480,16 @@
 
             if (cat === 'freelance') {
                 let daily = cleanNumber(document.getElementById('daily_salary').value);
-                totalIncome = daily; 
+                let days = parseFloat(document.getElementById('freelance_days_count').value) || 0;
+                
+                // Kalkulasi Total Freelance
+                let freelanceTotal = daily * days;
+                
+                // Update Display & Hidden Input
+                document.getElementById('freelance_calc_display').innerText = "Rp " + formatRupiah(freelanceTotal);
+                document.getElementById('freelance_total_income').value = freelanceTotal;
+                
+                totalIncome = freelanceTotal; 
                 totalFixed = 0; 
             } else if (cat === 'promotor') {
                 let promoBasic = cleanNumber(document.getElementById('promotor_basic').value);
@@ -472,14 +506,14 @@
             totalIncome += cleanNumber(document.getElementById('bonus').value);
             totalIncome += cleanNumber(document.getElementById('dispensation').value);
 
-            // Hitung Total Potongan Hutang dari List
+            // Hitung Potongan List Hutang
             let totalKasbon = 0;
             document.querySelectorAll('.loan-input').forEach(input => {
                 totalKasbon += cleanNumber(input.value);
             });
             document.getElementById('kasbon_deduction').value = totalKasbon;
 
-            // Hitung Potongan Lain
+            // Hitung Potongan
             const alphaDed = document.getElementById('alpha_deduction');
             const lateDed = document.getElementById('late_deduction');
             const overrideCheck = document.getElementById('override_attendance');
@@ -505,13 +539,12 @@
                 }
             }
 
-            // Sum Deduction (Termasuk Kasbon dari Loop)
+            // Sum Deduction
             let totalDeduction = cleanNumber(alphaDed ? alphaDed.value : 0) + 
                                  cleanNumber(lateDed ? lateDed.value : 0) + 
-                                 totalKasbon; // Gunakan hasil loop
+                                 totalKasbon;
 
             document.querySelectorAll('.deduction-input').forEach(el => {
-                // Skip field kasbon_deduction karena sudah dihitung diatas, dan alpha/late
                 if(el.id !== 'alpha_deduction' && el.id !== 'late_deduction' && el.id !== 'kasbon_deduction') {
                     totalDeduction += cleanNumber(el.value);
                 }
@@ -543,6 +576,7 @@
 
 <style>
     .bg-soft-info { background-color: rgba(13,202,240,0.15); }
+    .bg-soft-warning { background-color: rgba(255,193,7,0.15); }
     .card-radio { transition: all 0.2s; cursor: pointer; }
     .card-radio:hover { background-color: #f8f9fa; }
     .btn-check:checked + .btn-outline-primary { background-color: #0d6efd; color: white; }
