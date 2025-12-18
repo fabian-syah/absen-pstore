@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\Storage;
 class CashAdvanceController extends Controller
 {
     // --- 1. HALAMAN UTAMA (INDEX) ---
+    // --- 1. HALAMAN UTAMA (INDEX) ---
     public function index()
     {
         $user = auth()->user();
-        
+
         // Query Dasar
         $query = CashAdvance::with('user')->latest();
 
@@ -24,7 +25,11 @@ class CashAdvanceController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        $kasbons = $query->get();
+        // GANTI INI:
+        // $kasbons = $query->get(); 
+
+        // MENJADI INI (Angka 10 adalah jumlah baris per halaman):
+        $kasbons = $query->paginate(10);
 
         return view('kasbon.index', compact('kasbons'));
     }
@@ -55,10 +60,10 @@ class CashAdvanceController extends Controller
             'account_number' => 'required_if:payment_method,transfer',
         ]);
 
-        DB::transaction(function() use ($request, $cleanAmount) {
+        DB::transaction(function () use ($request, $cleanAmount) {
             // Tentukan User (Jika admin submit buat orang lain, atau user submit sendiri)
             $targetUser = auth()->user()->role == 'admin' ? User::find($request->user_id) : auth()->user();
-            
+
             // Simpan Data
             $data = [
                 'user_id' => $targetUser->id,
@@ -73,7 +78,7 @@ class CashAdvanceController extends Controller
             ];
 
             // Gabungkan Info Rekening
-            if($request->payment_method == 'transfer'){
+            if ($request->payment_method == 'transfer') {
                 $data['account_details'] = $request->bank_name . ' - ' . $request->account_number . ' a.n ' . $request->account_name;
             }
 
@@ -97,7 +102,7 @@ class CashAdvanceController extends Controller
     // --- 5. APPROVE / REJECT OLEH ADMIN ---
     public function updateStatus(Request $request, $id)
     {
-        if(auth()->user()->role !== 'admin') abort(403);
+        if (auth()->user()->role !== 'admin') abort(403);
 
         $kasbon = CashAdvance::findOrFail($id);
         $kasbon->update([
@@ -119,12 +124,12 @@ class CashAdvanceController extends Controller
             'payment_proof' => 'required|image|max:2048'
         ]);
 
-        DB::transaction(function() use ($request, $id, $cleanAmount) {
+        DB::transaction(function () use ($request, $id, $cleanAmount) {
             $kasbon = CashAdvance::findOrFail($id);
 
             // Simpan Riwayat
             $path = $request->file('payment_proof')->store('kasbon/installments', 'public');
-            
+
             $ins = CashAdvanceInstallment::create([
                 'cash_advance_id' => $kasbon->id,
                 'user_id' => auth()->id(),
@@ -136,12 +141,12 @@ class CashAdvanceController extends Controller
 
             // Update Saldo Induk
             $kasbon->total_paid += $cleanAmount;
-            
+
             // Cek Lunas
-            if($kasbon->total_paid >= $kasbon->amount) {
+            if ($kasbon->total_paid >= $kasbon->amount) {
                 $kasbon->status = 'paid';
             }
-            
+
             $kasbon->save();
         });
 
