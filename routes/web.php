@@ -149,24 +149,24 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/{id}/detail', [App\Http\Controllers\CashAdvanceController::class, 'show'])->name('show');
 
         // Route Bayar Cicilan
-        Route::post('/{id}/cicil', [App\Http\Controllers\CashAdvanceController::class, 'storeInstallment'])->name('pay'); // Saya ubah name jadi 'pay' agar sesuai view
+        Route::post('/{id}/cicil', [App\Http\Controllers\CashAdvanceController::class, 'storeInstallment'])->name('pay');
 
-        // ROUTE EXPORT (PENTING: Ditaruh di atas route resource {id} agar tidak tertabrak)
+        // ROUTE EXPORT
         Route::get('/export', [App\Http\Controllers\CashAdvanceController::class, 'export'])->name('export');
 
         // Middleware Khusus Admin & Admin Gaji
         Route::middleware(['role:admin,admin_gaji'])->group(function () {
             Route::delete('/{id}', [App\Http\Controllers\CashAdvanceController::class, 'destroy'])->name('destroy');
-
-            // [FIXING] Ganti PATCH jadi POST agar lebih kompatibel dengan form HTML standar
             Route::post('/{id}/status', [App\Http\Controllers\CashAdvanceController::class, 'updateStatus'])->name('status');
 
             Route::post('/installment/{id}/approve', [App\Http\Controllers\CashAdvanceController::class, 'approveInstallment'])->name('installment.approve');
             Route::post('/installment/{id}/reject', [App\Http\Controllers\CashAdvanceController::class, 'rejectInstallment'])->name('installment.reject');
             Route::get('/installment/{id}/edit', [App\Http\Controllers\CashAdvanceController::class, 'editInstallment'])->name('installment.edit');
             Route::put('/installment/{id}', [App\Http\Controllers\CashAdvanceController::class, 'updateInstallment'])->name('installment.update');
-            Route::get('/verifikasi-pembayaran', [App\Http\Controllers\CashAdvanceController::class, 'incomingInstallments'])->name('kasbon.verification');
             Route::delete('/installment/{id}', [App\Http\Controllers\CashAdvanceController::class, 'destroyInstallment'])->name('installment.destroy');
+
+            // [FIXED] Hapus 'kasbon.' karena sudah ada di grup utama. Nama akhirnya jadi 'kasbon.verification'
+            Route::get('/verifikasi-pembayaran', [App\Http\Controllers\CashAdvanceController::class, 'incomingInstallments'])->name('verification');
         });
     });
 
