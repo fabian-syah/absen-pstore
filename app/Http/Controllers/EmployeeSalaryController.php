@@ -16,8 +16,10 @@ class EmployeeSalaryController extends Controller
         $branches = Branch::orderBy('name')->get();
         $divisions = Division::orderBy('name')->get();
 
+        // [FIX] Filter: HANYA TAMPILKAN USER SELAIN ADMIN & ADMIN GAJI
         $query = User::with(['branch', 'division', 'employeeSalary'])
-            ->where('is_active', true);
+            ->where('is_active', true)
+            ->whereNotIn('role', ['admin', 'admin_gaji']); // <--- INI KUNCINYA
 
         if ($request->filled('search')) {
             $query->where('name', 'like', "%{$request->search}%");
@@ -48,12 +50,24 @@ class EmployeeSalaryController extends Controller
 
     public function edit($userId)
     {
+        // [FIX] Validasi Edit: Cegah akses edit gaji admin
         $user = User::with('employeeSalary')->findOrFail($userId);
+        
+        if (in_array($user->role, ['admin', 'admin_gaji'])) {
+            return redirect()->route('employee-salaries.index')->with('error', 'Gaji Admin & Admin Gaji tidak dapat diedit di sini (Rahasia).');
+        }
+
         return view('employee-salaries.edit', compact('user'));
     }
 
     public function update(Request $request, $userId)
     {
+        // [FIX] Validasi Update: Cegah update gaji admin via request langsung
+        $user = User::findOrFail($userId);
+        if (in_array($user->role, ['admin', 'admin_gaji'])) {
+            abort(403, 'Akses Ditolak: Anda tidak dapat mengubah gaji Admin.');
+        }
+
         $clean = function($val) {
             return str_replace('.', '', $val);
         };
@@ -72,7 +86,7 @@ class EmployeeSalaryController extends Controller
             'category' => $request->category,
             'bank_account_number' => $request->bank_account_number,
             'bank_name' => $request->bank_name,
-            'notes' => $request->notes, // <--- SUDAH DITAMBAHKAN
+            'notes' => $request->notes, 
             'updated_by' => Auth::id(),
             // Reset nilai default 0 agar bersih jika ganti kategori
             'basic_salary' => 0, 

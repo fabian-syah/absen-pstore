@@ -37,6 +37,13 @@
             </div>
         </div>
 
+        {{-- ALERT JIKA ADA ERROR --}}
+        @if(session('error'))
+            <div class="alert alert-danger shadow-sm border-0 mb-4">
+                <i class="mdi mdi-alert-circle me-2"></i> {{ session('error') }}
+            </div>
+        @endif
+
         {{-- FILTER --}}
         <div class="card card-modern mb-4">
             <div class="card-body">
@@ -192,7 +199,13 @@
                             <tr>
                                 <td colspan="6" class="text-center py-5">
                                     <h5 class="text-muted fw-bold">Tidak ada data ditemukan</h5>
-                                    <p class="text-muted small">Coba ubah filter pencarian Anda.</p>
+                                    <p class="text-muted small">
+                                        @if(request('search'))
+                                            User "<strong>{{ request('search') }}</strong>" tidak ditemukan atau merupakan Admin.
+                                        @else
+                                            Belum ada data karyawan.
+                                        @endif
+                                    </p>
                                 </td>
                             </tr>
                             @endforelse
