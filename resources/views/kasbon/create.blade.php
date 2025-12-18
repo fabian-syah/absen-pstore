@@ -2,22 +2,13 @@
 
 @section('content')
 <style>
-    /* Styling Custom UI */
     .payment-option-input { display: none; }
     .payment-option-card {
-        cursor: pointer;
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
-        padding: 20px;
-        transition: all 0.3s ease;
-        text-align: center;
-        height: 100%;
-        background-color: #fff;
+        cursor: pointer; border: 2px solid #e9ecef; border-radius: 12px;
+        padding: 20px; transition: all 0.3s ease; text-align: center; height: 100%; background-color: #fff;
     }
     .payment-option-card:hover { border-color: #b1b7c1; background-color: #f8f9fa; }
-    .payment-option-input:checked + .payment-option-card {
-        border-color: #4b49ac; background-color: #f0f0ff; color: #4b49ac;
-    }
+    .payment-option-input:checked + .payment-option-card { border-color: #4b49ac; background-color: #f0f0ff; color: #4b49ac; }
     .payment-option-input:checked + .payment-option-card i { color: #4b49ac; }
     .icon-lg { font-size: 2.5rem; margin-bottom: 10px; color: #6c757d; }
     #bankDetails { transition: all 0.4s ease-in-out; }
@@ -32,13 +23,10 @@
                 </div>
                 <div class="card-body p-4">
                     
-                    {{-- [PENTING] Menampilkan Pesan Error Validasi --}}
                     @if ($errors->any())
                         <div class="alert alert-danger">
                             <ul class="mb-0">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
+                                @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
                             </ul>
                         </div>
                     @endif
@@ -46,10 +34,12 @@
                     <form action="{{ route('kasbon.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
-                        {{-- 1. IDENTITAS --}}
+                        {{-- 1. IDENTITAS (LOGIKA ROLE DIPERBAIKI DISINI) --}}
                         <div class="mb-4">
                             <label class="form-label fw-bold text-uppercase small text-muted">Informasi Peminjam</label>
-                            @if (auth()->user()->role == 'admin')
+                            
+                            @if (in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                                {{-- ADMIN & ADMIN GAJI BISA PILIH USER --}}
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i class="mdi mdi-account-search"></i></span>
                                     <select name="user_id" class="form-select form-select-lg">
@@ -60,7 +50,9 @@
                                         @endforeach
                                     </select>
                                 </div>
+                                <small class="text-info">*Mode Admin/Gaji: Anda dapat mengajukan untuk karyawan lain.</small>
                             @else
+                                {{-- USER BIASA --}}
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i class="mdi mdi-account"></i></span>
                                     <input type="text" class="form-control form-control-lg bg-light fw-bold"
@@ -75,42 +67,31 @@
                             <label class="form-label fw-bold">Nominal Pengajuan</label>
                             <div class="input-group input-group-lg shadow-sm">
                                 <span class="input-group-text bg-primary text-white fw-bold px-4">Rp</span>
-                                <input type="text" name="amount" id="rupiah"
-                                    class="form-control fw-bold text-dark fs-4" 
-                                    placeholder="0" required autocomplete="off"
-                                    value="{{ old('amount') }}">
+                                <input type="text" name="amount" id="rupiah" class="form-control fw-bold text-dark fs-4" placeholder="0" required autocomplete="off" value="{{ old('amount') }}">
                             </div>
                             <small class="text-muted">Masukkan angka tanpa titik.</small>
                         </div>
 
-                        {{-- 3. METODE PENCAIRAN --}}
+                        {{-- 3. METODE --}}
                         <div class="mb-4">
                             <label class="form-label fw-bold mb-3">Metode Pencairan Dana</label>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <input type="radio" name="payment_method" id="methodCash" value="cash" 
-                                        class="payment-option-input" 
-                                        {{ old('payment_method', 'cash') == 'cash' ? 'checked' : '' }} 
-                                        onchange="toggleBank(false)">
+                                    <input type="radio" name="payment_method" id="methodCash" value="cash" class="payment-option-input" {{ old('payment_method', 'cash') == 'cash' ? 'checked' : '' }} onchange="toggleBank(false)">
                                     <label for="methodCash" class="payment-option-card d-block w-100">
-                                        <i class="mdi mdi-wallet icon-lg d-block"></i>
-                                        <span class="fw-bold fs-5">Tunai (Cash)</span>
+                                        <i class="mdi mdi-wallet icon-lg d-block"></i> <span class="fw-bold fs-5">Tunai (Cash)</span>
                                     </label>
                                 </div>
                                 <div class="col-md-6">
-                                    <input type="radio" name="payment_method" id="methodTransfer" value="transfer" 
-                                        class="payment-option-input" 
-                                        {{ old('payment_method') == 'transfer' ? 'checked' : '' }} 
-                                        onchange="toggleBank(true)">
+                                    <input type="radio" name="payment_method" id="methodTransfer" value="transfer" class="payment-option-input" {{ old('payment_method') == 'transfer' ? 'checked' : '' }} onchange="toggleBank(true)">
                                     <label for="methodTransfer" class="payment-option-card d-block w-100">
-                                        <i class="mdi mdi-bank icon-lg d-block"></i>
-                                        <span class="fw-bold fs-5">Transfer Bank</span>
+                                        <i class="mdi mdi-bank icon-lg d-block"></i> <span class="fw-bold fs-5">Transfer Bank</span>
                                     </label>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- 4. DETAIL REKENING --}}
+                        {{-- 4. BANK --}}
                         <div id="bankDetails" class="mb-4 p-4 bg-light rounded border border-dashed" style="display: none;">
                             <h6 class="fw-bold mb-3 text-primary">Informasi Rekening Tujuan</h6>
                             <div class="row g-3">
@@ -135,7 +116,7 @@
                             <textarea name="description" class="form-control" rows="3" required>{{ old('description') }}</textarea>
                         </div>
 
-                        {{-- 6. UPLOAD BUKTI --}}
+                        {{-- 6. BUKTI --}}
                         <div class="mb-5">
                             <label class="form-label fw-bold">Lampiran Dokumen</label>
                             <div class="p-3 border rounded bg-white">
@@ -149,7 +130,7 @@
                                         <input type="file" name="photo_2" class="form-control form-control-sm" required>
                                     </div>
                                 </div>
-                                <small class="text-danger mt-2 d-block">* Wajib upload format JPG/PNG/PDF. Maks 2MB.</small>
+                                <small class="text-danger mt-2 d-block">* Wajib upload format JPG/PNG/PDF. Maks 10MB.</small>
                             </div>
                         </div>
 
@@ -165,7 +146,6 @@
 </div>
 
 <script>
-    // Format Rupiah
     const rupiah = document.getElementById('rupiah');
     rupiah.addEventListener('keyup', function(e) { rupiah.value = formatRupiah(this.value); });
 
@@ -182,7 +162,6 @@
         return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
     }
 
-    // Toggle Bank (UI & Logic)
     function toggleBank(show) {
         const el = document.getElementById('bankDetails');
         const inputs = el.querySelectorAll('input');
@@ -195,9 +174,7 @@
         }
     }
 
-    // [FIXING REFRESH ISSUE] Cek status saat halaman dimuat ulang (kalau validasi gagal)
     document.addEventListener("DOMContentLoaded", function() {
-        // Jika sebelumnya user pilih transfer, buka lagi formnya
         if(document.getElementById('methodTransfer').checked) {
             toggleBank(true);
         }
