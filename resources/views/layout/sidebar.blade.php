@@ -91,14 +91,23 @@
         {{-- =================================== --}}
         
         {{-- 1. Menu Utama Kasbon (Semua Role bisa akses untuk pengajuan/lihat data) --}}
-        <li class="nav-item">
+        @if (auth()->user()->role != 'admin_gaji')
+            <li class="nav-item">
             <a class="nav-link" href="{{ route('kasbon.index') }}">
-            <i class="menu-icon mdi mdi-cash-multiple"></i>
-            <span class="menu-title">
+                <i class="menu-icon mdi mdi-cash-multiple"></i>
+                <span class="menu-title">
                 {{ in_array(auth()->user()->role, ['admin_gaji']) ? 'Data Kasbon' : 'Kasbon Saya' }}
-            </span>
+                </span>
             </a>
-        </li>
+            </li>
+        @elseif (auth()->user()->role == 'admin')
+            <li class="nav-item">
+            <a class="nav-link" href="{{ route('kasbon.index') }}">
+                <i class="menu-icon mdi mdi-cash-multiple"></i>
+                <span class="menu-title">Data Kasbon</span>
+            </a>
+            </li>
+        @endif
 
         {{-- 2. Menu Verifikasi Pembayaran (HANYA ADMIN GAJI) --}}
         @if(auth()->user()->role === 'admin_gaji')
