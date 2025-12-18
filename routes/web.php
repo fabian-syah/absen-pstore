@@ -63,6 +63,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     Route::post('/update-fcm-token', [UserController::class, 'updateFcmToken'])->name('update.fcm.token');
+    Route::get('/kasbon/export', [App\Http\Controllers\CashAdvanceController::class, 'export'])->name('kasbon.export');
 
     // --- Rute Search Global ---
     Route::get('/search', [GlobalSearchController::class, 'search'])->name('search');
@@ -146,7 +147,6 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/create', [App\Http\Controllers\CashAdvanceController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\CashAdvanceController::class, 'store'])->name('store');
         Route::get('/{id}/detail', [App\Http\Controllers\CashAdvanceController::class, 'show'])->name('show');
-        Route::get('/kasbon/export', [App\Http\Controllers\CashAdvanceController::class, 'export'])->name('kasbon.export');
         Route::post('/{id}/cicil', [App\Http\Controllers\CashAdvanceController::class, 'storeInstallment'])->name('installment.store');
 
         Route::middleware(['role:admin,admin_gaji'])->group(function () {
