@@ -93,29 +93,29 @@
         {{-- 1. Menu Utama Kasbon (Semua Role bisa akses untuk pengajuan/lihat data) --}}
         <li class="nav-item">
             <a class="nav-link" href="{{ route('kasbon.index') }}">
-                <i class="menu-icon mdi mdi-cash-multiple"></i>
-                <span class="menu-title">
-                    {{ in_array(auth()->user()->role, ['admin_gaji']) ? 'Data Kasbon' : 'Kasbon Saya' }}
-                </span>
+            <i class="menu-icon mdi mdi-cash-multiple"></i>
+            <span class="menu-title">
+                {{ in_array(auth()->user()->role, ['admin_gaji']) ? 'Data Kasbon' : 'Kasbon Saya' }}
+            </span>
             </a>
         </li>
 
-        {{-- 2. Menu Verifikasi Pembayaran (HANYA ADMIN & ADMIN GAJI) --}}
-        @if(in_array(auth()->user()->role, ['admin_gaji']))
+        {{-- 2. Menu Verifikasi Pembayaran (HANYA ADMIN GAJI) --}}
+        @if(auth()->user()->role === 'admin_gaji')
             @php
-                // Hitung jumlah cicilan yang statusnya 'pending'
-                $pendingCount = \App\Models\CashAdvanceInstallment::where('status', 'pending')->count();
+            // Hitung jumlah cicilan yang statusnya 'pending'
+            $pendingCount = \App\Models\CashAdvanceInstallment::where('status', 'pending')->count();
             @endphp
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('kasbon.verification') }}">
-                    <i class="menu-icon mdi mdi-cash-check"></i>
-                    <span class="menu-title">Verifikasi Bayar</span>
-                    
-                    {{-- Badge Merah jika ada yang pending --}}
-                    @if($pendingCount > 0)
-                        <span class="badge badge-danger rounded-pill ms-auto">{{ $pendingCount }}</span>
-                    @endif
-                </a>
+            <a class="nav-link" href="{{ route('kasbon.verification') }}">
+                <i class="menu-icon mdi mdi-cash-check"></i>
+                <span class="menu-title">Verifikasi Bayar</span>
+                
+                {{-- Badge Merah jika ada yang pending --}}
+                @if($pendingCount > 0)
+                <span class="badge badge-danger rounded-pill ms-auto">{{ $pendingCount }}</span>
+                @endif
+            </a>
             </li>
         @endif
 
