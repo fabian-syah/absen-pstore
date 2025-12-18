@@ -90,7 +90,11 @@ class AuditController extends Controller
         // Kirim notifikasi ke user bahwa absennya diterima
         try {
             $title = "Absensi Disetujui";
-            $body = "Absensi mandiri Anda pada " . $attendance->check_in_time->format('d/m/Y H:i') . " telah diverifikasi.";
+            // Pastikan format jam notifikasi juga sesuai timezone user (opsional, disini default app timezone)
+            $userTz = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
+            $checkInLocal = Carbon::parse($attendance->check_in_time)->timezone($userTz);
+            
+            $body = "Absensi mandiri Anda pada " . $checkInLocal->format('d/m/Y H:i') . " telah diverifikasi.";
             $this->sendNotificationToUser($attendance->user, $title, $body);
         } catch (\Exception $e) {
             // Abaikan error notifikasi agar tidak merusak flow
@@ -351,23 +355,34 @@ class AuditController extends Controller
         ]);
 
         $attendance = Attendance::findOrFail($id);
+        
+        // [TIMEZONE FIX] Ambil Timezone Cabang User
+        $branchTimezone = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
 
-        $checkInDate = Carbon::parse($attendance->check_in_time);
-        $checkOutDateTime = Carbon::parse($checkInDate->format('Y-m-d') . ' ' . $request->checkout_time);
+        // Konversi checkin time ke waktu lokal user dulu untuk referensi tanggal
+        $checkInDateLocal = Carbon::parse($attendance->check_in_time)->timezone($branchTimezone);
+        $checkInDateStr = $checkInDateLocal->format('Y-m-d');
 
-        if ($checkOutDateTime->lt($attendance->check_in_time)) {
-            $checkOutDateTime->addDay();
+        // Buat Waktu Checkout Lokal sesuai input Audit
+        $checkOutDateTimeLocal = Carbon::createFromFormat('Y-m-d H:i', $checkInDateStr . ' ' . $request->checkout_time, $branchTimezone);
+
+        // Jika checkout kurang dari checkin (misal checkout jam 01:00 pagi besoknya), tambah 1 hari
+        if ($checkOutDateTimeLocal->lt($checkInDateLocal)) {
+            $checkOutDateTimeLocal->addDay();
         }
 
+        // Konversi balik ke UTC/Server Time untuk disimpan di DB
+        $checkOutForDB = $checkOutDateTimeLocal->copy()->setTimezone(config('app.timezone'));
+
         $attendance->update([
-            'check_out_time' => $checkOutDateTime,
+            'check_out_time' => $checkOutForDB,
             'status' => 'verified',
             'verified_by_user_id' => Auth::id(),
             'audit_note' => 'Manual checkout by Audit: ' . $request->notes
         ]);
 
         $title = "Absen Pulang Diperbarui";
-        $body = "Audit telah mengatur jam pulang Anda untuk tanggal " . $checkInDate->format('d/m/Y') . " menjadi jam " . $checkOutDateTime->format('H:i') . ".";
+        $body = "Audit telah mengatur jam pulang Anda untuk tanggal " . $checkInDateLocal->format('d/m/Y') . " menjadi jam " . $checkOutDateTimeLocal->format('H:i') . " (" . $branchTimezone . ").";
         $this->sendNotificationToUser($attendance->user, $title, $body);
 
         return back()->with('success', 'Absen pulang berhasil diperbarui manual.');
@@ -423,8 +438,12 @@ class AuditController extends Controller
 
         // 6. Kirim Notifikasi ke User (Opsional)
         try {
+            // Gunakan timezone user
+            $userTz = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
+            $checkInLocal = Carbon::parse($attendance->check_in_time)->timezone($userTz);
+
             $title = "Verifikasi Absensi";
-            $body  = "Absensi tanggal " . $attendance->check_in_time->format('d M Y') .
+            $body  = "Absensi tanggal " . $checkInLocal->format('d M Y') .
                 " telah diverifikasi menjadi: " . $request->presence_status;
 
             if (method_exists($this, 'sendNotificationToUser')) {
@@ -442,12 +461,14 @@ class AuditController extends Controller
     /**
      * Mengupdate/Mengoreksi Data Absensi (Dari Modal Koreksi/Edit)
      * Route: audit.update.attendance
+     * * [UPDATE TIMEZONE AWARE]
+     * Input dari admin diasumsikan sebagai waktu LOKAL CABANG USER.
      */
     public function updateAttendance(Request $request, $id)
     {
         $request->validate([
-            'check_in_time'   => 'required', // Jam masuk wajib ada
-            'check_out_time'  => 'nullable',
+            'check_in_time'   => 'required', // Jam masuk wajib ada (Format H:i)
+            'check_out_time'  => 'nullable', // Format H:i
             'presence_status' => 'required|string',
             'status'          => 'required|string',
             'audit_note'      => 'nullable|string',
@@ -456,32 +477,41 @@ class AuditController extends Controller
 
         $attendance = Attendance::findOrFail($id);
 
-        // 1. Atur Jam Masuk & Pulang (Gabungkan Tanggal Asli + Jam Baru)
-        $originalDate = $attendance->check_in_time->format('Y-m-d');
+        // 1. Identifikasi Timezone Cabang User
+        $branchTimezone = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
+        
+        // Ambil tanggal asli dalam timezone user agar tidak bergeser hari
+        $originalDateLocal = Carbon::parse($attendance->check_in_time)->timezone($branchTimezone)->format('Y-m-d');
 
-        // Parse jam baru dari input form
-        $newCheckIn  = Carbon::parse($originalDate . ' ' . $request->check_in_time);
+        // 2. Proses Jam Masuk (Parse sebagai waktu lokal user)
+        $newCheckInLocal  = Carbon::createFromFormat('Y-m-d H:i', $originalDateLocal . ' ' . $request->check_in_time, $branchTimezone);
+        // Konversi ke App Timezone (UTC/WIB) untuk simpan ke DB
+        $newCheckInDB = $newCheckInLocal->copy()->setTimezone(config('app.timezone'));
 
-        $newCheckOut = null;
+        // 3. Proses Jam Pulang (Jika ada)
+        $newCheckOutDB = null;
         if ($request->check_out_time) {
-            $newCheckOut = Carbon::parse($originalDate . ' ' . $request->check_out_time);
+            $newCheckOutLocal = Carbon::createFromFormat('Y-m-d H:i', $originalDateLocal . ' ' . $request->check_out_time, $branchTimezone);
+            
             // Jika jam pulang lebih kecil dari jam masuk, asumsikan lewat tengah malam (tambah 1 hari)
-            if ($newCheckOut->lt($newCheckIn)) {
-                $newCheckOut->addDay();
+            if ($newCheckOutLocal->lt($newCheckInLocal)) {
+                $newCheckOutLocal->addDay();
             }
+            
+            $newCheckOutDB = $newCheckOutLocal->copy()->setTimezone(config('app.timezone'));
         }
 
-        // 2. Siapkan Data Update
+        // 4. Siapkan Data Update
         $updateData = [
-            'check_in_time'       => $newCheckIn,
-            'check_out_time'      => $newCheckOut,
-            'presence_status'     => $request->presence_status, // Izin, Libur, Masuk, dll
-            'status'              => $request->status, // verified, pending, rejected
-            'audit_note'          => $request->audit_note . ' (Dikoreksi: ' . Auth::user()->name . ')',
+            'check_in_time'       => $newCheckInDB,
+            'check_out_time'      => $newCheckOutDB,
+            'presence_status'     => $request->presence_status, 
+            'status'              => $request->status, 
+            'audit_note'          => $request->audit_note . ' (Dikoreksi Audit: ' . Auth::user()->name . ')',
             'verified_by_user_id' => Auth::id(),
         ];
 
-        // 3. Handle Foto Bukti (Jika ada upload baru saat koreksi)
+        // 5. Handle Foto Bukti (Jika ada upload baru saat koreksi)
         if ($request->hasFile('audit_photo')) {
             if ($attendance->audit_photo_path && Storage::disk('public')->exists($attendance->audit_photo_path)) {
                 Storage::disk('public')->delete($attendance->audit_photo_path);
@@ -490,10 +520,10 @@ class AuditController extends Controller
             $updateData['audit_photo_path'] = $path;
         }
 
-        // 4. Simpan Perubahan
+        // 6. Simpan Perubahan
         $attendance->update($updateData);
 
-        return back()->with('success', 'Data absensi berhasil dikoreksi.');
+        return back()->with('success', 'Data absensi berhasil dikoreksi (Waktu disesuaikan dengan timezone cabang user: ' . $branchTimezone . ').');
     }
 
     /**
