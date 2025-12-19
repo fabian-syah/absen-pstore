@@ -21,7 +21,7 @@ class SelfAttendanceController extends Controller
     use SendFcmNotification;
 
     /**
-     * Helper untuk mendapatkan Offset Timezone (contoh: +07:00)
+     * Helper untuk mendapatkan Offset Timezone (contoh: +07:00, +09:00)
      */
     private function getOffset($timezone) {
         return Carbon::now($timezone)->format('P');
@@ -77,8 +77,12 @@ class SelfAttendanceController extends Controller
             }
 
             // 4. Cek apakah sudah selesai absen hari ini (Lokal Time)
+            // Menggunakan Offset dari Config App sebagai Source, dan Offset Cabang sebagai Target
+            $appOffset = $this->getOffset(config('app.timezone'));
+            $branchOffset = $this->getOffset($branchTimezone);
+
             $finishedToday = Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayLocal->format('Y-m-d')])
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayLocal->format('Y-m-d')])
                 ->whereNotNull('check_out_time')
                 ->where('status', '!=', 'alpha')
                 ->exists();
@@ -102,7 +106,8 @@ class SelfAttendanceController extends Controller
             $attendance = null;
         }
 
-        return view('user_biasa.absen', compact('mode', 'attendance'));
+        // [PENTING] Kirim $branchTimezone ke View agar jam di UI sesuai lokasi
+        return view('user_biasa.absen', compact('mode', 'attendance', 'branchTimezone'));
     }
 
     /**
@@ -262,8 +267,11 @@ class SelfAttendanceController extends Controller
             }
 
             // Cek Double Absen Harian (Lokal)
+            $appOffset = $this->getOffset(config('app.timezone'));
+            $branchOffset = $this->getOffset($branchTimezone);
+
             $existingSessionToday = Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayDateLocal])
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayDateLocal])
                 ->where('status', '!=', 'alpha')
                 ->first();
 

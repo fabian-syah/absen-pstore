@@ -20,7 +20,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div>
                         <h5 class="fw-bold text-dark mb-1">Absen {{ ucfirst($mode) }}</h5>
-                        <p class="text-muted small mb-0">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</p>
+                        {{-- [FIX TIMEZONE] Tampilkan tanggal sesuai cabang --}}
+                        <p class="text-muted small mb-0">{{ \Carbon\Carbon::now($branchTimezone ?? 'Asia/Jakarta')->translatedFormat('l, d F Y') }}</p>
                     </div>
                     
                     {{-- INDICATOR MODE --}}
@@ -40,7 +41,8 @@
                     <div class="alert alert-soft-primary d-flex align-items-center py-2 px-3 rounded-3 mt-3 mb-0 fade show">
                         <i class="mdi mdi-clock-check-outline fs-5 me-2"></i>
                         <div class="small">
-                            Masuk pukul <span class="fw-bold">{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</span>
+                            {{-- [FIX TIMEZONE] Konversi Jam Masuk ke Timezone Cabang --}}
+                            Masuk pukul <span class="fw-bold">{{ \Carbon\Carbon::parse($attendance->check_in_time)->timezone($branchTimezone ?? 'Asia/Jakarta')->format('H:i') }}</span>
                         </div>
                     </div>
                 @endif
