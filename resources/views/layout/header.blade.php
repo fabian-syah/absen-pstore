@@ -35,8 +35,7 @@
                 </a>
             </li>
 
-            {{-- Search - Untuk Admin, Audit, LEADER, dan ADMIN GAJI --}}
-            {{-- [UPDATE] Menambahkan admin_gaji agar input search muncul --}}
+            {{-- Search --}}
             @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'admin_gaji']))
                 <li class="nav-item">
                     <div class="search-form position-relative">
@@ -52,9 +51,9 @@
             {{-- Broadcast Notifications --}}
             <li class="nav-item dropdown notification-dropdown">
                 <a class="nav-link position-relative d-flex align-items-center justify-content-center" 
-                   id="broadcastDropdown" 
-                   href="#" 
-                   data-bs-toggle="dropdown">
+                    id="broadcastDropdown" 
+                    href="#" 
+                    data-bs-toggle="dropdown">
                     <i class="icon-bell notification-icon"></i>
                     <span class="notification-badge" id="broadcastCount" style="display: none;">0</span>
                 </a>
@@ -81,6 +80,72 @@
                     <a href="javascript:void(0)" class="dropdown-item text-center py-3 text-primary fw-medium" id="viewAllBroadcasts">
                         <i class="mdi mdi-bullhorn-outline me-1"></i>View All Broadcasts
                     </a>
+                </div>
+            </li>
+
+            {{-- FITUR CHAT PER CABANG (TEKS & FOTO) --}}
+            <li class="nav-item dropdown">
+                <a class="nav-link count-indicator dropdown-toggle" id="messageDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="icon-mail icon-lg"></i>
+                    {{-- <span class="count bg-primary"></span> Optional Dot --}}
+                </a>
+                <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list p-0" 
+                     aria-labelledby="messageDropdown" 
+                     style="width: 380px; min-width: 380px;">
+                    
+                    {{-- Header Chat --}}
+                    <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary text-white">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                <i class="mdi mdi-office-building"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ Auth::user()->branch->name ?? 'Global' }} Group</h6>
+                                <small style="font-size: 10px; opacity: 0.9;">
+                                    <i class="mdi mdi-clock-outline"></i> {{ Auth::user()->branch->timezone ?? 'Asia/Jakarta' }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Body Chat --}}
+                    <div id="chatBody" class="p-3" style="height: 350px; overflow-y: auto; background: #eef1f6;">
+                        <div class="text-center text-muted mt-5 pt-5">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            <p class="small mt-2">Memuat percakapan...</p>
+                        </div>
+                    </div>
+
+                    {{-- Footer Input (Form) --}}
+                    <div class="p-2 border-top bg-white">
+                        {{-- Preview File (Hidden by default) --}}
+                        <div id="filePreviewArea" class="px-2 pb-2 d-none">
+                            <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 py-1">
+                                <i class="mdi mdi-image text-success me-2"></i>
+                                <span id="fileNamePreview" class="small text-muted" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">image.jpg</span>
+                                <button type="button" id="cancelFileBtn" class="btn btn-sm text-danger ms-2 p-0"><i class="mdi mdi-close"></i></button>
+                            </div>
+                        </div>
+
+                        <form id="chatForm" class="d-flex align-items-center gap-2" enctype="multipart/form-data">
+                            {{-- Input File Hidden --}}
+                            <input type="file" id="chatImageInput" name="image" accept="image/*" class="d-none">
+                            
+                            {{-- Tombol Attach --}}
+                            <button type="button" id="triggerFileBtn" class="btn btn-light btn-sm rounded-circle border p-2" title="Kirim Foto">
+                                <i class="mdi mdi-paperclip text-muted" style="font-size: 16px;"></i>
+                            </button>
+
+                            {{-- Input Text --}}
+                            <input type="text" id="chatInput" name="message" class="form-control form-control-sm border bg-light" 
+                                   placeholder="Ketik pesan..." autocomplete="off" style="border-radius: 20px;">
+                            
+                            {{-- Tombol Kirim --}}
+                            <button type="submit" class="btn btn-primary btn-sm rounded-circle p-2 shadow-sm" style="width: 36px; height: 36px;">
+                                <i class="mdi mdi-send" style="font-size: 16px;"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </li>
 
@@ -181,12 +246,9 @@
         let searchTimeout = null;
 
         if (searchInput && searchResults) {
-            // Event Listener Typing
             searchInput.addEventListener('input', function() {
                 const query = this.value;
                 const url = this.getAttribute('data-url');
-
-                // Clear debounce
                 clearTimeout(searchTimeout);
 
                 if (query.length < 2) {
@@ -195,7 +257,6 @@
                     return;
                 }
 
-                // Debounce 500ms (tunggu user selesai ngetik)
                 searchTimeout = setTimeout(() => {
                     fetch(`${url}?q=${encodeURIComponent(query)}`)
                         .then(response => {
@@ -213,14 +274,12 @@
                 }, 500);
             });
 
-            // Tampilkan hasil saat input di-klik (jika sudah ada isinya)
             searchInput.addEventListener('focus', function() {
                 if (this.value.length >= 2 && searchResults.innerHTML !== '') {
                     searchResults.classList.add('show');
                 }
             });
 
-            // Sembunyikan jika klik di luar area search
             document.addEventListener('click', function(e) {
                 if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
                     searchResults.classList.remove('show');
@@ -228,7 +287,6 @@
             });
         }
 
-        // Render Search Results HTML
         function renderSearchResults(results) {
             if (!results || results.length === 0) {
                 searchResults.innerHTML = '<div class="dropdown-item text-muted py-3 text-center">No results found</div>';
@@ -308,7 +366,6 @@
             `;
             } else {
                 const baseUrl = "{{ route('broadcast.show', ':id') }}";
-
                 const broadcastItems = broadcasts.map(broadcast => {
                     const detailUrl = baseUrl.replace(':id', broadcast.id);
                     const limit = 80;
@@ -339,7 +396,6 @@
                     </a>
                     `;
                 }).join('');
-
                 broadcastList.innerHTML = broadcastItems;
             }
         }
@@ -356,11 +412,212 @@
         `;
         }
 
+        if(viewAllBroadcasts) {
+            viewAllBroadcasts.addEventListener('click', function() {
+                @if (auth()->user()->role == 'admin')
+                    window.location.href = '{{ route('broadcast.index') }}';
+                @else
+                    alert('Fitur View All untuk user biasa belum aktif.');
+                @endif
+            });
+        }
+
+        loadBroadcastNotifications();
+        setInterval(loadBroadcastNotifications, 30000);
+        if (broadcastDropdown) {
+            broadcastDropdown.addEventListener('click', function() {
+                loadBroadcastNotifications();
+            });
+        }
+
         // ==========================================
-        // 3. UTILITY FUNCTIONS (Shared)
+        // 3. BRANCH CHAT LOGIC (TEXT + IMAGE)
         // ==========================================
-        
-        // Mencegah XSS Injection
+        const messageDropdown = document.getElementById('messageDropdown');
+        const chatBody = document.getElementById('chatBody');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatImageInput = document.getElementById('chatImageInput');
+        const triggerFileBtn = document.getElementById('triggerFileBtn');
+        const filePreviewArea = document.getElementById('filePreviewArea');
+        const fileNamePreview = document.getElementById('fileNamePreview');
+        const cancelFileBtn = document.getElementById('cancelFileBtn');
+
+        let isChatOpen = false;
+        let chatInterval = null;
+
+        // Open/Close Handler
+        if(messageDropdown) {
+            messageDropdown.addEventListener('show.bs.dropdown', function () {
+                isChatOpen = true;
+                loadMessages();
+                chatInterval = setInterval(loadMessages, 3000); // Polling chat
+                setTimeout(() => { chatBody.scrollTop = chatBody.scrollHeight; }, 500);
+            });
+
+            messageDropdown.addEventListener('hide.bs.dropdown', function () {
+                isChatOpen = false;
+                clearInterval(chatInterval);
+            });
+        }
+
+        // Prevent Close on Click Inside
+        const msgDropdownMenu = document.querySelector('.dropdown-menu[aria-labelledby="messageDropdown"]');
+        if(msgDropdownMenu) {
+            msgDropdownMenu.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+        }
+
+        // File Input Logic
+        if(triggerFileBtn) {
+            triggerFileBtn.addEventListener('click', () => chatImageInput.click());
+        }
+
+        if(chatImageInput) {
+            chatImageInput.addEventListener('change', function() {
+                if(this.files && this.files[0]) {
+                    filePreviewArea.classList.remove('d-none');
+                    fileNamePreview.textContent = this.files[0].name;
+                    chatInput.placeholder = "Tambahkan caption (opsional)...";
+                }
+            });
+        }
+
+        if(cancelFileBtn) {
+            cancelFileBtn.addEventListener('click', resetFileInput);
+        }
+
+        function resetFileInput() {
+            chatImageInput.value = '';
+            filePreviewArea.classList.add('d-none');
+            chatInput.placeholder = "Ketik pesan...";
+        }
+
+        // Load Messages
+        function loadMessages() {
+            if(!isChatOpen) return;
+
+            fetch('{{ route('messages.index') }}')
+                .then(response => response.json())
+                .then(data => {
+                    renderChat(data.messages);
+                })
+                .catch(err => console.error(err));
+        }
+
+        // Render Chat HTML
+        function renderChat(messages) {
+            if(messages.length === 0) {
+                chatBody.innerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted small"><i class="mdi mdi-chat-processing-outline fs-1 mb-2"></i><p>Belum ada obrolan.</p></div>';
+                return;
+            }
+
+            let html = '';
+            messages.forEach(msg => {
+                // Image HTML
+                let imageHtml = '';
+                if(msg.image_url) {
+                    imageHtml = `
+                        <div class="mb-1">
+                            <a href="${msg.image_url}" target="_blank">
+                                <img src="${msg.image_url}" class="rounded border shadow-sm" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+                            </a>
+                        </div>
+                    `;
+                }
+
+                // Text HTML
+                let textHtml = msg.message ? `<div>${escapeHtml(msg.message)}</div>` : '';
+
+                if(msg.is_me) {
+                    html += `
+                        <div class="d-flex justify-content-end mb-3">
+                            <div class="text-end" style="max-width: 85%;">
+                                <div class="bg-primary text-white px-3 py-2 rounded-3 shadow-sm text-start d-inline-block" style="border-bottom-right-radius: 4px !important;">
+                                    ${imageHtml}
+                                    ${textHtml}
+                                </div>
+                                <div class="small text-muted mt-1" style="font-size: 10px;">
+                                    ${msg.time} <i class="mdi mdi-check-all text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="d-flex justify-content-start mb-3">
+                            <div class="me-2 mt-1">
+                                ${msg.user_avatar 
+                                    ? `<img src="/storage/${msg.user_avatar}" class="rounded-circle border" style="width: 28px; height: 28px; object-fit: cover;">` 
+                                    : `<div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 10px;">${msg.user_name.charAt(0)}</div>`
+                                }
+                            </div>
+                            <div style="max-width: 85%;">
+                                <small class="d-block text-dark fw-bold mb-1" style="font-size: 11px;">${msg.user_name}</small>
+                                <div class="bg-white text-dark px-3 py-2 rounded-3 shadow-sm border d-inline-block" style="border-top-left-radius: 4px !important;">
+                                    ${imageHtml}
+                                    ${textHtml}
+                                </div>
+                                <div class="small text-muted mt-1" style="font-size: 10px;">${msg.time}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            // Auto scroll logic (simple)
+            // Save scroll position check
+            const isScrolledBottom = (chatBody.scrollHeight - chatBody.clientHeight - chatBody.scrollTop) < 150;
+            
+            chatBody.innerHTML = html;
+            
+            if(isScrolledBottom || messages.length <= 5) { 
+                 chatBody.scrollTop = chatBody.scrollHeight;
+            }
+        }
+
+        // Send Message Handler
+        if(chatForm) {
+            chatForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const message = formData.get('message');
+                const image = formData.get('image');
+
+                if(!message.trim() && (!image || image.size === 0)) return;
+
+                // Optimistic UI clear
+                chatInput.value = '';
+                resetFileInput();
+
+                fetch('{{ route('messages.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.error) {
+                        alert(data.error);
+                    } else {
+                        loadMessages(); 
+                        chatBody.scrollTop = chatBody.scrollHeight;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Gagal mengirim pesan.");
+                });
+            });
+        }
+
+        // ==========================================
+        // 4. UTILITY FUNCTIONS
+        // ==========================================
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -383,39 +640,9 @@
 
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
-
-        // ==========================================
-        // 4. INIT
-        // ==========================================
-
-        // View All Listener
-        if(viewAllBroadcasts) {
-            viewAllBroadcasts.addEventListener('click', function() {
-                @if (auth()->user()->role == 'admin')
-                    window.location.href = '{{ route('broadcast.index') }}';
-                @else
-                    showAllBroadcastsModal();
-                @endif
-            });
-        }
-
-        function showAllBroadcastsModal() {
-            alert('Fitur View All untuk user biasa belum aktif.');
-        }
-
-        // Init Notification Load
-        loadBroadcastNotifications();
-        // Refresh tiap 30 detik
-        setInterval(loadBroadcastNotifications, 30000);
-        // Refresh saat dropdown dibuka
-        if (broadcastDropdown) {
-            broadcastDropdown.addEventListener('click', function() {
-                loadBroadcastNotifications();
-            });
-        }
     });
 
-    // Fullscreen Toggle
+    // Fullscreen Toggle (Outside DOMContentLoaded is fine)
     function toggleFullScreen() {
         if (!document.fullscreenElement &&
             !document.webkitFullscreenElement &&
@@ -445,236 +672,54 @@
 </script>
 
 <style>
-    /* --- CSS TAMBAHAN UNTUK SEARCH --- */
-    .search-form {
-        position: relative;
-        margin-right: 15px;
-    }
+    /* --- CSS UNTUK SEARCH --- */
+    .search-form { position: relative; margin-right: 15px; }
+    .search-icon { left: 15px; top: 50%; transform: translateY(-50%); color: #6c757d; z-index: 10; pointer-events: none; }
+    .search-input { border-radius: 20px; border: 1px solid #e2e8f0; padding: 8px 15px 8px 40px; background: #f8f9fa; width: 300px; height: 38px; font-size: 14px; transition: all 0.3s ease; }
+    .search-input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); background: white; outline: none; }
+    .search-results { position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 1050; background: white; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); max-height: 400px; overflow-y: auto; display: none; }
+    .search-results.show { display: block; }
+    .search-results .dropdown-item { padding: 12px 16px; border-bottom: 1px solid #f1f3f5; white-space: normal; }
+    .search-results .dropdown-item:last-child { border-bottom: none; }
+    .search-results .dropdown-item:hover { background-color: #f8f9fa; }
 
-    .search-icon {
-        left: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-        z-index: 10;
-        pointer-events: none;
-    }
-
-    .search-input {
-        border-radius: 20px;
-        border: 1px solid #e2e8f0;
-        padding: 8px 15px 8px 40px;
-        background: #f8f9fa;
-        width: 300px;
-        height: 38px;
-        font-size: 14px;
-        transition: all 0.3s ease;
-    }
-
-    .search-input:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        background: white;
-        outline: none;
-    }
-
-    .search-results {
-        position: absolute;
-        top: calc(100% + 5px);
-        left: 0;
-        right: 0;
-        z-index: 1050;
-        background: white;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        max-height: 400px;
-        overflow-y: auto;
-        display: none;
-    }
-
-    .search-results.show {
-        display: block;
-    }
-
-    .search-results .dropdown-item {
-        padding: 12px 16px;
-        border-bottom: 1px solid #f1f3f5;
-        white-space: normal; /* Agar text panjang turun ke bawah */
-    }
-
-    .search-results .dropdown-item:last-child {
-        border-bottom: none;
-    }
-
-    .search-results .dropdown-item:hover {
-        background-color: #f8f9fa;
-    }
-
-    /* --- CSS LAMA (BROADCAST DLL) --- */
-    .notification-dropdown .nav-link {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        background: #f8f9fa;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-
-    .notification-dropdown .nav-link:hover {
-        background: #e9ecef;
-        transform: scale(1.05);
-    }
-
-    .notification-icon {
-        font-size: 20px;
-        color: #495057;
-    }
-
-    .notification-badge {
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        background: linear-gradient(135deg, #ff4757 0%, #dc3545 100%);
-        color: white;
-        border-radius: 10px;
-        padding: 2px 6px;
-        font-size: 10px;
-        font-weight: 700;
-        min-width: 18px;
-        height: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4);
-        border: 2px solid white;
-        animation: badge-pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes badge-pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-    }
-
-    .dropdown-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
+    /* --- CSS UNTUK NOTIFICATION --- */
+    .notification-dropdown .nav-link { width: 42px; height: 42px; border-radius: 50%; background: #f8f9fa; transition: all 0.3s ease; position: relative; }
+    .notification-dropdown .nav-link:hover { background: #e9ecef; transform: scale(1.05); }
+    .notification-icon { font-size: 20px; color: #495057; }
+    .notification-badge { position: absolute; top: -4px; right: -4px; background: linear-gradient(135deg, #ff4757 0%, #dc3545 100%); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4); border: 2px solid white; animation: badge-pulse 2s ease-in-out infinite; }
+    @keyframes badge-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    .dropdown-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
     .dropdown-header h6 { color: white; }
     .dropdown-header small { color: rgba(255, 255, 255, 0.8); }
     .dropdown-header .mdi { color: white; opacity: 0.9; }
-
-    .broadcast-item {
-        border-left: 3px solid transparent;
-        transition: all 0.2s ease;
-        cursor: pointer;
-    }
-
-    .broadcast-item:hover {
-        background: #f8f9fa;
-        border-left-color: #667eea;
-    }
-
-    .broadcast-item.unread {
-        background: #f0f4ff;
-        border-left-color: #667eea;
-    }
-
-    .broadcast-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        flex-shrink: 0;
-    }
-
+    .broadcast-item { border-left: 3px solid transparent; transition: all 0.2s ease; cursor: pointer; }
+    .broadcast-item:hover { background: #f8f9fa; border-left-color: #667eea; }
+    .broadcast-item.unread { background: #f0f4ff; border-left-color: #667eea; }
+    .broadcast-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
     .broadcast-icon.text-danger { background: #ffebee; color: #dc3545; }
     .broadcast-icon.text-warning { background: #fff3e0; color: #ff9800; }
     .broadcast-icon.text-info { background: #e3f2fd; color: #2196f3; }
-
     .broadcast-title { font-size: 14px; color: #212529; line-height: 1.4; }
-    
-    .broadcast-message {
-        font-size: 13px;
-        line-height: 1.4;
-        margin: 0;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .broadcast-read-more {
-        color: #667eea;
-        font-size: 12px;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-
+    .broadcast-message { font-size: 13px; line-height: 1.4; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .broadcast-read-more { color: #667eea; font-size: 12px; font-weight: 600; transition: all 0.2s ease; }
     .broadcast-item:hover .broadcast-read-more { color: #764ba2; }
     .broadcast-time { color: #6c757d; font-size: 11px; white-space: nowrap; }
-
-    .unread-dot {
-        width: 8px;
-        height: 8px;
-        background: #667eea;
-        border-radius: 50%;
-        display: inline-block;
-        margin-left: 8px;
-        flex-shrink: 0;
-    }
-
+    .unread-dot { width: 8px; height: 8px; background: #667eea; border-radius: 50%; display: inline-block; margin-left: 8px; flex-shrink: 0; }
     .empty-state { padding: 40px 20px; }
     .empty-icon { font-size: 64px; color: #dee2e6; line-height: 1; }
     .empty-icon.text-danger { color: #dc3545; }
     .empty-state h6 { font-size: 16px; margin-bottom: 4px; }
     .empty-state p { font-size: 13px; }
-
     #broadcastList::-webkit-scrollbar { width: 6px; }
     #broadcastList::-webkit-scrollbar-track { background: #f8f9fa; }
     #broadcastList::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
     #broadcastList::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
 
-    .profile-initial-nav {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 14px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-sizing: border-box;
-    }
-
-    .profile-initial-nav:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .profile-initial-dropdown {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 18px;
-        margin: 0 auto;
-        border: 3px solid #fff;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-    }
+    /* --- CSS UNTUK PROFILE --- */
+    .profile-initial-nav { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-sizing: border-box; }
+    .profile-initial-nav:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .profile-initial-dropdown { width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; margin: 0 auto; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2); }
 
     @media (max-width: 768px) {
         .search-form { margin: 10px 0; width: 100%; }

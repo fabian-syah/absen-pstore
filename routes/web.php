@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttendanceCorrectionController;
+use App\Http\Controllers\BranchMessageController;
 use App\Http\Controllers\BranchSalaryController;
 use App\Http\Controllers\EmployeeSalaryController;
 use App\Http\Controllers\EmploymentHistoryController;
@@ -72,6 +73,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     Route::get('/my-salary', [MySalaryController::class, 'index'])->name('my-salary.index');
     Route::get('/my-salary/{id}', [MySalaryController::class, 'show'])->name('my-salary.show');
+
+    Route::get('/branch-messages', [BranchMessageController::class, 'index'])->name('messages.index');
+    Route::post('/branch-messages', [BranchMessageController::class, 'store'])->name('messages.store');
 
     Route::post('/attendance/{id}/confirm-overtime', [DashboardController::class, 'confirmOvertime'])->name('attendance.confirm-overtime');
 
