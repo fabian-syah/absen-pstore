@@ -330,7 +330,7 @@ class AttendanceHistoryController extends Controller
             'is_late_checkin'     => $isLate,
             'audit_note'          => $request->audit_note,
             'audit_photo_path'    => $auditPhotoPath,
-            'verified_by_user_id' => ($request->status == 'verified') ? Auth::id() : null,
+            'verified_by_user_id' => Auth::id(), // SELALU SIMPAN ID PENGEDIT
             'attendance_type'     => ($attendance->presence_status == 'Alpha' && $request->presence_status != 'Alpha') ? 'manual' : $attendance->attendance_type,
         ]);
 

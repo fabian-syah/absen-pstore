@@ -441,10 +441,11 @@
                                                                 <small class="text-muted" style="font-size: 0.65rem;">Verifikasi</small>
                                                             </div>
                                                         @elseif($att->audit_photo_path || $att->attendance_type == 'manual')
-                                                            <div class="badge bg-info text-white p-1 me-2 rounded-1" style="min-width: 35px;">IN</div>
+                                                            {{-- BAGIAN INI DIUBAH UNTUK MENAMPILKAN NAMA PENGEDIT --}}
+                                                            <div class="badge bg-info text-white p-1 me-2 rounded-1" style="min-width: 35px;">EDIT</div>
                                                             <div class="lh-sm">
-                                                                <span class="d-block fw-bold text-dark small">Manual</span>
-                                                                <small class="text-muted" style="font-size: 0.65rem;">Audit/Admin</small>
+                                                                <span class="d-block fw-bold text-dark small">{{ $att->verifier->name ?? 'Manual' }}</span>
+                                                                <small class="text-muted" style="font-size: 0.65rem;">Koreksi Audit</small>
                                                             </div>
                                                         @else
                                                             <div class="badge bg-secondary text-white p-1 me-2 rounded-1" style="min-width: 35px;">IN</div>
