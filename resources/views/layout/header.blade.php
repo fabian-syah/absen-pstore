@@ -91,81 +91,86 @@
                     <span class="notification-badge bg-danger" id="mainChatBadge" style="display: none; top: 5px; right: 5px;">0</span> 
                 </a>
                 
+                {{-- [PERBAIKAN] Hapus display:flex dari style ini agar tidak muncul saat load awal --}}
                 <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list p-0" 
                      aria-labelledby="messageDropdown" 
-                     style="width: 380px; min-width: 380px; height: 500px; display: flex; flex-direction: column;">
+                     style="width: 380px; min-width: 380px; height: 500px;">
                     
-                    {{-- =========================== --}}
-                    {{-- VIEW 1: DAFTAR CABANG --}}
-                    {{-- =========================== --}}
-                    <div id="branchListView" class="d-flex flex-column h-100">
-                        <div class="p-3 border-bottom bg-primary text-white">
-                            <h6 class="mb-0 fw-bold"><i class="mdi mdi-forum-outline me-2"></i>Pilih Grup Cabang</h6>
-                        </div>
-                        
-                        <div id="branchListBody" class="flex-grow-1" style="overflow-y: auto; background: #fff;">
-                            <div class="text-center text-muted mt-5 pt-3">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                                <p class="small mt-2">Memuat daftar cabang...</p>
-                            </div>
-                        </div>
-                    </div>
+                    {{-- [TAMBAHAN] Wrapper d-flex di dalam sini untuk layout --}}
+                    <div class="d-flex flex-column h-100 w-100">
 
-                    {{-- =========================== --}}
-                    {{-- VIEW 2: ROOM CHAT --}}
-                    {{-- =========================== --}}
-                    <div id="chatRoomView" class="d-none flex-column h-100">
-                        {{-- Header Chat Room --}}
-                        <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary text-white">
-                            <div class="d-flex align-items-center gap-2">
-                                <button type="button" id="backToBranchList" class="btn btn-sm btn-outline-light border-0 p-1 me-1">
-                                    <i class="mdi mdi-arrow-left fs-6"></i>
-                                </button>
-                                <div>
-                                    <h6 class="mb-0 fw-bold" id="activeBranchName">Loading...</h6>
-                                    <small style="font-size: 10px; opacity: 0.9;" id="activeBranchTimezone">
-                                        <i class="mdi mdi-clock-outline me-1"></i>Asia/Jakarta
-                                    </small>
+                        {{-- =========================== --}}
+                        {{-- VIEW 1: DAFTAR CABANG --}}
+                        {{-- =========================== --}}
+                        <div id="branchListView" class="d-flex flex-column h-100 w-100">
+                            <div class="p-3 border-bottom bg-primary text-white">
+                                <h6 class="mb-0 fw-bold"><i class="mdi mdi-forum-outline me-2"></i>Pilih Grup Cabang</h6>
+                            </div>
+                            
+                            <div id="branchListBody" class="flex-grow-1" style="overflow-y: auto; background: #fff;">
+                                <div class="text-center text-muted mt-5 pt-3">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                    <p class="small mt-2">Memuat daftar cabang...</p>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Body Chat --}}
-                        <div id="chatBody" class="p-3 flex-grow-1" style="overflow-y: auto; background: #eef1f6;">
-                            {{-- Pesan akan dirender disini via JS --}}
-                        </div>
-
-                        {{-- Footer Input --}}
-                        <div class="p-2 border-top bg-white">
-                            {{-- Preview File --}}
-                            <div id="filePreviewArea" class="px-2 pb-2 d-none">
-                                <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 py-1">
-                                    <i class="mdi mdi-image text-success me-2"></i>
-                                    <span id="fileNamePreview" class="small text-muted" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">img.jpg</span>
-                                    <button type="button" id="cancelFileBtn" class="btn btn-sm text-danger ms-2 p-0"><i class="mdi mdi-close"></i></button>
+                        {{-- =========================== --}}
+                        {{-- VIEW 2: ROOM CHAT --}}
+                        {{-- =========================== --}}
+                        <div id="chatRoomView" class="d-none flex-column h-100 w-100">
+                            {{-- Header Chat Room --}}
+                            <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary text-white">
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" id="backToBranchList" class="btn btn-sm btn-outline-light border-0 p-1 me-1">
+                                        <i class="mdi mdi-arrow-left fs-6"></i>
+                                    </button>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold" id="activeBranchName">Loading...</h6>
+                                        <small style="font-size: 10px; opacity: 0.9;" id="activeBranchTimezone">
+                                            <i class="mdi mdi-clock-outline me-1"></i>Asia/Jakarta
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
 
-                            <form id="chatForm" class="d-flex align-items-center gap-2" enctype="multipart/form-data">
-                                {{-- Hidden Inputs --}}
-                                <input type="hidden" id="activeBranchId" name="branch_id">
-                                <input type="file" id="chatImageInput" name="image" accept="image/*" class="d-none">
-                                
-                                {{-- Buttons --}}
-                                <button type="button" id="triggerFileBtn" class="btn btn-light btn-sm rounded-circle border p-2" title="Kirim Foto">
-                                    <i class="mdi mdi-paperclip text-muted" style="font-size: 16px;"></i>
-                                </button>
+                            {{-- Body Chat --}}
+                            <div id="chatBody" class="p-3 flex-grow-1" style="overflow-y: auto; background: #eef1f6;">
+                                {{-- Pesan akan dirender disini via JS --}}
+                            </div>
 
-                                <input type="text" id="chatInput" name="message" class="form-control form-control-sm border bg-light" 
-                                       placeholder="Ketik pesan..." autocomplete="off" style="border-radius: 20px;">
-                                
-                                <button type="submit" class="btn btn-primary btn-sm rounded-circle p-2 shadow-sm" style="width: 36px; height: 36px;">
-                                    <i class="mdi mdi-send" style="font-size: 16px;"></i>
-                                </button>
-                            </form>
+                            {{-- Footer Input --}}
+                            <div class="p-2 border-top bg-white">
+                                {{-- Preview File --}}
+                                <div id="filePreviewArea" class="px-2 pb-2 d-none">
+                                    <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 py-1">
+                                        <i class="mdi mdi-image text-success me-2"></i>
+                                        <span id="fileNamePreview" class="small text-muted" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">img.jpg</span>
+                                        <button type="button" id="cancelFileBtn" class="btn btn-sm text-danger ms-2 p-0"><i class="mdi mdi-close"></i></button>
+                                    </div>
+                                </div>
+
+                                <form id="chatForm" class="d-flex align-items-center gap-2" enctype="multipart/form-data">
+                                    {{-- Hidden Inputs --}}
+                                    <input type="hidden" id="activeBranchId" name="branch_id">
+                                    <input type="file" id="chatImageInput" name="image" accept="image/*" class="d-none">
+                                    
+                                    {{-- Buttons --}}
+                                    <button type="button" id="triggerFileBtn" class="btn btn-light btn-sm rounded-circle border p-2" title="Kirim Foto">
+                                        <i class="mdi mdi-paperclip text-muted" style="font-size: 16px;"></i>
+                                    </button>
+
+                                    <input type="text" id="chatInput" name="message" class="form-control form-control-sm border bg-light" 
+                                        placeholder="Ketik pesan..." autocomplete="off" style="border-radius: 20px;">
+                                    
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-circle p-2 shadow-sm" style="width: 36px; height: 36px;">
+                                        <i class="mdi mdi-send" style="font-size: 16px;"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
 
+                    </div>
                 </div>
             </li>
 
