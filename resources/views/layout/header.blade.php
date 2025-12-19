@@ -210,9 +210,9 @@
                     <a href="{{ route('profile.edit') }}" class="dropdown-item">
                         <i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i> My Profile
                     </a>
-                    <a class="dropdown-item">
+                    {{-- <a class="dropdown-item">
                         <i class="dropdown-item-icon mdi mdi-message-text-outline text-primary me-2"></i> Messages
-                    </a>
+                    </a> --}}
                     <a class="dropdown-item">
                         <i class="dropdown-item-icon mdi mdi-help-circle-outline text-primary me-2"></i> FAQ
                     </a>
