@@ -21,41 +21,26 @@
 
     {{-- BAGIAN BARU: ATTENDANCE WRAPPED (Desember Only) --}}
     @if (\Carbon\Carbon::now()->month == 12)
-        <div class="row mb-4 animate-enter" style="animation-delay: 0.1s">
+        <div class="row mb-4 animate-enter">
             <div class="col-12">
-                <div class="card border-0 shadow-lg holiday-card" 
-                     style="background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%); 
-                            border: 2px solid rgba(255, 215, 0, 0.3);
-                            position: relative;
-                            overflow: hidden;">
-                    
-                    {{-- Glowing Effect --}}
-                    <div class="holiday-glow"></div>
-                    
-                    {{-- Snowflakes --}}
-                    <div class="snowflakes" aria-hidden="true">
-                        @for($i = 0; $i < 10; $i++)
-                            <div class="snowflake" style="animation-delay: {{ $i * 0.5 }}s; left: {{ $i * 10 }}%;"></div>
-                        @endfor
+                <div class="card bg-gradient-warning text-white shadow-lg"
+                    style="background: linear-gradient(135deg, #111 0%, #333 100%); border: 1px solid #FFD700; overflow: hidden; position: relative;">
+                    <div
+                        style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%); animation: rotateGlow 20s linear infinite; pointer-events: none;">
                     </div>
-                    
-                    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-center position-relative z-index-1 py-4">
-                        <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <div class="card-body d-flex justify-content-between align-items-center position-relative z-index-1">
+                        <div class="d-flex align-items-center">
                             <div class="me-3 d-none d-sm-block">
-                                <div class="sparkle-icon">
-                                    <i class="mdi mdi-sparkles text-warning"></i>
-                                </div>
+                                <i class="mdi mdi-sparkles text-warning display-4"></i>
                             </div>
                             <div>
-                                <h4 class="fw-bold text-warning mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                                    ✨ Your {{ date('Y') }} Wrapped is Here!
-                                </h4>
-                                <p class="mb-0 text-white-50 small">Lihat rangkuman perjalanan karirmu selama setahun ini.</p>
+                                <h4 class="fw-bold text-warning mb-1">✨ Your {{ date('Y') }} Wrapped is Here!</h4>
+                                <p class="mb-0 text-white-50">Lihat rangkuman perjalanan karirmu selama setahun ini.</p>
                             </div>
                         </div>
                         <a href="{{ route('attendance.recap') }}"
-                           class="btn btn-holiday rounded-pill fw-bold shadow-lg hover-scale px-4 py-2">
-                            <i class="mdi mdi-play-circle-outline me-2"></i> Putar Wrapped
+                            class="btn btn-light rounded-pill fw-bold shadow-sm hover-scale">
+                            <i class="mdi mdi-play-circle-outline me-1"></i> Putar
                         </a>
                     </div>
                 </div>
@@ -67,68 +52,68 @@
     @if (auth()->user()->role == 'admin')
         {{-- WIDGET ADMIN --}}
         <div class="row mb-4">
-            @php
-                $adminWidgets = [
-                    [
-                        'delay' => '0.1s',
-                        'gradient' => 'gradient-purple',
-                        'icon' => 'mdi-account-multiple',
-                        'label' => 'Total User',
-                        'value' => $totalUsers,
-                        'desc' => 'Karyawan Aktif'
-                    ],
-                    [
-                        'delay' => '0.2s',
-                        'gradient' => 'gradient-blue',
-                        'icon' => 'mdi-office-building',
-                        'label' => 'Total Cabang',
-                        'value' => $totalBranches,
-                        'desc' => 'Cabang Terdaftar'
-                    ],
-                    [
-                        'delay' => '0.3s',
-                        'gradient' => 'gradient-green',
-                        'icon' => 'mdi-calendar-check',
-                        'label' => 'Absensi Hari Ini',
-                        'value' => $attendancesToday,
-                        'desc' => 'Total absensi hari ini'
-                    ],
-                    [
-                        'delay' => '0.4s',
-                        'gradient' => 'gradient-orange',
-                        'icon' => 'mdi-alert-circle-outline',
-                        'label' => 'Perlu Verifikasi',
-                        'value' => $pendingVerifications,
-                        'desc' => 'Menunggu persetujuan'
-                    ]
-                ];
-            @endphp
-            
-            @foreach($adminWidgets as $widget)
-            <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: {{ $widget['delay'] }}">
-                <div class="card card-bank {{ $widget['gradient'] }} hover-lift">
+            <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
+                <div class="card card-bank gradient-purple">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
-                        <div class="card-bank-icon"><i class="mdi {{ $widget['icon'] }}"></i></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
                         <div class="card-bank-content">
-                            <p class="card-bank-label">{{ $widget['label'] }}</p>
-                            <h2 class="card-bank-value count-up" data-target="{{ $widget['value'] }}">0</h2>
-                            <p class="card-bank-desc">{{ $widget['desc'] }}</p>
+                            <p class="card-bank-label">Total User</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $totalUsers }}">0</h2>
+                            <p class="card-bank-desc">Karyawan Aktif</p>
                         </div>
                         <div class="card-bank-pattern"></div>
-                        <div class="card-bank-corner">
-                            <i class="mdi {{ $widget['icon'] }}"></i>
-                        </div>
                     </div>
                 </div>
             </div>
-            @endforeach
+            <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
+                <div class="card card-bank gradient-blue">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-office-building"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Total Cabang</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $totalBranches }}">0</h2>
+                            <p class="card-bank-desc">Cabang Terdaftar</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
+                <div class="card card-bank gradient-green">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Absensi Hari Ini</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $attendancesToday }}">0</h2>
+                            <p class="card-bank-desc">Total absensi hari ini</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.4s">
+                <div class="card card-bank gradient-orange">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Perlu Verifikasi</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
+                            <p class="card-bank-desc">Menunggu persetujuan</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     @elseif (auth()->user()->role == 'audit')
         {{-- WIDGET AUDIT --}}
         <div class="row mb-4">
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                <div class="card card-bank gradient-red hover-lift">
+                <div class="card card-bank gradient-red">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
@@ -136,7 +121,7 @@
                             <p class="card-bank-label">Verif Absensi</p>
                             <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
                             <p class="card-bank-desc">Absensi pending (Foto/Lokasi)</p>
-                            <a href="{{ route('audit.verify.list') }}" class="btn btn-sm btn-light mt-2 shadow-sm hover-scale">
+                            <a href="{{ route('audit.verify.list') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
                                 <i class="mdi mdi-clipboard-check me-1"></i>Lihat Daftar
                             </a>
                         </div>
@@ -145,7 +130,7 @@
                 </div>
             </div>
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card card-bank gradient-blue hover-lift">
+                <div class="card card-bank gradient-blue">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-file-document-edit-outline"></i></div>
@@ -153,7 +138,7 @@
                             <p class="card-bank-label">Approve Izin</p>
                             <h2 class="card-bank-value count-up" data-target="{{ $pendingLeaves }}">0</h2>
                             <p class="card-bank-desc">Izin, Sakit, Cuti, WFH, Telat</p>
-                            <a href="{{ route('leave-requests.index') }}" class="btn btn-sm btn-light mt-2 shadow-sm hover-scale">
+                            <a href="{{ route('leave-requests.index') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
                                 <i class="mdi mdi-playlist-check me-1"></i>Lihat Pengajuan
                             </a>
                         </div>
@@ -162,7 +147,7 @@
                 </div>
             </div>
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
-                <div class="card card-bank gradient-green hover-lift">
+                <div class="card card-bank gradient-green">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
@@ -180,24 +165,21 @@
         {{-- WIDGET SECURITY --}}
         <div class="row mb-4">
             <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                <div class="card card-action hover-float bg-gradient-dark text-white">
+                <div class="card card-action hover-float">
                     <div class="card-body text-center py-5">
                         <div class="mb-4 pulse-icon-wrapper">
-                            <div class="qr-scan-icon">
-                                <i class="mdi mdi-qrcode-scan"></i>
-                                <div class="qr-scan-line"></div>
-                            </div>
+                            <i class="mdi mdi-qrcode-scan display-1 text-dark"></i>
                         </div>
                         <h4 class="card-title mb-3">Pindai QR User</h4>
-                        <p class="text-light mb-4">Arahkan kamera ke QR Code user untuk melakukan absensi.</p>
-                        <a href="{{ route('security.scan') }}" class="btn btn-light btn-lg shadow-lg hover-scale px-4">
+                        <p class="text-muted mb-4">Arahkan kamera ke QR Code user untuk melakukan absensi.</p>
+                        <a href="{{ route('security.scan') }}" class="btn btn-dark btn-lg shadow-lg">
                             <i class="mdi mdi-camera-enhance me-2"></i>Mulai Memindai
                         </a>
                     </div>
                 </div>
             </div>
             <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card card-bank gradient-dark hover-lift">
+                <div class="card card-bank gradient-dark">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-chart-bar"></i></div>
@@ -226,17 +208,14 @@
         {{-- 1. TOP 3 ABSENSI (USER/ADMIN/AUDIT/LEADER) --}}
         @if(auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
         <div class="col-12">
-            <div class="card border-0 shadow-lg luxury-card overflow-hidden hover-float">
+            <div class="card border-0 shadow-lg luxury-card overflow-hidden">
                 <div class="luxury-bg-glow"></div>
                 <div class="luxury-bg-pattern"></div>
                 
                 <div class="card-body p-4 position-relative z-index-1">
                     <div class="text-center mb-5">
-                        <div class="trophy-icon mb-3">
-                            <i class="mdi mdi-trophy"></i>
-                        </div>
-                        <h3 class="fw-bold mb-1 luxury-title">
-                            Top Rajin Absen
+                        <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
+                            <i class="mdi mdi-trophy text-warning me-2"></i>Top Rajin Absen
                         </h3>
                         <p class="text-muted small">
                             {{ auth()->user()->role == 'admin' ? 'Global' : 'Cabang Anda' }} - Bulan {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
@@ -244,16 +223,16 @@
                     </div>
 
                     {{-- PODIUM CONTAINER --}}
-                    <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-4">
+                    <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
                         
                         {{-- JUARA 2 (KIRI) --}}
                         @if(isset($leaderboard[1]))
                             <div class="podium-step-container animate-enter" style="animation-delay: 0.6s">
-                                <div class="podium-avatar-wrapper silver-glow">
+                                <div class="podium-avatar-wrapper">
                                     @if($leaderboard[1]->user->profile_photo_path)
                                         <img src="{{ asset('storage/'.$leaderboard[1]->user->profile_photo_path) }}" class="luxury-avatar">
                                     @else
-                                        <div class="luxury-avatar-placeholder silver-gradient">
+                                        <div class="luxury-avatar-placeholder bg-secondary">
                                             {{ substr($leaderboard[1]->user->name, 0, 1) }}
                                         </div>
                                     @endif
@@ -278,9 +257,7 @@
                         @if(isset($leaderboard[0]))
                             <div class="podium-step-container main-winner animate-enter" style="animation-delay: 0.5s">
                                 <div class="crown-floating">
-                                    <div class="crown-wrapper">
-                                        <i class="mdi mdi-crown"></i>
-                                    </div>
+                                    <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown" width="50">
                                 </div>
                                 <div class="podium-avatar-wrapper gold-glow">
                                     @if($leaderboard[0]->user->profile_photo_path)
@@ -296,13 +273,13 @@
                                     <div class="sparkle s1"></div>
                                     <div class="sparkle s2"></div>
                                     <div class="sparkle s3"></div>
-                                    <div class="podium-content pt-4">
+                                    <div class="podium-content pt-3">
                                         <h5 class="fw-bold text-dark mb-1">{{ Str::limit($leaderboard[0]->user->name, 15) }}</h5>
                                         <p class="small text-muted mb-2">{{ $leaderboard[0]->user->division->name ?? '-' }}</p>
                                         <div class="stat-pill gold mb-2">
                                             <i class="mdi mdi-star me-1"></i>{{ $leaderboard[0]->total_attendance }} Kehadiran
                                         </div>
-                                        <div class="stat-pill light">
+                                        <div class="stat-pill">
                                             <i class="mdi mdi-timer-sand me-1"></i>Avg: {{ $leaderboard[0]->avg_arrival_display }}
                                         </div>
                                     </div>
@@ -313,11 +290,11 @@
                         {{-- JUARA 3 (KANAN) --}}
                         @if(isset($leaderboard[2]))
                             <div class="podium-step-container animate-enter" style="animation-delay: 0.7s">
-                                <div class="podium-avatar-wrapper bronze-glow">
+                                <div class="podium-avatar-wrapper">
                                     @if($leaderboard[2]->user->profile_photo_path)
                                         <img src="{{ asset('storage/'.$leaderboard[2]->user->profile_photo_path) }}" class="luxury-avatar">
                                     @else
-                                        <div class="luxury-avatar-placeholder bronze-gradient">
+                                        <div class="luxury-avatar-placeholder" style="background: #CD7F32;">
                                             {{ substr($leaderboard[2]->user->name, 0, 1) }}
                                         </div>
                                     @endif
@@ -347,30 +324,27 @@
         {{-- 2. TOP SCANNER (ADMIN & SECURITY) -- SAME PODIUM STYLE --}}
         @if((auth()->user()->role == 'admin' || auth()->user()->role == 'security') && isset($topScanners) && count($topScanners) > 0)
         <div class="col-12 mt-4">
-             <div class="card border-0 shadow-lg luxury-card overflow-hidden hover-float">
+             <div class="card border-0 shadow-lg luxury-card overflow-hidden">
                 <div class="luxury-bg-pattern"></div>
                 <div class="card-body p-4 position-relative z-index-1">
                     <div class="text-center mb-5">
-                        <div class="scanner-icon mb-3">
-                            <i class="mdi mdi-qrcode-scan"></i>
-                        </div>
-                        <h3 class="fw-bold mb-1 luxury-title">
-                            Top Security Scanner
+                        <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
+                            <i class="mdi mdi-qrcode-scan text-primary me-2"></i>Top Security Scanner
                         </h3>
                         <p class="text-muted small">Total Scan Terbanyak Bulan Ini</p>
                     </div>
 
                      {{-- PODIUM CONTAINER --}}
-                     <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-4">
+                     <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
                         
                         {{-- JUARA 2 --}}
                         @if(isset($topScanners[1]))
                             <div class="podium-step-container">
-                                <div class="podium-avatar-wrapper silver-glow">
+                                <div class="podium-avatar-wrapper">
                                      @if($topScanners[1]->profile_photo_path)
                                         <img src="{{ asset('storage/'.$topScanners[1]->profile_photo_path) }}" class="luxury-avatar">
                                     @else
-                                        <div class="luxury-avatar-placeholder silver-gradient">{{ substr($topScanners[1]->name, 0, 1) }}</div>
+                                        <div class="luxury-avatar-placeholder bg-secondary">{{ substr($topScanners[1]->name, 0, 1) }}</div>
                                     @endif
                                     <div class="rank-circle silver">2</div>
                                 </div>
@@ -378,7 +352,7 @@
                                     <div class="podium-content">
                                         <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[1]->name, 12) }}</h6>
                                         <div class="stat-pill mt-2">
-                                            <i class="mdi mdi-qrcode me-1"></i>{{ $topScanners[1]->total_scans }} Scan
+                                            {{ $topScanners[1]->total_scans }} Scan
                                         </div>
                                     </div>
                                 </div>
@@ -388,11 +362,7 @@
                         {{-- JUARA 1 --}}
                         @if(isset($topScanners[0]))
                             <div class="podium-step-container main-winner">
-                                <div class="crown-floating">
-                                    <div class="crown-wrapper">
-                                        <i class="mdi mdi-crown"></i>
-                                    </div>
-                                </div>
+                                <div class="crown-floating"><img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown" width="50"></div>
                                 <div class="podium-avatar-wrapper gold-glow">
                                     @if($topScanners[0]->profile_photo_path)
                                         <img src="{{ asset('storage/'.$topScanners[0]->profile_photo_path) }}" class="luxury-avatar">
@@ -402,7 +372,7 @@
                                     <div class="rank-circle gold">1</div>
                                 </div>
                                 <div class="podium-block gold-block text-center">
-                                    <div class="podium-content pt-4">
+                                    <div class="podium-content pt-3">
                                         <h5 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[0]->name, 15) }}</h5>
                                         <div class="stat-pill gold mt-2">
                                             <i class="mdi mdi-star me-1"></i>{{ $topScanners[0]->total_scans }} Scan
@@ -415,11 +385,11 @@
                         {{-- JUARA 3 --}}
                         @if(isset($topScanners[2]))
                             <div class="podium-step-container">
-                                <div class="podium-avatar-wrapper bronze-glow">
+                                <div class="podium-avatar-wrapper">
                                      @if($topScanners[2]->profile_photo_path)
                                         <img src="{{ asset('storage/'.$topScanners[2]->profile_photo_path) }}" class="luxury-avatar">
                                     @else
-                                        <div class="luxury-avatar-placeholder bronze-gradient">{{ substr($topScanners[2]->name, 0, 1) }}</div>
+                                        <div class="luxury-avatar-placeholder" style="background: #CD7F32;">{{ substr($topScanners[2]->name, 0, 1) }}</div>
                                     @endif
                                     <div class="rank-circle bronze">3</div>
                                 </div>
@@ -427,7 +397,7 @@
                                     <div class="podium-content">
                                         <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[2]->name, 12) }}</h6>
                                         <div class="stat-pill mt-2">
-                                            <i class="mdi mdi-qrcode me-1"></i>{{ $topScanners[2]->total_scans }} Scan
+                                            {{ $topScanners[2]->total_scans }} Scan
                                         </div>
                                     </div>
                                 </div>
@@ -449,12 +419,7 @@
 
     <div class="row animate-enter" style="animation-delay: 0.5s">
         <div class="col-12">
-            <div class="d-flex align-items-center mb-3">
-                <div class="section-icon">
-                    <i class="mdi mdi-account-circle"></i>
-                </div>
-                <h4 class="card-title mb-0 ms-3">Absensi Pribadi</h4>
-            </div>
+            <h4 class="card-title mb-3"><i class="mdi mdi-account-circle me-2"></i>Absensi Pribadi</h4>
         </div>
     </div>
 
@@ -465,8 +430,7 @@
 
                 {{-- ID CARD VISUAL --}}
                 <div class="col-12 mb-3">
-                    <div class="card card-id gradient-dark hover-lift">
-                        <div class="card-id-glow"></div>
+                    <div class="card card-id gradient-dark">
                         <div class="card-body">
                             <div class="card-id-header">
                                 <div class="card-id-photo-wrapper">
@@ -512,7 +476,7 @@
                 {{-- QR CODE CARD UNTUK SCAN SECURITY --}}
                 <div class="col-12">
                     <div class="card border-0 shadow-sm hover-float" style="background: white; border-radius: 16px;">
-                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                        <div class="card-body d-flex align-items-center justify-content-between">
                             <div>
                                 <h5 class="fw-bold mb-1">QR Code Absensi</h5>
                                 <p class="text-muted small mb-0">Klik QR untuk memperbesar</p>
@@ -531,8 +495,8 @@
 
         {{-- KARTU STATUS ABSENSI & TOMBOL ABSEN MANDIRI --}}
         <div class="col-md-7 grid-margin stretch-card">
-            <div class="card card-status hover-shadow-lg h-100">
-                <div class="card-body d-flex flex-column">
+            <div class="card card-status hover-shadow-lg">
+                <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-4">
                         <div>
                             <h4 class="card-title mb-1">
@@ -545,33 +509,31 @@
 
                         <div class="text-end">
                             {{-- CLOCK ELEMENT --}}
-                            <div class="clock-display">
-                                <h4 class="fw-bold mb-0 font-monospace text-primary" id="realtime-clock">--:--:--</h4>
-                            </div>
+                            <h4 class="fw-bold mb-0 font-monospace text-primary" id="realtime-clock">--:--:--</h4>
                             {{-- TAMPILKAN TIMEZONE --}}
                             <small class="text-muted d-block" style="font-size: 0.7rem;">
                                 {{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}
-                                <span class="timezone-badge">{{ $current_timezone }}</span>
+                                ({{ $current_timezone }})
                             </small>
                         </div>
                     </div>
 
                     @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show shadow-sm animate-pulse-green">
+                        <div class="alert alert-success alert-dismissible fade show shadow-sm">
                             <i class="mdi mdi-check-circle-outline me-2"></i>
                             {{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
                     @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show shadow-sm animate-pulse-red">
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm">
                             <i class="mdi mdi-alert-circle-outline me-2"></i>
                             {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
                     @if (session('warning'))
-                        <div class="alert alert-warning alert-dismissible fade show shadow-sm animate-pulse-orange">
+                        <div class="alert alert-warning alert-dismissible fade show shadow-sm">
                             <i class="mdi mdi-alert-outline me-2"></i>
                             {{ session('warning') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -579,327 +541,325 @@
                     @endif
 
                     {{-- LOGIKA TAMPILAN STATUS --}}
-                    <div class="flex-grow-1 d-flex align-items-center">
-                        @if ($myAttendanceToday)
-                            {{-- 1. JIKA SUDAH ABSEN MASUK --}}
-                            @php
-                                $isCrossDay = false;
-                                if (!$myAttendanceToday->check_out_time) {
-                                    // Timezone already handled in Controller
-                                    $isCrossDay =
-                                        $myAttendanceToday->check_in_time->format('Y-m-d') !==
-                                        \Carbon\Carbon::now($current_timezone)->format('Y-m-d');
-                                }
-                                $sourceLabel =
-                                    $myAttendanceToday->attendance_type == 'scan' ? 'Security Scan' : 'Selfie Mandiri';
-                            @endphp
+                    @if ($myAttendanceToday)
+                        {{-- 1. JIKA SUDAH ABSEN MASUK --}}
+                        @php
+                            $isCrossDay = false;
+                            if (!$myAttendanceToday->check_out_time) {
+                                // Timezone already handled in Controller
+                                $isCrossDay =
+                                    $myAttendanceToday->check_in_time->format('Y-m-d') !==
+                                    \Carbon\Carbon::now($current_timezone)->format('Y-m-d');
+                            }
+                            $sourceLabel =
+                                $myAttendanceToday->attendance_type == 'scan' ? 'Security Scan' : 'Selfie Mandiri';
+                        @endphp
 
-                            {{-- SUDAH PULANG --}}
-                            @if ($myAttendanceToday->check_out_time || $myAttendanceToday->photo_out_path)
-                                <div class="status-card status-success w-100 mb-3 animate-pulse-green">
-                                    <div class="d-flex align-items-center">
-                                        <div class="status-icon shadow"><i class="mdi mdi-home-variant"></i></div>
-                                        <div class="flex-grow-1">
-                                            <h5 class="mb-1 fw-bold">Anda Sudah Pulang</h5>
-                                            <p class="text-muted mb-0 small">Terima kasih atas kerja keras Anda!</p>
-                                        </div>
-                                    </div>
-                                    <hr>
-                                    <div class="row text-center">
-                                        <div class="col-6 border-end">
-                                            <small class="text-muted d-block">JAM MASUK</small>
-                                            <h4 class="fw-bold text-success mb-0 count-up-time">
-                                                {{ $myAttendanceToday->check_in_time->format('H:i') }}
-                                            </h4>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="text-muted d-block">JAM PULANG</small>
-                                            <h4 class="fw-bold text-primary mb-0 count-up-time">
-                                                {{ $myAttendanceToday->check_out_time ? $myAttendanceToday->check_out_time->format('H:i') : '-' }}
-                                            </h4>
-                                        </div>
+                        {{-- SUDAH PULANG --}}
+                        @if ($myAttendanceToday->check_out_time || $myAttendanceToday->photo_out_path)
+                            <div class="status-card status-success mb-3 animate-pulse-green">
+                                <div class="d-flex align-items-center">
+                                    <div class="status-icon shadow"><i class="mdi mdi-home-variant"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1 fw-bold">Anda Sudah Pulang</h5>
+                                        <p class="text-muted mb-0 small">Terima kasih atas kerja keras Anda!</p>
                                     </div>
                                 </div>
-
-                                {{-- SEDANG BEKERJA --}}
-                            @else
-                                <div
-                                    class="status-card {{ $isCrossDay ? 'status-warning' : 'status-success' }} w-100 mb-3 position-relative overflow-hidden">
-
-
-                                    <div class="d-flex align-items-center position-relative z-index-1">
-                                        <div class="status-icon shadow pulse-animation">
-                                            <i
-                                                class="mdi {{ $isCrossDay ? 'mdi-clock-alert-outline' : 'mdi-clock-check' }}"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            @if ($isCrossDay)
-                                                {{-- [MODIFIKASI] SECTION LEMBUR LINTAS HARI --}}
-                                                <div class="alert alert-light border-warning mb-0 p-3"
-                                                    style="background-color: #fffbeb; border: 1px solid #fcd34d;">
-                                                    <div class="d-flex align-items-center mb-2">
-                                                        <div>
-                                                            <h6 class="text-danger fw-bold mb-0 text-uppercase"
-                                                                style="letter-spacing: 0.5px;">Lembur Lintas Hari Detected!
-                                                            </h6>
-                                                            <p class="text-muted small mb-0">
-                                                                Masuk: <span
-                                                                    class="fw-bold text-dark">{{ $myAttendanceToday->check_in_time->format('d M, H:i') }}</span>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    <hr class="my-3" style="border-top: 1px solid #fde68a;">
-
-                                                    {{-- CONTAINER UTAMA ACTION --}}
-                                                    <div id="cross-day-actions">
-
-                                                        {{-- OPSI 1: SLIDER UNTUK FOTO (NORMAL) --}}
-                                                        <div class="mb-3" id="slider-view">
-                                                            <p class="text-muted small mb-1">
-                                                                <i class="mdi mdi-camera me-1"></i><strong>Opsi 1:</strong>
-                                                                Absen Pulang Normal (Foto)
-                                                            </p>
-
-                                                            <div class="position-relative w-100 rounded-pill d-flex align-items-center px-1 user-select-none shadow-sm"
-                                                                id="slide-track"
-                                                                style="height: 50px; background-color: #fde047; transition: all 0.2s;">
-
-                                                                <div class="position-absolute w-100 text-center"
-                                                                    style="pointer-events: none; left:0;">
-                                                                    <span class="fw-bold text-dark small opacity-75"
-                                                                        style="letter-spacing: 1px;">GESER KE KANAN >></span>
-                                                                </div>
-
-                                                                <div id="slide-thumb"
-                                                                    class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center text-warning"
-                                                                    style="width: 42px; height: 42px; cursor: pointer; position: absolute; left: 4px; z-index: 10;">
-                                                                    <i class="mdi mdi-arrow-right fw-bold fs-5"></i>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {{-- OPSI 2: TOMBOL LEWATI (TANPA FOTO) --}}
-                                                        <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
-                                                            method="POST">
-                                                            @csrf
-                                                            <p class="text-muted small mb-1">
-                                                                <i class="mdi mdi-cancel me-1"></i><strong>Opsi 2:</strong>
-                                                                Lupa Absen (Tanpa Foto)
-                                                            </p>
-                                                            <button type="submit"
-                                                                class="btn btn-outline-danger w-100 py-2 shadow-sm hover-scale"
-                                                                onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis TANPA FOTO.\nStatus kemarin akan menjadi \'Verified/Present\' tapi ada catatan skip.\n\nLanjutkan?');">
-                                                                <i class="mdi mdi-skip-forward me-2"></i>Lewati & Tutup Sesi
-                                                            </button>
-                                                        </form>
-                                                    </div>
-
-                                                    {{-- FASE 3: CAMERA BUTTON (Muncul setelah slide) --}}
-                                                    <div id="camera-view" class="d-none text-center animate-enter mt-3">
-                                                        <div class="mb-3">
-                                                            <h6 class="text-primary fw-bold">Konfirmasi Pulang</h6>
-                                                            <p class="text-muted small">Silahkan ambil foto selfie untuk
-                                                                validasi.</p>
-                                                        </div>
-                                                        <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
-                                                            class="btn btn-primary w-100 py-3 rounded-3 shadow-sm fw-bold hover-scale">
-                                                            <i class="mdi mdi-camera-party-mode me-2"></i> Ambil Foto & Pulang
-                                                        </a>
-                                                    </div>
-
-                                                </div>
-                                            @else
-                                                {{-- STATUS NORMAL --}}
-                                                <div class="d-flex align-items-center">
-                                                    <h5 class="mb-1 fw-bold">Sedang Bekerja</h5>
-                                                    <span class="live-indicator ms-2"></span>
-                                                </div>
-                                                <p class="mb-0">Masuk Pukul:
-                                                    <strong>{{ $myAttendanceToday->check_in_time->format('H:i') }}</strong> via
-                                                    {{ $sourceLabel }}
-                                                </p>
-                                            @endif
-                                        </div>
+                                <hr>
+                                <div class="row text-center">
+                                    <div class="col-6 border-end">
+                                        <small class="text-muted d-block">JAM MASUK</small>
+                                        <h4 class="fw-bold text-success mb-0 count-up-time">
+                                            {{ $myAttendanceToday->check_in_time->format('H:i') }}
+                                        </h4>
                                     </div>
-
-                                    {{-- TOMBOL AKSI PULANG (NORMAL) --}}
-                                    @if (!$isCrossDay)
-                                        <div class="mt-3 pt-3 border-top position-relative z-index-1">
-                                            @if (Auth::user()->only_security_scan)
-                                                <button class="btn btn-secondary btn-sm w-100 shadow-sm" disabled
-                                                    style="cursor: not-allowed; opacity: 0.7;">
-                                                    <i class="mdi mdi-lock me-1"></i> Absen Pulang Mandiri Dikunci
-                                                </button>
-                                                <small class="text-danger d-block text-center mt-1" style="font-size: 10px;">
-                                                    Silahkan Scan QR Code ke Security untuk Pulang
-                                                </small>
-                                            @else
-                                                <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
-                                                    class="btn btn-danger btn-sm w-100 shadow hover-scale py-2">
-                                                    <i class="mdi mdi-logout me-1"></i>
-                                                    Absen Pulang Mandiri
-                                                </a>
-                                            @endif
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-                        @elseif($myPendingLeave)
-                            {{-- 2. JIKA ADA PENGAJUAN PENDING (KUNING) --}}
-                            <div class="status-card status-warning w-100 mb-3 hover-shadow-lg">
-                                <div class="text-center py-5">
-                                    <div class="mb-3">
-                                        <i class="mdi mdi-timer-sand display-3 text-warning pulse-animation"></i>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">JAM PULANG</small>
+                                        <h4 class="fw-bold text-primary mb-0 count-up-time">
+                                            {{ $myAttendanceToday->check_out_time ? $myAttendanceToday->check_out_time->format('H:i') : '-' }}
+                                        </h4>
                                     </div>
-                                    <h4 class="mb-2 fw-bold text-warning">Sedang Menunggu Approve dari Audit</h4>
-                                    <p class="text-muted mb-4 px-3">
-                                        Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda sedang
-                                        diproses.
-                                    </p>
-                                    <div class="bg-white p-3 rounded border mb-3 shadow-sm mx-4">
-                                        <span class="fst-italic text-dark">"{{ $myPendingLeave->reason }}"</span>
-                                    </div>
-                                    {{-- Tombol Batalkan --}}
-                                    <form action="{{ route('leave-requests.cancel', $myPendingLeave->id) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="btn btn-danger btn-sm shadow-sm hover-scale"
-                                            onclick="return confirm('Batalkan pengajuan ini?')">
-                                            <i class="mdi mdi-close-circle me-1"></i> Batalkan Pengajuan
-                                        </button>
-                                    </form>
                                 </div>
                             </div>
-                            {{-- 3. JIKA SUDAH DI APPROVE (HIJAU) --}}
-                        @elseif(isset($myLeaveToday) && $myLeaveToday && $myLeaveToday->status == 'approved')
-                            <div class="status-card status-success w-100 mb-3 hover-float">
-                                <div class="d-flex align-items-start">
-                                    <div class="status-icon shadow"><i class="mdi mdi-check-decagram"></i></div>
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between">
-                                            <h5 class="mb-1 fw-bold">Pengajuan Disetujui</h5>
-                                        </div>
-                                        <p class="text-muted mb-2 small">
-                                            Status: <strong>{{ strtoupper($myLeaveToday->type) }}</strong>
-                                        </p>
-                                        <div class="bg-white p-2 rounded border mb-2 shadow-sm">
-                                            <span class="fst-italic text-dark">"{{ $myLeaveToday->reason }}"</span>
-                                        </div>
 
-                                        @if ($myLeaveToday->file_proof)
-                                            <div class="mt-2">
-                                                <button type="button" class="btn btn-sm btn-light border shadow-sm hover-scale"
-                                                    onclick="window.open('{{ Storage::url($myLeaveToday->file_proof) }}', '_blank')">
-                                                    <i class="mdi mdi-image-area me-1"></i>Lihat Bukti
-                                                </button>
+                            {{-- SEDANG BEKERJA --}}
+                        @else
+                            <div
+                                class="status-card {{ $isCrossDay ? 'status-warning' : 'status-success' }} mb-3 position-relative overflow-hidden">
+
+
+                                <div class="d-flex align-items-center position-relative z-index-1">
+                                    <div class="status-icon shadow pulse-animation">
+                                        <i
+                                            class="mdi {{ $isCrossDay ? 'mdi-clock-alert-outline' : 'mdi-clock-check' }}"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        @if ($isCrossDay)
+                                            {{-- [MODIFIKASI] SECTION LEMBUR LINTAS HARI --}}
+                                            <div class="alert alert-light border-warning mb-0 p-3"
+                                                style="background-color: #fffbeb; border: 1px solid #fcd34d;">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div>
+                                                        <h6 class="text-danger fw-bold mb-0 text-uppercase"
+                                                            style="letter-spacing: 0.5px;">Lembur Lintas Hari Detected!
+                                                        </h6>
+                                                        <p class="text-muted small mb-0">
+                                                            Masuk: <span
+                                                                class="fw-bold text-dark">{{ $myAttendanceToday->check_in_time->format('d M, H:i') }}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <hr class="my-3" style="border-top: 1px solid #fde68a;">
+
+                                                {{-- CONTAINER UTAMA ACTION --}}
+                                                <div id="cross-day-actions">
+
+                                                    {{-- OPSI 1: SLIDER UNTUK FOTO (NORMAL) --}}
+                                                    <div class="mb-3" id="slider-view">
+                                                        <p class="text-muted small mb-1">
+                                                            <i class="mdi mdi-camera me-1"></i><strong>Opsi 1:</strong>
+                                                            Absen Pulang Normal (Foto)
+                                                        </p>
+
+                                                        <div class="position-relative w-100 rounded-pill d-flex align-items-center px-1 user-select-none shadow-sm"
+                                                            id="slide-track"
+                                                            style="height: 50px; background-color: #fde047; transition: all 0.2s;">
+
+                                                            <div class="position-absolute w-100 text-center"
+                                                                style="pointer-events: none; left:0;">
+                                                                <span class="fw-bold text-dark small opacity-75"
+                                                                    style="letter-spacing: 1px;">GESER KE KANAN >></span>
+                                                            </div>
+
+                                                            <div id="slide-thumb"
+                                                                class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center text-warning"
+                                                                style="width: 42px; height: 42px; cursor: pointer; position: absolute; left: 4px; z-index: 10;">
+                                                                <i class="mdi mdi-arrow-right fw-bold fs-5"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- OPSI 2: TOMBOL LEWATI (TANPA FOTO) --}}
+                                                    <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        <p class="text-muted small mb-1">
+                                                            <i class="mdi mdi-cancel me-1"></i><strong>Opsi 2:</strong>
+                                                            Lupa Absen (Tanpa Foto)
+                                                        </p>
+                                                        <button type="submit"
+                                                            class="btn btn-outline-danger w-100 py-2 shadow-sm"
+                                                            onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis TANPA FOTO.\nStatus kemarin akan menjadi \'Verified/Present\' tapi ada catatan skip.\n\nLanjutkan?');">
+                                                            <i class="mdi mdi-skip-forward me-2"></i>Lewati & Tutup Sesi
+                                                        </button>
+                                                    </form>
+                                                </div>
+
+                                                {{-- FASE 3: CAMERA BUTTON (Muncul setelah slide) --}}
+                                                <div id="camera-view" class="d-none text-center animate-enter mt-3">
+                                                    <div class="mb-3">
+                                                        <h6 class="text-primary fw-bold">Konfirmasi Pulang</h6>
+                                                        <p class="text-muted small">Silahkan ambil foto selfie untuk
+                                                            validasi.</p>
+                                                    </div>
+                                                    <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
+                                                        class="btn btn-primary w-100 py-3 rounded-3 shadow-sm fw-bold">
+                                                        <i class="mdi mdi-camera-party-mode me-2"></i> Ambil Foto & Pulang
+                                                    </a>
+                                                </div>
+
                                             </div>
+                                        @else
+                                            {{-- STATUS NORMAL --}}
+                                            <div class="d-flex align-items-center">
+                                                <h5 class="mb-1 fw-bold">Sedang Bekerja</h5>
+                                                <span class="live-indicator ms-2"></span>
+                                            </div>
+                                            <p class="mb-0">Masuk Pukul:
+                                                <strong>{{ $myAttendanceToday->check_in_time->format('H:i') }}</strong> via
+                                                {{ $sourceLabel }}
+                                            </p>
                                         @endif
                                     </div>
                                 </div>
 
-                                <div class="mt-3 pt-3 border-top text-center">
-
-                                    {{-- LOGIKA BARU: Jika Izin Telat, tombolnya adalah ABSEN MASUK (bukan batalkan izin) --}}
-                                    @if ($myLeaveToday->type === 'telat')
-                                        <p class="small text-muted mb-2">Anda sudah sampai kantor?</p>
-                                        <a href="{{ route('self.attend.create') }}"
-                                            class="btn btn-primary btn-sm w-100 shadow-sm hover-scale py-2">
-                                            <i class="mdi mdi-camera-account me-2"></i> Lakukan Absen Masuk
-                                        </a>
-                                        <small class="d-block mt-2 text-muted fst-italic" style="font-size: 10px;">
-                                            *Izin telat akan tetap tercatat di history Anda.
-                                        </small>
-                                    @else
-                                        {{-- LOGIKA LAMA (Untuk Sakit/Cuti/WFH yang masuk lebih awal) --}}
-                                        <p class="small text-muted mb-2">Berubah pikiran atau sudah sampai kantor?</p>
-                                        <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}"
-                                            method="POST">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit"
-                                                class="btn btn-outline-danger btn-sm w-100 shadow-sm hover-scale py-2"
-                                                onclick="return confirm('Apakah Anda yakin? Status izin hari ini akan dibatalkan dan Anda bisa absen kembali.');">
-                                                <i class="mdi mdi-map-marker-radius me-2"></i>Batalkan Izin & Absen Masuk
+                                {{-- TOMBOL AKSI PULANG (NORMAL) --}}
+                                @if (!$isCrossDay)
+                                    <div class="mt-3 pt-3 border-top position-relative z-index-1">
+                                        @if (Auth::user()->only_security_scan)
+                                            <button class="btn btn-secondary btn-sm w-100 shadow-sm" disabled
+                                                style="cursor: not-allowed; opacity: 0.7;">
+                                                <i class="mdi mdi-lock me-1"></i> Absen Pulang Mandiri Dikunci
                                             </button>
-                                        </form>
-                                    @endif
+                                            <small class="text-danger d-block text-center mt-1" style="font-size: 10px;">
+                                                Silahkan Scan QR Code ke Security untuk Pulang
+                                            </small>
+                                        @else
+                                            <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
+                                                class="btn btn-danger btn-sm w-100 shadow hover-scale">
+                                                <i class="mdi mdi-logout me-1"></i>
+                                                Absen Pulang Mandiri
+                                            </a>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    @elseif($myPendingLeave)
+                        {{-- 2. JIKA ADA PENGAJUAN PENDING (KUNING) --}}
+                        <div class="status-card status-warning mb-3 hover-shadow-lg">
+                            <div class="text-center py-5">
+                                <div class="mb-3">
+                                    <i class="mdi mdi-timer-sand display-3 text-warning pulse-animation"></i>
+                                </div>
+                                <h4 class="mb-2 fw-bold text-warning">Sedang Menunggu Approve dari Audit</h4>
+                                <p class="text-muted mb-4 px-3">
+                                    Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda sedang
+                                    diproses.
+                                </p>
+                                <div class="bg-white p-3 rounded border mb-3 shadow-sm mx-4">
+                                    <span class="fst-italic text-dark">"{{ $myPendingLeave->reason }}"</span>
+                                </div>
+                                {{-- Tombol Batalkan --}}
+                                <form action="{{ route('leave-requests.cancel', $myPendingLeave->id) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn btn-danger btn-sm shadow-sm"
+                                        onclick="return confirm('Batalkan pengajuan ini?')">
+                                        <i class="mdi mdi-close-circle me-1"></i> Batalkan Pengajuan
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {{-- 3. JIKA SUDAH DI APPROVE (HIJAU) --}}
+                    @elseif(isset($myLeaveToday) && $myLeaveToday && $myLeaveToday->status == 'approved')
+                        <div class="status-card status-success mb-3 hover-float">
+                            <div class="d-flex align-items-start">
+                                <div class="status-icon shadow"><i class="mdi mdi-check-decagram"></i></div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <h5 class="mb-1 fw-bold">Pengajuan Disetujui</h5>
+                                    </div>
+                                    <p class="text-muted mb-2 small">
+                                        Status: <strong>{{ strtoupper($myLeaveToday->type) }}</strong>
+                                    </p>
+                                    <div class="bg-white p-2 rounded border mb-2 shadow-sm">
+                                        <span class="fst-italic text-dark">"{{ $myLeaveToday->reason }}"</span>
+                                    </div>
 
+                                    @if ($myLeaveToday->file_proof)
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-light border shadow-sm"
+                                                onclick="window.open('{{ Storage::url($myLeaveToday->file_proof) }}', '_blank')">
+                                                <i class="mdi mdi-image-area me-1"></i>Lihat Bukti
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="mt-3 pt-3 border-top text-center">
+
+                                {{-- LOGIKA BARU: Jika Izin Telat, tombolnya adalah ABSEN MASUK (bukan batalkan izin) --}}
+                                @if ($myLeaveToday->type === 'telat')
+                                    <p class="small text-muted mb-2">Anda sudah sampai kantor?</p>
+                                    <a href="{{ route('self.attend.create') }}"
+                                        class="btn btn-primary btn-sm w-100 shadow-sm hover-scale">
+                                        <i class="mdi mdi-camera-account me-2"></i> Lakukan Absen Masuk
+                                    </a>
+                                    <small class="d-block mt-2 text-muted fst-italic" style="font-size: 10px;">
+                                        *Izin telat akan tetap tercatat di history Anda.
+                                    </small>
+                                @else
+                                    {{-- LOGIKA LAMA (Untuk Sakit/Cuti/WFH yang masuk lebih awal) --}}
+                                    <p class="small text-muted mb-2">Berubah pikiran atau sudah sampai kantor?</p>
+                                    <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}"
+                                        method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit"
+                                            class="btn btn-outline-danger btn-sm w-100 shadow-sm hover-scale"
+                                            onclick="return confirm('Apakah Anda yakin? Status izin hari ini akan dibatalkan dan Anda bisa absen kembali.');">
+                                            <i class="mdi mdi-map-marker-radius me-2"></i>Batalkan Izin & Absen Masuk
+                                        </button>
+                                    </form>
+                                @endif
+
+                            </div>
+                        </div>
+                    @else
+                        {{-- [LOGIKA BARU] JIKA HABIS LEMBUR LINTAS HARI --}}
+                        @if (isset($justFinishedOvertime) && $justFinishedOvertime)
+                            <div class="status-card status-info mb-3 hover-shadow-lg">
+                                <div class="text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="mdi mdi-bed-clock display-4 text-info"></i>
+                                    </div>
+                                    <h5 class="mb-2 fw-bold text-info">Selamat Beristirahat!</h5>
+                                    <p class="text-muted mb-4 px-3 small">
+                                        Anda baru saja pulang lembur pukul
+                                        <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>.
+                                        <br>Sistem mencatat Anda lembur lintas hari. Anda dipersilakan masuk siang hari ini.
+                                    </p>
+
+                                    {{-- Tetap tampilkan tombol absen jika dia mau masuk lagi --}}
+                                    <div class="d-flex justify-content-center gap-2">
+                                        @if (Auth::user()->only_security_scan)
+                                            <div class="d-flex flex-column align-items-center w-100">
+                                                <button class="btn btn-secondary shadow-sm w-100" disabled
+                                                    style="cursor: not-allowed; opacity: 0.7;">
+                                                    <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
+                                                </button>
+                                            </div>
+                                        @else
+                                            <a href="{{ route('self.attend.create') }}"
+                                                class="btn btn-outline-info shadow hover-scale">
+                                                <i class="mdi mdi-fingerprint me-2"></i>Absen Shift Baru
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         @else
-                            {{-- [LOGIKA BARU] JIKA HABIS LEMBUR LINTAS HARI --}}
-                            @if (isset($justFinishedOvertime) && $justFinishedOvertime)
-                                <div class="status-card status-info w-100 mb-3 hover-shadow-lg">
-                                    <div class="text-center py-5">
-                                        <div class="mb-3">
-                                            <i class="mdi mdi-bed-clock display-4 text-info"></i>
-                                        </div>
-                                        <h5 class="mb-2 fw-bold text-info">Selamat Beristirahat!</h5>
-                                        <p class="text-muted mb-4 px-3 small">
-                                            Anda baru saja pulang lembur pukul
-                                            <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>.
-                                            <br>Sistem mencatat Anda lembur lintas hari. Anda dipersilakan masuk siang hari ini.
-                                        </p>
-
-                                        {{-- Tetap tampilkan tombol absen jika dia mau masuk lagi --}}
-                                        <div class="d-flex justify-content-center gap-2">
-                                            @if (Auth::user()->only_security_scan)
-                                                <div class="d-flex flex-column align-items-center w-100">
-                                                    <button class="btn btn-secondary shadow-sm w-100" disabled
-                                                        style="cursor: not-allowed; opacity: 0.7;">
-                                                        <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
-                                                    </button>
-                                                </div>
-                                            @else
-                                                <a href="{{ route('self.attend.create') }}"
-                                                    class="btn btn-outline-info shadow hover-scale py-2 px-4">
-                                                    <i class="mdi mdi-fingerprint me-2"></i>Absen Shift Baru
-                                                </a>
-                                            @endif
-                                        </div>
+                            {{-- 4. BELUM ABSEN (DEFAULT) --}}
+                            <div class="status-card status-info hover-shadow-lg">
+                                <div class="text-center py-4">
+                                    <div class="mb-3">
+                                        <i class="mdi mdi-clock-alert display-4 text-primary pulse-text"></i>
                                     </div>
-                                </div>
-                            @else
-                                {{-- 4. BELUM ABSEN (DEFAULT) --}}
-                                <div class="status-card status-info hover-shadow-lg w-100">
-                                    <div class="text-center py-4">
-                                        <div class="mb-3">
-                                            <i class="mdi mdi-clock-alert display-4 text-primary pulse-text"></i>
-                                        </div>
-                                        <h5 class="mb-2 fw-bold">Anda Belum Absen Hari Ini</h5>
-                                        <p class="text-muted mb-4">Gunakan fitur ini jika Anda bekerja WFH atau Dinas Luar.</p>
-                                        <div class="d-flex justify-content-center gap-2">
+                                    <h5 class="mb-2 fw-bold">Anda Belum Absen Hari Ini</h5>
+                                    <p class="text-muted mb-4">Gunakan fitur ini jika Anda bekerja WFH atau Dinas Luar.</p>
+                                    <div class="d-flex justify-content-center gap-2">
 
-                                            {{-- TOMBOL ABSEN MANDIRI --}}
-                                            @if (Auth::user()->only_security_scan)
-                                                <div class="d-flex flex-column align-items-center w-100">
-                                                    <button class="btn btn-secondary shadow-sm w-100" disabled
-                                                        style="cursor: not-allowed; opacity: 0.7;">
-                                                        <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
-                                                    </button>
-                                                    <small class="text-danger mt-1" style="font-size: 10px;">
-                                                        <i class="mdi mdi-alert-circle"></i> Wajib Scan QR ke Security
-                                                    </small>
-                                                </div>
-                                            @else
-                                                <a href="{{ route('self.attend.create') }}"
-                                                    class="btn btn-dark shadow hover-scale py-2 px-4">
-                                                    <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
-                                                </a>
-                                            @endif
-
-                                            <a href="{{ route('leave-requests.create') }}"
-                                                class="btn btn-outline-dark shadow-sm hover-scale py-2 px-4">
-                                                <i class="mdi mdi-file-document-edit-outline me-2"></i>Izin/Sakit
+                                        {{-- TOMBOL ABSEN MANDIRI --}}
+                                        @if (Auth::user()->only_security_scan)
+                                            <div class="d-flex flex-column align-items-center w-100">
+                                                <button class="btn btn-secondary shadow-sm w-100" disabled
+                                                    style="cursor: not-allowed; opacity: 0.7;">
+                                                    <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
+                                                </button>
+                                                <small class="text-danger mt-1" style="font-size: 10px;">
+                                                    <i class="mdi mdi-alert-circle"></i> Wajib Scan QR ke Security
+                                                </small>
+                                            </div>
+                                        @else
+                                            <a href="{{ route('self.attend.create') }}"
+                                                class="btn btn-dark shadow hover-scale">
+                                                <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
                                             </a>
-                                        </div>
+                                        @endif
+
+                                        <a href="{{ route('leave-requests.create') }}"
+                                            class="btn btn-outline-dark shadow-sm hover-scale">
+                                            <i class="mdi mdi-file-document-edit-outline me-2"></i>Izin/Sakit
+                                        </a>
                                     </div>
                                 </div>
-                            @endif
-
+                            </div>
                         @endif
-                    </div>
+
+                    @endif
                 </div>
             </div>
         </div>
@@ -910,7 +870,7 @@
     {{-- ======================================================================= --}}
     <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
         <div class="col-12">
-            <div class="card shadow-sm border-0 quick-actions-card">
+            <div class="card shadow-sm border-0" style="background: linear-gradient(to right, #ffffff, #f8f9fa);">
                 <div class="card-body py-3">
                     <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
                         <div class="d-flex align-items-center mb-3 mb-md-0">
@@ -925,13 +885,13 @@
                         <div class="d-flex gap-2 w-100 w-md-auto">
                             {{-- Tombol Pengajuan Izin --}}
                             <a href="{{ route('leave-requests.create') }}"
-                                class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold flex-grow-1 flex-md-grow-0 hover-scale py-2">
+                                class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold flex-grow-1 flex-md-grow-0 hover-scale">
                                 <i class="mdi mdi-file-document-edit-outline me-2"></i> Ajukan Izin / Sakit
                             </a>
 
                             {{-- Tombol Riwayat (Opsional, agar seimbang) --}}
                             <a href="{{ route('attendance.history') }}"
-                                class="btn btn-outline-secondary rounded-pill px-4 shadow-sm fw-bold flex-grow-1 flex-md-grow-0 hover-scale py-2">
+                                class="btn btn-outline-secondary rounded-pill px-4 shadow-sm fw-bold flex-grow-1 flex-md-grow-0 hover-scale">
                                 <i class="mdi mdi-history me-2"></i> Riwayat
                             </a>
                         </div>
@@ -944,14 +904,9 @@
     {{-- CHART SECTION --}}
     <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
         <div class="col-12">
-            <div class="card shadow-sm hover-float">
+            <div class="card shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom-0 py-3">
-                    <div class="d-flex align-items-center">
-                        <div class="chart-icon me-3">
-                            <i class="mdi mdi-chart-pie"></i>
-                        </div>
-                        <h4 class="card-title mb-0">Statistik Absensi</h4>
-                    </div>
+                    <h4 class="card-title mb-0"><i class="mdi mdi-chart-pie me-2"></i>Statistik Absensi</h4>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -960,12 +915,10 @@
                                 <canvas id="attendancePieChart"></canvas>
                             </div>
                         </div>
-                        <div class="col-md-6 d-flex align-items-center justify-content-center">
-                            <div class="text-center p-4">
-                                <div class="chart-illustration mb-3">
-                                    <i class="mdi mdi-chart-bar-stacked"></i>
-                                </div>
-                                <p class="text-muted mb-0">Analisis data kehadiran secara realtime</p>
+                        <div class="col-md-6 d-flex align-items-center justify-content-center text-muted">
+                            <div class="text-center">
+                                <i class="mdi mdi-chart-bar-stacked display-1 opacity-25"></i>
+                                <p class="mt-2">Analisis data kehadiran secara realtime</p>
                             </div>
                         </div>
                     </div>
@@ -1007,7 +960,7 @@
                         <div id="qrcode-modal-display" class="d-flex justify-content-center"></div>
                     </div>
                     <p class="text-muted small mb-3">Tunjukkan ke Security untuk Scan</p>
-                    <button type="button" class="btn btn-dark rounded-pill px-4 hover-scale" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-dark rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -1017,178 +970,27 @@
 
 @push('styles')
     <style>
-        /* === ENHANCED ANIMATIONS === */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translate3d(0, 40px, 0);
-            }
-            to {
-                opacity: 1;
-                transform: translate3d(0, 0, 0);
-            }
+        /* === SLIDER LOGIC STYLES === */
+        #slide-thumb {
+            transition: transform 0.1s;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+        #slide-thumb:active {
+            cursor: grabbing !important;
         }
 
-        @keyframes pulseGlow {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+        .animate-enter {
+            animation: fadeInUp 0.5s ease-out forwards;
         }
 
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-        }
+        /* === EXISTING STYLES === */
+        /* === LUXURY LEADERBOARD STYLES (NEW) === */
 
-        /* === ENHANCED CARD STYLES === */
-        .hover-lift {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .hover-lift:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
-        }
-
-        /* === HOLIDAY CARD ENHANCEMENT === */
-        .holiday-card {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .holiday-glow {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
-            animation: rotateGlow 20s linear infinite;
-            z-index: 0;
-        }
-
-        .snowflakes {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .snowflake {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            animation: fall linear infinite;
-            opacity: 0.8;
-        }
-
-        @keyframes fall {
-            0% {
-                transform: translateY(-100px) rotate(0deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(100px) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        .sparkle-icon {
-            position: relative;
-            font-size: 48px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .btn-holiday {
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            color: #000;
-            border: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-holiday:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
-        }
-
-        /* === ENHANCED BANK CARDS === */
-        .card-bank {
-            position: relative;
-            min-height: 200px;
-            border-radius: 20px;
-            overflow: hidden;
-            border: none;
-        }
-
-        .card-bank-corner {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            font-size: 24px;
-            opacity: 0.1;
-        }
-
-        .card-bank-chip {
-            width: 45px;
-            height: 35px;
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border-radius: 8px;
-            position: relative;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transform: perspective(100px) rotateX(20deg);
-        }
-
-        .card-bank-chip:before {
-            content: '';
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            right: 5px;
-            bottom: 5px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-        }
-
-        .card-bank-icon {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 56px;
-            opacity: 0.15;
-        }
-
-        .card-bank-value {
-            font-family: 'JetBrains Mono', 'Consolas', monospace;
-            font-size: 40px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            line-height: 1;
-            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        /* === ENHANCED LEADERBOARD === */
+        /* 1. Card Container & Background */
         .luxury-card {
             background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
             position: relative;
-            border-radius: 24px;
-            overflow: hidden;
+            transition: all 0.4s ease;
         }
 
         .luxury-bg-glow {
@@ -1197,492 +999,847 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255, 223, 0, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+            background: radial-gradient(circle, rgba(255, 223, 0, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
             animation: rotateGlow 20s linear infinite;
             z-index: 0;
+            pointer-events: none;
         }
 
-        .luxury-title {
-            font-family: 'Playfair Display', serif;
-            background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 2rem;
-        }
-
-        .trophy-icon, .scanner-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            color: white;
-            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
-        }
-
-        .scanner-icon {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        /* Enhanced Avatars */
-        .podium-avatar-wrapper {
-            position: relative;
-            margin-bottom: 20px;
-            z-index: 2;
-        }
-
-        .gold-glow::before,
-        .silver-glow::before,
-        .bronze-glow::before {
-            content: '';
-            position: absolute;
-            inset: -8px;
-            border-radius: 50%;
-            z-index: -1;
-            animation: pulseGlow 2s infinite;
-        }
-
-        .gold-glow::before {
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
-        }
-
-        .silver-glow::before {
-            background: radial-gradient(circle, rgba(192, 192, 192, 0.4) 0%, transparent 70%);
-        }
-
-        .bronze-glow::before {
-            background: radial-gradient(circle, rgba(205, 127, 50, 0.4) 0%, transparent 70%);
-        }
-
-        .luxury-avatar {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 5px solid #fff;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .main-winner .luxury-avatar {
-            width: 120px;
-            height: 120px;
-            border-width: 6px;
-        }
-
-        .luxury-avatar:hover {
-            transform: scale(1.05) rotate(5deg);
-        }
-
-        .crown-wrapper {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
-        }
-
-        /* Enhanced Podium Blocks */
-        .podium-block {
-            width: 100%;
-            border-radius: 20px 20px 0 0;
-            padding: 25px 15px;
-            position: relative;
-            backdrop-filter: blur(10px);
-            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
-            border: 2px solid rgba(255,255,255,0.8);
-        }
-
-        .gold-block {
-            height: 200px;
-            background: linear-gradient(180deg, rgba(255, 236, 179, 0.6) 0%, rgba(255, 255, 255, 0.3) 100%);
-            border-top: 6px solid #FFD700;
-            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.2);
-        }
-
-        .silver-block {
-            height: 160px;
-            background: linear-gradient(180deg, rgba(245, 245, 245, 0.6) 0%, rgba(255, 255, 255, 0.3) 100%);
-            border-top: 4px solid #C0C0C0;
-        }
-
-        .bronze-block {
-            height: 140px;
-            background: linear-gradient(180deg, rgba(239, 219, 207, 0.6) 0%, rgba(255, 255, 255, 0.3) 100%);
-            border-top: 4px solid #CD7F32;
-        }
-
-        /* Enhanced Stat Pills */
-        .stat-pill {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 25px;
-            font-size: 12px;
-            font-weight: 700;
-            background: white;
-            color: #555;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-        }
-
-        .stat-pill:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-pill.gold {
-            background: linear-gradient(45deg, #FFD700, #FDB931);
-            color: white;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-        }
-
-        .stat-pill.light {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-
-        /* === ENHANCED ID CARD === */
-        .card-id {
-            position: relative;
-            border-radius: 24px;
-            overflow: hidden;
-            min-height: 240px;
-        }
-
-        .card-id-glow {
+        .luxury-bg-pattern {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+            background-image: radial-gradient(#E1E1E1 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        @keyframes rotateGlow {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .icon-box-luxury {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #FFF8E1, #FFF3C4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.15);
+        }
+
+        .glass-badge {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #444;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        /* 2. Podium Layout */
+        .podium-luxury-container {
+            min-height: 280px;
+            margin-bottom: -30px;
+            /* Overlap with block below */
+        }
+
+        .podium-step-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 3. Avatars & Glows */
+        .podium-avatar-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .podium-avatar-wrapper:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .luxury-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .luxury-avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Winner Specifics */
+        .main-winner {
+            z-index: 10;
+        }
+
+        .main-winner .luxury-avatar,
+        .main-winner .luxury-avatar-placeholder {
+            width: 110px;
+            height: 110px;
+            border-width: 5px;
+        }
+
+        .crown-floating {
+            position: absolute;
+            top: -55px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-5deg);
+            animation: floatCrown 3s ease-in-out infinite;
+            z-index: 20;
+            filter: drop-shadow(0 5px 15px rgba(255, 215, 0, 0.4));
+        }
+
+        @keyframes floatCrown {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0) rotate(-5deg);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-10px) rotate(0deg);
+            }
+        }
+
+        /* Glow Effects */
+        .gold-glow::before {
+            content: '';
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+            z-index: -1;
+            animation: pulseGlow 2s infinite;
+        }
+
+        /* Gradients */
+        .gold-gradient {
+            background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
+        }
+
+        .silver-gradient {
+            background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
+        }
+
+        .bronze-gradient {
+            background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);
+        }
+
+        /* Rank Circles */
+        .rank-circle {
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: white;
+            border: 2px solid white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 5;
+        }
+
+        .rank-circle.gold {
+            background: #FDB931;
+        }
+
+        .rank-circle.silver {
+            background: #A9A9A9;
+        }
+
+        .rank-circle.bronze {
+            background: #A0522D;
+        }
+
+        /* 4. Podium Blocks (The Steps) */
+        .podium-block {
+            width: 100%;
+            border-radius: 16px 16px 0 0;
+            padding: 20px 10px;
+            position: relative;
+            margin: 0 5px;
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+            /* Tapered shape */
+            backdrop-filter: blur(5px);
+        }
+
+        .gold-block {
+            height: 180px;
+            /* Sedikit lebih tinggi untuk muat info tambahan */
+            background: linear-gradient(180deg, rgba(255, 236, 179, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-top: 4px solid #FFD700;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);
+        }
+
+        .silver-block {
+            height: 140px;
+            background: linear-gradient(180deg, rgba(245, 245, 245, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-top: 4px solid #C0C0C0;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .bronze-block {
+            height: 120px;
+            background: linear-gradient(180deg, rgba(239, 219, 207, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-top: 4px solid #CD7F32;
+            box-shadow: 0 10px 20px rgba(160, 82, 45, 0.05);
+        }
+
+        .podium-content {
+            transform: translateY(5px);
+        }
+
+        .stat-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #fff;
+            color: #555;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-pill.gold {
+            background: linear-gradient(45deg, #FFD700, #FDB931);
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+        }
+
+        /* 5. Runner Up List */
+        .runner-up-container {
+            background: #fff;
+            border-radius: 16px;
+            padding: 10px;
+            /* border: 1px solid #f0f0f0; */
+        }
+
+        .runner-up-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #f1f3f5;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .runner-up-item:hover {
+            border-color: #FFD700;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transform: translateX(5px);
+        }
+
+        .rank-number {
+            font-family: 'Consolas', monospace;
+            font-weight: 900;
+            font-size: 18px;
+            color: #d1d1d1;
+            width: 30px;
+        }
+
+        .runner-avatar {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+        }
+
+        .runner-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            background: #eee;
+            color: #888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* 6. Sparkles */
+        .sparkle {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+            z-index: 20;
+            box-shadow: 0 0 5px #fff, 0 0 10px #FFD700;
+        }
+
+        .s1 {
+            width: 4px;
+            height: 4px;
+            top: 0;
+            left: 10%;
+            animation-delay: 0.5s;
+        }
+
+        .s2 {
+            width: 6px;
+            height: 6px;
+            top: 10%;
+            right: 0;
+            animation-delay: 1s;
+        }
+
+        .s3 {
+            width: 3px;
+            height: 3px;
+            bottom: 10px;
+            left: -5px;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Small utilities */
+        .small-font {
+            font-size: 11px;
+        }
+
+
+        /* === EXISTING STYLES === */
+
+        /* 1. Entrance Animation (Slide Up Fade) */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translate3d(0, 40px, 0);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        .animate-enter {
+            opacity: 0;
+            /* Awal tersembunyi */
+            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* 2. Pulse Animation for Status Icon */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        .pulse-text {
+            animation: pulseText 2s infinite;
+        }
+
+        @keyframes pulseText {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* 3. Live Indicator Dot */
+        .live-indicator {
+            width: 10px;
+            height: 10px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        /* 4. Hover Effects */
+        .hover-float {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-float:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .hover-scale {
+            transition: transform 0.2s ease;
+        }
+
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+
+        .scale-on-hover:hover {
+            transform: scale(1.1);
+        }
+
+        .hover-shadow-lg {
+            transition: box-shadow 0.3s ease;
+        }
+
+        .hover-shadow-lg:hover {
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* 5. Glassmorphism for Modal */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        /* 6. Card Bank Styles */
+        .card-bank {
+            position: relative;
+            min-height: 200px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-bank .card-body {
+            position: relative;
+            z-index: 2;
+            padding: 24px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-grow: 1;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .card-bank-chip {
+            width: 40px;
+            height: 30px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-radius: 6px;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-bank-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 48px;
+            opacity: 0.2;
+        }
+
+        .card-bank-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .card-bank-value {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .card-bank-desc {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-bottom: 0;
+        }
+
+        .card-bank-pattern {
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
             z-index: 1;
         }
 
+        /* Gradients */
+        .gradient-purple {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .gradient-blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .gradient-green {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .gradient-orange {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .gradient-red {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .gradient-dark {
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+        }
+
+        .card-id {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            color: white;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .card-id .card-body {
+            position: relative;
+            z-index: 2;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-grow: 1;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .card-id-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-id-photo-wrapper {
+            position: relative;
+            z-index: 5;
+        }
+
         .id-card-img {
-            width: 70px;
-            height: 80px;
+            width: 60px;
+            height: 70px;
             object-fit: cover;
-            border-radius: 10px;
-            border: 3px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease-in-out;
         }
 
         .id-card-img:hover {
-            transform: scale(1.15) rotate(2deg);
+            transform: scale(1.1);
             border-color: #fff;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
 
         .id-card-img-placeholder {
-            width: 70px;
-            height: 80px;
+            width: 60px;
+            height: 70px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            border: 3px solid rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 28px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-id-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .card-id-logo i {
+            font-size: 38px;
+            margin-bottom: 4px;
+            color: #ffed4e;
+        }
+
+        .card-id-details {
+            flex-grow: 1;
+        }
+
+        .card-id-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+            font-weight: 500;
         }
 
         .card-id-name {
-            font-size: 26px;
-            font-weight: 800;
-            margin-bottom: 15px;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
             line-height: 1.2;
-            font-family: 'JetBrains Mono', monospace;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-family: 'Consolas', 'Courier New', monospace;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        /* === ENHANCED STATUS CARDS === */
-        .status-card {
-            padding: 28px;
+        .card-id-division {
+            font-size: 16px;
+            font-weight: 500;
+            opacity: 0.9;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .card-id-footer {
+            margin-top: auto;
+        }
+
+        .card-action {
             border-radius: 16px;
-            border: 3px solid;
-            background: white;
-            position: relative;
-            overflow: hidden;
+            border: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            height: 100%;
         }
 
-        .status-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-            animation: shimmer 2s infinite;
+        .card-status {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            height: 100%;
+        }
+
+        .status-card {
+            padding: 24px;
+            border-radius: 12px;
+            border: 2px solid;
+            background: #f8fafc;
+            transition: all 0.3s ease;
         }
 
         .status-success {
             border-color: #10b981;
             background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.1);
-        }
-
-        .status-success::before {
-            background: linear-gradient(90deg, transparent, #10b981, transparent);
         }
 
         .status-warning {
             border-color: #f59e0b;
             background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.1);
         }
 
         .status-info {
             border-color: #3b82f6;
             background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
         }
 
         .status-icon {
-            width: 64px;
-            height: 64px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 24px;
-            font-size: 32px;
+            margin-right: 20px;
+            font-size: 28px;
             flex-shrink: 0;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
 
-        /* === ENHANCED BUTTONS === */
-        .btn {
-            border-radius: 12px;
+        .status-success .status-icon {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-warning .status-icon {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .status-info .status-icon {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .badge {
+            border-radius: 8px;
             font-weight: 600;
-            padding: 12px 28px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 6px 12px;
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
+        .btn {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        .btn:hover::before {
-            width: 300px;
-            height: 300px;
+        .btn:active {
+            transform: scale(0.95);
         }
 
         .btn-dark {
-            background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
+            background: #1a1a1a;
             border: none;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 12px 28px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .btn-dark:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            background: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
         }
 
-        /* === ENHANCED QUICK ACTIONS === */
-        .quick-actions-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border: 1px solid rgba(0,0,0,0.05);
-        }
-
-        .icon-box {
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .icon-box:hover {
-            transform: rotate(15deg) scale(1.1);
-        }
-
-        /* === ENHANCED CHART SECTION === */
-        .chart-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-        }
-
-        .chart-illustration {
-            font-size: 80px;
-            color: #e5e7eb;
-            opacity: 0.5;
-        }
-
-        /* === ENHANCED ANIMATION STATES === */
-        .animate-pulse-green {
-            animation: pulseGreen 2s infinite;
-        }
-
-        @keyframes pulseGreen {
-            0%, 100% { box-shadow: 0 10px 30px rgba(16, 185, 129, 0.1); }
-            50% { box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3); }
-        }
-
-        .animate-pulse-red {
-            animation: pulseRed 2s infinite;
-        }
-
-        @keyframes pulseRed {
-            0%, 100% { box-shadow: 0 10px 30px rgba(239, 68, 68, 0.1); }
-            50% { box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3); }
-        }
-
-        .animate-pulse-orange {
-            animation: pulseOrange 2s infinite;
-        }
-
-        @keyframes pulseOrange {
-            0%, 100% { box-shadow: 0 10px 30px rgba(245, 158, 11, 0.1); }
-            50% { box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3); }
-        }
-
-        /* === QR SCAN ICON ANIMATION === */
-        .qr-scan-icon {
-            position: relative;
-            font-size: 64px;
-            color: #fff;
-        }
-
-        .qr-scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, #fff, transparent);
-            animation: scanLine 2s infinite linear;
-        }
-
-        @keyframes scanLine {
-            0% { top: 0; }
-            100% { top: 100%; }
-        }
-
-        /* === SECTION ICONS === */
-        .section-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        .btn-outline-dark {
+            border: 2px solid #1a1a1a;
+            color: #1a1a1a;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-weight: 600;
+            padding: 12px 28px;
+        }
+
+        .btn-outline-dark:hover {
+            background: #1a1a1a;
             color: white;
-            font-size: 24px;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
         }
 
-        /* === TIMEZONE BADGE === */
-        .timezone-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 4px;
-            font-size: 0.65rem;
-            color: #3b82f6;
-        }
-
-        /* === CLOCK DISPLAY === */
-        .clock-display {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
-            padding: 8px 16px;
-            border-radius: 12px;
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        /* === RESPONSIVE ENHANCEMENTS === */
         @media (max-width: 768px) {
             .card-bank-value {
-                font-size: 32px;
+                font-size: 28px;
             }
-            
-            .luxury-avatar {
-                width: 70px;
-                height: 70px;
+
+            .card-bank {
+                min-height: 180px;
+                margin-bottom: 20px;
             }
-            
-            .main-winner .luxury-avatar {
-                width: 90px;
-                height: 90px;
+
+            .card-id {
+                min-height: 200px;
             }
-            
+
+            .card-id-name {
+                font-size: 20px;
+            }
+
+            .id-card-img,
+            .id-card-img-placeholder {
+                width: 50px;
+                height: 60px;
+            }
+
+            #greeting-text {
+                font-size: 0.8rem;
+            }
+
+            h3.fw-bold {
+                font-size: 1.5rem;
+            }
+
+            /* Responsive Podium */
+            .luxury-avatar,
+            .luxury-avatar-placeholder {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+
+            .main-winner .luxury-avatar,
+            .main-winner .luxury-avatar-placeholder {
+                width: 80px;
+                height: 80px;
+            }
+
+            .crown-floating {
+                top: -45px;
+            }
+
+            .crown-floating img {
+                width: 40px;
+            }
+
             .podium-block {
-                padding: 15px 10px;
-            }
-            
-            .gold-block { height: 160px; }
-            .silver-block { height: 130px; }
-            .bronze-block { height: 110px; }
-            
-            .btn {
-                padding: 10px 20px;
-            }
-        }
-
-        /* === ACCESSIBILITY ENHANCEMENTS === */
-        .focus-visible:focus {
-            outline: 3px solid #3b82f6;
-            outline-offset: 2px;
-        }
-
-        /* === PERFORMANCE OPTIMIZATIONS === */
-        .will-change-transform {
-            will-change: transform;
-        }
-
-        /* === DARK MODE SUPPORT (Optional) === */
-        @media (prefers-color-scheme: dark) {
-            .luxury-card {
-                background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-            }
-            
-            .luxury-title {
-                background: linear-gradient(135deg, #fff 0%, #d1d5db 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-            }
-            
-            .status-card {
-                background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+                height: auto;
+                min-height: 80px;
             }
         }
     </style>
@@ -1695,531 +1852,304 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize all components with enhanced effects
-            
-            // --- SLIDER LOGIC (Enhanced) ---
+
+            // --- [BARU] SLIDER LOGIC ---
             const track = document.getElementById('slide-track');
             const thumb = document.getElementById('slide-thumb');
+            const sliderView = document.getElementById('slider-view');
             const cameraView = document.getElementById('camera-view');
-            const actionsContainer = document.getElementById('cross-day-actions');
+            const actionsContainer = document.getElementById('cross-day-actions'); // Container tombol2
 
             if (track && thumb) {
                 let isDragging = false;
                 let startX;
                 let trackWidth = track.clientWidth;
                 let thumbWidth = thumb.clientWidth;
-                let maxMove = trackWidth - thumbWidth - 8;
+                let maxMove = trackWidth - thumbWidth - 8; // 8px padding adjustment
 
-                // Update on resize
+                // Init size update
                 window.addEventListener('resize', () => {
                     trackWidth = track.clientWidth;
                     maxMove = trackWidth - thumbWidth - 8;
                 });
 
-                // Start drag with improved touch support
+                // Start
                 const startDrag = (e) => {
-                    e.preventDefault();
                     isDragging = true;
                     startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
                     thumb.style.transition = 'none';
-                    track.style.transition = 'background-color 0.3s ease';
                 };
 
-                // Smooth drag with velocity
+                // Move
                 const drag = (e) => {
                     if (!isDragging) return;
-                    
+
                     const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
                     const deltaX = clientX - startX;
-                    
-                    // Add easing for smoother movement
+
+                    // Limit 0 to maxMove
                     let moveX = Math.max(0, Math.min(deltaX, maxMove));
-                    thumb.style.transform = `translateX(${moveX}px) translateZ(0)`;
-                    
-                    // Update track color based on progress
-                    const progress = moveX / maxMove;
-                    track.style.backgroundColor = `hsl(54, ${70 + progress * 30}%, ${70 + progress * 20}%)`;
-                    
-                    // Update text opacity
+                    thumb.style.transform = `translateX(${moveX}px)`;
+
+                    // Fade text based on percentage
+                    const percentage = moveX / maxMove;
                     const text = track.querySelector('span');
-                    if (text) {
-                        text.style.opacity = 1 - progress;
-                        text.style.transform = `scale(${1 - progress * 0.2})`;
-                    }
+                    if (text) text.style.opacity = 1 - percentage;
                 };
 
-                // End drag with success animation
+                // End
                 const endDrag = () => {
                     if (!isDragging) return;
                     isDragging = false;
-                    
+                    thumb.style.transition = 'transform 0.2s ease-out';
+
                     const style = window.getComputedStyle(thumb);
                     const matrix = new DOMMatrix(style.transform);
                     const currentTranslateX = matrix.m41;
-                    
-                    // Success threshold
-                    if (currentTranslateX > (maxMove * 0.75)) {
-                        thumb.style.transform = `translateX(${maxMove}px) translateZ(0)`;
-                        thumb.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                        track.style.backgroundColor = '#86efac';
+
+                    if (currentTranslateX > (maxMove * 0.8)) {
+                        // SUCCESS
+                        thumb.style.transform = `translateX(${maxMove}px)`;
                         finishSlide();
                     } else {
-                        // Reset with bounce animation
-                        thumb.style.transform = 'translateX(0px) translateZ(0)';
-                        thumb.style.transition = 'transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
-                        track.style.backgroundColor = '#fde047';
+                        // RESET
+                        thumb.style.transform = `translateX(0px)`;
                         const text = track.querySelector('span');
-                        if (text) {
-                            text.style.opacity = 0.75;
-                            text.style.transform = 'scale(1)';
-                        }
+                        if (text) text.style.opacity = 0.75;
                     }
                 };
 
-                // Add event listeners with passive for performance
-                thumb.addEventListener('mousedown', startDrag, { passive: false });
-                thumb.addEventListener('touchstart', startDrag, { passive: false });
-                
-                document.addEventListener('mousemove', drag, { passive: true });
-                document.addEventListener('touchmove', drag, { passive: true });
-                
+                // Add Listeners
+                thumb.addEventListener('mousedown', startDrag);
+                thumb.addEventListener('touchstart', startDrag);
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', drag);
+
                 document.addEventListener('mouseup', endDrag);
                 document.addEventListener('touchend', endDrag);
 
                 function finishSlide() {
-                    // Change icon with animation
-                    thumb.innerHTML = '<i class="mdi mdi-check-circle text-success fs-4"></i>';
-                    thumb.classList.add('pulse-animation');
-                    
-                    // Hide actions and show camera with delay
+                    // Change icon to check
+                    thumb.innerHTML = '<i class="mdi mdi-check text-success fs-4"></i>';
+                    track.style.backgroundColor = '#d1fae5'; // Light green
+
                     setTimeout(() => {
-                        if (actionsContainer) actionsContainer.style.opacity = '0';
-                        setTimeout(() => {
-                            if (actionsContainer) actionsContainer.classList.add('d-none');
-                            cameraView.classList.remove('d-none');
-                            cameraView.style.opacity = '0';
-                            cameraView.style.transform = 'translateY(20px)';
-                            
-                            // Animate camera view in
-                            setTimeout(() => {
-                                cameraView.style.opacity = '1';
-                                cameraView.style.transform = 'translateY(0)';
-                                cameraView.style.transition = 'all 0.5s ease';
-                            }, 50);
-                        }, 300);
-                    }, 500);
+                        // Sembunyikan container action (slider + tombol lewati)
+                        if (actionsContainer) actionsContainer.classList.add('d-none');
+                        else sliderView.classList.add('d-none');
+
+                        // Munculkan kamera
+                        cameraView.classList.remove('d-none');
+                    }, 400);
                 }
             }
 
-            // --- ENHANCED LIVE CLOCK WITH TIMEZONE ---
+            // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
             function updateClock() {
+                // Gunakan Timezone yang dikirim dari Controller
                 const timeZone = "{{ $current_timezone }}";
+
                 const now = new Date();
-                
-                try {
-                    const timeString = now.toLocaleTimeString('en-US', {
-                        timeZone: timeZone,
-                        hour12: false,
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-                    
-                    // Update main clock
-                    const clockElement = document.getElementById('realtime-clock');
-                    if (clockElement) {
-                        clockElement.textContent = timeString;
-                        // Add subtle pulse animation on second change
-                        clockElement.style.transform = 'scale(1.05)';
-                        setTimeout(() => {
-                            clockElement.style.transform = 'scale(1)';
-                        }, 100);
-                    }
-                    
-                    // Update header clock
-                    const headerClock = document.getElementById('header-clock');
-                    if (headerClock) headerClock.textContent = timeString;
-                    
-                    // Update greeting based on local time
-                    const localHour = parseInt(timeString.split(':')[0]);
-                    const greetingElement = document.getElementById('greeting-text');
-                    
-                    let greeting = 'Selamat Datang,';
-                    if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
-                    else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
-                    else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
-                    else greeting = 'Selamat Malam,';
-                    
-                    if (greetingElement) greetingElement.textContent = greeting;
-                    
-                } catch (error) {
-                    console.error('Error updating clock:', error);
-                }
+                const timeString = now.toLocaleTimeString('en-US', {
+                    timeZone: timeZone, // Kunci utama: Pakai timezone cabang
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+
+                const clockElement = document.getElementById('realtime-clock');
+                if (clockElement) clockElement.innerText = timeString;
+
+                // Greeting logic (Sesuai jam lokal cabang)
+                // Kita perlu ambil jam (0-23) dari string waktu lokal
+                const localHour = parseInt(timeString.split(':')[0]);
+                const greetingElement = document.getElementById('greeting-text');
+
+                let greeting = 'Selamat Datang,';
+                if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
+                else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
+                else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
+                else greeting = 'Selamat Malam,';
+
+                if (greetingElement) greetingElement.innerText = greeting;
             }
-            
-            // Initialize clock and update every second
-            updateClock();
+
             setInterval(updateClock, 1000);
-            
-            // Smooth count-up animation with easing
+            updateClock(); // Run immediately
+
+            // 2. [BARU] COUNT UP ANIMATION (Angka naik dari 0)
             const counters = document.querySelectorAll('.count-up');
             counters.forEach(counter => {
                 const target = +counter.getAttribute('data-target');
-                if (isNaN(target)) return;
-                
-                const duration = 1500; // Faster animation
-                const startTime = Date.now();
-                
-                const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4);
-                
+                const duration = 2000; // 2 detik
+                const increment = target / (duration / 16); // 60fps
+
+                let current = 0;
                 const updateCounter = () => {
-                    const elapsed = Date.now() - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    const easedProgress = easeOutQuart(progress);
-                    const current = Math.floor(easedProgress * target);
-                    
-                    counter.textContent = current.toLocaleString();
-                    
-                    if (progress < 1) {
+                    current += increment;
+                    if (current < target) {
+                        counter.innerText = Math.ceil(current);
                         requestAnimationFrame(updateCounter);
                     } else {
-                        counter.textContent = target.toLocaleString();
+                        counter.innerText = target;
                     }
                 };
-                
-                // Start animation with slight delay for staggered effect
-                setTimeout(updateCounter, 100 + Math.random() * 200);
+                updateCounter();
             });
 
-            // --- ENHANCED QR CODE GENERATION ---
+            // --- SCRIPT QR CODE ---
             @if (Auth::user()->qr_code_value)
                 const qrValue = "{{ Auth::user()->qr_code_value }}";
-                
-                // Dashboard QR Code
-                const dashboardQr = new QRCode(document.getElementById("dashboard-qrcode"), {
+
+                new QRCode(document.getElementById("dashboard-qrcode"), {
                     text: qrValue,
-                    width: 70,
-                    height: 70,
-                    colorDark: "#1a1a1a",
+                    width: 64,
+                    height: 64,
+                    colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
                 });
-                
-                // Add hover effect to QR container
-                const qrContainer = document.getElementById("dashboard-qrcode");
-                if (qrContainer) {
-                    qrContainer.addEventListener('mouseenter', function() {
-                        this.style.transform = 'scale(1.15)';
-                        this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-                    });
-                    
-                    qrContainer.addEventListener('mouseleave', function() {
-                        this.style.transform = 'scale(1)';
-                        this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                    });
-                }
-                
-                // Modal QR Code
+
                 var qrModal = document.getElementById('qrModal');
                 qrModal.addEventListener('show.bs.modal', function(event) {
-                    var qrModalContainer = document.getElementById('qrcode-modal-display');
-                    qrModalContainer.innerHTML = '';
-                    
-                    new QRCode(qrModalContainer, {
+                    var qrContainer = document.getElementById('qrcode-modal-display');
+                    qrContainer.innerHTML = '';
+                    new QRCode(qrContainer, {
                         text: qrValue,
-                        width: 220,
-                        height: 220,
-                        colorDark: "#1a1a1a",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.H
+                        width: 256,
+                        height: 256,
                     });
                 });
             @endif
 
-            // --- ENHANCED CHARTS WITH ANIMATION ---
-            const ctx = document.getElementById('attendancePieChart')?.getContext('2d');
-            if (ctx) {
-                // Configure global chart defaults
-                Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-                Chart.defaults.animation.duration = 2000;
-                Chart.defaults.animation.easing = 'easeOutQuart';
-                
-                @if (auth()->user()->role == 'admin')
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
-                            datasets: [{
-                                data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                    {{ $stats['early'] }}, {{ $stats['pending'] }},
-                                    {{ $stats['absent'] }}
-                                ],
-                                backgroundColor: [
-                                    'rgba(0, 210, 91, 0.9)',
-                                    'rgba(255, 171, 0, 0.9)',
-                                    'rgba(252, 66, 74, 0.9)',
-                                    'rgba(0, 144, 231, 0.9)',
-                                    'rgba(140, 148, 163, 0.9)'
-                                ],
-                                borderColor: 'white',
-                                borderWidth: 3,
-                                hoverBorderWidth: 4,
-                                hoverOffset: 15
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            animation: {
-                                animateScale: true,
-                                animateRotate: true
-                            },
-                            plugins: {
-                                legend: {
-                                    position: 'right',
-                                    labels: {
-                                        usePointStyle: true,
-                                        padding: 20,
-                                        font: {
-                                            size: 12,
-                                            weight: '500'
-                                        }
-                                    }
-                                },
-                                tooltip: {
-                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                    titleFont: { size: 13 },
-                                    bodyFont: { size: 13 },
-                                    padding: 12,
-                                    cornerRadius: 8
-                                }
-                            },
-                            cutout: '70%'
-                        }
-                    });
-                @elseif (auth()->user()->role == 'audit')
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Terverifikasi', 'Pending', 'Terlambat'],
-                            datasets: [{
-                                data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
-                                    {{ $stats['late'] }}
-                                ],
-                                backgroundColor: [
-                                    'rgba(0, 210, 91, 0.9)',
-                                    'rgba(255, 171, 0, 0.9)',
-                                    'rgba(252, 66, 74, 0.9)'
-                                ],
-                                borderColor: 'white',
-                                borderWidth: 3,
-                                hoverBorderWidth: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '75%',
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 20,
-                                        font: {
-                                            size: 12
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                @elseif (auth()->user()->role == 'security')
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Scan Masuk', 'Scan Pulang'],
-                            datasets: [{
-                                data: [{{ $stats['check_in_scans'] }},
-                                    {{ $stats['check_out_scans'] }}
-                                ],
-                                backgroundColor: [
-                                    'rgba(0, 210, 91, 0.9)',
-                                    'rgba(0, 144, 231, 0.9)'
-                                ],
-                                borderColor: 'white',
-                                borderWidth: 3,
-                                hoverBorderWidth: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '65%',
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 20
-                                    }
-                                }
-                            }
-                        }
-                    });
-                @else
-                    new Chart(ctx, {
-                        type: 'pie',
-                        data: {
-                            labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
-                            datasets: [{
-                                data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                    {{ $stats['early'] }}, {{ $stats['pending'] }}
-                                ],
-                                backgroundColor: [
-                                    'rgba(0, 210, 91, 0.9)',
-                                    'rgba(255, 171, 0, 0.9)',
-                                    'rgba(252, 66, 74, 0.9)',
-                                    'rgba(140, 148, 163, 0.9)'
-                                ],
-                                borderColor: 'white',
-                                borderWidth: 3,
-                                hoverBorderWidth: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 20
-                                    }
-                                }
-                            }
-                        }
-                    });
-                @endif
-            }
+            // --- SCRIPT CHART ---
+            const ctx = document.getElementById('attendancePieChart').getContext('2d');
 
-            // --- ENHANCED MODAL INTERACTIONS ---
+            // Default Options untuk Chart agar lebih halus
+            Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+
+            @if (auth()->user()->role == 'admin')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
+                        datasets: [{
+                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                {{ $stats['absent'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
+                                '#8c94a3'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 10 // Efek hover keluar
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            }
+                        },
+                        cutout: '75%'
+                    }
+                });
+            @elseif (auth()->user()->role == 'audit')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Terverifikasi', 'Pending', 'Terlambat'],
+                        datasets: [{
+                            data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
+                                {{ $stats['late'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @elseif (auth()->user()->role == 'security')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Scan Masuk', 'Scan Pulang'],
+                        datasets: [{
+                            data: [{{ $stats['check_in_scans'] }},
+                                {{ $stats['check_out_scans'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#0090e7'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @else
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
+                        datasets: [{
+                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                {{ $stats['early'] }}, {{ $stats['pending'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @endif
+
+            // --- MODAL FOTO PROFIL ---
             var profilePhotoModal = document.getElementById('profilePhotoModal');
             if (profilePhotoModal) {
                 profilePhotoModal.addEventListener('show.bs.modal', function(event) {
                     var button = event.relatedTarget;
                     var src = button.getAttribute('data-src');
                     var modalImg = document.getElementById('profileModalImageSrc');
-                    
-                    // Add loading effect
-                    modalImg.style.opacity = '0';
                     modalImg.src = src;
-                    
-                    // Fade in image after load
-                    modalImg.onload = function() {
-                        modalImg.style.transition = 'opacity 0.5s ease';
-                        modalImg.style.opacity = '1';
-                    };
-                });
-            }
-
-            // --- ENHANCED HOVER EFFECTS FOR ALL CARDS ---
-            const cards = document.querySelectorAll('.card');
-            cards.forEach(card => {
-                card.classList.add('will-change-transform');
-                
-                card.addEventListener('mouseenter', function() {
-                    this.style.zIndex = '10';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.zIndex = '';
-                });
-            });
-
-            // --- PARALLAX EFFECT FOR LUXURY CARDS ---
-            const luxuryCards = document.querySelectorAll('.luxury-card');
-            luxuryCards.forEach(card => {
-                card.addEventListener('mousemove', function(e) {
-                    const rect = this.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-                    
-                    const rotateY = (x - centerX) / 25;
-                    const rotateX = (centerY - y) / 25;
-                    
-                    this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(0)`;
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
-                    this.style.transition = 'transform 0.5s ease';
-                });
-            });
-
-            // --- ENHANCED ALERT AUTO-DISMISS ---
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    if (alert && alert.parentNode) {
-                        alert.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                        alert.style.opacity = '0';
-                        alert.style.transform = 'translateX(100%)';
-                        
-                        setTimeout(() => {
-                            if (alert && alert.parentNode) {
-                                alert.remove();
-                            }
-                        }, 500);
-                    }
-                }, 5000);
-            });
-
-            // --- SMOOTH SCROLL FOR PAGE LOAD ---
-            window.addEventListener('load', () => {
-                document.body.style.opacity = '0';
-                document.body.style.transition = 'opacity 0.5s ease';
-                
-                setTimeout(() => {
-                    document.body.style.opacity = '1';
-                }, 100);
-            });
-
-            // --- ADD KEYBOARD NAVIGATION SUPPORT ---
-            document.addEventListener('keydown', (e) => {
-                // Escape key closes modals
-                if (e.key === 'Escape') {
-                    const modals = document.querySelectorAll('.modal.show');
-                    modals.forEach(modal => {
-                        const modalInstance = bootstrap.Modal.getInstance(modal);
-                        if (modalInstance) modalInstance.hide();
-                    });
-                }
-                
-                // Enter key triggers primary button in focused card
-                if (e.key === 'Enter' && e.target.classList.contains('card')) {
-                    const primaryBtn = e.target.querySelector('.btn-primary, .btn-dark');
-                    if (primaryBtn) primaryBtn.click();
-                }
-            });
-
-            // --- PERFORMANCE OPTIMIZATION: Intersection Observer for lazy loading ---
-            if ('IntersectionObserver' in window) {
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('animated');
-                            observer.unobserve(entry.target);
-                        }
-                    });
-                }, {
-                    threshold: 0.1,
-                    rootMargin: '50px'
-                });
-                
-                document.querySelectorAll('.animate-enter').forEach(el => {
-                    observer.observe(el);
                 });
             }
         });
