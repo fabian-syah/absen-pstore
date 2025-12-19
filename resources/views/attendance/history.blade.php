@@ -235,6 +235,7 @@
                                         <tr>
                                             {{-- TANGGAL --}}
                                             <td class="ps-4 py-3">
+                                                {{-- GUNAKAN JAM LOKAL (Sudah dikonversi Controller) --}}
                                                 <div class="fw-bold text-dark">{{ $att->check_in_time->format('d M Y') }}</div>
                                                 <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">{{ $att->check_in_time->format('l') }}</small>
                                             </td>
@@ -246,8 +247,8 @@
                                                         <i class="mdi mdi-login-variant {{ $att->is_calculated_late ? 'text-danger' : 'text-success' }} me-2 fs-5"></i>
                                                         <div>
                                                             <span class="fw-bold fs-6 {{ $att->is_calculated_late ? 'text-danger' : 'text-dark' }}">
-                                                                {{-- GUNAKAN JAM LOKAL --}}
-                                                                {{ $att->check_in_local ? $att->check_in_local->format('H:i') : $att->check_in_time->format('H:i') }}
+                                                                {{-- GUNAKAN JAM LOKAL (Sudah dikonversi Controller) --}}
+                                                                {{ $att->check_in_time->format('H:i') }}
                                                             </span>
                                                             @if ($att->is_calculated_late)
                                                                 @if($att->is_excused_late)
@@ -309,8 +310,8 @@
                                                             <i class="mdi mdi-logout-variant text-primary me-2 fs-5"></i>
                                                             <div>
                                                                 <span class="fw-bold fs-6 {{ $att->is_early_checkout ? 'text-warning' : 'text-dark' }}">
-                                                                    {{-- GUNAKAN JAM LOKAL --}}
-                                                                    {{ $att->check_out_local ? $att->check_out_local->format('H:i') : $att->check_out_time->format('H:i') }}
+                                                                    {{-- GUNAKAN JAM LOKAL (Sudah dikonversi Controller) --}}
+                                                                    {{ $att->check_out_time->format('H:i') }}
                                                                 </span>
                                                                 @if ($att->is_early_checkout)
                                                                     <span class="badge bg-warning text-dark rounded-pill px-2 py-0 ms-1" style="font-size: 0.6rem;">Cepat</span>

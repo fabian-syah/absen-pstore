@@ -48,7 +48,7 @@ class AttendanceHistoryController extends Controller
         $nextMonth = $nextDate->month;
         $nextYear  = $nextDate->year;
 
-        // Ambil Data
+        // Ambil Data dengan Timezone yang Sesuai
         $data = $this->getHistoryData($targetUser, $selectedMonth, $selectedYear);
 
         $history = $data['history'];
@@ -101,9 +101,14 @@ class AttendanceHistoryController extends Controller
 
     /**
      * Core Logic: Menggabungkan Data Absensi Real & Data Izin (Leave)
+     * [FIXED] Menyesuaikan Timezone Cabang
      */
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
+        // 0. DETEKSI TIMEZONE CABANG USER
+        // Default ke Asia/Jakarta jika tidak ada setting di branch
+        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+
         // 1. AMBIL DATA ABSENSI BULAN INI + DATA AKHIR BULAN LALU (Untuk cek lembur lintas hari)
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->subDay(); // H-1
         $endDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->endOfMonth();
@@ -131,25 +136,45 @@ class AttendanceHistoryController extends Controller
 
         // --- PROSES DATA ABSENSI REAL ---
         foreach ($attendances as $index => $att) {
-            // Hanya masukkan ke history jika check_in_time masuk bulan yang dipilih
+            // [FIX TIMEZONE] Konversi waktu DB (UTC/Server) ke Timezone Cabang
+            if ($att->check_in_time) {
+                $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
+            }
+            if ($att->check_out_time) {
+                $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
+            }
+
+            // Gunakan properti tambahan agar tidak bingung di View
+            $att->check_in_local = $att->check_in_time;
+            $att->check_out_local = $att->check_out_time;
+
+            // Hanya masukkan ke history jika check_in_time (setelah konversi timezone) masuk bulan yang dipilih
             if ($att->check_in_time->month == $selectedMonth) {
 
                 // === LOGIKA VALIDASI LEMBUR LINTAS HARI ===
                 $att->is_excused_late = false;
 
                 // Cari absen kemarin
+                // Karena loop berdasarkan query yang sudah sorted, kita cari manual di collection yang sudah diproses atau query raw
+                // Note: Logic sederhana ini mencari attendance H-1 di array $attendances
                 $yesterday = $att->check_in_time->copy()->subDay()->format('Y-m-d');
-                $prevAtt = $attendances->filter(function ($a) use ($yesterday) {
-                    return $a->check_in_time->format('Y-m-d') == $yesterday;
+                
+                $prevAtt = $attendances->filter(function ($a) use ($yesterday, $branchTimezone) {
+                    // Konversi dulu temp untuk comparison
+                    $tempTime = Carbon::parse($a->check_in_time)->timezone($branchTimezone);
+                    return $tempTime->format('Y-m-d') == $yesterday;
                 })->first();
 
                 if ($prevAtt && $prevAtt->check_out_time) {
-                    // Ambang batas: Pulang di atas jam 02:00 pagi hari ini
+                    // Pastikan prevAtt checkout juga dikonversi ke local untuk comparison
+                    $prevOutLocal = Carbon::parse($prevAtt->check_out_time)->timezone($branchTimezone);
+                    
+                    // Ambang batas: Pulang di atas jam 02:00 pagi hari ini (Local Time)
                     $thresholdTime = $att->check_in_time->copy()->setTime(2, 0, 0);
 
-                    if ($prevAtt->check_out_time->gt($thresholdTime)) {
+                    if ($prevOutLocal->gt($thresholdTime)) {
                         $att->is_excused_late = true;
-                        $att->overtime_reason = "Pulang s/d " . $prevAtt->check_out_time->format('H:i');
+                        $att->overtime_reason = "Pulang s/d " . $prevOutLocal->format('H:i');
                     }
                 }
 
@@ -175,8 +200,14 @@ class AttendanceHistoryController extends Controller
                         $fakeAtt = new Attendance();
                         $fakeAtt->id = 'leave_' . $leave->id . '_' . $date->timestamp;
                         $fakeAtt->user_id = $user->id;
-                        $fakeAtt->check_in_time = $date->copy()->setTime(8, 0, 0);
+                        
+                        // Set jam dummy (08:00) sesuai timezone user agar konsisten
+                        $fakeAtt->check_in_time = $date->copy()->setTime(8, 0, 0)->timezone($branchTimezone);
+                        // Properti local
+                        $fakeAtt->check_in_local = $fakeAtt->check_in_time;
+                        
                         $fakeAtt->check_out_time = null;
+                        $fakeAtt->check_out_local = null;
 
                         $typeLabel = ucfirst($leave->type);
                         if ($leave->type == 'telat') $typeLabel = 'Izin Telat';
