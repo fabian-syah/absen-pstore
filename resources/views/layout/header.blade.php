@@ -91,12 +91,12 @@
                     <span class="notification-badge bg-danger" id="mainChatBadge" style="display: none; top: 5px; right: 5px;">0</span> 
                 </a>
                 
-                {{-- [PERBAIKAN] Hapus display:flex dari style ini agar tidak muncul saat load awal --}}
+                {{-- Dropdown Container --}}
                 <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list p-0" 
                      aria-labelledby="messageDropdown" 
                      style="width: 380px; min-width: 380px; height: 500px;">
                     
-                    {{-- [TAMBAHAN] Wrapper d-flex di dalam sini untuk layout --}}
+                    {{-- Wrapper untuk layout --}}
                     <div class="d-flex flex-column h-100 w-100">
 
                         {{-- =========================== --}}
@@ -107,6 +107,7 @@
                                 <h6 class="mb-0 fw-bold"><i class="mdi mdi-forum-outline me-2"></i>Pilih Grup Cabang</h6>
                             </div>
                             
+                            {{-- Area ini akan SCROLLABLE jika cabangnya banyak --}}
                             <div id="branchListBody" class="flex-grow-1" style="overflow-y: auto; background: #fff;">
                                 <div class="text-center text-muted mt-5 pt-3">
                                     <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
