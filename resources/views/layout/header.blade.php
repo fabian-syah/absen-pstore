@@ -35,7 +35,7 @@
                 </a>
             </li>
 
-            {{-- Search --}}
+            {{-- Search - Untuk Admin, Audit, LEADER, dan ADMIN GAJI --}}
             @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'admin_gaji']))
                 <li class="nav-item">
                     <div class="search-form position-relative">
@@ -83,69 +83,89 @@
                 </div>
             </li>
 
-            {{-- FITUR CHAT PER CABANG (TEKS & FOTO) --}}
+            {{-- FITUR CHAT MULTI-BRANCH (TEKS & FOTO) --}}
             <li class="nav-item dropdown">
                 <a class="nav-link count-indicator dropdown-toggle" id="messageDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="icon-mail icon-lg"></i>
-                    {{-- <span class="count bg-primary"></span> Optional Dot --}}
+                    {{-- Dot Merah Utama (Total Unread dari semua cabang) --}}
+                    <span class="notification-badge bg-danger" id="mainChatBadge" style="display: none; top: 5px; right: 5px;">0</span> 
                 </a>
+                
                 <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list p-0" 
                      aria-labelledby="messageDropdown" 
-                     style="width: 380px; min-width: 380px;">
+                     style="width: 380px; min-width: 380px; height: 500px; display: flex; flex-direction: column;">
                     
-                    {{-- Header Chat --}}
-                    <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary text-white">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                <i class="mdi mdi-office-building"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 fw-bold">{{ Auth::user()->branch->name ?? 'Global' }} Group</h6>
-                                <small style="font-size: 10px; opacity: 0.9;">
-                                    <i class="mdi mdi-clock-outline"></i> {{ Auth::user()->branch->timezone ?? 'Asia/Jakarta' }}
-                                </small>
+                    {{-- =========================== --}}
+                    {{-- VIEW 1: DAFTAR CABANG --}}
+                    {{-- =========================== --}}
+                    <div id="branchListView" class="d-flex flex-column h-100">
+                        <div class="p-3 border-bottom bg-primary text-white">
+                            <h6 class="mb-0 fw-bold"><i class="mdi mdi-forum-outline me-2"></i>Pilih Grup Cabang</h6>
+                        </div>
+                        
+                        <div id="branchListBody" class="flex-grow-1" style="overflow-y: auto; background: #fff;">
+                            <div class="text-center text-muted mt-5 pt-3">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                <p class="small mt-2">Memuat daftar cabang...</p>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Body Chat --}}
-                    <div id="chatBody" class="p-3" style="height: 350px; overflow-y: auto; background: #eef1f6;">
-                        <div class="text-center text-muted mt-5 pt-5">
-                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                            <p class="small mt-2">Memuat percakapan...</p>
-                        </div>
-                    </div>
-
-                    {{-- Footer Input (Form) --}}
-                    <div class="p-2 border-top bg-white">
-                        {{-- Preview File (Hidden by default) --}}
-                        <div id="filePreviewArea" class="px-2 pb-2 d-none">
-                            <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 py-1">
-                                <i class="mdi mdi-image text-success me-2"></i>
-                                <span id="fileNamePreview" class="small text-muted" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">image.jpg</span>
-                                <button type="button" id="cancelFileBtn" class="btn btn-sm text-danger ms-2 p-0"><i class="mdi mdi-close"></i></button>
+                    {{-- =========================== --}}
+                    {{-- VIEW 2: ROOM CHAT --}}
+                    {{-- =========================== --}}
+                    <div id="chatRoomView" class="d-none flex-column h-100">
+                        {{-- Header Chat Room --}}
+                        <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary text-white">
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" id="backToBranchList" class="btn btn-sm btn-outline-light border-0 p-1 me-1">
+                                    <i class="mdi mdi-arrow-left fs-6"></i>
+                                </button>
+                                <div>
+                                    <h6 class="mb-0 fw-bold" id="activeBranchName">Loading...</h6>
+                                    <small style="font-size: 10px; opacity: 0.9;" id="activeBranchTimezone">
+                                        <i class="mdi mdi-clock-outline me-1"></i>Asia/Jakarta
+                                    </small>
+                                </div>
                             </div>
                         </div>
 
-                        <form id="chatForm" class="d-flex align-items-center gap-2" enctype="multipart/form-data">
-                            {{-- Input File Hidden --}}
-                            <input type="file" id="chatImageInput" name="image" accept="image/*" class="d-none">
-                            
-                            {{-- Tombol Attach --}}
-                            <button type="button" id="triggerFileBtn" class="btn btn-light btn-sm rounded-circle border p-2" title="Kirim Foto">
-                                <i class="mdi mdi-paperclip text-muted" style="font-size: 16px;"></i>
-                            </button>
+                        {{-- Body Chat --}}
+                        <div id="chatBody" class="p-3 flex-grow-1" style="overflow-y: auto; background: #eef1f6;">
+                            {{-- Pesan akan dirender disini via JS --}}
+                        </div>
 
-                            {{-- Input Text --}}
-                            <input type="text" id="chatInput" name="message" class="form-control form-control-sm border bg-light" 
-                                   placeholder="Ketik pesan..." autocomplete="off" style="border-radius: 20px;">
-                            
-                            {{-- Tombol Kirim --}}
-                            <button type="submit" class="btn btn-primary btn-sm rounded-circle p-2 shadow-sm" style="width: 36px; height: 36px;">
-                                <i class="mdi mdi-send" style="font-size: 16px;"></i>
-                            </button>
-                        </form>
+                        {{-- Footer Input --}}
+                        <div class="p-2 border-top bg-white">
+                            {{-- Preview File --}}
+                            <div id="filePreviewArea" class="px-2 pb-2 d-none">
+                                <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 py-1">
+                                    <i class="mdi mdi-image text-success me-2"></i>
+                                    <span id="fileNamePreview" class="small text-muted" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">img.jpg</span>
+                                    <button type="button" id="cancelFileBtn" class="btn btn-sm text-danger ms-2 p-0"><i class="mdi mdi-close"></i></button>
+                                </div>
+                            </div>
+
+                            <form id="chatForm" class="d-flex align-items-center gap-2" enctype="multipart/form-data">
+                                {{-- Hidden Inputs --}}
+                                <input type="hidden" id="activeBranchId" name="branch_id">
+                                <input type="file" id="chatImageInput" name="image" accept="image/*" class="d-none">
+                                
+                                {{-- Buttons --}}
+                                <button type="button" id="triggerFileBtn" class="btn btn-light btn-sm rounded-circle border p-2" title="Kirim Foto">
+                                    <i class="mdi mdi-paperclip text-muted" style="font-size: 16px;"></i>
+                                </button>
+
+                                <input type="text" id="chatInput" name="message" class="form-control form-control-sm border bg-light" 
+                                       placeholder="Ketik pesan..." autocomplete="off" style="border-radius: 20px;">
+                                
+                                <button type="submit" class="btn btn-primary btn-sm rounded-circle p-2 shadow-sm" style="width: 36px; height: 36px;">
+                                    <i class="mdi mdi-send" style="font-size: 16px;"></i>
+                                </button>
+                            </form>
+                        </div>
                     </div>
+
                 </div>
             </li>
 
@@ -210,9 +230,9 @@
                     <a href="{{ route('profile.edit') }}" class="dropdown-item">
                         <i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i> My Profile
                     </a>
-                    {{-- <a class="dropdown-item">
+                    <a class="dropdown-item">
                         <i class="dropdown-item-icon mdi mdi-message-text-outline text-primary me-2"></i> Messages
-                    </a> --}}
+                    </a>
                     <a class="dropdown-item">
                         <i class="dropdown-item-icon mdi mdi-help-circle-outline text-primary me-2"></i> FAQ
                     </a>
@@ -236,6 +256,7 @@
     </div>
 </nav>
 
+{{-- SCRIPT JAVASCRIPT --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // ==========================================
@@ -431,9 +452,21 @@
         }
 
         // ==========================================
-        // 3. BRANCH CHAT LOGIC (TEXT + IMAGE)
+        // 3. MULTI-BRANCH CHAT LOGIC (2 Views)
         // ==========================================
         const messageDropdown = document.getElementById('messageDropdown');
+        const mainChatBadge = document.getElementById('mainChatBadge');
+        
+        // Views
+        const branchListView = document.getElementById('branchListView');
+        const branchListBody = document.getElementById('branchListBody');
+        const chatRoomView = document.getElementById('chatRoomView');
+        const backToBranchList = document.getElementById('backToBranchList');
+        
+        // Chat Elements
+        const activeBranchName = document.getElementById('activeBranchName');
+        const activeBranchTimezone = document.getElementById('activeBranchTimezone');
+        const activeBranchId = document.getElementById('activeBranchId');
         const chatBody = document.getElementById('chatBody');
         const chatForm = document.getElementById('chatForm');
         const chatInput = document.getElementById('chatInput');
@@ -443,21 +476,30 @@
         const fileNamePreview = document.getElementById('fileNamePreview');
         const cancelFileBtn = document.getElementById('cancelFileBtn');
 
-        let isChatOpen = false;
-        let chatInterval = null;
+        // State variables
+        let isDropdownOpen = false;
+        let currentView = 'list'; // 'list' or 'room'
+        let currentBranchId = null;
+        let branchInterval = null;
+        let messageInterval = null;
 
-        // Open/Close Handler
+        // --- HANDLER DROPDOWN ---
         if(messageDropdown) {
             messageDropdown.addEventListener('show.bs.dropdown', function () {
-                isChatOpen = true;
-                loadMessages();
-                chatInterval = setInterval(loadMessages, 3000); // Polling chat
-                setTimeout(() => { chatBody.scrollTop = chatBody.scrollHeight; }, 500);
+                isDropdownOpen = true;
+                if(currentView === 'list') {
+                    loadBranchList();
+                    branchInterval = setInterval(loadBranchList, 5000); // Polling list cabang
+                } else if (currentView === 'room' && currentBranchId) {
+                    loadMessages(currentBranchId);
+                    messageInterval = setInterval(() => loadMessages(currentBranchId), 3000);
+                }
             });
 
             messageDropdown.addEventListener('hide.bs.dropdown', function () {
-                isChatOpen = false;
-                clearInterval(chatInterval);
+                isDropdownOpen = false;
+                clearInterval(branchInterval);
+                clearInterval(messageInterval);
             });
         }
 
@@ -469,53 +511,132 @@
             });
         }
 
-        // File Input Logic
-        if(triggerFileBtn) {
-            triggerFileBtn.addEventListener('click', () => chatImageInput.click());
+        // --- 1. LIST CABANG LOGIC ---
+        function loadBranchList() {
+            if(!isDropdownOpen && currentView !== 'list') return;
+
+            fetch('{{ route('chat.branches') }}')
+                .then(res => res.json())
+                .then(data => {
+                    renderBranchList(data.branches);
+                    updateMainBadge(data.total_unread);
+                })
+                .catch(err => console.error(err));
         }
 
-        if(chatImageInput) {
-            chatImageInput.addEventListener('change', function() {
-                if(this.files && this.files[0]) {
-                    filePreviewArea.classList.remove('d-none');
-                    fileNamePreview.textContent = this.files[0].name;
-                    chatInput.placeholder = "Tambahkan caption (opsional)...";
+        function renderBranchList(branches) {
+            if(branches.length === 0) {
+                branchListBody.innerHTML = '<div class="text-center text-muted mt-5 pt-3"><i class="mdi mdi-office-building-remove fs-1"></i><p class="small">Anda tidak terhubung ke cabang manapun.</p></div>';
+                return;
+            }
+
+            let html = '';
+            branches.forEach(branch => {
+                // Badge Unread
+                let badgeHtml = '';
+                if(branch.unread_count > 0) {
+                    badgeHtml = `<span class="badge bg-danger rounded-pill ms-auto" style="font-size: 10px;">${branch.unread_count}</span>`;
                 }
+
+                html += `
+                    <div class="p-3 border-bottom d-flex align-items-center branch-item" 
+                         onclick="openChatRoom(${branch.id}, '${escapeHtml(branch.name)}', '${branch.timezone}')"
+                         style="cursor: pointer; transition: background 0.2s;">
+                        
+                        <div class="bg-light text-primary rounded-circle d-flex align-items-center justify-content-center me-3 border" style="width: 40px; height: 40px;">
+                            <i class="mdi mdi-office-building"></i>
+                        </div>
+                        
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 text-dark fw-bold text-truncate" style="max-width: 180px; font-size: 14px;">${escapeHtml(branch.name)}</h6>
+                                ${badgeHtml}
+                            </div>
+                            <small class="text-muted text-truncate d-block" style="font-size: 12px;">${escapeHtml(branch.last_message)}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            branchListBody.innerHTML = html;
+        }
+
+        function updateMainBadge(count) {
+            if(count > 0) {
+                mainChatBadge.textContent = count > 99 ? '99+' : count;
+                mainChatBadge.style.display = 'flex';
+            } else {
+                mainChatBadge.style.display = 'none';
+            }
+        }
+
+        // --- 2. ROOM CHAT LOGIC ---
+        
+        // Fungsi global agar bisa dipanggil dari HTML onclick
+        window.openChatRoom = function(branchId, branchName, timezone) {
+            // Switch View
+            currentView = 'room';
+            currentBranchId = branchId;
+            
+            // UI Updates
+            branchListView.classList.remove('d-flex');
+            branchListView.classList.add('d-none');
+            
+            chatRoomView.classList.remove('d-none');
+            chatRoomView.classList.add('d-flex');
+
+            // Set Header Info
+            activeBranchName.textContent = branchName;
+            activeBranchTimezone.textContent = timezone;
+            activeBranchId.value = branchId;
+
+            // Clear Old Chat & Load New
+            chatBody.innerHTML = '<div class="text-center text-muted mt-5 pt-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="small mt-2">Memuat pesan...</p></div>';
+            
+            // Stop List Interval, Start Message Interval
+            clearInterval(branchInterval);
+            loadMessages(branchId);
+            messageInterval = setInterval(() => loadMessages(branchId), 3000);
+        };
+
+        // Back Button Logic
+        if(backToBranchList) {
+            backToBranchList.addEventListener('click', function() {
+                // Switch View back to List
+                currentView = 'list';
+                currentBranchId = null;
+
+                chatRoomView.classList.remove('d-flex');
+                chatRoomView.classList.add('d-none');
+
+                branchListView.classList.remove('d-none');
+                branchListView.classList.add('d-flex');
+
+                // Stop Message Interval, Start List Interval
+                clearInterval(messageInterval);
+                loadBranchList(); // Immediate refresh to update unread counts
+                branchInterval = setInterval(loadBranchList, 5000);
             });
         }
 
-        if(cancelFileBtn) {
-            cancelFileBtn.addEventListener('click', resetFileInput);
-        }
+        function loadMessages(branchId) {
+            if(currentView !== 'room') return;
 
-        function resetFileInput() {
-            chatImageInput.value = '';
-            filePreviewArea.classList.add('d-none');
-            chatInput.placeholder = "Ketik pesan...";
-        }
-
-        // Load Messages
-        function loadMessages() {
-            if(!isChatOpen) return;
-
-            fetch('{{ route('messages.index') }}')
-                .then(response => response.json())
+            fetch(`{{ route('messages.index') }}?branch_id=${branchId}`)
+                .then(res => res.json())
                 .then(data => {
                     renderChat(data.messages);
                 })
                 .catch(err => console.error(err));
         }
 
-        // Render Chat HTML
         function renderChat(messages) {
             if(messages.length === 0) {
-                chatBody.innerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted small"><i class="mdi mdi-chat-processing-outline fs-1 mb-2"></i><p>Belum ada obrolan.</p></div>';
+                chatBody.innerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted small"><i class="mdi mdi-chat-processing-outline fs-1 mb-2"></i><p>Belum ada obrolan di cabang ini.</p></div>';
                 return;
             }
 
             let html = '';
             messages.forEach(msg => {
-                // Image HTML
                 let imageHtml = '';
                 if(msg.image_url) {
                     imageHtml = `
@@ -526,11 +647,10 @@
                         </div>
                     `;
                 }
-
-                // Text HTML
                 let textHtml = msg.message ? `<div>${escapeHtml(msg.message)}</div>` : '';
 
                 if(msg.is_me) {
+                    // PESAN SENDIRI
                     html += `
                         <div class="d-flex justify-content-end mb-3">
                             <div class="text-end" style="max-width: 85%;">
@@ -538,13 +658,12 @@
                                     ${imageHtml}
                                     ${textHtml}
                                 </div>
-                                <div class="small text-muted mt-1" style="font-size: 10px;">
-                                    ${msg.time} <i class="mdi mdi-check-all text-primary"></i>
-                                </div>
+                                <div class="small text-muted mt-1" style="font-size: 10px;">${msg.time}</div>
                             </div>
                         </div>
                     `;
                 } else {
+                    // PESAN ORANG LAIN
                     html += `
                         <div class="d-flex justify-content-start mb-3">
                             <div class="me-2 mt-1">
@@ -567,57 +686,73 @@
             });
 
             // Auto scroll logic (simple)
-            // Save scroll position check
+            // Cek apakah user sedang scroll ke atas
             const isScrolledBottom = (chatBody.scrollHeight - chatBody.clientHeight - chatBody.scrollTop) < 150;
             
             chatBody.innerHTML = html;
             
-            if(isScrolledBottom || messages.length <= 5) { 
-                 chatBody.scrollTop = chatBody.scrollHeight;
+            // Scroll ke bawah jika di posisi bawah atau chat baru dibuka
+            if(isScrolledBottom || messages.length <= 5) {
+                chatBody.scrollTop = chatBody.scrollHeight;
             }
         }
 
-        // Send Message Handler
+        // --- 3. SEND MESSAGE LOGIC ---
+        if(triggerFileBtn) triggerFileBtn.addEventListener('click', () => chatImageInput.click());
+        
+        if(chatImageInput) {
+            chatImageInput.addEventListener('change', function() {
+                if(this.files && this.files[0]) {
+                    filePreviewArea.classList.remove('d-none');
+                    fileNamePreview.textContent = this.files[0].name;
+                    chatInput.placeholder = "Tambahkan caption...";
+                }
+            });
+        }
+
+        if(cancelFileBtn) {
+            cancelFileBtn.addEventListener('click', resetFileInput);
+        }
+
+        function resetFileInput() {
+            chatImageInput.value = '';
+            filePreviewArea.classList.add('d-none');
+            chatInput.placeholder = "Ketik pesan...";
+        }
+
         if(chatForm) {
             chatForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                
                 const formData = new FormData(this);
-                const message = formData.get('message');
-                const image = formData.get('image');
-
-                if(!message.trim() && (!image || image.size === 0)) return;
-
-                // Optimistic UI clear
+                
+                // Validasi Client
+                if(!formData.get('message').trim() && (!formData.get('image') || formData.get('image').size === 0)) return;
+                
+                // Optimistic Clear
                 chatInput.value = '';
                 resetFileInput();
 
                 fetch('{{ route('messages.store') }}', {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if(data.error) {
-                        alert(data.error);
-                    } else {
-                        loadMessages(); 
+                    if(data.error) alert(data.error);
+                    else {
+                        loadMessages(currentBranchId);
                         chatBody.scrollTop = chatBody.scrollHeight;
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    alert("Gagal mengirim pesan.");
+                    alert("Gagal mengirim.");
                 });
             });
         }
 
-        // ==========================================
-        // 4. UTILITY FUNCTIONS
-        // ==========================================
+        // --- 4. UTILITIES ---
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -640,9 +775,16 @@
 
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
+        
+        // --- 5. AUTO LOAD BADGE ON PAGE LOAD ---
+        // Panggil sekali saat load halaman agar badge merah di navbar muncul
+        fetch('{{ route('chat.branches') }}')
+            .then(res => res.json())
+            .then(data => updateMainBadge(data.total_unread))
+            .catch(e => {});
     });
 
-    // Fullscreen Toggle (Outside DOMContentLoaded is fine)
+    // Fullscreen Toggle
     function toggleFullScreen() {
         if (!document.fullscreenElement &&
             !document.webkitFullscreenElement &&
@@ -720,6 +862,9 @@
     .profile-initial-nav { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-sizing: border-box; }
     .profile-initial-nav:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
     .profile-initial-dropdown { width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; margin: 0 auto; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2); }
+
+    /* --- CSS TAMBAHAN CHAT --- */
+    .branch-item:hover { background-color: #f8f9fa; }
 
     @media (max-width: 768px) {
         .search-form { margin: 10px 0; width: 100%; }

@@ -74,7 +74,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/my-salary', [MySalaryController::class, 'index'])->name('my-salary.index');
     Route::get('/my-salary/{id}', [MySalaryController::class, 'show'])->name('my-salary.show');
 
+    Route::get('/chat/branches', [BranchMessageController::class, 'getBranchList'])->name('chat.branches');
+    // Get Messages (Butuh parameter ?branch_id=...)
     Route::get('/branch-messages', [BranchMessageController::class, 'index'])->name('messages.index');
+    // Send Message
     Route::post('/branch-messages', [BranchMessageController::class, 'store'])->name('messages.store');
 
     Route::post('/attendance/{id}/confirm-overtime', [DashboardController::class, 'confirmOvertime'])->name('attendance.confirm-overtime');
