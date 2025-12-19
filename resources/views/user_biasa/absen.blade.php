@@ -360,25 +360,15 @@
 @endpush
 
 @push('scripts')
-{{-- LOAD FACE API --}}
+{{-- LOAD FACE API MINIFIED --}}
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
-{{-- LOAD SWEETALERT (Untuk UI Loading/Error yang lebih bagus) --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ==========================================
-        // CONFIGURATION FOR PERFORMANCE & NETWORK
-        // ==========================================
-        const CONFIG = {
-            AI_INTERVAL_MS: 800,      // Cek wajah tiap 800ms (Bukan Realtime 60fps) -> Hemat Baterai & CPU
-            AI_INPUT_SIZE: 160,       // Resolusi input AI kecil saja (makin kecil makin cepat)
-            AI_SCORE_THRESHOLD: 0.5,  // Toleransi kemiripan wajah
-            MAX_RETRIES: 5,           // Coba kirim ulang 5x jika sinyal hilang
-            RETRY_DELAY: 2000,        // Jeda 2 detik sebelum kirim ulang
-            COMPRESSION_QUALITY: 0.7  // Kompresi foto di klien (0.7 = 70%)
-        };
-
+        // === KONFIGURASI PERFORMA HP KENTANG ===
+        const AI_INPUT_SIZE = 224; 
+        const AI_SCORE_THRESHOLD = 0.55; 
+        
         const useAI = {{ Auth::user()->use_face_recognition ? 'true' : 'false' }};
         const assetPath = "{{ asset('public/models') }}"; 
 
@@ -393,44 +383,53 @@
         const photoInputHidden = document.getElementById('photo-input-hidden');
         const canvas = document.getElementById('capture-canvas');
         
-        // Location & Form
+        // Input Hidden Location
         const latInput = document.getElementById('latitude');
         const lngInput = document.getElementById('longitude');
         const accInput = document.getElementById('accuracy');
         const coordDisplay = document.getElementById('coordinates-display');
         const accBadge = document.getElementById('gps-accuracy-badge');
-        const form = document.getElementById('attendance-form');
-        const slideTrack = document.getElementById('slide-track');
-        const slideThumb = document.getElementById('slide-thumb');
         
-        // UI Status
         const faceStatusBadge = document.getElementById('face-status-badge');
         const focusBox = document.querySelector('.focus-box');
         const modelLoadingText = document.getElementById('model-loading-text');
+        const cameraInstruction = document.getElementById('camera-instruction');
+        const aiScanLine = document.getElementById('ai-scan-line');
+        const slideTrack = document.getElementById('slide-track');
+        const slideThumb = document.getElementById('slide-thumb');
+        const slideText = document.querySelector('.slide-bg-text');
+        const form = document.getElementById('attendance-form');
 
         // State Management
         let streamRef = null;
         let isProcessingAI = false; 
         let isFaceValid = false;
-        let aiInterval = null; // Variable untuk menyimpan interval
+        let modelsLoaded = false;
+        let animationFrameId = null;
 
-        // --- 1. INITIALIZE & LOCATION ---
-        getLocation(); // Get location immediately
-
+        // --- 1. INITIALIZE ---
         startBtn.addEventListener('click', async () => {
             startBtn.disabled = true;
             
+            // Trigger GPS Update saat tombol start ditekan
+            getLocation();
+
             if (useAI) {
-                toggleLoadingState(true);
-                try {
-                    // Load model (hanya TinyFaceDetector yg ringan)
-                    await faceapi.nets.tinyFaceDetector.loadFromUri(assetPath);
-                    toggleLoadingState(false);
-                    initCamera(true);
-                } catch (err) {
-                    console.error("AI Load Error:", err);
-                    Swal.fire("Mode AI Gagal", "Sinyal lambat meload AI, beralih ke mode manual.", "warning");
-                    initCamera(false); 
+                if (!modelsLoaded) {
+                    toggleLoadingState(true);
+                    try {
+                        console.log("Loading AI Models...");
+                        await faceapi.nets.tinyFaceDetector.loadFromUri(assetPath);
+                        modelsLoaded = true;
+                        toggleLoadingState(false);
+                        initCamera();
+                    } catch (err) {
+                        console.error("AI Error:", err);
+                        alert("Gagal memuat AI (Koneksi/File Model Missing). Beralih ke manual.");
+                        initCamera(false); 
+                    }
+                } else {
+                    initCamera();
                 }
             } else {
                 initCamera(false);
@@ -442,11 +441,15 @@
             modelLoadingText.classList.toggle('d-none', !isLoading);
         }
 
-        // --- 2. CAMERA HANDLING ---
-        function initCamera(enableAI) {
-            // Gunakan resolusi standar VGA agar ringan di HP Kentang
+        // --- 2. CAMERA HANDLING (VGA ONLY) ---
+        function initCamera(enableAI = true) {
             const constraints = {
-                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+                video: { 
+                    facingMode: "user", 
+                    width: { ideal: 640 }, 
+                    height: { ideal: 480 },
+                    frameRate: { ideal: 24, max: 30 } 
+                },
                 audio: false
             };
 
@@ -460,177 +463,205 @@
                     startScreen.classList.add('d-none');
                     videoFeed.classList.add('ready');
 
-                    if (enableAI) {
-                        document.getElementById('ai-scan-line')?.classList.remove('d-none');
-                        startOptimizedDetection();
+                    if (enableAI && useAI) {
+                        if (aiScanLine) aiScanLine.classList.remove('d-none');
+                        startFaceDetectionLoop();
                     } else {
-                        setReadyToCapture(true, "Mode Manual");
+                        setReadyToCapture(true, "Mode Manual Siap");
                     }
                 };
             })
             .catch(err => {
-                Swal.fire("Kamera Error", "Gagal membuka kamera: " + err.message, "error");
+                alert("Gagal akses kamera: " + err.message);
                 startBtn.disabled = false;
             });
         }
 
-        // --- 3. OPTIMIZED AI DETECTION (Anti-Lag) ---
-        function startOptimizedDetection() {
+        // --- 3. AI DETECTION LOOP (SMART RECURSIVE) ---
+        async function startFaceDetectionLoop() {
             const options = new faceapi.TinyFaceDetectorOptions({ 
-                inputSize: CONFIG.AI_INPUT_SIZE, // Ukuran kecil = Lebih Cepat 
-                scoreThreshold: CONFIG.AI_SCORE_THRESHOLD 
+                inputSize: AI_INPUT_SIZE, 
+                scoreThreshold: AI_SCORE_THRESHOLD 
             });
 
-            // GANTI requestAnimationFrame dengan setInterval
-            // Ini mencegah HP panas dan Lag karena tidak memaksa 60fps processing
-            aiInterval = setInterval(async () => {
-                if (videoFeed.paused || videoFeed.ended || isProcessingAI) return;
+            const runDetection = async () => {
+                if (!streamRef || videoFeed.paused || videoFeed.ended) return;
 
-                isProcessingAI = true;
-                const startT = performance.now();
+                if (isProcessingAI) {
+                    animationFrameId = requestAnimationFrame(runDetection);
+                    return;
+                }
+
+                isProcessingAI = true; 
 
                 try {
-                    // Detect Single Face (Lebih ringan daripada detectAllFaces)
-                    const result = await faceapi.detectSingleFace(videoFeed, options);
-                    
-                    if (result) {
-                        if (!isFaceValid) { isFaceValid = true; onFaceValid(); }
+                    const detections = await faceapi.detectAllFaces(videoFeed, options);
+
+                    if (detections.length > 0) {
+                        const bestDetection = detections[0];
+                        if (bestDetection.score > AI_SCORE_THRESHOLD) {
+                            if (!isFaceValid) {
+                                isFaceValid = true;
+                                onFaceValid();
+                            }
+                        }
                     } else {
-                        if (isFaceValid) { isFaceValid = false; onFaceInvalid(); }
+                        if (isFaceValid) {
+                            isFaceValid = false;
+                            onFaceInvalid();
+                        }
                     }
-
-                    // Performance Check: Jika deteksi butuh waktu > 500ms, matikan AI
-                    const duration = performance.now() - startT;
-                    if (duration > 500) {
-                        console.warn("Device too slow for AI, switching to manual.");
-                        stopAI();
-                        setReadyToCapture(true, "Mode Ringan (Auto)");
-                    }
-
                 } catch (err) {
-                    console.log("Skip frame");
+                    console.log("Detection skipped");
                 }
+
                 isProcessingAI = false;
 
-            }, CONFIG.AI_INTERVAL_MS);
-        }
+                setTimeout(() => {
+                    animationFrameId = requestAnimationFrame(runDetection);
+                }, 300); 
+            };
 
-        function stopAI() {
-            if (aiInterval) clearInterval(aiInterval);
-            document.getElementById('ai-scan-line')?.classList.add('d-none');
+            runDetection();
         }
 
         function onFaceValid() {
             focusBox.classList.add('active');
-            setReadyToCapture(true, "Wajah Terdeteksi");
+            setReadyToCapture(true, "Wajah Valid");
         }
 
         function onFaceInvalid() {
             focusBox.classList.remove('active');
-            setReadyToCapture(false, "Posisikan Wajah");
+            setReadyToCapture(false, "Wajah Tidak Terdeteksi");
         }
 
-        function setReadyToCapture(ready, msg) {
-            captureBtn.disabled = !ready;
-            if(ready) {
+        function setReadyToCapture(ready, message) {
+            if (ready) {
+                captureBtn.disabled = false;
                 captureBtn.classList.add('ready');
-                faceStatusBadge.innerHTML = `<i class="mdi mdi-check-circle"></i> ${msg}`;
+                faceStatusBadge.innerHTML = `<i class="mdi mdi-check-circle"></i> ${message}`;
                 faceStatusBadge.className = "badge-glass text-success border-success";
+                cameraInstruction.innerText = "Tekan tombol shutter sekarang";
             } else {
+                captureBtn.disabled = true;
                 captureBtn.classList.remove('ready');
-                faceStatusBadge.innerHTML = `<i class="mdi mdi-alert"></i> ${msg}`;
+                faceStatusBadge.innerHTML = `<i class="mdi mdi-alert"></i> ${message}`;
                 faceStatusBadge.className = "badge-glass text-warning border-warning";
+                cameraInstruction.innerText = "Posisikan wajah di dalam kotak";
             }
         }
 
-        // --- 4. CAPTURE & COMPRESS ---
+        // --- 4. CAPTURE LOGIC ---
         captureBtn.addEventListener('click', () => {
-            // Ambil lokasi lagi sesaat sebelum foto (Refresh GPS)
-            getLocation();
+            if (useAI && !isFaceValid) return;
+            
+            // Paksa update lokasi lagi sebelum capture
+            getLocation(true);
 
-            // Animasi tombol
             captureBtn.style.transform = "scale(0.9)";
             setTimeout(() => captureBtn.style.transform = "scale(1.05)", 100);
 
-            // Gambar ke canvas
-            const w = videoFeed.videoWidth;
-            const h = videoFeed.videoHeight;
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.scale(-1, 1); 
-            ctx.drawImage(videoFeed, -w, 0, w, h);
+            const width = videoFeed.videoWidth;
+            const height = videoFeed.videoHeight;
+            canvas.width = width;
+            canvas.height = height;
             
-            // Konversi ke Blob (Compress JPG quality 0.7)
+            const ctx = canvas.getContext('2d');
+            ctx.save();
+            ctx.scale(-1, 1); 
+            ctx.drawImage(videoFeed, -width, 0, width, height);
+            ctx.restore();
+
             canvas.toBlob(blob => {
-                // Buat File object untuk input hidden
-                const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+                const file = new File([blob], "attendance_" + Date.now() + ".jpg", { type: "image/jpeg" });
                 const dt = new DataTransfer();
                 dt.items.add(file);
                 photoInputHidden.files = dt.files;
                 
-                // Tampilkan Preview
                 previewImage.src = URL.createObjectURL(blob);
                 
-                // Stop Kamera & AI
-                stopAI();
-                if (streamRef) streamRef.getTracks().forEach(track => track.stop());
-                
-                // Tampilkan Result Screen
+                stopCamera();
                 resultScreen.classList.remove('d-none');
                 checkGlobalValidity();
 
-            }, 'image/jpeg', CONFIG.COMPRESSION_QUALITY);
+            }, 'image/jpeg', 0.85);
         });
+
+        function stopCamera() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (streamRef) {
+                streamRef.getTracks().forEach(track => track.stop());
+                streamRef = null;
+            }
+        }
 
         retakeBtn.addEventListener('click', () => {
-            window.location.reload(); // Refresh paling aman untuk reset state kamera
+            resultScreen.classList.add('d-none');
+            photoInputHidden.value = '';
+            isFaceValid = false;
+            initCamera(); 
+            checkGlobalValidity();
         });
 
-        // --- 5. ROBUST LOCATION (GPS) ---
-        function getLocation() {
-            if (!navigator.geolocation) {
-                coordDisplay.innerText = "GPS Tidak Support";
-                return;
-            }
-            coordDisplay.innerText = "Mencari Lokasi...";
-            accBadge.innerText = "Mencari...";
-            
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const { latitude, longitude, accuracy } = pos.coords;
-                    latInput.value = latitude;
-                    lngInput.value = longitude;
-                    accInput.value = accuracy;
-                    
-                    coordDisplay.innerText = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-                    accBadge.innerText = `Akurasi: ${Math.round(accuracy)}m`;
-                    accBadge.className = accuracy < 100 ? 'badge bg-light text-success' : 'badge bg-light text-warning';
-                    checkGlobalValidity();
-                },
-                (err) => {
-                    // Fallback jika GPS High Accuracy gagal, coba Low Accuracy
-                    console.warn("GPS High Accuracy Failed, trying low.");
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => {
-                            latInput.value = pos.coords.latitude;
-                            lngInput.value = pos.coords.longitude;
-                            accInput.value = pos.coords.accuracy;
-                            coordDisplay.innerText = "Lokasi (Low Acc) OK";
-                            checkGlobalValidity();
-                        },
-                        (finalErr) => {
-                            coordDisplay.innerText = "Gagal Lokasi";
-                            accBadge.innerText = "Error";
+        // --- 5. GPS & SLIDER ---
+        function getLocation(highAccuracy = true) {
+            if (navigator.geolocation) {
+                coordDisplay.innerText = "Mencari lokasi...";
+                accBadge.className = "badge bg-warning text-dark";
+                accBadge.innerText = "Mencari...";
+                
+                // Opsi Geolocation: Coba akurasi tinggi dulu, timeout 15 detik
+                const options = {
+                    enableHighAccuracy: highAccuracy,
+                    timeout: 15000, 
+                    maximumAge: 0
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        // SUKSES DAPAT LOKASI
+                        const { latitude, longitude, accuracy } = pos.coords;
+                        latInput.value = latitude;
+                        lngInput.value = longitude;
+                        accInput.value = accuracy;
+                        
+                        coordDisplay.innerText = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                        accBadge.innerText = `Akurasi ±${Math.round(accuracy)}m`;
+                        accBadge.className = 'badge bg-light text-success border border-success';
+                        
+                        checkGlobalValidity();
+                    },
+                    (err) => {
+                        // ERROR / TIMEOUT
+                        console.warn(`ERROR(${err.code}): ${err.message}`);
+                        
+                        // Jika timeout di High Accuracy (GPS), coba fallback ke Low Accuracy (Network)
+                        if (highAccuracy && err.code === 3) { // Code 3 = Timeout
+                             console.log("High accuracy timed out, trying low accuracy...");
+                             coordDisplay.innerText = "Mengambil lokasi (Network)...";
+                             // Panggil ulang fungsi dengan mode Low Accuracy (false)
+                             getLocation(false);
+                        } else {
+                            // Jika Low Accuracy juga gagal atau error lain (Permission Denied dll)
+                            let msg = err.message;
+                            if(err.message.includes("Timeout")) msg = "Waktu habis, coba refresh.";
+                            if(err.code === 1) msg = "Izin lokasi ditolak.";
+                            
+                            coordDisplay.innerText = "Gagal: " + msg;
                             accBadge.className = 'badge bg-danger text-white';
-                            Swal.fire("GPS Error", "Aktifkan GPS anda dan Refresh halaman.", "error");
-                        },
-                        { enableHighAccuracy: false, timeout: 20000 }
-                    );
-                },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-            );
+                            accBadge.innerText = "Error";
+                            checkGlobalValidity(); 
+                        }
+                    },
+                    options
+                );
+            } else {
+                coordDisplay.innerText = "Browser tidak support GPS";
+            }
         }
+        
+        // Panggil lokasi saat load halaman (Mode High Accuracy)
+        getLocation(true);
 
         function checkGlobalValidity() {
             const hasPhoto = photoInputHidden.files.length > 0;
@@ -638,17 +669,27 @@
             
             if (hasPhoto && hasLoc) {
                 slideTrack.classList.remove('disabled');
-                document.querySelector('.slide-bg-text').innerText = "GESER UNTUK ABSEN >>";
-                document.querySelector('.slide-bg-text').classList.add('text-active');
+                slideText.innerText = "GESER KE KANAN >>";
+                slideText.classList.add('text-active'); 
+            } else {
+                slideTrack.classList.add('disabled');
+                slideText.innerText = hasPhoto ? "TUNGGU LOKASI..." : "AMBIL FOTO DULU";
+                if(hasPhoto && !hasLoc) slideText.innerText = "MENUNGGU GPS...";
+                slideText.classList.remove('text-active');
             }
         }
 
-        // --- 6. SLIDE & AJAX SUBMIT (NETWORK RESILIENCE) ---
-        let isDragging = false, startX, maxSlide;
+        // --- 6. SLIDER LOGIC ---
+        let isDragging = false, startX, currentX, maxSlide;
         const updateSliderWidth = () => { maxSlide = slideTrack.offsetWidth - slideThumb.offsetWidth - 8; };
-        setTimeout(updateSliderWidth, 500);
+        
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(updateSliderWidth, 250);
+        });
+        updateSliderWidth();
 
-        // Slide logic (Touch/Mouse)
         const handleStart = (e) => {
             if (slideTrack.classList.contains('disabled')) return;
             isDragging = true;
@@ -658,117 +699,54 @@
 
         const handleMove = (e) => {
             if (!isDragging) return;
+            // e.preventDefault(); 
             const clientX = (e.type.includes('touch')) ? e.touches[0].clientX : e.clientX;
             let move = clientX - startX;
-            if (move < 0) move = 0; if (move > maxSlide) move = maxSlide;
+            if (move < 0) move = 0;
+            if (move > maxSlide) move = maxSlide;
+            currentX = move;
             slideThumb.style.transform = `translateX(${move}px)`;
+            slideText.style.opacity = 1 - (move / maxSlide);
         };
 
         const handleEnd = () => {
             if (!isDragging) return;
             isDragging = false;
             
-            // Jika geser > 90%
-            if (parseFloat(slideThumb.style.transform.replace('translateX(', '')) >= maxSlide * 0.9) {
+            if (currentX >= maxSlide * 0.9) {
                 slideThumb.style.transform = `translateX(${maxSlide}px)`;
                 slideTrack.classList.add('submitted');
+                slideThumb.innerHTML = '<i class="mdi mdi-check"></i>';
+                slideText.innerText = "MENGIRIM...";
+                slideText.style.opacity = 1;
                 
-                // Submit Form via AJAX
-                submitAttendanceWithRetry();
+                if(!form.classList.contains('submitting')) {
+                    form.classList.add('submitting');
+                    // Pastikan input lokasi ada isinya sebelum submit
+                    if(latInput.value === '') {
+                        alert("Lokasi belum ditemukan. Coba refresh atau izinkan lokasi.");
+                        slideThumb.style.transform = 'translateX(0px)';
+                        slideTrack.classList.remove('submitted');
+                        slideThumb.innerHTML = '<i class="mdi mdi-chevron-double-right"></i>';
+                        slideText.innerText = "MENUNGGU GPS...";
+                        form.classList.remove('submitting');
+                    } else {
+                        form.submit();
+                    }
+                }
             } else {
-                slideThumb.style.transition = 'transform 0.3s ease';
+                slideThumb.style.transition = 'transform 0.3s ease-out';
                 slideThumb.style.transform = 'translateX(0px)';
+                slideText.style.opacity = 1;
             }
         };
 
-        // Event Listeners Slider
         slideThumb.addEventListener('mousedown', handleStart);
         slideThumb.addEventListener('touchstart', handleStart, {passive: false});
         window.addEventListener('mousemove', handleMove);
         window.addEventListener('touchmove', handleMove, {passive: false});
         window.addEventListener('mouseup', handleEnd);
         window.addEventListener('touchend', handleEnd);
-
-        // === CORE: FUNGSI UPLOAD TAHAN BANTING ===
-        async function submitAttendanceWithRetry(retryCount = 0) {
-            
-            // 1. Tampilkan UI Loading
-            if(retryCount === 0) {
-                Swal.fire({
-                    title: 'Mengirim Data...',
-                    html: 'Jangan tutup halaman ini.',
-                    allowOutsideClick: false,
-                    didOpen: () => { Swal.showLoading(); }
-                });
-            } else {
-                Swal.update({
-                    title: `Koneksi Buruk (Percobaan ${retryCount}/${CONFIG.MAX_RETRIES})`,
-                    html: 'Sedang mencoba menyambung kembali...'
-                });
-            }
-
-            // 2. Siapkan Data
-            const formData = new FormData(form);
-
-            // 3. Eksekusi Fetch
-            try {
-                const response = await fetch("{{ route('self.attend.store') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: formData
-                });
-
-                if (!response.ok) throw new Error(`Server Error: ${response.status}`);
-
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: result.message,
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(() => {
-                        window.location.href = result.redirect_url;
-                    });
-                } else {
-                    throw new Error(result.message);
-                }
-
-            } catch (error) {
-                console.error("Upload Error:", error);
-
-                // 4. Logic Retry (Jika gagal)
-                if (retryCount < CONFIG.MAX_RETRIES) {
-                    // Tunggu sebentar lalu coba lagi
-                    setTimeout(() => {
-                        submitAttendanceWithRetry(retryCount + 1);
-                    }, CONFIG.RETRY_DELAY);
-                } else {
-                    // Jika sudah menyerah (Limit Retry Habis)
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal Mengirim',
-                        text: 'Koneksi internet Anda sangat tidak stabil. Cari sinyal yang lebih baik dan tekan "Coba Lagi".',
-                        showCancelButton: true,
-                        confirmButtonText: 'Coba Lagi',
-                        cancelButtonText: 'Batal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            submitAttendanceWithRetry(0); // Reset retry counter
-                        } else {
-                            // Reset slider jika batal
-                            slideThumb.style.transform = 'translateX(0px)';
-                            slideTrack.classList.remove('submitted');
-                        }
-                    });
-                }
-            }
-        }
     });
 </script>
 @endpush
