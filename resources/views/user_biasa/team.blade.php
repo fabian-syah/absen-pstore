@@ -101,77 +101,47 @@
         </div>
     </div>
 
-    {{-- PANEL AUDIT / PIC WILAYAH (MULTI BRANCH) --}}
-    @if($assignedAudits->count() > 0)
-    <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(to right, #f8f9fa, #ffffff); border-left: 5px solid #0d6efd !important;">
-        <div class="card-body p-4">
-            <h5 class="fw-bold mb-3 text-dark">
-                <i class="mdi mdi-shield-account text-primary me-2"></i>Audit & PIC Wilayah
-            </h5>
-            <div class="row g-3">
-                @foreach($assignedAudits as $audit)
-                    <div class="col-md-6 col-lg-4">
-                        <div class="d-flex align-items-start p-3 bg-white rounded-3 border shadow-sm h-100">
-                            {{-- Foto Audit --}}
-                            <div class="flex-shrink-0 me-3">
-                                @if($audit->profile_photo_path)
-                                    <img src="{{ Storage::url($audit->profile_photo_path) }}" class="rounded-circle" width="45" height="45" style="object-fit: cover;">
-                                @else
-                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 45px; height: 45px;">
-                                        {{ substr($audit->name, 0, 1) }}
-                                    </div>
-                                @endif
-                            </div>
-                            
-                            {{-- Info Audit --}}
-                            <div class="flex-grow-1">
-                                <h6 class="fw-bold mb-1">{{ $audit->name }}</h6>
-                                <div class="mb-2">
-                                    <span class="badge bg-soft-primary text-primary rounded-pill px-2">
-                                        <i class="mdi mdi-id-card me-1"></i>Audit
-                                    </span>
-                                </div>
-                                
-                                {{-- Daftar Cabang yang Dipegang (Multi Branch) --}}
-                                <div class="d-flex flex-wrap gap-1">
-                                    @php
-                                        // Gabungkan single branch dan multi branch
-                                        $auditBranches = $audit->branches;
-                                        if($audit->branch) {
-                                            $auditBranches = $auditBranches->push($audit->branch);
-                                        }
-                                        // Filter hanya cabang yang relevan dengan user yang login (myBranchIds)
-                                        $relevantBranches = $auditBranches->whereIn('id', $myBranchIds)->unique('id');
-                                    @endphp
-
-                                    @foreach($relevantBranches as $branch)
-                                        <span class="badge bg-light text-secondary border" style="font-size: 0.7rem; font-weight: normal;">
-                                            <i class="mdi mdi-office-building me-1"></i>{{ $branch->name }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-    @endif
-
     <div class="row mb-5">
         <div class="col-12">
             <div class="card team-card">
+                
+                {{-- HEADER WITH COMPACT AUDIT INFO --}}
                 <div class="team-header">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                        
+                        {{-- Title --}}
                         <div>
-                            <h4 class="mb-2 fw-bold">
+                            <h4 class="mb-1 fw-bold">
                                 <i class="mdi mdi-account-multiple-outline me-2"></i>Status Rekan Tim
                             </h4>
                             <p class="mb-0 opacity-75 small">Monitoring kehadiran real-time.</p>
                         </div>
-                        <span class="team-count badge rounded-pill px-4 py-2 fs-6">
-                            <i class="mdi mdi-account-group me-2"></i>{{ $myTeam->count() }} Orang
+
+                        {{-- COMPACT AUDIT INFO (Disini perubahannya) --}}
+                        @if($assignedAudits->count() > 0)
+                            <div class="d-flex flex-wrap gap-2 justify-content-md-end align-items-center ms-md-auto">
+                               @foreach($assignedAudits as $audit)
+                                   <div class="d-flex align-items-center bg-white bg-opacity-10 rounded-pill pe-3 ps-1 py-1 border border-white border-opacity-25" title="Audit / PIC">
+                                       {{-- Foto --}}
+                                       @if($audit->profile_photo_path)
+                                           <img src="{{ Storage::url($audit->profile_photo_path) }}" class="rounded-circle border border-2 border-white" width="28" height="28" style="object-fit: cover;">
+                                       @else
+                                           <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold border border-2 border-white" style="width: 28px; height: 28px; font-size: 11px;">
+                                               {{ substr($audit->name, 0, 1) }}
+                                           </div>
+                                       @endif
+                                       {{-- Nama --}}
+                                       <span class="ms-2 small fw-bold text-white" style="font-size: 0.75rem;">
+                                           {{ explode(' ', $audit->name)[0] }}
+                                       </span>
+                                   </div>
+                               @endforeach
+                            </div>
+                        @endif
+
+                        {{-- Total Badge --}}
+                        <span class="team-count badge rounded-pill px-3 py-2 ms-md-2">
+                            <i class="mdi mdi-account-group me-1"></i>{{ $myTeam->count() }}
                         </span>
                     </div>
                 </div>
