@@ -84,16 +84,12 @@ class DashboardController extends Controller
         $data['myLeaveToday'] = $this->getTodayLeaveRequest($user->id, $todayInBranch, 'approved');
         $data['myPendingLeave'] = $this->getTodayLeaveRequest($user->id, $todayInBranch, 'pending');
 
-        // A. Cek Sesi Aktif
+        // A. Cek Sesi Aktif (Masuk tapi belum Pulang)
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32)) 
             ->latest('check_in_time')
             ->first();
-
-        if ($activeSession) {
-            $activeSession->check_in_time = Carbon::parse($activeSession->check_in_time)->timezone($userTimezone);
-        }
 
         // B. Cek Sesi Selesai Hari Ini
         $finishedSessionToday = Attendance::where('user_id', $user->id)
@@ -102,35 +98,50 @@ class DashboardController extends Controller
             ->latest('check_in_time')
             ->first();
 
-        if ($finishedSessionToday) {
-            $finishedSessionToday->check_in_time = Carbon::parse($finishedSessionToday->check_in_time)->timezone($userTimezone);
-            $finishedSessionToday->check_out_time = Carbon::parse($finishedSessionToday->check_out_time)->timezone($userTimezone);
-        }
-
-        // C. Cek Sesi Lembur Lintas Hari
+        // C. Cek Sesi Lembur Lintas Hari (Pulang hari ini tapi masuk kemarin)
         $lastOvertimeSession = Attendance::where('user_id', $user->id)
             ->whereDate('check_in_time', '<', $todayInBranch) 
             ->whereDate('check_out_time', $todayInBranch)     
             ->latest('check_out_time')
             ->first();
 
+        // Adjust Timezone for Display
+        if ($activeSession) {
+            $activeSession->check_in_time = Carbon::parse($activeSession->check_in_time)->timezone($userTimezone);
+        }
+        if ($finishedSessionToday) {
+            $finishedSessionToday->check_in_time = Carbon::parse($finishedSessionToday->check_in_time)->timezone($userTimezone);
+            $finishedSessionToday->check_out_time = Carbon::parse($finishedSessionToday->check_out_time)->timezone($userTimezone);
+        }
         if ($lastOvertimeSession) {
             $lastOvertimeSession->check_out_time = Carbon::parse($lastOvertimeSession->check_out_time)->timezone($userTimezone);
         }
 
+        // Logic Penentuan Status Dashboard
+        $data['myAttendanceToday'] = null;
         $data['justFinishedOvertime'] = false;
-        $data['lastOvertimeSession'] = null;
+        $data['isStillWorkingOvertime'] = false; // Flag Baru untuk Lembur Aktif
+        $data['overtimeDuration'] = null;
 
         if ($activeSession) {
-            $data['myAttendanceToday'] = $activeSession;
+            $checkInDate = $activeSession->check_in_time->format('Y-m-d');
+            
+            // Jika tanggal Check In BUKAN hari ini => Sedang Lembur Lintas Hari
+            if ($checkInDate !== $todayInBranch) {
+                $data['isStillWorkingOvertime'] = true;
+                $data['myAttendanceToday'] = $activeSession; // Tetap kirim data sesi
+                $data['overtimeDuration'] = $activeSession->check_in_time->diff($nowInBranch); // Hitung durasi
+            } else {
+                // Masuk Hari Ini (Normal)
+                $data['myAttendanceToday'] = $activeSession;
+            }
         } elseif ($finishedSessionToday) {
+            // Sudah pulang hari ini
             $data['myAttendanceToday'] = $finishedSessionToday;
         } elseif ($lastOvertimeSession) {
-            $data['myAttendanceToday'] = null; 
+            // Baru saja selesai lembur lintas hari (Pulang pagi ini)
             $data['justFinishedOvertime'] = true;
             $data['lastOvertimeSession'] = $lastOvertimeSession;
-        } else {
-            $data['myAttendanceToday'] = null;
         }
 
         $data['myPendingCount'] = Attendance::where('user_id', $user->id)->where('status', 'pending_verification')->count();
@@ -139,7 +150,7 @@ class DashboardController extends Controller
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
-        // 5. DATA UNTUK WIDGET & LEADERBOARD (MODIFIED FOR TOP 3)
+        // 5. DATA UNTUK WIDGET & LEADERBOARD
         // =========================================================================
         
         // --- LEADERBOARD ABSENSI (KECUALI SECURITY) ---
@@ -170,7 +181,7 @@ class DashboardController extends Controller
                 ->orderBy('total_attendance', 'desc') 
                 ->orderBy('total_work_seconds', 'desc') 
                 ->orderBy('avg_arrival_time', 'asc') 
-                ->take(3) // <--- AMBIL CUMA 3 TOP
+                ->take(3) 
                 ->with(['user', 'user.division', 'user.branch'])
                 ->get()
                 ->map(function ($item) {
@@ -206,7 +217,7 @@ class DashboardController extends Controller
                 return $sec;
             });
             
-            $data['topScanners'] = $scanners->sortByDesc('total_scans')->take(3)->values(); // Top 3 Security
+            $data['topScanners'] = $scanners->sortByDesc('total_scans')->take(3)->values(); 
         }
 
         // =========================================================================
@@ -329,7 +340,6 @@ class DashboardController extends Controller
 
     private function getUserAttendanceStats($user_id, $branch_id = null)
     {
-        // Untuk statistik bulanan user, tetap gunakan bulan saat ini (bisa disesuaikan jika perlu)
         $query = Attendance::where('user_id', $user_id)
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)

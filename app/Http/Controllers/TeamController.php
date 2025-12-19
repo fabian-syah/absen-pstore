@@ -83,13 +83,20 @@ class TeamController extends Controller
             $todayDate = Carbon::now($memberTz)->format('Y-m-d');
             $now = Carbon::now($memberTz);
 
+            // Cari absensi yang valid untuk ditampilkan
             $validAttendance = $member->attendances->first(function ($att) use ($memberTz, $todayDate, $now) {
                 $checkIn = Carbon::parse($att->check_in_time)->setTimezone($memberTz);
                 $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($memberTz) : null;
 
+                // Case 1: Masuk Hari Ini
                 if ($checkIn->format('Y-m-d') === $todayDate) return true;
+                
+                // Case 2: Selesai Lembur Hari Ini (Check in kemarin, checkout hari ini)
                 if ($checkOut && $checkOut->format('Y-m-d') === $todayDate && $checkIn->format('Y-m-d') < $todayDate) return true;
+                
+                // Case 3: MASIH Lembur (Check in kemarin, belum checkout, masih dalam 32 jam)
                 if (!$checkOut && $checkIn->diffInHours($now) < 32 && $checkIn->format('Y-m-d') < $todayDate) return true;
+                
                 return false;
             });
 
