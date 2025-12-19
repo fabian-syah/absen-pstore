@@ -280,16 +280,20 @@ class AttendanceHistoryController extends Controller
             abort(403, 'Akses Ditolak.');
         }
 
+        // AMBIL DATA DULU SEBELUM VALIDASI UNTUK CEK FOTO LAMA
+        $attendance = Attendance::findOrFail($id);
+
         $request->validate([
             'presence_status' => 'required|string',
             'check_in_time'   => 'required',
             'check_out_time'  => 'nullable',
             'status'          => 'required|in:verified,pending_verification,rejected',
             'audit_note'      => 'nullable|string',
-            'audit_photo'     => 'nullable|image|max:2048'
+            // VALIDASI: WAJIB FOTO jika belum ada, OPSIONAL (nullable) jika sudah ada
+            'audit_photo'     => $attendance->audit_photo_path ? 'nullable|image|max:2048' : 'required|image|max:2048'
+        ], [
+            'audit_photo.required' => 'Bukti foto wajib di-upload untuk melakukan koreksi.',
         ]);
-
-        $attendance = Attendance::findOrFail($id);
 
         $originalDate = $attendance->check_in_time->format('Y-m-d');
         $newCheckIn = Carbon::parse($originalDate . ' ' . $request->check_in_time);

@@ -441,7 +441,6 @@
                                                                 <small class="text-muted" style="font-size: 0.65rem;">Verifikasi</small>
                                                             </div>
                                                         @elseif($att->audit_photo_path || $att->attendance_type == 'manual')
-                                                            {{-- BAGIAN INI DIUBAH UNTUK MENAMPILKAN NAMA PENGEDIT --}}
                                                             <div class="badge bg-info text-white p-1 me-2 rounded-1" style="min-width: 35px;">EDIT</div>
                                                             <div class="lh-sm">
                                                                 <span class="d-block fw-bold text-dark small">{{ $att->verifier->name ?? 'Manual' }}</span>
@@ -668,9 +667,15 @@
                                         </select>
                                     </div>
 
+                                    {{-- BAGIAN INI DIPERBARUI: LOGIKA WAJIB FOTO --}}
                                     <div class="mb-3">
-                                        <label class="form-label small fw-bold">Bukti & Catatan</label>
-                                        <input type="file" name="audit_photo" class="form-control mb-2">
+                                        <label class="form-label small fw-bold text-danger">Bukti (Wajib) & Catatan</label>
+                                        <input type="file" name="audit_photo" class="form-control mb-2" {{ $att->audit_photo_path ? '' : 'required' }}>
+                                        @if($att->audit_photo_path)
+                                            <small class="text-success d-block mb-2"><i class="mdi mdi-check"></i> Bukti sudah ada (Upload ulang untuk mengganti)</small>
+                                        @else
+                                            <small class="text-danger d-block mb-2">* Wajib upload bukti foto untuk melakukan koreksi.</small>
+                                        @endif
                                         <textarea name="audit_note" class="form-control" rows="2" placeholder="Alasan koreksi...">{{ $att->audit_note }}</textarea>
                                     </div>
                                 </div>
