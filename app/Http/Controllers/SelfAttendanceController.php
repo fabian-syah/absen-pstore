@@ -62,11 +62,9 @@ class SelfAttendanceController extends Controller
             // === MODE MASUK ===
             
             // 3. Cek Status Cuti / Izin (Selain Telat)
-            // Jika user sedang Cuti/Sakit/Izin Seharian, tolak akses absen.
-            // TAPI jika "Izin Telat", biarkan lewat agar bisa absen masuk.
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
                 ->where('status', 'approved')
-                ->where('type', '!=', 'telat') // FIX: Kecualikan tipe 'telat'
+                ->where('type', '!=', 'telat')
                 ->where('is_active', true)
                 ->whereDate('start_date', '<=', $todayLocal)
                 ->whereDate('end_date', '>=', $todayLocal)
@@ -88,7 +86,6 @@ class SelfAttendanceController extends Controller
             }
 
             // 5. Cek Laporan Telat (LateNotification)
-            // Jika user melapor telat (fitur notifikasi), suruh hapus dulu statusnya sebelum absen.
             $activeLateStatus = LateNotification::where('user_id', $user->id)
                 ->where('is_active', true)
                 ->whereDate('created_at', today())
@@ -112,6 +109,9 @@ class SelfAttendanceController extends Controller
     {
         // Security Check Layer 2
         if (Auth::user()->only_security_scan) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Akses Ditolak: Security Scan Only.'], 403);
+            }
             return redirect()->route('dashboard')->with('error', 'AKSES DITOLAK: Anda hanya boleh absen melalui Scan Security.');
         }
 
@@ -123,255 +123,264 @@ class SelfAttendanceController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $user = Auth::user();
-        $currentTime = now(); // Waktu Server (UTC/WIB tergantung config app)
-        
-        // Setup Timezone
-        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
-        $localTime = Carbon::now($branchTimezone);
-        $todayDateLocal = $localTime->format('Y-m-d');
-        
-        $branchName = $user->branch->name ?? '-';
-        $attendanceToUpdate = null;
-
-        // A. Cek apakah ini request PULANG (Update Sesi)
-        // Cek ID dari form atau cari sesi aktif otomatis
-        if ($request->filled('attendance_id')) {
-            $attendanceToUpdate = Attendance::find($request->attendance_id);
-        }
-        
-        // Fallback jika ID tidak dikirim tapi mode pulang
-        if (!$attendanceToUpdate && $request->has('mode') && $request->mode == 'pulang') {
-             $attendanceToUpdate = Attendance::where('user_id', $user->id)
-                ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', now()->subHours(32))
-                ->latest('check_in_time')
-                ->first();
-        }
-
-        // --- PROSES KOMPRESI GAMBAR ---
-        $path = null;
-        if ($request->hasFile('photo')) {
-            $file = $request->file('photo');
-            $filename = 'public/foto_mandiri/' . Str::random(40) . '.jpg';
+        try {
+            $user = Auth::user();
+            $currentTime = now(); // Waktu Server (UTC/WIB tergantung config app)
             
-            // Resize & Compress
-            $img = Image::make($file);
-            $img->orientate();
-            $img->resize(800, null, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
+            // Setup Timezone
+            $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+            $localTime = Carbon::now($branchTimezone);
+            $todayDateLocal = $localTime->format('Y-m-d');
             
-            $compressedImage = (string) $img->encode('jpg', 70);
-            Storage::disk('public')->put($filename, $compressedImage);
-            $path = $filename;
-        }
+            $branchName = $user->branch->name ?? '-';
+            $attendanceToUpdate = null;
 
-        $workSchedule = WorkSchedule::getScheduleForUser($user->id);
-        $shouldSendNotif = false;
-        $notifTitle = "";
-        $notifBody = "";
-
-        // =====================================================================
-        // CASE 1: ABSEN PULANG (UPDATE)
-        // =====================================================================
-        if ($attendanceToUpdate) {
-            
-            // Validasi User
-            if($attendanceToUpdate->user_id != $user->id){
-                 return redirect()->route('dashboard')->with('error', 'Sesi absensi tidak valid.');
-            }
-
-            // Cek Pulang Cepat (Early Checkout)
-            $isEarly = false;
-            if ($workSchedule && $workSchedule->check_out_start) {
-                 $scheduleStartStr = Carbon::parse($workSchedule->check_out_start)->format('H:i:s');
-                 $scheduleStartLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleStartStr, $branchTimezone);
-                 
-                 // Jika pulang sebelum jam jadwal pulang
-                 if ($localTime->lt($scheduleStartLocal)) {
-                     $isEarly = true;
-                 }
-            }
-
-            // Logic Notes
-            $finalNotes = $attendanceToUpdate->notes;
-            $userNote = $request->notes ? ": " . $request->notes : "";
-            
-            // Cek Lembur Lintas Hari (Check In Kemarin, Pulang Hari Ini)
-            $checkInLocal = Carbon::parse($attendanceToUpdate->check_in_time)->timezone($branchTimezone);
-            $isCrossDay = !$checkInLocal->isSameDay($localTime);
-
-            $currentStatus = $attendanceToUpdate->status;
-            $newStatus = $currentStatus; 
-
-            // Aturan Status:
-            // 1. Jika sebelumnya rejected/alpha -> ubah jadi pending verification.
-            if (in_array($currentStatus, ['rejected', 'alpha'])) {
-                $newStatus = 'pending_verification';
+            // A. Cek apakah ini request PULANG (Update Sesi)
+            // Cek ID dari form atau cari sesi aktif otomatis
+            if ($request->filled('attendance_id')) {
+                $attendanceToUpdate = Attendance::find($request->attendance_id);
             }
             
-            // 2. Auto Verify untuk Lembur Lintas Hari jika sebelumnya sudah Verified
-            if ($isCrossDay) {
-                $extraNote = "[Lembur/Lintas Hari] ";
-                if ($currentStatus == 'verified') {
-                    $newStatus = 'verified'; 
+            // Fallback jika ID tidak dikirim tapi mode pulang
+            if (!$attendanceToUpdate && $request->has('mode') && $request->mode == 'pulang') {
+                 $attendanceToUpdate = Attendance::where('user_id', $user->id)
+                    ->whereNull('check_out_time')
+                    ->where('check_in_time', '>=', now()->subHours(32))
+                    ->latest('check_in_time')
+                    ->first();
+            }
+
+            // --- PROSES KOMPRESI GAMBAR ---
+            $path = null;
+            if ($request->hasFile('photo')) {
+                $file = $request->file('photo');
+                $filename = 'public/foto_mandiri/' . Str::random(40) . '.jpg';
+                
+                // Resize & Compress (Pastikan aspect ratio terjaga)
+                $img = Image::make($file);
+                $img->orientate();
+                $img->resize(800, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+                
+                $compressedImage = (string) $img->encode('jpg', 70);
+                Storage::disk('public')->put($filename, $compressedImage);
+                $path = $filename;
+            }
+
+            $workSchedule = WorkSchedule::getScheduleForUser($user->id);
+            $shouldSendNotif = false;
+            $notifTitle = "";
+            $notifBody = "";
+            $responseMessage = "";
+
+            // =====================================================================
+            // CASE 1: ABSEN PULANG (UPDATE)
+            // =====================================================================
+            if ($attendanceToUpdate) {
+                
+                // Validasi User
+                if($attendanceToUpdate->user_id != $user->id){
+                    throw new \Exception('Sesi absensi tidak valid.');
                 }
-            } else {
+
+                // Cek Pulang Cepat (Early Checkout)
+                $isEarly = false;
+                if ($workSchedule && $workSchedule->check_out_start) {
+                     $scheduleStartStr = Carbon::parse($workSchedule->check_out_start)->format('H:i:s');
+                     $scheduleStartLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleStartStr, $branchTimezone);
+                     
+                     if ($localTime->lt($scheduleStartLocal)) {
+                         $isEarly = true;
+                     }
+                }
+
+                // Logic Notes
+                $finalNotes = $attendanceToUpdate->notes;
+                $userNote = $request->notes ? ": " . $request->notes : "";
+                
+                // Cek Lembur Lintas Hari
+                $checkInLocal = Carbon::parse($attendanceToUpdate->check_in_time)->timezone($branchTimezone);
+                $isCrossDay = !$checkInLocal->isSameDay($localTime);
+
+                $currentStatus = $attendanceToUpdate->status;
+                $newStatus = $currentStatus; 
+
+                // Aturan Status
+                if (in_array($currentStatus, ['rejected', 'alpha'])) {
+                    $newStatus = 'pending_verification';
+                }
+                
                 $extraNote = "";
-            }
+                if ($isCrossDay) {
+                    $extraNote = "[Lembur/Lintas Hari] ";
+                    if ($currentStatus == 'verified') {
+                        $newStatus = 'verified'; 
+                    }
+                }
 
-            $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $extraNote . "Pulang (Selfie)" . $userNote;
-            
-            $attendanceToUpdate->update([
-                'check_out_time'    => $currentTime,
-                'photo_out_path'    => $path,
-                'is_early_checkout' => $isEarly,
-                'status'            => $newStatus,
-                'notes'             => $finalNotes,
-                'latitude_out'      => $request->latitude,
-                'longitude_out'     => $request->longitude,
-            ]);
+                $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $extraNote . "Pulang (Selfie)" . $userNote;
+                
+                $attendanceToUpdate->update([
+                    'check_out_time'    => $currentTime,
+                    'photo_out_path'    => $path,
+                    'is_early_checkout' => $isEarly,
+                    'status'            => $newStatus,
+                    'notes'             => $finalNotes,
+                    'latitude_out'      => $request->latitude,
+                    'longitude_out'     => $request->longitude,
+                ]);
 
-            $message = "Berhasil absen pulang.";
-            if ($isCrossDay) {
-                $message = "Konfirmasi Lembur Berhasil. Absen pulang tercatat.";
-            }
+                $responseMessage = "Berhasil absen pulang.";
+                if ($isCrossDay) {
+                    $responseMessage = "Konfirmasi Lembur Berhasil. Absen pulang tercatat.";
+                }
 
-            // Kirim Notifikasi jika status Pending
-            if ($newStatus == 'pending_verification') {
+                if ($newStatus == 'pending_verification') {
+                    $shouldSendNotif = true;
+                    $notifTitle = "Verifikasi Pulang";
+                    $notifBody = "{$user->name} absen pulang di {$branchName}";
+                }
+
+            } 
+            // =====================================================================
+            // CASE 2: ABSEN MASUK (CREATE BARU)
+            // =====================================================================
+            else {
+                // Cek double session
+                $checkAgain = Attendance::where('user_id', $user->id)
+                    ->whereNull('check_out_time')
+                    ->where('check_in_time', '>=', now()->subHours(32))
+                    ->first();
+                
+                if ($checkAgain) {
+                    throw new \Exception('Anda masih memiliki sesi aktif. Mohon refresh halaman.');
+                }
+
+                // Cek Double Absen Harian (Lokal)
+                $existingSessionToday = Attendance::where('user_id', $user->id)
+                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayDateLocal])
+                    ->where('status', '!=', 'alpha')
+                    ->first();
+
+                if ($existingSessionToday) {
+                    if ($existingSessionToday->check_out_time == null) {
+                        // Warning only via redirect, but throw for API
+                        throw new \Exception('Sesi aktif terdeteksi. Silakan refresh halaman.');
+                    } else {
+                        throw new \Exception('Anda sudah menyelesaikan absensi hari ini.');
+                    }
+                }
+
+                // Logic Terlambat
+                $isLate = false;
+                if ($workSchedule && $workSchedule->check_in_end) {
+                    $scheduleEndStr = Carbon::parse($workSchedule->check_in_end)->format('H:i:s');
+                    $scheduleEndLocal = Carbon::createFromFormat('Y-m-d H:i:s', $todayDateLocal . ' ' . $scheduleEndStr, $branchTimezone);
+                    
+                    if ($localTime->gt($scheduleEndLocal)) {
+                        $isLate = true;
+                    }
+                }
+
+                // Cek Izin Telat
+                $latePermission = LeaveRequest::where('user_id', $user->id)
+                    ->where('type', 'telat')
+                    ->where('status', 'approved')
+                    ->whereDate('start_date', $todayDateLocal)
+                    ->first();
+
+                $finalNotes = $request->notes;
+
+                if ($latePermission) {
+                    $reasonNote = "[Izin Telat Approved: " . $latePermission->reason . "]";
+                    $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $reasonNote;
+                }
+
+                // Snapshot Jadwal
+                $snapIn = $user->check_in_start;
+                if (!$snapIn && $workSchedule) $snapIn = $workSchedule->check_in_start;
+                $snapOut = $user->check_out_start;
+                if (!$snapOut && $workSchedule) $snapOut = $workSchedule->check_out_start;
+
+                Attendance::create([
+                    'user_id'           => $user->id,
+                    'branch_id'         => $user->branch_id,
+                    'check_in_time'     => $currentTime,
+                    'status'            => 'pending_verification',
+                    'presence_status'   => 'Masuk',
+                    'attendance_type'   => 'self',
+                    'photo_path'        => $path,
+                    'latitude'          => $request->latitude,
+                    'longitude'         => $request->longitude,
+                    'work_schedule_id'  => $workSchedule?->id,
+                    'is_late_checkin'   => $isLate,
+                    'notes'             => $finalNotes,
+                    'verified_by_user_id' => null, 
+                    'scheduled_check_in' => $snapIn,
+                    'scheduled_check_out' => $snapOut,
+                ]);
+
+                $responseMessage = 'Berhasil absen masuk. Menunggu verifikasi.';
                 $shouldSendNotif = true;
-                $notifTitle = "Verifikasi Pulang";
-                $notifBody = "{$user->name} absen pulang di {$branchName}";
+                $notifTitle = "Verifikasi Masuk";
+                $notifBody = "{$user->name} absen masuk (Selfie) di {$branchName}";
             }
 
-        } 
-        // =====================================================================
-        // CASE 2: ABSEN MASUK (CREATE BARU)
-        // =====================================================================
-        else {
-            // Cek double session (Safety)
-            $checkAgain = Attendance::where('user_id', $user->id)
-                ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', now()->subHours(32))
-                ->first();
-            
-            if ($checkAgain) {
-                 return redirect()->route('dashboard')->with('error', 'Anda masih memiliki sesi aktif. Mohon refresh halaman.');
-            }
-
-            // Cek Double Absen Harian (Lokal)
-            $existingSessionToday = Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayDateLocal])
-                ->where('status', '!=', 'alpha')
-                ->first();
-
-            if ($existingSessionToday) {
-                if ($existingSessionToday->check_out_time == null) {
-                    return redirect()->route('dashboard')->with('warning', 'Sesi aktif terdeteksi. Silakan refresh halaman.');
-                } else {
-                    return redirect()->route('dashboard')->with('error', 'Anda sudah menyelesaikan absensi hari ini.');
+            // Kirim Notifikasi FCM
+            if ($shouldSendNotif) {
+                try {
+                    $this->sendNotificationToBranchRoles(['audit', 'admin'], $user->branch_id, $notifTitle, $notifBody);
+                } catch (\Exception $e) {
+                    Log::error("FCM Error: " . $e->getMessage());
                 }
             }
 
-            // Logic Terlambat (Late Checkin)
-            $isLate = false;
-            if ($workSchedule && $workSchedule->check_in_end) {
-                $scheduleEndStr = Carbon::parse($workSchedule->check_in_end)->format('H:i:s');
-                $scheduleEndLocal = Carbon::createFromFormat('Y-m-d H:i:s', $todayDateLocal . ' ' . $scheduleEndStr, $branchTimezone);
-                
-                if ($localTime->gt($scheduleEndLocal)) {
-                    $isLate = true;
-                }
+            // --- RESPON DATA (Support AJAX untuk Sinyal Lemah) ---
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => $responseMessage,
+                    'redirect_url' => route('dashboard')
+                ]);
             }
 
-            // [FIX REQUEST]: Cek apakah ada Izin Telat yang Approved hari ini?
-            // Tujuannya agar data Izin Telat tetap ada di history, tapi absen tetap masuk.
-            $latePermission = LeaveRequest::where('user_id', $user->id)
-                ->where('type', 'telat')
-                ->where('status', 'approved')
-                ->whereDate('start_date', $todayDateLocal)
-                ->first();
+            return redirect()->route('dashboard')->with('success', $responseMessage);
 
-            $finalNotes = $request->notes;
-
-            // Jika ada Izin Telat, tambahkan ke notes otomatis & jangan hitung sbg terlambat (opsional)
-            if ($latePermission) {
-                $reasonNote = "[Izin Telat Approved: " . $latePermission->reason . "]";
-                $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $reasonNote;
-                
-                // Opsional: Jika ingin dianggap 'On Time' karena sudah izin, uncomment baris bawah:
-                // $isLate = false; 
+        } catch (\Exception $e) {
+            // Error Handling untuk AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Gagal: ' . $e->getMessage()
+                ], 500);
             }
-
-            // Ambil Snapshot Jadwal (Agar history tidak berubah jika master jadwal berubah)
-            $snapIn = $user->check_in_start;
-            if (!$snapIn && $workSchedule) $snapIn = $workSchedule->check_in_start;
-            $snapOut = $user->check_out_start;
-            if (!$snapOut && $workSchedule) $snapOut = $workSchedule->check_out_start;
-
-            Attendance::create([
-                'user_id'           => $user->id,
-                'branch_id'         => $user->branch_id,
-                'check_in_time'     => $currentTime,
-                'status'            => 'pending_verification',
-                'presence_status'   => 'Masuk',
-                'attendance_type'   => 'self',
-                'photo_path'        => $path,
-                'latitude'          => $request->latitude,
-                'longitude'         => $request->longitude,
-                'work_schedule_id'  => $workSchedule?->id,
-                'is_late_checkin'   => $isLate,
-                'notes'             => $finalNotes,
-                'verified_by_user_id' => null, 
-                'scheduled_check_in' => $snapIn,
-                'scheduled_check_out' => $snapOut,
-            ]);
-
-            $message = 'Berhasil absen masuk. Menunggu verifikasi.';
-            $shouldSendNotif = true;
-            $notifTitle = "Verifikasi Masuk";
-            $notifBody = "{$user->name} absen masuk (Selfie) di {$branchName}";
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        // Kirim Notifikasi FCM ke Admin/Audit
-        if ($shouldSendNotif) {
-            try {
-                $this->sendNotificationToBranchRoles(['audit', 'admin'], $user->branch_id, $notifTitle, $notifBody);
-            } catch (\Exception $e) {
-                Log::error("FCM Error: " . $e->getMessage());
-            }
-        }
-
-        return redirect()->route('dashboard')->with('success', $message);
     }
     
     /**
-     * Fitur Lewati Absen Pulang (Lupa Absen)
-     * Menutup sesi kemarin secara otomatis tanpa foto.
+     * Fitur Lewati Absen Pulang
      */
     public function skipCheckOut($id)
     {
         $user = Auth::user();
-        // Cari sesi yang ID-nya cocok DAN belum checkout
         $attendance = Attendance::where('id', $id)
             ->where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->first();
 
         if ($attendance) {
-            // Tutup sesi pada 23:59:59 di hari check-in tersebut
             $endOfPreviousDay = Carbon::parse($attendance->check_in_time)->endOfDay();
             
-            // Jika sebelumnya sudah verified, tetap verified. Jika belum, tetap pending.
             $status = ($attendance->status == 'verified' || $attendance->status == 'present') 
                         ? $attendance->status 
                         : 'pending_verification';
             
             $attendance->update([
                 'check_out_time' => $endOfPreviousDay,
-                'photo_out_path' => null, // Tidak ada foto
+                'photo_out_path' => null,
                 'status'         => $status,
                 'notes'          => $attendance->notes . ' | User LEWATI absen pulang (Lupa/Skip)',
             ]);
@@ -381,14 +390,13 @@ class SelfAttendanceController extends Controller
     }
 
     /**
-     * Simpan Laporan Telat (Notification)
+     * Simpan Laporan Telat
      */
     public function storeLateStatus(Request $request)
     {
         $request->validate(['message' => 'required|string|max:255']);
         $user = Auth::user();
         
-        // Nonaktifkan laporan lama
         LateNotification::where('user_id', $user->id)->update(['is_active' => false]);
         
         LateNotification::create([
