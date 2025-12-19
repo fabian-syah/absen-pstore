@@ -54,7 +54,7 @@ class TeamController extends Controller
             'attendances' => function ($q) use ($dateLimit) {
                 // Ambil semua absen dari 2 hari terakhir. Aman untuk banyak user.
                 $q->where('check_in_time', '>=', $dateLimit)
-                  ->orderBy('check_in_time', 'desc');
+                    ->orderBy('check_in_time', 'desc');
             },
             'leaveRequests' => function ($q) use ($todayInBranch) {
                 $q->where('status', 'approved')
@@ -75,7 +75,10 @@ class TeamController extends Controller
         // 4. Statistik & Logic
         $stats = [
             'total' => $myTeam->count(),
-            'hadir' => 0, 'izin_sakit' => 0, 'belum_hadir' => 0, 'lembur' => 0
+            'hadir' => 0,
+            'izin_sakit' => 0,
+            'belum_hadir' => 0,
+            'lembur' => 0
         ];
 
         foreach ($myTeam as $member) {
@@ -84,19 +87,28 @@ class TeamController extends Controller
             $now = Carbon::now($memberTz);
 
             // Cari absensi yang valid untuk ditampilkan
+            // Cari absensi yang valid untuk ditampilkan
             $validAttendance = $member->attendances->first(function ($att) use ($memberTz, $todayDate, $now) {
                 $checkIn = Carbon::parse($att->check_in_time)->setTimezone($memberTz);
                 $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($memberTz) : null;
 
-                // Case 1: Masuk Hari Ini
+                // Case 1: Masuk Hari Ini (Normal)
                 if ($checkIn->format('Y-m-d') === $todayDate) return true;
-                
+
                 // Case 2: Selesai Lembur Hari Ini (Check in kemarin, checkout hari ini)
                 if ($checkOut && $checkOut->format('Y-m-d') === $todayDate && $checkIn->format('Y-m-d') < $todayDate) return true;
-                
-                // Case 3: MASIH Lembur (Check in kemarin, belum checkout, masih dalam 32 jam)
-                if (!$checkOut && $checkIn->diffInHours($now) < 32 && $checkIn->format('Y-m-d') < $todayDate) return true;
-                
+
+                // Case 3: MASIH Lembur (Check in kemarin, belum checkout)
+                // PERUBAHAN DISINI: Tambahkan cek $att->is_extended_shift
+                if (!$checkOut && $checkIn->diffInHours($now) < 32 && $checkIn->format('Y-m-d') < $todayDate) {
+                    // HANYA jika user sudah konfirmasi slide di dashboardnya
+                    if ($att->is_extended_shift) {
+                        return true;
+                    }
+                    // Jika belum slide, return false (agar dianggap Alpha/Belum hadir hari ini di mata Tim)
+                    return false;
+                }
+
                 return false;
             });
 
@@ -123,7 +135,9 @@ class TeamController extends Controller
         if ($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0;
 
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
-            ->withCount(['users' => function ($q) { $q->where('is_active', true); }])
+            ->withCount(['users' => function ($q) {
+                $q->where('is_active', true);
+            }])
             ->orderBy('name', 'asc')->get();
 
         $assignedAudits = collect();
@@ -160,7 +174,7 @@ class TeamController extends Controller
                 $users = User::where('branch_id', $branch->id)->where('is_active', true)
                     ->with(['attendances' => function ($q) use ($dateLimit) {
                         $q->where('check_in_time', '>=', $dateLimit)
-                          ->orderBy('check_in_time', 'desc');
+                            ->orderBy('check_in_time', 'desc');
                     }, 'leaveRequests' => function ($q) use ($todayInBranch) {
                         $q->where('status', 'approved')
                             ->whereDate('start_date', '<=', $todayInBranch)
@@ -168,13 +182,17 @@ class TeamController extends Controller
                     }])->get();
 
                 $branch->users_count = $users->count();
-                $hadir = 0; $sakit = 0; $izin_cuti = 0; $alpha = 0; $lembur = 0;
+                $hadir = 0;
+                $sakit = 0;
+                $izin_cuti = 0;
+                $alpha = 0;
+                $lembur = 0;
 
                 foreach ($users as $u) {
                     $validAttendance = $u->attendances->first(function ($att) use ($tz, $todayInBranch, $nowInBranch) {
                         $checkIn = Carbon::parse($att->check_in_time)->setTimezone($tz);
                         $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($tz) : null;
-                        
+
                         if ($checkIn->format('Y-m-d') === $todayInBranch) return true;
                         if ($checkOut && $checkOut->format('Y-m-d') === $todayInBranch && $checkIn->format('Y-m-d') < $todayInBranch) return true;
                         if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 32 && $checkIn->format('Y-m-d') < $todayInBranch) return true;
@@ -185,7 +203,7 @@ class TeamController extends Controller
                     $att = $validAttendance;
                     $leave = $u->leaveRequests->first();
                     $isOvertime = false;
-                    
+
                     if ($att) {
                         $checkInDate = Carbon::parse($att->check_in_time)->setTimezone($tz)->format('Y-m-d');
                         if ($checkInDate !== $todayInBranch) {
@@ -248,7 +266,7 @@ class TeamController extends Controller
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)
             ->with(['division', 'attendances' => function ($q) use ($dateLimit) {
                 $q->where('check_in_time', '>=', $dateLimit)
-                  ->orderBy('check_in_time', 'desc');
+                    ->orderBy('check_in_time', 'desc');
             }])->get();
 
         $attendanceGroups = ['Masuk' => [], 'Izin' => [], 'Sakit' => [], 'Cuti' => [], 'WFH / Dinas Luar' => [], 'Alpha / Belum Absen' => [], 'Lembur' => []];

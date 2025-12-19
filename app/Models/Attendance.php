@@ -21,6 +21,7 @@ class Attendance extends Model
         'scheduled_check_in',  // <--- WAJIB ADA (SNAPSHOT JADWAL MASUK)
         'scheduled_check_out', // <--- WAJIB ADA (SNAPSHOT JADWAL PULANG)
         'status',
+        'is_extended_shift',
         'presence_status',
         'photo_path',
         'photo_out_path',

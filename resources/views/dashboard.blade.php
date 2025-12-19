@@ -202,212 +202,244 @@
     {{-- ======================================================================= --}}
     {{-- BAGIAN 2: LEADERBOARD PODIUM MEWAH (TOP 3)                              --}}
     {{-- ======================================================================= --}}
-    
+
     <div class="row mb-5 animate-enter" style="animation-delay: 0.4s">
-        
+
         {{-- 1. TOP 3 ABSENSI (USER/ADMIN/AUDIT/LEADER) --}}
-        @if(auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
-        <div class="col-12">
-            <div class="card border-0 shadow-lg luxury-card overflow-hidden">
-                <div class="luxury-bg-glow"></div>
-                <div class="luxury-bg-pattern"></div>
-                
-                <div class="card-body p-4 position-relative z-index-1">
-                    <div class="text-center mb-5">
-                        <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
-                            <i class="mdi mdi-trophy text-warning me-2"></i>Top Rajin Absen
-                        </h3>
-                        <p class="text-muted small">
-                            {{ auth()->user()->role == 'admin' ? 'Global' : 'Cabang Anda' }} - Bulan {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
-                        </p>
-                    </div>
+        @if (auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
+            <div class="col-12">
+                <div class="card border-0 shadow-lg luxury-card overflow-hidden">
+                    <div class="luxury-bg-glow"></div>
+                    <div class="luxury-bg-pattern"></div>
 
-                    {{-- PODIUM CONTAINER --}}
-                    <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
-                        
-                        {{-- JUARA 2 (KIRI) --}}
-                        @if(isset($leaderboard[1]))
-                            <div class="podium-step-container animate-enter" style="animation-delay: 0.6s">
-                                <div class="podium-avatar-wrapper">
-                                    @if($leaderboard[1]->user->profile_photo_path)
-                                        <img src="{{ asset('storage/'.$leaderboard[1]->user->profile_photo_path) }}" class="luxury-avatar">
-                                    @else
-                                        <div class="luxury-avatar-placeholder bg-secondary">
-                                            {{ substr($leaderboard[1]->user->name, 0, 1) }}
-                                        </div>
-                                    @endif
-                                    <div class="rank-circle silver">2</div>
-                                </div>
-                                <div class="podium-block silver-block text-center">
-                                    <div class="podium-content">
-                                        <h6 class="fw-bold text-dark mb-1">{{ Str::limit($leaderboard[1]->user->name, 12) }}</h6>
-                                        <p class="small text-muted mb-2">{{ $leaderboard[1]->user->division->name ?? '-' }}</p>
-                                        <div class="stat-pill mb-1">
-                                            <i class="mdi mdi-check-circle text-success me-1"></i>{{ $leaderboard[1]->total_attendance }} Hadir
-                                        </div>
-                                        <div class="stat-pill">
-                                            <i class="mdi mdi-clock-outline text-primary me-1"></i>{{ $leaderboard[1]->avg_arrival_display }}
+                    <div class="card-body p-4 position-relative z-index-1">
+                        <div class="text-center mb-5">
+                            <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
+                                <i class="mdi mdi-trophy text-warning me-2"></i>Top Rajin Absen
+                            </h3>
+                            <p class="text-muted small">
+                                {{ auth()->user()->role == 'admin' ? 'Global' : 'Cabang Anda' }} - Bulan
+                                {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                            </p>
+                        </div>
+
+                        {{-- PODIUM CONTAINER --}}
+                        <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
+
+                            {{-- JUARA 2 (KIRI) --}}
+                            @if (isset($leaderboard[1]))
+                                <div class="podium-step-container animate-enter" style="animation-delay: 0.6s">
+                                    <div class="podium-avatar-wrapper">
+                                        @if ($leaderboard[1]->user->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $leaderboard[1]->user->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder bg-secondary">
+                                                {{ substr($leaderboard[1]->user->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <div class="rank-circle silver">2</div>
+                                    </div>
+                                    <div class="podium-block silver-block text-center">
+                                        <div class="podium-content">
+                                            <h6 class="fw-bold text-dark mb-1">
+                                                {{ Str::limit($leaderboard[1]->user->name, 12) }}</h6>
+                                            <p class="small text-muted mb-2">
+                                                {{ $leaderboard[1]->user->division->name ?? '-' }}</p>
+                                            <div class="stat-pill mb-1">
+                                                <i
+                                                    class="mdi mdi-check-circle text-success me-1"></i>{{ $leaderboard[1]->total_attendance }}
+                                                Hadir
+                                            </div>
+                                            <div class="stat-pill">
+                                                <i
+                                                    class="mdi mdi-clock-outline text-primary me-1"></i>{{ $leaderboard[1]->avg_arrival_display }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endif
+                            @endif
 
-                        {{-- JUARA 1 (TENGAH - TERTINGGI) --}}
-                        @if(isset($leaderboard[0]))
-                            <div class="podium-step-container main-winner animate-enter" style="animation-delay: 0.5s">
-                                <div class="crown-floating">
-                                    <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown" width="50">
-                                </div>
-                                <div class="podium-avatar-wrapper gold-glow">
-                                    @if($leaderboard[0]->user->profile_photo_path)
-                                        <img src="{{ asset('storage/'.$leaderboard[0]->user->profile_photo_path) }}" class="luxury-avatar">
-                                    @else
-                                        <div class="luxury-avatar-placeholder gold-gradient">
-                                            {{ substr($leaderboard[0]->user->name, 0, 1) }}
-                                        </div>
-                                    @endif
-                                    <div class="rank-circle gold">1</div>
-                                </div>
-                                <div class="podium-block gold-block text-center">
-                                    <div class="sparkle s1"></div>
-                                    <div class="sparkle s2"></div>
-                                    <div class="sparkle s3"></div>
-                                    <div class="podium-content pt-3">
-                                        <h5 class="fw-bold text-dark mb-1">{{ Str::limit($leaderboard[0]->user->name, 15) }}</h5>
-                                        <p class="small text-muted mb-2">{{ $leaderboard[0]->user->division->name ?? '-' }}</p>
-                                        <div class="stat-pill gold mb-2">
-                                            <i class="mdi mdi-star me-1"></i>{{ $leaderboard[0]->total_attendance }} Kehadiran
-                                        </div>
-                                        <div class="stat-pill">
-                                            <i class="mdi mdi-timer-sand me-1"></i>Avg: {{ $leaderboard[0]->avg_arrival_display }}
+                            {{-- JUARA 1 (TENGAH - TERTINGGI) --}}
+                            @if (isset($leaderboard[0]))
+                                <div class="podium-step-container main-winner animate-enter"
+                                    style="animation-delay: 0.5s">
+                                    <div class="crown-floating">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown"
+                                            width="50">
+                                    </div>
+                                    <div class="podium-avatar-wrapper gold-glow">
+                                        @if ($leaderboard[0]->user->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $leaderboard[0]->user->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder gold-gradient">
+                                                {{ substr($leaderboard[0]->user->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <div class="rank-circle gold">1</div>
+                                    </div>
+                                    <div class="podium-block gold-block text-center">
+                                        <div class="sparkle s1"></div>
+                                        <div class="sparkle s2"></div>
+                                        <div class="sparkle s3"></div>
+                                        <div class="podium-content pt-3">
+                                            <h5 class="fw-bold text-dark mb-1">
+                                                {{ Str::limit($leaderboard[0]->user->name, 15) }}</h5>
+                                            <p class="small text-muted mb-2">
+                                                {{ $leaderboard[0]->user->division->name ?? '-' }}</p>
+                                            <div class="stat-pill gold mb-2">
+                                                <i class="mdi mdi-star me-1"></i>{{ $leaderboard[0]->total_attendance }}
+                                                Kehadiran
+                                            </div>
+                                            <div class="stat-pill">
+                                                <i class="mdi mdi-timer-sand me-1"></i>Avg:
+                                                {{ $leaderboard[0]->avg_arrival_display }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endif
+                            @endif
 
-                        {{-- JUARA 3 (KANAN) --}}
-                        @if(isset($leaderboard[2]))
-                            <div class="podium-step-container animate-enter" style="animation-delay: 0.7s">
-                                <div class="podium-avatar-wrapper">
-                                    @if($leaderboard[2]->user->profile_photo_path)
-                                        <img src="{{ asset('storage/'.$leaderboard[2]->user->profile_photo_path) }}" class="luxury-avatar">
-                                    @else
-                                        <div class="luxury-avatar-placeholder" style="background: #CD7F32;">
-                                            {{ substr($leaderboard[2]->user->name, 0, 1) }}
-                                        </div>
-                                    @endif
-                                    <div class="rank-circle bronze">3</div>
-                                </div>
-                                <div class="podium-block bronze-block text-center">
-                                    <div class="podium-content">
-                                        <h6 class="fw-bold text-dark mb-1">{{ Str::limit($leaderboard[2]->user->name, 12) }}</h6>
-                                        <p class="small text-muted mb-2">{{ $leaderboard[2]->user->division->name ?? '-' }}</p>
-                                        <div class="stat-pill mb-1">
-                                            <i class="mdi mdi-check me-1"></i>{{ $leaderboard[2]->total_attendance }} Hadir
-                                        </div>
-                                        <div class="stat-pill">
-                                            {{ $leaderboard[2]->avg_arrival_display }}
+                            {{-- JUARA 3 (KANAN) --}}
+                            @if (isset($leaderboard[2]))
+                                <div class="podium-step-container animate-enter" style="animation-delay: 0.7s">
+                                    <div class="podium-avatar-wrapper">
+                                        @if ($leaderboard[2]->user->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $leaderboard[2]->user->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder" style="background: #CD7F32;">
+                                                {{ substr($leaderboard[2]->user->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <div class="rank-circle bronze">3</div>
+                                    </div>
+                                    <div class="podium-block bronze-block text-center">
+                                        <div class="podium-content">
+                                            <h6 class="fw-bold text-dark mb-1">
+                                                {{ Str::limit($leaderboard[2]->user->name, 12) }}</h6>
+                                            <p class="small text-muted mb-2">
+                                                {{ $leaderboard[2]->user->division->name ?? '-' }}</p>
+                                            <div class="stat-pill mb-1">
+                                                <i class="mdi mdi-check me-1"></i>{{ $leaderboard[2]->total_attendance }}
+                                                Hadir
+                                            </div>
+                                            <div class="stat-pill">
+                                                {{ $leaderboard[2]->avg_arrival_display }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endif
+                            @endif
 
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         @endif
-        
+
         {{-- 2. TOP SCANNER (ADMIN & SECURITY) -- SAME PODIUM STYLE --}}
-        @if((auth()->user()->role == 'admin' || auth()->user()->role == 'security') && isset($topScanners) && count($topScanners) > 0)
-        <div class="col-12 mt-4">
-             <div class="card border-0 shadow-lg luxury-card overflow-hidden">
-                <div class="luxury-bg-pattern"></div>
-                <div class="card-body p-4 position-relative z-index-1">
-                    <div class="text-center mb-5">
-                        <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
-                            <i class="mdi mdi-qrcode-scan text-primary me-2"></i>Top Security Scanner
-                        </h3>
-                        <p class="text-muted small">Total Scan Terbanyak Bulan Ini</p>
+        @if (
+            (auth()->user()->role == 'admin' || auth()->user()->role == 'security') &&
+                isset($topScanners) &&
+                count($topScanners) > 0)
+            <div class="col-12 mt-4">
+                <div class="card border-0 shadow-lg luxury-card overflow-hidden">
+                    <div class="luxury-bg-pattern"></div>
+                    <div class="card-body p-4 position-relative z-index-1">
+                        <div class="text-center mb-5">
+                            <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
+                                <i class="mdi mdi-qrcode-scan text-primary me-2"></i>Top Security Scanner
+                            </h3>
+                            <p class="text-muted small">Total Scan Terbanyak Bulan Ini</p>
+                        </div>
+
+                        {{-- PODIUM CONTAINER --}}
+                        <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
+
+                            {{-- JUARA 2 --}}
+                            @if (isset($topScanners[1]))
+                                <div class="podium-step-container">
+                                    <div class="podium-avatar-wrapper">
+                                        @if ($topScanners[1]->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $topScanners[1]->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder bg-secondary">
+                                                {{ substr($topScanners[1]->name, 0, 1) }}</div>
+                                        @endif
+                                        <div class="rank-circle silver">2</div>
+                                    </div>
+                                    <div class="podium-block silver-block text-center">
+                                        <div class="podium-content">
+                                            <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[1]->name, 12) }}
+                                            </h6>
+                                            <div class="stat-pill mt-2">
+                                                {{ $topScanners[1]->total_scans }} Scan
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- JUARA 1 --}}
+                            @if (isset($topScanners[0]))
+                                <div class="podium-step-container main-winner">
+                                    <div class="crown-floating"><img
+                                            src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown"
+                                            width="50"></div>
+                                    <div class="podium-avatar-wrapper gold-glow">
+                                        @if ($topScanners[0]->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $topScanners[0]->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder gold-gradient">
+                                                {{ substr($topScanners[0]->name, 0, 1) }}</div>
+                                        @endif
+                                        <div class="rank-circle gold">1</div>
+                                    </div>
+                                    <div class="podium-block gold-block text-center">
+                                        <div class="podium-content pt-3">
+                                            <h5 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[0]->name, 15) }}
+                                            </h5>
+                                            <div class="stat-pill gold mt-2">
+                                                <i class="mdi mdi-star me-1"></i>{{ $topScanners[0]->total_scans }} Scan
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- JUARA 3 --}}
+                            @if (isset($topScanners[2]))
+                                <div class="podium-step-container">
+                                    <div class="podium-avatar-wrapper">
+                                        @if ($topScanners[2]->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $topScanners[2]->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder" style="background: #CD7F32;">
+                                                {{ substr($topScanners[2]->name, 0, 1) }}</div>
+                                        @endif
+                                        <div class="rank-circle bronze">3</div>
+                                    </div>
+                                    <div class="podium-block bronze-block text-center">
+                                        <div class="podium-content">
+                                            <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[2]->name, 12) }}
+                                            </h6>
+                                            <div class="stat-pill mt-2">
+                                                {{ $topScanners[2]->total_scans }} Scan
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                        </div>
                     </div>
-
-                     {{-- PODIUM CONTAINER --}}
-                     <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
-                        
-                        {{-- JUARA 2 --}}
-                        @if(isset($topScanners[1]))
-                            <div class="podium-step-container">
-                                <div class="podium-avatar-wrapper">
-                                     @if($topScanners[1]->profile_photo_path)
-                                        <img src="{{ asset('storage/'.$topScanners[1]->profile_photo_path) }}" class="luxury-avatar">
-                                    @else
-                                        <div class="luxury-avatar-placeholder bg-secondary">{{ substr($topScanners[1]->name, 0, 1) }}</div>
-                                    @endif
-                                    <div class="rank-circle silver">2</div>
-                                </div>
-                                <div class="podium-block silver-block text-center">
-                                    <div class="podium-content">
-                                        <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[1]->name, 12) }}</h6>
-                                        <div class="stat-pill mt-2">
-                                            {{ $topScanners[1]->total_scans }} Scan
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        {{-- JUARA 1 --}}
-                        @if(isset($topScanners[0]))
-                            <div class="podium-step-container main-winner">
-                                <div class="crown-floating"><img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown" width="50"></div>
-                                <div class="podium-avatar-wrapper gold-glow">
-                                    @if($topScanners[0]->profile_photo_path)
-                                        <img src="{{ asset('storage/'.$topScanners[0]->profile_photo_path) }}" class="luxury-avatar">
-                                    @else
-                                        <div class="luxury-avatar-placeholder gold-gradient">{{ substr($topScanners[0]->name, 0, 1) }}</div>
-                                    @endif
-                                    <div class="rank-circle gold">1</div>
-                                </div>
-                                <div class="podium-block gold-block text-center">
-                                    <div class="podium-content pt-3">
-                                        <h5 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[0]->name, 15) }}</h5>
-                                        <div class="stat-pill gold mt-2">
-                                            <i class="mdi mdi-star me-1"></i>{{ $topScanners[0]->total_scans }} Scan
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        {{-- JUARA 3 --}}
-                        @if(isset($topScanners[2]))
-                            <div class="podium-step-container">
-                                <div class="podium-avatar-wrapper">
-                                     @if($topScanners[2]->profile_photo_path)
-                                        <img src="{{ asset('storage/'.$topScanners[2]->profile_photo_path) }}" class="luxury-avatar">
-                                    @else
-                                        <div class="luxury-avatar-placeholder" style="background: #CD7F32;">{{ substr($topScanners[2]->name, 0, 1) }}</div>
-                                    @endif
-                                    <div class="rank-circle bronze">3</div>
-                                </div>
-                                <div class="podium-block bronze-block text-center">
-                                    <div class="podium-content">
-                                        <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[2]->name, 12) }}</h6>
-                                        <div class="stat-pill mt-2">
-                                            {{ $topScanners[2]->total_scans }} Scan
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                     </div>
                 </div>
-             </div>
-        </div>
+            </div>
         @endif
 
     </div>
@@ -615,58 +647,73 @@
                                                 {{-- CONTAINER UTAMA ACTION --}}
                                                 <div id="cross-day-actions">
 
-                                                    {{-- OPSI 1: SLIDER UNTUK FOTO (NORMAL) --}}
-                                                    <div class="mb-3" id="slider-view">
-                                                        <p class="text-muted small mb-1">
-                                                            <i class="mdi mdi-camera me-1"></i><strong>Opsi 1:</strong>
-                                                            Absen Pulang Normal (Foto)
-                                                        </p>
+                                                    {{-- LOGIC: HANYA TAMPILKAN SLIDER JIKA BELUM DIKONFIRMASI --}}
+                                                    @if (!$myAttendanceToday->is_extended_shift)
+                                                        {{-- WRAPPER SLIDER & SKIP --}}
+                                                        <div id="confirmation-wrapper">
+                                                            {{-- OPSI 1: SLIDER UNTUK FOTO (NORMAL) --}}
+                                                            <div class="mb-3" id="slider-view">
+                                                                <p class="text-muted small mb-1">
+                                                                    <i class="mdi mdi-camera me-1"></i><strong>Opsi
+                                                                        1:</strong>
+                                                                    Absen Pulang Normal (Foto)
+                                                                </p>
 
-                                                        <div class="position-relative w-100 rounded-pill d-flex align-items-center px-1 user-select-none shadow-sm"
-                                                            id="slide-track"
-                                                            style="height: 50px; background-color: #fde047; transition: all 0.2s;">
+                                                                <div class="position-relative w-100 rounded-pill d-flex align-items-center px-1 user-select-none shadow-sm"
+                                                                    id="slide-track"
+                                                                    style="height: 50px; background-color: #fde047; transition: all 0.2s;">
 
-                                                            <div class="position-absolute w-100 text-center"
-                                                                style="pointer-events: none; left:0;">
-                                                                <span class="fw-bold text-dark small opacity-75"
-                                                                    style="letter-spacing: 1px;">GESER KE KANAN >></span>
+                                                                    <div class="position-absolute w-100 text-center"
+                                                                        style="pointer-events: none; left:0;">
+                                                                        <span class="fw-bold text-dark small opacity-75"
+                                                                            style="letter-spacing: 1px;">GESER KE KANAN
+                                                                            >></span>
+                                                                    </div>
+
+                                                                    <div id="slide-thumb"
+                                                                        class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center text-warning"
+                                                                        style="width: 42px; height: 42px; cursor: pointer; position: absolute; left: 4px; z-index: 10;">
+                                                                        <i class="mdi mdi-arrow-right fw-bold fs-5"></i>
+                                                                    </div>
+                                                                </div>
                                                             </div>
 
-                                                            <div id="slide-thumb"
-                                                                class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center text-warning"
-                                                                style="width: 42px; height: 42px; cursor: pointer; position: absolute; left: 4px; z-index: 10;">
-                                                                <i class="mdi mdi-arrow-right fw-bold fs-5"></i>
-                                                            </div>
+                                                            {{-- OPSI 2: TOMBOL LEWATI (TANPA FOTO) --}}
+                                                            <form
+                                                                action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
+                                                                method="POST">
+                                                                @csrf
+                                                                <p class="text-muted small mb-1">
+                                                                    <i class="mdi mdi-cancel me-1"></i><strong>Opsi
+                                                                        2:</strong>
+                                                                    Lupa Absen (Tanpa Foto)
+                                                                </p>
+                                                                <button type="submit"
+                                                                    class="btn btn-outline-danger w-100 py-2 shadow-sm"
+                                                                    onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis TANPA FOTO.\n\nLanjutkan?');">
+                                                                    <i class="mdi mdi-skip-forward me-2"></i>Lewati & Tutup
+                                                                    Sesi
+                                                                </button>
+                                                            </form>
                                                         </div>
+                                                    @endif
+
+                                                    {{-- FASE 3: CAMERA BUTTON --}}
+                                                    {{-- Tampil otomatis jika sudah confirm (is_extended_shift == true) ATAU setelah slide selesai (via JS) --}}
+                                                    <div id="camera-view"
+                                                        class="{{ $myAttendanceToday->is_extended_shift ? '' : 'd-none' }} text-center animate-enter mt-3">
+                                                        <div class="mb-3">
+                                                            <h6 class="text-primary fw-bold">Konfirmasi Pulang</h6>
+                                                            <p class="text-muted small">Silahkan ambil foto selfie untuk
+                                                                validasi.</p>
+                                                        </div>
+                                                        <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
+                                                            class="btn btn-primary w-100 py-3 rounded-3 shadow-sm fw-bold">
+                                                            <i class="mdi mdi-camera-party-mode me-2"></i> Ambil Foto &
+                                                            Pulang
+                                                        </a>
                                                     </div>
 
-                                                    {{-- OPSI 2: TOMBOL LEWATI (TANPA FOTO) --}}
-                                                    <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        <p class="text-muted small mb-1">
-                                                            <i class="mdi mdi-cancel me-1"></i><strong>Opsi 2:</strong>
-                                                            Lupa Absen (Tanpa Foto)
-                                                        </p>
-                                                        <button type="submit"
-                                                            class="btn btn-outline-danger w-100 py-2 shadow-sm"
-                                                            onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis TANPA FOTO.\nStatus kemarin akan menjadi \'Verified/Present\' tapi ada catatan skip.\n\nLanjutkan?');">
-                                                            <i class="mdi mdi-skip-forward me-2"></i>Lewati & Tutup Sesi
-                                                        </button>
-                                                    </form>
-                                                </div>
-
-                                                {{-- FASE 3: CAMERA BUTTON (Muncul setelah slide) --}}
-                                                <div id="camera-view" class="d-none text-center animate-enter mt-3">
-                                                    <div class="mb-3">
-                                                        <h6 class="text-primary fw-bold">Konfirmasi Pulang</h6>
-                                                        <p class="text-muted small">Silahkan ambil foto selfie untuk
-                                                            validasi.</p>
-                                                    </div>
-                                                    <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
-                                                        class="btn btn-primary w-100 py-3 rounded-3 shadow-sm fw-bold">
-                                                        <i class="mdi mdi-camera-party-mode me-2"></i> Ambil Foto & Pulang
-                                                    </a>
                                                 </div>
 
                                             </div>
@@ -1930,18 +1977,43 @@
                 document.addEventListener('touchend', endDrag);
 
                 function finishSlide() {
-                    // Change icon to check
-                    thumb.innerHTML = '<i class="mdi mdi-check text-success fs-4"></i>';
-                    track.style.backgroundColor = '#d1fae5'; // Light green
+                    // 1. UI Changes (Visual Feedback)
+                    thumb.innerHTML = '<i class="mdi mdi-loading mdi-spin text-success fs-4"></i>'; // Loading icon
+                    track.style.backgroundColor = '#d1fae5';
 
-                    setTimeout(() => {
-                        // Sembunyikan container action (slider + tombol lewati)
-                        if (actionsContainer) actionsContainer.classList.add('d-none');
-                        else sliderView.classList.add('d-none');
+                    // 2. AJAX Request to Confirm Overtime
+                    const attendanceId = "{{ $myAttendanceToday->id ?? 0 }}";
 
-                        // Munculkan kamera
-                        cameraView.classList.remove('d-none');
-                    }, 400);
+                    fetch(`/attendance/${attendanceId}/confirm-overtime`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // Success
+                            thumb.innerHTML = '<i class="mdi mdi-check text-success fs-4"></i>';
+
+                            setTimeout(() => {
+                                // Sembunyikan wrapper slider & tombol skip
+                                const confirmationWrapper = document.getElementById(
+                                    'confirmation-wrapper');
+                                if (confirmationWrapper) confirmationWrapper.classList.add('d-none');
+
+                                // Munculkan kamera
+                                if (cameraView) cameraView.classList.remove('d-none');
+
+                                // Opsional: Tampilkan notifikasi kecil
+                                // alert('Status Lembur Aktif!'); 
+                            }, 500);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Gagal mengupdate status lembur. Silahkan refresh halaman.');
+                        });
                 }
             }
 

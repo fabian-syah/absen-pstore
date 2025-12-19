@@ -24,8 +24,8 @@ class DashboardController extends Controller
         // [TIMEZONE & LIVE CLOCK SETUP]
         $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $data['current_timezone'] = $userTimezone;
-        
-        $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d'); 
+
+        $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
         $nowInBranch = Carbon::now($userTimezone);
 
         // =========================================================================
@@ -87,7 +87,7 @@ class DashboardController extends Controller
         // A. Cek Sesi Aktif (Masuk tapi belum Pulang)
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32)) 
+            ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32))
             ->latest('check_in_time')
             ->first();
 
@@ -100,8 +100,8 @@ class DashboardController extends Controller
 
         // C. Cek Sesi Lembur Lintas Hari (Pulang hari ini tapi masuk kemarin)
         $lastOvertimeSession = Attendance::where('user_id', $user->id)
-            ->whereDate('check_in_time', '<', $todayInBranch) 
-            ->whereDate('check_out_time', $todayInBranch)     
+            ->whereDate('check_in_time', '<', $todayInBranch)
+            ->whereDate('check_out_time', $todayInBranch)
             ->latest('check_out_time')
             ->first();
 
@@ -125,7 +125,7 @@ class DashboardController extends Controller
 
         if ($activeSession) {
             $checkInDate = $activeSession->check_in_time->format('Y-m-d');
-            
+
             // Jika tanggal Check In BUKAN hari ini => Sedang Lembur Lintas Hari
             if ($checkInDate !== $todayInBranch) {
                 $data['isStillWorkingOvertime'] = true;
@@ -146,42 +146,42 @@ class DashboardController extends Controller
 
         $data['myPendingCount'] = Attendance::where('user_id', $user->id)->where('status', 'pending_verification')->count();
         $data['myTeamCount'] = User::where('division_id', $user->division_id)->where('id', '!=', $user->id)->count();
-        
+
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
         // 5. DATA UNTUK WIDGET & LEADERBOARD
         // =========================================================================
-        
+
         // --- LEADERBOARD ABSENSI (KECUALI SECURITY) ---
         if ($user->role != 'security') {
             $data['leaderboard'] = Attendance::select(
-                    'user_id', 
-                    DB::raw('count(*) as total_attendance'), 
-                    DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'), 
-                    DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds')
-                )
-                ->whereMonth('check_in_time', $nowInBranch->month) 
-                ->whereYear('check_in_time', $nowInBranch->year)   
-                ->whereNotNull('check_out_time') 
-                ->where('status', 'verified') 
-                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar']) 
-                ->where('presence_status', '!=', 'Alpha') 
-                ->whereTime('check_in_time', '!=', '00:00:00') 
-                ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0') 
+                'user_id',
+                DB::raw('count(*) as total_attendance'),
+                DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
+                DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds')
+            )
+                ->whereMonth('check_in_time', $nowInBranch->month)
+                ->whereYear('check_in_time', $nowInBranch->year)
+                ->whereNotNull('check_out_time')
+                ->where('status', 'verified')
+                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])
+                ->where('presence_status', '!=', 'Alpha')
+                ->whereTime('check_in_time', '!=', '00:00:00')
+                ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0')
                 ->whereHas('user', function ($q) use ($user, $allBranchIds) {
                     $q->where('is_active', true)
-                      ->whereNotIn('role', ['admin', 'security']); 
+                        ->whereNotIn('role', ['admin', 'security']);
 
                     if ($user->role !== 'admin') {
                         $q->whereIn('branch_id', $allBranchIds);
                     }
                 })
                 ->groupBy('user_id')
-                ->orderBy('total_attendance', 'desc') 
-                ->orderBy('total_work_seconds', 'desc') 
-                ->orderBy('avg_arrival_time', 'asc') 
-                ->take(3) 
+                ->orderBy('total_attendance', 'desc')
+                ->orderBy('total_work_seconds', 'desc')
+                ->orderBy('avg_arrival_time', 'asc')
+                ->take(3)
                 ->with(['user', 'user.division', 'user.branch'])
                 ->get()
                 ->map(function ($item) {
@@ -193,13 +193,13 @@ class DashboardController extends Controller
         // --- LEADERBOARD SCANNER (SECURITY & ADMIN) ---
         if ($user->role == 'admin' || $user->role == 'security') {
             $securityUsersQuery = User::where('is_active', true)->whereIn('role', ['security', 'admin']);
-            
+
             if ($user->role != 'admin') {
                 $securityUsersQuery->whereIn('branch_id', $allBranchIds);
             } elseif ($user->role == 'admin' && $branch_id != null) {
                 $securityUsersQuery->where('branch_id', $branch_id);
             }
-            
+
             $securityUsers = $securityUsersQuery->get();
 
             $scanners = $securityUsers->map(function ($sec) use ($nowInBranch) {
@@ -207,17 +207,17 @@ class DashboardController extends Controller
                     ->whereMonth('check_in_time', $nowInBranch->month)
                     ->whereYear('check_in_time', $nowInBranch->year)
                     ->count();
-                
+
                 $scanOut = Attendance::where('scanned_out_by_user_id', $sec->id)
                     ->whereMonth('check_in_time', $nowInBranch->month)
                     ->whereYear('check_in_time', $nowInBranch->year)
                     ->count();
-                
+
                 $sec->total_scans = $scanIn + $scanOut;
                 return $sec;
             });
-            
-            $data['topScanners'] = $scanners->sortByDesc('total_scans')->take(3)->values(); 
+
+            $data['topScanners'] = $scanners->sortByDesc('total_scans')->take(3)->values();
         }
 
         // =========================================================================
@@ -403,7 +403,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $branch_id = $user->branch_id;
-        
+
         $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
 
@@ -443,5 +443,17 @@ class DashboardController extends Controller
         }
         $pdf = PDF::loadView('pdf.attendance-report', $data);
         return $pdf->download('laporan-absensi-' . $user->role . '-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function confirmOvertime($id)
+    {
+        $attendance = Attendance::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+
+        // Update flag menjadi true
+        $attendance->update([
+            'is_extended_shift' => true
+        ]);
+
+        return response()->json(['status' => 'success', 'message' => 'Status lembur dikonfirmasi.']);
     }
 }

@@ -73,6 +73,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/my-salary', [MySalaryController::class, 'index'])->name('my-salary.index');
     Route::get('/my-salary/{id}', [MySalaryController::class, 'show'])->name('my-salary.show');
 
+    Route::post('/attendance/{id}/confirm-overtime', [DashboardController::class, 'confirmOvertime'])->name('attendance.confirm-overtime');
+
     Route::get('/my-wrapped-2025', [App\Http\Controllers\AttendanceRecapController::class, 'index'])->name('attendance.recap');
 
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
