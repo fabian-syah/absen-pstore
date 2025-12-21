@@ -260,6 +260,36 @@ class DashboardController extends Controller
         if (!isset($data['leaderboard'])) $data['leaderboard'] = [];
         if (!isset($data['topScanners'])) $data['topScanners'] = [];
 
+        // =========================================================================
+        // 7. [BARU] LOGIKA ULANG TAHUN (BIRTHDAY COUNTDOWN)
+        // =========================================================================
+        $userBirthDate = $user->birth_date ? Carbon::parse($user->birth_date) : null;
+        $birthdayData = null;
+
+        if ($userBirthDate) {
+            // Buat tanggal ultah tahun ini sesuai timezone cabang
+            $nextBirthday = Carbon::createFromDate($nowInBranch->year, $userBirthDate->month, $userBirthDate->day, $userTimezone)->startOfDay();
+
+            // Jika ultah tahun ini sudah lewat (kemarin dst), set ke tahun depan
+            if ($nextBirthday->isPast() && !$nextBirthday->isSameDay($nowInBranch->startOfDay())) {
+                $nextBirthday->addYear();
+            }
+
+            $diffInDays = $nowInBranch->startOfDay()->diffInDays($nextBirthday, false);
+            $isToday = $nextBirthday->isSameDay($nowInBranch->startOfDay());
+
+            // Tampilkan HANYA jika H-30 atau HARI INI
+            if ($diffInDays <= 30) {
+                $birthdayData = [
+                    'is_today' => $isToday,
+                    'days_left' => $diffInDays,
+                    'date' => $nextBirthday->format('Y-m-d'), // Untuk JS Countdown
+                    'age_to_be' => $nextBirthday->year - $userBirthDate->year
+                ];
+            }
+        }
+        $data['birthdayData'] = $birthdayData;
+
         return view('dashboard', $data);
     }
 

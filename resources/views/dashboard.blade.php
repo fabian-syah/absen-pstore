@@ -19,6 +19,89 @@
 
 @section('content')
 
+    {{-- ======================================================================= --}}
+    {{-- BAGIAN BARU: BIRTHDAY CELEBRATION (Hanya Muncul Jika H-30 atau Hari H)  --}}
+    {{-- ======================================================================= --}}
+    @if (isset($birthdayData) && $birthdayData)
+        <div class="row mb-4 animate-enter">
+            <div class="col-12">
+                <div class="card border-0 shadow-lg overflow-hidden birthday-card">
+                    {{-- Animated Background Elements --}}
+                    <div class="confetti-container"></div>
+                    <div class="balloon b1"></div>
+                    <div class="balloon b2"></div>
+                    <div class="balloon b3"></div>
+
+                    <div class="card-body position-relative z-index-1 py-4 px-4">
+                        <div class="row align-items-center">
+                            {{-- KIRI: PESAN --}}
+                            <div class="col-md-7 text-white">
+                                @if ($birthdayData['is_today'])
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-warning text-dark fw-bold me-2 pulse-animation">
+                                            <i class="mdi mdi-cake-variant me-1"></i> SPECIAL DAY
+                                        </span>
+                                        <h2 class="fw-bold mb-0 text-shadow-glam">HAPPY BIRTHDAY! 🎂</h2>
+                                    </div>
+                                    <p class="lead mb-1 text-white-50">
+                                        Selamat Ulang Tahun yang ke-<strong>{{ $birthdayData['age_to_be'] }}</strong>, {{ Auth::user()->name }}!
+                                    </p>
+                                    <p class="small text-white-50 mb-0">Semoga panjang umur, sehat selalu, dan karir makin cemerlang di PStore!</p>
+                                @else
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-light text-primary fw-bold me-2">
+                                            <i class="mdi mdi-calendar-star me-1"></i> UPCOMING
+                                        </span>
+                                        <h3 class="fw-bold mb-0 text-white">Counting Down to Your Day! 🎈</h3>
+                                    </div>
+                                    <p class="mb-0 text-white-50">
+                                        Sebentar lagi kamu ulang tahun yang ke-<strong>{{ $birthdayData['age_to_be'] }}</strong>.
+                                        Siapkan harapan terbaikmu!
+                                    </p>
+                                @endif
+                            </div>
+
+                            {{-- KANAN: COUNTDOWN TIMER --}}
+                            <div class="col-md-5 mt-4 mt-md-0 text-center text-md-end">
+                                @if (!$birthdayData['is_today'])
+                                    <div class="d-flex justify-content-center justify-content-md-end gap-2" id="birthday-countdown">
+                                        {{-- Hari --}}
+                                        <div class="countdown-box glass-box">
+                                            <span class="d-block fw-bold fs-3" id="cd-days">{{ $birthdayData['days_left'] }}</span>
+                                            <small class="text-uppercase" style="font-size: 9px;">Hari</small>
+                                        </div>
+                                        {{-- Jam --}}
+                                        <div class="countdown-box glass-box">
+                                            <span class="d-block fw-bold fs-3" id="cd-hours">00</span>
+                                            <small class="text-uppercase" style="font-size: 9px;">Jam</small>
+                                        </div>
+                                        {{-- Menit --}}
+                                        <div class="countdown-box glass-box">
+                                            <span class="d-block fw-bold fs-3" id="cd-minutes">00</span>
+                                            <small class="text-uppercase" style="font-size: 9px;">Menit</small>
+                                        </div>
+                                        {{-- Detik --}}
+                                        <div class="countdown-box glass-box">
+                                            <span class="d-block fw-bold fs-3 text-warning" id="cd-seconds">00</span>
+                                            <small class="text-uppercase" style="font-size: 9px;">Detik</small>
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- Jika Hari H --}}
+                                    <div class="text-center">
+                                         <button class="btn btn-light text-danger fw-bold shadow-lg pulse-animation" onclick="confettiEffect()">
+                                            <i class="mdi mdi-party-popper me-2"></i> RAYAKAN SEKARANG!
+                                         </button>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- BAGIAN BARU: ATTENDANCE WRAPPED (Desember Only) --}}
     @if (\Carbon\Carbon::now()->month == 12)
         <div class="row mb-4 animate-enter">
@@ -1017,6 +1100,93 @@
 
 @push('styles')
     <style>
+        /* === BIRTHDAY CARD STYLES === */
+        .birthday-card {
+            background: linear-gradient(135deg, #4c1d95 0%, #be185d 100%);
+            /* Ungu ke Pink Mewah */
+            position: relative;
+            color: white;
+        }
+
+        /* Glassmorphism for Countdown */
+        .glass-box {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px 15px;
+            min-width: 70px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .text-shadow-glam {
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Balloons Animation */
+        .balloon {
+            position: absolute;
+            width: 60px;
+            height: 70px;
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            background-color: rgba(255, 255, 255, 0.1);
+            bottom: -80px;
+            z-index: 0;
+            animation: floatBalloon 10s infinite ease-in-out;
+        }
+
+        .balloon::before {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .b1 {
+            left: 10%;
+            background: rgba(255, 215, 0, 0.2);
+            animation-duration: 8s;
+            animation-delay: 0s;
+            width: 50px;
+            height: 60px;
+        }
+
+        .b2 {
+            right: 15%;
+            background: rgba(0, 255, 255, 0.15);
+            animation-duration: 12s;
+            animation-delay: 2s;
+            width: 70px;
+            height: 85px;
+        }
+
+        .b3 {
+            left: 50%;
+            background: rgba(255, 105, 180, 0.15);
+            animation-duration: 10s;
+            animation-delay: 5s;
+        }
+
+        @keyframes floatBalloon {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-300px) rotate(20deg);
+                opacity: 0;
+            }
+        }
+
         /* === SLIDER LOGIC STYLES === */
         #slide-thumb {
             transition: transform 0.1s;
@@ -2005,9 +2175,6 @@
 
                                 // Munculkan kamera
                                 if (cameraView) cameraView.classList.remove('d-none');
-
-                                // Opsional: Tampilkan notifikasi kecil
-                                // alert('Status Lembur Aktif!'); 
                             }, 500);
                         })
                         .catch(error => {
@@ -2071,6 +2238,39 @@
                 updateCounter();
             });
 
+            // --- [BARU] BIRTHDAY COUNTDOWN SCRIPT ---
+            @if (isset($birthdayData) && !$birthdayData['is_today'])
+                const targetDate = new Date("{{ $birthdayData['date'] }}T00:00:00");
+
+                function updateCountdown() {
+                    const now = new Date();
+                    const diff = targetDate - now;
+
+                    if (diff <= 0) {
+                        // Jika waktu habis (masuk jam 00:00 ultah), reload biar tampilan berubah jadi HARI H
+                        location.reload();
+                        return;
+                    }
+
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    // Update DOM
+                    if (document.getElementById('cd-days')) document.getElementById('cd-days').innerText = days;
+                    if (document.getElementById('cd-hours')) document.getElementById('cd-hours').innerText = hours
+                        .toString().padStart(2, '0');
+                    if (document.getElementById('cd-minutes')) document.getElementById('cd-minutes').innerText =
+                        minutes.toString().padStart(2, '0');
+                    if (document.getElementById('cd-seconds')) document.getElementById('cd-seconds').innerText =
+                        seconds.toString().padStart(2, '0');
+                }
+
+                setInterval(updateCountdown, 1000);
+                updateCountdown();
+            @endif
+
             // --- SCRIPT QR CODE ---
             @if (Auth::user()->qr_code_value)
                 const qrValue = "{{ Auth::user()->qr_code_value }}";
@@ -2098,8 +2298,6 @@
 
             // --- SCRIPT CHART ---
             const ctx = document.getElementById('attendancePieChart').getContext('2d');
-
-            // Default Options untuk Chart agar lebih halus
             Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
 
             @if (auth()->user()->role == 'admin')
@@ -2225,5 +2423,10 @@
                 });
             }
         });
+
+        // Optional: Confetti Effect Function (Placeholder)
+        function confettiEffect() {
+            alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
+        }
     </script>
 @endpush
