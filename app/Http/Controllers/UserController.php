@@ -44,33 +44,38 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = User::with(['division', 'branch', 'branches', 'divisions']);
+        $search = $request->search;
 
-        if ($user->role == 'admin' && $user->branch_id != null) {
-            $query->where('branch_id', $user->branch_id);
-        } elseif (in_array($user->role, ['audit', 'leader'])) {
-            $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
-            if ($user->branch_id) {
-                $allowedBranchIds[] = $user->branch_id;
+        // Base query untuk user Aktif
+        $activeQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', true);
+
+        // Base query untuk user Non-Aktif
+        $inactiveQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', false);
+
+        // Filter berdasarkan Role (seperti logika sebelumnya)
+        foreach ([$activeQuery, $inactiveQuery] as $query) {
+            if ($user->role == 'admin' && $user->branch_id != null) {
+                $query->where('branch_id', $user->branch_id);
+            } elseif (in_array($user->role, ['audit', 'leader'])) {
+                $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
+                if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
+                $query->whereIn('branch_id', array_unique($allowedBranchIds));
             }
-            $allowedBranchIds = array_unique($allowedBranchIds);
-            $query->whereIn('branch_id', $allowedBranchIds);
+
+            // Pencarian
+            if ($search != '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('login_id', 'like', "%{$search}%");
+                });
+            }
         }
 
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('login_id', 'like', "%{$search}%");
-            });
-        }
+        $users = $activeQuery->latest()->paginate(10, ['*'], 'active_page')->appends(['search' => $search]);
+        $inactiveUsers = $inactiveQuery->latest()->paginate(10, ['*'], 'inactive_page')->appends(['search' => $search]);
 
-        $users = $query->latest()
-            ->paginate(10)
-            ->appends(['search' => $request->search]);
-
-        return view('users.user_index', compact('users'));
+        return view('users.user_index', compact('users', 'inactiveUsers'));
     }
 
     public function create()

@@ -44,113 +44,191 @@
                         <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
                     @endif
 
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th> # </th>
-                                    <th> Profil Pengguna </th>
-                                    <th> Kontak </th>
-                                    <th> Role </th>
-                                    <th> Penempatan & Divisi </th>
-                                    <th> Tanggal Join </th>
-                                    <th> QR Code </th>
-                                    <th> Aksi </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($users as $key => $user)
-                                    <tr>
-                                        <td> {{ $users->firstItem() + $key }} </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-3 position-relative">
-                                                    @if ($user->profile_photo_path)
-                                                        <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="profile" class="img-sm rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: {{ $user->is_verified ? '2px solid #0d6efd' : 'none' }};">
+                    {{-- NAV TABS UNTUK MEMISAHKAN AKTIF & NON-AKTIF --}}
+                    <ul class="nav nav-tabs tab-basic mb-3" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="active-tab" data-bs-toggle="tab" href="#active-users" role="tab" aria-controls="active-users" aria-selected="true">
+                                User Aktif <span class="badge bg-success ms-1 text-white">{{ $users->total() }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="inactive-tab" data-bs-toggle="tab" href="#inactive-users" role="tab" aria-controls="inactive-users" aria-selected="false">
+                                EX Karyawan <span class="badge bg-danger ms-1 text-white">{{ $inactiveUsers->total() }}</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content tab-content-basic">
+                        {{-- TAB 1: USER AKTIF --}}
+                        <div class="tab-pane fade show active" id="active-users" role="tabpanel" aria-labelledby="active-tab">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th> # </th>
+                                            <th> Profil Pengguna </th>
+                                            <th> Kontak </th>
+                                            <th> Role </th>
+                                            <th> Penempatan & Divisi </th>
+                                            <th> Tanggal Join </th>
+                                            <th> QR Code </th>
+                                            <th> Aksi </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($users as $key => $user)
+                                            <tr>
+                                                <td> {{ $users->firstItem() + $key }} </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="me-3 position-relative">
+                                                            @if ($user->profile_photo_path)
+                                                                <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="profile" class="img-sm rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: {{ $user->is_verified ? '2px solid #0d6efd' : 'none' }};">
+                                                            @else
+                                                                <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random" alt="profile" class="img-sm rounded-circle">
+                                                            @endif
+                                                            @if ($user->is_verified)
+                                                                <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center" style="bottom: -2px; right: -2px; width: 16px; height: 16px;">
+                                                                    <i class="mdi mdi-check-decagram text-primary" style="font-size: 14px;"></i>
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold d-flex align-items-center gap-1">{{ $user->name }}</div>
+                                                            <small class="text-muted">ID: {{ $user->login_id ?? '-' }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div><i class="mdi mdi-email-outline me-1"></i> {{ $user->email }}</div>
+                                                    @if ($user->whatsapp)
+                                                        <div class="text-success mt-1"><i class="mdi mdi-whatsapp me-1"></i> {{ $user->whatsapp }}</div>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
+                                                    @if($user->only_security_scan)
+                                                        <div class="mt-1"><span class="badge bg-danger text-white" style="font-size: 10px;"><i class="mdi mdi-qrcode-scan"></i> Scan Only</span></div>
+                                                    @endif
+                                                    @if($user->use_face_recognition)
+                                                         <div class="mt-1"><span class="badge bg-success text-white" style="font-size: 10px;"><i class="mdi mdi-face-recognition"></i> AI ON</span></div>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <div class="fw-bold mb-1" style="font-size: 0.9rem;">
+                                                        @if ($user->role == 'audit' || $user->role == 'leader')
+                                                            {{ $user->branches->pluck('name')->join(', ') ?: 'Semua Cabang' }}
+                                                        @else
+                                                            {{ $user->branch->name ?? 'Semua Cabang' }}
+                                                        @endif
+                                                    </div>
+                                                    <div class="text-muted">
+                                                        @if ($user->divisions->isNotEmpty())
+                                                            <i class="mdi mdi-label-outline text-primary me-1" style="font-size: 10px;"></i>
+                                                            <span style="font-size: 0.8rem;">{{ $user->divisions->pluck('name')->join(', ') }}</span>
+                                                        @else
+                                                            <span class="text-muted fst-italic" style="font-size: 0.8rem;">-</span>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}</td>
+                                                <td>
+                                                    @if ($user->qr_code_value)
+                                                        <button type="button" class="btn btn-inverse-dark btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#qrModal" data-name="{{ $user->name }}" data-qr="{{ $user->qr_code_value }}">
+                                                            <i class="mdi mdi-qrcode"></i>
+                                                        </button>
                                                     @else
-                                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random" alt="profile" class="img-sm rounded-circle">
+                                                        <span class="text-muted text-small">N/A</span>
                                                     @endif
-                                                    @if ($user->is_verified)
-                                                        <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center" style="bottom: -2px; right: -2px; width: 16px; height: 16px;">
-                                                            <i class="mdi mdi-check-decagram text-primary" style="font-size: 14px;"></i>
-                                                        </span>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ route('users.show', $user->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail"><i class="mdi mdi-eye"></i></a>
+                                                    <a href="{{ route('users.edit', $user->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
+                                                    @if ($user->id != auth()->id() && auth()->user()->role != 'audit' && auth()->user()->role != 'leader')
+                                                        <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?');">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm" title="Hapus"><i class="mdi mdi-delete"></i></button>
+                                                        </form>
                                                     @endif
-                                                </div>
-                                                <div>
-                                                    <div class="fw-bold d-flex align-items-center gap-1">{{ $user->name }}</div>
-                                                    <small class="text-muted">ID: {{ $user->login_id ?? '-' }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div><i class="mdi mdi-email-outline me-1"></i> {{ $user->email }}</div>
-                                            @if ($user->whatsapp)
-                                                <div class="text-success mt-1"><i class="mdi mdi-whatsapp me-1"></i> {{ $user->whatsapp }}</div>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
-                                            @if($user->only_security_scan)
-                                                <div class="mt-1"><span class="badge bg-danger text-white" style="font-size: 10px;"><i class="mdi mdi-qrcode-scan"></i> Scan Only</span></div>
-                                            @endif
-                                            {{-- Indikator AI --}}
-                                            @if($user->use_face_recognition)
-                                                 <div class="mt-1"><span class="badge bg-success text-white" style="font-size: 10px;"><i class="mdi mdi-face-recognition"></i> AI ON</span></div>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="fw-bold mb-1" style="font-size: 0.9rem;">
-                                                @if ($user->role == 'audit' || $user->role == 'leader')
-                                                    {{ $user->branches->pluck('name')->join(', ') ?: 'Semua Cabang' }}
-                                                @else
-                                                    {{ $user->branch->name ?? 'Semua Cabang' }}
-                                                @endif
-                                            </div>
-                                            <div class="text-muted">
-                                                @if ($user->divisions->isNotEmpty())
-                                                    <i class="mdi mdi-label-outline text-primary me-1" style="font-size: 10px;"></i>
-                                                    <span style="font-size: 0.8rem;">{{ $user->divisions->pluck('name')->join(', ') }}</span>
-                                                @else
-                                                    <span class="text-muted fst-italic" style="font-size: 0.8rem;">-</span>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}</td>
-                                        <td>
-                                            @if ($user->qr_code_value)
-                                                <button type="button" class="btn btn-inverse-dark btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#qrModal" data-name="{{ $user->name }}" data-qr="{{ $user->qr_code_value }}">
-                                                    <i class="mdi mdi-qrcode"></i>
-                                                </button>
-                                            @else
-                                                <span class="text-muted text-small">N/A</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <a href="{{ route('users.show', $user->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail"><i class="mdi mdi-eye"></i></a>
-                                            <a href="{{ route('users.edit', $user->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
-                                            @if ($user->id != auth()->id() && auth()->user()->role != 'audit' && auth()->user()->role != 'leader')
-                                                <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?');">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm" title="Hapus"><i class="mdi mdi-delete"></i></button>
-                                                </form>
-                                            @endif
-                                            @if ($user->id != auth()->id())
-                                                <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-icon btn-sm {{ $user->is_active ? 'btn-inverse-danger' : 'btn-inverse-success' }}" title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
-                                                        <i class="mdi {{ $user->is_active ? 'mdi-power-off' : 'mdi-power' }}"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="9" class="text-center py-4"><div class="text-muted">Tidak ada data user yang ditemukan.</div></td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                                    @if ($user->id != auth()->id())
+                                                        <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            <button type="submit" class="btn btn-icon btn-sm btn-inverse-danger" title="Nonaktifkan">
+                                                                <i class="mdi mdi-power-off"></i>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr><td colspan="8" class="text-center py-4"><div class="text-muted">Tidak ada data user aktif ditemukan.</div></td></tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 d-flex justify-content-end">{{ $users->links('pagination::bootstrap-5') }}</div>
+                        </div>
+
+                        {{-- TAB 2: EX KARYAWAN (NON-AKTIF) --}}
+                        <div class="tab-pane fade" id="inactive-users" role="tabpanel" aria-labelledby="inactive-tab">
+                            <div class="table-responsive">
+                                <table class="table table-hover border-danger">
+                                    <thead>
+                                        <tr class="bg-light">
+                                            <th> # </th>
+                                            <th> Profil Pengguna </th>
+                                            <th> Email </th>
+                                            <th> Penempatan Terakhir </th>
+                                            <th> Tanggal Join </th>
+                                            <th> Aksi </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($inactiveUsers as $key => $user)
+                                            <tr class="opacity-75">
+                                                <td> {{ $inactiveUsers->firstItem() + $key }} </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="me-3">
+                                                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=f8d7da&color=721c24" alt="profile" class="img-sm rounded-circle">
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold text-danger">{{ $user->name }}</div>
+                                                            <small class="text-muted">ID: {{ $user->login_id ?? '-' }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ $user->email }}</td>
+                                                <td>
+                                                    <span class="badge bg-dark text-white">
+                                                        <i class="mdi mdi-store me-1"></i> {{ $user->branch->name ?? 'EX Karyawan' }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}</td>
+                                                <td>
+                                                    <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-icon btn-sm btn-inverse-success" title="Aktifkan Kembali">
+                                                            <i class="mdi mdi-power"></i>
+                                                        </button>
+                                                    </form>
+                                                    @if (auth()->user()->role == 'admin')
+                                                        <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus permanen data ini?');">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm" title="Hapus Permanen"><i class="mdi mdi-delete-forever"></i></button>
+                                                        </form>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr><td colspan="6" class="text-center py-4"><div class="text-muted">Tidak ada data EX Karyawan.</div></td></tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 d-flex justify-content-end">{{ $inactiveUsers->links('pagination::bootstrap-5') }}</div>
+                        </div>
                     </div>
-                    <div class="mt-4 d-flex justify-content-end">{{ $users->links('pagination::bootstrap-5') }}</div>
                 </div>
             </div>
         </div>
@@ -160,12 +238,17 @@
     <div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title" id="qrModalLabel">QR Code User</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="qrModalLabel">QR Code User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
                 <div class="modal-body text-center">
                     <div id="qrcode-container" class="d-flex justify-content-center my-3"></div>
                     <p class="text-muted small mt-2">Scan QR ini untuk absensi</p>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
             </div>
         </div>
     </div>
