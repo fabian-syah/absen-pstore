@@ -7,8 +7,8 @@ use App\Models\Division;
 use App\Models\Branch;
 use App\Models\Attendance;
 use App\Models\Violation;
-use App\Models\JobTarget; 
-use App\Models\CashAdvance; 
+use App\Models\JobTarget;
+use App\Models\CashAdvance;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -215,7 +215,7 @@ class UserController extends Controller
 
         $displayCheckIn = '';
         $displayCheckOut = '';
-        
+
         if ($user->branch) {
             $branchTz = $user->branch->timezone ?? $this->adminTimezone;
 
@@ -276,7 +276,7 @@ class UserController extends Controller
         $data['hire_date'] = $request->hire_date ?? null;
 
         $targetBranchId = $request->branch_id ?? $user->branch_id;
-        
+
         if ($targetBranchId) {
             $branch = Branch::find($targetBranchId);
             $targetTz = $branch->timezone ?? $this->adminTimezone;
@@ -387,11 +387,11 @@ class UserController extends Controller
             ->latest('check_in_time')
             ->take(5)
             ->get();
-        
-        foreach($recentAttendance as $att) {
-            if($user->branch && $user->branch->timezone) {
+
+        foreach ($recentAttendance as $att) {
+            if ($user->branch && $user->branch->timezone) {
                 $att->check_in_local = Carbon::parse($att->check_in_time)->timezone($user->branch->timezone);
-                if($att->check_out_time) {
+                if ($att->check_out_time) {
                     $att->check_out_local = Carbon::parse($att->check_out_time)->timezone($user->branch->timezone);
                 }
             } else {
@@ -413,17 +413,17 @@ class UserController extends Controller
         $activeTargets = JobTarget::where('user_id', $user->id)
             ->where('type', 'personal_target')
             ->where('status', '!=', 'completed')
-            ->orderBy('star_level', 'desc') 
+            ->orderBy('star_level', 'desc')
             ->orderBy('deadline', 'asc')
             ->get();
 
         $achievements = JobTarget::where('user_id', $user->id)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('type', 'personal_achievement')
-                  ->orWhere(function($subQ) {
-                      $subQ->where('type', 'personal_target')
-                           ->where('status', 'completed');
-                  });
+                    ->orWhere(function ($subQ) {
+                        $subQ->where('type', 'personal_target')
+                            ->where('status', 'completed');
+                    });
             })
             ->orderBy('completed_at', 'desc')
             ->orderBy('created_at', 'desc')
@@ -522,10 +522,30 @@ class UserController extends Controller
 
     public function toggleStatus(User $user)
     {
-        if ($user->id == auth()->id()) return back();
+        // Mencegah admin menonaktifkan diri sendiri
+        if ($user->id == auth()->id()) {
+            return back()->with('error', 'Anda tidak bisa menonaktifkan akun sendiri.');
+        }
+
+        // Toggle status aktif/nonaktif
         $user->is_active = !$user->is_active;
+
+        // Logika Otomatis Pindah Cabang jika dinonaktifkan
+        if ($user->is_active == false) {
+            // Cek apakah cabang ID 83 (EX Karyawan) ada di database
+            $exBranchExists = \App\Models\Branch::where('id', 83)->exists();
+
+            if ($exBranchExists) {
+                $user->branch_id = 83;
+            }
+            // Opsional: Jika Anda ingin menghapus relasi multi-cabang (untuk audit/leader) saat nonaktif
+            $user->branches()->detach();
+        }
+
         $user->save();
-        return back()->with('success', 'Status user diperbarui.');
+
+        $statusText = $user->is_active ? 'diaktifkan' : 'dinonaktifkan dan dipindahkan ke EX Karyawan';
+        return back()->with('success', "Status user berhasil $statusText.");
     }
 
     private function getSpecificUserStats($user_id)
