@@ -10,10 +10,10 @@
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
             <h3 class="fw-bold mb-0">{{ Auth::user()->name }}!</h3>
         </div>
-        <div class="text-end d-none d-md-block">
+        {{-- <div class="text-end d-none d-md-block">
             <h5 class="fw-bold mb-0 text-primary" id="header-clock">--:--:--</h5>
             <small class="text-muted">{{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}</small>
-        </div>
+        </div> --}}
     </div>
 @endsection
 
