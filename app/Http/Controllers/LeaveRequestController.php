@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class LeaveRequestController extends Controller
@@ -128,16 +130,45 @@ class LeaveRequestController extends Controller
     /**
      * ACTION: APPROVE
      */
-    public function approve(LeaveRequest $leaveRequest)
-    {
+   public function approve(LeaveRequest $leaveRequest)
+{
+    DB::beginTransaction();
+    try {
         $leaveRequest->update([
             'status' => 'approved',
             'approved_by' => Auth::id(),
             'rejection_reason' => null,
         ]);
 
-        return redirect()->back()->with('success', 'Pengajuan disetujui.');
+        // LOGIKA BARU: Jika tipe adalah 'telat', buatkan baris absensi otomatis
+        if ($leaveRequest->type === 'telat') {
+            // Cek apakah sudah ada absensi di tanggal tersebut agar tidak double
+            $existingAttendance = Attendance::where('user_id', $leaveRequest->user_id)
+                ->whereDate('check_in_time', $leaveRequest->start_date)
+                ->first();
+
+            if (!$existingAttendance) {
+                Attendance::create([
+                    'user_id' => $leaveRequest->user_id,
+                    'branch_id' => $leaveRequest->user->branch_id,
+                    'check_in_time' => Carbon::parse($leaveRequest->start_date->format('Y-m-d') . ' ' . $leaveRequest->start_time),
+                    'presence_status' => 'Masuk', // Status hadir
+                    'status' => 'verified',       // Otomatis terverifikasi karena izin di-acc audit
+                    'notes' => 'Izin Telat: ' . $leaveRequest->reason,
+                    'attendance_type' => 'selfie', // Atau sesuaikan kategori Anda
+                    'is_late_checkin' => true,
+                    'verified_by_user_id' => Auth::id() // Di-verify oleh audit yang nge-acc
+                ]);
+            }
+        }
+
+        DB::commit();
+        return redirect()->back()->with('success', 'Pengajuan disetujui dan data absensi diperbarui.');
+    } catch (\Exception $e) {
+        DB::rollback();
+        return redirect()->back()->with('error', 'Gagal memproses data: ' . $e->getMessage());
     }
+}
 
     /**
      * ACTION: REJECT
