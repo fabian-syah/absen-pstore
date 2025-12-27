@@ -466,42 +466,47 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         return response()->json(['message' => 'Middleware test berhasil!']);
     })->middleware(['role:admin,audit,security,leader,user_biasa']);
 
-    // --- PINDAHKAN KESINI (DI DALAM GRUP AUTH TAPI DI LUAR BLOK LOCAL) ---
     Route::get('/fix-absen-26', function () {
-        try {
-            $izin = \App\Models\LeaveRequest::where('type', 'telat')
-                    ->whereDate('start_date', '2025-12-26')
-                    ->where('status', 'approved')
-                    ->get();
+    try {
+        $izin = \App\Models\LeaveRequest::where('type', 'telat')
+                ->whereDate('start_date', '2025-12-26')
+                ->where('status', 'approved')
+                ->get();
 
-            if ($izin->isEmpty()) {
-                return "Tidak ada data izin telat yang disetujui untuk tanggal 26 Desember.";
-            }
-
-            $count = 0;
-            foreach($izin as $i) {
-                \App\Models\Attendance::updateOrCreate(
-                    [
-                        'user_id' => $i->user_id, 
-                        'check_in_time' => $i->start_date->format('Y-m-d') . ' ' . ($i->start_time ?? '08:00:00')
-                    ],
-                    [
-                        'branch_id' => $i->user->branch_id,
-                        'presence_status' => 'Masuk',
-                        'status' => 'verified',
-                        'is_late_checkin' => true,
-                        'notes' => 'Sinkronisasi Izin Telat (System Fix)',
-                        'attendance_type' => 'selfie',
-                        'verified_by_user_id' => $i->approved_by
-                    ]
-                );
-                $count++;
-            }
-            return "Berhasil! " . $count . " data absensi tanggal 26 Des telah dibuat.";
-        } catch (\Exception $e) {
-            return "Error: " . $e->getMessage();
+        if ($izin->isEmpty()) {
+            return "Tidak ada data izin telat yang disetujui.";
         }
-    });
+
+        $count = 0;
+        foreach($izin as $i) {
+            // Ambil jadwal user jika ada untuk snapshot
+            $user = \App\Models\User::find($i->user_id);
+            
+            \App\Models\Attendance::updateOrCreate(
+                [
+                    'user_id' => $i->user_id, 
+                    'check_in_time' => $i->start_date->format('Y-m-d') . ' ' . ($i->start_time ?? '08:00:00')
+                ],
+                [
+                    'branch_id' => $user->branch_id,
+                    'presence_status' => 'Masuk',
+                    'status' => 'verified',
+                    'is_late_checkin' => true,
+                    'notes' => 'Sinkronisasi Izin Telat (System Fix)',
+                    'attendance_type' => 'self', // Gunakan 'self' sesuai model
+                    'verified_by_user_id' => $i->approved_by,
+                    // Tambahkan snapshot jadwal agar tidak error null
+                    'scheduled_check_in' => $user->check_in_start ?? '08:00:00',
+                    'scheduled_check_out' => $user->check_out_start ?? '17:00:00'
+                ]
+            );
+            $count++;
+        }
+        return "Berhasil! " . $count . " data absensi diperbarui.";
+    } catch (\Exception $e) {
+        return "Gagal! Error: " . $e->getMessage();
+    }
+});
 
     Route::fallback(function () {
         return response()->view('errors.404', [], 404);

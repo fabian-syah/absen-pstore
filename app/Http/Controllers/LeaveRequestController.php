@@ -155,7 +155,7 @@ class LeaveRequestController extends Controller
                     'presence_status' => 'Masuk', // Status hadir
                     'status' => 'verified',       // Otomatis terverifikasi karena izin di-acc audit
                     'notes' => 'Izin Telat: ' . $leaveRequest->reason,
-                    'attendance_type' => 'selfie', // Atau sesuaikan kategori Anda
+                    'attendance_type' => 'self', // Atau sesuaikan kategori Anda
                     'is_late_checkin' => true,
                     'verified_by_user_id' => Auth::id() // Di-verify oleh audit yang nge-acc
                 ]);
