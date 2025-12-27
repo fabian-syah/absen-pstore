@@ -474,12 +474,11 @@ Route::middleware(['auth', 'active.user'])->group(function () {
                 ->get();
 
         if ($izin->isEmpty()) {
-            return "Tidak ada data izin telat yang disetujui.";
+            return "Tidak ada data izin telat.";
         }
 
         $count = 0;
         foreach($izin as $i) {
-            // Ambil jadwal user jika ada untuk snapshot
             $user = \App\Models\User::find($i->user_id);
             
             \App\Models\Attendance::updateOrCreate(
@@ -493,16 +492,17 @@ Route::middleware(['auth', 'active.user'])->group(function () {
                     'status' => 'verified',
                     'is_late_checkin' => true,
                     'notes' => 'Sinkronisasi Izin Telat (System Fix)',
-                    'attendance_type' => 'self', // Gunakan 'self' sesuai model
+                    'attendance_type' => 'self', 
                     'verified_by_user_id' => $i->approved_by,
-                    // Tambahkan snapshot jadwal agar tidak error null
                     'scheduled_check_in' => $user->check_in_start ?? '08:00:00',
-                    'scheduled_check_out' => $user->check_out_start ?? '17:00:00'
+                    'scheduled_check_out' => $user->check_out_start ?? '17:00:00',
+                    // TAMBAHKAN BARIS INI UNTUK MEMUNCULKAN FOTO
+                    'photo_path' => $i->file_proof 
                 ]
             );
             $count++;
         }
-        return "Berhasil! " . $count . " data absensi diperbarui.";
+        return "Berhasil memperbarui " . $count . " data beserta foto.";
     } catch (\Exception $e) {
         return "Gagal! Error: " . $e->getMessage();
     }
