@@ -276,7 +276,7 @@ class AttendanceHistoryController extends Controller
      */
     public function updateByAudit(Request $request, $id)
     {
-        if (Auth::user()->role !== 'audit') {
+        if (!in_array(Auth::user()->role, ['audit', 'admin'])) {
             abort(403, 'Akses Ditolak.');
         }
 
