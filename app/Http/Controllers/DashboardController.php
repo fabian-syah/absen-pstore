@@ -120,21 +120,26 @@ class DashboardController extends Controller
         // Logic Penentuan Status Dashboard
         $data['myAttendanceToday'] = null;
         $data['justFinishedOvertime'] = false;
-        $data['isStillWorkingOvertime'] = false; 
+        $data['isStillWorkingOvertime'] = false; // Flag Baru untuk Lembur Aktif
         $data['overtimeDuration'] = null;
 
         if ($activeSession) {
             $checkInDate = $activeSession->check_in_time->format('Y-m-d');
+
+            // Jika tanggal Check In BUKAN hari ini => Sedang Lembur Lintas Hari
             if ($checkInDate !== $todayInBranch) {
                 $data['isStillWorkingOvertime'] = true;
-                $data['myAttendanceToday'] = $activeSession; 
-                $data['overtimeDuration'] = $activeSession->check_in_time->diff($nowInBranch); 
+                $data['myAttendanceToday'] = $activeSession; // Tetap kirim data sesi
+                $data['overtimeDuration'] = $activeSession->check_in_time->diff($nowInBranch); // Hitung durasi
             } else {
+                // Masuk Hari Ini (Normal)
                 $data['myAttendanceToday'] = $activeSession;
             }
         } elseif ($finishedSessionToday) {
+            // Sudah pulang hari ini
             $data['myAttendanceToday'] = $finishedSessionToday;
         } elseif ($lastOvertimeSession) {
+            // Baru saja selesai lembur lintas hari (Pulang pagi ini)
             $data['justFinishedOvertime'] = true;
             $data['lastOvertimeSession'] = $lastOvertimeSession;
         }
@@ -145,27 +150,25 @@ class DashboardController extends Controller
         $personalStats = $this->getUserAttendanceStats($user->id, $branch_id);
 
         // =========================================================================
-        // 5. DATA UNTUK WIDGET & LEADERBOARD (FIXED LOGIC)
+        // 5. DATA UNTUK WIDGET & LEADERBOARD
         // =========================================================================
 
-        // --- LEADERBOARD ABSENSI ---
+        // --- LEADERBOARD ABSENSI (KECUALI SECURITY) ---
         if ($user->role != 'security') {
-            /** * PERBAIKAN: 
-             * 1. Hapus whereNotNull('check_out_time') agar user yang lupa absen pulang tapi dikonfirmasi audit tetap muncul.
-             * 2. Gunakan COALESCE pada total_work_seconds agar null dianggap 0 dan tidak merusak sorting.
-             * 3. Filter status harus verified atau hadir.
-             */
             $data['leaderboard'] = Attendance::select(
                 'user_id',
                 DB::raw('count(*) as total_attendance'),
                 DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
-                DB::raw('SUM(COALESCE(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time), 0)) as total_work_seconds')
+                DB::raw('SUM(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time)) as total_work_seconds')
             )
                 ->whereMonth('check_in_time', $nowInBranch->month)
                 ->whereYear('check_in_time', $nowInBranch->year)
+                ->whereNotNull('check_out_time')
                 ->where('status', 'verified')
-                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar', 'Telat', 'Izin Telat'])
+                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])
+                ->where('presence_status', '!=', 'Alpha')
                 ->whereTime('check_in_time', '!=', '00:00:00')
+                ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0')
                 ->whereHas('user', function ($q) use ($user, $allBranchIds) {
                     $q->where('is_active', true)
                         ->whereNotIn('role', ['admin', 'security']);
@@ -224,7 +227,9 @@ class DashboardController extends Controller
         $userQuery = User::query();
 
         if ($user->role == 'admin') {
-            if ($branch_id != null) {
+            if ($branch_id == null) {
+                // Super Admin
+            } else {
                 $attendanceQuery->where('branch_id', $branch_id);
                 $userQuery->where('branch_id', $branch_id);
             }
@@ -256,23 +261,29 @@ class DashboardController extends Controller
         if (!isset($data['topScanners'])) $data['topScanners'] = [];
 
         // =========================================================================
-        // 7. ULANG TAHUN LOGIC
+        // 7. [BARU] LOGIKA ULANG TAHUN (BIRTHDAY COUNTDOWN)
         // =========================================================================
         $userBirthDate = $user->birth_date ? Carbon::parse($user->birth_date) : null;
         $birthdayData = null;
 
         if ($userBirthDate) {
+            // Buat tanggal ultah tahun ini sesuai timezone cabang
             $nextBirthday = Carbon::createFromDate($nowInBranch->year, $userBirthDate->month, $userBirthDate->day, $userTimezone)->startOfDay();
+
+            // Jika ultah tahun ini sudah lewat (kemarin dst), set ke tahun depan
             if ($nextBirthday->isPast() && !$nextBirthday->isSameDay($nowInBranch->startOfDay())) {
                 $nextBirthday->addYear();
             }
+
             $diffInDays = $nowInBranch->startOfDay()->diffInDays($nextBirthday, false);
             $isToday = $nextBirthday->isSameDay($nowInBranch->startOfDay());
+
+            // Tampilkan HANYA jika H-30 atau HARI INI
             if ($diffInDays <= 30) {
                 $birthdayData = [
                     'is_today' => $isToday,
                     'days_left' => $diffInDays,
-                    'date' => $nextBirthday->format('Y-m-d'),
+                    'date' => $nextBirthday->format('Y-m-d'), // Untuk JS Countdown
                     'age_to_be' => $nextBirthday->year - $userBirthDate->year
                 ];
             }
@@ -281,6 +292,10 @@ class DashboardController extends Controller
 
         return view('dashboard', $data);
     }
+
+    // =========================================================================
+    // PRIVATE HELPER FUNCTIONS
+    // =========================================================================
 
     private function getTodayLeaveRequest($user_id, $todayDate, $status = 'approved')
     {
@@ -418,6 +433,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $branch_id = $user->branch_id;
+
         $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
 
@@ -462,7 +478,12 @@ class DashboardController extends Controller
     public function confirmOvertime($id)
     {
         $attendance = Attendance::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-        $attendance->update(['is_extended_shift' => true]);
+
+        // Update flag menjadi true
+        $attendance->update([
+            'is_extended_shift' => true
+        ]);
+
         return response()->json(['status' => 'success', 'message' => 'Status lembur dikonfirmasi.']);
     }
 }
