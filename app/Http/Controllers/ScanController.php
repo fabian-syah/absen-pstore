@@ -39,11 +39,11 @@ class ScanController extends Controller
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $todayLocal = Carbon::now($branchTimezone)->startOfDay();
 
-        $attendanceSession = Attendance::where('user_id', $user->id)
-            ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', now()->subHours(32))
-            ->latest('check_in_time')
-            ->first();
+       $attendanceSession = Attendance::where('user_id', $user->id)
+    ->whereNull('check_out_time')
+    ->where('check_in_time', '>=', now()->subHours(32)) // Konsisten 32 jam
+    ->latest('check_in_time')
+    ->first();
 
         if (!$attendanceSession) {
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
@@ -199,11 +199,11 @@ class ScanController extends Controller
             $msg = $isLate ? "Absen MASUK (TERLAMBAT)" : "Absen MASUK Berhasil";
         } elseif ($request->type == 'pulang') {
 
-            $attendance = Attendance::where('user_id', $user->id)
-                ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', now()->subHours(32))
-                ->latest('check_in_time')
-                ->first();
+           $attendance = Attendance::where('user_id', $user->id)
+    ->whereNull('check_out_time')
+    ->where('check_in_time', '>=', now()->subHours(32)) // Konsisten 32 jam
+    ->latest('check_in_time')
+    ->first();
 
             if (!$attendance) {
                 return response()->json(['status' => 'error', 'message' => 'Sesi tidak ditemukan atau expired.'], 404);

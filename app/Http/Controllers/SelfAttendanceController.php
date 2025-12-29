@@ -47,11 +47,12 @@ class SelfAttendanceController extends Controller
         // 2. CEK SESI AKTIF (Termasuk Lembur Lintas Hari)
         // Cari sesi yang belum checkout dan check_in dalam batas wajar (32 jam terakhir)
         $activeSession = Attendance::where('user_id', $user->id)
-            ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', now()->subHours(32)) 
-            ->where('status', '!=', 'alpha')
-            ->latest('check_in_time')
-            ->first();
+    ->whereNull('check_out_time')
+    // UBAH dari subHours(24) menjadi 32
+    ->where('check_in_time', '>=', now()->subHours(32)) 
+    ->where('status', '!=', 'alpha')
+    ->latest('check_in_time')
+    ->first();
 
         if ($activeSession) {
             // Jika ada sesi aktif -> Mode PULANG (Otomatis Lembur jika lewat hari)
@@ -251,9 +252,10 @@ class SelfAttendanceController extends Controller
         // =====================================================================
         else {
             $checkAgain = Attendance::where('user_id', $user->id)
-                ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', now()->subHours(32))
-                ->first();
+    ->whereNull('check_out_time')
+    // Pastikan pengecekan masuk baru juga konsisten 32 jam
+    ->where('check_in_time', '>=', now()->subHours(32))
+    ->first();
             
             if ($checkAgain) {
                  return redirect()->route('dashboard')->with('error', 'Anda masih memiliki sesi aktif. Mohon refresh halaman.');
