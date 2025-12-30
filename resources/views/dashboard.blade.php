@@ -527,6 +527,54 @@
 
     </div>
 
+    {{-- ======================================================================= --}}
+    {{-- [BARU] BAGIAN GALLERY: LEMBARAN CERITA BULAN INI (NOSTALGIA)            --}}
+    {{-- ======================================================================= --}}
+    <div class="row mt-4 mb-5 animate-enter" style="animation-delay: 0.5s">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between mb-3 px-2">
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark" style="font-family: 'Playfair Display', serif;">
+                        <i class="mdi mdi-camera-iris text-danger me-2"></i>Lembaran Cerita {{ $currentMonthName }}
+                    </h4>
+                    <p class="text-muted small mb-0">Mengenang setiap tetes keringat dan senyummu bulan ini.</p>
+                </div>
+            </div>
+            <div class="gallery-scroll-container">
+                <div class="d-flex gap-3 pb-3">
+                    @forelse ($attendanceGallery as $item)
+                        {{-- Foto Masuk --}}
+                        @if ($item->photo_path)
+                            <div class="gallery-item-wrapper">
+                                <div class="gallery-card shadow-sm" onclick="previewGalleryImage('{{ Storage::url($item->photo_path) }}', 'Momen Masuk Kerja', '{{ $item->check_in_time->translatedFormat('l, d F Y - H:i') }}')">
+                                    <img src="{{ Storage::url($item->photo_path) }}" class="gallery-img">
+                                    <div class="gallery-badge bg-success">MASUK</div>
+                                    <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Foto Pulang --}}
+                        @if ($item->photo_out_path)
+                            <div class="gallery-item-wrapper">
+                                <div class="gallery-card shadow-sm" onclick="previewGalleryImage('{{ Storage::url($item->photo_out_path) }}', 'Momen Pulang Kerja', '{{ $item->check_out_time ? $item->check_out_time->translatedFormat('l, d F Y - H:i') : '-' }}')">
+                                    <img src="{{ Storage::url($item->photo_out_path) }}" class="gallery-img">
+                                    <div class="gallery-badge bg-danger">PULANG</div>
+                                    <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
+                                </div>
+                            </div>
+                        @endif
+                    @empty
+                        <div class="col-12 text-center py-5 bg-light rounded-3 border-dashed w-100" style="min-width: 300px;">
+                            <i class="mdi mdi-image-filter-hdr display-4 text-muted opacity-25"></i>
+                            <p class="text-muted mt-2">Belum ada potret cerita untuk bulan ini...</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     {{-- ======================================================================= --}}
     {{-- BAGIAN 3: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI)                  --}}
@@ -1031,67 +1079,6 @@
         </div>
     </div>
 
-    {{-- ======================================================================= --}}
-    {{-- [BARU] BAGIAN GALLERY: LEMBARAN CERITA BULAN INI (NOSTALGIA)            --}}
-    {{-- ======================================================================= --}}
-    <div class="row mt-4 mb-5 animate-enter" style="animation-delay: 0.5s">
-        <div class="col-12">
-            <div class="d-flex align-items-center justify-content-between mb-3 px-2">
-                <div class="nostalgia-header">
-                    <h4 class="fw-bold mb-0 text-dark melancholy-title">
-                        <i class="mdi mdi-camera-iris text-danger me-2 shadow-icon"></i>Lembaran Cerita {{ $currentMonthName }}
-                    </h4>
-                    <p class="text-muted small mb-0 font-italic">"Sebab setiap lelahmu adalah bagian dari sejarah yang indah..."</p>
-                </div>
-            </div>
-            <div class="gallery-scroll-container">
-                <div class="d-flex gap-3 pb-4">
-                    @forelse ($attendanceGallery as $item)
-                        {{-- Foto Masuk --}}
-                        @if ($item->photo_path)
-                            <div class="gallery-item-wrapper">
-                                <div class="gallery-card shadow-lg" onclick="previewGalleryImage('{{ Storage::url($item->photo_path) }}', 'Awal Sebuah Perjuangan', '{{ $item->check_in_time->translatedFormat('l, d F Y - H:i') }}')">
-                                    <img src="{{ Storage::url($item->photo_path) }}" class="gallery-img">
-                                    <div class="gallery-overlay"></div>
-                                    <div class="gallery-badge bg-soft-green">MASUK</div>
-                                    <div class="gallery-date-info">
-                                        <span class="day">{{ $item->check_in_time->format('d') }}</span>
-                                        <span class="month">{{ $item->check_in_time->format('M') }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        {{-- Foto Pulang --}}
-                        @if ($item->photo_out_path)
-                            <div class="gallery-item-wrapper">
-                                <div class="gallery-card shadow-lg" onclick="previewGalleryImage('{{ Storage::url($item->photo_out_path) }}', 'Akhir Yang Berharga', '{{ $item->check_out_time ? $item->check_out_time->translatedFormat('l, d F Y - H:i') : '-' }}')">
-                                    <img src="{{ Storage::url($item->photo_out_path) }}" class="gallery-img">
-                                    <div class="gallery-overlay"></div>
-                                    <div class="gallery-badge bg-soft-red">PULANG</div>
-                                    <div class="gallery-date-info">
-                                        <span class="day">{{ $item->check_in_time->format('d') }}</span>
-                                        <span class="month">{{ $item->check_in_time->format('M') }}</span>
-                                    </div>
-                                    @if($item->check_out_time)
-                                    <div class="work-duration-pill">
-                                        <i class="mdi mdi-timer-outline me-1"></i>{{ $item->check_in_time->diff($item->check_out_time)->format('%h Jam') }}
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @endif
-                    @empty
-                        <div class="col-12 text-center py-5 bg-light rounded-4 border-dashed w-100" style="min-width: 300px; opacity: 0.6;">
-                            <i class="mdi mdi-image-filter-hdr display-4 text-muted mb-2"></i>
-                            <p class="text-muted font-italic">Belum ada fragmen kenangan tersimpan di bulan ini...</p>
-                        </div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-    </div>
-
     {{-- CHART SECTION --}}
     <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
         <div class="col-12">
@@ -1157,18 +1144,16 @@
         </div>
     </div>
 
-    {{-- [BARU] MODAL PREVIEW GALLERY (EMOTIONAL STYLE) --}}
+    {{-- [BARU] MODAL PREVIEW GALLERY --}}
     <div class="modal fade" id="galleryPreviewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark border-0 overflow-hidden shadow-2xl" style="border-radius: 25px;">
+            <div class="modal-content bg-dark border-0 overflow-hidden shadow-lg" style="border-radius: 20px;">
                 <div class="modal-body p-0 position-relative">
-                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-4" style="z-index: 100;" data-bs-dismiss="modal"></button>
-                    <div class="preview-img-container">
-                        <img src="" id="galleryPreviewImg" class="img-fluid w-100 h-100" style="object-fit: cover; min-height: 450px;">
-                    </div>
-                    <div class="p-4 text-white text-center" style="background: linear-gradient(transparent, rgba(0,0,0,0.95)); position: absolute; bottom: 0; left: 0; right: 0;">
-                        <h5 id="galleryPreviewTitle" class="fw-bold mb-2 melancholy-font"></h5>
-                        <p id="galleryPreviewDate" class="small opacity-80 mb-0 font-monospace"></p>
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" style="z-index: 10;" data-bs-dismiss="modal"></button>
+                    <img src="" id="galleryPreviewImg" class="img-fluid w-100" style="min-height: 300px; object-fit: cover;">
+                    <div class="p-4 text-white" style="background: linear-gradient(transparent, rgba(0,0,0,0.9)); position: absolute; bottom: 0; left: 0; right: 0;">
+                        <h5 id="galleryPreviewTitle" class="fw-bold mb-1"></h5>
+                        <p id="galleryPreviewDate" class="small opacity-75 mb-0"></p>
                     </div>
                 </div>
             </div>
@@ -1180,85 +1165,45 @@
 @push('styles')
     <style>
         /* === [BARU] NOSTALGIA GALLERY STYLES === */
-        .melancholy-title {
-            font-family: 'Playfair Display', serif;
-            animation: breathing 4s ease-in-out infinite;
-        }
-
-        @keyframes breathing {
-            0%, 100% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.02); opacity: 1; }
-        }
-
         .gallery-scroll-container {
             display: flex;
             overflow-x: auto;
-            padding: 10px 5px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
+            padding: 5px;
+            scrollbar-width: none; /* Firefox */
         }
-        .gallery-scroll-container::-webkit-scrollbar { display: none; }
+        .gallery-scroll-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 
         .gallery-card {
-            width: 155px;
-            height: 235px;
+            width: 140px;
+            height: 210px;
             position: relative;
-            border-radius: 22px;
+            border-radius: 18px;
             overflow: hidden;
-            background: #111;
+            background: #000;
             cursor: pointer;
-            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
-
         .gallery-img {
             width: 100%; height: 100%; object-fit: cover;
-            opacity: 0.55; 
-            filter: grayscale(100%) contrast(1.1) blur(1px); /* Efek Sedih/Lama */
-            transition: all 0.7s ease;
+            opacity: 0.7; filter: grayscale(80%) sepia(30%); /* Efek Sedih/Nostalgia */
+            transition: all 0.6s ease;
         }
-
-        .gallery-card:hover {
-            transform: translateY(-8px) scale(1.03);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-        }
-
         .gallery-card:hover .gallery-img {
-            opacity: 1; 
-            filter: grayscale(0%) contrast(1) blur(0px); /* Kembali Hidup saat disentuh */
+            opacity: 1; filter: grayscale(0%) sepia(0%);
+            transform: scale(1.1);
         }
-
-        .gallery-overlay {
-            position: absolute; inset: 0;
-            background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6));
-        }
-
         .gallery-badge {
-            position: absolute; top: 15px; left: 15px;
-            font-size: 7px; font-weight: 800; padding: 4px 10px;
-            border-radius: 6px; color: white; letter-spacing: 1.5px;
-            z-index: 10;
+            position: absolute; top: 12px; left: 12px;
+            font-size: 8px; font-weight: 800; padding: 4px 10px;
+            border-radius: 6px; color: white;
+            text-transform: uppercase;
         }
-
-        .bg-soft-green { background: rgba(16, 185, 129, 0.7); backdrop-filter: blur(4px); }
-        .bg-soft-red { background: rgba(239, 68, 68, 0.7); backdrop-filter: blur(4px); }
-
-        .gallery-date-info {
-            position: absolute; bottom: 15px; left: 15px;
-            color: white; z-index: 10; display: flex; flex-direction: column;
+        .gallery-date {
+            position: absolute; bottom: 12px; right: 12px;
+            color: white; font-size: 11px; font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
-        .gallery-date-info .day { font-size: 22px; font-weight: 900; line-height: 1; }
-        .gallery-date-info .month { font-size: 10px; text-transform: uppercase; opacity: 0.8; letter-spacing: 1px; }
-
-        .work-duration-pill {
-            position: absolute; bottom: 15px; right: 15px;
-            background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
-            color: white; font-size: 9px; padding: 3px 8px;
-            border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
-            z-index: 10;
-        }
-
-        .border-dashed { border: 2px dashed #ddd; background: transparent !important; }
+        .border-dashed { border: 2px dashed #dee2e6; }
 
         /* === BIRTHDAY CARD STYLES === */
         .birthday-card {
@@ -2220,468 +2165,382 @@
             }
         }
     </style>
-
-    <style>
-        /* === [BARU] NOSTALGIA GALLERY STYLES === */
-        .melancholy-title {
-            font-family: 'Playfair Display', serif;
-            animation: breathing 4s ease-in-out infinite;
-        }
-
-        @keyframes breathing {
-            0%, 100% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.02); opacity: 1; }
-        }
-
-        .gallery-scroll-container {
-            display: flex;
-            overflow-x: auto;
-            padding: 10px 5px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        .gallery-scroll-container::-webkit-scrollbar { display: none; }
-
-        .gallery-card {
-            width: 155px;
-            height: 235px;
-            position: relative;
-            border-radius: 22px;
-            overflow: hidden;
-            background: #111;
-            cursor: pointer;
-            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .gallery-img {
-            width: 100%; height: 100%; object-fit: cover;
-            opacity: 0.55; 
-            filter: grayscale(100%) contrast(1.1) blur(1px); /* Efek Sedih/Lama */
-            transition: all 0.7s ease;
-        }
-
-        .gallery-card:hover {
-            transform: translateY(-8px) scale(1.03);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-        }
-
-        .gallery-card:hover .gallery-img {
-            opacity: 1; 
-            filter: grayscale(0%) contrast(1) blur(0px); /* Kembali Hidup saat disentuh */
-        }
-
-        .gallery-overlay {
-            position: absolute; inset: 0;
-            background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6));
-        }
-
-        .gallery-badge {
-            position: absolute; top: 15px; left: 15px;
-            font-size: 7px; font-weight: 800; padding: 4px 10px;
-            border-radius: 6px; color: white; letter-spacing: 1.5px;
-            z-index: 10;
-        }
-
-        .bg-soft-green { background: rgba(16, 185, 129, 0.7); backdrop-filter: blur(4px); }
-        .bg-soft-red { background: rgba(239, 68, 68, 0.7); backdrop-filter: blur(4px); }
-
-        .gallery-date-info {
-            position: absolute; bottom: 15px; left: 15px;
-            color: white; z-index: 10; display: flex; flex-direction: column;
-        }
-        .gallery-date-info .day { font-size: 22px; font-weight: 900; line-height: 1; }
-        .gallery-date-info .month { font-size: 10px; text-transform: uppercase; opacity: 0.8; letter-spacing: 1px; }
-
-        .work-duration-pill {
-            position: absolute; bottom: 15px; right: 15px;
-            background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
-            color: white; font-size: 9px; padding: 3px 8px;
-            border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
-            z-index: 10;
-        }
-
-        .border-dashed { border: 2px dashed #ddd; background: transparent !important; }
-    </style>
 @endpush
 
 @push('scripts')
-    {{-- QRCode Lib & Chart --}}
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {{-- QRCode Lib & Chart --}}
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>
-        {{-- [BARU] SCRIPT PREVIEW GALLERY --}}
-        function previewGalleryImage(src, title, date) {
-            const modal = new bootstrap.Modal(document.getElementById('galleryPreviewModal'));
-            const img = document.getElementById('galleryPreviewImg');
-            img.style.opacity = '0';
-            img.src = src;
-            img.onload = function() { img.style.opacity = '1'; }; // Smooth load
-            document.getElementById('galleryPreviewTitle').innerText = title;
-            document.getElementById('galleryPreviewDate').innerText = date;
-            modal.show();
-        }
+    <script>
+        {{-- [BARU] SCRIPT PREVIEW GALLERY --}}
+        function previewGalleryImage(src, title, date) {
+            const modal = new bootstrap.Modal(document.getElementById('galleryPreviewModal'));
+            document.getElementById('galleryPreviewImg').src = src;
+            document.getElementById('galleryPreviewTitle').innerText = title;
+            document.getElementById('galleryPreviewDate').innerText = date;
+            modal.show();
+        }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
 
-            // --- [BARU] SLIDER LOGIC ---
-            const track = document.getElementById('slide-track');
-            const thumb = document.getElementById('slide-thumb');
-            const sliderView = document.getElementById('slider-view');
-            const cameraView = document.getElementById('camera-view');
-            const actionsContainer = document.getElementById('cross-day-actions'); // Container tombol2
+            // --- [BARU] SLIDER LOGIC ---
+            const track = document.getElementById('slide-track');
+            const thumb = document.getElementById('slide-thumb');
+            const sliderView = document.getElementById('slider-view');
+            const cameraView = document.getElementById('camera-view');
+            const actionsContainer = document.getElementById('cross-day-actions'); // Container tombol2
 
-            if (track && thumb) {
-                let isDragging = false;
-                let startX;
-                let trackWidth = track.clientWidth;
-                let thumbWidth = thumb.clientWidth;
-                let maxMove = trackWidth - thumbWidth - 8; // 8px padding adjustment
+            if (track && thumb) {
+                let isDragging = false;
+                let startX;
+                let trackWidth = track.clientWidth;
+                let thumbWidth = thumb.clientWidth;
+                let maxMove = trackWidth - thumbWidth - 8; // 8px padding adjustment
 
-                // Init size update
-                window.addEventListener('resize', () => {
-                    trackWidth = track.clientWidth;
-                    maxMove = trackWidth - thumbWidth - 8;
-                });
+                // Init size update
+                window.addEventListener('resize', () => {
+                    trackWidth = track.clientWidth;
+                    maxMove = trackWidth - thumbWidth - 8;
+                });
 
-                // Start
-                const startDrag = (e) => {
-                    isDragging = true;
-                    startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
-                    thumb.style.transition = 'none';
-                };
+                // Start
+                const startDrag = (e) => {
+                    isDragging = true;
+                    startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
+                    thumb.style.transition = 'none';
+                };
 
-                // Move
-                const drag = (e) => {
-                    if (!isDragging) return;
+                // Move
+                const drag = (e) => {
+                    if (!isDragging) return;
 
-                    const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
-                    const deltaX = clientX - startX;
+                    const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
+                    const deltaX = clientX - startX;
 
-                    // Limit 0 to maxMove
-                    let moveX = Math.max(0, Math.min(deltaX, maxMove));
-                    thumb.style.transform = `translateX(${moveX}px)`;
+                    // Limit 0 to maxMove
+                    let moveX = Math.max(0, Math.min(deltaX, maxMove));
+                    thumb.style.transform = `translateX(${moveX}px)`;
 
-                    // Fade text based on percentage
-                    const percentage = moveX / maxMove;
-                    const text = track.querySelector('span');
-                    if (text) text.style.opacity = 1 - percentage;
-                };
+                    // Fade text based on percentage
+                    const percentage = moveX / maxMove;
+                    const text = track.querySelector('span');
+                    if (text) text.style.opacity = 1 - percentage;
+                };
 
-                // End
-                const endDrag = () => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    thumb.style.transition = 'transform 0.2s ease-out';
+                // End
+                const endDrag = () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    thumb.style.transition = 'transform 0.2s ease-out';
 
-                    const style = window.getComputedStyle(thumb);
-                    const matrix = new DOMMatrix(style.transform);
-                    const currentTranslateX = matrix.m41;
+                    const style = window.getComputedStyle(thumb);
+                    const matrix = new DOMMatrix(style.transform);
+                    const currentTranslateX = matrix.m41;
 
-                    if (currentTranslateX > (maxMove * 0.8)) {
-                        // SUCCESS
-                        thumb.style.transform = `translateX(${maxMove}px)`;
-                        finishSlide();
-                    } else {
-                        // RESET
-                        thumb.style.transform = `translateX(0px)`;
-                        const text = track.querySelector('span');
-                        if (text) text.style.opacity = 0.75;
-                    }
-                };
+                    if (currentTranslateX > (maxMove * 0.8)) {
+                        // SUCCESS
+                        thumb.style.transform = `translateX(${maxMove}px)`;
+                        finishSlide();
+                    } else {
+                        // RESET
+                        thumb.style.transform = `translateX(0px)`;
+                        const text = track.querySelector('span');
+                        if (text) text.style.opacity = 0.75;
+                    }
+                };
 
-                // Add Listeners
-                thumb.addEventListener('mousedown', startDrag);
-                thumb.addEventListener('touchstart', startDrag);
+                // Add Listeners
+                thumb.addEventListener('mousedown', startDrag);
+                thumb.addEventListener('touchstart', startDrag);
 
-                document.addEventListener('mousemove', drag);
-                document.addEventListener('touchmove', drag);
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', drag);
 
-                document.addEventListener('mouseup', endDrag);
-                document.addEventListener('touchend', endDrag);
+                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('touchend', endDrag);
 
-                function finishSlide() {
-                    // 1. UI Changes (Visual Feedback)
-                    thumb.innerHTML = '<i class="mdi mdi-loading mdi-spin text-success fs-4"></i>'; // Loading icon
-                    track.style.backgroundColor = '#d1fae5';
+                function finishSlide() {
+                    // 1. UI Changes (Visual Feedback)
+                    thumb.innerHTML = '<i class="mdi mdi-loading mdi-spin text-success fs-4"></i>'; // Loading icon
+                    track.style.backgroundColor = '#d1fae5';
 
-                    // 2. AJAX Request to Confirm Overtime
-                    const attendanceId = "{{ $myAttendanceToday->id ?? 0 }}";
+                    // 2. AJAX Request to Confirm Overtime
+                    const attendanceId = "{{ $myAttendanceToday->id ?? 0 }}";
 
-                    fetch(`/attendance/${attendanceId}/confirm-overtime`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            // Success
-                            thumb.innerHTML = '<i class="mdi mdi-check text-success fs-4"></i>';
+                    fetch(`/attendance/${attendanceId}/confirm-overtime`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // Success
+                            thumb.innerHTML = '<i class="mdi mdi-check text-success fs-4"></i>';
 
-                            setTimeout(() => {
-                                // Sembunyikan wrapper slider & tombol skip
-                                const confirmationWrapper = document.getElementById(
-                                    'confirmation-wrapper');
-                                if (confirmationWrapper) confirmationWrapper.classList.add('d-none');
+                            setTimeout(() => {
+                                // Sembunyikan wrapper slider & tombol skip
+                                const confirmationWrapper = document.getElementById(
+                                    'confirmation-wrapper');
+                                if (confirmationWrapper) confirmationWrapper.classList.add('d-none');
 
-                                // Munculkan kamera
-                                if (cameraView) cameraView.classList.remove('d-none');
-                            }, 500);
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Gagal mengupdate status lembur. Silahkan refresh halaman.');
-                        });
-                }
-            }
+                                // Munculkan kamera
+                                if (cameraView) cameraView.classList.remove('d-none');
+                            }, 500);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Gagal mengupdate status lembur. Silahkan refresh halaman.');
+                        });
+                }
+            }
 
-            // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
-            function updateClock() {
-                // Gunakan Timezone yang dikirim dari Controller
-                const timeZone = "{{ $current_timezone }}";
+            // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
+            function updateClock() {
+                // Gunakan Timezone yang dikirim dari Controller
+                const timeZone = "{{ $current_timezone }}";
 
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('en-US', {
-                    timeZone: timeZone, // Kunci utama: Pakai timezone cabang
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', {
+                    timeZone: timeZone, // Kunci utama: Pakai timezone cabang
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
 
-                const clockElement = document.getElementById('realtime-clock');
-                if (clockElement) clockElement.innerText = timeString;
+                const clockElement = document.getElementById('realtime-clock');
+                if (clockElement) clockElement.innerText = timeString;
 
-                // Greeting logic (Sesuai jam lokal cabang)
-                // Kita perlu ambil jam (0-23) dari string waktu lokal
-                const localHour = parseInt(timeString.split(':')[0]);
-                const greetingElement = document.getElementById('greeting-text');
+                // Greeting logic (Sesuai jam lokal cabang)
+                // Kita perlu ambil jam (0-23) dari string waktu lokal
+                const localHour = parseInt(timeString.split(':')[0]);
+                const greetingElement = document.getElementById('greeting-text');
 
-                let greeting = 'Selamat Datang,';
-                if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
-                else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
-                else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
-                else greeting = 'Selamat Malam,';
+                let greeting = 'Selamat Datang,';
+                if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
+                else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
+                else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
+                else greeting = 'Selamat Malam,';
 
-                if (greetingElement) greetingElement.innerText = greeting;
-            }
+                if (greetingElement) greetingElement.innerText = greeting;
+            }
 
-            setInterval(updateClock, 1000);
-            updateClock(); // Run immediately
+            setInterval(updateClock, 1000);
+            updateClock(); // Run immediately
 
-            // 2. [BARU] COUNT UP ANIMATION (Angka naik dari 0)
-            const counters = document.querySelectorAll('.count-up');
-            counters.forEach(counter => {
-                const target = +counter.getAttribute('data-target');
-                const duration = 2000; // 2 detik
-                const increment = target / (duration / 16); // 60fps
+            // 2. [BARU] COUNT UP ANIMATION (Angka naik dari 0)
+            const counters = document.querySelectorAll('.count-up');
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const duration = 2000; // 2 detik
+                const increment = target / (duration / 16); // 60fps
 
-                let current = 0;
-                const updateCounter = () => {
-                    current += increment;
-                    if (current < target) {
-                        counter.innerText = Math.ceil(current);
-                        requestAnimationFrame(updateCounter);
-                    } else {
-                        counter.innerText = target;
-                    }
-                };
-                updateCounter();
-            });
+                let current = 0;
+                const updateCounter = () => {
+                    current += increment;
+                    if (current < target) {
+                        counter.innerText = Math.ceil(current);
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.innerText = target;
+                    }
+                };
+                updateCounter();
+            });
 
-            // --- [BARU] BIRTHDAY COUNTDOWN SCRIPT ---
-            @if (isset($birthdayData) && !$birthdayData['is_today'])
-                const targetDate = new Date("{{ $birthdayData['date'] }}T00:00:00");
+            // --- [BARU] BIRTHDAY COUNTDOWN SCRIPT ---
+            @if (isset($birthdayData) && !$birthdayData['is_today'])
+                const targetDate = new Date("{{ $birthdayData['date'] }}T00:00:00");
 
-                function updateCountdown() {
-                    const now = new Date();
-                    const diff = targetDate - now;
+                function updateCountdown() {
+                    const now = new Date();
+                    const diff = targetDate - now;
 
-                    if (diff <= 0) {
-                        // Jika waktu habis (masuk jam 00:00 ultah), reload biar tampilan berubah jadi HARI H
-                        location.reload();
-                        return;
-                    }
+                    if (diff <= 0) {
+                        // Jika waktu habis (masuk jam 00:00 ultah), reload biar tampilan berubah jadi HARI H
+                        location.reload();
+                        return;
+                    }
 
-                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  0                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-                    // Update DOM
-                    if (document.getElementById('cd-days')) document.getElementById('cd-days').innerText = days;
-                    if (document.getElementById('cd-hours')) document.getElementById('cd-hours').innerText = hours
-                        .toString().padStart(2, '0');
-                    if (document.getElementById('cd-minutes')) document.getElementById('cd-minutes').innerText =
-                        minutes.toString().padStart(2, '0');
-                    if (document.getElementById('cd-seconds')) document.getElementById('cd-seconds').innerText =
-                        seconds.toString().padStart(2, '0');
-                }
+                    // Update DOM
+                    if (document.getElementById('cd-days')) document.getElementById('cd-days').innerText = days;
+                    if (document.getElementById('cd-hours')) document.getElementById('cd-hours').innerText = hours
+                        .toString().padStart(2, '0');
+                    if (document.getElementById('cd-minutes')) document.getElementById('cd-minutes').innerText =
+                        minutes.toString().padStart(2, '0');
+                    if (document.getElementById('cd-seconds')) document.getElementById('cd-seconds').innerText =
+                        seconds.toString().padStart(2, '0');
+                }
 
-                setInterval(updateCountdown, 1000);
-                updateCountdown();
-            @endif
+                setInterval(updateCountdown, 1000);
+                updateCountdown();
+            @endif
 
-            // --- SCRIPT QR CODE ---
-            @if (Auth::user()->qr_code_value)
-                const qrValue = "{{ Auth::user()->qr_code_value }}";
+            // --- SCRIPT QR CODE ---
+            @if (Auth::user()->qr_code_value)
+                const qrValue = "{{ Auth::user()->qr_code_value }}";
 
-                new QRCode(document.getElementById("dashboard-qrcode"), {
-                    text: qrValue,
-                    width: 64,
-                    height: 64,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
+                new QRCode(document.getElementById("dashboard-qrcode"), {
+                    text: qrValue,
+                    width: 64,
+                    height: 64,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
 
-                var qrModal = document.getElementById('qrModal');
-                qrModal.addEventListener('show.bs.modal', function(event) {
-                    var qrContainer = document.getElementById('qrcode-modal-display');
-                    qrContainer.innerHTML = '';
-                    new QRCode(qrContainer, {
-                        text: qrValue,
-                        width: 256,
-                        height: 256,
-                    });
-                });
-            @endif
+                var qrModal = document.getElementById('qrModal');
+                qrModal.addEventListener('show.bs.modal', function(event) {
+                    var qrContainer = document.getElementById('qrcode-modal-display');
+                    qrContainer.innerHTML = '';
+                    new QRCode(qrContainer, {
+                        text: qrValue,
+                        width: 256,
+                        height: 256,
+                    });
+                });
+            @endif
 
-            // --- SCRIPT CHART ---
-            const ctx = document.getElementById('attendancePieChart').getContext('2d');
-            Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+            // --- SCRIPT CHART ---
+            const ctx = document.getElementById('attendancePieChart').getContext('2d');
+            Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
 
-            @if (auth()->user()->role == 'admin')
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
-                        datasets: [{
-                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                {{ $stats['early'] }}, {{ $stats['pending'] }},
-                                {{ $stats['absent'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
-                                '#8c94a3'
-                            ],
-                            borderWidth: 0,
-                            hoverOffset: 10 // Efek hover keluar
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: {
-                            animateScale: true,
-                            animateRotate: true
-                        },
-                        plugins: {
-                            legend: {
-                                position: 'right',
-  0                                 labels: {
-                                    usePointStyle: true,
-                                    padding: 20
-                                }
-                            }
-                        },
-                        cutout: '75%'
-                    }
-                });
-            @elseif (auth()->user()->role == 'audit')
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Terverifikasi', 'Pending', 'Terlambat'],
-                        datasets: [{
-                            data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
-                                {{ $stats['late'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
-                            borderWidth: 0,
-                            hoverOffset: 10
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '70%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
-                    }
-                });
-            @elseif (auth()->user()->role == 'security')
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Scan Masuk', 'Scan Pulang'],
-                        datasets: [{
-                            data: [{{ $stats['check_in_scans'] }},
-                                {{ $stats['check_out_scans'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#0090e7'],
-                            borderWidth: 0,
-                            hoverOffset: 10
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '60%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
-                    }
-                });
-            @else
-                new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
-                        datasets: [{
-                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                {{ $stats['early'] }}, {{ $stats['pending'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
-                            borderWidth: 2,
-                            borderColor: '#ffffff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
-                    }
-                });
-            @endif
+            @if (auth()->user()->role == 'admin')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
+                        datasets: [{
+                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                {{ $stats['absent'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
+                                '#8c94a3'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 10 // Efek hover keluar
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            }
+                        },
+                        cutout: '75%'
+                    }
+                });
+            @elseif (auth()->user()->role == 'audit')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Terverifikasi', 'Pending', 'Terlambat'],
+                        datasets: [{
+                            data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
+                                {{ $stats['late'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @elseif (auth()->user()->role == 'security')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Scan Masuk', 'Scan Pulang'],
+                        datasets: [{
+                            data: [{{ $stats['check_in_scans'] }},
+                                {{ $stats['check_out_scans'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#0090e7'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @else
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
+                        datasets: [{
+                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                {{ $stats['early'] }}, {{ $stats['pending'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @endif
 
-            // --- MODAL FOTO PROFIL ---
-            var profilePhotoModal = document.getElementById('profilePhotoModal');
-            if (profilePhotoModal) {
-                profilePhotoModal.addEventListener('show.bs.modal', function(event) {
-                    var button = event.relatedTarget;
-                    var src = button.getAttribute('data-src');
-                    var modalImg = document.getElementById('profileModalImageSrc');
-                    modalImg.src = src;
-                });
-            }
-        });
+            // --- MODAL FOTO PROFIL ---
+            var profilePhotoModal = document.getElementById('profilePhotoModal');
+            if (profilePhotoModal) {
+                profilePhotoModal.addEventListener('show.bs.modal', function(event) {
+                    var button = event.relatedTarget;
+                    var src = button.getAttribute('data-src');
+                    var modalImg = document.getElementById('profileModalImageSrc');
+                    modalImg.src = src;
+                });
+            }
+        });
 
-        // Optional: Confetti Effect Function (Placeholder)
-        function confettiEffect() {
-            alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
-        }
-    </script>
+        // Optional: Confetti Effect Function (Placeholder)
+        function confettiEffect() {
+            alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
+        }
+    </script>
 @endpush
