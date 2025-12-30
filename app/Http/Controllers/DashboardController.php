@@ -86,10 +86,10 @@ class DashboardController extends Controller
 
         // A. Cek Sesi Aktif (Masuk tapi belum Pulang)
         $activeSession = Attendance::where('user_id', $user->id)
-    ->whereNull('check_out_time')
-    ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32))
-    ->latest('check_in_time')
-    ->first();
+            ->whereNull('check_out_time')
+            ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(32))
+            ->latest('check_in_time')
+            ->first();
 
         // B. Cek Sesi Selesai Hari Ini
         $finishedSessionToday = Attendance::where('user_id', $user->id)
@@ -216,6 +216,20 @@ class DashboardController extends Controller
 
             $data['topScanners'] = $scanners->sortByDesc('total_scans')->take(3)->values();
         }
+
+        // =========================================================================
+        // [BARU] LOGIKA GALLERY NOSTALGIA BULANAN
+        // =========================================================================
+        $data['attendanceGallery'] = Attendance::where('user_id', $user->id)
+            ->whereMonth('check_in_time', $nowInBranch->month)
+            ->whereYear('check_in_time', $nowInBranch->year)
+            ->where(function($q) {
+                $q->whereNotNull('photo_path')
+                  ->orWhereNotNull('photo_out_path');
+            })
+            ->orderBy('check_in_time', 'asc')
+            ->get();
+        $data['currentMonthName'] = $nowInBranch->translatedFormat('F Y');
 
         // =========================================================================
         // 6. DASHBOARD WIDGETS LOGIC
