@@ -150,6 +150,11 @@ class DashboardController extends Controller
 
         // --- LEADERBOARD ABSENSI ---
         if ($user->role != 'security') {
+            /** * PERBAIKAN: 
+             * 1. Hapus whereNotNull('check_out_time') agar user yang lupa absen pulang tapi dikonfirmasi audit tetap muncul.
+             * 2. Gunakan COALESCE pada total_work_seconds agar null dianggap 0 dan tidak merusak sorting.
+             * 3. Filter status harus verified atau hadir.
+             */
             $data['leaderboard'] = Attendance::select(
                 'user_id',
                 DB::raw('count(*) as total_attendance'),
