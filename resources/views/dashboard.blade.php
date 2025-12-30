@@ -527,6 +527,54 @@
 
     </div>
 
+    {{-- ======================================================================= --}}
+    {{-- [BARU] BAGIAN GALLERY: LEMBARAN CERITA BULAN INI (NOSTALGIA)            --}}
+    {{-- ======================================================================= --}}
+    <div class="row mt-4 mb-5 animate-enter" style="animation-delay: 0.5s">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between mb-3 px-2">
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark" style="font-family: 'Playfair Display', serif;">
+                        <i class="mdi mdi-camera-iris text-danger me-2"></i>Lembaran Cerita {{ $currentMonthName }}
+                    </h4>
+                    <p class="text-muted small mb-0">Mengenang setiap tetes keringat dan senyummu bulan ini.</p>
+                </div>
+            </div>
+            <div class="gallery-scroll-container">
+                <div class="d-flex gap-3 pb-3">
+                    @forelse ($attendanceGallery as $item)
+                        {{-- Foto Masuk --}}
+                        @if ($item->photo_path)
+                            <div class="gallery-item-wrapper">
+                                <div class="gallery-card shadow-sm" onclick="previewGalleryImage('{{ Storage::url($item->photo_path) }}', 'Momen Masuk Kerja', '{{ $item->check_in_time->translatedFormat('l, d F Y - H:i') }}')">
+                                    <img src="{{ Storage::url($item->photo_path) }}" class="gallery-img">
+                                    <div class="gallery-badge bg-success">MASUK</div>
+                                    <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Foto Pulang --}}
+                        @if ($item->photo_out_path)
+                            <div class="gallery-item-wrapper">
+                                <div class="gallery-card shadow-sm" onclick="previewGalleryImage('{{ Storage::url($item->photo_out_path) }}', 'Momen Pulang Kerja', '{{ $item->check_out_time ? $item->check_out_time->translatedFormat('l, d F Y - H:i') : '-' }}')">
+                                    <img src="{{ Storage::url($item->photo_out_path) }}" class="gallery-img">
+                                    <div class="gallery-badge bg-danger">PULANG</div>
+                                    <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
+                                </div>
+                            </div>
+                        @endif
+                    @empty
+                        <div class="col-12 text-center py-5 bg-light rounded-3 border-dashed w-100" style="min-width: 300px;">
+                            <i class="mdi mdi-image-filter-hdr display-4 text-muted opacity-25"></i>
+                            <p class="text-muted mt-2">Belum ada potret cerita untuk bulan ini...</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     {{-- ======================================================================= --}}
     {{-- BAGIAN 3: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI)                  --}}
@@ -996,7 +1044,7 @@
     </div>
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS)                               --}}
+    {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS)                                --}}
     {{-- ======================================================================= --}}
     <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
         <div class="col-12">
@@ -1096,10 +1144,67 @@
         </div>
     </div>
 
+    {{-- [BARU] MODAL PREVIEW GALLERY --}}
+    <div class="modal fade" id="galleryPreviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border-0 overflow-hidden shadow-lg" style="border-radius: 20px;">
+                <div class="modal-body p-0 position-relative">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" style="z-index: 10;" data-bs-dismiss="modal"></button>
+                    <img src="" id="galleryPreviewImg" class="img-fluid w-100" style="min-height: 300px; object-fit: cover;">
+                    <div class="p-4 text-white" style="background: linear-gradient(transparent, rgba(0,0,0,0.9)); position: absolute; bottom: 0; left: 0; right: 0;">
+                        <h5 id="galleryPreviewTitle" class="fw-bold mb-1"></h5>
+                        <p id="galleryPreviewDate" class="small opacity-75 mb-0"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('styles')
     <style>
+        /* === [BARU] NOSTALGIA GALLERY STYLES === */
+        .gallery-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 5px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .gallery-scroll-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        .gallery-card {
+            width: 140px;
+            height: 210px;
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #000;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .gallery-img {
+            width: 100%; height: 100%; object-fit: cover;
+            opacity: 0.7; filter: grayscale(80%) sepia(30%); /* Efek Sedih/Nostalgia */
+            transition: all 0.6s ease;
+        }
+        .gallery-card:hover .gallery-img {
+            opacity: 1; filter: grayscale(0%) sepia(0%);
+            transform: scale(1.1);
+        }
+        .gallery-badge {
+            position: absolute; top: 12px; left: 12px;
+            font-size: 8px; font-weight: 800; padding: 4px 10px;
+            border-radius: 6px; color: white;
+            text-transform: uppercase;
+        }
+        .gallery-date {
+            position: absolute; bottom: 12px; right: 12px;
+            color: white; font-size: 11px; font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+        .border-dashed { border: 2px dashed #dee2e6; }
+
         /* === BIRTHDAY CARD STYLES === */
         .birthday-card {
             background: linear-gradient(135deg, #4c1d95 0%, #be185d 100%);
@@ -2068,6 +2173,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
+        {{-- [BARU] SCRIPT PREVIEW GALLERY --}}
+        function previewGalleryImage(src, title, date) {
+            const modal = new bootstrap.Modal(document.getElementById('galleryPreviewModal'));
+            document.getElementById('galleryPreviewImg').src = src;
+            document.getElementById('galleryPreviewTitle').innerText = title;
+            document.getElementById('galleryPreviewDate').innerText = date;
+            modal.show();
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
 
             // --- [BARU] SLIDER LOGIC ---
