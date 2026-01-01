@@ -140,48 +140,39 @@ class AuditController extends Controller
      * Menampilkan daftar absensi manual yang perlu diverifikasi
      */
     public function showVerificationList()
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
+    $query = Attendance::with(['user.division', 'user.branch'])
+        ->where('status', 'pending_verification')
+        ->whereNotNull('photo_path');
 
-        // 1. Query Dasar: Ambil data Attendance
-        $query = Attendance::with(['user.division', 'user.branch'])
-            ->where('status', 'pending_verification')
-            ->whereNotNull('photo_path');
+    $isLeaderAudit = $user->role == 'audit' && stripos($user->division->name ?? '', 'leader') !== false;
 
-        // [LOGIKA BARU] Cek apakah dia Leader Audit
-        // Syarat: Role Audit DAN Nama Divisi mengandung kata 'Leader'
-        $isLeaderAudit = $user->role == 'audit' && stripos($user->division->name ?? '', 'leader') !== false;
-
-        // [PENTING] FILTER:
-        // Jika dia BUKAN Leader Audit, sembunyikan data diri sendiri.
-        // Jika dia Leader Audit, biarkan data diri sendiri muncul.
-        if (!$isLeaderAudit) {
-            $query->where('user_id', '!=', $user->id);
-        }
-
-        // 2. Logika Hak Akses (Copy dari method showLatePermissions)
-        $isUniversalAccess = in_array($user->role, ['admin']);
-
-        if (!$isUniversalAccess) {
-            $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
-
-            if (!empty($myBranchIds)) {
-                $query->whereHas('user', function ($q) use ($myBranchIds) {
-                    $q->whereIn('branch_id', $myBranchIds);
-                });
-            } else {
-                // Jika user audit tidak punya cabang pegangan, kosongkan hasil
-                $query->where('id', 0);
-            }
-        }
-
-        // UPDATE: Menggunakan paginate(10) alih-alih get() agar ada pagination
-        $pendingAttendances = $query->oldest()->paginate(10);
-
-        return view('audit.verification_list', compact('pendingAttendances'));
+    if (!$isLeaderAudit) {
+        $query->where('user_id', '!=', $user->id);
     }
+
+    $isUniversalAccess = in_array($user->role, ['admin']);
+
+    if (!$isUniversalAccess) {
+        $pivotBranchIds = $user->branches->pluck('id')->toArray();
+        $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+        $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+        if (!empty($myBranchIds)) {
+            $query->whereHas('user', function ($q) use ($myBranchIds) {
+                $q->whereIn('branch_id', $myBranchIds);
+            });
+        } else {
+            $query->where('id', 0);
+        }
+    }
+
+    // PAKSA LIMIT TINGGI (Misal 500) agar di Laptop muncul semua
+    $pendingAttendances = $query->oldest()->paginate(500); 
+
+    return view('audit.verification_list', compact('pendingAttendances'));
+}
 
     /**
      * HALAMAN RIWAYAT (Approved, Rejected, Cancelled)
