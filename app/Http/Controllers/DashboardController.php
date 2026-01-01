@@ -296,16 +296,19 @@ class DashboardController extends Controller
         // =========================================================================
 // [BARU] LOGIKA PEMENANG BULAN LALU (HISTORIAL)
 // =========================================================================
+// Cari bagian ini di DashboardController dan ganti kodenya
 $lastMonth = $nowInBranch->copy()->subMonth();
 $data['lastMonthName'] = $lastMonth->translatedFormat('F Y');
 
-// Cari bagian ini di DashboardController dan ganti kodenya
 $data['lastMonthWinners'] = \App\Models\LeaderboardHistory::where('month', $lastMonth->month)
     ->where('year', $lastMonth->year)
     ->where('branch_id', $user->branch_id)
     ->with(['user', 'user.division'])
-    ->orderBy('rank', 'asc')
-    ->limit(3) // PAKSA HANYA 3 DATA SAJA
+    // PRIORITAS 1: Kehadiran terbanyak (21 hari akan otomatis di atas 8 hari)
+    ->orderBy('total_attendance', 'desc') 
+    // PRIORITAS 2: Jika total hari sama, urutkan berdasarkan rank asli dari perhitungan awal
+    ->orderBy('rank', 'asc') 
+    ->limit(3) // Paksa hanya 3 data agar layout simetris
     ->get();
 
         return view('dashboard', $data);

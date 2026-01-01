@@ -296,33 +296,33 @@
                     <div class="spotlight"></div>
                     <div class="card-body p-4 position-relative z-index-1">
                         <div class="text-center mb-5">
-                            <span class="badge bg-warning text-dark fw-bold mb-2">HALL OF FAME</span>
+                            <span class="badge bg-warning text-dark fw-bold mb-2 shadow-sm">HALL OF FAME</span>
                             <h3 class="fw-bold text-white mb-1" style="font-family: 'Playfair Display', serif;">
                                 <i class="mdi mdi-auto-fix text-warning me-2"></i>Pahlawan Absensi {{ $lastMonthName }}
                             </h3>
-                            <p class="text-white-50 small">Apresiasi untuk 3 dedikasi terbaik bulan lalu</p>
+                            <p class="text-white-50 small">Apresiasi untuk dedikasi luar biasa di bulan lalu</p>
                         </div>
 
-                        {{-- PAKSA LAYOUT 3 KOLOM --}}
-                        <div class="row row-cols-1 row-cols-md-3 justify-content-center g-4">
+                        {{-- Pastikan row-cols-md-3 untuk memaksa 3 kolom sejajar --}}
+                        <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
                             @foreach ($lastMonthWinners as $history)
                                 <div class="col">
                                     <div
                                         class="winner-memory-card text-center p-3 h-100 d-flex flex-column align-items-center">
                                         <div class="position-relative mb-3 mt-2">
-                                            {{-- Lencana Rank --}}
+                                            {{-- Badge Rank dinamis berdasarkan urutan hasil query --}}
                                             <div
-                                                class="rank-badge-mini {{ $history->rank == 1 ? 'gold' : ($history->rank == 2 ? 'silver' : 'bronze') }}">
-                                                #{{ $history->rank }}
+                                                class="rank-badge-mini {{ $loop->first ? 'gold' : ($loop->iteration == 2 ? 'silver' : 'bronze') }}">
+                                                #{{ $loop->iteration }}
                                             </div>
 
                                             @if ($history->user->profile_photo_path)
                                                 <img src="{{ asset('storage/' . $history->user->profile_photo_path) }}"
                                                     class="rounded-circle shadow-lg border border-2 border-white grayscale-memory"
-                                                    style="width: 90px; height: 90px; object-fit: cover;">
+                                                    style="width: 85px; height: 85px; object-fit: cover;">
                                             @else
                                                 <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white shadow-lg mx-auto"
-                                                    style="width: 90px; height: 90px; font-size: 28px;">
+                                                    style="width: 85px; height: 85px; font-size: 24px;">
                                                     {{ substr($history->user->name, 0, 1) }}
                                                 </div>
                                             @endif
@@ -336,7 +336,7 @@
 
                                         <div class="mt-auto">
                                             <span class="badge bg-light text-dark opacity-75 py-2 px-3"
-                                                style="font-size: 10px; border-radius: 50px;">
+                                                style="font-size: 11px; border-radius: 50px;">
                                                 <i
                                                     class="mdi mdi-calendar-check me-1"></i>{{ $history->total_attendance }}
                                                 Hari
