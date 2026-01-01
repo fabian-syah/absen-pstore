@@ -234,40 +234,34 @@
             </div>
 
             {{-- RINGKASAN BULANAN --}}
-            {{-- RINGKASAN BULANAN --}}
             <div class="row g-3 mb-4">
+                {{-- BOX TOTAL HARI --}}
                 <div class="col-6 col-md-3">
                     <div class="card bg-primary text-white border-0 shadow-sm rounded-4 h-100">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
                             <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Total Hari</h6>
-                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['total_hari'] }}</h2>
+                            {{-- Tambahkan @ sehingga jika key kosong tidak langsung crash --}}
+                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['total_hari'] ?? 0 }}</h2>
                         </div>
                     </div>
                 </div>
+
+                {{-- BOX HADIR --}}
                 <div class="col-6 col-md-3">
                     <div class="card bg-success text-white border-0 shadow-sm rounded-4 h-100">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
                             <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Hadir / WFH</h6>
-                            {{-- Gunakan data 'masuk' dari controller yang sudah membuang Alpha --}}
-                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['masuk'] }}</h2>
+                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['masuk'] ?? 0 }}</h2>
                         </div>
                     </div>
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="card bg-info text-white border-0 shadow-sm rounded-4 h-100">
-                        <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
-                            <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Sakit & Izin</h6>
-                            <h2 class="fw-bold text-white mb-0 display-6">
-                                {{ $summary['sakit'] + $summary['izin'] + $summary['cuti'] }}</h2>
-                        </div>
-                    </div>
-                </div>
+
+                {{-- BOX ALPHA (Sesuai permintaan Anda, angka 9 akan muncul di sini) --}}
                 <div class="col-6 col-md-3">
                     <div class="card bg-secondary text-white border-0 shadow-sm rounded-4 h-100">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
                             <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Alpha</h6>
-                            {{-- SEKARANG INI AKAN MUNCUL ANGKA 9 --}}
-                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['alpha'] }}</h2>
+                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['alpha'] ?? 0 }}</h2>
                         </div>
                     </div>
                 </div>

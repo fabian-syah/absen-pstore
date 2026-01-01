@@ -120,19 +120,30 @@ class AttendanceSummaryController extends Controller
 
     // --- 5. TENTUKAN DATA RINGKASAN UNTUK BOX ATAS (INI YANG BARU) ---
     // Kita ambil data dari array monthsData berdasarkan bulan yang sedang dilihat user
+   // --- 5. TENTUKAN DATA RINGKASAN UNTUK BOX ATAS ---
     $viewMonth = (int)$request->get('month', date('n'));
+    
+    // Pastikan key di sini SAMA PERSIS dengan yang ada di loop monthsData[$m]
     $summary = $monthsData[$viewMonth] ?? [
-        'total_hari' => 0, 'masuk' => 0, 'wfh' => 0, 'sakit' => 0,
-        'izin' => 0, 'cuti' => 0, 'alpha' => 0, 'telat' => 0, 'pulang_cepat' => 0
+        'total_hari' => 0, 
+        'masuk' => 0, 
+        'wfh' => 0, 
+        'sakit' => 0,
+        'izin' => 0, 
+        'cuti' => 0, 
+        'alpha' => 0, 
+        'telat' => 0, 
+        'pulang_cepat' => 0,
+        'pending' => 0 // Tambahkan ini agar tidak error saat dipanggil
     ];
 
-    return view('attendance.summary', [
+    return view('attendance.summary', [ // Pastikan nama file view benar (summary atau history)
         'user' => $targetUser,
         'selectedYear' => $selectedYear,
         'selectedMonth' => $viewMonth,
         'monthsData' => $monthsData,
         'grandTotal' => $grandTotal,
-        'summary' => $summary, // Kirim variabel summary agar Box Atas terisi
+        'summary' => $summary, 
         'employees' => $employees,
         'isAccessGranted' => in_array($currentUser->role, $allowedRoles)
     ]);
