@@ -93,15 +93,22 @@ class AttendanceSummaryController extends Controller
                         || str_contains(strtolower($row->presence_status ?? ''), 'telat');
             })->count();
 
-            $alphaCount = $monthAtt->filter(fn($q) => strtolower($q->presence_status ?? '') == 'alpha' || $q->status == 'alpha')->count();
+            // --- PERBAIKAN LOGIKA HITUNG MASUK ---
+$masukCount = $monthAtt->filter(function($row) {
+    $st = strtolower($row->presence_status ?? '');
+    
+    // PERBAIKAN: Alpha HARUS dikecualikan secara eksplisit
+    // Hanya hitung status yang benar-benar melakukan pekerjaan
+    return in_array($st, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat']) 
+           && $st !== 'alpha'; 
+})->count();
 
-            $masukCount = $monthAtt->filter(function($row) {
-                $st = strtolower($row->presence_status ?? '');
-                $type = strtolower($row->attendance_type ?? '');
-                
-                return in_array($st, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat']) 
-                        || (in_array($type, ['scan', 'self', 'manual']) && !in_array($st, ['sakit', 'izin', 'cuti', 'alpha']));
-            })->count();
+// --- PERBAIKAN LOGIKA HITUNG ALPHA ---
+$alphaCount = $monthAtt->filter(function($q) {
+    $st = strtolower($q->presence_status ?? '');
+    // Hitung record yang statusnya memang Alpha atau record kosong yang dianggap sistem Alpha
+    return $st == 'alpha' || $q->status == 'alpha';
+})->count();
 
             $wfhCount = $monthAtt->filter(fn($q) => str_contains(strtolower($q->presence_status ?? ''), 'wfh'))->count();
             $pulangCepatCount = $monthAtt->where('is_early_checkout', true)->count();
