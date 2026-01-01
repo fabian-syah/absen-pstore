@@ -2208,72 +2208,127 @@
             transform: translateY(-2px);
         }
 
-        /* Hall of Fame Styling */
+        /* ======================================================================= */
+        /* LUXURY HALL OF FAME STYLES (MODERN VERSION)                             */
+        /* ======================================================================= */
+
         .hall-of-fame-card {
+            background: linear-gradient(145deg, #0f0f0f 0%, #1a1a1a 100%) !important;
+            border-radius: 24px !important;
+            border: 1px solid rgba(255, 215, 0, 0.15) !important;
             position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
         }
 
+        /* Efek Cahaya Spotlight di Background */
         .spotlight {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 140%;
+            background: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.08) 0%, transparent 60%);
             pointer-events: none;
-        }
-
-        .grayscale-memory {
-            filter: sepia(0.3) contrast(1.1);
-            /* Memberikan efek nostalgia sedikit kecokelatan */
-            transition: all 0.5s ease;
-        }
-
-        .winner-memory-card:hover .grayscale-memory {
-            filter: sepia(0) contrast(1);
-            transform: scale(1.1);
-        }
-
-        .rank-badge-mini {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            font-size: 10px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            z-index: 5;
-            border: 2px solid #fff;
-        }
-
-        .rank-badge-mini.gold {
-            background: linear-gradient(45deg, #FFD700, #FDB931);
-        }
-
-        .rank-badge-mini.silver {
-            background: linear-gradient(45deg, #C0C0C0, #8E8E8E);
-        }
-
-        .rank-badge-mini.bronze {
-            background: linear-gradient(45deg, #CD7F32, #8B4513);
+            z-index: 0;
         }
 
         .winner-memory-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            padding: 1.5rem !important;
+            position: relative;
+            overflow: hidden;
         }
 
         .winner-memory-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 215, 0, 0.3);
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(255, 215, 0, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Efek Grayscale-Nostalgia yang Halus */
+        .grayscale-memory {
+            filter: grayscale(40%) contrast(1.1);
+            /* Tidak terlalu gelap agar tetap modern */
+            transition: all 0.5s ease;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .winner-memory-card:hover .grayscale-memory {
+            filter: grayscale(0%) contrast(1);
+            border-color: #ffd700;
+            transform: rotate(3deg);
+        }
+
+        /* Rank Badge Modern */
+        .rank-badge-mini {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            /* Bentuk kotak membulat lebih modern dari lingkaran */
+            font-size: 13px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transform: rotate(12deg);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            color: #000;
+        }
+
+        .rank-badge-mini.gold {
+            background: linear-gradient(135deg, #ffd700, #b8860b);
+        }
+
+        .rank-badge-mini.silver {
+            background: linear-gradient(135deg, #e0e0e0, #757575);
+        }
+
+        .rank-badge-mini.bronze {
+            background: linear-gradient(135deg, #cd7f32, #8b4513);
+        }
+
+        /* Tipografi Teks */
+        .winner-memory-card h6 {
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .winner-memory-card .text-warning {
+            font-size: 11px !important;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        /* Badge Kehadiran (Pill) */
+        .attendance-pill-custom {
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        .winner-memory-card:hover .attendance-pill-custom {
+            background: #ffd700;
+            color: #000;
         }
 
         @media (max-width: 768px) {
