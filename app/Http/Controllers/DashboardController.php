@@ -293,8 +293,6 @@ class DashboardController extends Controller
         }
         $data['birthdayData'] = $birthdayData;
 
-        
-
         // =========================================================================
 // [BARU] LOGIKA PEMENANG BULAN LALU (HISTORIAL)
 // =========================================================================
@@ -307,26 +305,6 @@ $data['lastMonthWinners'] = \App\Models\LeaderboardHistory::where('month', $last
     ->with(['user', 'user.division'])
     ->orderBy('rank', 'asc')
     ->get();
-
-    // [BARU] LOGIKA DINDING KENANGAN BULAN LALU
-        $lastMonth = $nowInBranch->copy()->subMonth();
-        $data['lastMonthName'] = $lastMonth->translatedFormat('F Y');
-
-        // Ambil Pahlawan Absensi (Karyawan)
-        $data['lastMonthWinners'] = \App\Models\LeaderboardHistory::where('month', $lastMonth->month)
-            ->where('year', $lastMonth->year)
-            ->where('branch_id', $user->branch_id)
-            ->where('type', 'attendance')
-            ->with('user.division')
-            ->orderBy('rank', 'asc')->get();
-
-        // Ambil Pahlawan Security (Scanner)
-        $data['lastMonthScanners'] = \App\Models\LeaderboardHistory::where('month', $lastMonth->month)
-            ->where('year', $lastMonth->year)
-            ->where('branch_id', $user->branch_id)
-            ->where('type', 'scanner')
-            ->with('user')
-            ->orderBy('rank', 'asc')->get();
 
         return view('dashboard', $data);
     }
