@@ -293,6 +293,19 @@ class DashboardController extends Controller
         }
         $data['birthdayData'] = $birthdayData;
 
+        // =========================================================================
+// [BARU] LOGIKA PEMENANG BULAN LALU (HISTORIAL)
+// =========================================================================
+$lastMonth = $nowInBranch->copy()->subMonth();
+$data['lastMonthName'] = $lastMonth->translatedFormat('F Y');
+
+$data['lastMonthWinners'] = \App\Models\LeaderboardHistory::where('month', $lastMonth->month)
+    ->where('year', $lastMonth->year)
+    ->where('branch_id', $user->branch_id) // Filter sesuai cabang user
+    ->with(['user', 'user.division'])
+    ->orderBy('rank', 'asc')
+    ->get();
+
         return view('dashboard', $data);
     }
 

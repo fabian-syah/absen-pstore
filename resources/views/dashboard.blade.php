@@ -44,9 +44,11 @@
                                         <h2 class="fw-bold mb-0 text-shadow-glam">HAPPY BIRTHDAY! 🎂</h2>
                                     </div>
                                     <p class="lead mb-1 text-white-50">
-                                        Selamat Ulang Tahun yang ke-<strong>{{ $birthdayData['age_to_be'] }}</strong>, {{ Auth::user()->name }}!
+                                        Selamat Ulang Tahun yang ke-<strong>{{ $birthdayData['age_to_be'] }}</strong>,
+                                        {{ Auth::user()->name }}!
                                     </p>
-                                    <p class="small text-white-50 mb-0">Semoga panjang umur, sehat selalu, dan karir makin cemerlang di PStore!</p>
+                                    <p class="small text-white-50 mb-0">Semoga panjang umur, sehat selalu, dan karir makin
+                                        cemerlang di PStore!</p>
                                 @else
                                     <div class="d-flex align-items-center mb-2">
                                         <span class="badge bg-light text-primary fw-bold me-2">
@@ -55,7 +57,8 @@
                                         <h3 class="fw-bold mb-0 text-white">Counting Down to Your Day! 🎈</h3>
                                     </div>
                                     <p class="mb-0 text-white-50">
-                                        Sebentar lagi kamu ulang tahun yang ke-<strong>{{ $birthdayData['age_to_be'] }}</strong>.
+                                        Sebentar lagi kamu ulang tahun yang
+                                        ke-<strong>{{ $birthdayData['age_to_be'] }}</strong>.
                                         Siapkan harapan terbaikmu!
                                     </p>
                                 @endif
@@ -64,10 +67,12 @@
                             {{-- KANAN: COUNTDOWN TIMER --}}
                             <div class="col-md-5 mt-4 mt-md-0 text-center text-md-end">
                                 @if (!$birthdayData['is_today'])
-                                    <div class="d-flex justify-content-center justify-content-md-end gap-2" id="birthday-countdown">
+                                    <div class="d-flex justify-content-center justify-content-md-end gap-2"
+                                        id="birthday-countdown">
                                         {{-- Hari --}}
                                         <div class="countdown-box glass-box">
-                                            <span class="d-block fw-bold fs-3" id="cd-days">{{ $birthdayData['days_left'] }}</span>
+                                            <span class="d-block fw-bold fs-3"
+                                                id="cd-days">{{ $birthdayData['days_left'] }}</span>
                                             <small class="text-uppercase" style="font-size: 9px;">Hari</small>
                                         </div>
                                         {{-- Jam --}}
@@ -89,9 +94,10 @@
                                 @else
                                     {{-- Jika Hari H --}}
                                     <div class="text-center">
-                                         <button class="btn btn-light text-danger fw-bold shadow-lg pulse-animation" onclick="confettiEffect()">
+                                        <button class="btn btn-light text-danger fw-bold shadow-lg pulse-animation"
+                                            onclick="confettiEffect()">
                                             <i class="mdi mdi-party-popper me-2"></i> RAYAKAN SEKARANG!
-                                         </button>
+                                        </button>
                                     </div>
                                 @endif
                             </div>
@@ -276,6 +282,67 @@
                             </div>
                         </div>
                         <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ======================================================================= --}}
+    {{-- BAGIAN BARU: DINDING KENANGAN (PEMENANG BULAN LALU)                    --}}
+    {{-- ======================================================================= --}}
+    @if (isset($lastMonthWinners) && $lastMonthWinners->count() > 0)
+        <div class="row mb-5 animate-enter" style="animation-delay: 0.3s">
+            <div class="col-12">
+                <div class="card border-0 shadow-lg hall-of-fame-card overflow-hidden"
+                    style="background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); border-radius: 20px;">
+                    <div class="spotlight"></div>
+                    <div class="card-body p-4 position-relative z-index-1">
+                        <div class="text-center mb-4">
+                            <span class="badge bg-warning text-dark fw-bold mb-2">HALL OF FAME</span>
+                            <h3 class="fw-bold text-white mb-1" style="font-family: 'Playfair Display', serif;">
+                                <i class="mdi mdi-auto-fix text-warning me-2"></i>Pahlawan Absensi {{ $lastMonthName }}
+                            </h3>
+                            <p class="text-white-50 small">Apresiasi untuk dedikasi luar biasa di bulan lalu</p>
+                        </div>
+
+                        <div class="row justify-content-center">
+                            @foreach ($lastMonthWinners as $history)
+                                <div class="col-md-4 mb-4">
+                                    <div class="winner-memory-card text-center p-3">
+                                        <div class="position-relative d-inline-block mb-3">
+                                            {{-- Lencana Rank --}}
+                                            <div
+                                                class="rank-badge-mini {{ $history->rank == 1 ? 'gold' : ($history->rank == 2 ? 'silver' : 'bronze') }}">
+                                                #{{ $history->rank }}
+                                            </div>
+
+                                            @if ($history->user->profile_photo_path)
+                                                <img src="{{ asset('storage/' . $history->user->profile_photo_path) }}"
+                                                    class="rounded-circle shadow-lg border border-3 border-light grayscale-memory"
+                                                    style="width: 80px; height: 80px; object-fit: cover;">
+                                            @else
+                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white shadow-lg mx-auto"
+                                                    style="width: 80px; height: 80px; font-size: 24px;">
+                                                    {{ substr($history->user->name, 0, 1) }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <h6 class="text-white fw-bold mb-0">{{ Str::limit($history->user->name, 15) }}
+                                        </h6>
+                                        <p class="text-warning small mb-1" style="font-size: 10px;">
+                                            {{ $history->user->division->name ?? 'Staff' }}</p>
+                                        <div class="d-flex justify-content-center gap-2 mt-2">
+                                            <span class="badge bg-light text-dark opacity-75" style="font-size: 9px;">
+                                                <i
+                                                    class="mdi mdi-calendar-check me-1"></i>{{ $history->total_attendance }}
+                                                Hari
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
@@ -546,7 +613,8 @@
                         {{-- Foto Masuk --}}
                         @if ($item->photo_path)
                             <div class="gallery-item-wrapper">
-                                <div class="gallery-card shadow-sm" onclick="previewGalleryImage('{{ Storage::url($item->photo_path) }}', 'Momen Masuk Kerja', '{{ $item->check_in_time->translatedFormat('l, d F Y - H:i') }}')">
+                                <div class="gallery-card shadow-sm"
+                                    onclick="previewGalleryImage('{{ Storage::url($item->photo_path) }}', 'Momen Masuk Kerja', '{{ $item->check_in_time->translatedFormat('l, d F Y - H:i') }}')">
                                     <img src="{{ Storage::url($item->photo_path) }}" class="gallery-img">
                                     <div class="gallery-badge bg-success">MASUK</div>
                                     <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
@@ -557,7 +625,8 @@
                         {{-- Foto Pulang --}}
                         @if ($item->photo_out_path)
                             <div class="gallery-item-wrapper">
-                                <div class="gallery-card shadow-sm" onclick="previewGalleryImage('{{ Storage::url($item->photo_out_path) }}', 'Momen Pulang Kerja', '{{ $item->check_out_time ? $item->check_out_time->translatedFormat('l, d F Y - H:i') : '-' }}')">
+                                <div class="gallery-card shadow-sm"
+                                    onclick="previewGalleryImage('{{ Storage::url($item->photo_out_path) }}', 'Momen Pulang Kerja', '{{ $item->check_out_time ? $item->check_out_time->translatedFormat('l, d F Y - H:i') : '-' }}')">
                                     <img src="{{ Storage::url($item->photo_out_path) }}" class="gallery-img">
                                     <div class="gallery-badge bg-danger">PULANG</div>
                                     <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
@@ -565,7 +634,8 @@
                             </div>
                         @endif
                     @empty
-                        <div class="col-12 text-center py-5 bg-light rounded-3 border-dashed w-100" style="min-width: 300px;">
+                        <div class="col-12 text-center py-5 bg-light rounded-3 border-dashed w-100"
+                            style="min-width: 300px;">
                             <i class="mdi mdi-image-filter-hdr display-4 text-muted opacity-25"></i>
                             <p class="text-muted mt-2">Belum ada potret cerita untuk bulan ini...</p>
                         </div>
@@ -1149,9 +1219,12 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark border-0 overflow-hidden shadow-lg" style="border-radius: 20px;">
                 <div class="modal-body p-0 position-relative">
-                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" style="z-index: 10;" data-bs-dismiss="modal"></button>
-                    <img src="" id="galleryPreviewImg" class="img-fluid w-100" style="min-height: 300px; object-fit: cover;">
-                    <div class="p-4 text-white" style="background: linear-gradient(transparent, rgba(0,0,0,0.9)); position: absolute; bottom: 0; left: 0; right: 0;">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
+                        style="z-index: 10;" data-bs-dismiss="modal"></button>
+                    <img src="" id="galleryPreviewImg" class="img-fluid w-100"
+                        style="min-height: 300px; object-fit: cover;">
+                    <div class="p-4 text-white"
+                        style="background: linear-gradient(transparent, rgba(0,0,0,0.9)); position: absolute; bottom: 0; left: 0; right: 0;">
                         <h5 id="galleryPreviewTitle" class="fw-bold mb-1"></h5>
                         <p id="galleryPreviewDate" class="small opacity-75 mb-0"></p>
                     </div>
@@ -1169,9 +1242,15 @@
             display: flex;
             overflow-x: auto;
             padding: 5px;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
+            /* Firefox */
         }
-        .gallery-scroll-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        .gallery-scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Chrome/Safari */
 
         .gallery-card {
             width: 140px;
@@ -1183,27 +1262,48 @@
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
+
         .gallery-img {
-            width: 100%; height: 100%; object-fit: cover;
-            opacity: 0.7; filter: grayscale(80%) sepia(30%); /* Efek Sedih/Nostalgia */
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+            filter: grayscale(80%) sepia(30%);
+            /* Efek Sedih/Nostalgia */
             transition: all 0.6s ease;
         }
+
         .gallery-card:hover .gallery-img {
-            opacity: 1; filter: grayscale(0%) sepia(0%);
+            opacity: 1;
+            filter: grayscale(0%) sepia(0%);
             transform: scale(1.1);
         }
+
         .gallery-badge {
-            position: absolute; top: 12px; left: 12px;
-            font-size: 8px; font-weight: 800; padding: 4px 10px;
-            border-radius: 6px; color: white;
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            font-size: 8px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: white;
             text-transform: uppercase;
         }
+
         .gallery-date {
-            position: absolute; bottom: 12px; right: 12px;
-            color: white; font-size: 11px; font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
         }
-        .border-dashed { border: 2px dashed #dee2e6; }
+
+        .border-dashed {
+            border: 2px dashed #dee2e6;
+        }
 
         /* === BIRTHDAY CARD STYLES === */
         .birthday-card {
@@ -2105,6 +2205,74 @@
             transform: translateY(-2px);
         }
 
+        /* Hall of Fame Styling */
+        .hall-of-fame-card {
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .spotlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .grayscale-memory {
+            filter: sepia(0.3) contrast(1.1);
+            /* Memberikan efek nostalgia sedikit kecokelatan */
+            transition: all 0.5s ease;
+        }
+
+        .winner-memory-card:hover .grayscale-memory {
+            filter: sepia(0) contrast(1);
+            transform: scale(1.1);
+        }
+
+        .rank-badge-mini {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 5;
+            border: 2px solid #fff;
+        }
+
+        .rank-badge-mini.gold {
+            background: linear-gradient(45deg, #FFD700, #FDB931);
+        }
+
+        .rank-badge-mini.silver {
+            background: linear-gradient(45deg, #C0C0C0, #8E8E8E);
+        }
+
+        .rank-badge-mini.bronze {
+            background: linear-gradient(45deg, #CD7F32, #8B4513);
+        }
+
+        .winner-memory-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .winner-memory-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
         @media (max-width: 768px) {
             .card-bank-value {
                 font-size: 28px;
@@ -2174,6 +2342,7 @@
 
     <script>
         {{-- [BARU] SCRIPT PREVIEW GALLERY --}}
+
         function previewGalleryImage(src, title, date) {
             const modal = new bootstrap.Modal(document.getElementById('galleryPreviewModal'));
             document.getElementById('galleryPreviewImg').src = src;
