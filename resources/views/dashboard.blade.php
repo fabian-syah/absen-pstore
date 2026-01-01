@@ -289,59 +289,74 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: DINDING KENANGAN (PEMENANG BULAN LALU)                    --}}
+    {{-- BAGIAN BARU: DINDING KENANGAN (HALL OF FAME)                            --}}
     {{-- ======================================================================= --}}
-    @if (isset($lastMonthWinners) && $lastMonthWinners->count() > 0)
+    @if ($lastMonthWinners->count() > 0 || $lastMonthScanners->count() > 0)
         <div class="row mb-5 animate-enter" style="animation-delay: 0.3s">
             <div class="col-12">
-                <div class="card border-0 shadow-lg hall-of-fame-card overflow-hidden"
-                    style="background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); border-radius: 20px;">
-                    <div class="spotlight"></div>
-                    <div class="card-body p-4 position-relative z-index-1">
-                        <div class="text-center mb-4">
-                            <span class="badge bg-warning text-dark fw-bold mb-2">HALL OF FAME</span>
-                            <h3 class="fw-bold text-white mb-1" style="font-family: 'Playfair Display', serif;">
-                                <i class="mdi mdi-auto-fix text-warning me-2"></i>Pahlawan Absensi {{ $lastMonthName }}
-                            </h3>
-                            <p class="text-white-50 small">Apresiasi untuk dedikasi luar biasa di bulan lalu</p>
+                <div class="card border-0 shadow-lg" style="background: #0f172a; border-radius: 20px; overflow: hidden;">
+                    <div class="card-body p-4 position-relative">
+                        <div style="position: absolute; top: 0; right: 0; padding: 20px; opacity: 0.1;">
+                            <i class="mdi mdi-history display-1 text-white"></i>
                         </div>
 
-                        <div class="row justify-content-center">
-                            @foreach ($lastMonthWinners as $history)
-                                <div class="col-md-4 mb-4">
-                                    <div class="winner-memory-card text-center p-3">
-                                        <div class="position-relative d-inline-block mb-3">
-                                            {{-- Lencana Rank --}}
-                                            <div
-                                                class="rank-badge-mini {{ $history->rank == 1 ? 'gold' : ($history->rank == 2 ? 'silver' : 'bronze') }}">
-                                                #{{ $history->rank }}
-                                            </div>
+                        <div class="text-center mb-5">
+                            <span class="badge bg-warning text-dark fw-bold px-3 py-2 mb-2"
+                                style="border-radius: 50px;">HALL OF FAME</span>
+                            <h3 class="text-white fw-bold" style="font-family: 'Playfair Display', serif;">🏛️ Dinding
+                                Kenangan {{ $lastMonthName }}</h3>
+                            <p class="text-white-50 small">Penghargaan untuk dedikasi terbaik di Cabang
+                                {{ Auth::user()->branch->name }}</p>
+                        </div>
 
-                                            @if ($history->user->profile_photo_path)
-                                                <img src="{{ asset('storage/' . $history->user->profile_photo_path) }}"
-                                                    class="rounded-circle shadow-lg border border-3 border-light grayscale-memory"
-                                                    style="width: 80px; height: 80px; object-fit: cover;">
-                                            @else
-                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white shadow-lg mx-auto"
-                                                    style="width: 80px; height: 80px; font-size: 24px;">
-                                                    {{ substr($history->user->name, 0, 1) }}
+                        <div class="row g-4">
+                            {{-- SISI KIRI: TOP ABSENSI --}}
+                            <div class="col-md-6" style="border-right: 1px dashed rgba(255,255,255,0.1);">
+                                <h6 class="text-warning text-center mb-4"><i
+                                        class="mdi mdi-trophy-outline me-2"></i>Pahlawan Absensi</h6>
+                                <div class="d-flex justify-content-center gap-3">
+                                    @foreach ($lastMonthWinners as $winner)
+                                        <div class="text-center" style="width: 100px;">
+                                            <div class="position-relative d-inline-block mb-2">
+                                                <img src="{{ $winner->user->profile_photo_path ? asset('storage/' . $winner->user->profile_photo_path) : asset('assets/images/faces/face1.jpg') }}"
+                                                    class="rounded-circle border border-2 border-warning"
+                                                    style="width: 60px; height: 60px; object-fit: cover; filter: sepia(0.3) contrast(1.1);">
+                                                <div class="bg-warning text-dark position-absolute bottom-0 end-0 rounded-circle fw-bold"
+                                                    style="font-size: 9px; width:18px; height:18px;">{{ $winner->rank }}
                                                 </div>
-                                            @endif
+                                            </div>
+                                            <p class="text-white small mb-0 text-truncate fw-bold">
+                                                {{ explode(' ', $winner->user->name)[0] }}</p>
+                                            <small class="text-white-50"
+                                                style="font-size: 8px;">{{ $winner->total_attendance }} Hadir</small>
                                         </div>
-                                        <h6 class="text-white fw-bold mb-0">{{ Str::limit($history->user->name, 15) }}
-                                        </h6>
-                                        <p class="text-warning small mb-1" style="font-size: 10px;">
-                                            {{ $history->user->division->name ?? 'Staff' }}</p>
-                                        <div class="d-flex justify-content-center gap-2 mt-2">
-                                            <span class="badge bg-light text-dark opacity-75" style="font-size: 9px;">
-                                                <i
-                                                    class="mdi mdi-calendar-check me-1"></i>{{ $history->total_attendance }}
-                                                Hari
-                                            </span>
-                                        </div>
-                                    </div>
+                                    @endforeach
                                 </div>
-                            @endforeach
+                            </div>
+
+                            {{-- SISI KANAN: TOP SECURITY --}}
+                            <div class="col-md-6">
+                                <h6 class="text-info text-center mb-4"><i
+                                        class="mdi mdi-shield-check-outline me-2"></i>Security Of The Month</h6>
+                                <div class="d-flex justify-content-center gap-3">
+                                    @foreach ($lastMonthScanners as $scanner)
+                                        <div class="text-center" style="width: 100px;">
+                                            <div class="position-relative d-inline-block mb-2">
+                                                <img src="{{ $scanner->user->profile_photo_path ? asset('storage/' . $scanner->user->profile_photo_path) : asset('assets/images/faces/face1.jpg') }}"
+                                                    class="rounded-circle border border-2 border-info"
+                                                    style="width: 60px; height: 60px; object-fit: cover; filter: sepia(0.3) contrast(1.1);">
+                                                <div class="bg-info text-white position-absolute bottom-0 end-0 rounded-circle fw-bold"
+                                                    style="font-size: 9px; width:18px; height:18px;">{{ $scanner->rank }}
+                                                </div>
+                                            </div>
+                                            <p class="text-white small mb-0 text-truncate fw-bold">
+                                                {{ explode(' ', $scanner->user->name)[0] }}</p>
+                                            <small class="text-white-50"
+                                                style="font-size: 8px;">{{ $scanner->total_attendance }} Scans</small>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
