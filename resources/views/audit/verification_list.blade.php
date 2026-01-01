@@ -65,14 +65,10 @@
                             <tbody>
                                 @foreach ($pendingAttendances as $att)
                                     @php
-                                        // AMBIL TIMEZONE CABANG USER
                                         $userTimezone = $att->user->branch->timezone ?? 'Asia/Jakarta';
-                                        
-                                        // KONVERSI WAKTU KE TIMEZONE CABANG
                                         $checkInLocal = Carbon::parse($att->check_in_time)->timezone($userTimezone);
                                         $checkOutLocal = $att->check_out_time ? Carbon::parse($att->check_out_time)->timezone($userTimezone) : null;
                                         
-                                        // Format Nama Timezone (e.g. Asia/Jayapura -> WIT)
                                         $tzLabel = '';
                                         if (str_contains($userTimezone, 'Jakarta') || str_contains($userTimezone, 'Pontianak')) $tzLabel = 'WIB';
                                         elseif (str_contains($userTimezone, 'Makassar') || str_contains($userTimezone, 'Bali')) $tzLabel = 'WITA';
@@ -81,7 +77,6 @@
                                     @endphp
 
                                     <tr>
-                                        {{-- 1. Karyawan --}}
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-3">
@@ -108,7 +103,6 @@
                                                     @else
                                                         <h6 class="mb-0 text-dark fw-bold">User Dihapus</h6>
                                                     @endif
-                                                    
                                                     <div class="small text-muted mt-1">
                                                         <span class="badge badge-soft-secondary me-1">{{ $att->user->division->name ?? 'N/A' }}</span>
                                                         <span class="text-xs" data-bs-toggle="tooltip" title="Timezone: {{ $userTimezone }}">
@@ -120,11 +114,8 @@
                                                 </div>
                                             </div>
                                         </td>
-
-                                        {{-- 2. Waktu & Lokasi (Updated: Masuk & Pulang Terpisah & TIMEZONE AWARE) --}}
                                         <td>
                                             <div class="d-flex flex-column gap-2 py-2">
-                                                {{-- JAM MASUK (Hijau) --}}
                                                 <div>
                                                     <span class="badge bg-soft-success text-success mb-1">
                                                         <i class="mdi mdi-login me-1"></i>Masuk: {{ $checkInLocal->format('H:i') }} <small>{{ $tzLabel }}</small>
@@ -139,8 +130,6 @@
                                                         @endif
                                                     </div>
                                                 </div>
-                                    
-                                                {{-- JAM PULANG (Merah) - Muncul jika ada --}}
                                                 @if($att->check_out_time)
                                                     <div class="border-top pt-2 mt-1 dashed-border">
                                                         <span class="badge bg-soft-danger text-danger mb-1">
@@ -157,24 +146,17 @@
                                                         </div>
                                                     </div>
                                                 @endif
-                                                
-                                                {{-- Tanggal --}}
                                                 <span class="small text-muted mt-1 border-top pt-1">
                                                     <i class="mdi mdi-calendar-blank me-1"></i>{{ $checkInLocal->format('d M Y') }}
                                                 </span>
                                             </div>
                                         </td>
-
-                                        {{-- 3. Catatan --}}
                                         <td>
                                             @if($att->notes)
                                                 <div class="p-2 bg-light rounded border border-light position-relative">
                                                     <div class="d-flex align-items-start">
                                                         <i class="mdi mdi-note-text-outline text-primary me-2 mt-1 flex-shrink-0"></i>
-                                                        <div class="text-muted small fst-italic text-truncate-multiline" 
-                                                             data-bs-toggle="tooltip" 
-                                                             data-bs-placement="top" 
-                                                             title="{{ $att->notes }}">
+                                                        <div class="text-muted small fst-italic text-truncate-multiline" data-bs-toggle="tooltip" title="{{ $att->notes }}">
                                                             "{{ $att->notes }}"
                                                         </div>
                                                     </div>
@@ -183,8 +165,6 @@
                                                 <span class="text-muted small ms-2">-</span>
                                             @endif
                                         </td>
-
-                                        {{-- 4. Bukti Foto --}}
                                         <td>
                                             <a href="{{ Storage::url($att->photo_path) }}" class="image-popup d-inline-block position-relative">
                                                 <img src="{{ Storage::url($att->photo_path) }}" alt="foto" class="rounded shadow-sm object-fit-cover" width="60" height="60">
@@ -198,8 +178,6 @@
                                                  </div>
                                             @endif
                                         </td>
-
-                                        {{-- 5. Aksi --}}
                                         <td class="text-end pe-4">
                                             <div class="d-flex justify-content-end gap-2">
                                                 <form action="{{ route('audit.approve', $att->id) }}" method="POST">
@@ -208,12 +186,7 @@
                                                         <i class="mdi mdi-check"></i> Terima
                                                     </button>
                                                 </form>
-                                                {{-- Tombol Edit / Koreksi --}}
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-soft-warning btn-rounded" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#editAttendanceModal{{ $att->id }}"
-                                                        title="Koreksi Jam">
+                                                <button type="button" class="btn btn-sm btn-soft-warning btn-rounded" data-bs-toggle="modal" data-bs-target="#editAttendanceModal{{ $att->id }}" title="Koreksi Jam">
                                                     <i class="mdi mdi-pencil"></i>
                                                 </button>
                                                 <form action="{{ route('audit.reject', $att->id) }}" method="POST" onsubmit="return confirm('Hapus data ini?');">
@@ -224,7 +197,7 @@
                                                 </form>
                                             </div>
 
-                                            {{-- MODAL EDIT / KOREKSI (Per Row) --}}
+                                            {{-- MODAL EDIT DESKTOP --}}
                                             <div class="modal fade text-start" id="editAttendanceModal{{ $att->id }}" tabindex="-1" aria-hidden="true">
                                                 <div class="modal-dialog">
                                                     <form action="{{ route('audit.update.attendance', $att->id) }}" method="POST" enctype="multipart/form-data">
@@ -236,14 +209,14 @@
                                                             </div>
                                                             <div class="modal-body">
                                                                 <div class="alert alert-info py-2 small">
-                                                                    <i class="mdi mdi-information me-1"></i> Waktu yang ditampilkan dan diinput adalah waktu <strong>{{ $userTimezone }} ({{ $tzLabel }})</strong>.
+                                                                    <i class="mdi mdi-information me-1"></i> Waktu input: <strong>{{ $tzLabel }}</strong>.
                                                                 </div>
                                                                 <div class="mb-3">
-                                                                    <label class="form-label">Jam Masuk ({{ $tzLabel }})</label>
+                                                                    <label class="form-label">Jam Masuk</label>
                                                                     <input type="time" name="check_in_time" class="form-control" value="{{ $checkInLocal->format('H:i') }}" required>
                                                                 </div>
                                                                 <div class="mb-3">
-                                                                    <label class="form-label">Jam Pulang ({{ $tzLabel }}) <small class="text-muted">(Opsional)</small></label>
+                                                                    <label class="form-label">Jam Pulang <small class="text-muted">(Opsional)</small></label>
                                                                     <input type="time" name="check_out_time" class="form-control" value="{{ $checkOutLocal ? $checkOutLocal->format('H:i') : '' }}">
                                                                 </div>
                                                                 <div class="mb-3">
@@ -259,24 +232,23 @@
                                                                 <div class="mb-3">
                                                                     <label class="form-label">Status Verifikasi</label>
                                                                     <select name="status" class="form-select">
-                                                                        <option value="verified" selected>Verified (Langsung Setujui)</option>
-                                                                        <option value="pending_verification">Pending (Tetap Menunggu)</option>
+                                                                        <option value="verified" selected>Verified</option>
+                                                                        <option value="pending_verification">Pending</option>
                                                                     </select>
                                                                 </div>
                                                                 <div class="mb-3">
                                                                     <label class="form-label">Catatan Audit</label>
-                                                                    <textarea name="audit_note" class="form-control" rows="2" placeholder="Alasan koreksi...">{{ $att->audit_note }}</textarea>
+                                                                    <textarea name="audit_note" class="form-control" rows="2">{{ $att->audit_note }}</textarea>
                                                                 </div>
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                                                                <button type="submit" class="btn btn-primary">Simpan Koreksi</button>
+                                                                <button type="submit" class="btn btn-primary">Simpan</button>
                                                             </div>
                                                         </div>
                                                     </form>
                                                 </div>
                                             </div>
-
                                         </td>
                                     </tr>
                                 @endforeach
@@ -284,89 +256,55 @@
                         </table>
                     </div>
                 </div>
-                {{-- Pagination Desktop --}}
-                <div class="card-footer bg-white border-top py-3">
-                    {{ $pendingAttendances->links('pagination::bootstrap-5') }}
+                {{-- PAGINATION DESKTOP - DISABLED (Hanya info jumlah) --}}
+                <div class="card-footer bg-white border-top py-3 d-none d-md-block">
+                    <div class="text-muted small text-center">Menampilkan {{ $pendingAttendances->count() }} data menunggu verifikasi di halaman ini.</div>
                 </div>
             </div>
 
-            {{-- TAMPILAN MOBILE (Cards) - Hidden di Desktop --}}
+            {{-- TAMPILAN MOBILE (Cards) --}}
             <div class="d-md-none">
                 @foreach ($pendingAttendances as $att)
                     @php
-                        // LOGIKA TIMEZONE UNTUK MOBILE JUGA
                         $userTimezone = $att->user->branch->timezone ?? 'Asia/Jakarta';
                         $checkInLocal = Carbon::parse($att->check_in_time)->timezone($userTimezone);
                         $checkOutLocal = $att->check_out_time ? Carbon::parse($att->check_out_time)->timezone($userTimezone) : null;
-                        
-                        $tzLabel = '';
-                        if (str_contains($userTimezone, 'Jakarta')) $tzLabel = 'WIB';
-                        elseif (str_contains($userTimezone, 'Makassar')) $tzLabel = 'WITA';
-                        elseif (str_contains($userTimezone, 'Jayapura')) $tzLabel = 'WIT';
+                        $tzLabel = str_contains($userTimezone, 'Jakarta') ? 'WIB' : (str_contains($userTimezone, 'Makassar') ? 'WITA' : 'WIT');
                     @endphp
 
                     <div class="card shadow-sm mb-3 border-0 attendance-card">
                         <div class="card-body">
-                            {{-- Header Card: User Info --}}
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 @if($att->user)
                                     <a href="{{ route('users.show', $att->user->id) }}" class="d-flex align-items-center text-decoration-none text-dark flex-grow-1">
                                         <div class="avatar-sm me-3">
-                                            <span class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fw-bold">
-                                                {{ substr($att->user->name, 0, 1) }}
-                                            </span>
+                                            <span class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fw-bold">{{ substr($att->user->name, 0, 1) }}</span>
                                         </div>
                                         <div>
-                                            <h6 class="mb-0 fw-bold text-primary">
-                                                {{ $att->user->name }} 
-                                                @if($att->user_id == Auth::id())
-                                                    <span class="badge bg-info ms-1" style="font-size: 0.6rem;">ANDA</span>
-                                                @endif
-                                                <i class="mdi mdi-chevron-right small text-muted"></i>
-                                            </h6>
-                                            <div class="small text-muted">
-                                                {{ $att->user->division->name ?? 'N/A' }}
-                                            </div>
+                                            <h6 class="mb-0 fw-bold text-primary">{{ $att->user->name }}</h6>
+                                            <div class="small text-muted">{{ $att->user->division->name ?? 'N/A' }}</div>
                                         </div>
                                     </a>
-                                @else
-                                    <h6 class="mb-0 fw-bold text-dark">User Dihapus</h6>
                                 @endif
                             </div>
 
-                            {{-- Info Cabang & Waktu Grid --}}
                             <div class="bg-light rounded p-2 mb-3 small">
                                 <div class="d-flex justify-content-between mb-1">
-                                    <span class="text-muted"><i class="mdi mdi-store me-1"></i>Cabang:</span>
+                                    <span class="text-muted">Cabang:</span>
                                     <span class="fw-semibold text-dark">{{ $att->user->branch->name ?? '-' }} ({{ $tzLabel }})</span>
                                 </div>
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span class="text-muted"><i class="mdi mdi-calendar me-1"></i>Tanggal:</span>
-                                    <span class="fw-semibold text-dark">{{ $checkInLocal->format('d M Y') }}</span>
-                                </div>
-
-                                {{-- GRID JAM MASUK vs PULANG --}}
-                                <div class="d-flex justify-content-between mt-2 pt-2 border-top">
+                                <div class="d-flex justify-content-between border-top pt-2 mt-2">
                                     <div class="text-center w-50 border-end">
-                                        <span class="d-block text-muted xxs">MASUK ({{ $tzLabel }})</span>
-                                        <span class="fw-bold text-success">
-                                            <i class="mdi mdi-login"></i> {{ $checkInLocal->format('H:i') }}
-                                        </span>
+                                        <span class="d-block text-muted xxs">MASUK</span>
+                                        <span class="fw-bold text-success">{{ $checkInLocal->format('H:i') }}</span>
                                     </div>
                                     <div class="text-center w-50">
-                                        <span class="d-block text-muted xxs">PULANG ({{ $tzLabel }})</span>
-                                        @if($checkOutLocal)
-                                            <span class="fw-bold text-danger">
-                                                <i class="mdi mdi-logout"></i> {{ $checkOutLocal->format('H:i') }}
-                                            </span>
-                                        @else
-                                            <span class="text-muted fst-italic">-</span>
-                                        @endif
+                                        <span class="d-block text-muted xxs">PULANG</span>
+                                        <span class="fw-bold text-danger">{{ $checkOutLocal ? $checkOutLocal->format('H:i') : '-' }}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- Foto & Lokasi --}}
                             <div class="row g-2 mb-3">
                                 <div class="col-4">
                                     <a href="{{ Storage::url($att->photo_path) }}" class="image-popup">
@@ -378,83 +316,62 @@
                                         <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="btn btn-outline-info w-100 h-100 d-flex align-items-center justify-content-center btn-sm">
                                             <i class="mdi mdi-map-marker-radius me-2"></i> Peta Masuk
                                         </a>
-                                    @else
-                                        <button disabled class="btn btn-light w-100 h-100 d-flex align-items-center justify-content-center btn-sm text-muted">
-                                            <i class="mdi mdi-map-marker-off me-2"></i> No Loc
-                                        </button>
                                     @endif
                                 </div>
                             </div>
 
-                            {{-- Tombol Aksi (Full Width) --}}
                             <div class="d-flex gap-2">
                                 <form action="{{ route('audit.approve', $att->id) }}" method="POST" class="w-50">
                                     @csrf @method('PUT')
-                                    <button type="submit" class="btn btn-success w-100 btn-sm">
-                                        <i class="mdi mdi-check"></i> Terima
-                                    </button>
+                                    <button type="submit" class="btn btn-success w-100 btn-sm"><i class="mdi mdi-check"></i> Terima</button>
                                 </form>
                                 <button type="button" class="btn btn-warning w-50 btn-sm" data-bs-toggle="modal" data-bs-target="#editAttendanceModalMobile{{ $att->id }}">
                                     <i class="mdi mdi-pencil"></i> Koreksi
                                 </button>
-                                <form action="{{ route('audit.reject', $att->id) }}" method="POST" class="w-25" onsubmit="return confirm('Hapus data ini?');">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger w-100 btn-sm">
-                                        <i class="mdi mdi-close"></i>
-                                    </button>
-                                </form>
                             </div>
-                            
-                             {{-- MODAL EDIT MOBILE (Copy of Desktop Modal Structure) --}}
-                             <div class="modal fade" id="editAttendanceModalMobile{{ $att->id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <form action="{{ route('audit.update.attendance', $att->id) }}" method="POST" class="w-100">
-                                        @csrf @method('PUT')
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Koreksi ({{ $att->user->name }})</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                 <div class="alert alert-info py-2 small">
-                                                    Waktu input adalah <strong>{{ $tzLabel }}</strong>.
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Masuk ({{ $tzLabel }})</label>
-                                                    <input type="time" name="check_in_time" class="form-control" value="{{ $checkInLocal->format('H:i') }}" required>
-                                                </div>
-                                                 <div class="mb-2">
-                                                    <label class="form-label">Pulang ({{ $tzLabel }})</label>
-                                                    <input type="time" name="check_out_time" class="form-control" value="{{ $checkOutLocal ? $checkOutLocal->format('H:i') : '' }}">
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Status</label>
-                                                    <select name="presence_status" class="form-select">
-                                                        <option value="Masuk" {{ $att->presence_status == 'Masuk' ? 'selected' : '' }}>Masuk</option>
-                                                        <option value="Izin" {{ $att->presence_status == 'Izin' ? 'selected' : '' }}>Izin</option>
-                                                        <option value="Sakit" {{ $att->presence_status == 'Sakit' ? 'selected' : '' }}>Sakit</option>
-                                                    </select>
-                                                </div>
-                                                <input type="hidden" name="status" value="verified">
-                                                <div class="mb-2">
-                                                    <label class="form-label">Catatan</label>
-                                                    <textarea name="audit_note" class="form-control" rows="1">{{ $att->audit_note }}</textarea>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="submit" class="btn btn-primary w-100">Simpan</button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
 
+                    {{-- MODAL EDIT MOBILE --}}
+                    <div class="modal fade" id="editAttendanceModalMobile{{ $att->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <form action="{{ route('audit.update.attendance', $att->id) }}" method="POST" class="w-100">
+                                @csrf @method('PUT')
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Koreksi ({{ $att->user->name }})</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-2">
+                                            <label class="form-label">Masuk ({{ $tzLabel }})</label>
+                                            <input type="time" name="check_in_time" class="form-control" value="{{ $checkInLocal->format('H:i') }}" required>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label">Pulang ({{ $tzLabel }})</label>
+                                            <input type="time" name="check_out_time" class="form-control" value="{{ $checkOutLocal ? $checkOutLocal->format('H:i') : '' }}">
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label">Status</label>
+                                            <select name="presence_status" class="form-select">
+                                                <option value="Masuk" {{ $att->presence_status == 'Masuk' ? 'selected' : '' }}>Masuk</option>
+                                                <option value="Izin" {{ $att->presence_status == 'Izin' ? 'selected' : '' }}>Izin</option>
+                                                <option value="Sakit" {{ $att->presence_status == 'Sakit' ? 'selected' : '' }}>Sakit</option>
+                                            </select>
+                                        </div>
+                                        <input type="hidden" name="status" value="verified">
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-primary w-100">Simpan</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 @endforeach
                 
-                {{-- Pagination Mobile --}}
-                <div class="mt-3">
+                {{-- PAGINATION MOBILE - ENABLED --}}
+                <div class="mt-3 mb-5 d-md-none">
                     {{ $pendingAttendances->links('pagination::bootstrap-5') }}
                 </div>
             </div>
@@ -473,7 +390,7 @@
         @endif
     </div>
 
-    {{-- Modal Image --}}
+    {{-- Modal Image Global --}}
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg bg-transparent">
@@ -489,13 +406,11 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Tooltip Init
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             });
 
-            // Image Popup
             const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
             const modalImage = document.getElementById('modalImage');
 
@@ -514,52 +429,24 @@
         .object-fit-cover { object-fit: cover; }
         .bg-soft-primary { background-color: rgba(59, 130, 246, 0.1); }
         .badge-soft-secondary { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
-        .bg-soft-success { background-color: rgba(16, 185, 129, 0.1); }
-        .bg-soft-danger { background-color: rgba(239, 68, 68, 0.1); }
-        
-        .text-danger { color: #ef4444 !important; }
-        .text-success { color: #10b981 !important; }
-
         .btn-rounded { border-radius: 50px; padding-left: 15px; padding-right: 15px; }
         .btn-soft-success { background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: none; }
         .btn-soft-success:hover { background-color: #10b981; color: white; }
-        .btn-soft-danger { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; }
-        .btn-soft-danger:hover { background-color: #ef4444; color: white; }
         .btn-soft-warning { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; border: none; }
         .btn-soft-warning:hover { background-color: #f59e0b; color: white; }
-
-        .image-popup { display: block; overflow: hidden; border-radius: 6px; }
+        .image-popup { display: block; overflow: hidden; border-radius: 6px; cursor: pointer; }
         .overlay-icon {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;
             opacity: 0; transition: opacity 0.2s;
         }
         .image-popup:hover .overlay-icon { opacity: 1; }
-
-        .hover-text-primary:hover { color: #3b82f6 !important; transition: color 0.2s; }
-        .hover-scale:hover { transform: scale(1.1); transition: transform 0.2s; }
-
         .font-size-11 { font-size: 11px; letter-spacing: 0.5px; }
-        .text-xs { font-size: 0.75rem; }
         .xxs { font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase; }
-
-        /* Dashed Border untuk pemisah Jam Pulang */
         .dashed-border { border-top: 1px dashed #dee2e6 !important; }
-
-        /* CSS KHUSUS CATATAN (TRUNCATE) */
         .text-truncate-multiline {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: normal;
-            cursor: help;
-        }
-
-        @media (max-width: 768px) {
-            .container-fluid { padding-left: 15px; padding-right: 15px; }
-            .attendance-card { border-radius: 12px; }
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; text-overflow: ellipsis; white-space: normal;
         }
     </style>
 @endpush
