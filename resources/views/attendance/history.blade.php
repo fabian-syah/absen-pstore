@@ -235,33 +235,55 @@
 
             {{-- RINGKASAN BULANAN --}}
             <div class="row g-3 mb-4">
-                {{-- BOX TOTAL HARI --}}
                 <div class="col-6 col-md-3">
                     <div class="card bg-primary text-white border-0 shadow-sm rounded-4 h-100">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
                             <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Total Hari</h6>
-                            {{-- Tambahkan @ sehingga jika key kosong tidak langsung crash --}}
-                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['total_hari'] ?? 0 }}</h2>
+                            {{-- Hitung total baris data yang tampil di tabel --}}
+                            <h2 class="fw-bold text-white mb-0 display-6">{{ $history->count() }}</h2>
                         </div>
                     </div>
                 </div>
 
-                {{-- BOX HADIR --}}
                 <div class="col-6 col-md-3">
                     <div class="card bg-success text-white border-0 shadow-sm rounded-4 h-100">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
                             <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Hadir / WFH</h6>
-                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['masuk'] ?? 0 }}</h2>
+                            {{-- Hanya hitung yang berstatus kerja dan BUKAN Alpha --}}
+                            <h2 class="fw-bold text-white mb-0 display-6">
+                                {{ $history->filter(function ($row) {
+                                        $st = strtolower($row->presence_status ?? '');
+                                        return in_array($st, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat']) && $st !== 'alpha';
+                                    })->count() }}
+                            </h2>
                         </div>
                     </div>
                 </div>
 
-                {{-- BOX ALPHA (Sesuai permintaan Anda, angka 9 akan muncul di sini) --}}
+                <div class="col-6 col-md-3">
+                    <div class="card bg-info text-white border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
+                            <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Sakit & Izin</h6>
+                            <h2 class="fw-bold text-white mb-0 display-6">
+                                {{ $history->filter(function ($row) {
+                                        $st = strtolower($row->presence_status ?? '');
+                                        return in_array($st, ['sakit', 'izin', 'cuti']);
+                                    })->count() }}
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-6 col-md-3">
                     <div class="card bg-secondary text-white border-0 shadow-sm rounded-4 h-100">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
                             <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Alpha</h6>
-                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['alpha'] ?? 0 }}</h2>
+                            {{-- MENGHITUNG ALPHA (Data Khotam yang 9 hari itu) --}}
+                            <h2 class="fw-bold text-white mb-0 display-6">
+                                {{ $history->filter(function ($row) {
+                                        return strtolower($row->presence_status ?? '') === 'alpha';
+                                    })->count() }}
+                            </h2>
                         </div>
                     </div>
                 </div>
