@@ -299,11 +299,13 @@ class DashboardController extends Controller
 $lastMonth = $nowInBranch->copy()->subMonth();
 $data['lastMonthName'] = $lastMonth->translatedFormat('F Y');
 
+// Cari bagian ini di DashboardController dan ganti kodenya
 $data['lastMonthWinners'] = \App\Models\LeaderboardHistory::where('month', $lastMonth->month)
     ->where('year', $lastMonth->year)
-    ->where('branch_id', $user->branch_id) // Filter sesuai cabang user
+    ->where('branch_id', $user->branch_id)
     ->with(['user', 'user.division'])
     ->orderBy('rank', 'asc')
+    ->limit(3) // PAKSA HANYA 3 DATA SAJA
     ->get();
 
         return view('dashboard', $data);

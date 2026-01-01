@@ -295,21 +295,22 @@
                 <div class="card border-0 shadow-lg hall-of-fame-card overflow-hidden">
                     <div class="spotlight"></div>
                     <div class="card-body p-4 position-relative z-index-1">
-                        <div class="text-center mb-4">
-                            <span class="badge bg-warning text-dark fw-bold mb-2 shadow-sm">HALL OF FAME</span>
+                        <div class="text-center mb-5">
+                            <span class="badge bg-warning text-dark fw-bold mb-2">HALL OF FAME</span>
                             <h3 class="fw-bold text-white mb-1" style="font-family: 'Playfair Display', serif;">
                                 <i class="mdi mdi-auto-fix text-warning me-2"></i>Pahlawan Absensi {{ $lastMonthName }}
                             </h3>
-                            <p class="text-white-50 small">Apresiasi untuk dedikasi luar biasa di bulan lalu</p>
+                            <p class="text-white-50 small">Apresiasi untuk 3 dedikasi terbaik bulan lalu</p>
                         </div>
 
-                        <div class="row justify-content-center align-items-stretch">
+                        {{-- PAKSA LAYOUT 3 KOLOM --}}
+                        <div class="row row-cols-1 row-cols-md-3 justify-content-center g-4">
                             @foreach ($lastMonthWinners as $history)
-                                <div class="col-6 col-md-4 mb-3">
+                                <div class="col">
                                     <div
-                                        class="winner-memory-card text-center p-3 h-100 d-flex flex-column align-items-center justify-content-center">
-                                        <div class="position-relative mb-3">
-                                            {{-- Lencana Rank di atas foto --}}
+                                        class="winner-memory-card text-center p-3 h-100 d-flex flex-column align-items-center">
+                                        <div class="position-relative mb-3 mt-2">
+                                            {{-- Lencana Rank --}}
                                             <div
                                                 class="rank-badge-mini {{ $history->rank == 1 ? 'gold' : ($history->rank == 2 ? 'silver' : 'bronze') }}">
                                                 #{{ $history->rank }}
@@ -317,25 +318,29 @@
 
                                             @if ($history->user->profile_photo_path)
                                                 <img src="{{ asset('storage/' . $history->user->profile_photo_path) }}"
-                                                    class="rounded-circle shadow-lg border border-2 border-white grayscale-memory object-fit-cover"
-                                                    style="width: 85px; height: 85px;">
+                                                    class="rounded-circle shadow-lg border border-2 border-white grayscale-memory"
+                                                    style="width: 90px; height: 90px; object-fit: cover;">
                                             @else
-                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white shadow-lg mx-auto grayscale-memory"
-                                                    style="width: 85px; height: 85px; font-size: 24px;">
+                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white shadow-lg mx-auto"
+                                                    style="width: 90px; height: 90px; font-size: 28px;">
                                                     {{ substr($history->user->name, 0, 1) }}
                                                 </div>
                                             @endif
                                         </div>
 
-                                        <h6 class="text-white fw-bold mb-1 text-truncate w-100">
-                                            {{ Str::limit($history->user->name, 15) }}</h6>
-                                        <p class="text-warning small mb-2" style="font-size: 10px; letter-spacing: 1px;">
+                                        <h6 class="text-white fw-bold mb-1">{{ Str::limit($history->user->name, 15) }}
+                                        </h6>
+                                        <p class="text-warning small mb-3" style="font-size: 10px; letter-spacing: 1px;">
                                             {{ strtoupper($history->user->division->name ?? 'Staff') }}
                                         </p>
 
-                                        <div class="attendance-pill mt-auto">
-                                            <i class="mdi mdi-calendar-check me-1"></i>{{ $history->total_attendance }}
-                                            Hari
+                                        <div class="mt-auto">
+                                            <span class="badge bg-light text-dark opacity-75 py-2 px-3"
+                                                style="font-size: 10px; border-radius: 50px;">
+                                                <i
+                                                    class="mdi mdi-calendar-check me-1"></i>{{ $history->total_attendance }}
+                                                Hari
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -2203,64 +2208,72 @@
             transform: translateY(-2px);
         }
 
-        /* Fix Hall of Fame Card Layout */
+        /* Hall of Fame Styling */
         .hall-of-fame-card {
-            background: linear-gradient(135deg, #111 0%, #222 100%) !important;
-            border-radius: 24px !important;
-            border: 1px solid rgba(255, 215, 0, 0.2) !important;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
         }
 
-        .winner-memory-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            min-height: 180px;
-        }
-
-        .winner-memory-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-10px);
-            border-color: rgba(255, 215, 0, 0.5);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Fix Badge Rank agar tidak menutupi wajah terlalu banyak */
-        .rank-badge-mini {
+        .spotlight {
             position: absolute;
-            top: -10px;
-            right: -10px;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            font-size: 12px;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #000;
-            z-index: 10;
-            border: 3px solid #222;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .attendance-pill {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-size: 10px;
-            font-weight: bold;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         .grayscale-memory {
-            filter: brightness(0.9) contrast(1.1) sepia(0.2);
+            filter: sepia(0.3) contrast(1.1);
+            /* Memberikan efek nostalgia sedikit kecokelatan */
             transition: all 0.5s ease;
         }
 
         .winner-memory-card:hover .grayscale-memory {
-            filter: brightness(1.1) contrast(1) sepia(0);
+            filter: sepia(0) contrast(1);
+            transform: scale(1.1);
+        }
+
+        .rank-badge-mini {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 5;
+            border: 2px solid #fff;
+        }
+
+        .rank-badge-mini.gold {
+            background: linear-gradient(45deg, #FFD700, #FDB931);
+        }
+
+        .rank-badge-mini.silver {
+            background: linear-gradient(45deg, #C0C0C0, #8E8E8E);
+        }
+
+        .rank-badge-mini.bronze {
+            background: linear-gradient(45deg, #CD7F32, #8B4513);
+        }
+
+        .winner-memory-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .winner-memory-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 215, 0, 0.3);
         }
 
         @media (max-width: 768px) {
