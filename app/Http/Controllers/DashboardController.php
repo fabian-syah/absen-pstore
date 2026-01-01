@@ -294,22 +294,38 @@ class DashboardController extends Controller
         $data['birthdayData'] = $birthdayData;
 
         // =========================================================================
-// [BARU] LOGIKA PEMENANG BULAN LALU (HISTORIAL)
 // =========================================================================
-// Cari bagian ini di DashboardController dan ganti kodenya
+// [FIXED] LOGIKA HALL OF FAME: HITUNG LIVE PER CABANG
+// =========================================================================
 $lastMonth = $nowInBranch->copy()->subMonth();
 $data['lastMonthName'] = $lastMonth->translatedFormat('F Y');
 
-$data['lastMonthWinners'] = \App\Models\LeaderboardHistory::where('month', $lastMonth->month)
-    ->where('year', $lastMonth->year)
-    ->where('branch_id', $user->branch_id)
+// Kita hitung langsung dari tabel Attendance agar angka sinkron dengan Riwayat Absensi
+$data['lastMonthWinners'] = Attendance::select(
+        'user_id', 
+        DB::raw('count(*) as total_attendance')
+    )
+    ->whereMonth('check_in_time', $lastMonth->month)
+    ->whereYear('check_in_time', $lastMonth->year)
+    // FILTER PER CABANG: Hanya ambil karyawan yang satu cabang dengan user yang login
+    ->where('branch_id', $user->branch_id) 
+    ->where('status', 'verified')
+    // Filter status yang dianggap "Masuk" (Sama dengan logic Riwayat Absensi)
+    ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar', 'Telat', 'Izin Telat'])
+    ->whereHas('user', function($q) {
+        $q->where('is_active', true)
+          ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk Hall of Fame
+    })
+    ->groupBy('user_id')
+    ->orderByDesc('total_attendance') // Urutkan dari yang masuk paling banyak
+    ->limit(3) // Ambil Top 3
     ->with(['user', 'user.division'])
-    // PRIORITAS 1: Kehadiran terbanyak (21 hari akan otomatis di atas 8 hari)
-    ->orderBy('total_attendance', 'desc') 
-    // PRIORITAS 2: Jika total hari sama, urutkan berdasarkan rank asli dari perhitungan awal
-    ->orderBy('rank', 'asc') 
-    ->limit(3) // Paksa hanya 3 data agar layout simetris
-    ->get();
+    ->get()
+    ->map(function($winner, $key) {
+        // Tambahkan property rank secara manual agar Blade tidak error
+        $winner->rank = $key + 1;
+        return $winner;
+    });
 
         return view('dashboard', $data);
     }
