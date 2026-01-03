@@ -27,6 +27,31 @@
     /* Privilege Box */
     .privilege-box { background: #f8f9fa; border: 1px dashed #ced4da; border-radius: 12px; padding: 15px; transition: all 0.3s; }
     .privilege-box.active { background: #eef2ff; border-color: #4B49AC; }
+
+    /* Modal Backdrop */
+    .modal-backdrop-custom { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; animation: fadeIn 0.3s ease-in-out; }
+    .modal-backdrop-custom.show { display: block; }
+
+    /* Modal */
+    .error-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 15px; padding: 30px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); z-index: 1000; max-width: 400px; animation: slideIn 0.4s ease-out; display: none; }
+    .error-modal.show { display: block; }
+
+    .error-modal.hide { animation: slideOut 0.3s ease-in-out forwards; }
+
+    .modal-header-error { display: flex; align-items: center; margin-bottom: 15px; }
+    .modal-icon-error { width: 50px; height: 50px; border-radius: 50%; background: #fee; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
+    .modal-icon-error i { font-size: 24px; color: #dc3545; }
+
+    .modal-title-error { font-size: 18px; font-weight: bold; color: #333; }
+    .modal-body-error { color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+
+    .modal-footer-error { display: flex; justify-content: flex-end; gap: 10px; }
+    .btn-close-error { background: #e9ecef; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+    .btn-close-error:hover { background: #dee2e6; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideIn { from { transform: translate(-50%, -60%); opacity: 0; } to { transform: translate(-50%, -50%); opacity: 1; } }
+    @keyframes slideOut { from { transform: translate(-50%, -50%); opacity: 1; } to { transform: translate(-50%, -60%); opacity: 0; } }
 </style>
 
 <div class="row justify-content-center">
@@ -116,7 +141,7 @@
                                     <label class="form-label">Gaji Pokok</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
-                                        <input type="text" name="basic_salary" class="form-control rupiahe fw-bold form-control-lg" 
+                                        <input type="text" id="basic_salary" name="basic_salary" class="form-control rupiahe fw-bold form-control-lg" 
                                                value="{{ number_format($user->employeeSalary->basic_salary ?? 0, 0, ',', '.') }}" placeholder="0">
                                     </div>
                                 </div>
@@ -223,6 +248,23 @@
     </div>
 </div>
 
+{{-- ERROR MODAL --}}
+<div class="modal-backdrop-custom" id="errorBackdrop"></div>
+<div class="error-modal" id="errorModal">
+    <div class="modal-header-error">
+        <div class="modal-icon-error">
+            <i class="mdi mdi-alert-circle"></i>
+        </div>
+        <div class="modal-title-error">Validasi Gaji Pokok</div>
+    </div>
+    <div class="modal-body-error" id="errorMessage">
+        Gaji Pokok tidak boleh lebih dari Rp 6.000.000. Silakan kurangi jumlahnya.
+    </div>
+    <div class="modal-footer-error">
+        <button class="btn-close-error" onclick="closeErrorModal()">Tutup</button>
+    </div>
+</div>
+
 {{-- SCRIPT --}}
 <script>
     function togglePrivilegeStyle(checkbox) {
@@ -232,6 +274,26 @@
         } else {
             box.classList.remove('active');
         }
+    }
+
+    function showErrorModal(message) {
+        const backdrop = document.getElementById('errorBackdrop');
+        const modal = document.getElementById('errorModal');
+        document.getElementById('errorMessage').innerText = message;
+        
+        backdrop.classList.add('show');
+        modal.classList.add('show');
+    }
+
+    function closeErrorModal() {
+        const backdrop = document.getElementById('errorBackdrop');
+        const modal = document.getElementById('errorModal');
+        
+        modal.classList.add('hide');
+        setTimeout(() => {
+            backdrop.classList.remove('show');
+            modal.classList.remove('show', 'hide');
+        }, 300);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -283,12 +345,23 @@
             return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
         }
 
-        // Clean Rupiah on Submit
+        // VALIDASI GAJI POKOK MAKSIMAL 6 JUTA
         document.getElementById('salaryForm').addEventListener('submit', function(e) {
+            const basicSalaryInput = document.getElementById('basic_salary');
+            const basicSalaryValue = parseInt(basicSalaryInput.value.replace(/\./g, '').replace(/,/g, ''));
+            
+            if (basicSalaryValue > 6000000) {
+                e.preventDefault();
+                showErrorModal('Gaji Pokok tidak boleh lebih dari Rp 6.000.000. Silakan kurangi jumlahnya.');
+                return false;
+            }
+
             rupiahInputs.forEach(input => {
                 input.value = input.value.replace(/\./g, '');
             });
         });
+
+        document.getElementById('errorBackdrop').addEventListener('click', closeErrorModal);
     });
 </script>
 @endsection
