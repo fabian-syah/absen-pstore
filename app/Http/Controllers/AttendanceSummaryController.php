@@ -16,7 +16,7 @@ class AttendanceSummaryController extends Controller
     {
         $currentUser = Auth::user();
         $selectedYear = $request->get('year', date('Y'));
-        $selectedMonth = $request->get('month', date('n')); // Ambil bulan yang dipilih user
+        $selectedMonth = $request->get('month', date('n'));
         $targetUserId = $request->get('user_id');
 
         // --- 1. SEARCH & SCOPE KARYAWAN ---
@@ -24,7 +24,10 @@ class AttendanceSummaryController extends Controller
         $targetUser = $currentUser; 
         $allowedRoles = ['admin', 'audit', 'leader', 'admin_gaji'];
 
-        if (in_array($currentUser->role, $allowedRoles)) {
+        // Cek apakah user punya hak akses filter karyawan
+        $isAccessGranted = in_array($currentUser->role, $allowedRoles);
+
+        if ($isAccessGranted) {
             if ($currentUser->role === 'audit' || $currentUser->role === 'leader') {
                 $handledBranchIds = $currentUser->branches ? $currentUser->branches->pluck('id')->toArray() : [];
                 if($currentUser->branch_id) { $handledBranchIds[] = $currentUser->branch_id; }
@@ -45,7 +48,6 @@ class AttendanceSummaryController extends Controller
         } 
 
         // --- 2. AMBIL DATA ---
-        // Data absensi khusus bulan dan tahun yang dipilih user
         $history = Attendance::where('user_id', $targetUser->id)
             ->whereYear('check_in_time', $selectedYear)
             ->whereMonth('check_in_time', $selectedMonth)
@@ -69,12 +71,10 @@ class AttendanceSummaryController extends Controller
         for ($m = 1; $m <= 12; $m++) {
             $monthAtt = $attendances->filter(fn($q) => $q->check_in_time->month == $m);
 
-            // Hitung Telat & Alpha
             $telatFromAttendance = $monthAtt->filter(fn($row) => $row->is_late_checkin == true || str_contains(strtolower($row->presence_status ?? ''), 'telat'))->count();
             $alphaCount = $monthAtt->filter(fn($q) => strtolower($q->presence_status ?? '') == 'alpha')->count();
             $pendingCount = $monthAtt->filter(fn($q) => $q->status == 'pending_verification')->count();
 
-            // Hitung Masuk (Kunci: Bukan Alpha)
             $masukCount = $monthAtt->filter(function($row) {
                 $st = strtolower($row->presence_status ?? '');
                 return in_array($st, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat']) && $st !== 'alpha';
@@ -83,7 +83,6 @@ class AttendanceSummaryController extends Controller
             $wfhCount = $monthAtt->filter(fn($q) => str_contains(strtolower($q->presence_status ?? ''), 'wfh'))->count();
             $pulangCepatCount = $monthAtt->where('is_early_checkout', true)->count();
 
-            // Hitung dari Tabel Leave Request
             $cutiCount = 0; $sakitCount = 0; $izinCount = 0; $telatFromLeave = 0; $wfhFromLeaveCount = 0; 
             foreach ($leaves as $leave) {
                 $start = Carbon::parse($leave->start_date);
@@ -120,28 +119,19 @@ class AttendanceSummaryController extends Controller
             foreach($grandTotal as $key => $val) { $grandTotal[$key] += $monthsData[$m][$key] ?? 0; }
         }
 
-        // --- 5. DATA UNTUK BOX ATAS (MAPPING KEY AGAR SESUAI DENGAN VIEW) ---
+        // --- 5. DATA UNTUK BOX ATAS ---
         $rawSummary = $monthsData[$selectedMonth];
-        
-        // Kita buat array summary baru dengan key 'present' agar history.blade.php bisa membacanya
         $summary = [
             'present' => $rawSummary['masuk'],
             'sakit'   => $rawSummary['sakit'],
             'izin'    => $rawSummary['izin'],
             'alpha'   => $rawSummary['alpha'],
             'total'   => $rawSummary['total_hari'],
-            'telat'   => $rawSummary['telat'],
-            'pending' => $rawSummary['pending'],
         ];
 
-        // Navigasi Prev/Next
-        $prevMonth = $selectedMonth == 1 ? 12 : $selectedMonth - 1;
-        $prevYear = $selectedMonth == 1 ? $selectedYear - 1 : $selectedYear;
-        $nextMonth = $selectedMonth == 12 ? 1 : $selectedMonth + 1;
-        $nextYear = $selectedMonth == 12 ? $selectedYear + 1 : $selectedYear;
-
-        return view('attendance.summary', [ // PASTIKAN NAMA VIEW ADALAH history
-            'employee' => $targetUser,
+        return view('attendance.summary', [
+            'user' => $targetUser, // Diubah ke 'user' agar sesuai dengan Blade
+            'isAccessGranted' => $isAccessGranted, // Kirim variabel ini agar @if(isset) bekerja
             'history' => $history,
             'selectedYear' => $selectedYear,
             'selectedMonth' => $selectedMonth,
@@ -149,8 +139,6 @@ class AttendanceSummaryController extends Controller
             'grandTotal' => $grandTotal,
             'summary' => $summary, 
             'employees' => $employees,
-            'prevMonth' => $prevMonth, 'prevYear' => $prevYear,
-            'nextMonth' => $nextMonth, 'nextYear' => $nextYear,
         ]);
     }
 }
