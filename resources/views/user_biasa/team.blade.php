@@ -94,7 +94,7 @@
         <div class="col-6 col-md-3">
             <div class="card stat-card h-100">
                 <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><p class="text-uppercase fw-bold text-muted small mb-1">Belum Absen</p><h3 class="mb-0 fw-bold text-danger">{{ $stats['absent'] }}</h3></div>
+                    <div><p class="text-uppercase fw-bold text-muted small mb-1">Belum Absen</p><h3 class="mb-0 fw-bold text-danger">{{ $stats['alpha'] }}</h3></div>
                     <div class="stat-icon-box bg-soft-danger"><i class="mdi mdi-clock-alert"></i></div>
                 </div>
             </div>
