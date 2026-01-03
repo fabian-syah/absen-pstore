@@ -144,9 +144,57 @@ class AttendanceHistoryController extends Controller
         return $pdf->download('Laporan.pdf');
     }
 
-    public function updateByAudit(Request $request, $id) {
+    public function updateByAudit(Request $request, $id)
+    {
+        if (!in_array(Auth::user()->role, ['audit', 'admin'])) {
+            abort(403, 'Akses Ditolak.');
+        }
+
         $attendance = Attendance::findOrFail($id);
-        $attendance->update($request->all());
-        return back();
+
+        $request->validate([
+            'presence_status' => 'required|string',
+            'check_in_time'   => 'required',
+            'check_out_time'  => 'nullable',
+            'status'          => 'required|in:verified,pending_verification,rejected',
+            'audit_note'      => 'nullable|string',
+            'audit_photo'     => $attendance->audit_photo_path ? 'nullable|image|max:2048' : 'required|image|max:2048'
+        ]);
+
+        $originalDate = $attendance->check_in_time->format('Y-m-d');
+        $newCheckIn = Carbon::parse($originalDate . ' ' . $request->check_in_time);
+
+        $newCheckOut = null;
+        if ($request->check_out_time) {
+            $newCheckOut = Carbon::parse($originalDate . ' ' . $request->check_out_time);
+            if ($newCheckOut->lt($newCheckIn)) { $newCheckOut->addDay(); }
+        }
+
+        // Logic Hitung Telat Berdasarkan Snapshot Jadwal di Model
+        $isLate = false;
+        if ($request->presence_status == 'Masuk' && $attendance->scheduled_check_in) {
+            $scheduleIn = Carbon::parse($originalDate . ' ' . $attendance->scheduled_check_in);
+            $isLate = $newCheckIn->gt($scheduleIn);
+        }
+
+        $auditPhotoPath = $attendance->audit_photo_path;
+        if ($request->hasFile('audit_photo')) {
+            $auditPhotoPath = $request->file('audit_photo')->store('audit-proofs', 'public');
+        }
+
+        // Update menggunakan field yang ada di $fillable
+        $attendance->update([
+            'presence_status'     => $request->presence_status,
+            'check_in_time'       => $newCheckIn,
+            'check_out_time'      => $newCheckOut,
+            'status'              => $request->status,
+            'is_late_checkin'     => $isLate,
+            'audit_note'          => $request->audit_note,
+            'audit_photo_path'    => $auditPhotoPath,
+            'verified_by_user_id' => Auth::id(),
+            'attendance_type'     => 'manual', // Set ke manual karena diedit audit
+        ]);
+
+        return back()->with('success', 'Data absensi berhasil diperbarui.');
     }
 }
