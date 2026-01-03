@@ -78,7 +78,7 @@
         <div class="col-6 col-md-3">
             <div class="card stat-card h-100">
                 <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><p class="text-uppercase fw-bold text-muted small mb-1">Hadir / Lembur</p><h3 class="mb-0 fw-bold text-success">{{ $stats['hadir'] }}</h3></div>
+                    <div><p class="text-uppercase fw-bold text-muted small mb-1">Hadir / Lembur</p><h3 class="mb-0 fw-bold text-success">{{ $stats['present'] }}</h3></div>
                     <div class="stat-icon-box bg-soft-success"><i class="mdi mdi-check-circle"></i></div>
                 </div>
             </div>
