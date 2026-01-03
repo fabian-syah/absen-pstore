@@ -7,6 +7,7 @@ use App\Models\LeaveRequest;
 use App\Models\User;
 use App\Models\Branch;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -143,18 +144,15 @@ class TeamController extends Controller
         if (!empty($myBranchIds)) {
             $assignedAudits = User::where('role', 'audit')
                 ->where('is_active', true)
-                ->with(['branches', 'branch']) // Eager Load relasi Multi dan Single
+                ->with(['branches', 'branch']) 
                 ->where(function($q) use ($myBranchIds) {
-                    // Cek Single Branch ID
                     $q->whereIn('branch_id', $myBranchIds)
-                    // Cek Multi Branch (Pivot)
                       ->orWhereHas('branches', function ($sq) use ($myBranchIds) {
                           $sq->whereIn('branches.id', $myBranchIds);
                       });
                 })
                 ->get();
         }
-        // --------------------------------
 
         return view('user_biasa.team', compact('myTeam', 'myBranchIds', 'controlledBranches', 'assignedAudits', 'stats'));
     }
@@ -335,10 +333,10 @@ class TeamController extends Controller
         $employee = User::with(['division', 'branch'])->findOrFail($employeeId);
         $selectedMonth = $request->get('month', date('m'));
         $selectedYear = $request->get('year', date('Y'));
+        
         $data = $this->getHistoryData($employee, $selectedMonth, $selectedYear);
-        return view('attendance.history', [
-            'history' => $data['history'],
-            'summary' => $data['summary'],
+        
+        return view('attendance.history', array_merge($data, [
             'selectedMonth' => $selectedMonth,
             'selectedYear' => $selectedYear,
             'employee' => $employee,
@@ -346,38 +344,117 @@ class TeamController extends Controller
             'prevYear' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->subMonth()->year,
             'nextMonth' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->addMonth()->month,
             'nextYear' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->addMonth()->year,
-        ]);
+        ]));
     }
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        $attendances = Attendance::with('verifier')->where('user_id', $user->id)->whereYear('check_in_time', $selectedYear)->whereMonth('check_in_time', $selectedMonth)->orderBy('check_in_time', 'desc')->get();
-        $leaves = LeaveRequest::where('user_id', $user->id)->where('status', 'approved')->where('is_active', true)->where(function ($q) use ($selectedMonth, $selectedYear) {
-            $q->whereMonth('start_date', $selectedMonth)->whereYear('start_date', $selectedYear)->orWhere(function ($subQ) use ($selectedMonth, $selectedYear) {
-                $subQ->whereMonth('end_date', $selectedMonth)->whereYear('end_date', $selectedYear);
-            });
-        })->get();
+        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
 
-        foreach ($attendances as $attendance) {
-            $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time)->format('Y-m-d');
-            $checkOutDate = $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->format('Y-m-d') : null;
-            $attendance->is_overtime = false;
-            if ($checkOutDate && $checkInDate !== $checkOutDate) {
-                $attendance->is_overtime = true;
-                $attendance->overtime_duration = \Carbon\Carbon::parse($attendance->check_in_time)->diff(\Carbon\Carbon::parse($attendance->check_out_time));
+        // 1. Tentukan Range Awal dan Akhir Bulan yang sedang dilihat
+        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+        
+        // Batasi penampilan sampai hari ini saja (jika melihat bulan berjalan)
+        $today = Carbon::now()->timezone($branchTimezone)->startOfDay();
+        $limitDate = ($endDate->gt($today)) ? $today : $endDate;
+
+        // 2. Ambil Absensi Real (Include H-1 untuk lembur lintas hari)
+        $attendances = Attendance::with(['verifier', 'scanner', 'user'])
+            ->where('user_id', $user->id)
+            ->whereBetween('check_in_time', [$startDate->copy()->subDay(), $endDate->copy()->addDay()])
+            ->get();
+
+        // 3. Ambil Izin yang bersinggungan dengan bulan terpilih
+        $leaves = LeaveRequest::with('verifier')
+            ->where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->where('is_active', true)
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                      ->orWhereBetween('end_date', [$startDate, $endDate])
+                      ->orWhere(function ($q) use ($startDate, $endDate) {
+                          $q->where('start_date', '<=', $startDate)
+                            ->where('end_date', '>=', $endDate);
+                      });
+            })
+            ->get();
+
+        $historyCollection = collect();
+        $period = CarbonPeriod::create($startDate, $limitDate);
+
+        // 4. Loop Kalender Harian
+        foreach ($period as $date) {
+            $currentDateStr = $date->format('Y-m-d');
+
+            // Cek Absen Real
+            $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
+                return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
+            })->first();
+
+            if ($att) {
+                $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
+                if ($att->check_out_time) { 
+                    $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); 
+                }
+                $historyCollection->push($att);
+            } else {
+                // JIKA ABSEN KOSONG, Cek Izin di tabel leaves
+                $leave = $leaves->filter(function ($l) use ($date) {
+                    $lStart = Carbon::parse($l->start_date)->startOfDay();
+                    $lEnd = Carbon::parse($l->end_date ?? $l->start_date)->endOfDay();
+                    return $date->between($lStart, $lEnd);
+                })->first();
+
+                $fakeAtt = new Attendance();
+                $fakeAtt->user_id = $user->id;
+                $fakeAtt->user = $user;
+                $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0);
+                
+                if ($leave) {
+                    $typeLabel = ucfirst($leave->type);
+                    if ($leave->type == 'telat') $typeLabel = 'Izin Telat';
+                    if ($leave->type == 'wfh') $typeLabel = 'WFH';
+
+                    $fakeAtt->presence_status = $typeLabel;
+                    $fakeAtt->status = 'verified';
+                    $fakeAtt->attendance_type = 'leave';
+                    $fakeAtt->notes = "Izin: " . $leave->reason;
+                    $fakeAtt->is_late_checkin = ($leave->type == 'telat');
+                    
+                    // Snapshot Jadwal
+                    $fakeAtt->scheduled_check_in = $user->check_in_start;
+                    $fakeAtt->scheduled_check_out = $user->check_out_start;
+
+                    $fakeAtt->setRelation('leaveRequest', $leave);
+                    $fakeAtt->setRelation('verifier', $leave->verifier);
+                } else {
+                    $fakeAtt->presence_status = $date->isWeekend() ? 'Libur' : 'Alpha';
+                    $fakeAtt->status = 'verified';
+                    $fakeAtt->attendance_type = 'system';
+                }
+                $historyCollection->push($fakeAtt);
             }
         }
+
+        $history = $historyCollection->sortByDesc('check_in_time');
+
+        // 5. HITUNG SUMMARY
         $summary = [
-            'total' => $attendances->count(),
-            'present' => $attendances->count(),
-            'sakit' => $leaves->where('type', 'sakit')->count(),
-            'izin'  => $leaves->whereIn('type', ['izin', 'cuti'])->count(),
-            'alpha' => 0,
-            'telat' => 0,
-            'pulang_cepat' => 0,
-            'pending' => $attendances->where('status', 'pending_verification')->count(),
+            'total' => $history->count(),
+            'present' => $history->filter(function ($item) {
+                $s = strtolower($item->presence_status ?? '');
+                return in_array($s, ['masuk', 'wfh', 'izin telat']) || str_contains($s, 'dinas') || 
+                       (empty($s) && in_array($item->attendance_type, ['scan', 'self', 'manual']));
+            })->count(),
+            'sakit' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'sakit')->count(),
+            'izin' => $history->filter(fn($i) => in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti', 'offday']))->count(),
+            'alpha' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'alpha')->count(),
+            'telat' => $history->where('is_late_checkin', true)->count(),
+            'pulang_cepat' => $history->where('is_early_checkout', true)->count(),
+            'pending' => $history->where('status', 'pending_verification')->count(),
         ];
 
-        return ['history' => $attendances, 'summary' => $summary];
+        return ['history' => $history, 'summary' => $summary];
     }
 }
