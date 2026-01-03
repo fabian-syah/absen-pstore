@@ -7,55 +7,79 @@ use App\Models\User;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod; // Import ini penting untuk looping tanggal
+use Carbon\CarbonPeriod;
 
 class MarkAbsentEmployees extends Command
 {
-    protected $signature = 'attendance:mark-absent';
-    protected $description = 'Cek user yang tidak absen dari awal bulan sampai kemarin dan tandai Alpha';
+    /**
+     * Signature sekarang menerima parameter opsional bulan dan tahun.
+     * Format: php artisan attendance:mark-absent {--month=} {--year=}
+     */
+    protected $signature = 'attendance:mark-absent {--month= : Bulan dalam angka 1-12} {--year= : Tahun contoh 2023}';
+    
+    protected $description = 'Cek user yang tidak absen pada periode tertentu dan tandai Alpha secara otomatis';
 
     public function handle()
     {
-        // 1. Tentukan Range Tanggal (Dari Awal Bulan s/d Kemarin)
-        // Contoh: Sekarang tgl 21, loop dari tgl 1 s/d tgl 20.
-        $startDate = Carbon::now()->startOfMonth(); 
-        $endDate   = Carbon::yesterday();
+        // 1. Ambil input dari user atau gunakan default (bulan/tahun sekarang)
+        $month = $this->option('month') ?: Carbon::now()->month;
+        $year  = $this->option('year') ?: Carbon::now()->year;
 
-        // Validasi: Jika script jalan tanggal 1, kemarin adalah bulan lalu.
-        // Opsional: Jika mau handle bulan lalu juga, logic start-nya bisa disesuaikan.
-        // Untuk sekarang kita asumsikan cek bulan berjalan.
-        if ($endDate->lt($startDate)) {
-             $this->info("Belum ada tanggal yang perlu dicek bulan ini.");
-             return;
+        try {
+            // Tentukan range: Awal bulan s/d akhir bulan yang dipilih
+            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $endDate   = $startDate->copy()->endOfMonth();
+
+            // Proteksi: Jika mengecek bulan berjalan, jangan sampai melewati hari kemarin
+            if ($startDate->isCurrentMonth()) {
+                $endDate = Carbon::yesterday();
+            }
+            
+            // Proteksi: Jika mencoba cek masa depan
+            if ($startDate->isFuture()) {
+                $this->error("Anda tidak bisa mengecek absen untuk bulan di masa depan!");
+                return;
+            }
+
+        } catch (\Exception $e) {
+            $this->error("Format bulan atau tahun salah.");
+            return;
         }
 
-        // Buat periode tanggal untuk diloop
+        // Buat periode tanggal
         $period = CarbonPeriod::create($startDate, $endDate);
 
-        $this->info("Memulai proses Auto-Alpha dari: " . $startDate->format('d-m-Y') . " s/d " . $endDate->format('d-m-Y'));
+        $this->info("=== PROSES AUTO-ALPHA ===");
+        $this->info("Periode: " . $startDate->format('F Y'));
+        $this->info("Range  : " . $startDate->format('d-m-Y') . " s/d " . $endDate->format('d-m-Y'));
+        $this->newLine();
 
         $users = User::where('role', '!=', 'super_admin')->get();
         $totalAlphaCreated = 0;
 
         foreach ($users as $user) {
-            $this->info("Mengecek User: {$user->name}");
+            $this->line("Mengecek User: <info>{$user->name}</info>");
+            $userAlphaCount = 0;
 
-            // --- LOOPING TANGGAL (1, 2, 3 ... 20) ---
             foreach ($period as $date) {
-                $currentDate = $date->copy(); // Copy agar object carbon tidak berubah
+                $currentDate = $date->copy();
 
-                // --- CEK 1: Apakah SUDAH ADA data absensi di tanggal ini? ---
-                // Baik itu Hadir, Telat, atau BAHKAN SUDAH ALPHA (dari run sebelumnya)
+                // --- CEK 1: Apakah Hari Libur (Sabtu/Minggu)? ---
+                // Biasanya Alpha tidak dihitung di hari libur.
+                if ($currentDate->isWeekend()) {
+                    continue;
+                }
+
+                // --- CEK 2: Apakah sudah ada data kehadiran/alpha? ---
                 $existingAttendance = Attendance::where('user_id', $user->id)
                     ->whereDate('check_in_time', $currentDate)
                     ->exists();
 
                 if ($existingAttendance) {
-                    // Skip, karena data hari itu sudah terisi (entah dia masuk, atau script ini sudah pernah jalan sebelumnya)
                     continue; 
                 }
 
-                // --- CEK 2: Apakah user SEDANG CUTI / IZIN di tanggal ini? ---
+                // --- CEK 3: Apakah sedang Cuti / Izin? ---
                 $isOnLeave = LeaveRequest::where('user_id', $user->id)
                     ->where('status', 'approved')
                     ->where('type', '!=', 'telat')
@@ -66,44 +90,39 @@ class MarkAbsentEmployees extends Command
                     ->exists();
 
                 if ($isOnLeave) {
-                    continue; // Skip, dia izin resmi
+                    continue;
                 }
-
-                // --- CEK 3: Apakah Hari Libur (Sabtu/Minggu)? ---
-                // Hapus komentar di bawah jika Alpha tidak berlaku di weekend
-                /*
-                if ($currentDate->isWeekend()) {
-                     continue;
-                }
-                */
 
                 // --- EKSEKUSI: BUAT DATA ALPHA ---
-                // Data kosong & tidak izin = ALPHA
                 try {
                     Attendance::create([
                         'user_id'           => $user->id,
-                        'branch_id'         => $user->branch_id ?? 1, // Default 1 jika null
-                        'check_in_time'     => $currentDate->setTime(0, 0, 0),
-                        'check_out_time'    => $currentDate->setTime(0, 0, 0),
+                        'branch_id'         => $user->branch_id ?? 1,
+                        'check_in_time'     => $currentDate->copy()->setTime(0, 0, 0),
+                        'check_out_time'    => $currentDate->copy()->setTime(0, 0, 0),
                         'status'            => 'verified',
                         'presence_status'   => 'Alpha',
                         'attendance_type'   => 'system',
-                        'audit_note'        => 'System Auto-Generate: Backfill Alpha check.',
-                        // Field lain set default/null
+                        'audit_note'        => "System Auto-Generate: Backfill Alpha for " . $currentDate->format('M Y'),
                         'photo_path'        => null,
                         'is_late_checkin'   => false,
                         'is_early_checkout' => false,
                     ]);
 
-                    $this->comment("  -> Tanggal " . $currentDate->format('d-m-Y') . ": Ditetapkan ALPHA.");
+                    $userAlphaCount++;
                     $totalAlphaCreated++;
 
                 } catch (\Exception $e) {
                     $this->error("  -> Error tgl " . $currentDate->format('d-m-Y') . ": " . $e->getMessage());
                 }
             }
+            
+            if ($userAlphaCount > 0) {
+                $this->comment("  -> Berhasil menambahkan $userAlphaCount hari Alpha.");
+            }
         }
 
-        $this->info("Selesai. Total record Alpha baru dibuat: $totalAlphaCreated");
+        $this->newLine();
+        $this->info("Selesai! Total record Alpha baru dibuat: $totalAlphaCreated");
     }
 }
