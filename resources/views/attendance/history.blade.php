@@ -11,7 +11,6 @@
 @section('heading')
     @if (isset($employee))
         <div class="d-flex align-items-center">
-            {{-- FIXING: Cek apakah branch_id ada sebelum membuat route --}}
             @if($employee->branch_id)
                 <a href="{{ route('team.branch.detail', $employee->branch_id) }}"
                     class="btn btn-sm btn-light btn-icon me-3 rounded-circle shadow-sm">
@@ -69,11 +68,7 @@
                         <div class="col-auto">
                             @php
                                 $prevParams = ['month' => $prevMonth, 'year' => $prevYear];
-                                if (isset($employee)) {
-                                    $prevRoute = route('team.branch.employee.history', array_merge(['branchId' => $employee->branch_id ?? 0, 'employeeId' => $employee->id], $prevParams));
-                                } else {
-                                    $prevRoute = route('attendance.history', $prevParams);
-                                }
+                                $prevRoute = isset($employee) ? route('team.branch.employee.history', array_merge(['branchId' => $employee->branch_id ?? 0, 'employeeId' => $employee->id], $prevParams)) : route('attendance.history', $prevParams);
                             @endphp
                             <a href="{{ $prevRoute }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold"><i class="mdi mdi-chevron-left me-1"></i> Prev</a>
                         </div>
@@ -103,11 +98,7 @@
                         <div class="col-auto d-flex gap-2">
                             @php
                                 $nextParams = ['month' => $nextMonth, 'year' => $nextYear];
-                                if (isset($employee)) {
-                                    $nextRoute = route('team.branch.employee.history', array_merge(['branchId' => $employee->branch_id ?? 0, 'employeeId' => $employee->id], $nextParams));
-                                } else {
-                                    $nextRoute = route('attendance.history', $nextParams);
-                                }
+                                $nextRoute = isset($employee) ? route('team.branch.employee.history', array_merge(['branchId' => $employee->branch_id ?? 0, 'employeeId' => $employee->id], $nextParams)) : route('attendance.history', $nextParams);
                             @endphp
                             <a href="{{ $nextRoute }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">Next <i class="mdi mdi-chevron-right ms-1"></i></a>
                             <a href="{{ route('attendance.export.pdf', ['month' => $selectedMonth, 'year' => $selectedYear, 'employeeId' => isset($employee) ? $employee->id : null]) }}" class="btn btn-danger btn-sm text-white ms-2 rounded-pill px-3 shadow-sm"><i class="mdi mdi-file-pdf-box me-1"></i> PDF</a>
@@ -251,7 +242,7 @@
                                                 $statusLower = strtolower($att->presence_status ?? 'alpha');
                                                 $badgeClass = match(true){
                                                     $statusLower == 'masuk' => 'bg-success',
-                                                    in_array($statusLower, ['sakit','izin','cuti','izin telat']) => 'bg-info',
+                                                    in_array($statusLower, ['sakit','izin','cuti','izin telat','offday']) => 'bg-info',
                                                     $statusLower == 'alpha' => 'bg-danger',
                                                     default => 'bg-dark'
                                                 };
@@ -335,11 +326,100 @@
         </div>
     </div>
 
-    {{-- MODALS AUDIT --}}
+    {{-- MODAL AUDIT (Verifikasi & Edit) --}}
     @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
         @foreach ($history as $att)
             @if($att->id && is_numeric($att->id))
-                {{-- Masukkan Modal Verifikasi & Edit di sini --}}
+                {{-- Modal Verifikasi --}}
+                <div class="modal fade" id="verifyModal{{ $att->id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content rounded-4">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title fw-bold">Verifikasi Absensi</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form action="{{ route('audit.verify.attendance', $att->id) }}" method="POST">
+                                @csrf @method('PUT')
+                                <div class="modal-body">
+                                    <p>Verifikasi absensi <strong>{{ $employee->name }}</strong> tanggal <strong>{{ $att->check_in_time->format('d M Y') }}</strong>?</p>
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <select name="presence_status" class="form-select">
+                                            <option value="Masuk" {{ $att->presence_status == 'Masuk' ? 'selected' : '' }}>Masuk</option>
+                                            <option value="Sakit" {{ $att->presence_status == 'Sakit' ? 'selected' : '' }}>Sakit</option>
+                                            <option value="Izin" {{ $att->presence_status == 'Izin' ? 'selected' : '' }}>Izin</option>
+                                            <option value="Alpha" {{ $att->presence_status == 'Alpha' ? 'selected' : '' }}>Alpha</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-success">Verifikasi</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Modal Edit Audit --}}
+                <div class="modal fade" id="editAuditModal{{ $att->id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content rounded-4">
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title fw-bold">Edit Absensi (Audit Mode)</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form action="{{ route('audit.update.attendance', $att->id) }}" method="POST" enctype="multipart/form-data">
+                                @csrf @method('PUT')
+                                <div class="modal-body">
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold">Jam Masuk</label>
+                                            <input type="time" name="check_in_time" class="form-control" value="{{ $att->check_in_time->format('H:i') }}" required>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold">Jam Pulang</label>
+                                            <input type="time" name="check_out_time" class="form-control" value="{{ $att->check_out_time ? $att->check_out_time->format('H:i') : '' }}">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Status Kehadiran</label>
+                                        <select name="presence_status" class="form-select" required>
+                                            <option value="Masuk" {{ $att->presence_status == 'Masuk' ? 'selected' : '' }}>Masuk</option>
+                                            <option value="Sakit" {{ $att->presence_status == 'Sakit' ? 'selected' : '' }}>Sakit</option>
+                                            <option value="Izin" {{ $att->presence_status == 'Izin' ? 'selected' : '' }}>Izin</option>
+                                            <option value="Cuti" {{ $att->presence_status == 'Cuti' ? 'selected' : '' }}>Cuti</option>
+                                            <option value="Alpha" {{ $att->presence_status == 'Alpha' ? 'selected' : '' }}>Alpha</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Status Verifikasi</label>
+                                        <select name="status" class="form-select" required>
+                                            <option value="verified" {{ $att->status == 'verified' ? 'selected' : '' }}>Verified</option>
+                                            <option value="pending_verification" {{ $att->status == 'pending_verification' ? 'selected' : '' }}>Pending</option>
+                                            <option value="rejected" {{ $att->status == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-danger">Upload Bukti Koreksi (Wajib)</label>
+                                        <input type="file" name="audit_photo" class="form-control" {{ $att->audit_photo_path ? '' : 'required' }}>
+                                        @if($att->audit_photo_path)
+                                            <small class="text-muted">Bukti sudah ada, upload ulang jika ingin mengganti.</small>
+                                        @endif
+                                    </div>
+                                    <div class="mb-0">
+                                        <label class="form-label small fw-bold">Catatan Audit</label>
+                                        <textarea name="audit_note" class="form-control" rows="2" placeholder="Alasan koreksi...">{{ $att->audit_note }}</textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-info text-white fw-bold">Simpan Perubahan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             @endif
         @endforeach
     @endif
