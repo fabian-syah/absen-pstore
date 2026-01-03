@@ -16,36 +16,33 @@ class LoginController extends Controller
     }
 
     public function login(Request $request)
-    {
-        $request->validate([
-            'login_id' => 'required|string',
-            'password' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'login_id' => 'required|string',
+        'password' => 'required|string',
+    ]);
 
-        // 1. Cari user
-        $user = User::where('login_id', $request->login_id)->first();
+    $user = User::where('login_id', $request->login_id)->first();
 
-        // 2. Cek User Ditemukan & Password Benar
-       if ($user && (Hash::check($request->password, $user->password))) {
+    if ($user && (Hash::check($request->password, $user->password))) {
 
-            // 3. CEK STATUS AKTIF (LOGIKA BARU)
-            if ($user->is_active == 0) {
-                return back()->withErrors([
-                    'login_id' => 'Akun Anda telah dinonaktifkan. Silakan hubungi Admin.',
-                ])->withInput();
-            }
-
-            // Jika lolos semua, login
-            Auth::login($user, $request->remember);
-            $request->session()->regenerate();
-            return redirect()->route('dashboard');
+        if ($user->is_active == 0) {
+            return back()->withErrors(['login_id' => 'Akun Anda dinonaktifkan.'])->withInput();
         }
 
-        // Jika gagal
-        return back()->withErrors([
-            'login_id' => 'ID Login atau Password salah.',
-        ])->withInput();
+        // --- LOGIKA BARU: Update Last Login ---
+        $user->update([
+            'last_login_at' => now()
+        ]);
+        // --------------------------------------
+
+        Auth::login($user, $request->remember);
+        $request->session()->regenerate();
+        return redirect()->route('dashboard');
     }
+
+    return back()->withErrors(['login_id' => 'ID Login atau Password salah.'])->withInput();
+}
 
     public function logout(Request $request)
     {

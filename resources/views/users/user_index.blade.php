@@ -68,6 +68,7 @@
                                             <th> # </th>
                                             <th> Profil Pengguna </th>
                                             <th> Kontak </th>
+                                            <th> Status Login </th> {{-- <--- KOLOM BARU --}}
                                             <th> Role </th>
                                             <th> Penempatan & Divisi </th>
                                             <th> Tanggal Join </th>
@@ -105,13 +106,37 @@
                                                         <div class="text-success mt-1"><i class="mdi mdi-whatsapp me-1"></i> {{ $user->whatsapp }}</div>
                                                     @endif
                                                 </td>
+                                                {{-- LOGIKA LAST LOGIN BERDASARKAN TIMEZONE CABANG --}}
+                                                <td>
+                                                    @php
+                                                        $branchTz = $user->branch->timezone ?? 'Asia/Jakarta';
+                                                        $lastLogin = $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->setTimezone($branchTz) : null;
+                                                        $isOnline = Cache::has('user-is-online-' . $user->id);
+                                                    @endphp
+
+                                                    @if($isOnline)
+                                                        <span class="badge badge-success d-flex align-items-center" style="width: fit-content;">
+                                                            <i class="mdi mdi-circle me-1" style="font-size: 10px;"></i> Online
+                                                        </span>
+                                                    @elseif($lastLogin)
+                                                        <div class="lh-1">
+                                                            <div class="fw-bold mb-1" style="font-size: 0.8rem;">{{ $lastLogin->translatedFormat('d M Y') }}</div>
+                                                            <small class="text-muted" style="font-size: 0.7rem;">
+                                                                <i class="mdi mdi-clock-outline me-1"></i>{{ $lastLogin->format('H:i') }} 
+                                                                {{ $branchTz == 'Asia/Jakarta' ? 'WIB' : ($branchTz == 'Asia/Makassar' ? 'WITA' : 'WIT') }}
+                                                            </small>
+                                                        </div>
+                                                    @else
+                                                        <span class="text-muted small">Belum Login</span>
+                                                    @endif
+                                                </td>
                                                 <td>
                                                     <span class="badge badge-outline-secondary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
                                                     @if($user->only_security_scan)
                                                         <div class="mt-1"><span class="badge bg-danger text-white" style="font-size: 10px;"><i class="mdi mdi-qrcode-scan"></i> Scan Only</span></div>
                                                     @endif
                                                     @if($user->use_face_recognition)
-                                                         <div class="mt-1"><span class="badge bg-success text-white" style="font-size: 10px;"><i class="mdi mdi-face-recognition"></i> AI ON</span></div>
+                                                        <div class="mt-1"><span class="badge bg-success text-white" style="font-size: 10px;"><i class="mdi mdi-face-recognition"></i> AI ON</span></div>
                                                     @endif
                                                 </td>
                                                 <td>
@@ -161,7 +186,7 @@
                                                 </td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="8" class="text-center py-4"><div class="text-muted">Tidak ada data user aktif ditemukan.</div></td></tr>
+                                            <tr><td colspan="9" class="text-center py-4"><div class="text-muted">Tidak ada data user aktif ditemukan.</div></td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>

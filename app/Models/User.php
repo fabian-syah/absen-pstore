@@ -62,6 +62,7 @@ class User extends Authenticatable
         'check_out_start',
         'check_in_end',
         'check_out_end',
+        'last_login_at',
     ];
 
     /**
@@ -81,6 +82,7 @@ class User extends Authenticatable
         'is_active' => 'boolean',
         'only_security_scan' => 'boolean',
         'gaji' => 'decimal:2', // Casting agar outputnya selalu format desimal/angka
+        'last_login_at' => 'datetime',
     ];
 
     // =================================================================
