@@ -121,7 +121,7 @@
                     <div class="card bg-success text-white border-0 shadow-sm rounded-4 h-100">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
                             <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Hadir / WFH</h6>
-                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['hadir'] }}</h2>
+                            <h2 class="fw-bold text-white mb-0 display-6">{{ $summary['present'] }}</h2>
                         </div>
                     </div>
                 </div>
