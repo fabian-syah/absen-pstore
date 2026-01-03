@@ -120,8 +120,19 @@ class AttendanceSummaryController extends Controller
             foreach($grandTotal as $key => $val) { $grandTotal[$key] += $monthsData[$m][$key] ?? 0; }
         }
 
-        // --- 5. DATA UNTUK BOX ATAS ---
-        $summary = $monthsData[$selectedMonth];
+        // --- 5. DATA UNTUK BOX ATAS (MAPPING KEY AGAR SESUAI DENGAN VIEW) ---
+        $rawSummary = $monthsData[$selectedMonth];
+        
+        // Kita buat array summary baru dengan key 'present' agar history.blade.php bisa membacanya
+        $summary = [
+            'present' => $rawSummary['masuk'],
+            'sakit'   => $rawSummary['sakit'],
+            'izin'    => $rawSummary['izin'],
+            'alpha'   => $rawSummary['alpha'],
+            'total'   => $rawSummary['total_hari'],
+            'telat'   => $rawSummary['telat'],
+            'pending' => $rawSummary['pending'],
+        ];
 
         // Navigasi Prev/Next
         $prevMonth = $selectedMonth == 1 ? 12 : $selectedMonth - 1;
