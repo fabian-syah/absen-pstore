@@ -125,7 +125,7 @@
                     <div class="bg-light rounded p-3 mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted small"><i class="mdi mdi-account-check text-success me-1"></i>Hadir</span>
-                            <span class="fw-bold text-dark">{{ $branch->stats_today['hadir'] }}</span>
+                            <span class="fw-bold text-dark">{{ $branch->stats_today['present'] }}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted small"><i class="mdi mdi-hospital-box text-info me-1"></i>Sakit</span>
