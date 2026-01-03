@@ -82,7 +82,11 @@
                                                 </div>
                                                 <div>
                                                     <h6 class="mb-0 fw-bold">{{ $att->user->name }}</h6>
-                                                    <small class="text-muted">{{ $att->user->division->name ?? 'Staff' }}</small>
+                                                    <div class="small text-muted">
+                                                        {{ $att->user->division->name ?? 'Staff' }} 
+                                                        <span class="mx-1">•</span> 
+                                                        <span class="text-primary fw-medium">{{ $att->user->branch->name ?? '-' }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
@@ -177,7 +181,10 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <h6 class="mb-0 fw-bold">{{ Str::limit($att->user->name, 22) }}</h6>
-                                    <small class="text-muted">{{ $att->user->branch->name ?? '-' }} ({{ $tzLabel }})</small>
+                                    <div class="d-flex align-items-center">
+                                        <small class="text-primary fw-bold">{{ $att->user->branch->name ?? '-' }}</small>
+                                        <small class="text-muted ms-1">({{ $tzLabel }})</small>
+                                    </div>
                                 </div>
                             </div>
                             
