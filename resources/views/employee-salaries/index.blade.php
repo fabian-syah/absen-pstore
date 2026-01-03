@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        {{-- ALERT ERROR --}}
+        {{-- ALERT --}}
         @if(session('error'))
             <div class="alert alert-danger shadow-sm border-0 mb-4">
                 <i class="mdi mdi-alert-circle me-2"></i> {{ session('error') }}
@@ -109,9 +109,9 @@
                             <tr>
                                 <th class="ps-4">PROFIL KARYAWAN</th>
                                 <th>LOKASI KERJA</th>
-                                <th>KATEGORI GAJI</th>
-                                <th>GAJI UTAMA / INSENTIF</th>
-                                <th>DETAIL TUNJANGAN & CATATAN</th>
+                                <th>KATEGORI</th>
+                                <th>GAJI UTAMA</th>
+                                <th>TOTAL MASTER GAJI</th>
                                 <th class="text-center pe-4">AKSI</th>
                             </tr>
                         </thead>
@@ -156,13 +156,13 @@
                                 <td>
                                     @if($user->employeeSalary)
                                         @if($user->employeeSalary->category == 'freelance')
-                                            <h6 class="mb-0 fw-800 text-dark-contrast">Rp {{ number_format($user->employeeSalary->daily_salary, 0, ',', '.') }}</h6>
+                                            <h6 class="mb-0 fw-bold">Rp {{ number_format($user->employeeSalary->daily_salary, 0, ',', '.') }}</h6>
                                             <small class="text-muted">/ kehadiran</small>
                                         @elseif($user->employeeSalary->category == 'promotor')
-                                            <h6 class="mb-0 fw-800 text-dark-contrast">Rp {{ number_format($user->employeeSalary->promotor_bonus, 0, ',', '.') }}</h6>
+                                            <h6 class="mb-0 fw-bold">Rp {{ number_format($user->employeeSalary->promotor_bonus, 0, ',', '.') }}</h6>
                                             <small class="text-success fw-bold">/ bulan (Insentif)</small>
                                         @else
-                                            <h6 class="mb-0 fw-800 text-dark-contrast">Rp {{ number_format($user->employeeSalary->basic_salary, 0, ',', '.') }}</h6>
+                                            <h6 class="mb-0 fw-bold">Rp {{ number_format($user->employeeSalary->basic_salary, 0, ',', '.') }}</h6>
                                             <small class="text-muted">/ bulan</small>
                                         @endif
                                     @else
@@ -170,30 +170,17 @@
                                     @endif
                                 </td>
 
-                                {{-- DETAIL TUNJANGAN & CATATAN --}}
-                                <td style="min-width: 200px;">
-                                    @if($user->employeeSalary)
-                                        <div class="d-flex flex-column gap-1">
-                                            @if($user->employeeSalary->category == 'employee')
-                                                <small class="text-dark fw-bold">Jabatan: <span class="text-secondary fw-normal">Rp {{ number_format($user->employeeSalary->position_allowance, 0, ',', '.') }}</span></small>
-                                                <small class="text-dark fw-bold">Privilege: <span class="text-secondary fw-normal">Rp {{ number_format($user->employeeSalary->owner_privilege, 0, ',', '.') }}</span></small>
-                                                @if($user->employeeSalary->use_privilege_mode)
-                                                    <span class="badge bg-success mt-1" style="width: fit-content; font-size: 0.6rem;"><i class="mdi mdi-shield-check"></i> Bebas Potongan</span>
-                                                @endif
-                                            @endif
-                                            
-                                            {{-- TAMPILKAN CATATAN JIKA ADA --}}
-                                            @if($user->employeeSalary->notes)
-                                                <div class="mt-2 p-2 bg-light rounded border border-light">
-                                                    <small class="text-muted d-block fw-bold" style="font-size: 0.7rem;"><i class="mdi mdi-note-text-outline"></i> Catatan:</small>
-                                                    <small class="text-dark fst-italic" style="font-size: 0.75rem; display: block; line-height: 1.2;">
-                                                        "{{ Str::limit($user->employeeSalary->notes, 50) }}"
-                                                    </small>
-                                                </div>
-                                            @endif
-                                        </div>
+                                <td>
+                                    @if($user->employeeSalary && $user->employeeSalary->category == 'employee')
+                                        @php
+                                            $totalMaster = $user->employeeSalary->basic_salary + 
+                                                           $user->employeeSalary->position_allowance + 
+                                                           $user->employeeSalary->owner_privilege;
+                                        @endphp
+                                        <h6 class="mb-0 fw-bold text-primary">Rp {{ number_format($totalMaster, 0, ',', '.') }}</h6>
+                                        <small class="text-muted" style="font-size: 0.7rem;">Pokok + Tunj + Priv</small>
                                     @else
-                                        <small class="text-muted">-</small>
+                                        <span class="text-muted">-</span>
                                     @endif
                                 </td>
 
@@ -205,13 +192,6 @@
                             <tr>
                                 <td colspan="6" class="text-center py-5">
                                     <h5 class="text-muted fw-bold">Tidak ada data ditemukan</h5>
-                                    <p class="text-muted small">
-                                        @if(request('search'))
-                                            User "<strong>{{ request('search') }}</strong>" tidak ditemukan.
-                                        @else
-                                            Belum ada data karyawan.
-                                        @endif
-                                    </p>
                                 </td>
                             </tr>
                             @endforelse

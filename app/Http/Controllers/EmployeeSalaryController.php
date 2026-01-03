@@ -16,14 +16,10 @@ class EmployeeSalaryController extends Controller
         $branches = Branch::orderBy('name')->get();
         $divisions = Division::orderBy('name')->get();
 
-        // 1. QUERY DASAR: WAJIB EXCLUDE ADMIN & ADMIN GAJI
-        // Kita kunci di awal query agar tidak bisa ditembus oleh search
         $query = User::with(['branch', 'division', 'employeeSalary'])
             ->where('is_active', true)
             ->whereNotIn('role', ['admin', 'admin_gaji']); 
 
-        // 2. FILTER PENCARIAN (DENGAN GROUPING)
-        // Grouping function($q) penting agar logika "OR" tidak membatalkan "whereNotIn" di atas
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -33,17 +29,14 @@ class EmployeeSalaryController extends Controller
             });
         }
 
-        // 3. FILTER CABANG
         if ($request->filled('branch_id')) {
             $query->where('branch_id', $request->branch_id);
         }
 
-        // 4. FILTER DIVISI
         if ($request->filled('division_id')) {
             $query->where('division_id', $request->division_id);
         }
 
-        // 5. FILTER KATEGORI GAJI
         if ($request->filled('category')) {
             if ($request->category == 'unset') {
                 $query->doesntHave('employeeSalary');
@@ -63,7 +56,6 @@ class EmployeeSalaryController extends Controller
     {
         $user = User::with('employeeSalary')->findOrFail($userId);
         
-        // PROTEKSI: Jika url ditembak manual untuk ID admin, tendang balik
         if (in_array($user->role, ['admin', 'admin_gaji'])) {
             return redirect()->route('employee-salaries.index')->with('error', 'Akses Ditolak: Data gaji Admin bersifat rahasia.');
         }
@@ -75,7 +67,6 @@ class EmployeeSalaryController extends Controller
     {
         $user = User::findOrFail($userId);
         
-        // PROTEKSI UPDATE
         if (in_array($user->role, ['admin', 'admin_gaji'])) {
             abort(403, 'Anda tidak diizinkan mengubah data gaji Admin.');
         }
@@ -88,11 +79,6 @@ class EmployeeSalaryController extends Controller
             'category' => 'required',
         ]);
 
-        if ($request->category == 'employee') {
-            $request->merge(['basic_salary' => $clean($request->basic_salary)]);
-            $request->validate(['basic_salary' => 'required|numeric|max:100000000']);
-        }
-
         // Siapkan Data Dasar
         $data = [
             'category' => $request->category,
@@ -100,7 +86,6 @@ class EmployeeSalaryController extends Controller
             'bank_name' => $request->bank_name,
             'notes' => $request->notes, 
             'updated_by' => Auth::id(),
-            // Reset nilai default 0 agar bersih jika ganti kategori
             'basic_salary' => 0, 
             'position_allowance' => 0, 
             'owner_privilege' => 0, 
@@ -109,18 +94,25 @@ class EmployeeSalaryController extends Controller
             'use_privilege_mode' => 0
         ];
 
-        // Isi Data Sesuai Kategori
+        // Validasi Spesifik Kategori Employee
         if ($request->category == 'employee') {
-            $data['basic_salary'] = $clean($request->basic_salary);
-            $data['position_allowance'] = $clean($request->position_allowance);
-            $data['owner_privilege'] = $clean($request->owner_privilege);
+            $basicSalary = (int) $clean($request->basic_salary);
+            
+            // VALIDASI MAKSIMAL 6 JUTA
+            if ($basicSalary > 6000000) {
+                return back()->withInput()->with('error', 'Gagal Simpan: Gaji Pokok tidak boleh melebihi Rp 6.000.000!');
+            }
+
+            $data['basic_salary'] = $basicSalary;
+            $data['position_allowance'] = (int) $clean($request->position_allowance);
+            $data['owner_privilege'] = (int) $clean($request->owner_privilege);
             $data['use_privilege_mode'] = $request->has('use_privilege_mode') ? 1 : 0;
             
         } elseif ($request->category == 'promotor') {
-            $data['promotor_bonus'] = $clean($request->promotor_bonus);
+            $data['promotor_bonus'] = (int) $clean($request->promotor_bonus);
             
         } elseif ($request->category == 'freelance') {
-            $data['daily_salary'] = $clean($request->daily_salary);
+            $data['daily_salary'] = (int) $clean($request->daily_salary);
         }
 
         EmployeeSalary::updateOrCreate(['user_id' => $userId], $data);
