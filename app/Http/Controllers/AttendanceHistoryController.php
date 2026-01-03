@@ -101,26 +101,23 @@ class AttendanceHistoryController extends Controller
 
     /**
      * Core Logic: Menggabungkan Data Absensi Real & Data Izin (Leave)
-     * [FIXED] Memastikan tanggal Izin muncul di tabel meskipun absen kosong
+     * [FIXED] Memastikan detail izin (notes & verifier) muncul di tabel
      */
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
 
-        // 1. Tentukan Range Kalender
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
         
         $today = Carbon::now()->timezone($branchTimezone)->startOfDay();
         $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
-        // 2. Ambil Absensi (Termasuk H-1 untuk cek lembur)
         $attendances = Attendance::with(['verifier', 'scanner', 'user'])
             ->where('user_id', $user->id)
             ->whereBetween('check_in_time', [$startDate->copy()->subDay(), $endDate->copy()->addDay()])
             ->get();
 
-        // 3. Ambil Izin
         $leaves = LeaveRequest::with('verifier')
             ->where('user_id', $user->id)
             ->where('status', 'approved')
@@ -130,11 +127,9 @@ class AttendanceHistoryController extends Controller
         $historyCollection = collect();
         $period = CarbonPeriod::create($startDate, $limitDate);
 
-        // 4. Loop Kalender untuk menyisipkan Izin di tanggal yang absennya kosong
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
 
-            // Cari data absen di DB
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
             })->first();
@@ -144,13 +139,13 @@ class AttendanceHistoryController extends Controller
                 if ($att->check_out_time) { $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); }
                 $historyCollection->push($att);
             } else {
-                // JIKA ABSEN KOSONG, CEK APAKAH ADA IZIN (Contoh: Tanggal 28)
                 $leave = $leaves->filter(function ($l) use ($date) {
                     return $date->between(Carbon::parse($l->start_date)->startOfDay(), Carbon::parse($l->end_date ?? $l->start_date)->endOfDay());
                 })->first();
 
                 $fakeAtt = new Attendance();
                 $fakeAtt->user_id = $user->id;
+                $fakeAtt->user = $user;
                 $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0);
                 
                 if ($leave) {
@@ -162,7 +157,7 @@ class AttendanceHistoryController extends Controller
                     $fakeAtt->status = 'verified';
                     $fakeAtt->attendance_type = 'leave';
                     $fakeAtt->is_late_checkin = ($leave->type == 'telat');
-                    $fakeAtt->notes = "[Izin Approved: " . $leave->reason . "]";
+                    $fakeAtt->notes = "Izin: " . $leave->reason;
                     $fakeAtt->setRelation('leaveRequest', $leave);
                     $fakeAtt->setRelation('verifier', $leave->verifier);
                 } else {
@@ -176,7 +171,6 @@ class AttendanceHistoryController extends Controller
 
         $history = $historyCollection->sortByDesc('check_in_time');
 
-        // 5. HITUNG SUMMARY
         $summary = [
             'total' => $history->count(),
             'hadir' => $history->filter(function ($item) {
