@@ -101,17 +101,16 @@ class AttendanceHistoryController extends Controller
 
     /**
      * Core Logic: Menggabungkan Data Absensi Real & Data Izin (Leave)
-     * [UPDATED] Menggunakan CarbonPeriod untuk memastikan tanggal tidak melompat
+     * [FIXED] Memastikan tanggal Izin muncul di tabel meskipun absen kosong
      */
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
 
-        // 1. Tentukan Range Kalender Penuh
+        // 1. Tentukan Range Kalender
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
         
-        // Proteksi untuk hari ini (jika bulan berjalan, jangan tampilkan tanggal masa depan sebagai alpha)
         $today = Carbon::now()->timezone($branchTimezone)->startOfDay();
         $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
@@ -126,50 +125,28 @@ class AttendanceHistoryController extends Controller
             ->where('user_id', $user->id)
             ->where('status', 'approved')
             ->where('is_active', true)
-            ->where(function ($q) use ($selectedMonth, $selectedYear) {
-                $q->whereMonth('start_date', $selectedMonth)->whereYear('start_date', $selectedYear)
-                    ->orWhereMonth('end_date', $selectedMonth)->whereYear('end_date', $selectedYear);
-            })->get();
+            ->get();
 
         $historyCollection = collect();
         $period = CarbonPeriod::create($startDate, $limitDate);
 
-        // 4. Loop Kalender
+        // 4. Loop Kalender untuk menyisipkan Izin di tanggal yang absennya kosong
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
 
-            // Cari data absen di DB untuk tanggal ini
+            // Cari data absen di DB
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
             })->first();
 
             if ($att) {
-                // Konversi Timezone
                 $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
-                if ($att->check_out_time) {
-                    $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
-                }
-                
-                // Logika Lembur Lintas Hari (H-1)
-                $att->is_excused_late = false;
-                $yesterdayStr = $att->check_in_time->copy()->subDay()->format('Y-m-d');
-                $prevAtt = $attendances->filter(function ($a) use ($yesterdayStr, $branchTimezone) {
-                    return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $yesterdayStr;
-                })->first();
-
-                if ($prevAtt && $prevAtt->check_out_time) {
-                    $prevOutLocal = Carbon::parse($prevAtt->check_out_time)->timezone($branchTimezone);
-                    $threshold = $att->check_in_time->copy()->setTime(2, 0, 0);
-                    if ($prevOutLocal->gt($threshold)) {
-                        $att->is_excused_late = true;
-                        $att->overtime_reason = "Pulang s/d " . $prevOutLocal->format('H:i');
-                    }
-                }
+                if ($att->check_out_time) { $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); }
                 $historyCollection->push($att);
             } else {
-                // Jika tidak ada absen, cek Izin
+                // JIKA ABSEN KOSONG, CEK APAKAH ADA IZIN (Contoh: Tanggal 28)
                 $leave = $leaves->filter(function ($l) use ($date) {
-                    return $date->between(Carbon::parse($l->start_date)->startOfDay(), Carbon::parse($l->end_date)->endOfDay());
+                    return $date->between(Carbon::parse($l->start_date)->startOfDay(), Carbon::parse($l->end_date ?? $l->start_date)->endOfDay());
                 })->first();
 
                 $fakeAtt = new Attendance();
@@ -185,15 +162,13 @@ class AttendanceHistoryController extends Controller
                     $fakeAtt->status = 'verified';
                     $fakeAtt->attendance_type = 'leave';
                     $fakeAtt->is_late_checkin = ($leave->type == 'telat');
-                    $fakeAtt->audit_note = "Pengajuan: " . $leave->reason;
+                    $fakeAtt->notes = "[Izin Approved: " . $leave->reason . "]";
                     $fakeAtt->setRelation('leaveRequest', $leave);
                     $fakeAtt->setRelation('verifier', $leave->verifier);
                 } else {
-                    // Jika tidak ada apa-apa dan bukan masa depan = Alpha
                     $fakeAtt->presence_status = $date->isWeekend() ? 'Libur' : 'Alpha';
                     $fakeAtt->status = 'verified';
                     $fakeAtt->attendance_type = 'system';
-                    $fakeAtt->audit_note = "Auto-generated: No record found";
                 }
                 $historyCollection->push($fakeAtt);
             }
@@ -231,11 +206,8 @@ class AttendanceHistoryController extends Controller
 
         $attendance = Attendance::find($id);
         
-        // Jika data belum ada (Alpha sistem yang mau diedit), kita buat baru
         if (!$attendance) {
-            // Logic untuk handle Alpha yang belum ada row-nya di DB
-            // Namun biasanya row Alpha sudah di-generate oleh command
-            return back()->with('error', 'Data absensi asli tidak ditemukan. Pastikan data sudah di-generate sistem.');
+            return back()->with('error', 'Data absensi asli tidak ditemukan.');
         }
 
         $request->validate([
@@ -255,9 +227,7 @@ class AttendanceHistoryController extends Controller
         $newCheckOut = null;
         if ($request->check_out_time) {
             $newCheckOut = Carbon::parse($originalDate . ' ' . $request->check_out_time);
-            if ($newCheckOut->lt($newCheckIn)) {
-                $newCheckOut->addDay();
-            }
+            if ($newCheckOut->lt($newCheckIn)) { $newCheckOut->addDay(); }
         }
 
         $workSchedule = WorkSchedule::getScheduleForUser($attendance->user_id);
@@ -268,14 +238,10 @@ class AttendanceHistoryController extends Controller
                 $scheduleStart = Carbon::parse($originalDate . ' ' . $workSchedule->check_in_end);
                 $isLate = $newCheckIn->gt($scheduleStart);
             }
-        } else {
-            $isLate = false;
-        }
+        } else { $isLate = false; }
 
         $auditPhotoPath = $attendance->audit_photo_path;
-        if ($request->hasFile('audit_photo')) {
-            $auditPhotoPath = $request->file('audit_photo')->store('audit-proofs', 'public');
-        }
+        if ($request->hasFile('audit_photo')) { $auditPhotoPath = $request->file('audit_photo')->store('audit-proofs', 'public'); }
 
         $attendance->update([
             'presence_status'     => $request->presence_status,
