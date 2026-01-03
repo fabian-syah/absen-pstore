@@ -12,8 +12,8 @@ class UserActivity
     public function handle(Request $request, Closure $next)
     {
         if (Auth::check()) {
-            // Simpan status online di cache selama 5 menit
-            $expiresAt = now()->addMinutes(1);
+            // Simpan status online di cache selama 60 detik
+            $expiresAt = now()->addSeconds(10);
             Cache::put('user-is-online-' . Auth::user()->id, true, $expiresAt);
         }
 
