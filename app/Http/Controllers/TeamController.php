@@ -77,9 +77,9 @@ class TeamController extends Controller
         // 4. Statistik & Logic
         $stats = [
             'total' => $myTeam->count(),
-            'hadir' => 0,
+            'present' => 0,
             'izin_sakit' => 0,
-            'belum_hadir' => 0,
+            'belum_present' => 0,
             'lembur' => 0
         ];
 
@@ -125,12 +125,12 @@ class TeamController extends Controller
                 }
             }
 
-            if ($att || $isWfh || $isOvertime) $stats['hadir']++;
+            if ($att || $isWfh || $isOvertime) $stats['present']++;
             elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti'])) $stats['izin_sakit']++;
         }
 
-        $stats['belum_hadir'] = $stats['total'] - ($stats['hadir'] + $stats['izin_sakit']);
-        if ($stats['belum_hadir'] < 0) $stats['belum_hadir'] = 0;
+        $stats['belum_present'] = $stats['total'] - ($stats['present'] + $stats['izin_sakit']);
+        if ($stats['belum_present'] < 0) $stats['belum_present'] = 0;
 
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
             ->withCount(['users' => function ($q) {
@@ -188,7 +188,7 @@ class TeamController extends Controller
                     }])->get();
 
                 $branch->users_count = $users->count();
-                $hadir = 0;
+                $present = 0;
                 $sakit = 0;
                 $izin_cuti = 0;
                 $alpha = 0;
@@ -218,15 +218,15 @@ class TeamController extends Controller
                         }
                     }
 
-                    if ($att || $isOvertime) $hadir++;
+                    if ($att || $isOvertime) $present++;
                     elseif ($leave) {
                         if ($leave->type == 'sakit') $sakit++;
-                        elseif ($leave->type == 'wfh') $hadir++;
+                        elseif ($leave->type == 'wfh') $present++;
                         else $izin_cuti++;
                     } else $alpha++;
                 }
 
-                $branch->stats_today = ['hadir' => $hadir, 'sakit' => $sakit, 'izin' => $izin_cuti, 'alpha' => $alpha, 'lembur' => $lembur];
+                $branch->stats_today = ['present' => $present, 'sakit' => $sakit, 'izin' => $izin_cuti, 'alpha' => $alpha, 'lembur' => $lembur];
                 return $branch;
             });
 
@@ -369,7 +369,7 @@ class TeamController extends Controller
         }
         $summary = [
             'total' => $attendances->count(),
-            'hadir' => $attendances->count(),
+            'present' => $attendances->count(),
             'sakit' => $leaves->where('type', 'sakit')->count(),
             'izin'  => $leaves->whereIn('type', ['izin', 'cuti'])->count(),
             'alpha' => 0,
