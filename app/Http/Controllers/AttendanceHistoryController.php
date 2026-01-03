@@ -21,7 +21,7 @@ class AttendanceHistoryController extends Controller
     {
         $user = Auth::user();
 
-        // [FIXING] Tambahkan 'admin_gaji' ke dalam array izin akses view orang lain
+        // Izin akses untuk admin/audit/leader/admin_gaji melihat history user lain
         if ($request->has('employeeId') && in_array($user->role, ['audit', 'admin', 'leader', 'admin_gaji'])) {
             $targetUser = User::find($request->employeeId);
             $employee = $targetUser;
@@ -34,11 +34,11 @@ class AttendanceHistoryController extends Controller
             return back()->with('error', 'Karyawan tidak ditemukan');
         }
 
-        // Ambil Parameter Bulan & Tahun
+        // Ambil Parameter Bulan & Tahun (Default hari ini)
         $selectedMonth = $request->get('month', date('m'));
         $selectedYear = $request->get('year', date('Y'));
 
-        // Logic Navigasi Bulan
+        // Navigasi Bulan
         $currentDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1);
         $prevDate = $currentDate->copy()->subMonth();
         $nextDate = $currentDate->copy()->addMonth();
@@ -48,99 +48,82 @@ class AttendanceHistoryController extends Controller
         $nextMonth = $nextDate->month;
         $nextYear  = $nextDate->year;
 
-        // Ambil Data dengan Kalender Lengkap
+        // Ambil Data dengan Sinkronisasi Field Model
         $data = $this->getHistoryData($targetUser, $selectedMonth, $selectedYear);
 
-        $history = $data['history'];
-        $summary = $data['summary'];
-
-        return view('attendance.history', compact(
-            'history',
-            'summary',
-            'selectedMonth',
-            'selectedYear',
-            'employee',
-            'prevMonth',
-            'prevYear',
-            'nextMonth',
-            'nextYear'
-        ));
+        return view('attendance.history', array_merge($data, [
+            'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear,
+            'employee' => $employee,
+            'prevMonth' => $prevMonth,
+            'prevYear' => $prevYear,
+            'nextMonth' => $nextMonth,
+            'nextYear' => $nextYear,
+        ]));
     }
 
     /**
-     * Export Riwayat ke PDF
-     */
-    public function exportPdf(Request $request)
-    {
-        $user = Auth::user();
-
-        if ($request->has('employeeId') && in_array($user->role, ['audit', 'admin', 'leader'])) {
-            $targetUser = User::find($request->employeeId);
-        } else {
-            $targetUser = $user;
-        }
-
-        if (!$targetUser) {
-            return back()->with('error', 'User tidak ditemukan.');
-        }
-
-        $selectedMonth = $request->get('month', date('m'));
-        $selectedYear = $request->get('year', date('Y'));
-
-        $data = $this->getHistoryData($targetUser, $selectedMonth, $selectedYear);
-
-        $pdf = Pdf::loadView('attendance.export_pdf', [
-            'history' => $data['history'],
-            'summary' => $data['summary'],
-            'user' => $targetUser,
-            'monthName' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->translatedFormat('F Y')
-        ]);
-
-        return $pdf->download('Laporan_Absensi_' . $targetUser->name . '_' . $selectedMonth . '-' . $selectedYear . '.pdf');
-    }
-
-    /**
-     * Core Logic: Menggabungkan Data Absensi Real & Data Izin (Leave)
-     * [FIXED] Memastikan detail izin (notes & verifier) muncul di tabel
+     * Core Logic: Menggabungkan Data Absensi & Izin
+     * [FIXED] Filter Izin sekarang mengikuti Range Bulan yang dipilih
      */
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
 
+        // 1. Tentukan Range Awal dan Akhir Bulan yang sedang dilihat
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
         
+        // Batasi penampilan sampai hari ini saja (jika melihat bulan berjalan)
         $today = Carbon::now()->timezone($branchTimezone)->startOfDay();
         $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
-        $attendances = Attendance::with(['verifier', 'scanner', 'user'])
+        // 2. Ambil Absensi Real (Include H-1 untuk lembur lintas hari)
+        $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
             ->where('user_id', $user->id)
             ->whereBetween('check_in_time', [$startDate->copy()->subDay(), $endDate->copy()->addDay()])
             ->get();
 
+        // 3. [FIXING DISINI] Ambil Izin yang HANYA bersinggungan dengan bulan terpilih
         $leaves = LeaveRequest::with('verifier')
             ->where('user_id', $user->id)
             ->where('status', 'approved')
             ->where('is_active', true)
+            ->where(function ($query) use ($startDate, $endDate) {
+                // Izin yang mulai atau berakhir di bulan ini, atau izin panjang yang melewati bulan ini
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                      ->orWhereBetween('end_date', [$startDate, $endDate])
+                      ->orWhere(function ($q) use ($startDate, $endDate) {
+                          $q->where('start_date', '<=', $startDate)
+                            ->where('end_date', '>=', $endDate);
+                      });
+            })
             ->get();
 
         $historyCollection = collect();
         $period = CarbonPeriod::create($startDate, $limitDate);
 
+        // 4. Loop Kalender Harian
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
 
+            // Cek Absen Real
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
             })->first();
 
             if ($att) {
                 $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
-                if ($att->check_out_time) { $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); }
+                if ($att->check_out_time) { 
+                    $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); 
+                }
                 $historyCollection->push($att);
             } else {
+                // JIKA ABSEN KOSONG, Cek Izin di tabel leaves yang sudah difilter per bulan
                 $leave = $leaves->filter(function ($l) use ($date) {
-                    return $date->between(Carbon::parse($l->start_date)->startOfDay(), Carbon::parse($l->end_date ?? $l->start_date)->endOfDay());
+                    $lStart = Carbon::parse($l->start_date)->startOfDay();
+                    $lEnd = Carbon::parse($l->end_date ?? $l->start_date)->endOfDay();
+                    return $date->between($lStart, $lEnd);
                 })->first();
 
                 $fakeAtt = new Attendance();
@@ -156,8 +139,13 @@ class AttendanceHistoryController extends Controller
                     $fakeAtt->presence_status = $typeLabel;
                     $fakeAtt->status = 'verified';
                     $fakeAtt->attendance_type = 'leave';
-                    $fakeAtt->is_late_checkin = ($leave->type == 'telat');
                     $fakeAtt->notes = "Izin: " . $leave->reason;
+                    $fakeAtt->is_late_checkin = ($leave->type == 'telat');
+                    
+                    // Snapshot Jadwal
+                    $fakeAtt->scheduled_check_in = $user->check_in_start;
+                    $fakeAtt->scheduled_check_out = $user->check_out_start;
+
                     $fakeAtt->setRelation('leaveRequest', $leave);
                     $fakeAtt->setRelation('verifier', $leave->verifier);
                 } else {
@@ -171,15 +159,16 @@ class AttendanceHistoryController extends Controller
 
         $history = $historyCollection->sortByDesc('check_in_time');
 
+        // 5. HITUNG SUMMARY (Sinkron dengan tampilan tabel)
         $summary = [
             'total' => $history->count(),
-            'hadir' => $history->filter(function ($item) {
+            'present' => $history->filter(function ($item) {
                 $s = strtolower($item->presence_status ?? '');
                 return in_array($s, ['masuk', 'wfh', 'izin telat']) || str_contains($s, 'dinas') || 
                        (empty($s) && in_array($item->attendance_type, ['scan', 'self', 'manual']));
             })->count(),
             'sakit' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'sakit')->count(),
-            'izin' => $history->filter(fn($i) => in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti']))->count(),
+            'izin' => $history->filter(fn($i) => in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti', 'offday']))->count(),
             'alpha' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'alpha')->count(),
             'telat' => $history->where('is_late_checkin', true)->count(),
             'pulang_cepat' => $history->where('is_early_checkout', true)->count(),
@@ -198,11 +187,7 @@ class AttendanceHistoryController extends Controller
             abort(403, 'Akses Ditolak.');
         }
 
-        $attendance = Attendance::find($id);
-        
-        if (!$attendance) {
-            return back()->with('error', 'Data absensi asli tidak ditemukan.');
-        }
+        $attendance = Attendance::findOrFail($id);
 
         $request->validate([
             'presence_status' => 'required|string',
@@ -211,8 +196,6 @@ class AttendanceHistoryController extends Controller
             'status'          => 'required|in:verified,pending_verification,rejected',
             'audit_note'      => 'nullable|string',
             'audit_photo'     => $attendance->audit_photo_path ? 'nullable|image|max:2048' : 'required|image|max:2048'
-        ], [
-            'audit_photo.required' => 'Bukti foto wajib di-upload untuk melakukan koreksi.',
         ]);
 
         $originalDate = $attendance->check_in_time->format('Y-m-d');
@@ -224,18 +207,16 @@ class AttendanceHistoryController extends Controller
             if ($newCheckOut->lt($newCheckIn)) { $newCheckOut->addDay(); }
         }
 
-        $workSchedule = WorkSchedule::getScheduleForUser($attendance->user_id);
-        $isLate = $attendance->is_late_checkin;
-
-        if ($newCheckIn->format('Y-m-d') >= '2025-12-01') {
-            if ($workSchedule && $request->presence_status == 'Masuk') {
-                $scheduleStart = Carbon::parse($originalDate . ' ' . $workSchedule->check_in_end);
-                $isLate = $newCheckIn->gt($scheduleStart);
-            }
-        } else { $isLate = false; }
+        $isLate = false;
+        if ($request->presence_status == 'Masuk' && $attendance->scheduled_check_in) {
+            $scheduleIn = Carbon::parse($originalDate . ' ' . $attendance->scheduled_check_in);
+            $isLate = $newCheckIn->gt($scheduleIn);
+        }
 
         $auditPhotoPath = $attendance->audit_photo_path;
-        if ($request->hasFile('audit_photo')) { $auditPhotoPath = $request->file('audit_photo')->store('audit-proofs', 'public'); }
+        if ($request->hasFile('audit_photo')) {
+            $auditPhotoPath = $request->file('audit_photo')->store('audit-proofs', 'public');
+        }
 
         $attendance->update([
             'presence_status'     => $request->presence_status,
@@ -246,9 +227,27 @@ class AttendanceHistoryController extends Controller
             'audit_note'          => $request->audit_note,
             'audit_photo_path'    => $auditPhotoPath,
             'verified_by_user_id' => Auth::id(),
-            'attendance_type'     => ($attendance->presence_status == 'Alpha' && $request->presence_status != 'Alpha') ? 'manual' : $attendance->attendance_type,
+            'attendance_type'     => 'manual',
         ]);
 
-        return back()->with('success', 'Data absensi berhasil diperbarui oleh Audit.');
+        return back()->with('success', 'Data absensi berhasil diperbarui.');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $user = Auth::user();
+        $targetUser = $request->has('employeeId') ? User::find($request->employeeId) : $user;
+        $selectedMonth = $request->get('month', date('m'));
+        $selectedYear = $request->get('year', date('Y'));
+        $data = $this->getHistoryData($targetUser, $selectedMonth, $selectedYear);
+
+        $pdf = Pdf::loadView('attendance.export_pdf', [
+            'history' => $data['history'],
+            'summary' => $data['summary'],
+            'user' => $targetUser,
+            'monthName' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->translatedFormat('F Y')
+        ]);
+
+        return $pdf->download('Laporan_Absensi_' . $targetUser->name . '.pdf');
     }
 }
