@@ -140,7 +140,7 @@ class AttendanceSummaryController extends Controller
         $nextMonth = $selectedMonth == 12 ? 1 : $selectedMonth + 1;
         $nextYear = $selectedMonth == 12 ? $selectedYear + 1 : $selectedYear;
 
-        return view('attendance.history', [ // PASTIKAN NAMA VIEW ADALAH history
+        return view('attendance.summary', [ // PASTIKAN NAMA VIEW ADALAH history
             'employee' => $targetUser,
             'history' => $history,
             'selectedYear' => $selectedYear,
