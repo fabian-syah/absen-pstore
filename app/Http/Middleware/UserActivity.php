@@ -13,7 +13,7 @@ class UserActivity
     {
         if (Auth::check()) {
             // Simpan status online di cache selama 5 menit
-            $expiresAt = now()->addMinutes(5);
+            $expiresAt = now()->addMinutes(1);
             Cache::put('user-is-online-' . Auth::user()->id, true, $expiresAt);
         }
 

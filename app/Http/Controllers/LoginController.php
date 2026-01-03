@@ -45,21 +45,22 @@ class LoginController extends Controller
 }
 
     public function logout(Request $request)
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
+    
+    if ($user) {
+        // --- TAMBAHKAN BARIS INI ---
+        // Hapus status online dari cache seketika saat logout
+        \Illuminate\Support\Facades\Cache::forget('user-is-online-' . $user->id);
         
-        // [TAMBAHAN] Hapus FCM Token di database saat logout
-        // Agar saat login nanti dia memaksa simpan ulang
-        if ($user) {
-            $user->fcm_token = null;
-            $user->save();
-        }
-
-        Auth::logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect('/login');
+        $user->fcm_token = null;
+        $user->save();
     }
+
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect('/login');
+}
 }
