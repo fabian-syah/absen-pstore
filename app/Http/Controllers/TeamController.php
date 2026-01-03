@@ -80,7 +80,7 @@ class TeamController extends Controller
             'total' => $myTeam->count(),
             'present' => 0,
             'izin_sakit' => 0,
-            'belum_present' => 0,
+            'alpha' => 0,
             'lembur' => 0
         ];
 
