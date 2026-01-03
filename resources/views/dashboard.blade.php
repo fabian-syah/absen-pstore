@@ -10,38 +10,47 @@
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
             <h3 class="fw-bold mb-0">{{ Auth::user()->name }}!</h3>
         </div>
+        {{-- <div class="text-end d-none d-md-block">
+            <h5 class="fw-bold mb-0 text-primary" id="header-clock">--:--:--</h5>
+            <small class="text-muted">{{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}</small>
+        </div> --}}
     </div>
 @endsection
 
 @section('content')
 
-    {{-- BAGIAN BARU: BIRTHDAY CELEBRATION --}}
+    {{-- ======================================================================= --}}
+    {{-- BAGIAN BARU: BIRTHDAY CELEBRATION (Hanya Muncul Jika H-30 atau Hari H)  --}}
+    {{-- ======================================================================= --}}
     @if (isset($birthdayData) && $birthdayData)
         <div class="row mb-4 animate-enter">
             <div class="col-12">
-                <div class="card border-0 shadow-sm overflow-hidden birthday-card">
+                <div class="card border-0 shadow-lg overflow-hidden birthday-card">
+                    {{-- Animated Background Elements --}}
                     <div class="confetti-container"></div>
                     <div class="balloon b1"></div>
                     <div class="balloon b2"></div>
                     <div class="balloon b3"></div>
 
-                    <div class="card-body position-relative z-index-1 py-5 px-4">
+                    <div class="card-body position-relative z-index-1 py-4 px-4">
                         <div class="row align-items-center">
+                            {{-- KIRI: PESAN --}}
                             <div class="col-md-7 text-white">
                                 @if ($birthdayData['is_today'])
-                                    <div class="d-flex align-items-center mb-3">
+                                    <div class="d-flex align-items-center mb-2">
                                         <span class="badge bg-warning text-dark fw-bold me-2 pulse-animation">
                                             <i class="mdi mdi-cake-variant me-1"></i> SPECIAL DAY
                                         </span>
-                                        <h2 class="fw-bold mb-0">HAPPY BIRTHDAY! 🎂</h2>
+                                        <h2 class="fw-bold mb-0 text-shadow-glam">HAPPY BIRTHDAY! 🎂</h2>
                                     </div>
-                                    <p class="lead mb-2 text-white-50">
+                                    <p class="lead mb-1 text-white-50">
                                         Selamat Ulang Tahun yang ke-<strong>{{ $birthdayData['age_to_be'] }}</strong>,
                                         {{ Auth::user()->name }}!
                                     </p>
-                                    <p class="small text-white-50 mb-0">Semoga panjang umur, sehat selalu, dan karir makin cemerlang di PStore!</p>
+                                    <p class="small text-white-50 mb-0">Semoga panjang umur, sehat selalu, dan karir makin
+                                        cemerlang di PStore!</p>
                                 @else
-                                    <div class="d-flex align-items-center mb-3">
+                                    <div class="d-flex align-items-center mb-2">
                                         <span class="badge bg-light text-primary fw-bold me-2">
                                             <i class="mdi mdi-calendar-star me-1"></i> UPCOMING
                                         </span>
@@ -55,29 +64,35 @@
                                 @endif
                             </div>
 
+                            {{-- KANAN: COUNTDOWN TIMER --}}
                             <div class="col-md-5 mt-4 mt-md-0 text-center text-md-end">
                                 @if (!$birthdayData['is_today'])
                                     <div class="d-flex justify-content-center justify-content-md-end gap-2"
                                         id="birthday-countdown">
-                                        <div class="countdown-box">
+                                        {{-- Hari --}}
+                                        <div class="countdown-box glass-box">
                                             <span class="d-block fw-bold fs-3"
                                                 id="cd-days">{{ $birthdayData['days_left'] }}</span>
                                             <small class="text-uppercase" style="font-size: 9px;">Hari</small>
                                         </div>
-                                        <div class="countdown-box">
+                                        {{-- Jam --}}
+                                        <div class="countdown-box glass-box">
                                             <span class="d-block fw-bold fs-3" id="cd-hours">00</span>
                                             <small class="text-uppercase" style="font-size: 9px;">Jam</small>
                                         </div>
-                                        <div class="countdown-box">
+                                        {{-- Menit --}}
+                                        <div class="countdown-box glass-box">
                                             <span class="d-block fw-bold fs-3" id="cd-minutes">00</span>
                                             <small class="text-uppercase" style="font-size: 9px;">Menit</small>
                                         </div>
-                                        <div class="countdown-box">
+                                        {{-- Detik --}}
+                                        <div class="countdown-box glass-box">
                                             <span class="d-block fw-bold fs-3 text-warning" id="cd-seconds">00</span>
                                             <small class="text-uppercase" style="font-size: 9px;">Detik</small>
                                         </div>
                                     </div>
                                 @else
+                                    {{-- Jika Hari H --}}
                                     <div class="text-center">
                                         <button class="btn btn-light text-danger fw-bold shadow-lg pulse-animation"
                                             onclick="confettiEffect()">
@@ -93,23 +108,27 @@
         </div>
     @endif
 
-    {{-- ATTENDANCE WRAPPED (DECEMBER ONLY) --}}
+    {{-- BAGIAN BARU: ATTENDANCE WRAPPED (Desember Only) --}}
     @if (\Carbon\Carbon::now()->month == 12)
         <div class="row mb-4 animate-enter">
             <div class="col-12">
-                <div class="card bg-dark text-white shadow-sm border-0 overflow-hidden">
-                    <div class="card-body d-flex justify-content-between align-items-center">
+                <div class="card bg-gradient-warning text-white shadow-lg"
+                    style="background: linear-gradient(135deg, #111 0%, #333 100%); border: 1px solid #FFD700; overflow: hidden; position: relative;">
+                    <div
+                        style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%); animation: rotateGlow 20s linear infinite; pointer-events: none;">
+                    </div>
+                    <div class="card-body d-flex justify-content-between align-items-center position-relative z-index-1">
                         <div class="d-flex align-items-center">
                             <div class="me-3 d-none d-sm-block">
                                 <i class="mdi mdi-sparkles text-warning display-4"></i>
                             </div>
                             <div>
-                                <h5 class="fw-bold text-warning mb-1">✨ Your {{ date('Y') }} Wrapped is Here!</h5>
-                                <p class="mb-0 text-white-50 small">Lihat rangkuman perjalanan karirmu selama setahun ini.</p>
+                                <h4 class="fw-bold text-warning mb-1">✨ Your {{ date('Y') }} Wrapped is Here!</h4>
+                                <p class="mb-0 text-white-50">Lihat rangkuman perjalanan karirmu selama setahun ini.</p>
                             </div>
                         </div>
                         <a href="{{ route('attendance.recap') }}"
-                            class="btn btn-outline-light rounded-pill fw-bold px-4 shadow-sm">
+                            class="btn btn-light rounded-pill fw-bold shadow-sm hover-scale">
                             <i class="mdi mdi-play-circle-outline me-1"></i> Putar
                         </a>
                     </div>
@@ -118,176 +137,157 @@
         </div>
     @endif
 
-    {{-- ADMIN/AUDIT/SECURITY DASHBOARD STATISTICS --}}
+    {{-- BAGIAN 1: DASHBOARD STATISTIK (ADMIN/AUDIT/SECURITY) --}}
     @if (auth()->user()->role == 'admin')
+        {{-- WIDGET ADMIN --}}
         <div class="row mb-4">
             <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                <div class="card stat-card stat-card-purple border-0 shadow-sm">
+                <div class="card card-bank gradient-purple">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="stat-label text-muted mb-2">Total User</p>
-                                <h3 class="stat-value count-up" data-target="{{ $totalUsers }}">0</h3>
-                                <p class="stat-desc text-muted small mb-0">Karyawan Aktif</p>
-                            </div>
-                            <div class="stat-icon bg-light rounded-3 p-3">
-                                <i class="mdi mdi-account-multiple text-primary fs-5"></i>
-                            </div>
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Total User</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $totalUsers }}">0</h2>
+                            <p class="card-bank-desc">Karyawan Aktif</p>
                         </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card stat-card stat-card-blue border-0 shadow-sm">
+                <div class="card card-bank gradient-blue">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="stat-label text-muted mb-2">Total Cabang</p>
-                                <h3 class="stat-value count-up" data-target="{{ $totalBranches }}">0</h3>
-                                <p class="stat-desc text-muted small mb-0">Cabang Terdaftar</p>
-                            </div>
-                            <div class="stat-icon bg-light rounded-3 p-3">
-                                <i class="mdi mdi-office-building text-info fs-5"></i>
-                            </div>
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-office-building"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Total Cabang</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $totalBranches }}">0</h2>
+                            <p class="card-bank-desc">Cabang Terdaftar</p>
                         </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
-                <div class="card stat-card stat-card-green border-0 shadow-sm">
+                <div class="card card-bank gradient-green">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="stat-label text-muted mb-2">Absensi Hari Ini</p>
-                                <h3 class="stat-value count-up" data-target="{{ $attendancesToday }}">0</h3>
-                                <p class="stat-desc text-muted small mb-0">Total absensi hari ini</p>
-                            </div>
-                            <div class="stat-icon bg-light rounded-3 p-3">
-                                <i class="mdi mdi-calendar-check text-success fs-5"></i>
-                            </div>
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Absensi Hari Ini</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $attendancesToday }}">0</h2>
+                            <p class="card-bank-desc">Total absensi hari ini</p>
                         </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.4s">
-                <div class="card stat-card stat-card-orange border-0 shadow-sm">
+                <div class="card card-bank gradient-orange">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="stat-label text-muted mb-2">Perlu Verifikasi</p>
-                                <h3 class="stat-value count-up" data-target="{{ $pendingVerifications }}">0</h3>
-                                <p class="stat-desc text-muted small mb-0">Menunggu persetujuan</p>
-                            </div>
-                            <div class="stat-icon bg-light rounded-3 p-3">
-                                <i class="mdi mdi-alert-circle-outline text-warning fs-5"></i>
-                            </div>
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Perlu Verifikasi</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
+                            <p class="card-bank-desc">Menunggu persetujuan</p>
                         </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
         </div>
     @elseif (auth()->user()->role == 'audit')
+        {{-- WIDGET AUDIT --}}
         <div class="row mb-4">
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                <div class="card stat-card stat-card-red border-0 shadow-sm">
+                <div class="card card-bank gradient-red">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="stat-label text-muted mb-2">Verif Absensi</p>
-                                <h3 class="stat-value count-up" data-target="{{ $pendingVerifications }}">0</h3>
-                                <p class="stat-desc text-muted small mb-0">Absensi pending (Foto/Lokasi)</p>
-                                <a href="{{ route('audit.verify.list') }}" class="btn btn-sm btn-light mt-3 shadow-sm">
-                                    <i class="mdi mdi-clipboard-check me-1"></i>Lihat Daftar
-                                </a>
-                            </div>
-                            <div class="stat-icon bg-light rounded-3 p-3">
-                                <i class="mdi mdi-alert-circle-outline text-danger fs-5"></i>
-                            </div>
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Verif Absensi</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
+                            <p class="card-bank-desc">Absensi pending (Foto/Lokasi)</p>
+                            <a href="{{ route('audit.verify.list') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
+                                <i class="mdi mdi-clipboard-check me-1"></i>Lihat Daftar
+                            </a>
                         </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card stat-card stat-card-blue border-0 shadow-sm">
+                <div class="card card-bank gradient-blue">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="stat-label text-muted mb-2">Approve Izin</p>
-                                <h3 class="stat-value count-up" data-target="{{ $pendingLeaves }}">0</h3>
-                                <p class="stat-desc text-muted small mb-0">Izin, Sakit, Cuti, WFH, Telat</p>
-                                <a href="{{ route('leave-requests.index') }}" class="btn btn-sm btn-light mt-3 shadow-sm">
-                                    <i class="mdi mdi-playlist-check me-1"></i>Lihat Pengajuan
-                                </a>
-                            </div>
-                            <div class="stat-icon bg-light rounded-3 p-3">
-                                <i class="mdi mdi-file-document-edit-outline text-info fs-5"></i>
-                            </div>
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-file-document-edit-outline"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Approve Izin</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingLeaves }}">0</h2>
+                            <p class="card-bank-desc">Izin, Sakit, Cuti, WFH, Telat</p>
+                            <a href="{{ route('leave-requests.index') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
+                                <i class="mdi mdi-playlist-check me-1"></i>Lihat Pengajuan
+                            </a>
                         </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
-                <div class="card stat-card stat-card-green border-0 shadow-sm">
+                <div class="card card-bank gradient-green">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="stat-label text-muted mb-2">Hadir Hari Ini</p>
-                                <h3 class="stat-value count-up" data-target="{{ $attendancesToday }}">0</h3>
-                                <p class="stat-desc text-muted small mb-0">Total kehadiran di cabang Anda</p>
-                            </div>
-                            <div class="stat-icon bg-light rounded-3 p-3">
-                                <i class="mdi mdi-calendar-check text-success fs-5"></i>
-                            </div>
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Hadir Hari Ini</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $attendancesToday }}">0</h2>
+                            <p class="card-bank-desc">Total kehadiran di cabang Anda</p>
                         </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
         </div>
     @elseif (auth()->user()->role == 'security')
+        {{-- WIDGET SECURITY --}}
         <div class="row mb-4">
             <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card card-action hover-float">
                     <div class="card-body text-center py-5">
-                        <div class="mb-4">
-                            <i class="mdi mdi-qrcode-scan display-1 text-primary"></i>
+                        <div class="mb-4 pulse-icon-wrapper">
+                            <i class="mdi mdi-qrcode-scan display-1 text-dark"></i>
                         </div>
-                        <h5 class="card-title mb-2 fw-bold">Pindai QR User</h5>
-                        <p class="text-muted mb-4 small">Arahkan kamera ke QR Code user untuk melakukan absensi.</p>
-                        <a href="{{ route('security.scan') }}" class="btn btn-primary rounded-3 px-4 fw-bold shadow-sm">
+                        <h4 class="card-title mb-3">Pindai QR User</h4>
+                        <p class="text-muted mb-4">Arahkan kamera ke QR Code user untuk melakukan absensi.</p>
+                        <a href="{{ route('security.scan') }}" class="btn btn-dark btn-lg shadow-lg">
                             <i class="mdi mdi-camera-enhance me-2"></i>Mulai Memindai
                         </a>
                     </div>
                 </div>
             </div>
             <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card stat-card border-0 shadow-sm">
+                <div class="card card-bank gradient-dark">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <p class="stat-label text-muted mb-2">Pindaian Hari Ini</p>
-                                <h3 class="stat-value count-up" data-target="{{ $myScansToday }}">0</h3>
-                                <p class="stat-desc text-muted small">Total pindaian QR hari ini</p>
-                            </div>
-                            <div class="stat-icon bg-light rounded-3 p-3">
-                                <i class="mdi mdi-chart-bar text-info fs-5"></i>
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-chart-bar"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Pindaian Hari Ini</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $myScansToday }}">0</h2>
+                            <p class="card-bank-desc">Total pindaian QR hari ini</p>
+                            <div class="mt-4 pt-3 border-top border-light">
+                                <p class="card-bank-label mb-2">User Aktif</p>
+                                <h3 class="card-bank-value mb-0 count-up" data-target="{{ $totalUsers }}">0</h3>
                             </div>
                         </div>
-                        <hr class="my-3">
-                        <p class="stat-label text-muted mb-2">User Aktif</p>
-                        <h3 class="stat-value count-up" data-target="{{ $totalUsers }}">0</h3>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
         </div>
     @endif
 
-    {{-- HALL OF FAME (LAST MONTH WINNERS) --}}
-    @if (isset($lastMonthWinners) && $lastMonthWinners->count() > 0)
-        <div class="row mb-5 animate-enter" style="animation-delay: 0.3s">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm overflow-hidden hall-of-fame-card">
-                    <div class="card-body p-5">
-                        <div class="text-center mb-5">
     {{-- BAGIAN BARU: DINDING KENANGAN (PEMENANG BULAN LALU) --}}
     @if (isset($lastMonthWinners) && $lastMonthWinners->count() > 0)
         <div class="row mb-5 animate-enter" style="animation-delay: 0.3s">
