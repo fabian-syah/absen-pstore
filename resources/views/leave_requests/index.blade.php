@@ -121,7 +121,7 @@
                                         {{-- 4. ALASAN --}}
                                         <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
 
-                                        {{-- 5. BUKTI (FIX: Pakai window.showImageModal) --}}
+                                        {{-- 5. BUKTI --}}
                                         <td>
                                             @if ($req->file_proof)
                                                 <a href="javascript:void(0)" 
@@ -164,36 +164,11 @@
                                                     </button>
                                                 </form>
                                                 
-                                                {{-- Tombol Reject --}}
+                                                {{-- Tombol Reject dengan data dinamis untuk iPhone --}}
                                                 <button type="button" class="btn btn-danger btn-sm p-2" 
-                                                        data-bs-toggle="modal" data-bs-target="#rejectModal{{ $req->id }}">
+                                                        onclick="window.openRejectModal('{{ $req->id }}', '{{ route('late.reject', $req->id) }}')">
                                                     <i class="mdi mdi-close"></i>
                                                 </button>
-                                                
-                                                {{-- Modal Reject (Inline Modal) --}}
-                                                <div class="modal fade" id="rejectModal{{ $req->id }}" tabindex="-1">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title">Tolak Pengajuan</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                            </div>
-                                                            <form action="{{ route('late.reject', $req->id) }}" method="POST">
-                                                                @csrf
-                                                                <div class="modal-body">
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
-                                                                        <textarea name="rejection_reason" class="form-control" rows="3" required></textarea>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                                    <button type="submit" class="btn btn-danger">Tolak</button>
-                                                                </div>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             @endif
                                         </td>
                                     </tr>
@@ -223,13 +198,37 @@
         </div>
     </div>
 
-    {{-- MODAL UNTUK PREVIEW GAMBAR --}}
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    {{-- MODAL REJECT DINAMIS (Paling Stabil untuk iPhone/iOS) --}}
+    <div class="modal fade" id="rejectModalDynamic" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tolak Pengajuan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formRejectDynamic" action="" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Alasan Penolakan <span class="text-danger">*</span></label>
+                            <textarea name="rejection_reason" class="form-control text-dark" rows="3" required placeholder="Tulis alasan penolakan..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Tolak Sekarang</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL PREVIEW GAMBAR --}}
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true" style="z-index: 10000;">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Bukti Lampiran</h5>
-                    {{-- Tombol close support Bootstrap 4 & 5 --}}
                     <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center bg-light">
@@ -242,37 +241,51 @@
         </div>
     </div>
 
-    {{-- SCRIPT LANGSUNG DI DALAM CONTENT (Bukan di section script) --}}
-    {{-- Kita load jQuery via CDN untuk memastikan $ berfungsi --}}
+    {{-- SCRIPTS --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        // Membuat fungsi GLOBAL (window.) agar bisa dipanggil dari onclick
-        window.showImageModal = function(imageUrl) {
-            console.log('Mencoba membuka gambar: ' + imageUrl);
+        // FUNGSI UNTUK MODAL REJECT (SOLUSI IPHONE)
+        window.openRejectModal = function(reqId, actionUrl) {
+            var modalElement = document.getElementById('rejectModalDynamic');
+            var formElement = document.getElementById('formRejectDynamic');
             
-            // 1. Set URL Gambar
+            // Set action URL secara dinamis
+            formElement.action = actionUrl;
+            
+            // Buka Modal
+            try {
+                $(modalElement).modal('show');
+            } catch (e) {
+                var myModal = new bootstrap.Modal(modalElement);
+                myModal.show();
+            }
+        };
+
+        // FUNGSI UNTUK PREVIEW GAMBAR
+        window.showImageModal = function(imageUrl) {
             var imgElement = document.getElementById('modalImagePreview');
             if (imgElement) {
                 imgElement.src = imageUrl;
             }
 
-            // 2. Buka Modal (Support jQuery / Bootstrap)
-            // Kita coba pakai jQuery dulu karena template admin biasanya pakai ini
             try {
                 $('#imageModal').modal('show');
             } catch (e) {
-                console.error("jQuery error:", e);
-                // Fallback kalau jQuery gagal, pakai Vanilla JS Bootstrap 5
                 var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
                 myModal.show();
             }
         };
 
-        // Reset gambar saat modal ditutup
+        // Reset data saat modal ditutup agar tidak conflict
         $(document).ready(function() {
-            $('#imageModal').on('hidden.bs.modal hidden.modal', function () {
+            $('#imageModal').on('hidden.bs.modal', function () {
                 $('#modalImagePreview').attr('src', '');
+            });
+            
+            $('#rejectModalDynamic').on('hidden.bs.modal', function () {
+                $('#formRejectDynamic').attr('action', '');
+                $(this).find('textarea').val('');
             });
         });
     </script>
