@@ -8,7 +8,6 @@ use App\Http\Controllers\EmploymentHistoryController;
 use App\Http\Controllers\MySalaryController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\SalarySummaryController;
-use App\Models\Attendance;
 use App\Models\User;
 use App\Traits\SendFcmNotification;
 use Illuminate\Support\Facades\Route;
@@ -468,15 +467,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     })->middleware(['role:admin,audit,security,leader,user_biasa']);
 
     Route::get('/bersihkan-alpha-salah', function () {
-    // Tanggal yang ingin dihapus (misal hari ini tanggal 4 atau 5)
-    $tanggalSalah = '2026-01-05'; // GANTI SESUAI TANGGAL YANG SALAH
+    $tanggalSalah = '2026-01-05';
 
-    $deleted = Attendance::where('presence_status', 'Alpha')
-        ->whereDate('check_in_time', $tanggalSalah)
-        ->where('attendance_type', 'system')
+    // Kita hapus semua status 'Alpha' pada tanggal tersebut tanpa melihat metodenya
+    $deleted = \App\Models\Attendance::whereDate('check_in_time', $tanggalSalah)
+        ->where('presence_status', 'Alpha')
         ->delete();
 
-    return "Berhasil menghapus $deleted data Alpha salah pada tanggal $tanggalSalah";
+    return "Berhasil menghapus $deleted data Alpha pada tanggal $tanggalSalah. Sekarang karyawan sudah bisa absen kembali.";
 });
 
     Route::get('/fix-absen-26', function () {
