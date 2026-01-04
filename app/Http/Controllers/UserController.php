@@ -42,41 +42,45 @@ class UserController extends Controller
     }
 
     public function index(Request $request)
-    {
-        $user = Auth::user();
-        $search = $request->search;
+{
+    $user = Auth::user();
+    $search = $request->search;
 
-        // Base query untuk user Aktif
-        $activeQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', true);
+    // 1. Base query untuk user Aktif (Tetap menggunakan filter keamanan)
+    $activeQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', true);
 
-        // Base query untuk user Non-Aktif
-        $inactiveQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', false);
+    // 2. Base query untuk user Non-Aktif (Hapus filter branch agar semua EX muncul)
+    $inactiveQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', false);
 
-        // Filter berdasarkan Role (seperti logika sebelumnya)
-        foreach ([$activeQuery, $inactiveQuery] as $query) {
-            if ($user->role == 'admin' && $user->branch_id != null) {
-                $query->where('branch_id', $user->branch_id);
-            } elseif (in_array($user->role, ['audit', 'leader'])) {
-                $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
-                if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
-                $query->whereIn('branch_id', array_unique($allowedBranchIds));
-            }
-
-            // Pencarian
-            if ($search != '') {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('login_id', 'like', "%{$search}%");
-                });
-            }
-        }
-
-        $users = $activeQuery->latest()->paginate(10, ['*'], 'active_page')->appends(['search' => $search]);
-        $inactiveUsers = $inactiveQuery->latest()->paginate(10, ['*'], 'inactive_page')->appends(['search' => $search]);
-
-        return view('users.user_index', compact('users', 'inactiveUsers'));
+    // --- FILTER UNTUK USER AKTIF SAJA ---
+    if ($user->role == 'admin' && $user->branch_id != null) {
+        $activeQuery->where('branch_id', $user->branch_id);
+    } elseif (in_array($user->role, ['audit', 'leader'])) {
+        $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
+        if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
+        $activeQuery->whereIn('branch_id', array_unique($allowedBranchIds));
     }
+
+    // --- PENCARIAN (Berlaku untuk keduanya) ---
+    if ($search != '') {
+        $activeQuery->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('login_id', 'like', "%{$search}%");
+        });
+        
+        $inactiveQuery->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('login_id', 'like', "%{$search}%");
+        });
+    }
+
+    $users = $activeQuery->latest()->paginate(10, ['*'], 'active_page')->appends(['search' => $search]);
+    $inactiveUsers = $inactiveQuery->latest()->paginate(10, ['*'], 'inactive_page')->appends(['search' => $search]);
+
+    return view('users.user_index', compact('users', 'inactiveUsers'));
+}
 
     public function create()
     {
