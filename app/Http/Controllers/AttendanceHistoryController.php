@@ -108,7 +108,8 @@ class AttendanceHistoryController extends Controller
                     $fakeAtt->setRelation('leaveRequest', $leave);
                     $fakeAtt->setRelation('verifier', $leave->verifier);
                 } else {
-                    $fakeAtt->presence_status = $date->isWeekend() ? 'Libur' : 'Alpha';
+                    // Update: Menghilangkan pengecekan weekend agar status tetap Alpha meskipun hari libur
+                    $fakeAtt->presence_status = 'Alpha';
                     $fakeAtt->status = 'verified';
                     $fakeAtt->attendance_type = 'system';
                 }

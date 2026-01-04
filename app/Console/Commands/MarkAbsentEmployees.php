@@ -66,9 +66,9 @@ class MarkAbsentEmployees extends Command
 
                 // --- CEK 1: Apakah Hari Libur (Sabtu/Minggu)? ---
                 // Biasanya Alpha tidak dihitung di hari libur.
-                if ($currentDate->isWeekend()) {
-                    continue;
-                }
+                // if ($currentDate->isWeekend()) {
+                //     continue;
+                // }
 
                 // --- CEK 2: Apakah sudah ada data kehadiran/alpha? ---
                 $existingAttendance = Attendance::where('user_id', $user->id)
