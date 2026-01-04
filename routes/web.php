@@ -8,6 +8,7 @@ use App\Http\Controllers\EmploymentHistoryController;
 use App\Http\Controllers\MySalaryController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\SalarySummaryController;
+use App\Models\Attendance;
 use App\Models\User;
 use App\Traits\SendFcmNotification;
 use Illuminate\Support\Facades\Route;
@@ -465,6 +466,18 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/test-role-middleware', function () {
         return response()->json(['message' => 'Middleware test berhasil!']);
     })->middleware(['role:admin,audit,security,leader,user_biasa']);
+
+    Route::get('/bersihkan-alpha-salah', function () {
+    // Tanggal yang ingin dihapus (misal hari ini tanggal 4 atau 5)
+    $tanggalSalah = '2026-01-05'; // GANTI SESUAI TANGGAL YANG SALAH
+
+    $deleted = Attendance::where('presence_status', 'Alpha')
+        ->whereDate('check_in_time', $tanggalSalah)
+        ->where('attendance_type', 'system')
+        ->delete();
+
+    return "Berhasil menghapus $deleted data Alpha salah pada tanggal $tanggalSalah";
+});
 
     Route::get('/fix-absen-26', function () {
     try {
