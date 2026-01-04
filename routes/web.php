@@ -469,12 +469,12 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/bersihkan-alpha-salah', function () {
     $tanggalSalah = '2026-01-05';
 
-    // Menghapus SEMUA data dengan status Alpha di tanggal tersebut
+    // Menghapus SEMUA status Alpha pada tanggal tersebut
     $deleted = \App\Models\Attendance::whereDate('check_in_time', $tanggalSalah)
         ->where('presence_status', 'Alpha')
         ->delete();
 
-    return "Berhasil menghapus $deleted data Alpha pada tanggal $tanggalSalah. Sekarang tombol absen karyawan seharusnya sudah muncul kembali.";
+    return "Berhasil menghapus $deleted data Alpha pada tanggal $tanggalSalah. Silakan minta karyawan refresh aplikasinya.";
 });
 
     Route::get('/fix-absen-26', function () {
