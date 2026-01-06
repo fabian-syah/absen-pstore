@@ -327,6 +327,26 @@ $data['lastMonthWinners'] = Attendance::select(
         return $winner;
     });
 
+    // ... Logika Birthday yang sudah ada ...
+
+// =========================================================================
+// 8. [BARU] LOGIKA RAMADHAN COUNTDOWN (Estimasi 18 Feb 2026)
+// =========================================================================
+// Ganti tanggal ini sesuai ketetapan pemerintah nanti
+$ramadanDate = Carbon::createFromDate(2026, 2, 18, $userTimezone)->startOfDay(); 
+$diffRamadan = $nowInBranch->startOfDay()->diffInDays($ramadanDate, false);
+
+$ramadanData = null;
+// Tampilkan jika H-60 sampai Hari H
+if ($diffRamadan >= 0 && $diffRamadan <= 60) {
+    $ramadanData = [
+        'days_left' => $diffRamadan,
+        'date' => $ramadanDate->format('Y-m-d'),
+        'is_today' => $diffRamadan === 0
+    ];
+}
+$data['ramadanData'] = $ramadanData;
+
         return view('dashboard', $data);
     }
 

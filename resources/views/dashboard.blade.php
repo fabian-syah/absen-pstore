@@ -108,6 +108,95 @@
         </div>
     @endif
 
+    {{-- ======================================================================= --}}
+    {{-- BAGIAN BARU: RAMADHAN COUNTDOWN (Nuansa Religi & Mewah)                --}}
+    {{-- ======================================================================= --}}
+    @if (isset($ramadanData) && $ramadanData)
+        <div class="row mb-4 animate-enter" style="animation-delay: 0.1s">
+            <div class="col-12">
+                <div class="card border-0 shadow-lg overflow-hidden ramadan-card">
+                    {{-- Background Ornament (CSS Only) --}}
+                    <div class="islamic-pattern"></div>
+
+                    {{-- Animated Lanterns --}}
+                    <div class="lantern l-1">
+                        <div class="lantern-inner"></div>
+                    </div>
+                    <div class="lantern l-2">
+                        <div class="lantern-inner"></div>
+                    </div>
+                    <div class="lantern l-3">
+                        <div class="lantern-inner"></div>
+                    </div>
+
+                    {{-- Stars --}}
+                    <div class="star s-1"></div>
+                    <div class="star s-2"></div>
+                    <div class="star s-3"></div>
+
+                    <div class="card-body position-relative z-index-1 py-4 px-4">
+                        <div class="row align-items-center">
+                            {{-- KIRI: TEKS SAPAAN --}}
+                            <div class="col-md-7 text-white text-center text-md-start">
+                                <div class="mb-2">
+                                    <span class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill shadow-sm"
+                                        style="letter-spacing: 1px; border: 2px solid #fff;">
+                                        <i class="mdi mdi-moon-waning-crescent me-1"></i> 1447 HIJRIAH
+                                    </span>
+                                </div>
+                                <h2 class="fw-bold mb-1 font-arabic text-gold-gradient">Marhaban Ya Ramadhan</h2>
+                                <p class="text-white-50 mb-0" style="font-size: 1.1rem;">
+                                    "Bulan suci penuh berkah dan ampunan segera tiba."
+                                </p>
+                                <p class="small text-white-50 mt-1 fst-italic">
+                                    Persiapkan diri untuk menjemput pahala terbaik di bulan mulia.
+                                </p>
+                            </div>
+
+                            {{-- KANAN: TIMER MUNDUR --}}
+                            <div class="col-md-5 mt-4 mt-md-0">
+                                @if (!$ramadanData['is_today'])
+                                    <div class="d-flex justify-content-center justify-content-md-end gap-2"
+                                        id="ramadan-countdown">
+                                        {{-- Hari --}}
+                                        <div class="r-countdown-box">
+                                            <span class="r-time" id="r-days">{{ $ramadanData['days_left'] }}</span>
+                                            <span class="r-label">HARI</span>
+                                        </div>
+                                        <div class="r-separator">:</div>
+                                        {{-- Jam --}}
+                                        <div class="r-countdown-box">
+                                            <span class="r-time" id="r-hours">00</span>
+                                            <span class="r-label">JAM</span>
+                                        </div>
+                                        <div class="r-separator">:</div>
+                                        {{-- Menit --}}
+                                        <div class="r-countdown-box">
+                                            <span class="r-time" id="r-minutes">00</span>
+                                            <span class="r-label">MENIT</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center text-md-end mt-2">
+                                        <small class="text-warning fw-bold pulse-text">
+                                            <i class="mdi mdi-clock-outline me-1"></i> Menuju Maghrib Pertama
+                                        </small>
+                                    </div>
+                                @else
+                                    <div class="text-center text-md-end">
+                                        <div
+                                            class="py-3 px-4 rounded-3 border border-warning bg-white bg-opacity-10 backdrop-blur">
+                                            <h3 class="text-warning fw-bold mb-0">Selamat Menunaikan<br>Ibadah Puasa</h3>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- BAGIAN BARU: ATTENDANCE WRAPPED (Desember Only) --}}
     @if (\Carbon\Carbon::now()->month == 12)
         <div class="row mb-4 animate-enter">
