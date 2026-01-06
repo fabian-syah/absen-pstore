@@ -1329,6 +1329,160 @@
 
 @push('styles')
     <style>
+        /* === RAMADHAN THEME === */
+        .ramadan-card {
+            background: radial-gradient(circle at top right, #064e3b 0%, #022c22 100%);
+            /* Hijau Tua Mewah */
+            border: 1px solid #fbbf24 !important;
+            /* Border Emas */
+            min-height: 200px;
+        }
+
+        /* Pola Geometris Halus */
+        .islamic-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            background-image: radial-gradient(#fbbf24 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Efek Teks Emas */
+        .text-gold-gradient {
+            background: linear-gradient(to right, #fbbf24, #f59e0b, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            font-family: 'Playfair Display', serif;
+            /* Font Serif biar terlihat klasik */
+        }
+
+        /* Kotak Countdown */
+        .r-countdown-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(251, 191, 36, 0.5);
+            /* Border Emas Transparan */
+            border-radius: 8px;
+            width: 70px;
+            height: 75px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .r-time {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1;
+            font-family: 'Consolas', monospace;
+        }
+
+        .r-label {
+            font-size: 9px;
+            color: #fbbf24;
+            /* Warna Emas */
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        .r-separator {
+            font-size: 28px;
+            font-weight: bold;
+            color: #fbbf24;
+            padding-top: 10px;
+        }
+
+        /* Animasi Lentera (Fanous) */
+        .lantern {
+            position: absolute;
+            top: -10px;
+            width: 30px;
+            height: 40px;
+            background: #fbbf24;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+            z-index: 2;
+            animation: swing 3s ease-in-out infinite alternate;
+            transform-origin: top center;
+        }
+
+        .lantern::before {
+            /* Tali Lentera */
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            width: 2px;
+            height: 50px;
+            background: rgba(251, 191, 36, 0.5);
+        }
+
+        .lantern-inner {
+            /* Cahaya di dalam */
+            position: absolute;
+            top: 10px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            background: #fff;
+            opacity: 0.8;
+            border-radius: 2px;
+            animation: flicker 2s infinite;
+        }
+
+        .l-1 {
+            right: 10%;
+            height: 50px;
+            width: 35px;
+            animation-duration: 3.5s;
+            top: -5px;
+        }
+
+        .l-2 {
+            right: 20%;
+            height: 40px;
+            width: 25px;
+            animation-duration: 4s;
+            opacity: 0.8;
+        }
+
+        .l-3 {
+            right: 5%;
+            height: 35px;
+            width: 25px;
+            animation-duration: 3s;
+            opacity: 0.7;
+        }
+
+        @keyframes swing {
+            0% {
+                transform: rotate(5deg);
+            }
+
+            100% {
+                transform: rotate(-5deg);
+            }
+        }
+
+        @keyframes flicker {
+
+            0%,
+            100% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
         /* === [BARU] NOSTALGIA GALLERY STYLES === */
         .gallery-scroll-container {
             display: flex;
@@ -2858,5 +3012,36 @@
         function confettiEffect() {
             alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
         }
+
+        // --- SCRIPT RAMADHAN COUNTDOWN ---
+        @if (isset($ramadanData) && !$ramadanData['is_today'])
+            const ramadanDate = new Date("{{ $ramadanData['date'] }}T00:00:00");
+
+            function updateRamadanCountdown() {
+                const now = new Date();
+                const diff = ramadanDate - now;
+
+                if (diff <= 0) {
+                    location.reload();
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                
+                // Update DOM elements if they exist
+                const elDays = document.getElementById('r-days');
+                const elHours = document.getElementById('r-hours');
+                const elMinutes = document.getElementById('r-minutes');
+
+                if(elDays) elDays.innerText = days;
+                if(elHours) elHours.innerText = hours.toString().padStart(2, '0');
+                if(elMinutes) elMinutes.innerText = minutes.toString().padStart(2, '0');
+            }
+
+            setInterval(updateRamadanCountdown, 1000);
+            updateRamadanCountdown();
+        @endif
     </script>
 @endpush
