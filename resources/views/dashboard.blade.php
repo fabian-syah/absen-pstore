@@ -109,87 +109,112 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: RAMADHAN COUNTDOWN (Nuansa Religi & Mewah)                --}}
+    {{-- [UPGRADED] RAMADHAN COUNTDOWN: THE ROYAL ISLAMIC EDITION               --}}
     {{-- ======================================================================= --}}
     @if (isset($ramadanData) && $ramadanData)
-        <div class="row mb-4 animate-enter" style="animation-delay: 0.1s">
+        <div class="row mb-5 animate-enter" style="animation-delay: 0.1s">
             <div class="col-12">
-                <div class="card border-0 shadow-lg overflow-hidden ramadan-card">
-                    {{-- Background Ornament (CSS Only) --}}
-                    <div class="islamic-pattern"></div>
+                <div class="card border-0 shadow-lg overflow-hidden royal-ramadan-card">
 
-                    {{-- Animated Lanterns --}}
-                    <div class="lantern l-1">
-                        <div class="lantern-inner"></div>
+                    {{-- LAYER 1: Background Elements --}}
+                    <div class="royal-bg-pattern"></div>
+                    <div class="mosque-silhouette"></div> {{-- Siluet Masjid --}}
+                    <div class="moon-glow"></div> {{-- Cahaya Bulan --}}
+
+                    {{-- LAYER 2: Animated Lanterns (Gantung) --}}
+                    <div class="r-lantern l-big">
+                        <div class="r-lantern-light"></div>
                     </div>
-                    <div class="lantern l-2">
-                        <div class="lantern-inner"></div>
+                    <div class="r-lantern l-med">
+                        <div class="r-lantern-light"></div>
                     </div>
-                    <div class="lantern l-3">
-                        <div class="lantern-inner"></div>
+                    <div class="r-lantern l-small">
+                        <div class="r-lantern-light"></div>
                     </div>
 
-                    {{-- Stars --}}
-                    <div class="star s-1"></div>
-                    <div class="star s-2"></div>
-                    <div class="star s-3"></div>
+                    {{-- LAYER 3: Particles (Stars) --}}
+                    <div id="particles-js" class="particles-container"></div>
 
-                    <div class="card-body position-relative z-index-1 py-4 px-4">
+                    <div class="card-body position-relative z-index-10 py-5 px-4">
                         <div class="row align-items-center">
-                            {{-- KIRI: TEKS SAPAAN --}}
-                            <div class="col-md-7 text-white text-center text-md-start">
-                                <div class="mb-2">
-                                    <span class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill shadow-sm"
-                                        style="letter-spacing: 1px; border: 2px solid #fff;">
-                                        <i class="mdi mdi-moon-waning-crescent me-1"></i> 1447 HIJRIAH
+
+                            {{-- KIRI: TYPOGRAPHY & MESSAGE --}}
+                            <div class="col-lg-7 text-center text-lg-start mb-4 mb-lg-0">
+                                <div class="d-inline-block mb-3 animate-float">
+                                    <span class="badge-royal">
+                                        <i class="mdi mdi-star-crescent text-warning me-2"></i>
+                                        1447 H / 2026 M
                                     </span>
                                 </div>
-                                <h2 class="fw-bold mb-1 font-arabic text-gold-gradient">Marhaban Ya Ramadhan</h2>
-                                <p class="text-white-50 mb-0" style="font-size: 1.1rem;">
-                                    "Bulan suci penuh berkah dan ampunan segera tiba."
+
+                                {{-- Kaligrafi / Teks Arab Besar --}}
+                                <h1 class="display-4 fw-bold text-gradient-gold mb-2 font-arabic"
+                                    style="line-height: 1.2; text-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                                    Marhaban Ya Ramadhan
+                                </h1>
+
+                                <p class="lead text-white-50 mb-4 px-3 px-lg-0"
+                                    style="font-weight: 300; letter-spacing: 0.5px;">
+                                    "Tamu agung akan segera tiba. Siapkan hati untuk bulan penuh ampunan."
                                 </p>
-                                <p class="small text-white-50 mt-1 fst-italic">
-                                    Persiapkan diri untuk menjemput pahala terbaik di bulan mulia.
-                                </p>
+
+                                {{-- Quote Box Kecil --}}
+                                <div class="quote-box-royal mx-auto mx-lg-0">
+                                    <i class="mdi mdi-format-quote-open text-warning me-1"></i>
+                                    <span class="fst-italic small text-light">Ahlan Wa Sahlan, Bulan Suci.</span>
+                                </div>
                             </div>
 
-                            {{-- KANAN: TIMER MUNDUR --}}
-                            <div class="col-md-5 mt-4 mt-md-0">
+                            {{-- KANAN: LUXURY COUNTDOWN TIMER --}}
+                            <div class="col-lg-5">
                                 @if (!$ramadanData['is_today'])
-                                    <div class="d-flex justify-content-center justify-content-md-end gap-2"
-                                        id="ramadan-countdown">
-                                        {{-- Hari --}}
-                                        <div class="r-countdown-box">
-                                            <span class="r-time" id="r-days">{{ $ramadanData['days_left'] }}</span>
-                                            <span class="r-label">HARI</span>
+                                    <div class="royal-countdown-wrapper">
+                                        <div class="d-flex justify-content-center gap-3">
+
+                                            {{-- HARI --}}
+                                            <div class="royal-timer-box">
+                                                <div class="timer-circle-bg"></div>
+                                                <span class="royal-time"
+                                                    id="royal-days">{{ $ramadanData['days_left'] }}</span>
+                                                <span class="royal-label">HARI</span>
+                                            </div>
+
+                                            {{-- JAM --}}
+                                            <div class="royal-timer-box">
+                                                <div class="timer-circle-bg"></div>
+                                                <span class="royal-time" id="royal-hours">00</span>
+                                                <span class="royal-label">JAM</span>
+                                            </div>
+
+                                            {{-- MENIT --}}
+                                            <div class="royal-timer-box">
+                                                <div class="timer-circle-bg"></div>
+                                                <span class="royal-time" id="royal-minutes">00</span>
+                                                <span class="royal-label">MENIT</span>
+                                            </div>
+
                                         </div>
-                                        <div class="r-separator">:</div>
-                                        {{-- Jam --}}
-                                        <div class="r-countdown-box">
-                                            <span class="r-time" id="r-hours">00</span>
-                                            <span class="r-label">JAM</span>
+
+                                        <div class="text-center mt-4">
+                                            <div class="loading-bar-container">
+                                                <div class="loading-bar-fill"></div>
+                                            </div>
+                                            <small class="text-warning text-uppercase letter-spacing-2 mt-2 d-block">
+                                                Menuju Maghrib Pertama
+                                            </small>
                                         </div>
-                                        <div class="r-separator">:</div>
-                                        {{-- Menit --}}
-                                        <div class="r-countdown-box">
-                                            <span class="r-time" id="r-minutes">00</span>
-                                            <span class="r-label">MENIT</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-center text-md-end mt-2">
-                                        <small class="text-warning fw-bold pulse-text">
-                                            <i class="mdi mdi-clock-outline me-1"></i> Menuju Maghrib Pertama
-                                        </small>
                                     </div>
                                 @else
-                                    <div class="text-center text-md-end">
-                                        <div
-                                            class="py-3 px-4 rounded-3 border border-warning bg-white bg-opacity-10 backdrop-blur">
-                                            <h3 class="text-warning fw-bold mb-0">Selamat Menunaikan<br>Ibadah Puasa</h3>
-                                        </div>
+                                    {{-- TAMPILAN HARI H --}}
+                                    <div class="text-center animate-pulse-gold">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/4358/4358661.png" width="80"
+                                            class="mb-3 drop-shadow-glow">
+                                        <h2 class="text-white fw-bold">Selamat Berpuasa</h2>
+                                        <p class="text-warning mb-0">Semoga amal ibadah kita diterima Allah SWT.</p>
                                     </div>
                                 @endif
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -1329,157 +1354,327 @@
 
 @push('styles')
     <style>
-        /* === RAMADHAN THEME === */
-        .ramadan-card {
-            background: radial-gradient(circle at top right, #064e3b 0%, #022c22 100%);
-            /* Hijau Tua Mewah */
-            border: 1px solid #fbbf24 !important;
-            /* Border Emas */
-            min-height: 200px;
+        /* === ROYAL RAMADHAN THEME === */
+        @import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@700&display=swap');
+
+        .royal-ramadan-card {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            /* Deep Mystical Blue/Green */
+            position: relative;
+            border-radius: 24px !important;
+            border: 1px solid rgba(255, 215, 0, 0.3) !important;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
         }
 
-        /* Pola Geometris Halus */
-        .islamic-pattern {
+        .font-arabic {
+            font-family: 'Scheherazade New', serif;
+            /* Font style Arab/Timur Tengah */
+        }
+
+        /* Pattern Background */
+        .royal-bg-pattern {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            opacity: 0.1;
-            background-image: radial-gradient(#fbbf24 1px, transparent 1px);
-            background-size: 20px 20px;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(circle at 50% 50%, transparent 0%, transparent 100%),
+                repeating-linear-gradient(45deg, rgba(255, 215, 0, 0.03) 0px, rgba(255, 215, 0, 0.03) 1px, transparent 1px, transparent 10px);
+            opacity: 0.6;
+            z-index: 1;
         }
 
-        /* Efek Teks Emas */
-        .text-gold-gradient {
-            background: linear-gradient(to right, #fbbf24, #f59e0b, #fbbf24);
+        /* Silhouette Masjid */
+        .mosque-silhouette {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background-image: url('https://cdn.pixabay.com/photo/2017/01/31/15/34/mosque-2025088_1280.png');
+            /* Gambar Siluet Transparan */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom left;
+            opacity: 0.15;
+            z-index: 2;
+            filter: invert(1);
+            /* Putihkan siluet */
+        }
+
+        /* Cahaya Bulan */
+        .moon-glow {
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+            z-index: 1;
+        }
+
+        /* Teks Emas Mewah */
+        .text-gradient-gold {
+            background: linear-gradient(to bottom, #fff 20%, #ffd700 80%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            font-family: 'Playfair Display', serif;
-            /* Font Serif biar terlihat klasik */
         }
 
-        /* Kotak Countdown */
-        .r-countdown-box {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(251, 191, 36, 0.5);
-            /* Border Emas Transparan */
-            border-radius: 8px;
-            width: 70px;
-            height: 75px;
+        /* Badge 1447 H */
+        .badge-royal {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            padding: 8px 20px;
+            border-radius: 50px;
+            color: #ffd700;
+            font-weight: 600;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Quote Box */
+        .quote-box-royal {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid #ffd700;
+            padding: 10px 15px;
+            border-radius: 0 8px 8px 0;
+            display: inline-block;
+        }
+
+        /* --- LANTERNS (LENTERA) --- */
+        .r-lantern {
+            position: absolute;
+            top: -20px;
+            background: #111;
+            border: 2px solid #ffd700;
+            border-radius: 4px;
+            z-index: 5;
+            transform-origin: top center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .r-lantern::before {
+            /* Tali */
+            content: '';
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            width: 2px;
+            height: 100px;
+            background: rgba(255, 215, 0, 0.5);
+            transform: translateX(-50%);
+        }
+
+        .r-lantern-light {
+            position: absolute;
+            top: 20%;
+            left: 20%;
+            right: 20%;
+            bottom: 20%;
+            background: radial-gradient(circle, #fff 0%, #ffd700 60%, transparent 100%);
+            opacity: 0.8;
+            border-radius: 50%;
+            filter: blur(5px);
+            animation: lanternFlicker 3s infinite alternate;
+        }
+
+        .l-big {
+            right: 10%;
+            width: 40px;
+            height: 60px;
+            animation: lanternSwing 6s ease-in-out infinite alternate;
+        }
+
+        .l-med {
+            right: 20%;
+            width: 30px;
+            height: 45px;
+            top: -10px;
+            animation: lanternSwing 5s ease-in-out infinite alternate-reverse;
+            opacity: 0.9;
+        }
+
+        .l-small {
+            right: 5%;
+            width: 25px;
+            height: 35px;
+            top: -5px;
+            animation: lanternSwing 4s ease-in-out infinite alternate;
+            opacity: 0.8;
+        }
+
+        @keyframes lanternSwing {
+            from {
+                transform: rotate(3deg);
+            }
+
+            to {
+                transform: rotate(-3deg);
+            }
+        }
+
+        @keyframes lanternFlicker {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: scale(0.9);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+
+        /* --- TIMER BOXES --- */
+        .royal-countdown-wrapper {
+            position: relative;
+            z-index: 10;
+        }
+
+        .royal-timer-box {
+            width: 80px;
+            height: 100px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
         }
 
-        .r-time {
-            font-size: 28px;
+        /* Efek Kilau di Timer */
+        .royal-timer-box::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        .royal-time {
+            font-size: 2.5rem;
             font-weight: 800;
             color: #fff;
             line-height: 1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
             font-family: 'Consolas', monospace;
         }
 
-        .r-label {
-            font-size: 9px;
-            color: #fbbf24;
-            /* Warna Emas */
-            margin-top: 4px;
+        .royal-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #ffd700;
+            margin-top: 5px;
             letter-spacing: 1px;
         }
 
-        .r-separator {
-            font-size: 28px;
-            font-weight: bold;
-            color: #fbbf24;
-            padding-top: 10px;
+        /* Loading Bar */
+        .loading-bar-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
         }
 
-        /* Animasi Lentera (Fanous) */
-        .lantern {
-            position: absolute;
-            top: -10px;
-            width: 30px;
-            height: 40px;
-            background: #fbbf24;
-            border-radius: 5px;
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
-            z-index: 2;
-            animation: swing 3s ease-in-out infinite alternate;
-            transform-origin: top center;
+        .loading-bar-fill {
+            height: 100%;
+            background: #ffd700;
+            width: 60%;
+            /* Statis dulu, nanti bisa dinamis JS */
+            box-shadow: 0 0 10px #ffd700;
+            animation: loadProgress 2s ease-out;
         }
 
-        .lantern::before {
-            /* Tali Lentera */
-            content: '';
-            position: absolute;
-            top: -50px;
-            left: 50%;
-            width: 2px;
-            height: 50px;
-            background: rgba(251, 191, 36, 0.5);
-        }
-
-        .lantern-inner {
-            /* Cahaya di dalam */
-            position: absolute;
-            top: 10px;
-            left: 5px;
-            right: 5px;
-            bottom: 5px;
-            background: #fff;
-            opacity: 0.8;
-            border-radius: 2px;
-            animation: flicker 2s infinite;
-        }
-
-        .l-1 {
-            right: 10%;
-            height: 50px;
-            width: 35px;
-            animation-duration: 3.5s;
-            top: -5px;
-        }
-
-        .l-2 {
-            right: 20%;
-            height: 40px;
-            width: 25px;
-            animation-duration: 4s;
-            opacity: 0.8;
-        }
-
-        .l-3 {
-            right: 5%;
-            height: 35px;
-            width: 25px;
-            animation-duration: 3s;
-            opacity: 0.7;
-        }
-
-        @keyframes swing {
+        @keyframes shine {
             0% {
-                transform: rotate(5deg);
+                transform: translateX(-100%) rotate(45deg);
             }
 
             100% {
-                transform: rotate(-5deg);
+                transform: translateX(100%) rotate(45deg);
             }
         }
 
-        @keyframes flicker {
+        @keyframes loadProgress {
+            from {
+                width: 0%;
+            }
+
+            to {
+                width: 60%;
+            }
+        }
+
+        /* Particles Container (Stars) */
+        .particles-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Manual Stars (CSS Only fallback) */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #fff;
+            animation: twinkle 2s infinite ease-in-out;
+        }
+
+        .s-1 {
+            width: 3px;
+            height: 3px;
+            top: 20%;
+            left: 15%;
+            animation-delay: 0s;
+        }
+
+        .s-2 {
+            width: 2px;
+            height: 2px;
+            top: 40%;
+            left: 30%;
+            animation-delay: 1s;
+        }
+
+        .s-3 {
+            width: 4px;
+            height: 4px;
+            top: 10%;
+            right: 40%;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes twinkle {
 
             0%,
             100% {
-                opacity: 0.8;
+                opacity: 0.3;
+                transform: scale(0.8);
             }
 
             50% {
-                opacity: 0.4;
+                opacity: 1;
+                transform: scale(1.2);
             }
         }
 
@@ -2642,6 +2837,38 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
+        // --- ROYAL RAMADHAN JS ---
+        @if (isset($ramadanData) && !$ramadanData['is_today'])
+            const royalRamadanDate = new Date("{{ $ramadanData['date'] }}T00:00:00");
+
+            function updateRoyalCountdown() {
+                const now = new Date();
+                const diff = royalRamadanDate - now;
+
+                if (diff <= 0) {
+                    location.reload(); // Refresh halaman saat hari H
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                // Update DOM elements
+                const elDays = document.getElementById('royal-days');
+                const elHours = document.getElementById('royal-hours');
+                const elMinutes = document.getElementById('royal-minutes');
+
+                // Efek Animasi Angka Berubah (Optional)
+                if (elDays && elDays.innerText != days) elDays.innerText = days;
+                if (elHours) elHours.innerText = hours.toString().padStart(2, '0');
+                if (elMinutes) elMinutes.innerText = minutes.toString().padStart(2, '0');
+            }
+
+            // Jalankan setiap detik
+            setInterval(updateRoyalCountdown, 1000);
+            updateRoyalCountdown(); // Run immediately
+        @endif
         {{-- [BARU] SCRIPT PREVIEW GALLERY --}}
 
         function previewGalleryImage(src, title, date) {
@@ -3012,36 +3239,5 @@
         function confettiEffect() {
             alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
         }
-
-        // --- SCRIPT RAMADHAN COUNTDOWN ---
-        @if (isset($ramadanData) && !$ramadanData['is_today'])
-            const ramadanDate = new Date("{{ $ramadanData['date'] }}T00:00:00");
-
-            function updateRamadanCountdown() {
-                const now = new Date();
-                const diff = ramadanDate - now;
-
-                if (diff <= 0) {
-                    location.reload();
-                    return;
-                }
-
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                
-                // Update DOM elements if they exist
-                const elDays = document.getElementById('r-days');
-                const elHours = document.getElementById('r-hours');
-                const elMinutes = document.getElementById('r-minutes');
-
-                if(elDays) elDays.innerText = days;
-                if(elHours) elHours.innerText = hours.toString().padStart(2, '0');
-                if(elMinutes) elMinutes.innerText = minutes.toString().padStart(2, '0');
-            }
-
-            setInterval(updateRamadanCountdown, 1000);
-            updateRamadanCountdown();
-        @endif
     </script>
 @endpush
