@@ -538,4 +538,69 @@ class AuditController extends Controller
             Log::error("Gagal mengirim notifikasi ke user " . $user->name . ": " . $e->getMessage());
         }
     }
-}
+
+    /**
+     * Menyimpan Data Absensi Baru (Input Manual oleh Audit)
+     * Digunakan untuk mengisi tanggal yang statusnya Alpha/Kosong
+     * Route: audit.store.attendance
+     */
+    public function storeByAudit(Request $request)
+    {
+        // 1. Validasi Input
+        $request->validate([
+            'user_id'         => 'required|exists:users,id',
+            'date'            => 'required|date',      // Tanggal yang sedang diisi (Y-m-d)
+            'check_in_time'   => 'required',           // Jam masuk (H:i)
+            'presence_status' => 'required|string',
+            'audit_note'      => 'nullable|string',
+            'audit_photo'     => 'nullable|image|max:2048'
+        ]);
+
+        // 2. Ambil User & Timezone Cabangnya
+        $user = User::findOrFail($request->user_id);
+        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+
+        // 3. Proses Waktu Check-In
+        // Gabungkan Tanggal (dari hidden input) + Jam (dari input time) sesuai timezone cabang
+        $checkInDateTime = Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_in_time, $branchTimezone);
+        
+        // Convert ke UTC/App Timezone untuk disimpan ke DB
+        $checkInDB = $checkInDateTime->copy()->setTimezone(config('app.timezone'));
+
+        // 4. Proses Waktu Check-Out (Jika ada)
+        $checkOutDB = null;
+        if ($request->check_out_time) {
+            $checkOutDateTime = Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_out_time, $branchTimezone);
+            
+            // Jika jam pulang lebih kecil dari jam masuk (misal pulang dini hari 01:00), anggap besoknya (+1 hari)
+            if ($checkOutDateTime->lt($checkInDateTime)) {
+                 $checkOutDateTime->addDay();
+            }
+            $checkOutDB = $checkOutDateTime->copy()->setTimezone(config('app.timezone'));
+        }
+
+        // 5. Handle Upload Foto Bukti Audit
+        $auditPhotoPath = null;
+        if ($request->hasFile('audit_photo')) {
+            $auditPhotoPath = $request->file('audit_photo')->store('attendance/audit', 'public');
+        }
+
+        // 6. Simpan Data Baru ke Database
+        Attendance::create([
+            'user_id'             => $user->id,
+            'branch_id'           => $user->branch_id ?? 1,
+            'check_in_time'       => $checkInDB,
+            'check_out_time'      => $checkOutDB,
+            'presence_status'     => $request->presence_status,
+            'status'              => 'verified',     // Langsung verified karena diinput oleh Audit
+            'attendance_type'     => 'manual',       // Tipe manual
+            'audit_note'          => $request->audit_note . ' (Input Manual Audit: ' . Auth::user()->name . ')',
+            'audit_photo_path'    => $auditPhotoPath,
+            'verified_by_user_id' => Auth::id(),
+            'is_late_checkin'     => false,          // Default false, atau bisa tambahkan logika hitung telat jika mau
+            'is_early_checkout'   => false,
+        ]);
+
+        return back()->with('success', 'Data absensi baru berhasil ditambahkan.');
+    }
+} // <--- Ini penutup class AuditController

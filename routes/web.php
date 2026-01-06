@@ -325,6 +325,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/all-attendance', [AdminAttendanceController::class, 'index'])->name('admin.attendance.all');
         Route::put('/audit/verify-attendance/{id}', [App\Http\Controllers\AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
         Route::put('/attendance/{id}/audit-update', [AttendanceHistoryController::class, 'updateByAudit'])->name('audit.update.attendance');
+        // Route untuk input manual absensi baru oleh Audit (untuk tanggal Alpha/Kosong)
+        Route::post('/audit/attendance/store', [App\Http\Controllers\AuditController::class, 'storeByAudit'])->name('audit.store.attendance');
 
         Route::resource('branches', BranchController::class);
         Route::post('/branches/{branch}/toggle-status', [BranchController::class, 'toggleStatus'])->name('branches.toggle-status');

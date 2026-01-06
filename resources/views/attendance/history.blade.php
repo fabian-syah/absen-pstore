@@ -498,6 +498,7 @@
                                             @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
                                                 <td class="text-end pe-4">
                                                     @if($att->id)
+                                                        {{-- DATA SUDAH ADA DI DB (EDIT/VERIF) --}}
                                                         <div class="btn-group btn-group-sm shadow-sm" role="group">
                                                             @if ($att->status != 'verified')
                                                                 <button type="button" class="btn btn-success text-white" 
@@ -517,6 +518,62 @@
                                                                     <i class="mdi mdi-close"></i>
                                                                 </button>
                                                             @endif
+                                                        </div>
+                                                    @else
+                                                        {{-- DATA KOSONG/ALPHA (INPUT MANUAL) --}}
+                                                        <button type="button" class="btn btn-primary btn-sm text-white shadow-sm" 
+                                                                data-bs-toggle="modal" data-bs-target="#createAuditModal{{ $loop->index }}" 
+                                                                title="Input Data Manual">
+                                                            <i class="mdi mdi-plus-box"></i> Input
+                                                        </button>
+
+                                                        {{-- MODAL INPUT BARU --}}
+                                                        <div class="modal fade text-start" id="createAuditModal{{ $loop->index }}" tabindex="-1">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content rounded-4 border-0">
+                                                                    <div class="modal-header bg-primary text-white">
+                                                                        <h5 class="modal-title fw-bold">Input Absensi ({{ $att->check_in_time->format('d M Y') }})</h5>
+                                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                                    </div>
+                                                                    <form action="{{ route('audit.store.attendance') }}" method="POST" enctype="multipart/form-data">
+                                                                        @csrf
+                                                                        <div class="modal-body p-4">
+                                                                            <input type="hidden" name="user_id" value="{{ $employee->id }}">
+                                                                            <input type="hidden" name="date" value="{{ $att->check_in_time->format('Y-m-d') }}">
+
+                                                                            <div class="row g-3 mb-3">
+                                                                                <div class="col-6">
+                                                                                    <label class="form-label small fw-bold">Jam Masuk</label>
+                                                                                    <input type="time" name="check_in_time" class="form-control" required>
+                                                                                </div>
+                                                                                <div class="col-6">
+                                                                                    <label class="form-label small fw-bold">Jam Pulang</label>
+                                                                                    <input type="time" name="check_out_time" class="form-control">
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="mb-3">
+                                                                                <label class="form-label small fw-bold">Status Kehadiran</label>
+                                                                                <select name="presence_status" class="form-select" required>
+                                                                                    <option value="Masuk">✅ Masuk</option>
+                                                                                    <option value="Sakit">🤒 Sakit</option>
+                                                                                    <option value="Izin">📝 Izin</option>
+                                                                                    <option value="Cuti">🏖️ Cuti</option>
+                                                                                </select>
+                                                                            </div>
+
+                                                                            <div class="mb-3">
+                                                                                <label class="form-label small fw-bold">Catatan & Bukti</label>
+                                                                                <input type="file" name="audit_photo" class="form-control mb-2">
+                                                                                <textarea name="audit_note" class="form-control" rows="2" placeholder="Alasan input manual..."></textarea>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="modal-footer pt-0 px-4 pb-4 border-top-0">
+                                                                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Simpan Data</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     @endif
                                                 </td>
