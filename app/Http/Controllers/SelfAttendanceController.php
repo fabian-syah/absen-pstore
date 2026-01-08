@@ -329,13 +329,16 @@ class SelfAttendanceController extends Controller
             $notifBody = "{$user->name} absen masuk (Selfie) di {$branchName}";
         }
 
+        /* <-- TAMBAHKAN INI DI AWAL
         if ($shouldSendNotif) {
             try {
+                // Fungsi ini yang bikin loading lama karena nunggu koneksi Firebase
                 $this->sendNotificationToBranchRoles(['audit', 'admin'], $user->branch_id, $notifTitle, $notifBody);
             } catch (\Exception $e) {
-                // Log::error("FCM Error: " . $e->getMessage());
+                Log::error("FCM Error: " . $e->getMessage());
             }
         }
+        */  
 
         return redirect()->route('dashboard')->with('success', $message);
     }
@@ -380,9 +383,11 @@ class SelfAttendanceController extends Controller
             'is_active' => true,
         ]);
 
+        /* MATIKAN JUGA YANG INI
         try {
             $this->sendNotificationToBranchRoles(['audit', 'admin'], $user->branch_id, "Laporan Telat", "{$user->name} melaporkan akan terlambat.");
         } catch (\Exception $e) {}
+        */
 
         return redirect()->route('dashboard')->with('success', 'Laporan telat dikirim.');
     }
