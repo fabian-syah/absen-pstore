@@ -9,6 +9,7 @@ use App\Models\Attendance;
 use App\Models\Violation;
 use App\Models\JobTarget;
 use App\Models\CashAdvance;
+use App\Traits\SendFcmNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
+
+    use SendFcmNotification;
     // Set Timezone Admin (Pusat)
     protected $adminTimezone = 'Asia/Jakarta';
 
