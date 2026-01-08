@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class SelfAttendanceController extends Controller
 {
-    use SendFcmNotification;
+    // use SendFcmNotification;
 
     /**
      * Helper untuk mendapatkan Offset Timezone (contoh: +07:00)
@@ -333,7 +333,7 @@ class SelfAttendanceController extends Controller
             try {
                 $this->sendNotificationToBranchRoles(['audit', 'admin'], $user->branch_id, $notifTitle, $notifBody);
             } catch (\Exception $e) {
-                Log::error("FCM Error: " . $e->getMessage());
+                // Log::error("FCM Error: " . $e->getMessage());
             }
         }
 

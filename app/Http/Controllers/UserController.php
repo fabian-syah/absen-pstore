@@ -568,16 +568,16 @@ class UserController extends Controller
         return ['total' => $presentCount, 'present' => $presentCount, 'alpha' => 0, 'late' => 0, 'early' => 0, 'pending' => 0, 'on_time' => 0, 'on_time_percentage' => 0, 'late_percentage' => 0, 'current_month' => Carbon::now()->format('F Y')];
     }
 
-    public function updateFcmToken(Request $request)
-    {
-        try {
-            $request->validate(['token' => 'required|string']);
-            $user = Auth::user();
-            $user->fcm_token = $request->token;
-            $user->save();
-            return response()->json(['success' => true, 'message' => 'Token updated']);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false], 500);
-        }
-    }
+    // public function updateFcmToken(Request $request)
+    // {
+    //     try {
+    //         $request->validate(['token' => 'required|string']);
+    //         $user = Auth::user();
+    //         $user->fcm_token = $request->token;
+    //         $user->save();
+    //         return response()->json(['success' => true, 'message' => 'Token updated']);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['success' => false], 500);
+    //     }
+    // }
 }
