@@ -214,20 +214,6 @@
             border: 1px solid #bbf7d0;
         }
 
-        /* Styles untuk Pesan Error Hosting */
-        .server-error-msg {
-            background: #fff8e1;
-            color: #b45309;
-            border: 1px solid #fcd34d;
-            border-left: 5px solid #f59e0b;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 25px;
-            font-size: 13px;
-            line-height: 1.5;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
         .text-muted {
             color: #64748b !important;
         }
@@ -293,16 +279,6 @@
                 <div class="row w-100 mx-0 justify-content-center">
                     <div class="col-xl-4 col-lg-5 col-md-6 col-sm-8">
                         <div class="auth-form-light text-center py-5 px-4 px-sm-5 login-card">
-                            
-                            <div class="server-error-msg text-start">
-                                <h6 class="fw-bold mb-2" style="color: #92400e;">
-                                    <i class="mdi mdi-access-point-network-off me-2"></i>Mohon Maaf, Layanan Terganggu
-                                </h6>
-                                <p class="mb-0">
-                                    Saat ini kami sedang mengalami kendala teknis pada server hosting (<strong>Error 504 Gateway Time-out</strong>). <br><br>
-                                    Tim teknis sedang berupaya keras untuk memulihkan koneksi. Jika Anda mengalami kegagalan login, mohon tunggu beberapa saat dan coba lagi secara berkala.
-                                </p>
-                            </div>
                             <div class="brand-logo">
                                 <div class="logo-container">
                                     <i class="mdi mdi-fingerprint"></i>
@@ -314,6 +290,7 @@
                             <h4 class="fw-bold mb-3 text-dark">Selamat Datang</h4>
                             <p class="text-muted mb-4">Masuk dengan ID Login Anda</p>
 
+                            <!-- Informasi Login -->
                             <div class="login-info text-start">
                                 <h6><i class="mdi mdi-information-outline me-2"></i>Cara Login:</h6>
                                 <ul>
