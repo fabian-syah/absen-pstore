@@ -52,18 +52,27 @@ class AttendanceHistoryController extends Controller
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
+        // Setup Timezone
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
         
-        $today = Carbon::now()->timezone($branchTimezone)->startOfDay();
+        // [FIX] Gunakan endOfDay() agar hari ini terhitung penuh sampai 23:59:59
+        // Jika pakai startOfDay(), loop bisa berhenti di detik 00:00:00 tanggal 9, sehingga data tanggal 9 dianggap belum masuk.
+        $today = Carbon::now($branchTimezone)->endOfDay();
+        
+        // Tentukan batas akhir loop: Jika akhir bulan > hari ini, gunakan hari ini sebagai batas (agar tidak muncul Alpha di masa depan)
+        // Namun karena $today sudah endOfDay, tanggal 9 akan masuk penuh dalam loop.
         $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
+        // Ambil Data Absensi (Buffer +/- 1 hari untuk antisipasi beda timezone)
         $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
             ->where('user_id', $user->id)
             ->whereBetween('check_in_time', [$startDate->copy()->subDay(), $endDate->copy()->addDay()])
             ->get();
 
+        // Ambil Data Cuti/Izin
         $leaves = LeaveRequest::with('verifier')
             ->where('user_id', $user->id)
             ->where('status', 'approved')
@@ -82,23 +91,30 @@ class AttendanceHistoryController extends Controller
 
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
+            
+            // Cari Absensi di tanggal loop (Konversi CheckIn ke Timezone Cabang dulu baru bandingkan tanggal)
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
             })->first();
 
             if ($att) {
+                // Konversi objek waktu ke timezone cabang untuk tampilan view
                 $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
-                if ($att->check_out_time) { $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); }
+                if ($att->check_out_time) { 
+                    $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); 
+                }
                 $historyCollection->push($att);
             } else {
+                // Cek Cuti/Izin
                 $leave = $leaves->filter(function ($l) use ($date) {
                     return $date->between(Carbon::parse($l->start_date)->startOfDay(), Carbon::parse($l->end_date ?? $l->start_date)->endOfDay());
                 })->first();
 
+                // Buat Objek Absensi Dummy (Alpha/Cuti)
                 $fakeAtt = new Attendance();
                 $fakeAtt->user_id = $user->id;
                 $fakeAtt->user = $user;
-                $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0);
+                $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0); // Set jam 00:00 untuk sorting
                 
                 if ($leave) {
                     $fakeAtt->presence_status = ucfirst($leave->type);
@@ -108,7 +124,7 @@ class AttendanceHistoryController extends Controller
                     $fakeAtt->setRelation('leaveRequest', $leave);
                     $fakeAtt->setRelation('verifier', $leave->verifier);
                 } else {
-                    // Update: Menghilangkan pengecekan weekend agar status tetap Alpha meskipun hari libur
+                    // Alpha
                     $fakeAtt->presence_status = 'Alpha';
                     $fakeAtt->status = 'verified';
                     $fakeAtt->attendance_type = 'system';
@@ -117,8 +133,12 @@ class AttendanceHistoryController extends Controller
             }
         }
 
-        $history = $historyCollection->sortByDesc('check_in_time');
+        // Sorting dari tanggal terbaru
+        $history = $historyCollection->sortByDesc(function ($item) {
+            return $item->check_in_time->timestamp;
+        });
 
+        // Hitung Summary
         $summary = [
             'total' => $history->count(),
             'present' => $history->filter(function ($item) {
