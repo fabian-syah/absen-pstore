@@ -8,6 +8,7 @@ use App\Models\JobTarget;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache; // Import Cache untuk mendukung fitur Last Seen
 
 class BranchController extends Controller
 {
@@ -66,6 +67,7 @@ class BranchController extends Controller
             if (!in_array($branch->id, $allowedBranchIds)) abort(403, 'Akses Ditolak. Cabang ini bukan wilayah Anda.');
         }
 
+        // Mengambil data karyawan (termasuk last_login_at secara otomatis dari model User)
         $employees = User::with(['division', 'attendances' => function ($q) {
             $q->whereDate('check_in_time', now());
         }])

@@ -46,6 +46,14 @@
                             <span class="fw-bold text-muted">Total Karyawan</span>
                             <span class="badge bg-primary fs-6">{{ $totalEmployees }}</span>
                         </div>
+                        {{-- Menampilkan Timezone Cabang agar informatif --}}
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="fw-bold text-muted">Zona Waktu</span>
+                            <span class="text-dark">
+                                {{ $branch->timezone }} 
+                                ({{ $branch->timezone == 'Asia/Jakarta' ? 'WIB' : ($branch->timezone == 'Asia/Makassar' ? 'WITA' : 'WIT') }})
+                            </span>
+                        </div>
 
                         <div class="py-3">
                             <span class="fw-bold text-muted d-block mb-2">Audit Penanggung Jawab</span>
@@ -137,6 +145,7 @@
                                 <tr>
                                     <th>Foto</th>
                                     <th>Nama / ID</th>
+                                    <th>Status Login</th> {{-- KOLOM BARU --}}
                                     <th>Jabatan</th>
                                     <th>Divisi</th>
                                     <th>Status</th>
@@ -166,6 +175,37 @@
                                             <div class="d-flex align-items-center gap-1"><h6 class="mb-0 fw-semibold">{{ $user->name }}</h6></div>
                                             <small class="text-muted d-block mt-1">{{ $user->login_id }}</small>
                                         </td>
+                                        
+                                        {{-- LOGIKA LAST SEEN SESUAI TIMEZONE CABANG --}}
+                                        <td>
+                                            @php
+                                                // Ambil timezone dari object branch yang dikirim controller
+                                                $branchTz = $branch->timezone ?? 'Asia/Jakarta';
+                                                
+                                                // Cek cache online (gunakan Facades Cache secara eksplisit agar aman di blade)
+                                                $isOnline = \Illuminate\Support\Facades\Cache::has('user-is-online-' . $user->id);
+                                                
+                                                // Konversi last_login_at ke timezone cabang
+                                                $lastLogin = $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->setTimezone($branchTz) : null;
+                                            @endphp
+
+                                            @if($isOnline)
+                                                <span class="badge badge-success d-flex align-items-center" style="width: fit-content; padding: 5px 10px;">
+                                                    <i class="mdi mdi-circle me-1" style="font-size: 8px;"></i> Online
+                                                </span>
+                                            @elseif($lastLogin)
+                                                <div class="lh-1">
+                                                    <div class="fw-bold mb-1" style="font-size: 0.8rem;">{{ $lastLogin->translatedFormat('d M Y') }}</div>
+                                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                                        <i class="mdi mdi-clock-outline me-1"></i>{{ $lastLogin->format('H:i') }} 
+                                                        {{ $branchTz == 'Asia/Jakarta' ? 'WIB' : ($branchTz == 'Asia/Makassar' ? 'WITA' : 'WIT') }}
+                                                    </small>
+                                                </div>
+                                            @else
+                                                <span class="text-muted small fst-italic">Belum Login</span>
+                                            @endif
+                                        </td>
+
                                         <td>
                                             @php
                                                 if($user->role == 'leader') { $displayRole = 'Leader'; $badgeClass = 'role-leader'; $icon = 'mdi-crown'; } 
@@ -186,7 +226,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center py-5 text-muted">
+                                        <td colspan="7" class="text-center py-5 text-muted">
                                             <div class="d-flex flex-column align-items-center">
                                                 <div class="bg-light rounded-circle p-3 mb-2"><i class="mdi mdi-account-off fs-2 text-secondary"></i></div>
                                                 <p class="mb-0">Belum ada karyawan di cabang ini.</p>
