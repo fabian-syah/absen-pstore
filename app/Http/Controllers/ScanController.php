@@ -41,7 +41,7 @@ class ScanController extends Controller
 
        $attendanceSession = Attendance::where('user_id', $user->id)
     ->whereNull('check_out_time')
-    ->where('check_in_time', '>=', now()->subHours(32)) // Konsisten 32 jam
+    ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 32 jam
     ->latest('check_in_time')
     ->first();
 
@@ -143,12 +143,12 @@ class ScanController extends Controller
 
             Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '<', $currentTime->copy()->subHours(32))
+                ->where('check_in_time', '<', $currentTime->copy()->subHours(24))
                 ->update(['check_out_time' => DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed by Security Scan (Expired)']);
 
             if (Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', $currentTime->copy()->subHours(32))
+                ->where('check_in_time', '>=', $currentTime->copy()->subHours(24))
                 ->exists()
             ) {
                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini masih memiliki sesi aktif (Belum Pulang)!'], 409);
@@ -201,7 +201,7 @@ class ScanController extends Controller
 
            $attendance = Attendance::where('user_id', $user->id)
     ->whereNull('check_out_time')
-    ->where('check_in_time', '>=', now()->subHours(32)) // Konsisten 32 jam
+    ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 32 jam
     ->latest('check_in_time')
     ->first();
 

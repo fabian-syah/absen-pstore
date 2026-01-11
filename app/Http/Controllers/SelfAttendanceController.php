@@ -49,7 +49,7 @@ class SelfAttendanceController extends Controller
         $activeSession = Attendance::where('user_id', $user->id)
     ->whereNull('check_out_time')
     // UBAH dari subHours(24) menjadi 32
-    ->where('check_in_time', '>=', now()->subHours(32)) 
+    ->where('check_in_time', '>=', now()->subHours(24)) 
     ->where('status', '!=', 'alpha')
     ->latest('check_in_time')
     ->first();
@@ -146,7 +146,7 @@ class SelfAttendanceController extends Controller
         if (!$attendanceToUpdate && $request->has('mode') && $request->mode == 'pulang') {
              $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', now()->subHours(32))
+                ->where('check_in_time', '>=', now()->subHours(24))
                 ->latest('check_in_time')
                 ->first();
         }
@@ -254,7 +254,7 @@ class SelfAttendanceController extends Controller
             $checkAgain = Attendance::where('user_id', $user->id)
     ->whereNull('check_out_time')
     // Pastikan pengecekan masuk baru juga konsisten 32 jam
-    ->where('check_in_time', '>=', now()->subHours(32))
+    ->where('check_in_time', '>=', now()->subHours(24))
     ->first();
             
             if ($checkAgain) {
