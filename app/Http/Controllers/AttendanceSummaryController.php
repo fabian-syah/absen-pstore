@@ -48,13 +48,23 @@ class AttendanceSummaryController extends Controller
         } 
 
         // --- 2. AMBIL DATA ---
+        // Data History untuk detail tabel
         $history = Attendance::where('user_id', $targetUser->id)
             ->whereYear('check_in_time', $selectedYear)
             ->whereMonth('check_in_time', $selectedMonth)
             ->orderBy('check_in_time', 'desc')
             ->get();
 
-        $attendances = Attendance::where('user_id', $targetUser->id)->whereYear('check_in_time', $selectedYear)->get();
+        // Data Absensi Setahun Penuh (Untuk perhitungan statistik)
+        // Kita mengambil buffer sedikit (subDay/addDay) untuk antisipasi timezone cut-off
+        $attendances = Attendance::where('user_id', $targetUser->id)
+            ->whereBetween('check_in_time', [
+                Carbon::create($selectedYear, 1, 1)->startOfYear()->subDays(2),
+                Carbon::create($selectedYear, 12, 31)->endOfYear()->addDays(2)
+            ])
+            ->get();
+
+        // Data Cuti/Izin Setahun
         $leaves = LeaveRequest::where('user_id', $targetUser->id)->where('status', 'approved')
             ->where(function($q) use ($selectedYear) {
                 $q->whereYear('start_date', $selectedYear)->orWhereYear('end_date', $selectedYear);
@@ -67,10 +77,16 @@ class AttendanceSummaryController extends Controller
             'izin' => 0, 'cuti' => 0, 'alpha' => 0, 'telat' => 0, 'pulang_cepat' => 0, 'pending' => 0
         ];
 
+        // Ambil Timezone Cabang User (Penting untuk sinkronisasi dengan History)
+        $branchTimezone = $targetUser->branch->timezone ?? 'Asia/Jakarta';
+
         // --- 4. LOOPING 12 BULAN ---
         for ($m = 1; $m <= 12; $m++) {
-            $monthAtt = $attendances->filter(fn($q) => $q->check_in_time->month == $m);
+            
+            // Filter absensi bulan ini (Basic filter untuk counter biasa)
+            $monthAtt = $attendances->filter(fn($q) => $q->check_in_time->month == $m && $q->check_in_time->year == $selectedYear);
 
+            // Hitung Counter Dasar dari Attendance Record
             $telatFromAttendance = $monthAtt->filter(fn($row) => $row->is_late_checkin == true || str_contains(strtolower($row->presence_status ?? ''), 'telat'))->count();
             $alphaCount = $monthAtt->filter(fn($q) => strtolower($q->presence_status ?? '') == 'alpha')->count();
             $pendingCount = $monthAtt->filter(fn($q) => $q->status == 'pending_verification')->count();
@@ -83,33 +99,32 @@ class AttendanceSummaryController extends Controller
             $wfhCount = $monthAtt->filter(fn($q) => str_contains(strtolower($q->presence_status ?? ''), 'wfh'))->count();
             $pulangCepatCount = $monthAtt->where('is_early_checkout', true)->count();
 
+            // Hitung Data dari Leave Request (Cuti/Izin/Sakit)
+            // Dengan Logika "Timezone Strict" agar sinkron dengan History
             $cutiCount = 0; $sakitCount = 0; $izinCount = 0; $telatFromLeave = 0; $wfhFromLeaveCount = 0; 
-            // --- PERBAIKAN START ---
             
-            // 1. Ambil Timezone Cabang (Default ke Asia/Jakarta jika null)
-            $branchTimezone = $targetUser->branch->timezone ?? 'Asia/Jakarta';
-
             foreach ($leaves as $leave) {
                 $start = Carbon::parse($leave->start_date);
                 $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
                 $period = CarbonPeriod::create($start, $end);
 
                 foreach ($period as $date) {
-                    // Pastikan hanya menghitung bulan & tahun yang dipilih
+                    // Pastikan tanggal loop berada di bulan & tahun yang sedang dihitung ($m & $selectedYear)
                     if ($date->month == $m && $date->year == $selectedYear) {
                         
                         $currentDateStr = $date->format('Y-m-d');
 
-                        // 2. CEK STRICT: Gunakan variable global $attendances (bukan $monthAtt)
-                        // dan konversi ke Timezone cabang sebelum mencocokkan tanggal.
+                        // STRICT CHECK:
+                        // Cek apakah ada data absensi di hari ini dengan mengonversi check_in_time ke Timezone Cabang.
+                        // Kita cek dari collection global $attendances untuk akurasi penuh.
                         $attendanceFound = $attendances->first(function($att) use ($currentDateStr, $branchTimezone) {
                             return Carbon::parse($att->check_in_time)
                                 ->timezone($branchTimezone)
                                 ->format('Y-m-d') === $currentDateStr;
                         });
 
-                        // 3. LOGIKA: Jika TIDAK ADA absensi masuk (clock-in) pada tanggal tsb,
-                        // baru hitung counter Izin/Sakit/Cuti.
+                        // JIKA TIDAK ADA DATA ABSENSI (Clock-In), BARU HITUNG SEBAGAI IZIN/CUTI
+                        // Jika sudah ada Clock-In, maka prioritasnya adalah "Hadir/Masuk", bukan Izin.
                         if (!$attendanceFound) {
                             if ($leave->type == 'cuti') {
                                 $cutiCount++;
@@ -120,18 +135,19 @@ class AttendanceSummaryController extends Controller
                             } elseif (strtolower($leave->type) == 'wfh') {
                                 $wfhFromLeaveCount++;
                             } else {
-                                // Menangkap tipe "izin", "permit", dll
+                                // Default ke Izin jika tipe tidak spesifik
                                 $izinCount++;
                             }
                         }
                     }
                 }
             }
-            // --- PERBAIKAN END ---
 
+            // Agregasi Total
             $totalMasukBulanIni = $masukCount + $wfhFromLeaveCount; 
             $totalHariBulanIni = $totalMasukBulanIni + $sakitCount + $izinCount + $cutiCount + $alphaCount;
 
+            // Masukkan ke Array Data Bulanan
             $monthsData[$m] = [
                 'name' => Carbon::create()->month($m)->translatedFormat('F'),
                 'total_hari' => $totalHariBulanIni,
@@ -145,10 +161,14 @@ class AttendanceSummaryController extends Controller
                 'pulang_cepat' => $pulangCepatCount,
                 'pending' => $pendingCount
             ];
-            foreach($grandTotal as $key => $val) { $grandTotal[$key] += $monthsData[$m][$key] ?? 0; }
+
+            // Tambahkan ke Grand Total Tahunan
+            foreach($grandTotal as $key => $val) { 
+                $grandTotal[$key] += $monthsData[$m][$key] ?? 0; 
+            }
         }
 
-        // --- 5. DATA UNTUK BOX ATAS ---
+        // --- 5. DATA UNTUK BOX ATAS (SUMMARY) ---
         $rawSummary = $monthsData[$selectedMonth];
         $summary = [
             'present' => $rawSummary['masuk'],
@@ -156,11 +176,15 @@ class AttendanceSummaryController extends Controller
             'izin'    => $rawSummary['izin'],
             'alpha'   => $rawSummary['alpha'],
             'total'   => $rawSummary['total_hari'],
+            // Tambahan untuk detail box kecil
+            'telat'   => $rawSummary['telat'],
+            'pulang_cepat' => $rawSummary['pulang_cepat'],
+            'pending' => $rawSummary['pending']
         ];
 
         return view('attendance.summary', [
-            'user' => $targetUser, // Diubah ke 'user' agar sesuai dengan Blade
-            'isAccessGranted' => $isAccessGranted, // Kirim variabel ini agar @if(isset) bekerja
+            'user' => $targetUser,
+            'isAccessGranted' => $isAccessGranted,
             'history' => $history,
             'selectedYear' => $selectedYear,
             'selectedMonth' => $selectedMonth,
