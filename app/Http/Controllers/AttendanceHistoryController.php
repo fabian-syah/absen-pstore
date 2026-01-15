@@ -52,7 +52,6 @@ class AttendanceHistoryController extends Controller
 
    private function getHistoryData($user, $selectedMonth, $selectedYear)
 {
-    // Setup Timezone
     $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
     
     $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
@@ -61,13 +60,12 @@ class AttendanceHistoryController extends Controller
     $today = Carbon::now($branchTimezone)->endOfDay();
     $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
-    // 1. Ambil Data Attendance untuk bulan ini
+    // Ambil data
     $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
         ->where('user_id', $user->id)
         ->whereBetween('check_in_time', [$startDate, $endDate])
         ->get();
 
-    // 2. Ambil Data LeaveRequest yang disetujui untuk bulan ini
     $leaves = LeaveRequest::with('verifier')
         ->where('user_id', $user->id)
         ->where('status', 'approved')
@@ -80,51 +78,68 @@ class AttendanceHistoryController extends Controller
                   });
         })->get();
 
-    // 3. Gabungkan data
     $historyCollection = collect();
-    
-    // Loop setiap hari dalam bulan
     $period = CarbonPeriod::create($startDate, $limitDate);
     
     foreach ($period as $date) {
         $currentDateStr = $date->format('Y-m-d');
         
-        // Cek apakah ada attendance di tanggal ini
+        // Cek attendance
         $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
             return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
         })->first();
 
+        // Cek leave
+        $leave = $leaves->filter(function ($l) use ($date) {
+            return $date->between(
+                Carbon::parse($l->start_date)->startOfDay(), 
+                Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
+            );
+        })->first();
+
         if ($att) {
-            // Ada attendance, gunakan data attendance
+            // Ada attendance
             $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
             if ($att->check_out_time) { 
                 $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); 
             }
+            
+            // Jika ada leave untuk tanggal ini, update status
+            if ($leave) {
+                if ($leave->type == 'telat') {
+                    // Special case: tetap masuk tapi status telat
+                    $att->presence_status = 'Telat';
+                    $att->is_late_checkin = true;
+                } else {
+                    $att->presence_status = ucfirst($leave->type);
+                }
+            }
+            
             $historyCollection->push($att);
         } else {
-            // Tidak ada attendance, cek apakah ada leave
-            $leave = $leaves->filter(function ($l) use ($date) {
-                return $date->between(
-                    Carbon::parse($l->start_date)->startOfDay(), 
-                    Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
-                );
-            })->first();
-
+            // Tidak ada attendance
             if ($leave) {
-                // Ada leave, buat record dummy
+                // Ada leave
                 $fakeAtt = new Attendance();
                 $fakeAtt->user_id = $user->id;
                 $fakeAtt->user = $user;
                 $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0);
-                $fakeAtt->presence_status = ucfirst($leave->type); // 'izin', 'sakit', 'cuti', dll
+                
+                if ($leave->type == 'telat') {
+                    $fakeAtt->presence_status = 'Telat';
+                    $fakeAtt->is_late_checkin = true;
+                } else {
+                    $fakeAtt->presence_status = ucfirst($leave->type);
+                }
+                
                 $fakeAtt->status = 'verified';
                 $fakeAtt->attendance_type = 'leave';
-                $fakeAtt->notes = "Izin: " . $leave->reason;
+                $fakeAtt->notes = $leave->reason;
                 $fakeAtt->setRelation('leaveRequest', $leave);
                 $fakeAtt->setRelation('verifier', $leave->verifier);
                 $historyCollection->push($fakeAtt);
             } else {
-                // Tidak ada attendance maupun leave = Alpha
+                // Alpha
                 $fakeAtt = new Attendance();
                 $fakeAtt->user_id = $user->id;
                 $fakeAtt->user = $user;
@@ -137,12 +152,12 @@ class AttendanceHistoryController extends Controller
         }
     }
 
-    // Sorting dari tanggal terbaru
+    // Sorting
     $history = $historyCollection->sortByDesc(function ($item) {
         return $item->check_in_time->timestamp;
     });
 
-    // Hitung Summary - LOGIKA YANG SAMA PERSIS DENGAN SUMMARY CONTROLLER
+    // Hitung Summary - LOGIKA YANG SAMA
     $summary = [
         'total' => $history->count(),
         'present' => $history->filter(function ($item) {
