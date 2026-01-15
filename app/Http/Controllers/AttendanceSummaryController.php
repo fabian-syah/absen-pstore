@@ -84,36 +84,50 @@ class AttendanceSummaryController extends Controller
             $pulangCepatCount = $monthAtt->where('is_early_checkout', true)->count();
 
             $cutiCount = 0; $sakitCount = 0; $izinCount = 0; $telatFromLeave = 0; $wfhFromLeaveCount = 0; 
-            foreach ($leaves as $leave) {
-    $start = Carbon::parse($leave->start_date);
-    $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
-    $period = CarbonPeriod::create($start, $end);
-
-    foreach ($period as $date) {
-        if ($date->month == $m && $date->year == $selectedYear) {
-            // Cek apakah tanggal ini sudah ada di data attendance (User melakukan clock-in)
-            $alreadyInAttendance = $monthAtt->filter(fn($att) => $att->check_in_time->isSameDay($date))->isNotEmpty();
-
-            // FIX: Hanya hitung Izin/Sakit/Cuti jika TIDAK ADA absensi masuk (clock-in) di hari itu.
-            // Ini agar sinkron dengan HistoryController yang memprioritaskan kehadiran fisik.
+            // --- PERBAIKAN START ---
             
-            if (!$alreadyInAttendance) {
-                if ($leave->type == 'cuti') {
-                    $cutiCount++;
-                } elseif ($leave->type == 'sakit') {
-                    $sakitCount++;
-                } elseif ($leave->type == 'telat') {
-                    $telatFromLeave++;
-                } elseif (strtolower($leave->type) == 'wfh') {
-                    $wfhFromLeaveCount++;
-                } else {
-                    // Ini menangkap tipe "izin", "permit", dll
-                    $izinCount++;
+            // 1. Ambil Timezone Cabang (Default ke Asia/Jakarta jika null)
+            $branchTimezone = $targetUser->branch->timezone ?? 'Asia/Jakarta';
+
+            foreach ($leaves as $leave) {
+                $start = Carbon::parse($leave->start_date);
+                $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
+                $period = CarbonPeriod::create($start, $end);
+
+                foreach ($period as $date) {
+                    // Pastikan hanya menghitung bulan & tahun yang dipilih
+                    if ($date->month == $m && $date->year == $selectedYear) {
+                        
+                        $currentDateStr = $date->format('Y-m-d');
+
+                        // 2. CEK STRICT: Gunakan variable global $attendances (bukan $monthAtt)
+                        // dan konversi ke Timezone cabang sebelum mencocokkan tanggal.
+                        $attendanceFound = $attendances->first(function($att) use ($currentDateStr, $branchTimezone) {
+                            return Carbon::parse($att->check_in_time)
+                                ->timezone($branchTimezone)
+                                ->format('Y-m-d') === $currentDateStr;
+                        });
+
+                        // 3. LOGIKA: Jika TIDAK ADA absensi masuk (clock-in) pada tanggal tsb,
+                        // baru hitung counter Izin/Sakit/Cuti.
+                        if (!$attendanceFound) {
+                            if ($leave->type == 'cuti') {
+                                $cutiCount++;
+                            } elseif ($leave->type == 'sakit') {
+                                $sakitCount++;
+                            } elseif ($leave->type == 'telat') {
+                                $telatFromLeave++;
+                            } elseif (strtolower($leave->type) == 'wfh') {
+                                $wfhFromLeaveCount++;
+                            } else {
+                                // Menangkap tipe "izin", "permit", dll
+                                $izinCount++;
+                            }
+                        }
+                    }
                 }
             }
-        }
-    }
-}
+            // --- PERBAIKAN END ---
 
             $totalMasukBulanIni = $masukCount + $wfhFromLeaveCount; 
             $totalHariBulanIni = $totalMasukBulanIni + $sakitCount + $izinCount + $cutiCount + $alphaCount;
