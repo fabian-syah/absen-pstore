@@ -51,59 +51,111 @@ class AttendanceHistoryController extends Controller
     }
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
-{
-    // Setup Timezone
-    $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
-    
-    $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
-    $endDate = $startDate->copy()->endOfMonth();
-    
-    $today = Carbon::now($branchTimezone)->endOfDay();
-    $limitDate = ($endDate->gt($today)) ? $today : $endDate;
+    {
+        // Setup Timezone
+        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        
+        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+        
+        // [FIX] Gunakan endOfDay() agar hari ini terhitung penuh sampai 23:59:59
+        // Jika pakai startOfDay(), loop bisa berhenti di detik 00:00:00 tanggal 9, sehingga data tanggal 9 dianggap belum masuk.
+        $today = Carbon::now($branchTimezone)->endOfDay();
+        
+        // Tentukan batas akhir loop: Jika akhir bulan > hari ini, gunakan hari ini sebagai batas (agar tidak muncul Alpha di masa depan)
+        // Namun karena $today sudah endOfDay, tanggal 9 akan masuk penuh dalam loop.
+        $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
-    // Ambil Data Absensi untuk bulan ini
-    $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
-        ->where('user_id', $user->id)
-        ->whereBetween('check_in_time', [$startDate, $endDate])
-        ->orderBy('check_in_time', 'desc')
-        ->get();
+        // Ambil Data Absensi (Buffer +/- 1 hari untuk antisipasi beda timezone)
+        $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
+            ->where('user_id', $user->id)
+            ->whereBetween('check_in_time', [$startDate->copy()->subDay(), $endDate->copy()->addDay()])
+            ->get();
 
-    // Tidak perlu membuat dummy data untuk alpha - biarkan attendance kosong jika tidak ada data
-    $history = $attendances->map(function($att) use ($branchTimezone) {
-        // Konversi timezone
-        $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
-        if ($att->check_out_time) { 
-            $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); 
+        // Ambil Data Cuti/Izin
+        $leaves = LeaveRequest::with('verifier')
+            ->where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->where('is_active', true)
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                      ->orWhereBetween('end_date', [$startDate, $endDate])
+                      ->orWhere(function ($q) use ($startDate, $endDate) {
+                          $q->where('start_date', '<=', $startDate)
+                            ->where('end_date', '>=', $endDate);
+                      });
+            })->get();
+
+        $historyCollection = collect();
+        $period = CarbonPeriod::create($startDate, $limitDate);
+
+        foreach ($period as $date) {
+            $currentDateStr = $date->format('Y-m-d');
+            
+            // Cari Absensi di tanggal loop (Konversi CheckIn ke Timezone Cabang dulu baru bandingkan tanggal)
+            $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
+                return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
+            })->first();
+
+            if ($att) {
+                // Konversi objek waktu ke timezone cabang untuk tampilan view
+                $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
+                if ($att->check_out_time) { 
+                    $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); 
+                }
+                $historyCollection->push($att);
+            } else {
+                // Cek Cuti/Izin
+                $leave = $leaves->filter(function ($l) use ($date) {
+                    return $date->between(Carbon::parse($l->start_date)->startOfDay(), Carbon::parse($l->end_date ?? $l->start_date)->endOfDay());
+                })->first();
+
+                // Buat Objek Absensi Dummy (Alpha/Cuti)
+                $fakeAtt = new Attendance();
+                $fakeAtt->user_id = $user->id;
+                $fakeAtt->user = $user;
+                $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0); // Set jam 00:00 untuk sorting
+                
+                if ($leave) {
+                    $fakeAtt->presence_status = ucfirst($leave->type);
+                    $fakeAtt->status = 'verified';
+                    $fakeAtt->attendance_type = 'leave';
+                    $fakeAtt->notes = "Izin: " . $leave->reason;
+                    $fakeAtt->setRelation('leaveRequest', $leave);
+                    $fakeAtt->setRelation('verifier', $leave->verifier);
+                } else {
+                    // Alpha
+                    $fakeAtt->presence_status = 'Alpha';
+                    $fakeAtt->status = 'verified';
+                    $fakeAtt->attendance_type = 'system';
+                }
+                $historyCollection->push($fakeAtt);
+            }
         }
-        return $att;
-    });
 
-    // Hitung Summary hanya dari data yang ada
-    $summary = [
-        'total' => $history->count(),
-        'present' => $history->filter(function ($item) {
-            $s = strtolower($item->presence_status ?? '');
-            return in_array($s, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat']);
-        })->count(),
-        'sakit' => $history->filter(fn($i) => 
-            strtolower($i->presence_status ?? '') === 'sakit'
-        )->count(),
-        'izin' => $history->filter(fn($i) => 
-            strtolower($i->presence_status ?? '') === 'izin'
-        )->count(),
-        'cuti' => $history->filter(fn($i) => 
-            strtolower($i->presence_status ?? '') === 'cuti'
-        )->count(),
-        'alpha' => $history->filter(fn($i) => 
-            strtolower($i->presence_status ?? '') === 'alpha'
-        )->count(),
-        'telat' => $history->where('is_late_checkin', true)->count(),
-        'pulang_cepat' => $history->where('is_early_checkout', true)->count(),
-        'pending' => $history->where('status', 'pending_verification')->count(),
-    ];
+        // Sorting dari tanggal terbaru
+        $history = $historyCollection->sortByDesc(function ($item) {
+            return $item->check_in_time->timestamp;
+        });
 
-    return ['history' => $history, 'summary' => $summary];
-}
+        // Hitung Summary
+        $summary = [
+            'total' => $history->count(),
+            'present' => $history->filter(function ($item) {
+                $s = strtolower($item->presence_status ?? '');
+                return in_array($s, ['masuk', 'wfh', 'izin telat']) || str_contains($s, 'dinas') || 
+                       (empty($s) && in_array($item->attendance_type, ['scan', 'self', 'manual']));
+            })->count(),
+            'sakit' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'sakit')->count(),
+            'izin' => $history->filter(fn($i) => in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti', 'offday']))->count(),
+            'alpha' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'alpha')->count(),
+            'telat' => $history->where('is_late_checkin', true)->count(),
+            'pulang_cepat' => $history->where('is_early_checkout', true)->count(),
+            'pending' => $history->where('status', 'pending_verification')->count(),
+        ];
+
+        return ['history' => $history, 'summary' => $summary];
+    }
 
     public function exportPdf(Request $request) {
         $user = Auth::user();
