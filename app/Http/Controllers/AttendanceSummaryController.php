@@ -79,11 +79,16 @@ class AttendanceSummaryController extends Controller
 
         // Ambil Timezone Cabang User (Penting untuk sinkronisasi dengan History)
         $branchTimezone = $targetUser->branch->timezone ?? 'Asia/Jakarta';
+        
+        // Tentukan "Hari Ini" berdasarkan timezone cabang.
+        // HistoryController membatasi data sampai hari ini ($limitDate), 
+        // jadi Summary juga harus stop menghitung jika tanggal > hari ini.
+        $today = Carbon::now($branchTimezone)->endOfDay();
 
         // --- 4. LOOPING 12 BULAN ---
         for ($m = 1; $m <= 12; $m++) {
             
-            // Filter absensi bulan ini (Basic filter untuk counter biasa)
+            // Filter absensi bulan ini
             $monthAtt = $attendances->filter(fn($q) => $q->check_in_time->month == $m && $q->check_in_time->year == $selectedYear);
 
             // Hitung Counter Dasar dari Attendance Record
@@ -100,7 +105,6 @@ class AttendanceSummaryController extends Controller
             $pulangCepatCount = $monthAtt->where('is_early_checkout', true)->count();
 
             // Hitung Data dari Leave Request (Cuti/Izin/Sakit)
-            // Dengan Logika "Timezone Strict" agar sinkron dengan History
             $cutiCount = 0; $sakitCount = 0; $izinCount = 0; $telatFromLeave = 0; $wfhFromLeaveCount = 0; 
             
             foreach ($leaves as $leave) {
@@ -109,14 +113,20 @@ class AttendanceSummaryController extends Controller
                 $period = CarbonPeriod::create($start, $end);
 
                 foreach ($period as $date) {
-                    // Pastikan tanggal loop berada di bulan & tahun yang sedang dihitung ($m & $selectedYear)
+                    // Pastikan tanggal loop berada di bulan & tahun yang sedang dihitung
                     if ($date->month == $m && $date->year == $selectedYear) {
                         
+                        // LOGIK SINKRONISASI HISTORY:
+                        // Jika tanggal loop adalah MASA DEPAN (lebih besar dari hari ini), SKIP.
+                        // Karena HistoryController tidak menampilkan data masa depan.
+                        if ($date->gt($today)) {
+                            continue;
+                        }
+
                         $currentDateStr = $date->format('Y-m-d');
 
                         // STRICT CHECK:
-                        // Cek apakah ada data absensi di hari ini dengan mengonversi check_in_time ke Timezone Cabang.
-                        // Kita cek dari collection global $attendances untuk akurasi penuh.
+                        // Cek apakah ada data absensi (Clock-In) di hari ini dengan timezone yang benar.
                         $attendanceFound = $attendances->first(function($att) use ($currentDateStr, $branchTimezone) {
                             return Carbon::parse($att->check_in_time)
                                 ->timezone($branchTimezone)
@@ -135,7 +145,6 @@ class AttendanceSummaryController extends Controller
                             } elseif (strtolower($leave->type) == 'wfh') {
                                 $wfhFromLeaveCount++;
                             } else {
-                                // Default ke Izin jika tipe tidak spesifik
                                 $izinCount++;
                             }
                         }
@@ -176,7 +185,6 @@ class AttendanceSummaryController extends Controller
             'izin'    => $rawSummary['izin'],
             'alpha'   => $rawSummary['alpha'],
             'total'   => $rawSummary['total_hari'],
-            // Tambahan untuk detail box kecil
             'telat'   => $rawSummary['telat'],
             'pulang_cepat' => $rawSummary['pulang_cepat'],
             'pending' => $rawSummary['pending']
