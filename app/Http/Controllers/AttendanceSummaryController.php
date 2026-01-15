@@ -85,20 +85,35 @@ class AttendanceSummaryController extends Controller
 
             $cutiCount = 0; $sakitCount = 0; $izinCount = 0; $telatFromLeave = 0; $wfhFromLeaveCount = 0; 
             foreach ($leaves as $leave) {
-                $start = Carbon::parse($leave->start_date);
-                $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
-                $period = CarbonPeriod::create($start, $end);
-                foreach ($period as $date) {
-                    if ($date->month == $m && $date->year == $selectedYear) {
-                        $alreadyInAttendance = $monthAtt->filter(fn($att) => $att->check_in_time->isSameDay($date))->isNotEmpty();
-                        if ($leave->type == 'cuti') $cutiCount++;
-                        elseif ($leave->type == 'sakit') $sakitCount++;
-                        elseif ($leave->type == 'telat') $telatFromLeave++;
-                        elseif (strtolower($leave->type) == 'wfh') { if (!$alreadyInAttendance) $wfhFromLeaveCount++; }
-                        else $izinCount++;
-                    }
+    $start = Carbon::parse($leave->start_date);
+    $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
+    $period = CarbonPeriod::create($start, $end);
+
+    foreach ($period as $date) {
+        if ($date->month == $m && $date->year == $selectedYear) {
+            // Cek apakah tanggal ini sudah ada di data attendance (User melakukan clock-in)
+            $alreadyInAttendance = $monthAtt->filter(fn($att) => $att->check_in_time->isSameDay($date))->isNotEmpty();
+
+            // FIX: Hanya hitung Izin/Sakit/Cuti jika TIDAK ADA absensi masuk (clock-in) di hari itu.
+            // Ini agar sinkron dengan HistoryController yang memprioritaskan kehadiran fisik.
+            
+            if (!$alreadyInAttendance) {
+                if ($leave->type == 'cuti') {
+                    $cutiCount++;
+                } elseif ($leave->type == 'sakit') {
+                    $sakitCount++;
+                } elseif ($leave->type == 'telat') {
+                    $telatFromLeave++;
+                } elseif (strtolower($leave->type) == 'wfh') {
+                    $wfhFromLeaveCount++;
+                } else {
+                    // Ini menangkap tipe "izin", "permit", dll
+                    $izinCount++;
                 }
             }
+        }
+    }
+}
 
             $totalMasukBulanIni = $masukCount + $wfhFromLeaveCount; 
             $totalHariBulanIni = $totalMasukBulanIni + $sakitCount + $izinCount + $cutiCount + $alphaCount;
