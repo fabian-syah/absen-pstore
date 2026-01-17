@@ -542,9 +542,9 @@
                                     </td>
 
                                     <td class="text-center pe-4">
-                                        {{-- MODIFIKASI: Menambahkan parameter page, search, dll agar bisa kembali ke halaman yang sama --}}
+                                        {{-- MODIFIKASI: Menggunakan 'id' sebagai parameter, bukan 'employee_salary' --}}
                                         <a href="{{ route('employee-salaries.edit', [
-                                            'employee_salary' => $user->id, 
+                                            'id' => $user->id, 
                                             'page' => request('page'),
                                             'search' => request('search'),
                                             'branch_id' => request('branch_id'),
