@@ -47,23 +47,24 @@ class EmployeeSalaryController extends Controller
             }
         }
 
+        // withQueryString() penting agar link pagination membawa parameter filter
         $users = $query->orderBy('name')->paginate(10)->withQueryString();
 
         return view('employee-salaries.index', compact('users', 'branches', 'divisions'));
     }
 
-    public function edit(Request $request, $userId) // Tambahkan Request $request
+    public function edit(Request $request, $userId)
     {
         $user = User::with('employeeSalary')->findOrFail($userId);
         
         if (in_array($user->role, ['admin', 'admin_gaji'])) {
-            return redirect()->route('employee-salaries.index')->with('error', 'Akses Ditolak.');
+            return redirect()->route('employee-salaries.index')->with('error', 'Akses Ditolak: Data gaji Admin bersifat rahasia.');
         }
 
-        // AMBIL HALAMAN SAAT INI (Default 1 jika tidak ada)
-        $currentPage = $request->input('page', 1); 
+        // MENANGKAP PAGE SAAT INI UNTUK DIKIRIM KE VIEW
+        // Jika tidak ada parameter page, default ke 1
+        $currentPage = $request->input('page', 1);
 
-        // Kirim $currentPage ke view
         return view('employee-salaries.edit', compact('user', 'currentPage'));
     }
 
@@ -119,18 +120,15 @@ class EmployeeSalaryController extends Controller
             $data['daily_salary'] = (int) $clean($request->daily_salary);
         }
 
-       EmployeeSalary::updateOrCreate(['user_id' => $userId], $data);
+        EmployeeSalary::updateOrCreate(['user_id' => $userId], $data);
 
-        // UBAH BAGIAN RETURN REDIRECT
-        // Kita ambil parameter 'page' dari input hidden form
-        $page = $request->input('page', 1);
-
-        // Sertakan semua query string (supaya search/filter tidak hilang) + page
+        // LOGIKA REDIRECT KE HALAMAN SEMULA
+        // Kita ambil parameter dari input hidden yang dikirim dari form edit
         return redirect()->route('employee-salaries.index', [
-            'page' => $page, 
-            'search' => $request->input('current_search'), // Opsional: jika ingin menjaga search
-            'branch_id' => $request->input('current_branch'), // Opsional
-            'category' => $request->input('current_category') // Opsional
+            'page'      => $request->input('page', 1),            // Kembali ke halaman page yang benar
+            'search'    => $request->input('current_search'),     // Menjaga pencarian
+            'branch_id' => $request->input('current_branch'),     // Menjaga filter cabang
+            'category'  => $request->input('current_category')    // Menjaga filter kategori
         ])->with('success', 'Master gaji berhasil disimpan.');
     }
 }
