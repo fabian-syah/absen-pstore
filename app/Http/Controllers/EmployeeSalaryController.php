@@ -52,15 +52,19 @@ class EmployeeSalaryController extends Controller
         return view('employee-salaries.index', compact('users', 'branches', 'divisions'));
     }
 
-    public function edit($userId)
+    public function edit(Request $request, $userId) // Tambahkan Request $request
     {
         $user = User::with('employeeSalary')->findOrFail($userId);
         
         if (in_array($user->role, ['admin', 'admin_gaji'])) {
-            return redirect()->route('employee-salaries.index')->with('error', 'Akses Ditolak: Data gaji Admin bersifat rahasia.');
+            return redirect()->route('employee-salaries.index')->with('error', 'Akses Ditolak.');
         }
 
-        return view('employee-salaries.edit', compact('user'));
+        // AMBIL HALAMAN SAAT INI (Default 1 jika tidak ada)
+        $currentPage = $request->input('page', 1); 
+
+        // Kirim $currentPage ke view
+        return view('employee-salaries.edit', compact('user', 'currentPage'));
     }
 
     public function update(Request $request, $userId)
@@ -115,8 +119,18 @@ class EmployeeSalaryController extends Controller
             $data['daily_salary'] = (int) $clean($request->daily_salary);
         }
 
-        EmployeeSalary::updateOrCreate(['user_id' => $userId], $data);
+       EmployeeSalary::updateOrCreate(['user_id' => $userId], $data);
 
-        return redirect()->route('employee-salaries.index')->with('success', 'Master gaji berhasil disimpan.');
+        // UBAH BAGIAN RETURN REDIRECT
+        // Kita ambil parameter 'page' dari input hidden form
+        $page = $request->input('page', 1);
+
+        // Sertakan semua query string (supaya search/filter tidak hilang) + page
+        return redirect()->route('employee-salaries.index', [
+            'page' => $page, 
+            'search' => $request->input('current_search'), // Opsional: jika ingin menjaga search
+            'branch_id' => $request->input('current_branch'), // Opsional
+            'category' => $request->input('current_category') // Opsional
+        ])->with('success', 'Master gaji berhasil disimpan.');
     }
 }

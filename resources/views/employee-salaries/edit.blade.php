@@ -57,9 +57,14 @@
 <div class="row justify-content-center">
     <div class="col-lg-9 col-md-11">
         
-        {{-- Tombol Kembali --}}
+        {{-- Tombol Kembali (Update: Menjaga Page & Filter) --}}
         <div class="mb-4">
-            <a href="{{ route('employee-salaries.index') }}" class="text-decoration-none text-muted fw-bold small">
+            <a href="{{ route('employee-salaries.index', [
+                'page' => request('page', 1), 
+                'search' => request('search'), 
+                'branch_id' => request('branch_id'), 
+                'category' => request('category')
+            ]) }}" class="text-decoration-none text-muted fw-bold small">
                 <i class="mdi mdi-arrow-left me-1"></i> Kembali ke Daftar Gaji
             </a>
         </div>
@@ -93,6 +98,12 @@
                 <form action="{{ route('employee-salaries.update', $user->id) }}" method="POST" id="salaryForm">
                     @csrf
                     @method('PUT')
+
+                    {{-- HIDDEN INPUTS UNTUK MENJAGA PAGINATION & FILTER --}}
+                    <input type="hidden" name="page" value="{{ request('page', 1) }}">
+                    <input type="hidden" name="current_search" value="{{ request('search') }}">
+                    <input type="hidden" name="current_branch" value="{{ request('branch_id') }}">
+                    <input type="hidden" name="current_category" value="{{ request('category') }}">
 
                     <div class="row g-5">
                         
@@ -236,7 +247,14 @@
                     <hr class="my-5 opacity-25">
 
                     <div class="d-flex justify-content-end gap-3">
-                        <a href="{{ route('employee-salaries.index') }}" class="btn btn-light btn-lg px-4 fw-bold border" style="border-radius: 10px;">Batal</a>
+                        {{-- Tombol Batal (Update: Menjaga Page) --}}
+                        <a href="{{ route('employee-salaries.index', [
+                            'page' => request('page', 1),
+                            'search' => request('search'), 
+                            'branch_id' => request('branch_id'), 
+                            'category' => request('category')
+                        ]) }}" class="btn btn-light btn-lg px-4 fw-bold border" style="border-radius: 10px;">Batal</a>
+                        
                         <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm text-white" style="border-radius: 10px;">
                             <i class="mdi mdi-content-save-check me-2"></i> Simpan Data
                         </button>
