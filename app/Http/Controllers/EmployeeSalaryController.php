@@ -59,8 +59,8 @@ class EmployeeSalaryController extends Controller
         // Mengambil semua parameter request (search, filter, category)
         $filters = $request->all();
         
-        // Export akan otomatis menghasilkan file dengan banyak Sheet (Tab)
-        return Excel::download(new EmployeeSalaryExport($filters), 'Data-Master-Gaji-Per-Kategori-' . date('Y-m-d-H-i') . '.xlsx');
+        // Export akan otomatis menghasilkan file dengan Sheet sesuai Filter
+        return Excel::download(new EmployeeSalaryExport($filters), 'Data-Master-Gaji-' . date('Y-m-d-H-i') . '.xlsx');
     }
 
     public function edit(Request $request, $userId)

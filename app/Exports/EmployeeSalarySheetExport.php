@@ -52,7 +52,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
 
         // 4. Logika Kategori Spesifik untuk Sheet Ini
         if ($this->category === 'all') {
-            // Jika tab "Semua Data", tidak ada filter kategori tambahan (kecuali user memfilter dari UI)
+            // Jika tab "Semua Data", kita cek apakah ada filter kategori dari UI
              if (isset($this->filters['category']) && $this->filters['category'] != null) {
                 if ($this->filters['category'] == 'unset') {
                     $query->doesntHave('employeeSalary');
