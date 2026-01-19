@@ -2,144 +2,36 @@
 
 namespace App\Exports;
 
-use App\Models\User;
-use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class EmployeeSalaryExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class EmployeeSalaryExport implements WithMultipleSheets
 {
-    protected $request;
+    protected $filters;
 
-    public function __construct($request)
+    public function __construct($filters)
     {
-        $this->request = $request;
+        $this->filters = $filters;
     }
 
-    public function query()
+    public function sheets(): array
     {
-        $query = User::with(['branch', 'division', 'employeeSalary'])
-            ->where('is_active', true)
-            ->whereNotIn('role', ['admin', 'admin_gaji']); 
+        $sheets = [];
 
-        // Filter: Search
-        if (isset($this->request['search']) && $this->request['search'] != null) {
-            $search = $this->request['search'];
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('login_id', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
+        // 1. Sheet Semua Data (Gabungan)
+        $sheets[] = new EmployeeSalarySheetExport('all', $this->filters, 'Semua Data');
 
-        // Filter: Branch
-        if (isset($this->request['branch_id']) && $this->request['branch_id'] != null) {
-            $query->where('branch_id', $this->request['branch_id']);
-        }
+        // 2. Sheet Karyawan Tetap
+        $sheets[] = new EmployeeSalarySheetExport('employee', $this->filters, 'Karyawan Tetap');
 
-        // Filter: Division
-        if (isset($this->request['division_id']) && $this->request['division_id'] != null) {
-            $query->where('division_id', $this->request['division_id']);
-        }
+        // 3. Sheet Promotor
+        $sheets[] = new EmployeeSalarySheetExport('promotor', $this->filters, 'Promotor');
 
-        // Filter: Category
-        if (isset($this->request['category']) && $this->request['category'] != null) {
-            if ($this->request['category'] == 'unset') {
-                $query->doesntHave('employeeSalary');
-            } else {
-                $query->whereHas('employeeSalary', function($q) {
-                    $q->where('category', $this->request['category']);
-                });
-            }
-        }
+        // 4. Sheet Freelance
+        $sheets[] = new EmployeeSalarySheetExport('freelance', $this->filters, 'Freelance');
 
-        return $query->orderBy('name');
-    }
+        // 5. Sheet Belum Diatur
+        $sheets[] = new EmployeeSalarySheetExport('unset', $this->filters, 'Belum Diatur');
 
-    public function headings(): array
-    {
-        return [
-            'Nama Karyawan',
-            'Login ID',
-            'Email',
-            'Divisi',
-            'Cabang',
-            'Kategori Gaji',
-            'Gaji Pokok (Bulanan)',
-            'Tunjangan Jabatan',
-            'Privilege Owner',
-            'Gaji Harian (Freelance)',
-            'Insentif (Promotor)',
-            'Total Master Gaji (Estimasi)',
-            'Nama Bank',
-            'No. Rekening',
-            'Catatan',
-        ];
-    }
-
-    public function map($user): array
-    {
-        $salary = $user->employeeSalary;
-        
-        $categoryLabel = 'Belum Diatur';
-        $basicSalary = 0;
-        $positionAllowance = 0;
-        $ownerPrivilege = 0;
-        $dailySalary = 0;
-        $promotorBonus = 0;
-        $totalMaster = 0;
-        $bankName = '-';
-        $accountNumber = '-';
-        $notes = '-';
-
-        if ($salary) {
-            $bankName = $salary->bank_name;
-            $accountNumber = $salary->bank_account_number;
-            $notes = $salary->notes;
-
-            if ($salary->category == 'employee') {
-                $categoryLabel = 'Karyawan Tetap';
-                $basicSalary = $salary->basic_salary;
-                $positionAllowance = $salary->position_allowance;
-                $ownerPrivilege = $salary->owner_privilege;
-                $totalMaster = $basicSalary + $positionAllowance + $ownerPrivilege;
-            } elseif ($salary->category == 'freelance') {
-                $categoryLabel = 'Freelance';
-                $dailySalary = $salary->daily_salary;
-                $totalMaster = $dailySalary; // Per hari
-            } elseif ($salary->category == 'promotor') {
-                $categoryLabel = 'Promotor';
-                $promotorBonus = $salary->promotor_bonus;
-                $totalMaster = $promotorBonus;
-            }
-        }
-
-        return [
-            $user->name,
-            $user->login_id ?? '-',
-            $user->email,
-            $user->division->name ?? '-',
-            $user->branch->name ?? '-',
-            $categoryLabel,
-            $basicSalary,
-            $positionAllowance,
-            $ownerPrivilege,
-            $dailySalary,
-            $promotorBonus,
-            $totalMaster,
-            $bankName,
-            $accountNumber . ' ', // Trick to force string in Excel
-            $notes,
-        ];
-    }
-
-    public function styles(Worksheet $sheet)
-    {
-        return [
-            1 => ['font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']], 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '4B49AC']]],
-        ];
+        return $sheets;
     }
 }

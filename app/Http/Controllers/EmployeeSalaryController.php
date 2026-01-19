@@ -8,8 +8,8 @@ use App\Models\Division;
 use App\Models\EmployeeSalary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Exports\EmployeeSalaryExport; // Tambahan Import
-use Maatwebsite\Excel\Facades\Excel;  // Tambahan Import
+use App\Exports\EmployeeSalaryExport; 
+use Maatwebsite\Excel\Facades\Excel;  
 
 class EmployeeSalaryController extends Controller
 {
@@ -49,19 +49,18 @@ class EmployeeSalaryController extends Controller
             }
         }
 
-        // withQueryString() penting agar link pagination membawa parameter filter
         $users = $query->orderBy('name')->paginate(10)->withQueryString();
 
         return view('employee-salaries.index', compact('users', 'branches', 'divisions'));
     }
 
-    // METHOD BARU: EXPORT EXCEL
     public function export(Request $request)
     {
         // Mengambil semua parameter request (search, filter, category)
         $filters = $request->all();
         
-        return Excel::download(new EmployeeSalaryExport($filters), 'Data-Master-Gaji-' . date('Y-m-d-H-i') . '.xlsx');
+        // Export akan otomatis menghasilkan file dengan banyak Sheet (Tab)
+        return Excel::download(new EmployeeSalaryExport($filters), 'Data-Master-Gaji-Per-Kategori-' . date('Y-m-d-H-i') . '.xlsx');
     }
 
     public function edit(Request $request, $userId)
@@ -72,8 +71,6 @@ class EmployeeSalaryController extends Controller
             return redirect()->route('employee-salaries.index')->with('error', 'Akses Ditolak: Data gaji Admin bersifat rahasia.');
         }
 
-        // MENANGKAP PAGE SAAT INI UNTUK DIKIRIM KE VIEW
-        // Jika tidak ada parameter page, default ke 1
         $currentPage = $request->input('page', 1);
 
         return view('employee-salaries.edit', compact('user', 'currentPage'));
@@ -95,7 +92,6 @@ class EmployeeSalaryController extends Controller
             'category' => 'required',
         ]);
 
-        // Siapkan Data Dasar
         $data = [
             'category' => $request->category,
             'bank_account_number' => $request->bank_account_number,
@@ -110,11 +106,9 @@ class EmployeeSalaryController extends Controller
             'use_privilege_mode' => 0
         ];
 
-        // Validasi Spesifik Kategori Employee
         if ($request->category == 'employee') {
             $basicSalary = (int) $clean($request->basic_salary);
             
-            // VALIDASI MAKSIMAL 6 JUTA
             if ($basicSalary > 6000000) {
                 return back()->withInput()->with('error', 'Gagal Simpan: Gaji Pokok tidak boleh melebihi Rp 6.000.000!');
             }
@@ -133,13 +127,11 @@ class EmployeeSalaryController extends Controller
 
         EmployeeSalary::updateOrCreate(['user_id' => $userId], $data);
 
-        // LOGIKA REDIRECT KE HALAMAN SEMULA
-        // Kita ambil parameter dari input hidden yang dikirim dari form edit
         return redirect()->route('employee-salaries.index', [
-            'page'      => $request->input('page', 1),            // Kembali ke halaman page yang benar
-            'search'    => $request->input('current_search'),     // Menjaga pencarian
-            'branch_id' => $request->input('current_branch'),     // Menjaga filter cabang
-            'category'  => $request->input('current_category')    // Menjaga filter kategori
+            'page'      => $request->input('page', 1),            
+            'search'    => $request->input('current_search'),     
+            'branch_id' => $request->input('current_branch'),     
+            'category'  => $request->input('current_category')    
         ])->with('success', 'Master gaji berhasil disimpan.');
     }
 }
