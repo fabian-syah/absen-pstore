@@ -10,10 +10,14 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithEvents; 
+use Maatwebsite\Excel\Concerns\WithColumnFormatting; // IMPORT BARU
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Table; 
+use PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat; // IMPORT BARU
 
-class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithTitle, WithEvents
+class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithTitle, WithEvents, WithColumnFormatting
 {
     protected $category;
     protected $filters;
@@ -151,32 +155,57 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
         ];
     }
 
+    // FUNCTION BARU: FORMAT RUPIAH
+    public function columnFormats(): array
+    {
+        return [
+            'G' => '"Rp " #,##0', // Gaji Pokok
+            'H' => '"Rp " #,##0', // Tunjangan
+            'I' => '"Rp " #,##0', // Privilege
+            'J' => '"Rp " #,##0', // Gaji Harian
+            'K' => '"Rp " #,##0', // Insentif
+            'L' => '"Rp " #,##0', // Total
+        ];
+    }
+
     public function styles(Worksheet $sheet)
     {
-        $color = '4B49AC'; 
-
-        if ($this->category === 'promotor') $color = '0ea5e9'; 
-        if ($this->category === 'freelance') $color = 'f59e0b'; 
-        if ($this->category === 'unset') $color = '6b7280'; 
-
-        return [
-            1 => [
-                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']], 
-                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => $color]]
-            ],
-        ];
+        // Styling kosong karena dihandle registerEvents (Table)
+        return [];
     }
 
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                // INI YANG MEMBUAT FILTER MUNCUL
-                // Mengambil area data (misal A1:O50)
+                
+                // 1. Ambil Dimensi Data
                 $dimension = $event->sheet->getDelegate()->calculateWorksheetDimension();
                 
-                // Mengaktifkan AutoFilter pada area tersebut
-                $event->sheet->getDelegate()->setAutoFilter($dimension);
+                // 2. Buat Nama Tabel Unik
+                $tableName = str_replace(' ', '', $this->sheetTitle) . '_' . uniqid(); 
+
+                // 3. Buat Object Tabel
+                $table = new Table();
+                $table->setName($tableName);
+                $table->setRange($dimension);
+                $table->setShowTotalsRow(false);
+                
+                // 4. Pilih Gaya Tabel (Biru)
+                $tableStyle = new TableStyle();
+                $tableStyle->setTheme(TableStyle::TABLE_STYLE_MEDIUM2);
+                $table->setStyle($tableStyle);
+
+                // 5. Masukkan Tabel
+                $event->sheet->getDelegate()->addTable($table);
+
+                // 6. Freeze Header
+                $event->sheet->getDelegate()->freezePane('A2');
+                
+                // 7. Auto Size Kolom
+                foreach(range('A', 'O') as $columnID) {
+                    $event->sheet->getDelegate()->getColumnDimension($columnID)->setAutoSize(true);
+                }
             },
         ];
     }

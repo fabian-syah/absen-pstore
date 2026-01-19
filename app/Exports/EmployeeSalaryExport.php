@@ -35,7 +35,7 @@ class EmployeeSalaryExport implements WithMultipleSheets
             return $sheets;
         }
 
-        // DEFAULT: Tampilkan 1 Sheet "Semua Data" yang sudah ada AutoFilternya
+        // DEFAULT: Tampilkan 1 Sheet "Semua Data"
         $sheets[] = new EmployeeSalarySheetExport('all', $this->filters, 'Semua Data');
 
         return $sheets;
