@@ -9,8 +9,8 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithEvents; // IMPORT PENTING
-use Maatwebsite\Excel\Events\AfterSheet;   // IMPORT PENTING
+use Maatwebsite\Excel\Concerns\WithEvents; 
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithTitle, WithEvents
@@ -167,15 +167,16 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
         ];
     }
 
-    // --- BAGIAN INI YANG MEMBUAT FILTER MUNCUL DI EXCEL ---
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                // Mengaktifkan AutoFilter untuk range data (Dari A1 sampai kolom terakhir)
-                $event->sheet->getDelegate()->setAutoFilter(
-                    $event->sheet->getDelegate()->calculateWorksheetDimension()
-                );
+                // INI YANG MEMBUAT FILTER MUNCUL
+                // Mengambil area data (misal A1:O50)
+                $dimension = $event->sheet->getDelegate()->calculateWorksheetDimension();
+                
+                // Mengaktifkan AutoFilter pada area tersebut
+                $event->sheet->getDelegate()->setAutoFilter($dimension);
             },
         ];
     }

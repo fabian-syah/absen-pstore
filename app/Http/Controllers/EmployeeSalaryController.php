@@ -57,6 +57,7 @@ class EmployeeSalaryController extends Controller
     public function export(Request $request)
     {
         $filters = $request->all();
+        // Nama file disesuaikan
         return Excel::download(new EmployeeSalaryExport($filters), 'Data-Master-Gaji-' . date('Y-m-d-H-i') . '.xlsx');
     }
 

@@ -35,9 +35,7 @@ class EmployeeSalaryExport implements WithMultipleSheets
             return $sheets;
         }
 
-        // DEFAULT:
-        // Jika tidak ada filter, cukup tampilkan 1 Sheet "Semua Data".
-        // Di sheet ini nanti user bisa pakai Filter Excel (Panah kecil) karena sudah kita set di file sebelumnya.
+        // DEFAULT: Tampilkan 1 Sheet "Semua Data" yang sudah ada AutoFilternya
         $sheets[] = new EmployeeSalarySheetExport('all', $this->filters, 'Semua Data');
 
         return $sheets;
