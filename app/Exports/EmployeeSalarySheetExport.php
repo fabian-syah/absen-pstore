@@ -9,9 +9,11 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\WithEvents; // IMPORT PENTING
+use Maatwebsite\Excel\Events\AfterSheet;   // IMPORT PENTING
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithTitle
+class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithTitle, WithEvents
 {
     protected $category;
     protected $filters;
@@ -50,9 +52,8 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             $query->where('division_id', $this->filters['division_id']);
         }
 
-        // 4. Logika Kategori Spesifik untuk Sheet Ini
+        // 4. Logika Kategori
         if ($this->category === 'all') {
-            // Jika tab "Semua Data", kita cek apakah ada filter kategori dari UI
              if (isset($this->filters['category']) && $this->filters['category'] != null) {
                 if ($this->filters['category'] == 'unset') {
                     $query->doesntHave('employeeSalary');
@@ -63,10 +64,8 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
                 }
             }
         } elseif ($this->category === 'unset') {
-            // Khusus Tab "Belum Diatur"
             $query->doesntHave('employeeSalary');
         } else {
-            // Khusus Tab "Karyawan Tetap", "Promotor", dll
             $query->whereHas('employeeSalary', function($q) {
                 $q->where('category', $this->category);
             });
@@ -147,25 +146,37 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             $promotorBonus,
             $totalMaster,
             $bankName,
-            $accountNumber . ' ', // Trick to force string in Excel
+            $accountNumber . ' ', 
             $notes,
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        // Warna Header berbeda tiap sheet agar mudah dibedakan
-        $color = '4B49AC'; // Default Blue
+        $color = '4B49AC'; 
 
-        if ($this->category === 'promotor') $color = '0ea5e9'; // Light Blue
-        if ($this->category === 'freelance') $color = 'f59e0b'; // Orange
-        if ($this->category === 'unset') $color = '6b7280'; // Grey
+        if ($this->category === 'promotor') $color = '0ea5e9'; 
+        if ($this->category === 'freelance') $color = 'f59e0b'; 
+        if ($this->category === 'unset') $color = '6b7280'; 
 
         return [
             1 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']], 
                 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => $color]]
             ],
+        ];
+    }
+
+    // --- BAGIAN INI YANG MEMBUAT FILTER MUNCUL DI EXCEL ---
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function(AfterSheet $event) {
+                // Mengaktifkan AutoFilter untuk range data (Dari A1 sampai kolom terakhir)
+                $event->sheet->getDelegate()->setAutoFilter(
+                    $event->sheet->getDelegate()->calculateWorksheetDimension()
+                );
+            },
         ];
     }
 

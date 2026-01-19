@@ -18,10 +18,9 @@ class EmployeeSalaryExport implements WithMultipleSheets
         $sheets = [];
         $categoryFilter = $this->filters['category'] ?? null;
 
-        // LOGIKA BARU: 
-        // Jika User memilih kategori spesifik di Filter, Export HANYA sheet itu saja.
+        // Jika user memfilter di Web (Misal pilih 'Freelance'), 
+        // Excel cuma akan menampilkan 1 sheet Freelance.
         if ($categoryFilter && $categoryFilter !== '') {
-            
             if ($categoryFilter == 'employee') {
                 $sheets[] = new EmployeeSalarySheetExport('employee', $this->filters, 'Karyawan Tetap');
             } elseif ($categoryFilter == 'promotor') {
@@ -31,29 +30,15 @@ class EmployeeSalaryExport implements WithMultipleSheets
             } elseif ($categoryFilter == 'unset') {
                 $sheets[] = new EmployeeSalarySheetExport('unset', $this->filters, 'Belum Diatur');
             } else {
-                // Fallback jika value tidak dikenal, tampilkan sebagai "Data Filtered"
                 $sheets[] = new EmployeeSalarySheetExport($categoryFilter, $this->filters, 'Data Terfilter');
             }
-
             return $sheets;
         }
 
-        // JIKA TIDAK ADA FILTER (Default): Tampilkan Semua Sheet seperti sebelumnya
-        
-        // 1. Sheet Semua Data (Gabungan)
+        // DEFAULT:
+        // Jika tidak ada filter, cukup tampilkan 1 Sheet "Semua Data".
+        // Di sheet ini nanti user bisa pakai Filter Excel (Panah kecil) karena sudah kita set di file sebelumnya.
         $sheets[] = new EmployeeSalarySheetExport('all', $this->filters, 'Semua Data');
-
-        // 2. Sheet Karyawan Tetap
-        $sheets[] = new EmployeeSalarySheetExport('employee', $this->filters, 'Karyawan Tetap');
-
-        // 3. Sheet Promotor
-        $sheets[] = new EmployeeSalarySheetExport('promotor', $this->filters, 'Promotor');
-
-        // 4. Sheet Freelance
-        $sheets[] = new EmployeeSalarySheetExport('freelance', $this->filters, 'Freelance');
-
-        // 5. Sheet Belum Diatur
-        $sheets[] = new EmployeeSalarySheetExport('unset', $this->filters, 'Belum Diatur');
 
         return $sheets;
     }
