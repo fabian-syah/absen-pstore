@@ -295,6 +295,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::middleware(['auth', 'role:admin_gaji'])->group(function () {
 
         Route::get('/master-gaji', [EmployeeSalaryController::class, 'index'])->name('employee-salaries.index');
+        Route::get('/employee-salaries/export', [App\Http\Controllers\EmployeeSalaryController::class, 'export'])->name('employee-salaries.export');
         Route::get('/master-gaji/{id}/edit', [EmployeeSalaryController::class, 'edit'])->name('employee-salaries.edit');
         Route::put('/master-gaji/{id}', [EmployeeSalaryController::class, 'update'])->name('employee-salaries.update');
         Route::get('/salaries/create', [SalaryController::class, 'create'])->name('salaries.create');

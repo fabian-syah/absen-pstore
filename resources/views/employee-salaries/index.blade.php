@@ -342,12 +342,19 @@
         <div class="col-12">
             
             {{-- HEADER --}}
-            <div class="header-section d-flex justify-content-between align-items-center">
+            <div class="header-section d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
                     <h3 class="mb-2">📊 Master Data Gaji</h3>
                     <p class="mb-0">Kelola komponen gaji pokok, tunjangan, dan kategori karyawan dengan mudah dan efisien.</p>
                 </div>
-                <div>
+                <div class="d-flex gap-2">
+                    {{-- TOMBOL EXPORT EXCEL --}}
+                    {{-- Menggunakan request()->query() untuk menyertakan filter saat ini (search, branch, dll) --}}
+                    <a href="{{ route('employee-salaries.export', request()->query()) }}" class="btn btn-header d-flex align-items-center gap-2 bg-success border-success text-white">
+                        <i class="mdi mdi-file-excel"></i>
+                        <span>Export Excel</span>
+                    </a>
+
                     <button class="btn btn-header d-flex align-items-center gap-2">
                         <i class="mdi mdi-account-group"></i>
                         <span>Total: <strong>{{ $users->total() }}</strong> Karyawan</span>

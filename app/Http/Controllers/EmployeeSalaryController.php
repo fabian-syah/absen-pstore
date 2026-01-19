@@ -8,6 +8,8 @@ use App\Models\Division;
 use App\Models\EmployeeSalary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\EmployeeSalaryExport; // Tambahan Import
+use Maatwebsite\Excel\Facades\Excel;  // Tambahan Import
 
 class EmployeeSalaryController extends Controller
 {
@@ -51,6 +53,15 @@ class EmployeeSalaryController extends Controller
         $users = $query->orderBy('name')->paginate(10)->withQueryString();
 
         return view('employee-salaries.index', compact('users', 'branches', 'divisions'));
+    }
+
+    // METHOD BARU: EXPORT EXCEL
+    public function export(Request $request)
+    {
+        // Mengambil semua parameter request (search, filter, category)
+        $filters = $request->all();
+        
+        return Excel::download(new EmployeeSalaryExport($filters), 'Data-Master-Gaji-' . date('Y-m-d-H-i') . '.xlsx');
     }
 
     public function edit(Request $request, $userId)
