@@ -12,6 +12,8 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithEvents; 
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Table; // Import untuk Tabel Excel
+use PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle; // Import Style
 
 class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithTitle, WithEvents
 {
@@ -153,30 +155,44 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
 
     public function styles(Worksheet $sheet)
     {
-        $color = '4B49AC'; 
-
-        if ($this->category === 'promotor') $color = '0ea5e9'; 
-        if ($this->category === 'freelance') $color = 'f59e0b'; 
-        if ($this->category === 'unset') $color = '6b7280'; 
-
-        return [
-            1 => [
-                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']], 
-                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => $color]]
-            ],
-        ];
+        // Kita kosongkan bagian ini karena styling akan dihandle oleh TableStyle di registerEvents
+        return [];
     }
 
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                // INI YANG MEMBUAT FILTER MUNCUL
-                // Mengambil area data (misal A1:O50)
+                
+                // 1. Ambil Dimensi Data (Misal A1:O100)
                 $dimension = $event->sheet->getDelegate()->calculateWorksheetDimension();
                 
-                // Mengaktifkan AutoFilter pada area tersebut
-                $event->sheet->getDelegate()->setAutoFilter($dimension);
+                // 2. Buat Nama Tabel yang Unik (Menghindari error jika nama tabel duplikat)
+                // Hapus spasi dari judul sheet dan tambahkan angka random
+                $tableName = str_replace(' ', '', $this->sheetTitle) . '_' . uniqid(); 
+
+                // 3. Buat Object Tabel Excel
+                $table = new Table();
+                $table->setName($tableName);
+                $table->setRange($dimension);
+                $table->setShowTotalsRow(false); // Matikan baris Total di bawah
+                
+                // 4. Pilih Gaya Tabel (Biru Medium adalah standar profesional)
+                $tableStyle = new TableStyle();
+                $tableStyle->setTheme(TableStyle::TABLE_STYLE_MEDIUM2); // Style Biru
+                $table->setStyle($tableStyle);
+
+                // 5. Masukkan Tabel ke Sheet
+                $event->sheet->getDelegate()->addTable($table);
+
+                // 6. Freeze Pane (Kunci Baris Header agar tetap terlihat saat scroll)
+                // 'A2' berarti baris 1 dikunci, scroll mulai dari baris 2
+                $event->sheet->getDelegate()->freezePane('A2');
+                
+                // 7. Auto Size Kolom (Agar tulisan tidak terpotong)
+                foreach(range('A', 'O') as $columnID) {
+                    $event->sheet->getDelegate()->getColumnDimension($columnID)->setAutoSize(true);
+                }
             },
         ];
     }
