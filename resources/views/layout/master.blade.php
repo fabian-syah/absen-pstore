@@ -6,10 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>@yield('title') </title>
 
-    {{-- PENTING: Meta Token untuk keamanan Request AJAX ke Server --}}
+    {{-- Meta Token & Manifest --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    {{-- PENTING: Manifest untuk identitas Push Notification di Chrome/Edge --}}
     <link rel="manifest" href="/manifest.json">
 
     {{-- CSS Assets --}}
@@ -29,36 +27,63 @@
     @stack('styles')
 
     <style>
-        /* CSS AGAR SIDEBAR TETAP IKUT (FIXED/STICKY) */
+        /* ==========================================================
+           FIX SIDEBAR STICKY LOGIC
+           ========================================================== */
         @media (min-width: 992px) {
+            /* Pastikan pembungkus utama tidak membatasi sticky */
+            .container-scroller, 
+            .page-body-wrapper {
+                overflow: visible !important;
+            }
+
             .sidebar {
-                position: sticky;
-                top: 70px; /* Sesuaikan dengan tinggi navbar Anda */
-                height: calc(100vh - 70px);
+                position: fixed !important; /* Paksa posisi tetap */
+                top: 97px; /* Sesuaikan dengan tinggi navbar pstore */
+                height: calc(100vh - 97px);
                 overflow-y: auto;
+                z-index: 1000;
+                transition: width 0.25s ease, background 0.25s ease;
             }
-            
-            /* Menghilangkan scrollbar di sidebar agar lebih rapi tapi tetap bisa di-scroll */
-            .sidebar::-webkit-scrollbar {
-                width: 5px;
+
+            /* Berikan space di sebelah kiri panel utama agar tidak tertutup sidebar */
+            .main-panel {
+                margin-left: 235px; /* Sesuaikan dengan lebar sidebar standard */
+                width: calc(100% - 235px);
+                min-height: calc(100vh - 97px);
+                display: flex;
+                flex-direction: column;
             }
-            .sidebar::-webkit-scrollbar-thumb {
-                background: #f1f1f1; 
-                border-radius: 10px;
+
+            /* Penyesuaian saat sidebar di-minimize (jika ada fitur toggle) */
+            body.sidebar-icon-only .sidebar {
+                width: 70px;
             }
-            .sidebar:hover::-webkit-scrollbar-thumb {
-                background: #ccc; 
+            body.sidebar-icon-only .main-panel {
+                margin-left: 70px;
+                width: calc(100% - 70px);
             }
         }
 
-        .main-panel {
-            min-height: calc(100vh - 70px);
-            display: flex;
-            flex-direction: column;
+        /* Styling scrollbar halus untuk sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #e0e0e0;
+            border-radius: 10px;
+        }
+        .sidebar:hover::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
         }
 
         .content-wrapper {
             flex-grow: 1;
+            background: #f4f5f7;
+        }
+
+        .footer {
+            background: #fff;
         }
     </style>
 </head>
@@ -99,10 +124,7 @@
     <script src="{{ asset('assets/js/jquery.cookie.js') }}" type="text/javascript"></script>
     <script src="{{ asset('assets/js/dashboard.js') }}"></script>
 
-    {{-- ================================================================= --}}
-    {{-- FIREBASE NOTIFICATION LOGIC (KHUSUS AUDIT & ADMIN) --}}
-    {{-- ================================================================= --}}
-    
+    {{-- Firebase Notification Logic --}}
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
@@ -132,20 +154,14 @@
                         'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({ token: token })
-                }).then(response => {
-                    return response.json();
-                }).then(data => {
-                    console.log("FCM Token status:", data.message);
-                }).catch(err => {
-                    console.log("Gagal menyimpan token ke server.", err);
-                });
+                }).then(response => response.json())
+                .then(data => console.log("FCM Token status:", data.message))
+                .catch(err => console.log("Gagal menyimpan token.", err));
             }
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/firebase-messaging-sw.js')
                 .then(function(registration) {
-                    console.log('Service Worker Registered with scope:', registration.scope);
-                    
                     Notification.requestPermission().then((permission) => {
                         if (permission === 'granted') {
                             messaging.getToken({ 
@@ -153,32 +169,24 @@
                                 serviceWorkerRegistration: registration 
                             })
                             .then((currentToken) => {
-                                if (currentToken) {
-                                    sendTokenToServer(currentToken);
-                                }
-                            }).catch((err) => {
-                                console.log('Error mengambil token:', err);
+                                if (currentToken) sendTokenToServer(currentToken);
                             });
                         }
                     });
-                }).catch(function(err) {
-                    console.log('Service Worker registration failed:', err);
                 });
             }
 
             messaging.onMessage((payload) => {
                 const title = payload.notification ? payload.notification.title : "Notifikasi Baru";
                 const body = payload.notification ? payload.notification.body : "Cek dashboard.";
-                const icon = 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png';
                 const url = payload.data ? payload.data.click_action : '/';
 
                 if (Notification.permission === 'granted') {
                     var notif = new Notification(title, {
                         body: body,
-                        icon: icon,
+                        icon: 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png',
                         tag: 'audit-alert-' + Date.now()
                     });
-
                     notif.onclick = function() {
                         window.focus();
                         window.location.href = url;
@@ -191,4 +199,5 @@
 
     @stack('scripts')
 </body>
+
 </html>
