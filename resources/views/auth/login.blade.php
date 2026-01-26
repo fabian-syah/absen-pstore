@@ -8,7 +8,8 @@
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -66,10 +67,23 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(20px, -20px) scale(1.03); }
-            50% { transform: translate(-15px, 15px) scale(0.97); }
-            75% { transform: translate(15px, 20px) scale(1.02); }
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(20px, -20px) scale(1.03);
+            }
+
+            50% {
+                transform: translate(-15px, 15px) scale(0.97);
+            }
+
+            75% {
+                transform: translate(15px, 20px) scale(1.02);
+            }
         }
 
         /* Glassmorphism card */
@@ -88,7 +102,7 @@
             border-radius: 28px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 48px 40px;
-            box-shadow: 
+            box-shadow:
                 0 30px 60px -15px rgba(0, 0, 0, 0.6),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
             animation: slideUp 0.6s ease-out;
@@ -99,6 +113,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -125,8 +140,17 @@
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 15px 35px rgba(255, 255, 255, 0.1); }
-            50% { transform: scale(1.03); box-shadow: 0 20px 45px rgba(255, 255, 255, 0.15); }
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 15px 35px rgba(255, 255, 255, 0.1);
+            }
+
+            50% {
+                transform: scale(1.03);
+                box-shadow: 0 20px 45px rgba(255, 255, 255, 0.15);
+            }
         }
 
         .logo-icon i {
@@ -170,7 +194,7 @@
             position: relative;
         }
 
-        .input-wrapper > i {
+        .input-wrapper>i {
             position: absolute;
             left: 18px;
             top: 50%;
@@ -204,7 +228,7 @@
             box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
         }
 
-        .input-wrapper:focus-within > i {
+        .input-wrapper:focus-within>i {
             color: white;
         }
 
@@ -335,11 +359,27 @@
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-5px); }
-            40% { transform: translateX(5px); }
-            60% { transform: translateX(-5px); }
-            80% { transform: translateX(5px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-5px);
+            }
+
+            40% {
+                transform: translateX(5px);
+            }
+
+            60% {
+                transform: translateX(-5px);
+            }
+
+            80% {
+                transform: translateX(5px);
+            }
         }
 
         .alert i {
@@ -388,33 +428,513 @@
             letter-spacing: 0.5px;
         }
 
-        /* Responsive */
-        @media (max-width: 480px) {
-            .login-card {
-                padding: 36px 24px;
-                border-radius: 20px;
+        /* Responsive - All Devices */
+        
+        /* Large Desktop (1400px+) */
+        @media (min-width: 1400px) {
+            .login-container {
+                max-width: 480px;
             }
-
+            
+            .login-card {
+                padding: 56px 48px;
+            }
+            
+            .logo-icon {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .logo-icon i {
+                font-size: 42px;
+            }
+            
+            .brand-name {
+                font-size: 36px;
+            }
+        }
+        
+        /* Desktop (1200px - 1399px) */
+        @media (min-width: 1200px) and (max-width: 1399px) {
+            .login-container {
+                max-width: 460px;
+            }
+        }
+        
+        /* Laptop (992px - 1199px) */
+        @media (min-width: 992px) and (max-width: 1199px) {
+            .login-container {
+                max-width: 440px;
+            }
+            
+            .login-card {
+                padding: 44px 36px;
+            }
+        }
+        
+        /* Tablet Landscape (768px - 991px) */
+        @media (min-width: 768px) and (max-width: 991px) {
+            .login-container {
+                max-width: 420px;
+            }
+            
+            .login-card {
+                padding: 40px 32px;
+            }
+            
+            .logo-icon {
+                width: 75px;
+                height: 75px;
+            }
+            
+            .logo-icon i {
+                font-size: 35px;
+            }
+            
+            .brand-name {
+                font-size: 30px;
+            }
+        }
+        
+        /* Tablet Portrait (600px - 767px) */
+        @media (min-width: 600px) and (max-width: 767px) {
+            .login-container {
+                max-width: 400px;
+                padding: 24px;
+            }
+            
+            .login-card {
+                padding: 36px 28px;
+                border-radius: 24px;
+            }
+            
+            .logo-section {
+                margin-bottom: 32px;
+            }
+            
+            .logo-icon {
+                width: 72px;
+                height: 72px;
+            }
+            
+            .logo-icon i {
+                font-size: 34px;
+            }
+            
+            .brand-name {
+                font-size: 28px;
+                letter-spacing: 2px;
+            }
+            
+            .brand-tagline {
+                font-size: 13px;
+            }
+        }
+        
+        /* Large Mobile (481px - 599px) */
+        @media (min-width: 481px) and (max-width: 599px) {
+            body {
+                padding: 16px;
+            }
+            
+            .login-container {
+                max-width: 100%;
+                padding: 16px;
+            }
+            
+            .login-card {
+                padding: 32px 24px;
+                border-radius: 22px;
+            }
+            
+            .logo-section {
+                margin-bottom: 28px;
+            }
+            
             .logo-icon {
                 width: 68px;
                 height: 68px;
             }
-
+            
             .logo-icon i {
                 font-size: 32px;
             }
-
+            
             .brand-name {
                 font-size: 26px;
+                letter-spacing: 2px;
             }
-
+            
+            .brand-tagline {
+                font-size: 13px;
+            }
+            
+            .form-group label {
+                font-size: 11px;
+                letter-spacing: 1px;
+            }
+            
             .form-control {
                 padding: 16px 16px 16px 48px;
+                font-size: 14px;
             }
-
+            
+            .input-wrapper > i {
+                font-size: 16px;
+                left: 16px;
+            }
+            
+            .password-toggle {
+                right: 14px;
+                font-size: 16px;
+            }
+            
             .btn-login {
                 padding: 16px;
                 font-size: 14px;
+                letter-spacing: 1.5px;
+            }
+            
+            .info-box {
+                padding: 14px;
+                margin-bottom: 24px;
+            }
+            
+            .info-box-title {
+                font-size: 12px;
+            }
+            
+            .info-box ul {
+                font-size: 12px;
+                padding-left: 24px;
+            }
+        }
+        
+        /* Mobile (320px - 480px) - Android & iOS phones */
+        @media (max-width: 480px) {
+            html {
+                font-size: 14px;
+            }
+            
+            body {
+                padding: 12px;
+                min-height: 100vh;
+                min-height: -webkit-fill-available;
+                overflow-x: hidden;
+            }
+            
+            .shape {
+                filter: blur(60px);
+            }
+            
+            .shape-1 {
+                width: 250px;
+                height: 250px;
+                top: -80px;
+                left: -80px;
+            }
+            
+            .shape-2 {
+                width: 200px;
+                height: 200px;
+                bottom: -60px;
+                right: -60px;
+            }
+            
+            .shape-3 {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .login-container {
+                max-width: 100%;
+                padding: 10px;
+                width: 100%;
+            }
+            
+            .login-card {
+                padding: 28px 20px;
+                border-radius: 20px;
+                width: 100%;
+            }
+            
+            .logo-section {
+                margin-bottom: 24px;
+            }
+            
+            .logo-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 16px;
+            }
+            
+            .logo-icon i {
+                font-size: 28px;
+            }
+            
+            .brand-name {
+                font-size: 24px;
+                letter-spacing: 1.5px;
+                margin-bottom: 4px;
+            }
+            
+            .brand-tagline {
+                font-size: 12px;
+            }
+            
+            .info-box {
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 12px;
+            }
+            
+            .info-box-title {
+                font-size: 11px;
+                margin-bottom: 8px;
+            }
+            
+            .info-box-title i {
+                font-size: 14px;
+                margin-right: 8px;
+            }
+            
+            .info-box ul {
+                font-size: 11px;
+                padding-left: 20px;
+            }
+            
+            .info-box li {
+                margin-bottom: 3px;
+            }
+            
+            .form-group {
+                margin-bottom: 18px;
+            }
+            
+            .form-group label {
+                font-size: 10px;
+                margin-bottom: 8px;
+                letter-spacing: 1px;
+            }
+            
+            .form-control {
+                padding: 14px 14px 14px 44px;
+                font-size: 14px;
+                border-radius: 12px;
+            }
+            
+            .input-wrapper > i {
+                font-size: 15px;
+                left: 14px;
+            }
+            
+            .password-toggle {
+                right: 12px;
+                font-size: 15px;
+            }
+            
+            .btn-login {
+                padding: 14px;
+                font-size: 13px;
+                border-radius: 12px;
+                letter-spacing: 1px;
+            }
+            
+            .btn-login i {
+                margin-right: 8px;
+            }
+            
+            .alert {
+                padding: 12px 14px;
+                font-size: 12px;
+                border-radius: 10px;
+                margin-bottom: 18px;
+            }
+            
+            .alert i {
+                font-size: 16px;
+                margin-right: 10px;
+            }
+            
+            .footer {
+                margin-top: 24px;
+                padding-top: 18px;
+            }
+            
+            .footer p {
+                font-size: 10px;
+            }
+        }
+        
+        /* Extra Small Mobile (below 360px) */
+        @media (max-width: 359px) {
+            body {
+                padding: 8px;
+            }
+            
+            .login-container {
+                padding: 6px;
+            }
+            
+            .login-card {
+                padding: 24px 16px;
+            }
+            
+            .logo-icon {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .logo-icon i {
+                font-size: 24px;
+            }
+            
+            .brand-name {
+                font-size: 20px;
+            }
+            
+            .brand-tagline {
+                font-size: 11px;
+            }
+            
+            .form-control {
+                padding: 12px 12px 12px 40px;
+                font-size: 13px;
+            }
+            
+            .input-wrapper > i {
+                font-size: 14px;
+                left: 12px;
+            }
+            
+            .btn-login {
+                padding: 12px;
+                font-size: 12px;
+            }
+            
+            .info-box-title {
+                font-size: 10px;
+            }
+            
+            .info-box ul {
+                font-size: 10px;
+            }
+        }
+        
+        /* iOS Safe Area (for notched phones like iPhone X+) */
+        @supports (padding: env(safe - area - inset - top)) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+            }
+        }
+        
+        /* Landscape orientation for phones */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                min-height: 100vh;
+                padding: 10px 20px;
+                overflow-y: auto;
+            }
+            
+            .login-container {
+                max-width: 400px;
+            }
+            
+            .login-card {
+                padding: 20px 24px;
+            }
+            
+            .logo-section {
+                margin-bottom: 16px;
+            }
+            
+            .logo-icon {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .logo-icon i {
+                font-size: 24px;
+            }
+            
+            .brand-name {
+                font-size: 22px;
+                margin-bottom: 2px;
+            }
+            
+            .brand-tagline {
+                font-size: 11px;
+            }
+            
+            .info-box {
+                padding: 10px;
+                margin-bottom: 14px;
+            }
+            
+            .form-group {
+                margin-bottom: 12px;
+            }
+            
+            .form-control {
+                padding: 12px 12px 12px 42px;
+            }
+            
+            .btn-login {
+                padding: 12px;
+                margin-top: 4px;
+            }
+            
+            .footer {
+                margin-top: 14px;
+                padding-top: 12px;
+            }
+            
+            .shape {
+                display: none;
+            }
+        }
+        
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .form-control {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            
+            .btn-login:hover {
+                transform: none;
+            }
+            
+            .btn-login:active {
+                transform: scale(0.98);
+            }
+            
+            .password-toggle {
+                padding: 8px;
+                margin: -8px;
+            }
+        }
+        
+        /* High DPI / Retina displays */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .login-card {
+                border-width: 0.5px;
+            }
+        }
+        
+        /* Reduce motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            
+            .shape,
+            .dot {
+                display: none;
             }
         }
 
