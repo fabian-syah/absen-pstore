@@ -88,11 +88,58 @@ class SalaryController extends Controller
 
             $lateCount = $telatFisik + $izinTelat;
 
-            $alphaCount = Attendance::where('user_id', $selectedUserId)
-                ->whereMonth('check_in_time', $month)->whereYear('check_in_time', $year)
-                ->where(function ($q) {
-                    $q->where('status', 'alpha')->orWhere('presence_status', 'Alpha');
-                })->count();
+            // ALPHA COUNT - LOGIC YANG SAMA DENGAN AttendanceHistoryController
+            // Hitung dari total hari dalam bulan dikurangi attendance yang ada
+            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $endDate = $startDate->copy()->endOfMonth();
+            $today = Carbon::now()->endOfDay();
+            $limitDate = ($endDate->gt($today)) ? $today : $endDate;
+
+            // Total hari yang sudah lewat di bulan ini
+            $totalDays = $limitDate->day;
+
+            // Ambil semua attendance di bulan ini
+            $attendances = Attendance::where('user_id', $selectedUserId)
+                ->whereBetween('check_in_time', [$startDate, $endDate])
+                ->get();
+
+            // Ambil semua approved leaves di bulan ini
+            $leaves = LeaveRequest::where('user_id', $selectedUserId)
+                ->where('status', 'approved')
+                ->where(function ($query) use ($startDate, $endDate) {
+                    $query->whereBetween('start_date', [$startDate, $endDate])
+                        ->orWhereBetween('end_date', [$startDate, $endDate])
+                        ->orWhere(function ($q) use ($startDate, $endDate) {
+                            $q->where('start_date', '<=', $startDate)
+                                ->where('end_date', '>=', $endDate);
+                        });
+                })->get();
+
+            // Hitung berapa hari yang ada attendance atau leave
+            $coveredDays = 0;
+            for ($date = $startDate->copy(); $date->lte($limitDate); $date->addDay()) {
+                $currentDateStr = $date->format('Y-m-d');
+
+                // Cek apakah ada attendance
+                $hasAttendance = $attendances->filter(function ($a) use ($currentDateStr) {
+                    return Carbon::parse($a->check_in_time)->format('Y-m-d') == $currentDateStr;
+                })->isNotEmpty();
+
+                // Cek apakah ada leave
+                $hasLeave = $leaves->filter(function ($l) use ($date) {
+                    return $date->between(
+                        Carbon::parse($l->start_date)->startOfDay(),
+                        Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
+                    );
+                })->isNotEmpty();
+
+                if ($hasAttendance || $hasLeave) {
+                    $coveredDays++;
+                }
+            }
+
+            // Alpha = Total hari - Hari yang ada attendance/leave
+            $alphaCount = $totalDays - $coveredDays;
 
             // [BARU] FREELANCE ATTENDANCE BERDASARKAN RANGE TANGGAL
             // Hanya menghitung kehadiran dalam rentang Start Date - End Date
