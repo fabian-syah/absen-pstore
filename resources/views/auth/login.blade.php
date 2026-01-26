@@ -288,6 +288,11 @@
             padding: 8px;
             line-height: 1;
             z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
         }
 
         .password-toggle:hover {
@@ -868,9 +873,7 @@
         }
 
         /* iOS Safe Area (for notched phones like iPhone X+) */
-        @supports
-        (padding: env(safe - area - inset - top))
-            {
+        @supports (padding: env(safe - area - inset - top)) {
             body {
                 padding-top: env(safe-area-inset-top);
                 padding-bottom: env(safe-area-inset-bottom);
