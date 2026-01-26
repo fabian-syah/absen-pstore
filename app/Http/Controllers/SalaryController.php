@@ -120,9 +120,11 @@ class SalaryController extends Controller
             for ($date = $monthStartDate->copy(); $date->lte($limitDate); $date->addDay()) {
                 $currentDateStr = $date->format('Y-m-d');
 
-                // Cek apakah ada attendance
+                // Cek apakah ada attendance YANG BUKAN ALPHA
                 $hasAttendance = $attendances->filter(function ($a) use ($currentDateStr) {
-                    return Carbon::parse($a->check_in_time)->format('Y-m-d') == $currentDateStr;
+                    $dateMatch = Carbon::parse($a->check_in_time)->format('Y-m-d') == $currentDateStr;
+                    $notAlpha = strtolower($a->presence_status ?? '') !== 'alpha';
+                    return $dateMatch && $notAlpha;
                 })->isNotEmpty();
 
                 // Cek apakah ada leave
