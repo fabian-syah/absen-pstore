@@ -1349,8 +1349,8 @@
 @push('styles')
     <style>
         /* =================================================================
-                   CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
-                   ================================================================= */
+                           CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
+                           ================================================================= */
 
         /* DON'T override backgrounds - only fix text colors */
 
@@ -1460,1481 +1460,1493 @@
             color: #333 !important;
         }
 
-        /* === ROYAL RAMADHAN THEME === */
-        @import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@700&display=swap');
-
-        .royal-ramadan-card {
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-            /* Deep Mystical Blue/Green */
-            position: relative;
-            border-radius: 24px !important;
-            border: 1px solid rgba(255, 215, 0, 0.3) !important;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
-        }
-
-        .font-arabic {
-            font-family: 'Scheherazade New', serif;
-            /* Font style Arab/Timur Tengah */
-        }
-
-        /* Pattern Background */
-        .royal-bg-pattern {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                radial-gradient(circle at 50% 50%, transparent 0%, transparent 100%),
-                repeating-linear-gradient(45deg, rgba(255, 215, 0, 0.03) 0px, rgba(255, 215, 0, 0.03) 1px, transparent 1px, transparent 10px);
-            opacity: 0.6;
-            z-index: 1;
-        }
-
-        /* Silhouette Masjid */
-        .mosque-silhouette {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 150px;
-            background-image: url('https://cdn.pixabay.com/photo/2017/01/31/15/34/mosque-2025088_1280.png');
-            /* Gambar Siluet Transparan */
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: bottom left;
-            opacity: 0.15;
-            z-index: 2;
-            filter: invert(1);
-            /* Putihkan siluet */
-        }
-
-        /* Cahaya Bulan */
-        .moon-glow {
-            position: absolute;
-            top: -100px;
-            right: -100px;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
-            z-index: 1;
-        }
-
-        /* Teks Emas Mewah */
-        .text-gradient-gold {
-            background: linear-gradient(to bottom, #fff 20%, #ffd700 80%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Badge 1447 H */
-        .badge-royal {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 215, 0, 0.4);
-            padding: 8px 20px;
-            border-radius: 50px;
-            color: #ffd700;
-            font-weight: 600;
-            font-size: 0.9rem;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Quote Box */
-        .quote-box-royal {
-            background: rgba(0, 0, 0, 0.2);
-            border-left: 3px solid #ffd700;
-            padding: 10px 15px;
-            border-radius: 0 8px 8px 0;
-            display: inline-block;
-        }
-
-        /* --- LANTERNS (LENTERA) --- */
-        .r-lantern {
-            position: absolute;
-            top: -20px;
-            background: #111;
-            border: 2px solid #ffd700;
-            border-radius: 4px;
-            z-index: 5;
-            transform-origin: top center;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        .r-lantern::before {
-            /* Tali */
-            content: '';
-            position: absolute;
-            top: -100px;
-            left: 50%;
-            width: 2px;
-            height: 100px;
-            background: rgba(255, 215, 0, 0.5);
-            transform: translateX(-50%);
-        }
-
-        .r-lantern-light {
-            position: absolute;
-            top: 20%;
-            left: 20%;
-            right: 20%;
-            bottom: 20%;
-            background: radial-gradient(circle, #fff 0%, #ffd700 60%, transparent 100%);
-            opacity: 0.8;
-            border-radius: 50%;
-            filter: blur(5px);
-            animation: lanternFlicker 3s infinite alternate;
-        }
-
-        .l-big {
-            right: 10%;
-            width: 40px;
-            height: 60px;
-            animation: lanternSwing 6s ease-in-out infinite alternate;
-        }
-
-        .l-med {
-            right: 20%;
-            width: 30px;
-            height: 45px;
-            top: -10px;
-            animation: lanternSwing 5s ease-in-out infinite alternate-reverse;
-            opacity: 0.9;
-        }
-
-        .l-small {
-            right: 5%;
-            width: 25px;
-            height: 35px;
-            top: -5px;
-            animation: lanternSwing 4s ease-in-out infinite alternate;
-            opacity: 0.8;
-        }
-
-        @keyframes lanternSwing {
-            from {
-                transform: rotate(3deg);
+        /* ROYAL RAMADHAN CARD - Ensure white/gold text on dark gradient */
+            .royal-ramadan-card,
+            .royal-ramadan-card * {
+                color: #ffffff !important;
             }
 
-            to {
-                transform: rotate(-3deg);
+            .royal-ramadan-card .text-gradient-gold,
+            .royal-ramadan-card h1,
+            .royal-ramadan-card .badge-royal {
+                color: #FFD700 !important;
             }
-        }
 
-        @keyframes lanternFlicker {
+            /* === ROYAL RAMADHAN THEME - LUXURIOUS VERSION === */
+            @import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@700&display=swap');
 
-            0%,
-            100% {
+            .royal-ramadan-card {
+                background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%) !important;
+                /* Deep Mystical Blue/Green - ENFORCED */
+                position: relative;
+                border-radius: 24px !important;
+                border: 1px solid rgba(255, 215, 0, 0.3) !important;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+            }
+
+            .font-arabic {
+                font-family: 'Scheherazade New', serif;
+                /* Font style Arab/Timur Tengah */
+            }
+
+            /* Pattern Background */
+            .royal-bg-pattern {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image:
+                    radial-gradient(circle at 50% 50%, transparent 0%, transparent 100%),
+                    repeating-linear-gradient(45deg, rgba(255, 215, 0, 0.03) 0px, rgba(255, 215, 0, 0.03) 1px, transparent 1px, transparent 10px);
                 opacity: 0.6;
-                transform: scale(0.9);
+                z-index: 1;
             }
 
-            50% {
-                opacity: 1;
-                transform: scale(1.1);
-            }
-        }
-
-        /* --- TIMER BOXES --- */
-        .royal-countdown-wrapper {
-            position: relative;
-            z-index: 10;
-        }
-
-        .royal-timer-box {
-            width: 80px;
-            height: 100px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Efek Kilau di Timer */
-        .royal-timer-box::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transform: rotate(45deg);
-            animation: shine 3s infinite;
-        }
-
-        .royal-time {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #fff;
-            line-height: 1;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            font-family: 'Consolas', monospace;
-        }
-
-        .royal-label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #ffd700;
-            margin-top: 5px;
-            letter-spacing: 1px;
-        }
-
-        /* Loading Bar */
-        .loading-bar-container {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .loading-bar-fill {
-            height: 100%;
-            background: #ffd700;
-            width: 60%;
-            /* Statis dulu, nanti bisa dinamis JS */
-            box-shadow: 0 0 10px #ffd700;
-            animation: loadProgress 2s ease-out;
-        }
-
-        @keyframes shine {
-            0% {
-                transform: translateX(-100%) rotate(45deg);
+            /* Silhouette Masjid */
+            .mosque-silhouette {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 150px;
+                background-image: url('https://cdn.pixabay.com/photo/2017/01/31/15/34/mosque-2025088_1280.png');
+                /* Gambar Siluet Transparan */
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: bottom left;
+                opacity: 0.15;
+                z-index: 2;
+                filter: invert(1);
+                /* Putihkan siluet */
             }
 
-            100% {
-                transform: translateX(100%) rotate(45deg);
-            }
-        }
-
-        @keyframes loadProgress {
-            from {
-                width: 0%;
-            }
-
-            to {
-                width: 60%;
-            }
-        }
-
-        /* Particles Container (Stars) */
-        .particles-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        /* Manual Stars (CSS Only fallback) */
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 0 5px #fff;
-            animation: twinkle 2s infinite ease-in-out;
-        }
-
-        .s-1 {
-            width: 3px;
-            height: 3px;
-            top: 20%;
-            left: 15%;
-            animation-delay: 0s;
-        }
-
-        .s-2 {
-            width: 2px;
-            height: 2px;
-            top: 40%;
-            left: 30%;
-            animation-delay: 1s;
-        }
-
-        .s-3 {
-            width: 4px;
-            height: 4px;
-            top: 10%;
-            right: 40%;
-            animation-delay: 0.5s;
-        }
-
-        @keyframes twinkle {
-
-            0%,
-            100% {
-                opacity: 0.3;
-                transform: scale(0.8);
+            /* Cahaya Bulan */
+            .moon-glow {
+                position: absolute;
+                top: -100px;
+                right: -100px;
+                width: 400px;
+                height: 400px;
+                background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+                z-index: 1;
             }
 
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-        }
-
-        /* === [BARU] NOSTALGIA GALLERY STYLES === */
-        .gallery-scroll-container {
-            display: flex;
-            overflow-x: auto;
-            padding: 5px;
-            scrollbar-width: none;
-            /* Firefox */
-        }
-
-        .gallery-scroll-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* Chrome/Safari */
-
-        .gallery-card {
-            width: 140px;
-            height: 210px;
-            position: relative;
-            border-radius: 18px;
-            overflow: hidden;
-            background: #000;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        }
-
-        .gallery-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.7;
-            filter: grayscale(80%) sepia(30%);
-            /* Efek Sedih/Nostalgia */
-            transition: all 0.6s ease;
-        }
-
-        .gallery-card:hover .gallery-img {
-            opacity: 1;
-            filter: grayscale(0%) sepia(0%);
-            transform: scale(1.1);
-        }
-
-        .gallery-badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            font-size: 8px;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 6px;
-            color: white;
-            text-transform: uppercase;
-        }
-
-        .gallery-date {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            color: white;
-            font-size: 11px;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-        }
-
-        .border-dashed {
-            border: 2px dashed #dee2e6;
-        }
-
-        /* === BIRTHDAY CARD STYLES === */
-        .birthday-card {
-            background: linear-gradient(135deg, #4c1d95 0%, #be185d 100%);
-            /* Ungu ke Pink Mewah */
-            position: relative;
-            color: white;
-        }
-
-        /* Glassmorphism for Countdown */
-        .glass-box {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 10px 15px;
-            min-width: 70px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .text-shadow-glam {
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Balloons Animation */
-        .balloon {
-            position: absolute;
-            width: 60px;
-            height: 70px;
-            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-            background-color: rgba(255, 255, 255, 0.1);
-            bottom: -80px;
-            z-index: 0;
-            animation: floatBalloon 10s infinite ease-in-out;
-        }
-
-        .balloon::before {
-            content: "";
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .b1 {
-            left: 10%;
-            background: rgba(255, 215, 0, 0.2);
-            animation-duration: 8s;
-            animation-delay: 0s;
-            width: 50px;
-            height: 60px;
-        }
-
-        .b2 {
-            right: 15%;
-            background: rgba(0, 255, 255, 0.15);
-            animation-duration: 12s;
-            animation-delay: 2s;
-            width: 70px;
-            height: 85px;
-        }
-
-        .b3 {
-            left: 50%;
-            background: rgba(255, 105, 180, 0.15);
-            animation-duration: 10s;
-            animation-delay: 5s;
-        }
-
-        @keyframes floatBalloon {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 0;
+            /* Teks Emas Mewah */
+            .text-gradient-gold {
+                background: linear-gradient(to bottom, #fff 20%, #ffd700 80%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
             }
 
-            20% {
-                opacity: 1;
+            /* Badge 1447 H */
+            .badge-royal {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 215, 0, 0.4);
+                padding: 8px 20px;
+                border-radius: 50px;
+                color: #ffd700;
+                font-weight: 600;
+                font-size: 0.9rem;
+                backdrop-filter: blur(5px);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             }
 
-            100% {
-                transform: translateY(-300px) rotate(20deg);
-                opacity: 0;
-            }
-        }
-
-        /* === SLIDER LOGIC STYLES === */
-        #slide-thumb {
-            transition: transform 0.1s;
-        }
-
-        #slide-thumb:active {
-            cursor: grabbing !important;
-        }
-
-        .animate-enter {
-            animation: fadeInUp 0.5s ease-out forwards;
-        }
-
-        /* === EXISTING STYLES === */
-        /* === LUXURY LEADERBOARD STYLES (NEW) === */
-
-        /* 1. Card Container & Background */
-        .luxury-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
-            position: relative;
-            transition: all 0.4s ease;
-        }
-
-        .luxury-bg-glow {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 223, 0, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
-            animation: rotateGlow 20s linear infinite;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .luxury-bg-pattern {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: radial-gradient(#E1E1E1 1px, transparent 1px);
-            background-size: 20px 20px;
-            opacity: 0.3;
-            z-index: 0;
-        }
-
-        @keyframes rotateGlow {
-            0% {
-                transform: rotate(0deg);
+            /* Quote Box */
+            .quote-box-royal {
+                background: rgba(0, 0, 0, 0.2);
+                border-left: 3px solid #ffd700;
+                padding: 10px 15px;
+                border-radius: 0 8px 8px 0;
+                display: inline-block;
             }
 
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .icon-box-luxury {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #FFF8E1, #FFF3C4);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.15);
-        }
-
-        .glass-badge {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 14px;
-            color: #444;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-        }
-
-        /* 2. Podium Layout */
-        .podium-luxury-container {
-            min-height: 280px;
-            margin-bottom: -30px;
-            /* Overlap with block below */
-        }
-
-        .podium-step-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            position: relative;
-            z-index: 2;
-        }
-
-        /* 3. Avatars & Glows */
-        .podium-avatar-wrapper {
-            position: relative;
-            margin-bottom: 15px;
-            transition: transform 0.3s ease;
-        }
-
-        .podium-avatar-wrapper:hover {
-            transform: translateY(-8px) scale(1.02);
-        }
-
-        .luxury-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #fff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .luxury-avatar-placeholder {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 4px solid #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: bold;
-            color: #fff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Winner Specifics */
-        .main-winner {
-            z-index: 10;
-        }
-
-        .main-winner .luxury-avatar,
-        .main-winner .luxury-avatar-placeholder {
-            width: 110px;
-            height: 110px;
-            border-width: 5px;
-        }
-
-        .crown-floating {
-            position: absolute;
-            top: -55px;
-            left: 50%;
-            transform: translateX(-50%) rotate(-5deg);
-            animation: floatCrown 3s ease-in-out infinite;
-            z-index: 20;
-            filter: drop-shadow(0 5px 15px rgba(255, 215, 0, 0.4));
-        }
-
-        @keyframes floatCrown {
-
-            0%,
-            100% {
-                transform: translateX(-50%) translateY(0) rotate(-5deg);
+            /* --- LANTERNS (LENTERA) --- */
+            .r-lantern {
+                position: absolute;
+                top: -20px;
+                background: #111;
+                border: 2px solid #ffd700;
+                border-radius: 4px;
+                z-index: 5;
+                transform-origin: top center;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
             }
 
-            50% {
-                transform: translateX(-50%) translateY(-10px) rotate(0deg);
-            }
-        }
-
-        /* Glow Effects */
-        .gold-glow::before {
-            content: '';
-            position: absolute;
-            inset: -10px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
-            z-index: -1;
-            animation: pulseGlow 2s infinite;
-        }
-
-        /* Gradients */
-        .gold-gradient {
-            background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
-        }
-
-        .silver-gradient {
-            background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
-        }
-
-        .bronze-gradient {
-            background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);
-        }
-
-        /* Rank Circles */
-        .rank-circle {
-            position: absolute;
-            bottom: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 14px;
-            color: white;
-            border: 2px solid white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 5;
-        }
-
-        .rank-circle.gold {
-            background: #FDB931;
-        }
-
-        .rank-circle.silver {
-            background: #A9A9A9;
-        }
-
-        .rank-circle.bronze {
-            background: #A0522D;
-        }
-
-        /* 4. Podium Blocks (The Steps) */
-        .podium-block {
-            width: 100%;
-            border-radius: 16px 16px 0 0;
-            padding: 20px 10px;
-            position: relative;
-            margin: 0 5px;
-            clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
-            /* Tapered shape */
-            backdrop-filter: blur(5px);
-        }
-
-        .gold-block {
-            height: 180px;
-            /* Sedikit lebih tinggi untuk muat info tambahan */
-            background: linear-gradient(180deg, rgba(255, 236, 179, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
-            border-top: 4px solid #FFD700;
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);
-        }
-
-        .silver-block {
-            height: 140px;
-            background: linear-gradient(180deg, rgba(245, 245, 245, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
-            border-top: 4px solid #C0C0C0;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .bronze-block {
-            height: 120px;
-            background: linear-gradient(180deg, rgba(239, 219, 207, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
-            border-top: 4px solid #CD7F32;
-            box-shadow: 0 10px 20px rgba(160, 82, 45, 0.05);
-        }
-
-        .podium-content {
-            transform: translateY(5px);
-        }
-
-        .stat-pill {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            background: #fff;
-            color: #555;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-pill.gold {
-            background: linear-gradient(45deg, #FFD700, #FDB931);
-            color: #fff;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
-        }
-
-        /* 5. Runner Up List */
-        .runner-up-container {
-            background: #fff;
-            border-radius: 16px;
-            padding: 10px;
-            /* border: 1px solid #f0f0f0; */
-        }
-
-        .runner-up-item {
-            padding: 12px 16px;
-            border-radius: 12px;
-            background: #fff;
-            border: 1px solid #f1f3f5;
-            margin-bottom: 10px;
-            transition: all 0.2s ease;
-        }
-
-        .runner-up-item:hover {
-            border-color: #FFD700;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            transform: translateX(5px);
-        }
-
-        .rank-number {
-            font-family: 'Consolas', monospace;
-            font-weight: 900;
-            font-size: 18px;
-            color: #d1d1d1;
-            width: 30px;
-        }
-
-        .runner-avatar {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-        }
-
-        .runner-avatar-placeholder {
-            width: 40px;
-            height: 40px;
-            background: #eee;
-            color: #888;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        /* 6. Sparkles */
-        .sparkle {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle 2s infinite;
-            z-index: 20;
-            box-shadow: 0 0 5px #fff, 0 0 10px #FFD700;
-        }
-
-        .s1 {
-            width: 4px;
-            height: 4px;
-            top: 0;
-            left: 10%;
-            animation-delay: 0.5s;
-        }
-
-        .s2 {
-            width: 6px;
-            height: 6px;
-            top: 10%;
-            right: 0;
-            animation-delay: 1s;
-        }
-
-        .s3 {
-            width: 3px;
-            height: 3px;
-            bottom: 10px;
-            left: -5px;
-            animation-delay: 1.5s;
-        }
-
-        @keyframes twinkle {
-
-            0%,
-            100% {
-                opacity: 0;
-                transform: scale(0.5);
+            .r-lantern::before {
+                /* Tali */
+                content: '';
+                position: absolute;
+                top: -100px;
+                left: 50%;
+                width: 2px;
+                height: 100px;
+                background: rgba(255, 215, 0, 0.5);
+                transform: translateX(-50%);
             }
 
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-        }
-
-        /* Small utilities */
-        .small-font {
-            font-size: 11px;
-        }
-
-
-        /* === EXISTING STYLES === */
-
-        /* 1. Entrance Animation (Slide Up Fade) */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translate3d(0, 40px, 0);
+            .r-lantern-light {
+                position: absolute;
+                top: 20%;
+                left: 20%;
+                right: 20%;
+                bottom: 20%;
+                background: radial-gradient(circle, #fff 0%, #ffd700 60%, transparent 100%);
+                opacity: 0.8;
+                border-radius: 50%;
+                filter: blur(5px);
+                animation: lanternFlicker 3s infinite alternate;
             }
 
-            to {
-                opacity: 1;
-                transform: translate3d(0, 0, 0);
-            }
-        }
-
-        .animate-enter {
-            opacity: 0;
-            /* Awal tersembunyi */
-            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
-
-        /* 2. Pulse Animation for Status Icon */
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            .l-big {
+                right: 10%;
+                width: 40px;
+                height: 60px;
+                animation: lanternSwing 6s ease-in-out infinite alternate;
             }
 
-            70% {
-                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            .l-med {
+                right: 20%;
+                width: 30px;
+                height: 45px;
+                top: -10px;
+                animation: lanternSwing 5s ease-in-out infinite alternate-reverse;
+                opacity: 0.9;
             }
 
-            100% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-            }
-        }
-
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-
-        .pulse-text {
-            animation: pulseText 2s infinite;
-        }
-
-        @keyframes pulseText {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.1);
+            .l-small {
+                right: 5%;
+                width: 25px;
+                height: 35px;
+                top: -5px;
+                animation: lanternSwing 4s ease-in-out infinite alternate;
                 opacity: 0.8;
             }
 
-            100% {
-                transform: scale(1);
+            @keyframes lanternSwing {
+                from {
+                    transform: rotate(3deg);
+                }
+
+                to {
+                    transform: rotate(-3deg);
+                }
+            }
+
+            @keyframes lanternFlicker {
+
+                0%,
+                100% {
+                    opacity: 0.6;
+                    transform: scale(0.9);
+                }
+
+                50% {
+                    opacity: 1;
+                    transform: scale(1.1);
+                }
+            }
+
+            /* --- TIMER BOXES --- */
+            .royal-countdown-wrapper {
+                position: relative;
+                z-index: 10;
+            }
+
+            .royal-timer-box {
+                width: 80px;
+                height: 100px;
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+                border: 1px solid rgba(255, 215, 0, 0.3);
+                border-radius: 16px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+                position: relative;
+                overflow: hidden;
+            }
+
+            /* Efek Kilau di Timer */
+            .royal-timer-box::after {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+                transform: rotate(45deg);
+                animation: shine 3s infinite;
+            }
+
+            .royal-time {
+                font-size: 2.5rem;
+                font-weight: 800;
+                color: #fff;
+                line-height: 1;
+                text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+                font-family: 'Consolas', monospace;
+            }
+
+            .royal-label {
+                font-size: 0.7rem;
+                font-weight: 700;
+                color: #ffd700;
+                margin-top: 5px;
+                letter-spacing: 1px;
+            }
+
+            /* Loading Bar */
+            .loading-bar-container {
+                width: 100%;
+                height: 4px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                overflow: hidden;
+                margin-top: 10px;
+            }
+
+            .loading-bar-fill {
+                height: 100%;
+                background: #ffd700;
+                width: 60%;
+                /* Statis dulu, nanti bisa dinamis JS */
+                box-shadow: 0 0 10px #ffd700;
+                animation: loadProgress 2s ease-out;
+            }
+
+            @keyframes shine {
+                0% {
+                    transform: translateX(-100%) rotate(45deg);
+                }
+
+                100% {
+                    transform: translateX(100%) rotate(45deg);
+                }
+            }
+
+            @keyframes loadProgress {
+                from {
+                    width: 0%;
+                }
+
+                to {
+                    width: 60%;
+                }
+            }
+
+            /* Particles Container (Stars) */
+            .particles-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1;
+                pointer-events: none;
+            }
+
+            /* Manual Stars (CSS Only fallback) */
+            .star {
+                position: absolute;
+                background: white;
+                border-radius: 50%;
+                box-shadow: 0 0 5px #fff;
+                animation: twinkle 2s infinite ease-in-out;
+            }
+
+            .s-1 {
+                width: 3px;
+                height: 3px;
+                top: 20%;
+                left: 15%;
+                animation-delay: 0s;
+            }
+
+            .s-2 {
+                width: 2px;
+                height: 2px;
+                top: 40%;
+                left: 30%;
+                animation-delay: 1s;
+            }
+
+            .s-3 {
+                width: 4px;
+                height: 4px;
+                top: 10%;
+                right: 40%;
+                animation-delay: 0.5s;
+            }
+
+            @keyframes twinkle {
+
+                0%,
+                100% {
+                    opacity: 0.3;
+                    transform: scale(0.8);
+                }
+
+                50% {
+                    opacity: 1;
+                    transform: scale(1.2);
+                }
+            }
+
+            /* === [BARU] NOSTALGIA GALLERY STYLES === */
+            .gallery-scroll-container {
+                display: flex;
+                overflow-x: auto;
+                padding: 5px;
+                scrollbar-width: none;
+                /* Firefox */
+            }
+
+            .gallery-scroll-container::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* Chrome/Safari */
+
+            .gallery-card {
+                width: 140px;
+                height: 210px;
+                position: relative;
+                border-radius: 18px;
+                overflow: hidden;
+                background: #000;
+                cursor: pointer;
+                transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            }
+
+            .gallery-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                opacity: 0.7;
+                filter: grayscale(80%) sepia(30%);
+                /* Efek Sedih/Nostalgia */
+                transition: all 0.6s ease;
+            }
+
+            .gallery-card:hover .gallery-img {
                 opacity: 1;
-            }
-        }
-
-        /* 3. Live Indicator Dot */
-        .live-indicator {
-            width: 10px;
-            height: 10px;
-            background-color: #10b981;
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
-            animation: pulse 2s infinite;
-        }
-
-        /* 4. Hover Effects */
-        .hover-float {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .hover-float:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        .hover-scale {
-            transition: transform 0.2s ease;
-        }
-
-        .hover-scale:hover {
-            transform: scale(1.02);
-        }
-
-        .scale-on-hover:hover {
-            transform: scale(1.1);
-        }
-
-        .hover-shadow-lg {
-            transition: box-shadow 0.3s ease;
-        }
-
-        .hover-shadow-lg:hover {
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        /* 5. Glassmorphism for Modal */
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-
-        /* 6. Card Bank Styles */
-        .card-bank {
-            position: relative;
-            min-height: 200px;
-            border-radius: 16px;
-            overflow: hidden;
-            border: none;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
-
-        .card-bank .card-body {
-            position: relative;
-            z-index: 2;
-            padding: 24px;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            flex-grow: 1;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .card-bank-chip {
-            width: 40px;
-            height: 30px;
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border-radius: 6px;
-            position: relative;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .card-bank-icon {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 48px;
-            opacity: 0.2;
-        }
-
-        .card-bank-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.9;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .card-bank-value {
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            line-height: 1;
-        }
-
-        .card-bank-desc {
-            font-size: 13px;
-            opacity: 0.85;
-            margin-bottom: 0;
-        }
-
-        .card-bank-pattern {
-            position: absolute;
-            bottom: -50px;
-            right: -50px;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-            z-index: 1;
-        }
-
-        /* Gradients */
-        .gradient-purple {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .gradient-blue {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .gradient-green {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-
-        .gradient-orange {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .gradient-red {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .gradient-dark {
-            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
-        }
-
-        .card-id {
-            position: relative;
-            border-radius: 16px;
-            overflow: hidden;
-            border: none;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            color: white;
-            min-height: 220px;
-            display: flex;
-            flex-direction: column;
-            font-family: 'Roboto', sans-serif;
-        }
-
-        .card-id .card-body {
-            position: relative;
-            z-index: 2;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            flex-grow: 1;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .card-id-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .card-id-photo-wrapper {
-            position: relative;
-            z-index: 5;
-        }
-
-        .id-card-img {
-            width: 60px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            transition: transform 0.2s ease-in-out;
-        }
-
-        .id-card-img:hover {
-            transform: scale(1.1);
-            border-color: #fff;
-        }
-
-        .id-card-img-placeholder {
-            width: 60px;
-            height: 70px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 8px;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-id-logo {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            font-size: 10px;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .card-id-logo i {
-            font-size: 38px;
-            margin-bottom: 4px;
-            color: #ffed4e;
-        }
-
-        .card-id-details {
-            flex-grow: 1;
-        }
-
-        .card-id-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            opacity: 0.7;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        .card-id-name {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            line-height: 1.2;
-            font-family: 'Consolas', 'Courier New', monospace;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-id-division {
-            font-size: 16px;
-            font-weight: 500;
-            opacity: 0.9;
-            font-family: 'Consolas', 'Courier New', monospace;
-        }
-
-        .card-id-footer {
-            margin-top: auto;
-        }
-
-        .card-action {
-            border-radius: 16px;
-            border: none;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            height: 100%;
-        }
-
-        .card-status {
-            border-radius: 16px;
-            border: none;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            height: 100%;
-        }
-
-        .status-card {
-            padding: 24px;
-            border-radius: 12px;
-            border: 2px solid;
-            background: #f8fafc;
-            transition: all 0.3s ease;
-        }
-
-        .status-success {
-            border-color: #10b981;
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-        }
-
-        .status-warning {
-            border-color: #f59e0b;
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-        }
-
-        .status-info {
-            border-color: #3b82f6;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        }
-
-        .status-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 20px;
-            font-size: 28px;
-            flex-shrink: 0;
-        }
-
-        .status-success .status-icon {
-            background: #10b981;
-            color: white;
-        }
-
-        .status-warning .status-icon {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .status-info .status-icon {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .badge {
-            border-radius: 8px;
-            font-weight: 600;
-            padding: 6px 12px;
-        }
-
-        .btn {
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn-dark {
-            background: #1a1a1a;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            padding: 12px 28px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-dark:hover {
-            background: #000;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-outline-dark {
-            border: 2px solid #1a1a1a;
-            color: #1a1a1a;
-            border-radius: 12px;
-            font-weight: 600;
-            padding: 12px 28px;
-        }
-
-        .btn-outline-dark:hover {
-            background: #1a1a1a;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        /* ======================================================================= */
-        /* LUXURY HALL OF FAME STYLES (MODERN VERSION)                             */
-        /* ======================================================================= */
-
-        .hall-of-fame-card {
-            background: linear-gradient(145deg, #0f0f0f 0%, #1a1a1a 100%) !important;
-            border-radius: 24px !important;
-            border: 1px solid rgba(255, 215, 0, 0.15) !important;
-            position: relative;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
-        }
-
-        /* Efek Cahaya Spotlight di Background */
-        .spotlight {
-            position: absolute;
-            top: -20%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            height: 140%;
-            background: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.08) 0%, transparent 60%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .winner-memory-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
-            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            padding: 1.5rem !important;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .winner-memory-card:hover {
-            background: rgba(255, 255, 255, 0.07);
-            transform: translateY(-10px) scale(1.02);
-            border-color: rgba(255, 215, 0, 0.4);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Efek Grayscale-Nostalgia yang Halus */
-        .grayscale-memory {
-            filter: grayscale(40%) contrast(1.1);
-            /* Tidak terlalu gelap agar tetap modern */
-            transition: all 0.5s ease;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .winner-memory-card:hover .grayscale-memory {
-            filter: grayscale(0%) contrast(1);
-            border-color: #ffd700;
-            transform: rotate(3deg);
-        }
-
-        /* Rank Badge Modern */
-        .rank-badge-mini {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            /* Bentuk kotak membulat lebih modern dari lingkaran */
-            font-size: 13px;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            transform: rotate(12deg);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            color: #000;
-        }
-
-        .rank-badge-mini.gold {
-            background: linear-gradient(135deg, #ffd700, #b8860b);
-        }
-
-        .rank-badge-mini.silver {
-            background: linear-gradient(135deg, #e0e0e0, #757575);
-        }
-
-        .rank-badge-mini.bronze {
-            background: linear-gradient(135deg, #cd7f32, #8b4513);
-        }
-
-        /* Tipografi Teks */
-        .winner-memory-card h6 {
-            font-size: 16px;
-            letter-spacing: 0.5px;
-            margin-top: 10px;
-            color: #ffffff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        .winner-memory-card .text-warning {
-            font-size: 11px !important;
-            font-weight: 600;
-            text-transform: uppercase;
-            opacity: 0.8;
-        }
-
-        /* Badge Kehadiran (Pill) */
-        .attendance-pill-custom {
-            background: rgba(255, 215, 0, 0.1);
-            color: #ffd700;
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            padding: 5px 15px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-top: 15px;
-            display: inline-block;
-        }
-
-        .winner-memory-card:hover .attendance-pill-custom {
-            background: #ffd700;
-            color: #000;
-        }
-
-        @media (max-width: 768px) {
-            .card-bank-value {
-                font-size: 28px;
+                filter: grayscale(0%) sepia(0%);
+                transform: scale(1.1);
             }
 
-            .card-bank {
-                min-height: 180px;
-                margin-bottom: 20px;
+            .gallery-badge {
+                position: absolute;
+                top: 12px;
+                left: 12px;
+                font-size: 8px;
+                font-weight: 800;
+                padding: 4px 10px;
+                border-radius: 6px;
+                color: white;
+                text-transform: uppercase;
             }
 
-            .card-id {
-                min-height: 200px;
+            .gallery-date {
+                position: absolute;
+                bottom: 12px;
+                right: 12px;
+                color: white;
+                font-size: 11px;
+                font-weight: bold;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
             }
 
-            .card-id-name {
-                font-size: 20px;
+            .border-dashed {
+                border: 2px dashed #dee2e6;
             }
 
-            .id-card-img,
-            .id-card-img-placeholder {
+            /* === BIRTHDAY CARD STYLES === */
+            .birthday-card {
+                background: linear-gradient(135deg, #4c1d95 0%, #be185d 100%);
+                /* Ungu ke Pink Mewah */
+                position: relative;
+                color: white;
+            }
+
+            /* Glassmorphism for Countdown */
+            .glass-box {
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 12px;
+                padding: 10px 15px;
+                min-width: 70px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            }
+
+            .text-shadow-glam {
+                text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            }
+
+            /* Balloons Animation */
+            .balloon {
+                position: absolute;
+                width: 60px;
+                height: 70px;
+                border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+                background-color: rgba(255, 255, 255, 0.1);
+                bottom: -80px;
+                z-index: 0;
+                animation: floatBalloon 10s infinite ease-in-out;
+            }
+
+            .balloon::before {
+                content: "";
+                position: absolute;
+                bottom: -10px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 2px;
+                height: 20px;
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            .b1 {
+                left: 10%;
+                background: rgba(255, 215, 0, 0.2);
+                animation-duration: 8s;
+                animation-delay: 0s;
                 width: 50px;
                 height: 60px;
             }
 
-            #greeting-text {
-                font-size: 0.8rem;
+            .b2 {
+                right: 15%;
+                background: rgba(0, 255, 255, 0.15);
+                animation-duration: 12s;
+                animation-delay: 2s;
+                width: 70px;
+                height: 85px;
             }
 
-            h3.fw-bold {
-                font-size: 1.5rem;
+            .b3 {
+                left: 50%;
+                background: rgba(255, 105, 180, 0.15);
+                animation-duration: 10s;
+                animation-delay: 5s;
             }
 
-            /* Responsive Podium */
-            .luxury-avatar,
+            @keyframes floatBalloon {
+                0% {
+                    transform: translateY(0) rotate(0deg);
+                    opacity: 0;
+                }
+
+                20% {
+                    opacity: 1;
+                }
+
+                100% {
+                    transform: translateY(-300px) rotate(20deg);
+                    opacity: 0;
+                }
+            }
+
+            /* === SLIDER LOGIC STYLES === */
+            #slide-thumb {
+                transition: transform 0.1s;
+            }
+
+            #slide-thumb:active {
+                cursor: grabbing !important;
+            }
+
+            .animate-enter {
+                animation: fadeInUp 0.5s ease-out forwards;
+            }
+
+            /* === EXISTING STYLES === */
+            /* === LUXURY LEADERBOARD STYLES (NEW) === */
+
+            /* 1. Card Container & Background */
+            .luxury-card {
+                background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
+                position: relative;
+                transition: all 0.4s ease;
+            }
+
+            .luxury-bg-glow {
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255, 223, 0, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+                animation: rotateGlow 20s linear infinite;
+                z-index: 0;
+                pointer-events: none;
+            }
+
+            .luxury-bg-pattern {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image: radial-gradient(#E1E1E1 1px, transparent 1px);
+                background-size: 20px 20px;
+                opacity: 0.3;
+                z-index: 0;
+            }
+
+            @keyframes rotateGlow {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .icon-box-luxury {
+                width: 50px;
+                height: 50px;
+                background: linear-gradient(135deg, #FFF8E1, #FFF3C4);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                box-shadow: 0 4px 10px rgba(255, 193, 7, 0.15);
+            }
+
+            .glass-badge {
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(0, 0, 0, 0.05);
+                padding: 8px 16px;
+                border-radius: 50px;
+                font-weight: 600;
+                font-size: 14px;
+                color: #444;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            }
+
+            /* 2. Podium Layout */
+            .podium-luxury-container {
+                min-height: 280px;
+                margin-bottom: -30px;
+                /* Overlap with block below */
+            }
+
+            .podium-step-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-end;
+                position: relative;
+                z-index: 2;
+            }
+
+            /* 3. Avatars & Glows */
+            .podium-avatar-wrapper {
+                position: relative;
+                margin-bottom: 15px;
+                transition: transform 0.3s ease;
+            }
+
+            .podium-avatar-wrapper:hover {
+                transform: translateY(-8px) scale(1.02);
+            }
+
+            .luxury-avatar {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 4px solid #fff;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            }
+
             .luxury-avatar-placeholder {
-                width: 60px;
-                height: 60px;
-                font-size: 20px;
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                border: 4px solid #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 28px;
+                font-weight: bold;
+                color: #fff;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+
+            /* Winner Specifics */
+            .main-winner {
+                z-index: 10;
             }
 
             .main-winner .luxury-avatar,
             .main-winner .luxury-avatar-placeholder {
-                width: 80px;
-                height: 80px;
+                width: 110px;
+                height: 110px;
+                border-width: 5px;
             }
 
             .crown-floating {
-                top: -45px;
+                position: absolute;
+                top: -55px;
+                left: 50%;
+                transform: translateX(-50%) rotate(-5deg);
+                animation: floatCrown 3s ease-in-out infinite;
+                z-index: 20;
+                filter: drop-shadow(0 5px 15px rgba(255, 215, 0, 0.4));
             }
 
-            .crown-floating img {
-                width: 40px;
+            @keyframes floatCrown {
+
+                0%,
+                100% {
+                    transform: translateX(-50%) translateY(0) rotate(-5deg);
+                }
+
+                50% {
+                    transform: translateX(-50%) translateY(-10px) rotate(0deg);
+                }
             }
 
+            /* Glow Effects */
+            .gold-glow::before {
+                content: '';
+                position: absolute;
+                inset: -10px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+                z-index: -1;
+                animation: pulseGlow 2s infinite;
+            }
+
+            /* Gradients */
+            .gold-gradient {
+                background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
+            }
+
+            .silver-gradient {
+                background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
+            }
+
+            .bronze-gradient {
+                background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);
+            }
+
+            /* Rank Circles */
+            .rank-circle {
+                position: absolute;
+                bottom: -5px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 800;
+                font-size: 14px;
+                color: white;
+                border: 2px solid white;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                z-index: 5;
+            }
+
+            .rank-circle.gold {
+                background: #FDB931;
+            }
+
+            .rank-circle.silver {
+                background: #A9A9A9;
+            }
+
+            .rank-circle.bronze {
+                background: #A0522D;
+            }
+
+            /* 4. Podium Blocks (The Steps) */
             .podium-block {
-                height: auto;
-                min-height: 80px;
+                width: 100%;
+                border-radius: 16px 16px 0 0;
+                padding: 20px 10px;
+                position: relative;
+                margin: 0 5px;
+                clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+                /* Tapered shape */
+                backdrop-filter: blur(5px);
             }
-        }
-    </style>
+
+            .gold-block {
+                height: 180px;
+                /* Sedikit lebih tinggi untuk muat info tambahan */
+                background: linear-gradient(180deg, rgba(255, 236, 179, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+                border-top: 4px solid #FFD700;
+                box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);
+            }
+
+            .silver-block {
+                height: 140px;
+                background: linear-gradient(180deg, rgba(245, 245, 245, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+                border-top: 4px solid #C0C0C0;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            }
+
+            .bronze-block {
+                height: 120px;
+                background: linear-gradient(180deg, rgba(239, 219, 207, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+                border-top: 4px solid #CD7F32;
+                box-shadow: 0 10px 20px rgba(160, 82, 45, 0.05);
+            }
+
+            .podium-content {
+                transform: translateY(5px);
+            }
+
+            .stat-pill {
+                display: inline-block;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 700;
+                background: #fff;
+                color: #555;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            }
+
+            .stat-pill.gold {
+                background: linear-gradient(45deg, #FFD700, #FDB931);
+                color: #fff;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+                box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+            }
+
+            /* 5. Runner Up List */
+            .runner-up-container {
+                background: #fff;
+                border-radius: 16px;
+                padding: 10px;
+                /* border: 1px solid #f0f0f0; */
+            }
+
+            .runner-up-item {
+                padding: 12px 16px;
+                border-radius: 12px;
+                background: #fff;
+                border: 1px solid #f1f3f5;
+                margin-bottom: 10px;
+                transition: all 0.2s ease;
+            }
+
+            .runner-up-item:hover {
+                border-color: #FFD700;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+                transform: translateX(5px);
+            }
+
+            .rank-number {
+                font-family: 'Consolas', monospace;
+                font-weight: 900;
+                font-size: 18px;
+                color: #d1d1d1;
+                width: 30px;
+            }
+
+            .runner-avatar {
+                width: 40px;
+                height: 40px;
+                object-fit: cover;
+            }
+
+            .runner-avatar-placeholder {
+                width: 40px;
+                height: 40px;
+                background: #eee;
+                color: #888;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+            }
+
+            /* 6. Sparkles */
+            .sparkle {
+                position: absolute;
+                background: white;
+                border-radius: 50%;
+                animation: twinkle 2s infinite;
+                z-index: 20;
+                box-shadow: 0 0 5px #fff, 0 0 10px #FFD700;
+            }
+
+            .s1 {
+                width: 4px;
+                height: 4px;
+                top: 0;
+                left: 10%;
+                animation-delay: 0.5s;
+            }
+
+            .s2 {
+                width: 6px;
+                height: 6px;
+                top: 10%;
+                right: 0;
+                animation-delay: 1s;
+            }
+
+            .s3 {
+                width: 3px;
+                height: 3px;
+                bottom: 10px;
+                left: -5px;
+                animation-delay: 1.5s;
+            }
+
+            @keyframes twinkle {
+
+                0%,
+                100% {
+                    opacity: 0;
+                    transform: scale(0.5);
+                }
+
+                50% {
+                    opacity: 1;
+                    transform: scale(1.2);
+                }
+            }
+
+            /* Small utilities */
+            .small-font {
+                font-size: 11px;
+            }
+
+
+            /* === EXISTING STYLES === */
+
+            /* 1. Entrance Animation (Slide Up Fade) */
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translate3d(0, 40px, 0);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translate3d(0, 0, 0);
+                }
+            }
+
+            .animate-enter {
+                opacity: 0;
+                /* Awal tersembunyi */
+                animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            }
+
+            /* 2. Pulse Animation for Status Icon */
+            @keyframes pulse {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+                }
+
+                70% {
+                    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+                }
+
+                100% {
+                    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+                }
+            }
+
+            .pulse-animation {
+                animation: pulse 2s infinite;
+            }
+
+            .pulse-text {
+                animation: pulseText 2s infinite;
+            }
+
+            @keyframes pulseText {
+                0% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+
+                50% {
+                    transform: scale(1.1);
+                    opacity: 0.8;
+                }
+
+                100% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+
+            /* 3. Live Indicator Dot */
+            .live-indicator {
+                width: 10px;
+                height: 10px;
+                background-color: #10b981;
+                border-radius: 50%;
+                display: inline-block;
+                box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+                animation: pulse 2s infinite;
+            }
+
+            /* 4. Hover Effects */
+            .hover-float {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            .hover-float:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+            }
+
+            .hover-scale {
+                transition: transform 0.2s ease;
+            }
+
+            .hover-scale:hover {
+                transform: scale(1.02);
+            }
+
+            .scale-on-hover:hover {
+                transform: scale(1.1);
+            }
+
+            .hover-shadow-lg {
+                transition: box-shadow 0.3s ease;
+            }
+
+            .hover-shadow-lg:hover {
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+            }
+
+            /* 5. Glassmorphism for Modal */
+            .glass-effect {
+                background: rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+            }
+
+            /* 6. Card Bank Styles */
+            .card-bank {
+                position: relative;
+                min-height: 200px;
+                border-radius: 16px;
+                overflow: hidden;
+                border: none;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            }
+
+            .card-bank .card-body {
+                position: relative;
+                z-index: 2;
+                padding: 24px;
+                color: white;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                flex-grow: 1;
+                gap: 15px;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .card-bank-chip {
+                width: 40px;
+                height: 30px;
+                background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+                border-radius: 6px;
+                position: relative;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .card-bank-icon {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                font-size: 48px;
+                opacity: 0.2;
+            }
+
+            .card-bank-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                opacity: 0.9;
+                margin-bottom: 8px;
+                font-weight: 600;
+            }
+
+            .card-bank-value {
+                font-family: 'Consolas', 'Courier New', monospace;
+                font-size: 36px;
+                font-weight: 700;
+                margin-bottom: 8px;
+                line-height: 1;
+            }
+
+            .card-bank-desc {
+                font-size: 13px;
+                opacity: 0.85;
+                margin-bottom: 0;
+            }
+
+            .card-bank-pattern {
+                position: absolute;
+                bottom: -50px;
+                right: -50px;
+                width: 200px;
+                height: 200px;
+                background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+                border-radius: 50%;
+                z-index: 1;
+            }
+
+            /* Gradients */
+            .gradient-purple {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+
+            .gradient-blue {
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            }
+
+            .gradient-green {
+                background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            }
+
+            .gradient-orange {
+                background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            }
+
+            .gradient-red {
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            }
+
+            .gradient-dark {
+                background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+            }
+
+            .card-id {
+                position: relative;
+                border-radius: 16px;
+                overflow: hidden;
+                border: none;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+                color: white;
+                min-height: 220px;
+                display: flex;
+                flex-direction: column;
+                font-family: 'Roboto', sans-serif;
+            }
+
+            .card-id .card-body {
+                position: relative;
+                z-index: 2;
+                padding: 24px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                flex-grow: 1;
+                gap: 15px;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .card-id-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .card-id-photo-wrapper {
+                position: relative;
+                z-index: 5;
+            }
+
+            .id-card-img {
+                width: 60px;
+                height: 70px;
+                object-fit: cover;
+                border-radius: 8px;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+                cursor: pointer;
+                transition: transform 0.2s ease-in-out;
+            }
+
+            .id-card-img:hover {
+                transform: scale(1.1);
+                border-color: #fff;
+            }
+
+            .id-card-img-placeholder {
+                width: 60px;
+                height: 70px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 8px;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 24px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            }
+
+            .card-id-logo {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                font-size: 10px;
+                font-weight: 700;
+                line-height: 1;
+            }
+
+            .card-id-logo i {
+                font-size: 38px;
+                margin-bottom: 4px;
+                color: #ffed4e;
+            }
+
+            .card-id-details {
+                flex-grow: 1;
+            }
+
+            .card-id-label {
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                opacity: 0.7;
+                margin-bottom: 4px;
+                font-weight: 500;
+            }
+
+            .card-id-name {
+                font-size: 24px;
+                font-weight: 700;
+                margin-bottom: 12px;
+                line-height: 1.2;
+                font-family: 'Consolas', 'Courier New', monospace;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            .card-id-division {
+                font-size: 16px;
+                font-weight: 500;
+                opacity: 0.9;
+                font-family: 'Consolas', 'Courier New', monospace;
+            }
+
+            .card-id-footer {
+                margin-top: auto;
+            }
+
+            .card-action {
+                border-radius: 16px;
+                border: none;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                transition: all 0.3s ease;
+                height: 100%;
+            }
+
+            .card-status {
+                border-radius: 16px;
+                border: none;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                height: 100%;
+            }
+
+            .status-card {
+                padding: 24px;
+                border-radius: 12px;
+                border: 2px solid;
+                background: #f8fafc;
+                transition: all 0.3s ease;
+            }
+
+            .status-success {
+                border-color: #10b981;
+                background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            }
+
+            .status-warning {
+                border-color: #f59e0b;
+                background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            }
+
+            .status-info {
+                border-color: #3b82f6;
+                background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            }
+
+            .status-icon {
+                width: 56px;
+                height: 56px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 20px;
+                font-size: 28px;
+                flex-shrink: 0;
+            }
+
+            .status-success .status-icon {
+                background: #10b981;
+                color: white;
+            }
+
+            .status-warning .status-icon {
+                background: #f59e0b;
+                color: white;
+            }
+
+            .status-info .status-icon {
+                background: #3b82f6;
+                color: white;
+            }
+
+            .badge {
+                border-radius: 8px;
+                font-weight: 600;
+                padding: 6px 12px;
+            }
+
+            .btn {
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            }
+
+            .btn:active {
+                transform: scale(0.95);
+            }
+
+            .btn-dark {
+                background: #1a1a1a;
+                border: none;
+                border-radius: 12px;
+                font-weight: 600;
+                padding: 12px 28px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            .btn-dark:hover {
+                background: #000;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            }
+
+            .btn-outline-dark {
+                border: 2px solid #1a1a1a;
+                color: #1a1a1a;
+                border-radius: 12px;
+                font-weight: 600;
+                padding: 12px 28px;
+            }
+
+            .btn-outline-dark:hover {
+                background: #1a1a1a;
+                color: white;
+                transform: translateY(-2px);
+            }
+
+            /* ======================================================================= */
+            /* LUXURY HALL OF FAME STYLES (MODERN VERSION)                             */
+            /* ======================================================================= */
+
+            .hall-of-fame-card {
+                background: linear-gradient(145deg, #0f0f0f 0%, #1a1a1a 100%) !important;
+                border-radius: 24px !important;
+                border: 1px solid rgba(255, 215, 0, 0.15) !important;
+                position: relative;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+            }
+
+            /* Efek Cahaya Spotlight di Background */
+            .spotlight {
+                position: absolute;
+                top: -20%;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 100%;
+                height: 140%;
+                background: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.08) 0%, transparent 60%);
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            .winner-memory-card {
+                background: rgba(255, 255, 255, 0.03);
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(10px);
+                transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+                padding: 1.5rem !important;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .winner-memory-card:hover {
+                background: rgba(255, 255, 255, 0.07);
+                transform: translateY(-10px) scale(1.02);
+                border-color: rgba(255, 215, 0, 0.4);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            }
+
+            /* Efek Grayscale-Nostalgia yang Halus */
+            .grayscale-memory {
+                filter: grayscale(40%) contrast(1.1);
+                /* Tidak terlalu gelap agar tetap modern */
+                transition: all 0.5s ease;
+                border: 3px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .winner-memory-card:hover .grayscale-memory {
+                filter: grayscale(0%) contrast(1);
+                border-color: #ffd700;
+                transform: rotate(3deg);
+            }
+
+            /* Rank Badge Modern */
+            .rank-badge-mini {
+                position: absolute;
+                top: -8px;
+                right: -8px;
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                /* Bentuk kotak membulat lebih modern dari lingkaran */
+                font-size: 13px;
+                font-weight: 900;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10;
+                transform: rotate(12deg);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+                color: #000;
+            }
+
+            .rank-badge-mini.gold {
+                background: linear-gradient(135deg, #ffd700, #b8860b);
+            }
+
+            .rank-badge-mini.silver {
+                background: linear-gradient(135deg, #e0e0e0, #757575);
+            }
+
+            .rank-badge-mini.bronze {
+                background: linear-gradient(135deg, #cd7f32, #8b4513);
+            }
+
+            /* Tipografi Teks */
+            .winner-memory-card h6 {
+                font-size: 16px;
+                letter-spacing: 0.5px;
+                margin-top: 10px;
+                color: #ffffff;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            }
+
+            .winner-memory-card .text-warning {
+                font-size: 11px !important;
+                font-weight: 600;
+                text-transform: uppercase;
+                opacity: 0.8;
+            }
+
+            /* Badge Kehadiran (Pill) */
+            .attendance-pill-custom {
+                background: rgba(255, 215, 0, 0.1);
+                color: #ffd700;
+                border: 1px solid rgba(255, 215, 0, 0.2);
+                padding: 5px 15px;
+                border-radius: 50px;
+                font-size: 12px;
+                font-weight: 700;
+                margin-top: 15px;
+                display: inline-block;
+            }
+
+            .winner-memory-card:hover .attendance-pill-custom {
+                background: #ffd700;
+                color: #000;
+            }
+
+            @media (max-width: 768px) {
+                .card-bank-value {
+                    font-size: 28px;
+                }
+
+                .card-bank {
+                    min-height: 180px;
+                    margin-bottom: 20px;
+                }
+
+                .card-id {
+                    min-height: 200px;
+                }
+
+                .card-id-name {
+                    font-size: 20px;
+                }
+
+                .id-card-img,
+                .id-card-img-placeholder {
+                    width: 50px;
+                    height: 60px;
+                }
+
+                #greeting-text {
+                    font-size: 0.8rem;
+                }
+
+                h3.fw-bold {
+                    font-size: 1.5rem;
+                }
+
+                /* Responsive Podium */
+                .luxury-avatar,
+                .luxury-avatar-placeholder {
+                    width: 60px;
+                    height: 60px;
+                    font-size: 20px;
+                }
+
+                .main-winner .luxury-avatar,
+                .main-winner .luxury-avatar-placeholder {
+                    width: 80px;
+                    height: 80px;
+                }
+
+                .crown-floating {
+                    top: -45px;
+                }
+
+                .crown-floating img {
+                    width: 40px;
+                }
+
+                .podium-block {
+                    height: auto;
+                    min-height: 80px;
+                }
+            }
+        </style>
 @endpush
 
 @push('scripts')
@@ -3212,8 +3224,8 @@
                     });
                 @endif
 
-                            // --- SCRIPT CHART ---
-                            const ctx = document.getElementById('attendancePieChart').getContext('2d');
+                                // --- SCRIPT CHART ---
+                                const ctx = document.getElementById('attendancePieChart').getContext('2d');
             Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
 
             @if (auth()->user()->role == 'admin')
@@ -3223,7 +3235,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                            {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                                                    {{ $stats['early'] }}, {{ $stats['pending'] }},
                                 {{ $stats['absent'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
@@ -3309,7 +3321,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                            {{ $stats['early'] }}, {{ $stats['pending'] }}
+                                                                    {{ $stats['early'] }}, {{ $stats['pending'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
                             borderWidth: 2,
@@ -3328,8 +3340,8 @@
                 });
             @endif
 
-                            // --- MODAL FOTO PROFIL ---
-                            var profilePhotoModal = document.getElementById('profilePhotoModal');
+                                // --- MODAL FOTO PROFIL ---
+                                var profilePhotoModal = document.getElementById('profilePhotoModal');
             if (profilePhotoModal) {
                 profilePhotoModal.addEventListener('show.bs.modal', function (event) {
                     var button = event.relatedTarget;
