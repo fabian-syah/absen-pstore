@@ -8,14 +8,25 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\WithDrawings;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 
-class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping, WithStyles
+class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithDrawings, WithEvents, WithColumnWidths
 {
     protected $branchId;
+    private $inventoryData;
 
     public function __construct($branchId)
     {
         $this->branchId = $branchId;
+
+        // Cache data
+        $this->inventoryData = Inventory::whereHas('user', function ($q) {
+            $q->where('branch_id', $this->branchId);
+        })->with(['user', 'user.division', 'user.branch'])->latest()->get();
     }
 
     /**
@@ -23,16 +34,15 @@ class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping
      */
     public function collection()
     {
-        // Ambil inventaris yang usernya ada di branch ini
-        return Inventory::whereHas('user', function ($q) {
-            $q->where('branch_id', $this->branchId);
-        })->with(['user', 'user.division', 'user.branch'])->latest()->get();
+        return $this->inventoryData;
     }
 
     public function headings(): array
     {
         return [
             'No',
+            'Foto Barang',     // Kolom B
+            'Bukti Serah Terima', // Kolom C
             'Nama Barang',
             'Serial Number',
             'Kategori',
@@ -51,6 +61,8 @@ class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping
 
         return [
             $no,
+            '', // Placeholder B
+            '', // Placeholder C
             $inventory->item_name,
             $inventory->serial_number ?? '-',
             $inventory->category,
@@ -62,11 +74,76 @@ class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping
         ];
     }
 
+    public function drawings()
+    {
+        $drawings = [];
+        $row = 2; // Mulai dari baris ke-2
+
+        foreach ($this->inventoryData as $item) {
+            // 1. Gambar Barang (Kolom B)
+            if ($item->item_photo_path) {
+                $path = public_path('storage/' . $item->item_photo_path);
+                if (file_exists($path)) {
+                    $drawing = new Drawing();
+                    $drawing->setName('Foto Barang');
+                    $drawing->setDescription('Foto Barang');
+                    $drawing->setPath($path);
+                    $drawing->setHeight(50);
+                    $drawing->setCoordinates('B' . $row);
+                    $drawing->setOffsetX(5);
+                    $drawing->setOffsetY(5);
+                    $drawings[] = $drawing;
+                }
+            }
+
+            // 2. Gambar User (Kolom C)
+            if ($item->user_item_photo_path) {
+                $path = public_path('storage/' . $item->user_item_photo_path);
+                if (file_exists($path)) {
+                    $drawing = new Drawing();
+                    $drawing->setName('Foto User');
+                    $drawing->setDescription('Foto User');
+                    $drawing->setPath($path);
+                    $drawing->setHeight(50);
+                    $drawing->setCoordinates('C' . $row);
+                    $drawing->setOffsetX(5);
+                    $drawing->setOffsetY(5);
+                    $drawings[] = $drawing;
+                }
+            }
+
+            $row++;
+        }
+
+        return $drawings;
+    }
+
     public function styles(Worksheet $sheet)
     {
         return [
-            // Style the first row as bold text
             1 => ['font' => ['bold' => true]],
+        ];
+    }
+
+    public function columnWidths(): array
+    {
+        return [
+            'B' => 15,
+            'C' => 15,
+        ];
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $lastRow = $event->sheet->getHighestRow();
+                for ($i = 2; $i <= $lastRow; $i++) {
+                    $event->sheet->getDelegate()->getRowDimension($i)->setRowHeight(60);
+                }
+                $event->sheet->getDelegate()->getStyle('A1:K' . $lastRow)
+                    ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            },
         ];
     }
 }
