@@ -389,7 +389,7 @@ class AuditController extends Controller
         // 1. Validasi Input
         $request->validate([
             'presence_status' => 'required|string',
-            'audit_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
+            'audit_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:8192', // Max 2MB
             'audit_note' => 'nullable|string',
         ]);
 
@@ -553,7 +553,7 @@ class AuditController extends Controller
             'check_in_time' => 'required',           // Jam masuk (H:i)
             'presence_status' => 'required|string',
             'audit_note' => 'nullable|string',
-            'audit_photo' => 'nullable|image|max:2048'
+            'audit_photo' => 'nullable|image|max:8192'
         ]);
 
         // 2. Ambil User & Timezone Cabangnya
