@@ -393,7 +393,7 @@
         .avatar-modern {
             width: 42px;
             height: 42px;
-            border-radius: 50%;
+            border-radius: 12px;
             background: var(--primary-gradient);
             color: white;
             display: flex;
@@ -408,6 +408,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 12px;
         }
         .avatar-modern.avatar-sm {
             width: 36px;
