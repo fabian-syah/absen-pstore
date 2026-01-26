@@ -1349,8 +1349,8 @@
 @push('styles')
     <style>
         /* =================================================================
-               CRITICAL FIX: ENSURE TEXT VISIBILITY ON ALL BACKGROUNDS
-               ================================================================= */
+                   CRITICAL FIX: ENSURE TEXT VISIBILITY ON ALL BACKGROUNDS
+                   ================================================================= */
 
         /* Override for all text elements to ensure visibility */
         .card-title,
@@ -2965,375 +2965,375 @@
             setInterval(updateRoyalCountdown, 1000);
             updateRoyalCountdown(); // Run immediately
         @endif
-        {{ --[BARU] SCRIPT PREVIEW GALLERY-- }}
+        {{-- [BARU] SCRIPT PREVIEW GALLERY --}}
 
-        function previewGalleryImage(src, title, date) {
-            const modal = new bootstrap.Modal(document.getElementById('galleryPreviewModal'));
-            document.getElementById('galleryPreviewImg').src = src;
-            document.getElementById('galleryPreviewTitle').innerText = title;
-            document.getElementById('galleryPreviewDate').innerText = date;
-            modal.show();
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-
-            // --- [BARU] SLIDER LOGIC ---
-            const track = document.getElementById('slide-track');
-            const thumb = document.getElementById('slide-thumb');
-            const sliderView = document.getElementById('slider-view');
-            const cameraView = document.getElementById('camera-view');
-            const actionsContainer = document.getElementById('cross-day-actions'); // Container tombol2
-
-            if (track && thumb) {
-                let isDragging = false;
-                let startX;
-                let trackWidth = track.clientWidth;
-                let thumbWidth = thumb.clientWidth;
-                let maxMove = trackWidth - thumbWidth - 8; // 8px padding adjustment
-
-                // Init size update
-                window.addEventListener('resize', () => {
-                    trackWidth = track.clientWidth;
-                    maxMove = trackWidth - thumbWidth - 8;
-                });
-
-                // Start
-                const startDrag = (e) => {
-                    isDragging = true;
-                    startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
-                    thumb.style.transition = 'none';
-                };
-
-                // Move
-                const drag = (e) => {
-                    if (!isDragging) return;
-
-                    const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
-                    const deltaX = clientX - startX;
-
-                    // Limit 0 to maxMove
-                    let moveX = Math.max(0, Math.min(deltaX, maxMove));
-                    thumb.style.transform = `translateX(${moveX}px)`;
-
-                    // Fade text based on percentage
-                    const percentage = moveX / maxMove;
-                    const text = track.querySelector('span');
-                    if (text) text.style.opacity = 1 - percentage;
-                };
-
-                // End
-                const endDrag = () => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    thumb.style.transition = 'transform 0.2s ease-out';
-
-                    const style = window.getComputedStyle(thumb);
-                    const matrix = new DOMMatrix(style.transform);
-                    const currentTranslateX = matrix.m41;
-
-                    if (currentTranslateX > (maxMove * 0.8)) {
-                        // SUCCESS
-                        thumb.style.transform = `translateX(${maxMove}px)`;
-                        finishSlide();
-                    } else {
-                        // RESET
-                        thumb.style.transform = `translateX(0px)`;
-                        const text = track.querySelector('span');
-                        if (text) text.style.opacity = 0.75;
-                    }
-                };
-
-                // Add Listeners
-                thumb.addEventListener('mousedown', startDrag);
-                thumb.addEventListener('touchstart', startDrag);
-
-                document.addEventListener('mousemove', drag);
-                document.addEventListener('touchmove', drag);
-
-                document.addEventListener('mouseup', endDrag);
-                document.addEventListener('touchend', endDrag);
-
-                function finishSlide() {
-                    // 1. UI Changes (Visual Feedback)
-                    thumb.innerHTML = '<i class="mdi mdi-loading mdi-spin text-success fs-4"></i>'; // Loading icon
-                    track.style.backgroundColor = '#d1fae5';
-
-                    // 2. AJAX Request to Confirm Overtime
-                    const attendanceId = "{{ $myAttendanceToday->id ?? 0 }}";
-
-                    fetch(`/attendance/${attendanceId}/confirm-overtime`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            // Success
-                            thumb.innerHTML = '<i class="mdi mdi-check text-success fs-4"></i>';
-
-                            setTimeout(() => {
-                                // Sembunyikan wrapper slider & tombol skip
-                                const confirmationWrapper = document.getElementById(
-                                    'confirmation-wrapper');
-                                if (confirmationWrapper) confirmationWrapper.classList.add('d-none');
-
-                                // Munculkan kamera
-                                if (cameraView) cameraView.classList.remove('d-none');
-                            }, 500);
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Gagal mengupdate status lembur. Silahkan refresh halaman.');
-                        });
-                }
+            function previewGalleryImage(src, title, date) {
+                const modal = new bootstrap.Modal(document.getElementById('galleryPreviewModal'));
+                document.getElementById('galleryPreviewImg').src = src;
+                document.getElementById('galleryPreviewTitle').innerText = title;
+                document.getElementById('galleryPreviewDate').innerText = date;
+                modal.show();
             }
 
-            // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
-            function updateClock() {
-                // Gunakan Timezone yang dikirim dari Controller
-                const timeZone = "{{ $current_timezone }}";
+            document.addEventListener('DOMContentLoaded', function () {
 
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('en-US', {
-                    timeZone: timeZone, // Kunci utama: Pakai timezone cabang
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+                // --- [BARU] SLIDER LOGIC ---
+                const track = document.getElementById('slide-track');
+                const thumb = document.getElementById('slide-thumb');
+                const sliderView = document.getElementById('slider-view');
+                const cameraView = document.getElementById('camera-view');
+                const actionsContainer = document.getElementById('cross-day-actions'); // Container tombol2
 
-                const clockElement = document.getElementById('realtime-clock');
-                if (clockElement) clockElement.innerText = timeString;
+                if (track && thumb) {
+                    let isDragging = false;
+                    let startX;
+                    let trackWidth = track.clientWidth;
+                    let thumbWidth = thumb.clientWidth;
+                    let maxMove = trackWidth - thumbWidth - 8; // 8px padding adjustment
 
-                // Greeting logic (Sesuai jam lokal cabang)
-                // Kita perlu ambil jam (0-23) dari string waktu lokal
-                const localHour = parseInt(timeString.split(':')[0]);
-                const greetingElement = document.getElementById('greeting-text');
-
-                let greeting = 'Selamat Datang,';
-                if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
-                else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
-                else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
-                else greeting = 'Selamat Malam,';
-
-                if (greetingElement) greetingElement.innerText = greeting;
-            }
-
-            setInterval(updateClock, 1000);
-            updateClock(); // Run immediately
-
-            // 2. [BARU] COUNT UP ANIMATION (Angka naik dari 0)
-            const counters = document.querySelectorAll('.count-up');
-            counters.forEach(counter => {
-                const target = +counter.getAttribute('data-target');
-                const duration = 2000; // 2 detik
-                const increment = target / (duration / 16); // 60fps
-
-                let current = 0;
-                const updateCounter = () => {
-                    current += increment;
-                    if (current < target) {
-                        counter.innerText = Math.ceil(current);
-                        requestAnimationFrame(updateCounter);
-                    } else {
-                        counter.innerText = target;
-                    }
-                };
-                updateCounter();
-            });
-
-            // --- [BARU] BIRTHDAY COUNTDOWN SCRIPT ---
-            @if (isset($birthdayData) && !$birthdayData['is_today'])
-                const targetDate = new Date("{{ $birthdayData['date'] }}T00:00:00");
-
-                function updateCountdown() {
-                    const now = new Date();
-                    const diff = targetDate - now;
-
-                    if (diff <= 0) {
-                        // Jika waktu habis (masuk jam 00:00 ultah), reload biar tampilan berubah jadi HARI H
-                        location.reload();
-                        return;
-                    }
-
-                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-                    // Update DOM
-                    if (document.getElementById('cd-days')) document.getElementById('cd-days').innerText = days;
-                    if (document.getElementById('cd-hours')) document.getElementById('cd-hours').innerText = hours
-                        .toString().padStart(2, '0');
-                    if (document.getElementById('cd-minutes')) document.getElementById('cd-minutes').innerText =
-                        minutes.toString().padStart(2, '0');
-                    if (document.getElementById('cd-seconds')) document.getElementById('cd-seconds').innerText =
-                        seconds.toString().padStart(2, '0');
-                }
-
-                setInterval(updateCountdown, 1000);
-                updateCountdown();
-            @endif
-
-                // --- SCRIPT QR CODE ---
-                @if (Auth::user()->qr_code_value)
-                    const qrValue = "{{ Auth::user()->qr_code_value }}";
-
-                    new QRCode(document.getElementById("dashboard-qrcode"), {
-                        text: qrValue,
-                        width: 64,
-                        height: 64,
-                        colorDark: "#000000",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.H
+                    // Init size update
+                    window.addEventListener('resize', () => {
+                        trackWidth = track.clientWidth;
+                        maxMove = trackWidth - thumbWidth - 8;
                     });
 
-                    var qrModal = document.getElementById('qrModal');
-                    qrModal.addEventListener('show.bs.modal', function (event) {
-                        var qrContainer = document.getElementById('qrcode-modal-display');
-                        qrContainer.innerHTML = '';
-                        new QRCode(qrContainer, {
+                    // Start
+                    const startDrag = (e) => {
+                        isDragging = true;
+                        startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
+                        thumb.style.transition = 'none';
+                    };
+
+                    // Move
+                    const drag = (e) => {
+                        if (!isDragging) return;
+
+                        const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
+                        const deltaX = clientX - startX;
+
+                        // Limit 0 to maxMove
+                        let moveX = Math.max(0, Math.min(deltaX, maxMove));
+                        thumb.style.transform = `translateX(${moveX}px)`;
+
+                        // Fade text based on percentage
+                        const percentage = moveX / maxMove;
+                        const text = track.querySelector('span');
+                        if (text) text.style.opacity = 1 - percentage;
+                    };
+
+                    // End
+                    const endDrag = () => {
+                        if (!isDragging) return;
+                        isDragging = false;
+                        thumb.style.transition = 'transform 0.2s ease-out';
+
+                        const style = window.getComputedStyle(thumb);
+                        const matrix = new DOMMatrix(style.transform);
+                        const currentTranslateX = matrix.m41;
+
+                        if (currentTranslateX > (maxMove * 0.8)) {
+                            // SUCCESS
+                            thumb.style.transform = `translateX(${maxMove}px)`;
+                            finishSlide();
+                        } else {
+                            // RESET
+                            thumb.style.transform = `translateX(0px)`;
+                            const text = track.querySelector('span');
+                            if (text) text.style.opacity = 0.75;
+                        }
+                    };
+
+                    // Add Listeners
+                    thumb.addEventListener('mousedown', startDrag);
+                    thumb.addEventListener('touchstart', startDrag);
+
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('touchmove', drag);
+
+                    document.addEventListener('mouseup', endDrag);
+                    document.addEventListener('touchend', endDrag);
+
+                    function finishSlide() {
+                        // 1. UI Changes (Visual Feedback)
+                        thumb.innerHTML = '<i class="mdi mdi-loading mdi-spin text-success fs-4"></i>'; // Loading icon
+                        track.style.backgroundColor = '#d1fae5';
+
+                        // 2. AJAX Request to Confirm Overtime
+                        const attendanceId = "{{ $myAttendanceToday->id ?? 0 }}";
+
+                        fetch(`/attendance/${attendanceId}/confirm-overtime`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                // Success
+                                thumb.innerHTML = '<i class="mdi mdi-check text-success fs-4"></i>';
+
+                                setTimeout(() => {
+                                    // Sembunyikan wrapper slider & tombol skip
+                                    const confirmationWrapper = document.getElementById(
+                                        'confirmation-wrapper');
+                                    if (confirmationWrapper) confirmationWrapper.classList.add('d-none');
+
+                                    // Munculkan kamera
+                                    if (cameraView) cameraView.classList.remove('d-none');
+                                }, 500);
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('Gagal mengupdate status lembur. Silahkan refresh halaman.');
+                            });
+                    }
+                }
+
+                // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
+                function updateClock() {
+                    // Gunakan Timezone yang dikirim dari Controller
+                    const timeZone = "{{ $current_timezone }}";
+
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('en-US', {
+                        timeZone: timeZone, // Kunci utama: Pakai timezone cabang
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+
+                    const clockElement = document.getElementById('realtime-clock');
+                    if (clockElement) clockElement.innerText = timeString;
+
+                    // Greeting logic (Sesuai jam lokal cabang)
+                    // Kita perlu ambil jam (0-23) dari string waktu lokal
+                    const localHour = parseInt(timeString.split(':')[0]);
+                    const greetingElement = document.getElementById('greeting-text');
+
+                    let greeting = 'Selamat Datang,';
+                    if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
+                    else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
+                    else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
+                    else greeting = 'Selamat Malam,';
+
+                    if (greetingElement) greetingElement.innerText = greeting;
+                }
+
+                setInterval(updateClock, 1000);
+                updateClock(); // Run immediately
+
+                // 2. [BARU] COUNT UP ANIMATION (Angka naik dari 0)
+                const counters = document.querySelectorAll('.count-up');
+                counters.forEach(counter => {
+                    const target = +counter.getAttribute('data-target');
+                    const duration = 2000; // 2 detik
+                    const increment = target / (duration / 16); // 60fps
+
+                    let current = 0;
+                    const updateCounter = () => {
+                        current += increment;
+                        if (current < target) {
+                            counter.innerText = Math.ceil(current);
+                            requestAnimationFrame(updateCounter);
+                        } else {
+                            counter.innerText = target;
+                        }
+                    };
+                    updateCounter();
+                });
+
+                // --- [BARU] BIRTHDAY COUNTDOWN SCRIPT ---
+                @if (isset($birthdayData) && !$birthdayData['is_today'])
+                    const targetDate = new Date("{{ $birthdayData['date'] }}T00:00:00");
+
+                    function updateCountdown() {
+                        const now = new Date();
+                        const diff = targetDate - now;
+
+                        if (diff <= 0) {
+                            // Jika waktu habis (masuk jam 00:00 ultah), reload biar tampilan berubah jadi HARI H
+                            location.reload();
+                            return;
+                        }
+
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                        // Update DOM
+                        if (document.getElementById('cd-days')) document.getElementById('cd-days').innerText = days;
+                        if (document.getElementById('cd-hours')) document.getElementById('cd-hours').innerText = hours
+                            .toString().padStart(2, '0');
+                        if (document.getElementById('cd-minutes')) document.getElementById('cd-minutes').innerText =
+                            minutes.toString().padStart(2, '0');
+                        if (document.getElementById('cd-seconds')) document.getElementById('cd-seconds').innerText =
+                            seconds.toString().padStart(2, '0');
+                    }
+
+                    setInterval(updateCountdown, 1000);
+                    updateCountdown();
+                @endif
+
+                    // --- SCRIPT QR CODE ---
+                    @if (Auth::user()->qr_code_value)
+                        const qrValue = "{{ Auth::user()->qr_code_value }}";
+
+                        new QRCode(document.getElementById("dashboard-qrcode"), {
                             text: qrValue,
-                            width: 256,
-                            height: 256,
+                            width: 64,
+                            height: 64,
+                            colorDark: "#000000",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.H
                         });
+
+                        var qrModal = document.getElementById('qrModal');
+                        qrModal.addEventListener('show.bs.modal', function (event) {
+                            var qrContainer = document.getElementById('qrcode-modal-display');
+                            qrContainer.innerHTML = '';
+                            new QRCode(qrContainer, {
+                                text: qrValue,
+                                width: 256,
+                                height: 256,
+                            });
+                        });
+                    @endif
+
+                    // --- SCRIPT CHART ---
+                    const ctx = document.getElementById('attendancePieChart').getContext('2d');
+                Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+
+                @if (auth()->user()->role == 'admin')
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
+                            datasets: [{
+                                data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                            {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                    {{ $stats['absent'] }}
+                                ],
+                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
+                                    '#8c94a3'
+                                ],
+                                borderWidth: 0,
+                                hoverOffset: 10 // Efek hover keluar
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: {
+                                animateScale: true,
+                                animateRotate: true
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        usePointStyle: true,
+                                        padding: 20
+                                    }
+                                }
+                            },
+                            cutout: '75%'
+                        }
+                    });
+                @elseif (auth()->user()->role == 'audit')
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Terverifikasi', 'Pending', 'Terlambat'],
+                            datasets: [{
+                                data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
+                                    {{ $stats['late'] }}
+                                ],
+                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
+                                borderWidth: 0,
+                                hoverOffset: 10
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '70%',
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                @elseif (auth()->user()->role == 'security')
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Scan Masuk', 'Scan Pulang'],
+                            datasets: [{
+                                data: [{{ $stats['check_in_scans'] }},
+                                    {{ $stats['check_out_scans'] }}
+                                ],
+                                backgroundColor: ['#00d25b', '#0090e7'],
+                                borderWidth: 0,
+                                hoverOffset: 10
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '60%',
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                @else
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
+                            datasets: [{
+                                data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                            {{ $stats['early'] }}, {{ $stats['pending'] }}
+                                ],
+                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
                     });
                 @endif
 
-                // --- SCRIPT CHART ---
-                const ctx = document.getElementById('attendancePieChart').getContext('2d');
-            Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+                    // --- MODAL FOTO PROFIL ---
+                    var profilePhotoModal = document.getElementById('profilePhotoModal');
+                if (profilePhotoModal) {
+                    profilePhotoModal.addEventListener('show.bs.modal', function (event) {
+                        var button = event.relatedTarget;
+                        var src = button.getAttribute('data-src');
+                        var modalImg = document.getElementById('profileModalImageSrc');
+                        modalImg.src = src;
+                    });
+                }
+            });
 
-            @if (auth()->user()->role == 'admin')
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
-                        datasets: [{
-                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                        {{ $stats['early'] }}, {{ $stats['pending'] }},
-                                {{ $stats['absent'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
-                                '#8c94a3'
-                            ],
-                            borderWidth: 0,
-                            hoverOffset: 10 // Efek hover keluar
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: {
-                            animateScale: true,
-                            animateRotate: true
-                        },
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    usePointStyle: true,
-                                    padding: 20
-                                }
-                            }
-                        },
-                        cutout: '75%'
-                    }
-                });
-            @elseif (auth()->user()->role == 'audit')
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Terverifikasi', 'Pending', 'Terlambat'],
-                        datasets: [{
-                            data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
-                                {{ $stats['late'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
-                            borderWidth: 0,
-                            hoverOffset: 10
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '70%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
-                    }
-                });
-            @elseif (auth()->user()->role == 'security')
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Scan Masuk', 'Scan Pulang'],
-                        datasets: [{
-                            data: [{{ $stats['check_in_scans'] }},
-                                {{ $stats['check_out_scans'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#0090e7'],
-                            borderWidth: 0,
-                            hoverOffset: 10
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '60%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
-                    }
-                });
-            @else
-                new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
-                        datasets: [{
-                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                        {{ $stats['early'] }}, {{ $stats['pending'] }}
-                            ],
-                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
-                            borderWidth: 2,
-                            borderColor: '#ffffff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
-                    }
-                });
-            @endif
-
-                // --- MODAL FOTO PROFIL ---
-                var profilePhotoModal = document.getElementById('profilePhotoModal');
-            if (profilePhotoModal) {
-                profilePhotoModal.addEventListener('show.bs.modal', function (event) {
-                    var button = event.relatedTarget;
-                    var src = button.getAttribute('data-src');
-                    var modalImg = document.getElementById('profileModalImageSrc');
-                    modalImg.src = src;
-                });
+            // Optional: Confetti Effect Function (Placeholder)
+            function confettiEffect() {
+                alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
             }
-        });
-
-        // Optional: Confetti Effect Function (Placeholder)
-        function confettiEffect() {
-            alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
-        }
-    </script>
+        </script>
 @endpush
