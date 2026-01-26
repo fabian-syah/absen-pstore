@@ -429,45 +429,39 @@
         .time-in { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
         .time-out { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
 
-        /* Photo Thumbnail - Clean & Modern (Square) */
-        .photo-thumb {
-            position: relative;
-            width: 60px;
-            height: 60px;
-            border-radius: 12px; /* Diubah dari bulat ke kotak dengan sudut melengkung */
-            overflow: hidden;
-            cursor: pointer;
-            background: #f1f5f9;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        /* Photo Thumbnail - Paksa Jadi Kotak Modern */
+.photo-thumb {
+    position: relative;
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 12px !important; /* Kotak dengan lengkungan halus */
+    overflow: hidden !important;
+    cursor: pointer;
+    background: #f1f5f9;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    display: block; /* Memastikan container memiliki dimensi */
+}
 
-        .photo-thumb:hover {
-            transform: scale(1.08) translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
+/* Selector spesifik untuk memastikan gambar TIDAK bulat */
+.photo-thumb img, 
+.table-modern .attendance-row .photo-thumb img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 0 !important; /* Reset agar mengikuti container-nya */
+}
 
-        .photo-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            border-radius: 0; /* Menghapus radius tambahan pada tag img */
-        }
+.photo-thumb:hover {
+    transform: scale(1.1);
+    z-index: 10;
+}
 
-        /* Photo Mobile */
-        .photo-mobile {
-            border-radius: 10px; /* Konsisten dalam bentuk kotak */
-            overflow: hidden;
-            height: 65px;
-            cursor: pointer;
-        }
-
-        .photo-mobile img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+/* Versi Mobile juga kita perkuat */
+.photo-mobile, .photo-mobile img {
+    border-radius: 10px !important;
+    object-fit: cover !important;
+}
         .photo-overlay {
             position: absolute;
             inset: 0;
