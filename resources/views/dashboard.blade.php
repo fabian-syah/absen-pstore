@@ -249,1108 +249,1226 @@
     @endif
 
     {{-- ======================================================================= --}}
-        {{-- SECTION HEADER: COMPANY STATISTICS --}}
-        {{-- ======================================================================= --}}
-        @if (auth()->user()->role == 'admin')
-            <div class="section-header animate-enter" style="animation-delay: 0.2s">
-                <h3>
-                    <span class="section-icon">
-                        <i class="mdi mdi-chart-box-outline"></i>
-                    </span>
-                    Statistik Perusahaan
-                </h3>
-                <p class="section-subtitle">Ringkasan data dan performa organisasi</p>
-            </div>
-        @endif
+    {{-- SECTION HEADER: COMPANY STATISTICS --}}
+    {{-- ======================================================================= --}}
+    @if (auth()->user()->role == 'admin')
+        <div class="section-header animate-enter" style="animation-delay: 0.2s">
+            <h3>
+                <span class="section-icon">
+                    <i class="mdi mdi-chart-box-outline"></i>
+                </span>
+                Statistik Perusahaan
+            </h3>
+            <p class="section-subtitle">Ringkasan data dan performa organisasi</p>
+        </div>
+    @endif
 
-        {{-- BAGIAN 1: DASHBOARD STATISTIK (ADMIN/AUDIT/SECURITY) --}}
-        @if (auth()->user()->role == 'admin')
-            {{-- WIDGET ADMIN --}}
-            <div class="row mb-4">
-                <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                    <div class="card card-bank gradient-purple">
-                        <div class="card-body">
-                            <div class="card-bank-chip"></div>
-                            <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
-                            <div class="card-bank-content">
-                                <p class="card-bank-label">Total User</p>
-                                <h2 class="card-bank-value count-up" data-target="{{ $totalUsers }}">0</h2>
-                                <p class="card-bank-desc">Karyawan Aktif</p>
-                            </div>
-                            <div class="card-bank-pattern"></div>
+    {{-- BAGIAN 1: DASHBOARD STATISTIK (ADMIN/AUDIT/SECURITY) --}}
+    @if (auth()->user()->role == 'admin')
+        {{-- WIDGET ADMIN --}}
+        <div class="row mb-4">
+            <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
+                <div class="card card-bank gradient-purple">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Total User</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $totalUsers }}">0</h2>
+                            <p class="card-bank-desc">Karyawan Aktif</p>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                    <div class="card card-bank gradient-blue">
-                        <div class="card-body">
-                            <div class="card-bank-chip"></div>
-                            <div class="card-bank-icon"><i class="mdi mdi-office-building"></i></div>
-                            <div class="card-bank-content">
-                                <p class="card-bank-label">Total Cabang</p>
-                                <h2 class="card-bank-value count-up" data-target="{{ $totalBranches }}">0</h2>
-                                <p class="card-bank-desc">Cabang Terdaftar</p>
-                            </div>
-                            <div class="card-bank-pattern"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
-                    <div class="card card-bank gradient-green">
-                        <div class="card-body">
-                            <div class="card-bank-chip"></div>
-                            <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
-                            <div class="card-bank-content">
-                                <p class="card-bank-label">Absensi Hari Ini</p>
-                                <h2 class="card-bank-value count-up" data-target="{{ $attendancesToday }}">0</h2>
-                                <p class="card-bank-desc">Total absensi hari ini</p>
-                            </div>
-                            <div class="card-bank-pattern"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.4s">
-                    <div class="card card-bank gradient-orange">
-                        <div class="card-body">
-                            <div class="card-bank-chip"></div>
-                            <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
-                            <div class="card-bank-content">
-                                <p class="card-bank-label">Perlu Verifikasi</p>
-                                <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
-                                <p class="card-bank-desc">Menunggu persetujuan</p>
-                            </div>
-                            <div class="card-bank-pattern"></div>
-                        </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
-        @elseif (auth()->user()->role == 'audit')
-            {{-- WIDGET AUDIT --}}
-            <div class="row mb-4">
-                <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                    <div class="card card-bank gradient-red">
-                        <div class="card-body">
-                            <div class="card-bank-chip"></div>
-                            <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
-                            <div class="card-bank-content">
-                                <p class="card-bank-label">Verif Absensi</p>
-                                <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
-                                <p class="card-bank-desc">Absensi pending (Foto/Lokasi)</p>
-                                <a href="{{ route('audit.verify.list') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
-                                    <i class="mdi mdi-clipboard-check me-1"></i>Lihat Daftar
-                                </a>
-                            </div>
-                            <div class="card-bank-pattern"></div>
+            <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
+                <div class="card card-bank gradient-blue">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-office-building"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Total Cabang</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $totalBranches }}">0</h2>
+                            <p class="card-bank-desc">Cabang Terdaftar</p>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                    <div class="card card-bank gradient-blue">
-                        <div class="card-body">
-                            <div class="card-bank-chip"></div>
-                            <div class="card-bank-icon"><i class="mdi mdi-file-document-edit-outline"></i></div>
-                            <div class="card-bank-content">
-                                <p class="card-bank-label">Approve Izin</p>
-                                <h2 class="card-bank-value count-up" data-target="{{ $pendingLeaves }}">0</h2>
-                                <p class="card-bank-desc">Izin, Sakit, Cuti, WFH, Telat</p>
-                                <a href="{{ route('leave-requests.index') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
-                                    <i class="mdi mdi-playlist-check me-1"></i>Lihat Pengajuan
-                                </a>
-                            </div>
-                            <div class="card-bank-pattern"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
-                    <div class="card card-bank gradient-green">
-                        <div class="card-body">
-                            <div class="card-bank-chip"></div>
-                            <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
-                            <div class="card-bank-content">
-                                <p class="card-bank-label">Hadir Hari Ini</p>
-                                <h2 class="card-bank-value count-up" data-target="{{ $attendancesToday }}">0</h2>
-                                <p class="card-bank-desc">Total kehadiran di cabang Anda</p>
-                            </div>
-                            <div class="card-bank-pattern"></div>
-                        </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
-        @elseif (auth()->user()->role == 'security')
-            {{-- WIDGET SECURITY --}}
-            <div class="row mb-4">
-                <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                    <div class="card card-action hover-float">
-                        <div class="card-body text-center py-5">
-                            <div class="mb-4 pulse-icon-wrapper">
-                                <i class="mdi mdi-qrcode-scan display-1 text-dark"></i>
-                            </div>
-                            <h4 class="card-title mb-3">Pindai QR User</h4>
-                            <p class="text-muted mb-4">Arahkan kamera ke QR Code user untuk melakukan absensi.</p>
-                            <a href="{{ route('security.scan') }}" class="btn btn-dark btn-lg shadow-lg">
-                                <i class="mdi mdi-camera-enhance me-2"></i>Mulai Memindai
+            <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
+                <div class="card card-bank gradient-green">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Absensi Hari Ini</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $attendancesToday }}">0</h2>
+                            <p class="card-bank-desc">Total absensi hari ini</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 grid-margin stretch-card animate-enter" style="animation-delay: 0.4s">
+                <div class="card card-bank gradient-orange">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Perlu Verifikasi</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
+                            <p class="card-bank-desc">Menunggu persetujuan</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @elseif (auth()->user()->role == 'audit')
+        {{-- WIDGET AUDIT --}}
+        <div class="row mb-4">
+            <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
+                <div class="card card-bank gradient-red">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Verif Absensi</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
+                            <p class="card-bank-desc">Absensi pending (Foto/Lokasi)</p>
+                            <a href="{{ route('audit.verify.list') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
+                                <i class="mdi mdi-clipboard-check me-1"></i>Lihat Daftar
                             </a>
                         </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
-                <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                    <div class="card card-bank gradient-dark">
-                        <div class="card-body">
-                            <div class="card-bank-chip"></div>
-                            <div class="card-bank-icon"><i class="mdi mdi-chart-bar"></i></div>
-                            <div class="card-bank-content">
-                                <p class="card-bank-label">Pindaian Hari Ini</p>
-                                <h2 class="card-bank-value count-up" data-target="{{ $myScansToday }}">0</h2>
-                                <p class="card-bank-desc">Total pindaian QR hari ini</p>
-                                <div class="mt-4 pt-3 border-top border-light">
-                                    <p class="card-bank-label mb-2">User Aktif</p>
-                                    <h3 class="card-bank-value mb-0 count-up" data-target="{{ $totalUsers }}">0</h3>
-                                </div>
+            </div>
+            <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
+                <div class="card card-bank gradient-blue">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-file-document-edit-outline"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Approve Izin</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingLeaves }}">0</h2>
+                            <p class="card-bank-desc">Izin, Sakit, Cuti, WFH, Telat</p>
+                            <a href="{{ route('leave-requests.index') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
+                                <i class="mdi mdi-playlist-check me-1"></i>Lihat Pengajuan
+                            </a>
+                        </div>
+                        <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
+                <div class="card card-bank gradient-green">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Hadir Hari Ini</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $attendancesToday }}">0</h2>
+                            <p class="card-bank-desc">Total kehadiran di cabang Anda</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @elseif (auth()->user()->role == 'security')
+        {{-- WIDGET SECURITY --}}
+        <div class="row mb-4">
+            <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
+                <div class="card card-action hover-float">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-4 pulse-icon-wrapper">
+                            <i class="mdi mdi-qrcode-scan display-1 text-dark"></i>
+                        </div>
+                        <h4 class="card-title mb-3">Pindai QR User</h4>
+                        <p class="text-muted mb-4">Arahkan kamera ke QR Code user untuk melakukan absensi.</p>
+                        <a href="{{ route('security.scan') }}" class="btn btn-dark btn-lg shadow-lg">
+                            <i class="mdi mdi-camera-enhance me-2"></i>Mulai Memindai
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
+                <div class="card card-bank gradient-dark">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-chart-bar"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Pindaian Hari Ini</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $myScansToday }}">0</h2>
+                            <p class="card-bank-desc">Total pindaian QR hari ini</p>
+                            <div class="mt-4 pt-3 border-top border-light">
+                                <p class="card-bank-label mb-2">User Aktif</p>
+                                <h3 class="card-bank-value mb-0 count-up" data-target="{{ $totalUsers }}">0</h3>
                             </div>
-                            <div class="card-bank-pattern"></div>
+                        </div>
+                        <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- BAGIAN BARU: DINDING KENANGAN (PEMENANG BULAN LALU) --}}
+    @if (isset($lastMonthWinners) && $lastMonthWinners->count() > 0)
+        <div class="row mb-5 animate-enter" style="animation-delay: 0.3s">
+            <div class="col-12">
+                <div class="card border-0 shadow-lg hall-of-fame-card overflow-hidden">
+                    <div class="spotlight"></div>
+                    <div class="card-body p-4 position-relative z-index-1">
+                        <div class="text-center mb-5">
+                            <span class="badge bg-warning text-dark fw-bold mb-2 shadow-sm">HALL OF FAME</span>
+                            <h3 class="fw-bold text-white mb-1" style="font-family: 'Playfair Display', serif;">
+                                <i class="mdi mdi-auto-fix text-warning me-2"></i>Pahlawan Absensi {{ $lastMonthName }}
+                            </h3>
+                            <p class="text-white-50 small">Apresiasi untuk dedikasi luar biasa di bulan lalu</p>
+                        </div>
+
+                        {{-- Pastikan row-cols-md-3 untuk memaksa 3 kolom sejajar --}}
+                        <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
+                            @foreach ($lastMonthWinners as $history)
+                                <div class="col">
+                                    <div class="winner-memory-card text-center p-3 h-100 d-flex flex-column align-items-center">
+                                        <div class="position-relative mb-3 mt-2">
+                                            {{-- Badge Rank dinamis berdasarkan urutan hasil query --}}
+                                            <div
+                                                class="rank-badge-mini {{ $loop->first ? 'gold' : ($loop->iteration == 2 ? 'silver' : 'bronze') }}">
+                                                #{{ $loop->iteration }}
+                                            </div>
+
+                                            @if ($history->user->profile_photo_path)
+                                                <img src="{{ asset('storage/' . $history->user->profile_photo_path) }}"
+                                                    class="rounded-circle shadow-lg border border-2 border-white grayscale-memory"
+                                                    style="width: 85px; height: 85px; object-fit: cover;">
+                                            @else
+                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white shadow-lg mx-auto"
+                                                    style="width: 85px; height: 85px; font-size: 24px;">
+                                                    {{ substr($history->user->name, 0, 1) }}
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <h6 class="text-white fw-bold mb-1">{{ Str::limit($history->user->name, 15) }}
+                                        </h6>
+                                        <p class="text-warning small mb-3" style="font-size: 10px; letter-spacing: 1px;">
+                                            {{ strtoupper($history->user->division->name ?? 'Staff') }}
+                                        </p>
+
+                                        <div class="mt-auto">
+                                            <span class="badge bg-light text-dark opacity-75 py-2 px-3"
+                                                style="font-size: 11px; border-radius: 50px;">
+                                                <i class="mdi mdi-calendar-check me-1"></i>{{ $history->total_attendance }}
+                                                Hari
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
             </div>
-        @endif
+        </div>
+    @endif
 
-        {{-- BAGIAN BARU: DINDING KENANGAN (PEMENANG BULAN LALU) --}}
-        @if (isset($lastMonthWinners) && $lastMonthWinners->count() > 0)
-            <div class="row mb-5 animate-enter" style="animation-delay: 0.3s">
-                <div class="col-12">
-                    <div class="card border-0 shadow-lg hall-of-fame-card overflow-hidden">
-                        <div class="spotlight"></div>
-                        <div class="card-body p-4 position-relative z-index-1">
-                            <div class="text-center mb-5">
-                                <span class="badge bg-warning text-dark fw-bold mb-2 shadow-sm">HALL OF FAME</span>
-                                <h3 class="fw-bold text-white mb-1" style="font-family: 'Playfair Display', serif;">
-                                    <i class="mdi mdi-auto-fix text-warning me-2"></i>Pahlawan Absensi {{ $lastMonthName }}
-                                </h3>
-                                <p class="text-white-50 small">Apresiasi untuk dedikasi luar biasa di bulan lalu</p>
-                            </div>
+    {{-- ======================================================================= --}}
+    {{-- BAGIAN 2: LEADERBOARD PODIUM MEWAH (TOP 3) --}}
+    {{-- ======================================================================= --}}
 
-                            {{-- Pastikan row-cols-md-3 untuk memaksa 3 kolom sejajar --}}
-                            <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
-                                @foreach ($lastMonthWinners as $history)
-                                    <div class="col">
-                                        <div class="winner-memory-card text-center p-3 h-100 d-flex flex-column align-items-center">
-                                            <div class="position-relative mb-3 mt-2">
-                                                {{-- Badge Rank dinamis berdasarkan urutan hasil query --}}
-                                                <div
-                                                    class="rank-badge-mini {{ $loop->first ? 'gold' : ($loop->iteration == 2 ? 'silver' : 'bronze') }}">
-                                                    #{{ $loop->iteration }}
-                                                </div>
+    <div class="row mb-5 animate-enter" style="animation-delay: 0.4s">
 
-                                                @if ($history->user->profile_photo_path)
-                                                    <img src="{{ asset('storage/' . $history->user->profile_photo_path) }}"
-                                                        class="rounded-circle shadow-lg border border-2 border-white grayscale-memory"
-                                                        style="width: 85px; height: 85px; object-fit: cover;">
-                                                @else
-                                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white shadow-lg mx-auto"
-                                                        style="width: 85px; height: 85px; font-size: 24px;">
-                                                        {{ substr($history->user->name, 0, 1) }}
-                                                    </div>
-                                                @endif
+        {{-- 1. TOP 3 ABSENSI (USER/ADMIN/AUDIT/LEADER) --}}
+        @if (auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
+            <div class="col-12">
+                <div class="card border-0 shadow-lg luxury-card overflow-hidden">
+                    <div class="luxury-bg-glow"></div>
+                    <div class="luxury-bg-pattern"></div>
+
+                    <div class="card-body p-4 position-relative z-index-1">
+                        <div class="text-center mb-5">
+                            <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
+                                <i class="mdi mdi-trophy text-warning me-2"></i>Top Rajin Absen
+                            </h3>
+                            <p class="text-muted small">
+                                {{ auth()->user()->role == 'admin' ? 'Global' : 'Cabang Anda' }} - Bulan
+                                {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                            </p>
+                        </div>
+
+                        {{-- PODIUM CONTAINER --}}
+                        <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
+
+                            {{-- JUARA 2 (KIRI) --}}
+                            @if (isset($leaderboard[1]))
+                                <div class="podium-step-container animate-enter" style="animation-delay: 0.6s">
+                                    <div class="podium-avatar-wrapper">
+                                        @if ($leaderboard[1]->user->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $leaderboard[1]->user->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder bg-secondary">
+                                                {{ substr($leaderboard[1]->user->name, 0, 1) }}
                                             </div>
-
-                                            <h6 class="text-white fw-bold mb-1">{{ Str::limit($history->user->name, 15) }}
+                                        @endif
+                                        <div class="rank-circle silver">2</div>
+                                    </div>
+                                    <div class="podium-block silver-block text-center">
+                                        <div class="podium-content">
+                                            <h6 class="fw-bold text-dark mb-1">
+                                                {{ Str::limit($leaderboard[1]->user->name, 12) }}
                                             </h6>
-                                            <p class="text-warning small mb-3" style="font-size: 10px; letter-spacing: 1px;">
-                                                {{ strtoupper($history->user->division->name ?? 'Staff') }}
+                                            <p class="small text-muted mb-2">
+                                                {{ $leaderboard[1]->user->division->name ?? '-' }}
                                             </p>
-
-                                            <div class="mt-auto">
-                                                <span class="badge bg-light text-dark opacity-75 py-2 px-3"
-                                                    style="font-size: 11px; border-radius: 50px;">
-                                                    <i class="mdi mdi-calendar-check me-1"></i>{{ $history->total_attendance }}
-                                                    Hari
-                                                </span>
+                                            <div class="stat-pill mb-1">
+                                                <i
+                                                    class="mdi mdi-check-circle text-success me-1"></i>{{ $leaderboard[1]->total_attendance }}
+                                                Hadir
+                                            </div>
+                                            <div class="stat-pill">
+                                                <i
+                                                    class="mdi mdi-clock-outline text-primary me-1"></i>{{ $leaderboard[1]->avg_arrival_display }}
                                             </div>
                                         </div>
                                     </div>
-                                @endforeach
-                            </div>
+                                </div>
+                            @endif
+
+                            {{-- JUARA 1 (TENGAH - TERTINGGI) --}}
+                            @if (isset($leaderboard[0]))
+                                <div class="podium-step-container main-winner animate-enter" style="animation-delay: 0.5s">
+                                    <div class="crown-floating">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown" width="50">
+                                    </div>
+                                    <div class="podium-avatar-wrapper gold-glow">
+                                        @if ($leaderboard[0]->user->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $leaderboard[0]->user->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder gold-gradient">
+                                                {{ substr($leaderboard[0]->user->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <div class="rank-circle gold">1</div>
+                                    </div>
+                                    <div class="podium-block gold-block text-center">
+                                        <div class="sparkle s1"></div>
+                                        <div class="sparkle s2"></div>
+                                        <div class="sparkle s3"></div>
+                                        <div class="podium-content pt-3">
+                                            <h5 class="fw-bold text-dark mb-1">
+                                                {{ Str::limit($leaderboard[0]->user->name, 15) }}
+                                            </h5>
+                                            <p class="small text-muted mb-2">
+                                                {{ $leaderboard[0]->user->division->name ?? '-' }}
+                                            </p>
+                                            <div class="stat-pill gold mb-2">
+                                                <i class="mdi mdi-star me-1"></i>{{ $leaderboard[0]->total_attendance }}
+                                                Kehadiran
+                                            </div>
+                                            <div class="stat-pill">
+                                                <i class="mdi mdi-timer-sand me-1"></i>Avg:
+                                                {{ $leaderboard[0]->avg_arrival_display }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- JUARA 3 (KANAN) --}}
+                            @if (isset($leaderboard[2]))
+                                <div class="podium-step-container animate-enter" style="animation-delay: 0.7s">
+                                    <div class="podium-avatar-wrapper">
+                                        @if ($leaderboard[2]->user->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $leaderboard[2]->user->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder" style="background: #CD7F32;">
+                                                {{ substr($leaderboard[2]->user->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <div class="rank-circle bronze">3</div>
+                                    </div>
+                                    <div class="podium-block bronze-block text-center">
+                                        <div class="podium-content">
+                                            <h6 class="fw-bold text-dark mb-1">
+                                                {{ Str::limit($leaderboard[2]->user->name, 12) }}
+                                            </h6>
+                                            <p class="small text-muted mb-2">
+                                                {{ $leaderboard[2]->user->division->name ?? '-' }}
+                                            </p>
+                                            <div class="stat-pill mb-1">
+                                                <i class="mdi mdi-check me-1"></i>{{ $leaderboard[2]->total_attendance }}
+                                                Hadir
+                                            </div>
+                                            <div class="stat-pill">
+                                                {{ $leaderboard[2]->avg_arrival_display }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
                         </div>
                     </div>
                 </div>
             </div>
         @endif
 
-        {{-- ======================================================================= --}}
-        {{-- BAGIAN 2: LEADERBOARD PODIUM MEWAH (TOP 3) --}}
-        {{-- ======================================================================= --}}
+        {{-- 2. TOP SCANNER (ADMIN & SECURITY) -- SAME PODIUM STYLE --}}
+        @if (
+                (auth()->user()->role == 'admin' || auth()->user()->role == 'security') &&
+                isset($topScanners) &&
+                count($topScanners) > 0
+            )
+            <div class="col-12 mt-4">
+                <div class="card border-0 shadow-lg luxury-card overflow-hidden">
+                    <div class="luxury-bg-pattern"></div>
+                    <div class="card-body p-4 position-relative z-index-1">
+                        <div class="text-center mb-5">
+                            <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
+                                <i class="mdi mdi-qrcode-scan text-primary me-2"></i>Top Security Scanner
+                            </h3>
+                            <p class="text-muted small">Total Scan Terbanyak Bulan Ini</p>
+                        </div>
 
-        <div class="row mb-5 animate-enter" style="animation-delay: 0.4s">
+                        {{-- PODIUM CONTAINER --}}
+                        <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
 
-            {{-- 1. TOP 3 ABSENSI (USER/ADMIN/AUDIT/LEADER) --}}
-            @if (auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
-                <div class="col-12">
-                    <div class="card border-0 shadow-lg luxury-card overflow-hidden">
-                        <div class="luxury-bg-glow"></div>
-                        <div class="luxury-bg-pattern"></div>
+                            {{-- JUARA 2 --}}
+                            @if (isset($topScanners[1]))
+                                <div class="podium-step-container">
+                                    <div class="podium-avatar-wrapper">
+                                        @if ($topScanners[1]->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $topScanners[1]->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder bg-secondary">
+                                                {{ substr($topScanners[1]->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <div class="rank-circle silver">2</div>
+                                    </div>
+                                    <div class="podium-block silver-block text-center">
+                                        <div class="podium-content">
+                                            <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[1]->name, 12) }}
+                                            </h6>
+                                            <div class="stat-pill mt-2">
+                                                {{ $topScanners[1]->total_scans }} Scan
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
 
-                        <div class="card-body p-4 position-relative z-index-1">
-                            <div class="text-center mb-5">
-                                <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
-                                    <i class="mdi mdi-trophy text-warning me-2"></i>Top Rajin Absen
-                                </h3>
-                                <p class="text-muted small">
-                                    {{ auth()->user()->role == 'admin' ? 'Global' : 'Cabang Anda' }} - Bulan
-                                    {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
-                                </p>
+                            {{-- JUARA 1 --}}
+                            @if (isset($topScanners[0]))
+                                <div class="podium-step-container main-winner">
+                                    <div class="crown-floating"><img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png"
+                                            alt="Crown" width="50"></div>
+                                    <div class="podium-avatar-wrapper gold-glow">
+                                        @if ($topScanners[0]->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $topScanners[0]->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder gold-gradient">
+                                                {{ substr($topScanners[0]->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <div class="rank-circle gold">1</div>
+                                    </div>
+                                    <div class="podium-block gold-block text-center">
+                                        <div class="podium-content pt-3">
+                                            <h5 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[0]->name, 15) }}
+                                            </h5>
+                                            <div class="stat-pill gold mt-2">
+                                                <i class="mdi mdi-star me-1"></i>{{ $topScanners[0]->total_scans }} Scan
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- JUARA 3 --}}
+                            @if (isset($topScanners[2]))
+                                <div class="podium-step-container">
+                                    <div class="podium-avatar-wrapper">
+                                        @if ($topScanners[2]->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $topScanners[2]->profile_photo_path) }}"
+                                                class="luxury-avatar">
+                                        @else
+                                            <div class="luxury-avatar-placeholder" style="background: #CD7F32;">
+                                                {{ substr($topScanners[2]->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <div class="rank-circle bronze">3</div>
+                                    </div>
+                                    <div class="podium-block bronze-block text-center">
+                                        <div class="podium-content">
+                                            <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[2]->name, 12) }}
+                                            </h6>
+                                            <div class="stat-pill mt-2">
+                                                {{ $topScanners[2]->total_scans }} Scan
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+    </div>
+
+    {{-- ======================================================================= --}}
+    {{-- [BARU] BAGIAN GALLERY: LEMBARAN CERITA BULAN INI (NOSTALGIA) --}}
+    {{-- Hanya tampil 1 hari sebelum akhir bulan --}}
+    {{-- ======================================================================= --}}
+    @if(isset($showGallery) && $showGallery)
+        <div class="row mt-4 mb-5 animate-enter" style="animation-delay: 0.5s">
+            <div class="col-12">
+                <div class="d-flex align-items-center justify-content-between mb-3 px-2">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark" style="font-family: 'Playfair Display', serif;">
+                            <i class="mdi mdi-camera-iris text-danger me-2"></i>Lembaran Cerita {{ $currentMonthName }}
+                        </h4>
+                        <p class="text-muted small mb-0">Mengenang setiap tetes keringat dan senyummu bulan ini.</p>
+                    </div>
+                </div>
+                <div class="gallery-scroll-container">
+                    <div class="d-flex gap-3 pb-3">
+                        @forelse ($attendanceGallery as $item)
+                            {{-- Foto Masuk --}}
+                            @if ($item->photo_path)
+                                <div class="gallery-item-wrapper">
+                                    <div class="gallery-card shadow-sm"
+                                        onclick="previewGalleryImage('{{ Storage::url($item->photo_path) }}', 'Momen Masuk Kerja', '{{ $item->check_in_time->translatedFormat('l, d F Y - H:i') }}')">
+                                        <img src="{{ Storage::url($item->photo_path) }}" class="gallery-img">
+                                        <div class="gallery-badge bg-success">MASUK</div>
+                                        <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Foto Pulang --}}
+                            @if ($item->photo_out_path)
+                                <div class="gallery-item-wrapper">
+                                    <div class="gallery-card shadow-sm"
+                                        onclick="previewGalleryImage('{{ Storage::url($item->photo_out_path) }}', 'Momen Pulang Kerja', '{{ $item->check_out_time ? $item->check_out_time->translatedFormat('l, d F Y - H:i') : '-' }}')">
+                                        <img src="{{ Storage::url($item->photo_out_path) }}" class="gallery-img">
+                                        <div class="gallery-badge bg-danger">PULANG</div>
+                                        <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
+                                    </div>
+                                </div>
+                            @endif
+                        @empty
+                            <div class="col-12 text-center py-5 bg-light rounded-3 border-dashed w-100" style="min-width: 300px;">
+                                <i class="mdi mdi-image-filter-hdr display-4 text-muted opacity-25"></i>
+                                <p class="text-muted mt-2">Belum ada potret cerita untuk bulan ini...</p>
                             </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
-                            {{-- PODIUM CONTAINER --}}
-                            <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
 
-                                {{-- JUARA 2 (KIRI) --}}
-                                @if (isset($leaderboard[1]))
-                                    <div class="podium-step-container animate-enter" style="animation-delay: 0.6s">
-                                        <div class="podium-avatar-wrapper">
-                                            @if ($leaderboard[1]->user->profile_photo_path)
-                                                <img src="{{ asset('storage/' . $leaderboard[1]->user->profile_photo_path) }}"
-                                                    class="luxury-avatar">
-                                            @else
-                                                <div class="luxury-avatar-placeholder bg-secondary">
-                                                    {{ substr($leaderboard[1]->user->name, 0, 1) }}
-                                                </div>
-                                            @endif
-                                            <div class="rank-circle silver">2</div>
-                                        </div>
-                                        <div class="podium-block silver-block text-center">
-                                            <div class="podium-content">
-                                                <h6 class="fw-bold text-dark mb-1">
-                                                    {{ Str::limit($leaderboard[1]->user->name, 12) }}
-                                                </h6>
-                                                <p class="small text-muted mb-2">
-                                                    {{ $leaderboard[1]->user->division->name ?? '-' }}
-                                                </p>
-                                                <div class="stat-pill mb-1">
-                                                    <i
-                                                        class="mdi mdi-check-circle text-success me-1"></i>{{ $leaderboard[1]->total_attendance }}
-                                                    Hadir
-                                                </div>
-                                                <div class="stat-pill">
-                                                    <i
-                                                        class="mdi mdi-clock-outline text-primary me-1"></i>{{ $leaderboard[1]->avg_arrival_display }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
+    {{-- ======================================================================= --}}
+    {{-- BAGIAN 3: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI) --}}
+    {{-- ======================================================================= --}}
 
-                                {{-- JUARA 1 (TENGAH - TERTINGGI) --}}
-                                @if (isset($leaderboard[0]))
-                                    <div class="podium-step-container main-winner animate-enter" style="animation-delay: 0.5s">
-                                        <div class="crown-floating">
-                                            <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown" width="50">
-                                        </div>
-                                        <div class="podium-avatar-wrapper gold-glow">
-                                            @if ($leaderboard[0]->user->profile_photo_path)
-                                                <img src="{{ asset('storage/' . $leaderboard[0]->user->profile_photo_path) }}"
-                                                    class="luxury-avatar">
-                                            @else
-                                                <div class="luxury-avatar-placeholder gold-gradient">
-                                                    {{ substr($leaderboard[0]->user->name, 0, 1) }}
-                                                </div>
-                                            @endif
-                                            <div class="rank-circle gold">1</div>
-                                        </div>
-                                        <div class="podium-block gold-block text-center">
-                                            <div class="sparkle s1"></div>
-                                            <div class="sparkle s2"></div>
-                                            <div class="sparkle s3"></div>
-                                            <div class="podium-content pt-3">
-                                                <h5 class="fw-bold text-dark mb-1">
-                                                    {{ Str::limit($leaderboard[0]->user->name, 15) }}
-                                                </h5>
-                                                <p class="small text-muted mb-2">
-                                                    {{ $leaderboard[0]->user->division->name ?? '-' }}
-                                                </p>
-                                                <div class="stat-pill gold mb-2">
-                                                    <i class="mdi mdi-star me-1"></i>{{ $leaderboard[0]->total_attendance }}
-                                                    Kehadiran
-                                                </div>
-                                                <div class="stat-pill">
-                                                    <i class="mdi mdi-timer-sand me-1"></i>Avg:
-                                                    {{ $leaderboard[0]->avg_arrival_display }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
+    {{-- SECTION HEADER: PERSONAL DASHBOARD --}}
+    <div class="section-header animate-enter" style="animation-delay: 0.4s">
+        <h3>
+            <span class="section-icon">
+                <i class="mdi mdi-account-circle"></i>
+            </span>
+            Dashboard Pribadi
+        </h3>
+        <p class="section-subtitle">Informasi absensi dan akses cepat Anda</p>
+    </div>
 
-                                {{-- JUARA 3 (KANAN) --}}
-                                @if (isset($leaderboard[2]))
-                                    <div class="podium-step-container animate-enter" style="animation-delay: 0.7s">
-                                        <div class="podium-avatar-wrapper">
-                                            @if ($leaderboard[2]->user->profile_photo_path)
-                                                <img src="{{ asset('storage/' . $leaderboard[2]->user->profile_photo_path) }}"
-                                                    class="luxury-avatar">
-                                            @else
-                                                <div class="luxury-avatar-placeholder" style="background: #CD7F32;">
-                                                    {{ substr($leaderboard[2]->user->name, 0, 1) }}
-                                                </div>
-                                            @endif
-                                            <div class="rank-circle bronze">3</div>
-                                        </div>
-                                        <div class="podium-block bronze-block text-center">
-                                            <div class="podium-content">
-                                                <h6 class="fw-bold text-dark mb-1">
-                                                    {{ Str::limit($leaderboard[2]->user->name, 12) }}
-                                                </h6>
-                                                <p class="small text-muted mb-2">
-                                                    {{ $leaderboard[2]->user->division->name ?? '-' }}
-                                                </p>
-                                                <div class="stat-pill mb-1">
-                                                    <i class="mdi mdi-check me-1"></i>{{ $leaderboard[2]->total_attendance }}
-                                                    Hadir
-                                                </div>
-                                                <div class="stat-pill">
-                                                    {{ $leaderboard[2]->avg_arrival_display }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
+    <div class="row animate-enter" style="animation-delay: 0.5s">
+        {{-- KARTU ID & QR CODE (Quick Access) --}}
+        <div class="col-md-5 grid-margin stretch-card">
+            <div class="row w-100 m-0 p-0">
 
+                {{-- ID CARD VISUAL --}}
+                <div class="col-12 mb-3">
+                    <div class="card card-id gradient-dark">
+                        <div class="card-body">
+                            <div class="card-id-header">
+                                <div class="card-id-photo-wrapper">
+                                    @if (Auth::user()->profile_photo_path)
+                                        <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="Profile"
+                                            class="id-card-img" data-bs-toggle="modal" data-bs-target="#profilePhotoModal"
+                                            data-src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                            title="Klik untuk memperbesar">
+                                    @else
+                                        <div class="id-card-img-placeholder">
+                                            {{ substr(Auth::user()->name, 0, 1) }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="card-id-logo">
+                                    <i class="mdi mdi-credit-card-outline"></i>
+                                    <span>ID Card</span>
+                                </div>
+                            </div>
+                            <div class="card-id-details">
+                                <p class="card-id-label">NAMA</p>
+                                <h3 class="card-id-name text-truncate">{{ strtoupper(Auth::user()->name) }}</h3>
+                                <p class="card-id-label">DIVISI</p>
+                                <h4 class="card-id-division">
+                                    {{ strtoupper(Auth::user()->division->name ?? 'BELUM ADA DIVISI') }}
+                                </h4>
+                            </div>
+                            <div class="card-id-footer d-flex justify-content-end align-items-end mt-4">
+                                <div class="text-end">
+                                    <p class="mb-0 text-white-50" style="font-size: 10px; letter-spacing: 1px;">NOMOR ID
+                                    </p>
+                                    <p class="card-id-card-number mb-0"
+                                        style="font-size: 22px; letter-spacing: 2px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                        {{ $idCardNumber ?? '000000 000000' }}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            @endif
 
-            {{-- 2. TOP SCANNER (ADMIN & SECURITY) -- SAME PODIUM STYLE --}}
-            @if (
-                    (auth()->user()->role == 'admin' || auth()->user()->role == 'security') &&
-                    isset($topScanners) &&
-                    count($topScanners) > 0
-                )
-                    <div class="col-12 mt-4">
-                        <div class="card border-0 shadow-lg luxury-card overflow-hidden">
-                            <div class="luxury-bg-pattern"></div>
-                            <div class="card-body p-4 position-relative z-index-1">
-                                <div class="text-center mb-5">
-                                    <h3 class="fw-bold mb-1" style="font-family: 'Playfair Display', serif; color: #333;">
-                                        <i class="mdi mdi-qrcode-scan text-primary me-2"></i>Top Security Scanner
-                                    </h3>
-                                    <p class="text-muted small">Total Scan Terbanyak Bulan Ini</p>
-                                </div>
-
-                                {{-- PODIUM CONTAINER --}}
-                                <div class="podium-luxury-container d-flex justify-content-center align-items-end gap-3">
-
-                                    {{-- JUARA 2 --}}
-                                    @if (isset($topScanners[1]))
-                                        <div class="podium-step-container">
-                                            <div class="podium-avatar-wrapper">
-                                                @if ($topScanners[1]->profile_photo_path)
-                                                    <img src="{{ asset('storage/' . $topScanners[1]->profile_photo_path) }}"
-                                                        class="luxury-avatar">
-                                                @else
-                                                    <div class="luxury-avatar-placeholder bg-secondary">
-                                                        {{ substr($topScanners[1]->name, 0, 1) }}
-                                                    </div>
-                                                @endif
-                                                <div class="rank-circle silver">2</div>
-                                            </div>
-                                            <div class="podium-block silver-block text-center">
-                                                <div class="podium-content">
-                                                    <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[1]->name, 12) }}
-                                                    </h6>
-                                                    <div class="stat-pill mt-2">
-                                                        {{ $topScanners[1]->total_scans }} Scan
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                    {{-- JUARA 1 --}}
-                                    @if (isset($topScanners[0]))
-                                        <div class="podium-step-container main-winner">
-                                            <div class="crown-floating"><img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png"
-                                                    alt="Crown" width="50"></div>
-                                            <div class="podium-avatar-wrapper gold-glow">
-                                                @if ($topScanners[0]->profile_photo_path)
-                                                    <img src="{{ asset('storage/' . $topScanners[0]->profile_photo_path) }}"
-                                                        class="luxury-avatar">
-                                                @else
-                                                    <div class="luxury-avatar-placeholder gold-gradient">
-                                                        {{ substr($topScanners[0]->name, 0, 1) }}
-                                                    </div>
-                                                @endif
-                                                <div class="rank-circle gold">1</div>
-                                            </div>
-                                            <div class="podium-block gold-block text-center">
-                                                <div class="podium-content pt-3">
-                                                    <h5 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[0]->name, 15) }}
-                                                    </h5>
-                                                    <div class="stat-pill gold mt-2">
-                                                        <i class="mdi mdi-star me-1"></i>{{ $topScanners[0]->total_scans }} Scan
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                    {{-- JUARA 3 --}}
-                                    @if (isset($topScanners[2]))
-                                        <div class="podium-step-container">
-                                            <div class="podium-avatar-wrapper">
-                                                @if ($topScanners[2]->profile_photo_path)
-                                                    <img src="{{ asset('storage/' . $topScanners[2]->profile_photo_path) }}"
-                                                        class="luxury-avatar">
-                                                @else
-                                                    <div class="luxury-avatar-placeholder" style="background: #CD7F32;">
-                                                        {{ substr($topScanners[2]->name, 0, 1) }}
-                                                    </div>
-                                                @endif
-                                                <div class="rank-circle bronze">3</div>
-                                            </div>
-                                            <div class="podium-block bronze-block text-center">
-                                                <div class="podium-content">
-                                                    <h6 class="fw-bold text-dark mb-1">{{ Str::limit($topScanners[2]->name, 12) }}
-                                                    </h6>
-                                                    <div class="stat-pill mt-2">
-                                                        {{ $topScanners[2]->total_scans }} Scan
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                </div>
+                {{-- QR CODE CARD UNTUK SCAN SECURITY --}}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm hover-float" style="background: white; border-radius: 16px;">
+                        <div class="card-body d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="fw-bold mb-1">QR Code Absensi</h5>
+                                <p class="text-muted small mb-0">Klik QR untuk memperbesar</p>
+                            </div>
+                            <div class="bg-light p-2 rounded shadow-sm scale-on-hover" id="dashboard-qrcode"
+                                style="cursor: pointer; transition: transform 0.2s;" data-bs-toggle="modal"
+                                data-bs-target="#qrModal">
+                                {{-- QR Code dirender via JS disini --}}
                             </div>
                         </div>
                     </div>
-            @endif
+                </div>
 
+            </div>
         </div>
 
-        {{-- ======================================================================= --}}
-        {{-- [BARU] BAGIAN GALLERY: LEMBARAN CERITA BULAN INI (NOSTALGIA) --}}
-        {{-- Hanya tampil 1 hari sebelum akhir bulan --}}
-        {{-- ======================================================================= --}}
-        @if(isset($showGallery) && $showGallery)
-            <div class="row mt-4 mb-5 animate-enter" style="animation-delay: 0.5s">
-                <div class="col-12">
-                    <div class="d-flex align-items-center justify-content-between mb-3 px-2">
+        {{-- KARTU STATUS ABSENSI & TOMBOL ABSEN MANDIRI --}}
+        <div class="col-md-7 grid-margin stretch-card">
+            <div class="card card-status hover-shadow-lg">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
                         <div>
-                            <h4 class="fw-bold mb-0 text-dark" style="font-family: 'Playfair Display', serif;">
-                                <i class="mdi mdi-camera-iris text-danger me-2"></i>Lembaran Cerita {{ $currentMonthName }}
+                            <h4 class="card-title mb-1">
+                                <i class="mdi mdi-calendar-today me-2"></i>Status Absensi
                             </h4>
-                            <p class="text-muted small mb-0">Mengenang setiap tetes keringat dan senyummu bulan ini.</p>
+                            <span class="badge bg-light text-dark border shadow-sm mt-1">
+                                <i class="mdi mdi-clock-outline me-1"></i> Jadwal: {{ $todaySchedule }}
+                            </span>
+                        </div>
+
+                        <div class="text-end">
+                            {{-- CLOCK ELEMENT --}}
+                            <h4 class="fw-bold mb-0 font-monospace text-primary" id="realtime-clock">--:--:--</h4>
+                            {{-- TAMPILKAN TIMEZONE --}}
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">
+                                {{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}
+                                ({{ $current_timezone }})
+                            </small>
                         </div>
                     </div>
-                    <div class="gallery-scroll-container">
-                        <div class="d-flex gap-3 pb-3">
-                            @forelse ($attendanceGallery as $item)
-                                {{-- Foto Masuk --}}
-                                @if ($item->photo_path)
-                                    <div class="gallery-item-wrapper">
-                                        <div class="gallery-card shadow-sm"
-                                            onclick="previewGalleryImage('{{ Storage::url($item->photo_path) }}', 'Momen Masuk Kerja', '{{ $item->check_in_time->translatedFormat('l, d F Y - H:i') }}')">
-                                            <img src="{{ Storage::url($item->photo_path) }}" class="gallery-img">
-                                            <div class="gallery-badge bg-success">MASUK</div>
-                                            <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
-                                        </div>
-                                    </div>
-                                @endif
 
-                                {{-- Foto Pulang --}}
-                                @if ($item->photo_out_path)
-                                    <div class="gallery-item-wrapper">
-                                        <div class="gallery-card shadow-sm"
-                                            onclick="previewGalleryImage('{{ Storage::url($item->photo_out_path) }}', 'Momen Pulang Kerja', '{{ $item->check_out_time ? $item->check_out_time->translatedFormat('l, d F Y - H:i') : '-' }}')">
-                                            <img src="{{ Storage::url($item->photo_out_path) }}" class="gallery-img">
-                                            <div class="gallery-badge bg-danger">PULANG</div>
-                                            <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
-                                        </div>
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show shadow-sm">
+                            <i class="mdi mdi-check-circle-outline me-2"></i>
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+                            <i class="mdi mdi-alert-circle-outline me-2"></i>
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+                    @if (session('warning'))
+                        <div class="alert alert-warning alert-dismissible fade show shadow-sm">
+                            <i class="mdi mdi-alert-outline me-2"></i>
+                            {{ session('warning') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    {{-- LOGIKA TAMPILAN STATUS --}}
+                    @if ($myAttendanceToday)
+                        {{-- 1. JIKA SUDAH ABSEN MASUK --}}
+                        @php
+                            $isCrossDay = false;
+                            if (!$myAttendanceToday->check_out_time) {
+                                // Timezone already handled in Controller
+                                $isCrossDay =
+                                    $myAttendanceToday->check_in_time->format('Y-m-d') !==
+                                    \Carbon\Carbon::now($current_timezone)->format('Y-m-d');
+                            }
+                            $sourceLabel =
+                                $myAttendanceToday->attendance_type == 'scan' ? 'Security Scan' : 'Selfie Mandiri';
+                        @endphp
+
+                        {{-- SUDAH PULANG --}}
+                        @if ($myAttendanceToday->check_out_time || $myAttendanceToday->photo_out_path)
+                            <div class="status-card status-success mb-3 animate-pulse-green">
+                                <div class="d-flex align-items-center">
+                                    <div class="status-icon shadow"><i class="mdi mdi-home-variant"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1 fw-bold">Anda Sudah Pulang</h5>
+                                        <p class="text-muted mb-0 small">Terima kasih atas kerja keras Anda!</p>
                                     </div>
-                                @endif
-                            @empty
-                                <div class="col-12 text-center py-5 bg-light rounded-3 border-dashed w-100" style="min-width: 300px;">
-                                    <i class="mdi mdi-image-filter-hdr display-4 text-muted opacity-25"></i>
-                                    <p class="text-muted mt-2">Belum ada potret cerita untuk bulan ini...</p>
                                 </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-
-        {{-- ======================================================================= --}}
-        {{-- BAGIAN 3: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI) --}}
-        {{-- ======================================================================= --}}
-
-        {{-- SECTION HEADER: PERSONAL DASHBOARD --}}
-            <div class="section-header animate-enter" style="animation-delay: 0.4s">
-                <h3>
-                    <span class="section-icon">
-                        <i class="mdi mdi-account-circle"></i>
-                    </span>
-                    Dashboard Pribadi
-                </h3>
-                <p class="section-subtitle">Informasi absensi dan akses cepat Anda</p>
-            </div>
-
-            <div class="row animate-enter" style="animation-delay: 0.5s">
-                {{-- KARTU ID & QR CODE (Quick Access) --}}
-                <div class="col-md-5 grid-margin stretch-card">
-                    <div class="row w-100 m-0 p-0">
-
-                        {{-- ID CARD VISUAL --}}
-                        <div class="col-12 mb-3">
-                            <div class="card card-id gradient-dark">
-                                <div class="card-body">
-                                    <div class="card-id-header">
-                                        <div class="card-id-photo-wrapper">
-                                            @if (Auth::user()->profile_photo_path)
-                                                <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="Profile"
-                                                    class="id-card-img" data-bs-toggle="modal" data-bs-target="#profilePhotoModal"
-                                                    data-src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
-                                                    title="Klik untuk memperbesar">
-                                            @else
-                                                <div class="id-card-img-placeholder">
-                                                    {{ substr(Auth::user()->name, 0, 1) }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <div class="card-id-logo">
-                                            <i class="mdi mdi-credit-card-outline"></i>
-                                            <span>ID Card</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-id-details">
-                                        <p class="card-id-label">NAMA</p>
-                                        <h3 class="card-id-name text-truncate">{{ strtoupper(Auth::user()->name) }}</h3>
-                                        <p class="card-id-label">DIVISI</p>
-                                        <h4 class="card-id-division">
-                                            {{ strtoupper(Auth::user()->division->name ?? 'BELUM ADA DIVISI') }}
+                                <hr>
+                                <div class="row text-center">
+                                    <div class="col-6 border-end">
+                                        <small class="text-muted d-block">JAM MASUK</small>
+                                        <h4 class="fw-bold text-success mb-0 count-up-time">
+                                            {{ $myAttendanceToday->check_in_time->format('H:i') }}
                                         </h4>
                                     </div>
-                                    <div class="card-id-footer d-flex justify-content-end align-items-end mt-4">
-                                        <div class="text-end">
-                                            <p class="mb-0 text-white-50" style="font-size: 10px; letter-spacing: 1px;">NOMOR ID
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">JAM PULANG</small>
+                                        <h4 class="fw-bold text-primary mb-0 count-up-time">
+                                            {{ $myAttendanceToday->check_out_time ? $myAttendanceToday->check_out_time->format('H:i') : '-' }}
+                                        </h4>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- SEDANG BEKERJA -PREMIUM REDESIGN --}}
+                        @else
+                                            <div class="active-work-card mb-3 position-relative overflow-hidden" 
+                                                 style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
+                                                        border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
+
+                                                {{-- Decorative Elements --}}
+                                                <div style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; 
+                                                            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                            border-radius: 50%;"></div>
+                                                <div style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; 
+                                                            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
+                                                            border-radius: 50%;"></div>
+
+                                                <div class="card-body p-4 position-relative" style="z-index: 2;">
+                                                    @if (!$isCrossDay)
+                                                        {{-- Header: Status & Live Indicator --}}
+                                                        <div class="d-flex align-items-center justify-content-between mb-4">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="work-status-icon me-3" 
+                                                                     style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
+                                                                            border-radius: 16px; display: flex; align-items: center; 
+                                                                            justify-content: center; backdrop-filter: blur(10px); 
+                                                                            border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                                    <i class="mdi mdi-briefcase-check text-white" style="font-size: 28px;"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <h4 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                                                                        Sedang Bekerja
+                                                                        <span class="live-pulse-badge"></span>
+                                                                    </h4>
+                                                                    <p class="mb-0 text-white" style="opacity: 0.9; font-size: 0.875rem;">
+                                                                        Anda aktif bekerja hari ini
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- Work Timeline & Info --}}
+                                                        <div class="work-timeline-card p-3 mb-3" 
+                                                             style="background: rgba(255,255,255,0.95); border-radius: 16px; 
+                                                                    box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+
+                                                            <div class="row g-3">
+                                                                {{-- Check In Time --}}
+                                                                <div class="col-6">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="timeline-dot me-3" 
+                                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #43e97b, #38f9d7); 
+                                                                                    border-radius: 50%; display: flex; align-items: center; 
+                                                                                    justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
+                                                                            <i class="mdi mdi-login text-white fs-5"></i>
+                                                                        </div>
+                                                                        <div>
+                                                                            <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                                Check In
+                                                                            </small>
+                                                                            <h5 class="fw-bold mb-0" style="color: #2d3748;">
+                                                                                {{ $myAttendanceToday->check_in_time->format('H:i') }}
+                                                                            </h5>
+                                                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                                                via {{ $sourceLabel }}
+                                                                            </small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {{-- Work Duration (Auto-calculating) --}}
+                                                                <div class="col-6">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="timeline-dot me-3" 
+                                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); 
+                                                                                    border-radius: 50%; display: flex; align-items: center; 
+                                                                                    justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+                                                                            <i class="mdi mdi-timer-outline text-white fs-5"></i>
+                                                                        </div>
+                                                                        <div>
+                                                                            <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                                Durasi Kerja
+                                                                            </small>
+                                                                            <h5 class="fw-bold mb-0" style="color: #2d3748;" id="work-duration-display">
+                                                                                -
+                                                                            </h5>
+                                                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                                                Live Counter
+                                                                            </small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {{-- Animated Progress Bar --}}
+                                                            <div class="mt-3">
+                                                                <div class="progress" style="height: 6px; border-radius: 10px; background: #e9ecef;">
+                                                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                                                         style="background: linear-gradient(90deg, #43e97b, #38f9d7); width: 100%;"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+
+                                                    {{-- Action Button --}}
+                                                    <div class="text-center">
+                                                        @if (!$isCrossDay)
+                                                            @if (Auth::user()->only_security_scan)
+                                                                <button class="btn btn-light btn-lg w-100 shadow-sm" disabled
+                                                                        style="border-radius: 14px; padding: 1rem; cursor: not-allowed; opacity: 0.7;">
+                                                                    <i class="mdi mdi-lock me-2"></i>
+                                                                    <span class="fw-bold">Absen Pulang Mandiri Dikunci</span>
+                                                                </button>
+                                                                <small class="text-white d-block mt-2" style="opacity: 0.85; font-size: 0.75rem;">
+                                                                    Silahkan Scan QR Code ke Security untuk Pulang
+                                                                </small>
+                                                            @else
+                                                                <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}" 
+                                                                   class="checkout-btn btn btn-lg w-100 shadow-lg"
+                                                                   style="background: rgba(255,255,255,0.95); color: #ef4444; border: none; 
+                                                                          border-radius: 14px; padding: 1rem; font-weight: 700; 
+                                                                          transition: all 0.3s ease; backdrop-filter: blur(10px);">
+                                                                    <i class="mdi mdi-logout-variant me-2"></i>
+                                                                    Absen Pulang Mandiri
+                                                                </a>
+                                                            @endif
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <style>
+                                                /* Live Pulse Badge */
+                                                .live-pulse-badge {
+                                                    display: inline-block;
+                                                    width: 12px;
+                                                    height: 12px;
+                                                    background: #fff;
+                                                    border-radius: 50%;
+                                                    animation: pulse-live 1.5s infinite;
+                                                    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+                                                }
+
+                                                @keyframes pulse-live {
+                                                    0% {
+                                                        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+                                                    }
+                                                    50% {
+                                                        box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+                                                    }
+                                                    100% {
+                                                        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+                                                    }
+                                                }
+
+                                                /* Checkout Button Hover */
+                                                .checkout-btn:hover {
+                                                    transform: translateY(-2px);
+                                                    box-shadow: 0 12px 30px rgba(239, 68, 68, 0.3) !important;
+                                                    background: white !important;
+                                                }
+
+                                                /* Active Work Card Entrance */
+                                                .active-work-card {
+                                                    animation: slideInUp 0.6s ease-out;
+                                                }
+
+                                                @keyframes slideInUp {
+                                                    from {
+                                                        opacity: 0;
+                                                        transform: translateY(30px);
+                                                    }
+                                                    to {
+                                                        opacity: 1;
+                                                        transform: translateY(0);
+                                                    }
+                                                }
+                                            </style>
+
+                                            <script>
+                                                // Auto-calculate work duration
+                                                @if (!$isCrossDay)
+                                                    (function() {
+                                                        const checkInTime = new Date('{{ $myAttendanceToday->check_in_time->toIso8601String() }}');
+                                                        const durationDisplay = document.getElementById('work-duration-display');
+
+                                                        function updateWorkDuration() {
+                                                            const now = new Date();
+                                                            const diff = now - checkInTime;
+
+                                                            const hours = Math.floor(diff / (1000 * 60 * 60));
+                                                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                                                            if (durationDisplay) {
+                                                                durationDisplay.textContent = `${hours}j ${minutes}m`;
+                                                            }
+                                                        }
+
+                                                        updateWorkDuration();
+                                                        setInterval(updateWorkDuration, 60000); // Update every minute
+                                                    })();
+                                                @endif
+                                            </script>
+                                        @endif
+                    @elseif($myPendingLeave)
+                                    {{-- 2. JIKA ADA PENGAJUAN PENDING (KUNING) --}}
+                                    <div class="status-card status-warning mb-3 hover-shadow-lg">
+                                        <div class="text-center py-5">
+                                            <div class="mb-3">
+                                                <i class="mdi mdi-timer-sand display-3 text-warning pulse-animation"></i>
+                                            </div>
+                                            <h4 class="mb-2 fw-bold text-warning">Sedang Menunggu Approve dari Audit</h4>
+                                            <p class="text-muted mb-4 px-3">
+                                                Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda sedang
+                                                diproses.
                                             </p>
-                                            <p class="card-id-card-number mb-0"
-                                                style="font-size: 22px; letter-spacing: 2px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                                                {{ $idCardNumber ?? '000000 000000' }}
-                                            </p>
+                                            <div class="bg-white p-3 rounded border mb-3 shadow-sm mx-4">
+                                                <span class="fst-italic text-dark">"{{ $myPendingLeave->reason }}"</span>
+                                            </div>
+                                            {{-- Tombol Batalkan --}}
+                                            <form action="{{ route('leave-requests.cancel', $myPendingLeave->id) }}" method="POST">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-danger btn-sm shadow-sm"
+                                                    onclick="return confirm('Batalkan pengajuan ini?')">
+                                                    <i class="mdi mdi-close-circle me-1"></i> Batalkan Pengajuan
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
-                                </div>
+                                    {{-- 3. JIKA SUDAH DI APPROVE (HIJAU) --}}
+                                @elseif(isset($myLeaveToday) && $myLeaveToday && $myLeaveToday->status == 'approved')
+                                    <div class="status-card status-success mb-3 hover-float">
+                                        <div class="d-flex align-items-start">
+                                            <div class="status-icon shadow"><i class="mdi mdi-check-decagram"></i></div>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between">
+                                                    <h5 class="mb-1 fw-bold">Pengajuan Disetujui</h5>
+                                                </div>
+                                                <p class="text-muted mb-2 small">
+                                                    Status: <strong>{{ strtoupper($myLeaveToday->type) }}</strong>
+                                                </p>
+                                                <div class="bg-white p-2 rounded border mb-2 shadow-sm">
+                                                    <span class="fst-italic text-dark">"{{ $myLeaveToday->reason }}"</span>
+                                                </div>
+
+                                                @if ($myLeaveToday->file_proof)
+                                                    <div class="mt-2">
+                                                        <button type="button" class="btn btn-sm btn-light border shadow-sm"
+                                                            onclick="window.open('{{ Storage::url($myLeaveToday->file_proof) }}', '_blank')">
+                                                            <i class="mdi mdi-image-area me-1"></i>Lihat Bukti
+                                                        </button>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3 pt-3 border-top text-center">
+
+                                            {{-- LOGIKA BARU: Jika Izin Telat, tombolnya adalah ABSEN MASUK (bukan batalkan izin) --}}
+                                            @if ($myLeaveToday->type === 'telat')
+                                                <p class="small text-muted mb-2">Anda sudah sampai kantor?</p>
+                                                <a href="{{ route('self.attend.create') }}"
+                                                    class="btn btn-primary btn-sm w-100 shadow-sm hover-scale">
+                                                    <i class="mdi mdi-camera-account me-2"></i> Lakukan Absen Masuk
+                                                </a>
+                                                <small class="d-block mt-2 text-muted fst-italic" style="font-size: 10px;">
+                                                    *Izin telat akan tetap tercatat di history Anda.
+                                                </small>
+                                            @else
+                                                {{-- LOGIKA LAMA (Untuk Sakit/Cuti/WFH yang masuk lebih awal) --}}
+                                                <p class="small text-muted mb-2">Berubah pikiran atau sudah sampai kantor?</p>
+                                                <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}" method="POST">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100 shadow-sm hover-scale"
+                                                        onclick="return confirm('Apakah Anda yakin? Status izin hari ini akan dibatalkan dan Anda bisa absen kembali.');">
+                                                        <i class="mdi mdi-map-marker-radius me-2"></i>Batalkan Izin & Absen Masuk
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- [LOGIKA BARU] JIKA HABIS LEMBUR LINTAS HARI --}}
+                                    @if (isset($justFinishedOvertime) && $justFinishedOvertime)
+                                        <div class="status-card status-info mb-3 hover-shadow-lg">
+                                            <div class="text-center py-5">
+                                                <div class="mb-3">
+                                                    <i class="mdi mdi-bed-clock display-4 text-info"></i>
+                                                </div>
+                                                <h5 class="mb-2 fw-bold text-info">Selamat Beristirahat!</h5>
+                                                <p class="text-muted mb-4 px-3 small">
+                                                    Anda baru saja pulang lembur pukul
+                                                    <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>.
+                                                    <br>Sistem mencatat Anda lembur lintas hari. Anda dipersilakan masuk siang hari ini.
+                                                </p>
+
+                                                {{-- Tetap tampilkan tombol absen jika dia mau masuk lagi --}}
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    @if (Auth::user()->only_security_scan)
+                                                        <div class="d-flex flex-column align-items-center w-100">
+                                                            <button class="btn btn-secondary shadow-sm w-100" disabled
+                                                                style="cursor: not-allowed; opacity: 0.7;">
+                                                                <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
+                                                            </button>
+                                                        </div>
+                                                    @else
+                                                        <a href="{{ route('self.attend.create') }}" class="btn btn-outline-info shadow hover-scale">
+                                                            <i class="mdi mdi-fingerprint me-2"></i>Absen Shift Baru
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        {{-- 4. BELUM ABSEN (DEFAULT) --}}
+                                        <div class="status-card status-info hover-shadow-lg">
+                                            <div class="text-center py-4">
+                                                <div class="mb-3">
+                                                    <i class="mdi mdi-clock-alert display-4 text-primary pulse-text"></i>
+                                                </div>
+                                                <h5 class="mb-2 fw-bold">Anda Belum Absen Hari Ini</h5>
+                                                <p class="text-muted mb-4">Gunakan fitur ini jika Anda bekerja WFH atau Dinas Luar.</p>
+                                                <div class="d-flex justify-content-center gap-2">
+
+                                                    {{-- TOMBOL ABSEN MANDIRI --}}
+                                                    @if (Auth::user()->only_security_scan)
+                                                        <div class="d-flex flex-column align-items-center w-100">
+                                                            <button class="btn btn-secondary shadow-sm w-100" disabled
+                                                                style="cursor: not-allowed; opacity: 0.7;">
+                                                                <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
+                                                            </button>
+                                                            <small class="text-danger mt-1" style="font-size: 10px;">
+                                                                <i class="mdi mdi-alert-circle"></i> Wajib Scan QR ke Security
+                                                            </small>
+                                                        </div>
+                                                    @else
+                                                        <a href="{{ route('self.attend.create') }}" class="btn btn-dark shadow hover-scale">
+                                                            <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
+                                                        </a>
+                                                    @endif
+
+                                                    <a href="{{ route('leave-requests.create') }}"
+                                                        class="btn btn-outline-dark shadow-sm hover-scale">
+                                                        <i class="mdi mdi-file-document-edit-outline me-2"></i>Izin/Sakit
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                @endif
                             </div>
                         </div>
-
-                        {{-- QR CODE CARD UNTUK SCAN SECURITY --}}
-                        <div class="col-12">
-                            <div class="card border-0 shadow-sm hover-float" style="background: white; border-radius: 16px;">
-                                <div class="card-body d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <h5 class="fw-bold mb-1">QR Code Absensi</h5>
-                                        <p class="text-muted small mb-0">Klik QR untuk memperbesar</p>
-                                    </div>
-                                    <div class="bg-light p-2 rounded shadow-sm scale-on-hover" id="dashboard-qrcode"
-                                        style="cursor: pointer; transition: transform 0.2s;" data-bs-toggle="modal"
-                                        data-bs-target="#qrModal">
-                                        {{-- QR Code dirender via JS disini --}}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
 
-                {{-- KARTU STATUS ABSENSI & TOMBOL ABSEN MANDIRI --}}
-                <div class="col-md-7 grid-margin stretch-card">
-                    <div class="card card-status hover-shadow-lg">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-4">
-                                <div>
-                                    <h4 class="card-title mb-1">
-                                        <i class="mdi mdi-calendar-today me-2"></i>Status Absensi
-                                    </h4>
-                                    <span class="badge bg-light text-dark border shadow-sm mt-1">
-                                        <i class="mdi mdi-clock-outline me-1"></i> Jadwal: {{ $todaySchedule }}
-                                    </span>
-                                </div>
+                {{-- ======================================================================= --}}
+                {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS) - MODERN REDESIGN --}}
+                {{-- ======================================================================= --}}
+                <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
+                    <div class="col-12">
+                        {{-- Container dengan gradient background --}}
+                        <div class="card border-0 shadow-lg overflow-hidden"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px;">
 
-                                <div class="text-end">
-                                    {{-- CLOCK ELEMENT --}}
-                                    <h4 class="fw-bold mb-0 font-monospace text-primary" id="realtime-clock">--:--:--</h4>
-                                    {{-- TAMPILKAN TIMEZONE --}}
-                                    <small class="text-muted d-block" style="font-size: 0.7rem;">
-                                        {{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}
-                                        ({{ $current_timezone }})
-                                    </small>
-                                </div>
-                            </div>
+                            {{-- Decorative elements --}}
+                            <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
+                                                background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                border-radius: 50%; pointer-events: none;"></div>
 
-                            @if (session('success'))
-                                <div class="alert alert-success alert-dismissible fade show shadow-sm">
-                                    <i class="mdi mdi-check-circle-outline me-2"></i>
-                                    {{ session('success') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            @endif
-                            @if (session('error'))
-                                <div class="alert alert-danger alert-dismissible fade show shadow-sm">
-                                    <i class="mdi mdi-alert-circle-outline me-2"></i>
-                                    {{ session('error') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            @endif
-                            @if (session('warning'))
-                                <div class="alert alert-warning alert-dismissible fade show shadow-sm">
-                                    <i class="mdi mdi-alert-outline me-2"></i>
-                                    {{ session('warning') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            @endif
-
-                            {{-- LOGIKA TAMPILAN STATUS --}}
-                            @if ($myAttendanceToday)
-                                {{-- 1. JIKA SUDAH ABSEN MASUK --}}
-                                @php
-                                    $isCrossDay = false;
-                                    if (!$myAttendanceToday->check_out_time) {
-                                        // Timezone already handled in Controller
-                                        $isCrossDay =
-                                            $myAttendanceToday->check_in_time->format('Y-m-d') !==
-                                            \Carbon\Carbon::now($current_timezone)->format('Y-m-d');
-                                    }
-                                    $sourceLabel =
-                                        $myAttendanceToday->attendance_type == 'scan' ? 'Security Scan' : 'Selfie Mandiri';
-                                @endphp
-
-                                {{-- SUDAH PULANG --}}
-                                @if ($myAttendanceToday->check_out_time || $myAttendanceToday->photo_out_path)
-                                    <div class="status-card status-success mb-3 animate-pulse-green">
+                            <div class="card-body p-4">
+                                <div class="row align-items-center g-3">
+                                    {{-- LEFT: Icon & Title --}}
+                                    <div class="col-lg-4">
                                         <div class="d-flex align-items-center">
-                                            <div class="status-icon shadow"><i class="mdi mdi-home-variant"></i></div>
-                                            <div class="flex-grow-1">
-                                                <h5 class="mb-1 fw-bold">Anda Sudah Pulang</h5>
-                                                <p class="text-muted mb-0 small">Terima kasih atas kerja keras Anda!</p>
+                                            {{-- Icon dengan glassmorphism effect --}}
+                                            <div class="d-flex align-items-center justify-content-center me-3"
+                                                style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
+                                                                border-radius: 16px; backdrop-filter: blur(10px); 
+                                                                border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                                                <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
                                             </div>
-                                        </div>
-                                        <hr>
-                                        <div class="row text-center">
-                                            <div class="col-6 border-end">
-                                                <small class="text-muted d-block">JAM MASUK</small>
-                                                <h4 class="fw-bold text-success mb-0 count-up-time">
-                                                    {{ $myAttendanceToday->check_in_time->format('H:i') }}
-                                                </h4>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">JAM PULANG</small>
-                                                <h4 class="fw-bold text-primary mb-0 count-up-time">
-                                                    {{ $myAttendanceToday->check_out_time ? $myAttendanceToday->check_out_time->format('H:i') : '-' }}
-                                                </h4>
+                                            <div>
+                                                <h4 class="fw-bold mb-1 text-white">Menu Cepat</h4>
+                                                <p class="mb-0 small" style="color: rgba(255, 255, 255, 0.85);">
+                                                    Akses cepat untuk pengajuan izin
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {{-- SEDANG BEKERJA --}}
-                                @else
-                                    <div
-                                        class="status-card {{ $isCrossDay ? 'status-warning' : 'status-success' }} mb-3 position-relative overflow-hidden">
-
-
-                                        <div class="d-flex align-items-center position-relative z-index-1">
-                                            <div class="status-icon shadow pulse-animation">
-                                                <i class="mdi {{ $isCrossDay ? 'mdi-clock-alert-outline' : 'mdi-clock-check' }}"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                @if ($isCrossDay)
-                                                    {{-- [MODIFIKASI] SECTION LEMBUR LINTAS HARI --}}
-                                                    <div class="alert alert-light border-warning mb-0 p-3"
-                                                        style="background-color: #fffbeb; border: 1px solid #fcd34d;">
-                                                        <div class="d-flex align-items-center mb-2">
-                                                            <div>
-                                                                <h6 class="text-danger fw-bold mb-0 text-uppercase"
-                                                                    style="letter-spacing: 0.5px;">Lembur Lintas Hari Detected!
-                                                                </h6>
-                                                                <p class="text-muted small mb-0">
-                                                                    Masuk: <span
-                                                                        class="fw-bold text-dark">{{ $myAttendanceToday->check_in_time->format('d M, H:i') }}</span>
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        <hr class="my-3" style="border-top: 1px solid #fde68a;">
-
-                                                        {{-- CONTAINER UTAMA ACTION --}}
-                                                        <div id="cross-day-actions">
-
-                                                            {{-- LOGIC: HANYA TAMPILKAN SLIDER JIKA BELUM DIKONFIRMASI --}}
-                                                            @if (!$myAttendanceToday->is_extended_shift)
-                                                                {{-- WRAPPER SLIDER & SKIP --}}
-                                                                <div id="confirmation-wrapper">
-                                                                    {{-- OPSI 1: SLIDER UNTUK FOTO (NORMAL) --}}
-                                                                    <div class="mb-3" id="slider-view">
-                                                                        <p class="text-muted small mb-1">
-                                                                            <i class="mdi mdi-camera me-1"></i><strong>Opsi
-                                                                                1:</strong>
-                                                                            Absen Pulang Normal (Foto)
-                                                                        </p>
-
-                                                                        <div class="position-relative w-100 rounded-pill d-flex align-items-center px-1 user-select-none shadow-sm"
-                                                                            id="slide-track"
-                                                                            style="height: 50px; background-color: #fde047; transition: all 0.2s;">
-
-                                                                            <div class="position-absolute w-100 text-center"
-                                                                                style="pointer-events: none; left:0;">
-                                                                                <span class="fw-bold text-dark small opacity-75"
-                                                                                    style="letter-spacing: 1px;">GESER KE KANAN
-                                                                                    >></span>
-                                                                            </div>
-
-                                                                            <div id="slide-thumb"
-                                                                                class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center text-warning"
-                                                                                style="width: 42px; height: 42px; cursor: pointer; position: absolute; left: 4px; z-index: 10;">
-                                                                                <i class="mdi mdi-arrow-right fw-bold fs-5"></i>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {{-- OPSI 2: TOMBOL LEWATI (TANPA FOTO) --}}
-                                                                    <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
-                                                                        method="POST">
-                                                                        @csrf
-                                                                        <p class="text-muted small mb-1">
-                                                                            <i class="mdi mdi-cancel me-1"></i><strong>Opsi
-                                                                                2:</strong>
-                                                                            Lupa Absen (Tanpa Foto)
-                                                                        </p>
-                                                                        <button type="submit" class="btn btn-outline-danger w-100 py-2 shadow-sm"
-                                                                            onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis TANPA FOTO.\n\nLanjutkan?');">
-                                                                            <i class="mdi mdi-skip-forward me-2"></i>Lewati & Tutup
-                                                                            Sesi
-                                                                        </button>
-                                                                    </form>
-                                                                </div>
-                                                            @endif
-
-                                                            {{-- FASE 3: CAMERA BUTTON --}}
-                                                            {{-- Tampil otomatis jika sudah confirm (is_extended_shift == true) ATAU setelah
-                                                            slide selesai (via JS) --}}
-                                                            <div id="camera-view"
-                                                                class="{{ $myAttendanceToday->is_extended_shift ? '' : 'd-none' }} text-center animate-enter mt-3">
-                                                                <div class="mb-3">
-                                                                    <h6 class="text-primary fw-bold">Konfirmasi Pulang</h6>
-                                                                    <p class="text-muted small">Silahkan ambil foto selfie untuk
-                                                                        validasi.</p>
-                                                                </div>
-                                                                <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
-                                                                    class="btn btn-primary w-100 py-3 rounded-3 shadow-sm fw-bold">
-                                                                    <i class="mdi mdi-camera-party-mode me-2"></i> Ambil Foto &
-                                                                    Pulang
-                                                                </a>
-                                                            </div>
-
-                                                        </div>
-
-                                                    </div>
-                                                @else
-                                                    {{-- STATUS NORMAL --}}
-                                                    <div class="d-flex align-items-center">
-                                                        <h5 class="mb-1 fw-bold">Sedang Bekerja</h5>
-                                                        <span class="live-indicator ms-2"></span>
-                                                    </div>
-                                                    <p class="mb-0">Masuk Pukul:
-                                                        <strong>{{ $myAttendanceToday->check_in_time->format('H:i') }}</strong> via
-                                                        {{ $sourceLabel }}
-                                                    </p>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        {{-- TOMBOL AKSI PULANG (NORMAL) --}}
-                                        @if (!$isCrossDay)
-                                            <div class="mt-3 pt-3 border-top position-relative z-index-1">
-                                                @if (Auth::user()->only_security_scan)
-                                                    <button class="btn btn-secondary btn-sm w-100 shadow-sm" disabled
-                                                        style="cursor: not-allowed; opacity: 0.7;">
-                                                        <i class="mdi mdi-lock me-1"></i> Absen Pulang Mandiri Dikunci
-                                                    </button>
-                                                    <small class="text-danger d-block text-center mt-1" style="font-size: 10px;">
-                                                        Silahkan Scan QR Code ke Security untuk Pulang
-                                                    </small>
-                                                @else
-                                                    <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
-                                                        class="btn btn-danger btn-sm w-100 shadow hover-scale">
-                                                        <i class="mdi mdi-logout me-1"></i>
-                                                        Absen Pulang Mandiri
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endif
-                            @elseif($myPendingLeave)
-                                {{-- 2. JIKA ADA PENGAJUAN PENDING (KUNING) --}}
-                                <div class="status-card status-warning mb-3 hover-shadow-lg">
-                                    <div class="text-center py-5">
-                                        <div class="mb-3">
-                                            <i class="mdi mdi-timer-sand display-3 text-warning pulse-animation"></i>
-                                        </div>
-                                        <h4 class="mb-2 fw-bold text-warning">Sedang Menunggu Approve dari Audit</h4>
-                                        <p class="text-muted mb-4 px-3">
-                                            Pengajuan <strong>{{ strtoupper($myPendingLeave->type) }}</strong> Anda sedang
-                                            diproses.
-                                        </p>
-                                        <div class="bg-white p-3 rounded border mb-3 shadow-sm mx-4">
-                                            <span class="fst-italic text-dark">"{{ $myPendingLeave->reason }}"</span>
-                                        </div>
-                                        {{-- Tombol Batalkan --}}
-                                        <form action="{{ route('leave-requests.cancel', $myPendingLeave->id) }}" method="POST">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="btn btn-danger btn-sm shadow-sm"
-                                                onclick="return confirm('Batalkan pengajuan ini?')">
-                                                <i class="mdi mdi-close-circle me-1"></i> Batalkan Pengajuan
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                                {{-- 3. JIKA SUDAH DI APPROVE (HIJAU) --}}
-                            @elseif(isset($myLeaveToday) && $myLeaveToday && $myLeaveToday->status == 'approved')
-                                <div class="status-card status-success mb-3 hover-float">
-                                    <div class="d-flex align-items-start">
-                                        <div class="status-icon shadow"><i class="mdi mdi-check-decagram"></i></div>
-                                        <div class="flex-grow-1">
-                                            <div class="d-flex justify-content-between">
-                                                <h5 class="mb-1 fw-bold">Pengajuan Disetujui</h5>
-                                            </div>
-                                            <p class="text-muted mb-2 small">
-                                                Status: <strong>{{ strtoupper($myLeaveToday->type) }}</strong>
-                                            </p>
-                                            <div class="bg-white p-2 rounded border mb-2 shadow-sm">
-                                                <span class="fst-italic text-dark">"{{ $myLeaveToday->reason }}"</span>
-                                            </div>
-
-                                            @if ($myLeaveToday->file_proof)
-                                                <div class="mt-2">
-                                                    <button type="button" class="btn btn-sm btn-light border shadow-sm"
-                                                        onclick="window.open('{{ Storage::url($myLeaveToday->file_proof) }}', '_blank')">
-                                                        <i class="mdi mdi-image-area me-1"></i>Lihat Bukti
-                                                    </button>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-3 pt-3 border-top text-center">
-
-                                        {{-- LOGIKA BARU: Jika Izin Telat, tombolnya adalah ABSEN MASUK (bukan batalkan izin) --}}
-                                        @if ($myLeaveToday->type === 'telat')
-                                            <p class="small text-muted mb-2">Anda sudah sampai kantor?</p>
-                                            <a href="{{ route('self.attend.create') }}"
-                                                class="btn btn-primary btn-sm w-100 shadow-sm hover-scale">
-                                                <i class="mdi mdi-camera-account me-2"></i> Lakukan Absen Masuk
-                                            </a>
-                                            <small class="d-block mt-2 text-muted fst-italic" style="font-size: 10px;">
-                                                *Izin telat akan tetap tercatat di history Anda.
-                                            </small>
-                                        @else
-                                            {{-- LOGIKA LAMA (Untuk Sakit/Cuti/WFH yang masuk lebih awal) --}}
-                                            <p class="small text-muted mb-2">Berubah pikiran atau sudah sampai kantor?</p>
-                                            <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}" method="POST">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button type="submit" class="btn btn-outline-danger btn-sm w-100 shadow-sm hover-scale"
-                                                    onclick="return confirm('Apakah Anda yakin? Status izin hari ini akan dibatalkan dan Anda bisa absen kembali.');">
-                                                    <i class="mdi mdi-map-marker-radius me-2"></i>Batalkan Izin & Absen Masuk
-                                                </button>
-                                            </form>
-                                        @endif
-
-                                    </div>
-                                </div>
-                            @else
-                                {{-- [LOGIKA BARU] JIKA HABIS LEMBUR LINTAS HARI --}}
-                                @if (isset($justFinishedOvertime) && $justFinishedOvertime)
-                                    <div class="status-card status-info mb-3 hover-shadow-lg">
-                                        <div class="text-center py-5">
-                                            <div class="mb-3">
-                                                <i class="mdi mdi-bed-clock display-4 text-info"></i>
-                                            </div>
-                                            <h5 class="mb-2 fw-bold text-info">Selamat Beristirahat!</h5>
-                                            <p class="text-muted mb-4 px-3 small">
-                                                Anda baru saja pulang lembur pukul
-                                                <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>.
-                                                <br>Sistem mencatat Anda lembur lintas hari. Anda dipersilakan masuk siang hari ini.
-                                            </p>
-
-                                            {{-- Tetap tampilkan tombol absen jika dia mau masuk lagi --}}
-                                            <div class="d-flex justify-content-center gap-2">
-                                                @if (Auth::user()->only_security_scan)
-                                                    <div class="d-flex flex-column align-items-center w-100">
-                                                        <button class="btn btn-secondary shadow-sm w-100" disabled
-                                                            style="cursor: not-allowed; opacity: 0.7;">
-                                                            <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
-                                                        </button>
-                                                    </div>
-                                                @else
-                                                    <a href="{{ route('self.attend.create') }}" class="btn btn-outline-info shadow hover-scale">
-                                                        <i class="mdi mdi-fingerprint me-2"></i>Absen Shift Baru
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                @else
-                                    {{-- 4. BELUM ABSEN (DEFAULT) --}}
-                                    <div class="status-card status-info hover-shadow-lg">
-                                        <div class="text-center py-4">
-                                            <div class="mb-3">
-                                                <i class="mdi mdi-clock-alert display-4 text-primary pulse-text"></i>
-                                            </div>
-                                            <h5 class="mb-2 fw-bold">Anda Belum Absen Hari Ini</h5>
-                                            <p class="text-muted mb-4">Gunakan fitur ini jika Anda bekerja WFH atau Dinas Luar.</p>
-                                            <div class="d-flex justify-content-center gap-2">
-
-                                                {{-- TOMBOL ABSEN MANDIRI --}}
-                                                @if (Auth::user()->only_security_scan)
-                                                    <div class="d-flex flex-column align-items-center w-100">
-                                                        <button class="btn btn-secondary shadow-sm w-100" disabled
-                                                            style="cursor: not-allowed; opacity: 0.7;">
-                                                            <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
-                                                        </button>
-                                                        <small class="text-danger mt-1" style="font-size: 10px;">
-                                                            <i class="mdi mdi-alert-circle"></i> Wajib Scan QR ke Security
-                                                        </small>
-                                                    </div>
-                                                @else
-                                                    <a href="{{ route('self.attend.create') }}" class="btn btn-dark shadow hover-scale">
-                                                        <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
-                                                    </a>
-                                                @endif
-
+                                    {{-- RIGHT: Action Buttons --}}
+                                    <div class="col-lg-8">
+                                        <div class="row g-3">
+                                            {{-- Button 1: Ajukan Izin --}}
+                                            <div class="col-md-6">
                                                 <a href="{{ route('leave-requests.create') }}"
-                                                    class="btn btn-outline-dark shadow-sm hover-scale">
-                                                    <i class="mdi mdi-file-document-edit-outline me-2"></i>Izin/Sakit
+                                                    class="quick-action-card d-block text-decoration-none">
+                                                    <div class="p-4 h-100 d-flex flex-column"
+                                                        style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
+                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
+
+                                                        {{-- Hover gradient effect --}}
+                                                        <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                                                            opacity: 0; transition: opacity 0.3s ease;"
+                                                            class="hover-gradient"></div>
+
+                                                        <div style="position: relative; z-index: 1;">
+                                                            <div class="d-flex align-items-center mb-2">
+                                                                <div class="icon-wrapper me-3" style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
+                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                                                    <i class="mdi mdi-file-document-edit text-white fs-4"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <h5 class="fw-bold mb-0 text-title">Ajukan Izin / Sakit</h5>
+                                                                </div>
+                                                            </div>
+                                                            <p class="small mb-0 text-desc" style="color: #6c757d;">
+                                                                Izin, Sakit, Cuti, WFH, atau Telat
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </div>
+
+                                            {{-- Button 2: Riwayat --}}
+                                            <div class="col-md-6">
+                                                <a href="{{ route('attendance.history') }}"
+                                                    class="quick-action-card d-block text-decoration-none">
+                                                    <div class="p-4 h-100 d-flex flex-column"
+                                                        style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
+                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
+
+                                                        {{-- Hover gradient effect --}}
+                                                        <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+                                                                            opacity: 0; transition: opacity 0.3s ease;"
+                                                            class="hover-gradient"></div>
+
+                                                        <div style="position: relative; z-index: 1;">
+                                                            <div class="d-flex align-items-center mb-2">
+                                                                <div class="icon-wrapper me-3" style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
+                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
+                                                                    <i class="mdi mdi-history text-white fs-4"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <h5 class="fw-bold mb-0 text-title">Riwayat Absensi</h5>
+                                                                </div>
+                                                            </div>
+                                                            <p class="small mb-0 text-desc" style="color: #6c757d;">
+                                                                Lihat semua riwayat kehadiran Anda
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </a>
                                             </div>
                                         </div>
                                     </div>
-                                @endif
-
-                            @endif
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- ======================================================================= --}}
-            {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS) - MODERN REDESIGN --}}
-            {{-- ======================================================================= --}}
-            <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
-                <div class="col-12">
-                    {{-- Container dengan gradient background --}}
-                    <div class="card border-0 shadow-lg overflow-hidden"
-                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px;">
+                <style>
+                    /* Hover effects untuk quick action cards */
+                    .quick-action-card:hover .hover-gradient {
+                        opacity: 1;
+                    }
 
-                        {{-- Decorative elements --}}
-                        <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
-                                            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                            border-radius: 50%; pointer-events: none;"></div>
+                    .quick-action-card:hover {
+                        transform: translateY(-4px);
+                    }
 
-                        <div class="card-body p-4">
-                            <div class="row align-items-center g-3">
-                                {{-- LEFT: Icon & Title --}}
-                                <div class="col-lg-4">
-                                    <div class="d-flex align-items-center">
-                                        {{-- Icon dengan glassmorphism effect --}}
-                                        <div class="d-flex align-items-center justify-content-center me-3"
-                                            style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
-                                                            border-radius: 16px; backdrop-filter: blur(10px); 
-                                                            border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
-                                            <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="fw-bold mb-1 text-white">Menu Cepat</h4>
-                                            <p class="mb-0 small" style="color: rgba(255, 255, 255, 0.85);">
-                                                Akses cepat untuk pengajuan izin
-                                            </p>
+                    .quick-action-card:hover .text-title,
+                    .quick-action-card:hover .text-desc {
+                        color: white !important;
+                    }
+
+                    .quick-action-card:hover .icon-wrapper {
+                        background: white !important;
+                    }
+
+                    .quick-action-card:hover .icon-wrapper i {
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                    }
+                </style>
+
+                {{-- CHART SECTION --}}
+                <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom-0 py-3">
+                                <h4 class="card-title mb-0"><i class="mdi mdi-chart-pie me-2"></i>Statistik Absensi</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="chart-container" style="position: relative; height:300px;">
+                                            <canvas id="attendancePieChart"></canvas>
                                         </div>
                                     </div>
-                                </div>
-
-                                {{-- RIGHT: Action Buttons --}}
-                                <div class="col-lg-8">
-                                    <div class="row g-3">
-                                        {{-- Button 1: Ajukan Izin --}}
-                                        <div class="col-md-6">
-                                            <a href="{{ route('leave-requests.create') }}"
-                                                class="quick-action-card d-block text-decoration-none">
-                                                <div class="p-4 h-100 d-flex flex-column"
-                                                    style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                    border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                    transition: all 0.3s ease; position: relative; overflow: hidden;">
-
-                                                    {{-- Hover gradient effect --}}
-                                                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                                                        opacity: 0; transition: opacity 0.3s ease;"
-                                                        class="hover-gradient"></div>
-
-                                                    <div style="position: relative; z-index: 1;">
-                                                        <div class="d-flex align-items-center mb-2">
-                                                            <div class="icon-wrapper me-3" style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
-                                                                <i class="mdi mdi-file-document-edit text-white fs-4"></i>
-                                                            </div>
-                                                            <div>
-                                                                <h5 class="fw-bold mb-0 text-title">Ajukan Izin / Sakit</h5>
-                                                            </div>
-                                                        </div>
-                                                        <p class="small mb-0 text-desc" style="color: #6c757d;">
-                                                            Izin, Sakit, Cuti, WFH, atau Telat
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
-
-                                        {{-- Button 2: Riwayat --}}
-                                        <div class="col-md-6">
-                                            <a href="{{ route('attendance.history') }}"
-                                                class="quick-action-card d-block text-decoration-none">
-                                                <div class="p-4 h-100 d-flex flex-column"
-                                                    style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                    border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                    transition: all 0.3s ease; position: relative; overflow: hidden;">
-
-                                                    {{-- Hover gradient effect --}}
-                                                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                                                                        opacity: 0; transition: opacity 0.3s ease;"
-                                                        class="hover-gradient"></div>
-
-                                                    <div style="position: relative; z-index: 1;">
-                                                        <div class="d-flex align-items-center mb-2">
-                                                            <div class="icon-wrapper me-3" style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
-                                                                                border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
-                                                                <i class="mdi mdi-history text-white fs-4"></i>
-                                                            </div>
-                                                            <div>
-                                                                <h5 class="fw-bold mb-0 text-title">Riwayat Absensi</h5>
-                                                            </div>
-                                                        </div>
-                                                        <p class="small mb-0 text-desc" style="color: #6c757d;">
-                                                            Lihat semua riwayat kehadiran Anda
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </a>
+                                    <div class="col-md-6 d-flex align-items-center justify-content-center text-muted">
+                                        <div class="text-center">
+                                            <i class="mdi mdi-chart-bar-stacked display-1 opacity-25"></i>
+                                            <p class="mt-2">Analisis data kehadiran secara realtime</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1358,118 +1476,64 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <style>
-                /* Hover effects untuk quick action cards */
-                .quick-action-card:hover .hover-gradient {
-                    opacity: 1;
-                }
+                {{-- MODAL POPUP FOTO PROFIL --}}
+                <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-md">
+                        <div class="modal-content glass-effect border-0">
+                            <div class="modal-body p-0 position-relative modal-image-wrapper text-center">
+                                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow"
+                                    data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
 
-                .quick-action-card:hover {
-                    transform: translateY(-4px);
-                }
-
-                .quick-action-card:hover .text-title,
-                .quick-action-card:hover .text-desc {
-                    color: white !important;
-                }
-
-                .quick-action-card:hover .icon-wrapper {
-                    background: white !important;
-                }
-
-                .quick-action-card:hover .icon-wrapper i {
-                    background: linear-gradient(135deg, #667eea, #764ba2);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                }
-            </style>
-
-            {{-- CHART SECTION --}}
-            <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
-                <div class="col-12">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom-0 py-3">
-                            <h4 class="card-title mb-0"><i class="mdi mdi-chart-pie me-2"></i>Statistik Absensi</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="chart-container" style="position: relative; height:300px;">
-                                        <canvas id="attendancePieChart"></canvas>
-                                    </div>
+                                <div class="p-3">
+                                    <img src="" id="profileModalImageSrc" class="img-fluid rounded shadow-lg" alt="Profile Photo"
+                                        style="max-height: 80vh; max-width: 100%; object-fit: contain;">
                                 </div>
-                                <div class="col-md-6 d-flex align-items-center justify-content-center text-muted">
-                                    <div class="text-center">
-                                        <i class="mdi mdi-chart-bar-stacked display-1 opacity-25"></i>
-                                        <p class="mt-2">Analisis data kehadiran secara realtime</p>
-                                    </div>
+                                <div class="mt-2 mb-3 text-white">
+                                    <h5 class="mb-0">{{ Auth::user()->name }}</h5>
+                                    <small class="opacity-75">Foto Profil</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- MODAL POPUP FOTO PROFIL --}}
-            <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-md">
-                    <div class="modal-content glass-effect border-0">
-                        <div class="modal-body p-0 position-relative modal-image-wrapper text-center">
-                            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow"
-                                data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
-
-                            <div class="p-3">
-                                <img src="" id="profileModalImageSrc" class="img-fluid rounded shadow-lg" alt="Profile Photo"
-                                    style="max-height: 80vh; max-width: 100%; object-fit: contain;">
+                {{-- MODAL POPUP QR CODE (Untuk Scan Security) --}}
+                <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                            <div class="modal-header border-0 pb-0 justify-content-center">
+                                <h5 class="modal-title fw-bold mt-3">QR Code Saya</h5>
                             </div>
-                            <div class="mt-2 mb-3 text-white">
-                                <h5 class="mb-0">{{ Auth::user()->name }}</h5>
-                                <small class="opacity-75">Foto Profil</small>
+                            <div class="modal-body text-center pt-2">
+                                <div class="p-4 bg-light rounded-circle d-inline-block mb-3 shadow-inner">
+                                    <div id="qrcode-modal-display" class="d-flex justify-content-center"></div>
+                                </div>
+                                <p class="text-muted small mb-3">Tunjukkan ke Security untuk Scan</p>
+                                <button type="button" class="btn btn-dark rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- MODAL POPUP QR CODE (Untuk Scan Security) --}}
-            <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-sm">
-                    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-                        <div class="modal-header border-0 pb-0 justify-content-center">
-                            <h5 class="modal-title fw-bold mt-3">QR Code Saya</h5>
-                        </div>
-                        <div class="modal-body text-center pt-2">
-                            <div class="p-4 bg-light rounded-circle d-inline-block mb-3 shadow-inner">
-                                <div id="qrcode-modal-display" class="d-flex justify-content-center"></div>
-                            </div>
-                            <p class="text-muted small mb-3">Tunjukkan ke Security untuk Scan</p>
-                            <button type="button" class="btn btn-dark rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- [BARU] MODAL PREVIEW GALLERY --}}
-            <div class="modal fade" id="galleryPreviewModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content bg-dark border-0 overflow-hidden shadow-lg" style="border-radius: 20px;">
-                        <div class="modal-body p-0 position-relative">
-                            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
-                                style="z-index: 10;" data-bs-dismiss="modal"></button>
-                            <img src="" id="galleryPreviewImg" class="img-fluid w-100"
-                                style="min-height: 300px; object-fit: cover;">
-                            <div class="p-4 text-white"
-                                style="background: linear-gradient(transparent, rgba(0,0,0,0.9)); position: absolute; bottom: 0; left: 0; right: 0;">
-                                <h5 id="galleryPreviewTitle" class="fw-bold mb-1"></h5>
-                                <p id="galleryPreviewDate" class="small opacity-75 mb-0"></p>
+                {{-- [BARU] MODAL PREVIEW GALLERY --}}
+                <div class="modal fade" id="galleryPreviewModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark border-0 overflow-hidden shadow-lg" style="border-radius: 20px;">
+                            <div class="modal-body p-0 position-relative">
+                                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
+                                    style="z-index: 10;" data-bs-dismiss="modal"></button>
+                                <img src="" id="galleryPreviewImg" class="img-fluid w-100"
+                                    style="min-height: 300px; object-fit: cover;">
+                                <div class="p-4 text-white"
+                                    style="background: linear-gradient(transparent, rgba(0,0,0,0.9)); position: absolute; bottom: 0; left: 0; right: 0;">
+                                    <h5 id="galleryPreviewTitle" class="fw-bold mb-1"></h5>
+                                    <p id="galleryPreviewDate" class="small opacity-75 mb-0"></p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
 @endsection
 
