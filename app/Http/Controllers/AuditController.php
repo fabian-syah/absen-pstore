@@ -463,7 +463,7 @@ class AuditController extends Controller
             'presence_status' => 'required|string',
             'status' => 'required|string',
             'audit_note' => 'nullable|string',
-            'audit_photo' => 'nullable|image|max:2048'
+            'audit_photo' => 'nullable|image|max:8192'
         ]);
 
         $attendance = Attendance::findOrFail($id);
