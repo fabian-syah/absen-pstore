@@ -90,7 +90,7 @@ class LeaveRequestController extends Controller
             'reason' => 'required|string|max:255',
             'file_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'start_date' => 'required|date',
-            'end_date'   => 'required_unless:type,telat|nullable|date|after_or_equal:start_date',
+            'end_date' => 'required_unless:type,telat|nullable|date|after_or_equal:start_date',
             'start_time' => 'required_if:type,telat|nullable|date_format:H:i',
         ], [
             'file_proof.required' => 'Bukti foto/dokumen wajib diupload.',
@@ -130,45 +130,100 @@ class LeaveRequestController extends Controller
     /**
      * ACTION: APPROVE
      */
-   public function approve(LeaveRequest $leaveRequest)
-{
-    DB::beginTransaction();
-    try {
-        $leaveRequest->update([
-            'status' => 'approved',
-            'approved_by' => Auth::id(),
-            'rejection_reason' => null,
-        ]);
+    public function approve(LeaveRequest $leaveRequest)
+    {
+        DB::beginTransaction();
+        try {
+            $leaveRequest->update([
+                'status' => 'approved',
+                'approved_by' => Auth::id(),
+                'rejection_reason' => null,
+            ]);
 
-        // LOGIKA BARU: Jika tipe adalah 'telat', buatkan baris absensi otomatis
-        if ($leaveRequest->type === 'telat') {
-            // Cek apakah sudah ada absensi di tanggal tersebut agar tidak double
-            $existingAttendance = Attendance::where('user_id', $leaveRequest->user_id)
-                ->whereDate('check_in_time', $leaveRequest->start_date)
-                ->first();
+            // AUTO-CREATE/UPDATE ATTENDANCE FOR ALL LEAVE TYPES
+            // Untuk setiap tanggal dalam range izin
+            $startDate = Carbon::parse($leaveRequest->start_date);
+            $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
 
-            if (!$existingAttendance) {
-                Attendance::create([
-                    'user_id' => $leaveRequest->user_id,
-                    'branch_id' => $leaveRequest->user->branch_id,
-                    'check_in_time' => Carbon::parse($leaveRequest->start_date->format('Y-m-d') . ' ' . $leaveRequest->start_time),
-                    'presence_status' => 'Masuk', // Status hadir
-                    'status' => 'verified',       // Otomatis terverifikasi karena izin di-acc audit
-                    'notes' => 'Izin Telat: ' . $leaveRequest->reason,
-                    'attendance_type' => 'self', // Atau sesuaikan kategori Anda
-                    'is_late_checkin' => true,
-                    'verified_by_user_id' => Auth::id() // Di-verify oleh audit yang nge-acc
-                ]);
+            // Map leave type to presence status
+            $presenceStatusMap = [
+                'telat' => 'Masuk',  // Telat tetap dianggap masuk
+                'wfh' => 'WFH',
+                'izin' => 'Izin',
+                'sakit' => 'Sakit',
+                'cuti' => 'Cuti',
+                'dinas' => 'Dinas Luar',
+            ];
+
+            $presenceStatus = $presenceStatusMap[$leaveRequest->type] ?? ucfirst($leaveRequest->type);
+
+            // Loop through each date in the range
+            for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+                $currentDate = $date->format('Y-m-d');
+
+                // Cek apakah sudah ada attendance di tanggal tersebut
+                $existingAttendance = Attendance::where('user_id', $leaveRequest->user_id)
+                    ->whereDate('check_in_time', $currentDate)
+                    ->first();
+
+                if ($existingAttendance) {
+                    // SUDAH ADA ATTENDANCE: Update presence_status jika masih Alpha atau null
+                    if (
+                        !$existingAttendance->presence_status ||
+                        strtolower($existingAttendance->presence_status) === 'alpha'
+                    ) {
+
+                        $updateData = [
+                            'presence_status' => $presenceStatus,
+                            'status' => 'verified',
+                            'attendance_type' => 'leave',
+                            'verified_by_user_id' => Auth::id(),
+                        ];
+
+                        // Khusus untuk telat: update jam masuk dan flag is_late_checkin
+                        if ($leaveRequest->type === 'telat' && $leaveRequest->start_time) {
+                            $updateData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leaveRequest->start_time);
+                            $updateData['is_late_checkin'] = true;
+                            $updateData['notes'] = 'Izin Telat: ' . $leaveRequest->reason;
+                        } else {
+                            $updateData['notes'] = ucfirst($leaveRequest->type) . ': ' . $leaveRequest->reason;
+                        }
+
+                        $existingAttendance->update($updateData);
+                    }
+                } else {
+                    // BELUM ADA ATTENDANCE: Create baru
+                    $attendanceData = [
+                        'user_id' => $leaveRequest->user_id,
+                        'branch_id' => $leaveRequest->user->branch_id,
+                        'presence_status' => $presenceStatus,
+                        'status' => 'verified',
+                        'attendance_type' => 'leave',
+                        'verified_by_user_id' => Auth::id(),
+                    ];
+
+                    // Khusus untuk telat: set jam masuk sesuai izin
+                    if ($leaveRequest->type === 'telat' && $leaveRequest->start_time) {
+                        $attendanceData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leaveRequest->start_time);
+                        $attendanceData['is_late_checkin'] = true;
+                        $attendanceData['notes'] = 'Izin Telat: ' . $leaveRequest->reason;
+                    } else {
+                        // Untuk tipe lain: set jam masuk 00:00 (karena tidak ada jam spesifik)
+                        $attendanceData['check_in_time'] = Carbon::parse($currentDate)->startOfDay();
+                        $attendanceData['notes'] = ucfirst($leaveRequest->type) . ': ' . $leaveRequest->reason;
+                    }
+
+                    Attendance::create($attendanceData);
+                }
             }
-        }
 
-        DB::commit();
-        return redirect()->back()->with('success', 'Pengajuan disetujui dan data absensi diperbarui.');
-    } catch (\Exception $e) {
-        DB::rollback();
-        return redirect()->back()->with('error', 'Gagal memproses data: ' . $e->getMessage());
+            DB::commit();
+            return redirect()->back()->with('success', 'Pengajuan disetujui dan data absensi diperbarui otomatis.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with('error', 'Gagal memproses data: ' . $e->getMessage());
+        }
     }
-}
 
     /**
      * ACTION: REJECT
@@ -217,7 +272,8 @@ class LeaveRequestController extends Controller
 
     public function finishEarly(LeaveRequest $leaveRequest)
     {
-        if ($leaveRequest->user_id != Auth::id()) abort(403);
+        if ($leaveRequest->user_id != Auth::id())
+            abort(403);
 
         // FIX: Khusus Izin Telat, jangan "batalkan" tanggalnya.
         // Biarkan request tetap aktif sebagai catatan history,
