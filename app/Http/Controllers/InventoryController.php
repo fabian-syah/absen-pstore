@@ -156,6 +156,19 @@ class InventoryController extends Controller
     }
 
     /**
+     * EXPORT EXCEL SEMUA BARANG AKTIF (ADMIN ONLY)
+     */
+    public function exportAllActive()
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $fileName = 'Semua_Inventaris_Aktif_' . date('Y-m-d') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\InventoryExport(), $fileName);
+    }
+
+    /**
      * Form Create
      */
     public function create(Request $request)

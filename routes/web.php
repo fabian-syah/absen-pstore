@@ -452,6 +452,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             ->name('inventory.branch.export')
             ->middleware('role:admin');
 
+        Route::get('/inventory/export/active', [InventoryController::class, 'exportAllActive'])
+            ->name('inventory.export.active')
+            ->middleware('role:admin');
+
         Route::get('/top-absensi-cabang', [BranchLeaderboardController::class, 'index'])
             ->name('branch-leaderboard.index');
 
