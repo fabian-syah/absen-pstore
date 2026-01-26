@@ -877,7 +877,9 @@
         }
 
         /* iOS Safe Area (for notched phones like iPhone X+) */
-        @supports (padding: env(safe - area - inset - top)) {
+        @supports
+        (padding: env(safe - area - inset - top))
+            {
             body {
                 padding-top: env(safe-area-inset-top);
                 padding-bottom: env(safe-area-inset-bottom);
@@ -1167,8 +1169,9 @@
                         <i class="fas fa-lock"></i>
                         <input type="password" class="form-control" id="password" name="password"
                             placeholder="Masukkan password..." required>
-                        <button type="button" class="password-toggle" onclick="togglePassword()">
-                            <i class="fas fa-eye" id="password-icon"></i>
+                        <button type="button" class="password-toggle" onclick="togglePassword()"
+                            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:8px;width:36px;height:36px;">
+                            <i class="fas fa-eye" id="password-icon" style="font-size:16px;line-height:1;"></i>
                         </button>
                     </div>
                 </div>
