@@ -53,6 +53,22 @@ class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping
         static $no = 0;
         $no++;
 
+        // Helper untuk mapping timezone ke singkatan (WIB/WITA/WIT)
+        $timezoneMap = [
+            'Asia/Jakarta' => 'WIB',
+            'Asia/Makassar' => 'WITA',
+            'Asia/Jayapura' => 'WIT',
+        ];
+
+        // Ambil timezone user
+        $userTimezone = $inventory->user->branch?->timezone;
+        $tzSuffix = $timezoneMap[$userTimezone] ?? '';
+
+        // Format Tanggal: d-m-Y (Suffix)
+        $receivedDate = $inventory->received_date
+            ? $inventory->received_date->format('Y-m-d') . ($tzSuffix ? ' ' . $tzSuffix : '')
+            : '-';
+
         return [
             $no,
             $inventory->item_name,
@@ -61,7 +77,7 @@ class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping
             $inventory->condition,
             $inventory->user->name ?? 'Tanpa Pemilik (Gudang)',
             $inventory->user->division?->name ?? '-',
-            $inventory->received_date,
+            $receivedDate, // Update formatting
             $inventory->user_id ? 'Aktif' : 'Gudang'
         ];
     }

@@ -51,6 +51,22 @@ class InventoryExport implements FromCollection, WithHeadings, WithMapping, With
         static $no = 0;
         $no++;
 
+        // Helper untuk mapping timezone ke singkatan (WIB/WITA/WIT)
+        $timezoneMap = [
+            'Asia/Jakarta' => 'WIB',
+            'Asia/Makassar' => 'WITA',
+            'Asia/Jayapura' => 'WIT',
+        ];
+
+        // Ambil timezone user (jika ada)
+        $userTimezone = $inventory->user->branch?->timezone;
+        $tzSuffix = $timezoneMap[$userTimezone] ?? '';
+
+        // Format Tanggal: d-m-Y (Suffix)
+        $receivedDate = $inventory->received_date
+            ? $inventory->received_date->format('Y-m-d') . ($tzSuffix ? ' ' . $tzSuffix : '')
+            : '-';
+
         return [
             $no,
             $inventory->item_name,
@@ -60,7 +76,7 @@ class InventoryExport implements FromCollection, WithHeadings, WithMapping, With
             $inventory->user->name ?? 'Tanpa Pemilik',
             $inventory->user->division?->name ?? '-',
             $inventory->user->branch?->name ?? '-',
-            $inventory->received_date,
+            $receivedDate, // Menggunakan formatting baru
             'Aktif'
         ];
     }
