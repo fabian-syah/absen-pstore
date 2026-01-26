@@ -279,7 +279,8 @@
                                     <p class="quote-author mb-0" id="quote-author"
                                         style="color: #ffffff !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.9);">
                                         <span class="quote-dash" style="color: #ffffff !important;">—</span> <span
-                                            id="author-name">Loading...</span>
+                                            id="author-name"
+                                            style="color: #ffffff !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.9);">Loading...</span>
                                     </p>
                                 </div>
                             </div>
@@ -1010,18 +1011,18 @@
                         @else
                             <div class="active-work-card mb-3 position-relative overflow-hidden"
                                 style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
-                                                                                                                    border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
+                                                                                                                                border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
 
                                 {{-- Decorative Elements --}}
                                 <div
                                     style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; 
-                                                                                                                        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                                                        border-radius: 50%;">
+                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                                    border-radius: 50%;">
                                 </div>
                                 <div
                                     style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; 
-                                                                                                                        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
-                                                                                                                        border-radius: 50%;">
+                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
+                                                                                                                                    border-radius: 50%;">
                                 </div>
 
                                 <div class="card-body p-4 position-relative" style="z-index: 2;">
@@ -1031,9 +1032,9 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="work-status-icon me-3"
                                                     style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
-                                                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
-                                                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
-                                                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                                     <i class="mdi mdi-briefcase-check text-white" style="font-size: 28px;"></i>
                                                 </div>
                                                 <div>
@@ -1051,7 +1052,7 @@
                                         {{-- Work Timeline & Info --}}
                                         <div class="work-timeline-card p-3 mb-3"
                                             style="background: rgba(255,255,255,0.95); border-radius: 16px; 
-                                                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                                                                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
 
                                             <div class="row g-3">
                                                 {{-- Check In Time --}}
@@ -1059,8 +1060,8 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="timeline-dot me-3"
                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #43e97b, #38f9d7); 
-                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
+                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
                                                             <i class="mdi mdi-login text-white fs-5"></i>
                                                         </div>
                                                         <div>
@@ -1083,8 +1084,8 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="timeline-dot me-3"
                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
                                                             <i class="mdi mdi-timer-outline text-white fs-5"></i>
                                                         </div>
                                                         <div>
@@ -1130,8 +1131,8 @@
                                                 <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
                                                     class="checkout-btn btn btn-lg w-100 shadow-lg"
                                                     style="background: rgba(255,255,255,0.95); color: #ef4444; border: none; 
-                                                                                                                                                                                      border-radius: 14px; padding: 1rem; font-weight: 700; 
-                                                                                                                                                                                      transition: all 0.3s ease; backdrop-filter: blur(10px);">
+                                                                                                                                                                                                          border-radius: 14px; padding: 1rem; font-weight: 700; 
+                                                                                                                                                                                                          transition: all 0.3s ease; backdrop-filter: blur(10px);">
                                                     <i class="mdi mdi-logout-variant me-2"></i>
                                                     Absen Pulang Mandiri
                                                 </a>
@@ -1193,29 +1194,29 @@
                             </style>
 
                             <script>
-                                            // Auto-calculate work dura                         tion
-                                            @if (!$isCrossDay)
-                                                (function () {
-                                                    const checkInTime = new Date('{{ $myAttendanceToday->check_in_time->toIso8601String() }}');
-                                                    const durationDisplay = document.getElementById('work-duration-display');
+                                                        // Auto-calcul                          ate work dura                         tion
+                                                        @if (!$isCrossDay)
+                                                            (function () {
+                                                                const checkInTime = new Date('{{ $myAttendanceToday->check_in_time->toIso8601String() }}');
+                                                                const durationDisplay = document.getElementById('work-duration-display');
 
-                                                    function updateWorkDuration() {
-                                                        const now = new Date();
-                                                        const diff = now - checkInTime;
+                                                                function updateWorkDuration() {
+                                                                    const now = new Date();
+                                                                    const diff = now - checkInTime;
 
-                                                        const hours = Math.floor(diff / (1000 * 60 * 60));
-                                                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                                                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                                                                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-                                                        if (durationDisplay) {
-                                                            durationDisplay.textContent = `${hours}j ${minutes}m`;
-                                                        }
-                                                    }
+                                                                    if (durationDisplay) {
+                                                                        durationDisplay.textContent = `${hours}j ${minutes}m`;
+                                                                    }
+                                                                }
 
-                                                    updateWorkDuration();
-                                                    setInterval(updateWorkDuration, 60000); // Update every minute
-                                                })();
-                                            @endif
-                                        </script>
+                                                                updateWorkDuration();
+                                                                setInterval(updateWorkDuration, 60000); // Update every minute
+                                                            })();
+                                                        @endif
+                                                    </script>
                         @endif
                     @elseif($myPendingLeave)
                             {{-- 2. JIKA ADA PENGAJUAN PENDING (KUNING) --}}
@@ -1245,450 +1246,450 @@
                             </div>
                             {{-- 3. JIKA SUDAH DI APPROVE (HIJAU) --}}
                         @elseif(isset($myLeaveToday) && $myLeaveToday && $myLeaveToday->status == 'approved')
-                            <div class="status-card status-success mb-3 hover-float">
-                                <div class="d-flex align-items-start">
-                                    <div class="status-icon shadow"><i class="mdi mdi-check-decagram"></i></div>
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between">
-                                            <h5 class="mb-1 fw-bold">Pengajuan Disetujui</h5>
-                                        </div>
-                                        <p class="text-muted mb-2 small">
-                                            Status: <strong>{{ strtoupper($myLeaveToday->type) }}</strong>
-                                        </p>
-                                        <div class="bg-white p-2 rounded border mb-2 shadow-sm">
-                                            <span class="fst-italic text-dark">"{{ $myLeaveToday->reason }}"</span>
-                                        </div>
-
-                                        @if ($myLeaveToday->file_proof)
-                                            <div class="mt-2">
-                                                <button type="button" class="btn btn-sm btn-light border shadow-sm"
-                                                    onclick="window.open('{{ Storage::url($myLeaveToday->file_proof) }}', '_blank')">
-                                                    <i class="mdi mdi-image-area me-1"></i>Lihat Bukti
-                                                </button>
+                                <div class="status-card status-success mb-3 hover-float">
+                                    <div class="d-flex align-items-start">
+                                        <div class="status-icon shadow"><i class="mdi mdi-check-decagram"></i></div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between">
+                                                <h5 class="mb-1 fw-bold">Pengajuan Disetujui</h5>
                                             </div>
-                                        @endif
-                                    </div>
-                                </div>
+                                            <p class="text-muted mb-2 small">
+                                                Status: <strong>{{ strtoupper($myLeaveToday->type) }}</strong>
+                                            </p>
+                                            <div class="bg-white p-2 rounded border mb-2 shadow-sm">
+                                                <span class="fst-italic text-dark">"{{ $myLeaveToday->reason }}"</span>
+                                            </div>
 
-                                <div class="mt-3 pt-3 border-top text-center">
-
-                                    {{-- LOGIKA BARU: Jika Izin Telat, tombolnya adalah ABSEN MASUK (bukan batalkan izin) --}}
-                                    @if ($myLeaveToday->type === 'telat')
-                                        <p class="small text-muted mb-2">Anda sudah sampai kantor?</p>
-                                        <a href="{{ route('self.attend.create') }}"
-                                            class="btn btn-primary btn-sm w-100 shadow-sm hover-scale">
-                                            <i class="mdi mdi-camera-account me-2"></i> Lakukan Absen Masuk
-                                        </a>
-                                        <small class="d-block mt-2 text-muted fst-italic" style="font-size: 10px;">
-                                            *Izin telat akan tetap tercatat di history Anda.
-                                        </small>
-                                    @else
-                                        {{-- LOGIKA LAMA (Untuk Sakit/Cuti/WFH yang masuk lebih awal) --}}
-                                        <p class="small text-muted mb-2">Berubah pikiran atau sudah sampai kantor?</p>
-                                        <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}" method="POST">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100 shadow-sm hover-scale"
-                                                onclick="return confirm('Apakah Anda yakin? Status izin hari ini akan dibatalkan dan Anda bisa absen kembali.');">
-                                                <i class="mdi mdi-map-marker-radius me-2"></i>Batalkan Izin & Absen Masuk
-                                            </button>
-                                        </form>
-                                    @endif
-
-                                </div>
-                            </div>
-                        @else
-                            {{-- [LOGIKA BARU] JIKA HABIS LEMBUR LINTAS HARI --}}
-                            @if (isset($justFinishedOvertime) && $justFinishedOvertime)
-                                <div class="status-card status-info mb-3 hover-shadow-lg">
-                                    <div class="text-center py-5">
-                                        <div class="mb-3">
-                                            <i class="mdi mdi-bed-clock display-4 text-info"></i>
-                                        </div>
-                                        <h5 class="mb-2 fw-bold text-info">Selamat Beristirahat!</h5>
-                                        <p class="text-muted mb-4 px-3 small">
-                                            Anda baru saja pulang lembur pukul
-                                            <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>.
-                                            <br>Sistem mencatat Anda lembur lintas hari. Anda dipersilakan masuk siang hari ini.
-                                        </p>
-
-                                        {{-- Tetap tampilkan tombol absen jika dia mau masuk lagi --}}
-                                        <div class="d-flex justify-content-center gap-2">
-                                            @if (Auth::user()->only_security_scan)
-                                                <div class="d-flex flex-column align-items-center w-100">
-                                                    <button class="btn btn-secondary shadow-sm w-100" disabled
-                                                        style="cursor: not-allowed; opacity: 0.7;">
-                                                        <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
+                                            @if ($myLeaveToday->file_proof)
+                                                <div class="mt-2">
+                                                    <button type="button" class="btn btn-sm btn-light border shadow-sm"
+                                                        onclick="window.open('{{ Storage::url($myLeaveToday->file_proof) }}', '_blank')">
+                                                        <i class="mdi mdi-image-area me-1"></i>Lihat Bukti
                                                     </button>
                                                 </div>
-                                            @else
-                                                <a href="{{ route('self.attend.create') }}" class="btn btn-outline-info shadow hover-scale">
-                                                    <i class="mdi mdi-fingerprint me-2"></i>Absen Shift Baru
-                                                </a>
                                             @endif
                                         </div>
+                                    </div>
+
+                                    <div class="mt-3 pt-3 border-top text-center">
+
+                                        {{-- LOGIKA BARU: Jika Izin Telat, tombolnya adalah ABSEN MASUK (bukan batalkan izin) --}}
+                                        @if ($myLeaveToday->type === 'telat')
+                                            <p class="small text-muted mb-2">Anda sudah sampai kantor?</p>
+                                            <a href="{{ route('self.attend.create') }}"
+                                                class="btn btn-primary btn-sm w-100 shadow-sm hover-scale">
+                                                <i class="mdi mdi-camera-account me-2"></i> Lakukan Absen Masuk
+                                            </a>
+                                            <small class="d-block mt-2 text-muted fst-italic" style="font-size: 10px;">
+                                                *Izin telat akan tetap tercatat di history Anda.
+                                            </small>
+                                        @else
+                                            {{-- LOGIKA LAMA (Untuk Sakit/Cuti/WFH yang masuk lebih awal) --}}
+                                            <p class="small text-muted mb-2">Berubah pikiran atau sudah sampai kantor?</p>
+                                            <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}" method="POST">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-outline-danger btn-sm w-100 shadow-sm hover-scale"
+                                                    onclick="return confirm('Apakah Anda yakin? Status izin hari ini akan dibatalkan dan Anda bisa absen kembali.');">
+                                                    <i class="mdi mdi-map-marker-radius me-2"></i>Batalkan Izin & Absen Masuk
+                                                </button>
+                                            </form>
+                                        @endif
+
                                     </div>
                                 </div>
                             @else
-                                {{-- 4. BELUM ABSEN (DEFAULT) --}}
-                                <div class="status-card status-info hover-shadow-lg">
-                                    <div class="text-center py-4">
-                                        <div class="mb-3">
-                                            <i class="mdi mdi-clock-alert display-4 text-primary pulse-text"></i>
+                                {{-- [LOGIKA BARU] JIKA HABIS LEMBUR LINTAS HARI --}}
+                                @if (isset($justFinishedOvertime) && $justFinishedOvertime)
+                                    <div class="status-card status-info mb-3 hover-shadow-lg">
+                                        <div class="text-center py-5">
+                                            <div class="mb-3">
+                                                <i class="mdi mdi-bed-clock display-4 text-info"></i>
+                                            </div>
+                                            <h5 class="mb-2 fw-bold text-info">Selamat Beristirahat!</h5>
+                                            <p class="text-muted mb-4 px-3 small">
+                                                Anda baru saja pulang lembur pukul
+                                                <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>.
+                                                <br>Sistem mencatat Anda lembur lintas hari. Anda dipersilakan masuk siang hari ini.
+                                            </p>
+
+                                            {{-- Tetap tampilkan tombol absen jika dia mau masuk lagi --}}
+                                            <div class="d-flex justify-content-center gap-2">
+                                                @if (Auth::user()->only_security_scan)
+                                                    <div class="d-flex flex-column align-items-center w-100">
+                                                        <button class="btn btn-secondary shadow-sm w-100" disabled
+                                                            style="cursor: not-allowed; opacity: 0.7;">
+                                                            <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <a href="{{ route('self.attend.create') }}" class="btn btn-outline-info shadow hover-scale">
+                                                        <i class="mdi mdi-fingerprint me-2"></i>Absen Shift Baru
+                                                    </a>
+                                                @endif
+                                            </div>
                                         </div>
-                                        <h5 class="mb-2 fw-bold">Anda Belum Absen Hari Ini</h5>
-                                        <p class="text-muted mb-4">Gunakan fitur ini jika Anda bekerja WFH atau Dinas Luar.</p>
-                                        <div class="d-flex justify-content-center gap-2">
+                                    </div>
+                                @else
+                                    {{-- 4. BELUM ABSEN (DEFAULT) --}}
+                                    <div class="status-card status-info hover-shadow-lg">
+                                        <div class="text-center py-4">
+                                            <div class="mb-3">
+                                                <i class="mdi mdi-clock-alert display-4 text-primary pulse-text"></i>
+                                            </div>
+                                            <h5 class="mb-2 fw-bold">Anda Belum Absen Hari Ini</h5>
+                                            <p class="text-muted mb-4">Gunakan fitur ini jika Anda bekerja WFH atau Dinas Luar.</p>
+                                            <div class="d-flex justify-content-center gap-2">
 
-                                            {{-- TOMBOL ABSEN MANDIRI --}}
-                                            @if (Auth::user()->only_security_scan)
-                                                <div class="d-flex flex-column align-items-center w-100">
-                                                    <button class="btn btn-secondary shadow-sm w-100" disabled
-                                                        style="cursor: not-allowed; opacity: 0.7;">
-                                                        <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
-                                                    </button>
-                                                    <small class="text-danger mt-1" style="font-size: 10px;">
-                                                        <i class="mdi mdi-alert-circle"></i> Wajib Scan QR ke Security
-                                                    </small>
-                                                </div>
-                                            @else
-                                                <a href="{{ route('self.attend.create') }}" class="btn btn-dark shadow hover-scale">
-                                                    <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
+                                                {{-- TOMBOL ABSEN MANDIRI --}}
+                                                @if (Auth::user()->only_security_scan)
+                                                    <div class="d-flex flex-column align-items-center w-100">
+                                                        <button class="btn btn-secondary shadow-sm w-100" disabled
+                                                            style="cursor: not-allowed; opacity: 0.7;">
+                                                            <i class="mdi mdi-lock me-1"></i> Absen Mandiri Dikunci
+                                                        </button>
+                                                        <small class="text-danger mt-1" style="font-size: 10px;">
+                                                            <i class="mdi mdi-alert-circle"></i> Wajib Scan QR ke Security
+                                                        </small>
+                                                    </div>
+                                                @else
+                                                    <a href="{{ route('self.attend.create') }}" class="btn btn-dark shadow hover-scale">
+                                                        <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
+                                                    </a>
+                                                @endif
+
+                                                <a href="{{ route('leave-requests.create') }}"
+                                                    class="btn btn-outline-dark shadow-sm hover-scale">
+                                                    <i class="mdi mdi-file-document-edit-outline me-2"></i>Izin/Sakit
                                                 </a>
-                                            @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
 
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ======================================================================= --}}
+            {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS) - MODERN REDESIGN --}}
+            {{-- ======================================================================= --}}
+            <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
+                <div class="col-12">
+                    {{-- Container dengan gradient background --}}
+                    <div class="card border-0 shadow-lg overflow-hidden"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px;">
+
+                        {{-- Decorative elements --}}
+                        <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
+                                                                                background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                border-radius: 50%; pointer-events: none;"></div>
+
+                        <div class="card-body p-4">
+                            <div class="row align-items-center g-3">
+                                {{-- LEFT: Icon & Title --}}
+                                <div class="col-lg-4">
+                                    <div class="d-flex align-items-center">
+                                        {{-- Icon dengan glassmorphism effect --}}
+                                        <div class="d-flex align-items-center justify-content-center me-3"
+                                            style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
+                                                                                                border-radius: 16px; backdrop-filter: blur(10px); 
+                                                                                                border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                                            <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="fw-bold mb-1 text-white">Menu Cepat</h4>
+                                            <p class="mb-0 small" style="color: rgba(255, 255, 255, 0.85);">
+                                                Akses cepat untuk pengajuan izin
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- RIGHT: Action Buttons --}}
+                                <div class="col-lg-8">
+                                    <div class="row g-3">
+                                        {{-- Button 1: Ajukan Izin --}}
+                                        <div class="col-md-6">
                                             <a href="{{ route('leave-requests.create') }}"
-                                                class="btn btn-outline-dark shadow-sm hover-scale">
-                                                <i class="mdi mdi-file-document-edit-outline me-2"></i>Izin/Sakit
+                                                class="quick-action-card d-block text-decoration-none">
+                                                <div class="p-4 h-100 d-flex flex-column"
+                                                    style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
+                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
+
+                                                    {{-- Hover gradient effect --}}
+                                                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
+                                                        class="hover-gradient"></div>
+
+                                                    <div style="position: relative; z-index: 1;">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <div class="icon-wrapper me-3"
+                                                                style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
+                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                                                <i class="mdi mdi-file-document-edit text-white fs-4"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h5 class="fw-bold mb-0 text-title">Ajukan Izin / Sakit</h5>
+                                                            </div>
+                                                        </div>
+                                                        <p class="small mb-0 text-desc" style="color: #6c757d;">
+                                                            Izin, Sakit, Cuti, WFH, atau Telat
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+
+                                        {{-- Button 2: Riwayat --}}
+                                        <div class="col-md-6">
+                                            <a href="{{ route('attendance.history') }}"
+                                                class="quick-action-card d-block text-decoration-none">
+                                                <div class="p-4 h-100 d-flex flex-column"
+                                                    style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
+                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
+
+                                                    {{-- Hover gradient effect --}}
+                                                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
+                                                        class="hover-gradient"></div>
+
+                                                    <div style="position: relative; z-index: 1;">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <div class="icon-wrapper me-3"
+                                                                style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
+                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
+                                                                <i class="mdi mdi-history text-white fs-4"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h5 class="fw-bold mb-0 text-title">Riwayat Absensi</h5>
+                                                            </div>
+                                                        </div>
+                                                        <p class="small mb-0 text-desc" style="color: #6c757d;">
+                                                            Lihat semua riwayat kehadiran Anda
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
                                 </div>
-                            @endif
-
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- ======================================================================= --}}
-        {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS) - MODERN REDESIGN --}}
-        {{-- ======================================================================= --}}
-        <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
-            <div class="col-12">
-                {{-- Container dengan gradient background --}}
-                <div class="card border-0 shadow-lg overflow-hidden"
-                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px;">
-
-                    {{-- Decorative elements --}}
-                    <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
-                                                                            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                            border-radius: 50%; pointer-events: none;"></div>
-
-                    <div class="card-body p-4">
-                        <div class="row align-items-center g-3">
-                            {{-- LEFT: Icon & Title --}}
-                            <div class="col-lg-4">
-                                <div class="d-flex align-items-center">
-                                    {{-- Icon dengan glassmorphism effect --}}
-                                    <div class="d-flex align-items-center justify-content-center me-3"
-                                        style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
-                                                                                            border-radius: 16px; backdrop-filter: blur(10px); 
-                                                                                            border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
-                                        <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="fw-bold mb-1 text-white">Menu Cepat</h4>
-                                        <p class="mb-0 small" style="color: rgba(255, 255, 255, 0.85);">
-                                            Akses cepat untuk pengajuan izin
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- RIGHT: Action Buttons --}}
-                            <div class="col-lg-8">
-                                <div class="row g-3">
-                                    {{-- Button 1: Ajukan Izin --}}
-                                    <div class="col-md-6">
-                                        <a href="{{ route('leave-requests.create') }}"
-                                            class="quick-action-card d-block text-decoration-none">
-                                            <div class="p-4 h-100 d-flex flex-column"
-                                                style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                    border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                    transition: all 0.3s ease; position: relative; overflow: hidden;">
-
-                                                {{-- Hover gradient effect --}}
-                                                <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                                                                                        opacity: 0; transition: opacity 0.3s ease;"
-                                                    class="hover-gradient"></div>
-
-                                                <div style="position: relative; z-index: 1;">
-                                                    <div class="d-flex align-items-center mb-2">
-                                                        <div class="icon-wrapper me-3"
-                                                            style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
-                                                            <i class="mdi mdi-file-document-edit text-white fs-4"></i>
-                                                        </div>
-                                                        <div>
-                                                            <h5 class="fw-bold mb-0 text-title">Ajukan Izin / Sakit</h5>
-                                                        </div>
-                                                    </div>
-                                                    <p class="small mb-0 text-desc" style="color: #6c757d;">
-                                                        Izin, Sakit, Cuti, WFH, atau Telat
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </div>
-
-                                    {{-- Button 2: Riwayat --}}
-                                    <div class="col-md-6">
-                                        <a href="{{ route('attendance.history') }}"
-                                            class="quick-action-card d-block text-decoration-none">
-                                            <div class="p-4 h-100 d-flex flex-column"
-                                                style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                    border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                    transition: all 0.3s ease; position: relative; overflow: hidden;">
-
-                                                {{-- Hover gradient effect --}}
-                                                <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                                                                                                        opacity: 0; transition: opacity 0.3s ease;"
-                                                    class="hover-gradient"></div>
-
-                                                <div style="position: relative; z-index: 1;">
-                                                    <div class="d-flex align-items-center mb-2">
-                                                        <div class="icon-wrapper me-3"
-                                                            style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
-                                                                                                                border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
-                                                            <i class="mdi mdi-history text-white fs-4"></i>
-                                                        </div>
-                                                        <div>
-                                                            <h5 class="fw-bold mb-0 text-title">Riwayat Absensi</h5>
-                                                        </div>
-                                                    </div>
-                                                    <p class="small mb-0 text-desc" style="color: #6c757d;">
-                                                        Lihat semua riwayat kehadiran Anda
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <style>
-            /* Hover effects untuk quick action cards */
-            .quick-action-card:hover .hover-gradient {
-                opacity: 1;
-            }
-
-            .quick-action-card:hover {
-                transform: translateY(-4px);
-            }
-
-            .quick-action-card:hover .text-title,
-            .quick-action-card:hover .text-desc {
-                color: white !important;
-            }
-
-            .quick-action-card:hover .icon-wrapper {
-                background: white !important;
-            }
-
-            .quick-action-card:hover .icon-wrapper i {
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-            }
-
-            /* Motivational Quote Widget Styles */
-            .quote-card {
-                position: relative;
-                overflow: hidden;
-            }
-
-            .quote-decoration-1 {
-                position: absolute;
-                width: 200px;
-                height: 200px;
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 50%;
-                top: -100px;
-                right: -50px;
-                animation: floatQuote 6s ease-in-out infinite;
-            }
-
-            .quote-decoration-2 {
-                position: absolute;
-                width: 150px;
-                height: 150px;
-                background: rgba(255, 255, 255, 0.08);
-                border-radius: 50%;
-                bottom: -80px;
-                left: -50px;
-                animation: floatQuote 8s ease-in-out infinite reverse;
-            }
-
-            @keyframes floatQuote {
-
-                0%,
-                100% {
-                    transform: translate(0, 0) scale(1);
+            <style>
+                /* Hover effects untuk quick action cards */
+                .quick-action-card:hover .hover-gradient {
+                    opacity: 1;
                 }
 
-                50% {
-                    transform: translate(10px, -10px) scale(1.05);
+                .quick-action-card:hover {
+                    transform: translateY(-4px);
                 }
-            }
 
-            .quote-icon {
-                width: 50px;
-                height: 50px;
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex-shrink: 0;
-            }
+                .quick-action-card:hover .text-title,
+                .quick-action-card:hover .text-desc {
+                    color: white !important;
+                }
 
-            .quote-icon i {
-                font-size: 28px;
-                color: #fff;
-            }
+                .quick-action-card:hover .icon-wrapper {
+                    background: white !important;
+                }
 
-            .quote-text {
-                font-size: 1.15rem;
-                font-weight: 600;
-                color: #fff !important;
-                line-height: 1.6;
-                font-style: italic;
-                margin: 0;
-                text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.9);
-            }
+                .quick-action-card:hover .icon-wrapper i {
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
 
-            .quote-author {
-                color: rgba(255, 255, 255, 0.95) !important;
-                font-size: 0.9rem;
-                font-weight: 600;
-                text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
-            }
+                /* Motivational Quote Widget Styles */
+                .quote-card {
+                    position: relative;
+                    overflow: hidden;
+                }
 
-            .quote-dash {
-                color: rgba(255, 255, 255, 0.7);
-            }
+                .quote-decoration-1 {
+                    position: absolute;
+                    width: 200px;
+                    height: 200px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 50%;
+                    top: -100px;
+                    right: -50px;
+                    animation: floatQuote 6s ease-in-out infinite;
+                }
 
-            @media (max-width: 768px) {
-                .quote-text {
-                    font-size: 0.95rem;
+                .quote-decoration-2 {
+                    position: absolute;
+                    width: 150px;
+                    height: 150px;
+                    background: rgba(255, 255, 255, 0.08);
+                    border-radius: 50%;
+                    bottom: -80px;
+                    left: -50px;
+                    animation: floatQuote 8s ease-in-out infinite reverse;
+                }
+
+                @keyframes floatQuote {
+
+                    0%,
+                    100% {
+                        transform: translate(0, 0) scale(1);
+                    }
+
+                    50% {
+                        transform: translate(10px, -10px) scale(1.05);
+                    }
                 }
 
                 .quote-icon {
-                    width: 40px;
-                    height: 40px;
+                    width: 50px;
+                    height: 50px;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
                 }
 
                 .quote-icon i {
-                    font-size: 22px;
+                    font-size: 28px;
+                    color: #fff;
                 }
-            }
-        </style>
 
-        {{-- CHART SECTION --}}
-        <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom-0 py-3">
-                        <h4 class="card-title mb-0"><i class="mdi mdi-chart-pie me-2"></i>Statistik Absensi</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="chart-container" style="position: relative; height:300px;">
-                                    <canvas id="attendancePieChart"></canvas>
+                .quote-text {
+                    font-size: 1.15rem;
+                    font-weight: 600;
+                    color: #fff !important;
+                    line-height: 1.6;
+                    font-style: italic;
+                    margin: 0;
+                    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.9);
+                }
+
+                .quote-author {
+                    color: rgba(255, 255, 255, 0.95) !important;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+                }
+
+                .quote-dash {
+                    color: rgba(255, 255, 255, 0.7);
+                }
+
+                @media (max-width: 768px) {
+                    .quote-text {
+                        font-size: 0.95rem;
+                    }
+
+                    .quote-icon {
+                        width: 40px;
+                        height: 40px;
+                    }
+
+                    .quote-icon i {
+                        font-size: 22px;
+                    }
+                }
+            </style>
+
+            {{-- CHART SECTION --}}
+            <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom-0 py-3">
+                            <h4 class="card-title mb-0"><i class="mdi mdi-chart-pie me-2"></i>Statistik Absensi</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="chart-container" style="position: relative; height:300px;">
+                                        <canvas id="attendancePieChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 d-flex align-items-center justify-content-center text-muted">
+                                    <div class="text-center">
+                                        <i class="mdi mdi-chart-bar-stacked display-1 opacity-25"></i>
+                                        <p class="mt-2">Analisis data kehadiran secara realtime</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 d-flex align-items-center justify-content-center text-muted">
-                                <div class="text-center">
-                                    <i class="mdi mdi-chart-bar-stacked display-1 opacity-25"></i>
-                                    <p class="mt-2">Analisis data kehadiran secara realtime</p>
-                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- MODAL POPUP FOTO PROFIL --}}
+            <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-md">
+                    <div class="modal-content glass-effect border-0">
+                        <div class="modal-body p-0 position-relative modal-image-wrapper text-center">
+                            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow"
+                                data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
+
+                            <div class="p-3">
+                                <img src="" id="profileModalImageSrc" class="img-fluid rounded shadow-lg" alt="Profile Photo"
+                                    style="max-height: 80vh; max-width: 100%; object-fit: contain;">
+                            </div>
+                            <div class="mt-2 mb-3 text-white">
+                                <h5 class="mb-0">{{ Auth::user()->name }}</h5>
+                                <small class="opacity-75">Foto Profil</small>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {{-- MODAL POPUP FOTO PROFIL --}}
-        <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-md">
-                <div class="modal-content glass-effect border-0">
-                    <div class="modal-body p-0 position-relative modal-image-wrapper text-center">
-                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow"
-                            data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
-
-                        <div class="p-3">
-                            <img src="" id="profileModalImageSrc" class="img-fluid rounded shadow-lg" alt="Profile Photo"
-                                style="max-height: 80vh; max-width: 100%; object-fit: contain;">
+            {{-- MODAL POPUP QR CODE (Untuk Scan Security) --}}
+            <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                        <div class="modal-header border-0 pb-0 justify-content-center">
+                            <h5 class="modal-title fw-bold mt-3">QR Code Saya</h5>
                         </div>
-                        <div class="mt-2 mb-3 text-white">
-                            <h5 class="mb-0">{{ Auth::user()->name }}</h5>
-                            <small class="opacity-75">Foto Profil</small>
+                        <div class="modal-body text-center pt-2">
+                            <div class="p-4 bg-light rounded-circle d-inline-block mb-3 shadow-inner">
+                                <div id="qrcode-modal-display" class="d-flex justify-content-center"></div>
+                            </div>
+                            <p class="text-muted small mb-3">Tunjukkan ke Security untuk Scan</p>
+                            <button type="button" class="btn btn-dark rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {{-- MODAL POPUP QR CODE (Untuk Scan Security) --}}
-        <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-                    <div class="modal-header border-0 pb-0 justify-content-center">
-                        <h5 class="modal-title fw-bold mt-3">QR Code Saya</h5>
-                    </div>
-                    <div class="modal-body text-center pt-2">
-                        <div class="p-4 bg-light rounded-circle d-inline-block mb-3 shadow-inner">
-                            <div id="qrcode-modal-display" class="d-flex justify-content-center"></div>
-                        </div>
-                        <p class="text-muted small mb-3">Tunjukkan ke Security untuk Scan</p>
-                        <button type="button" class="btn btn-dark rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- [BARU] MODAL PREVIEW GALLERY --}}
-        <div class="modal fade" id="galleryPreviewModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content bg-dark border-0 overflow-hidden shadow-lg" style="border-radius: 20px;">
-                    <div class="modal-body p-0 position-relative">
-                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
-                            style="z-index: 10;" data-bs-dismiss="modal"></button>
-                        <img src="" id="galleryPreviewImg" class="img-fluid w-100"
-                            style="min-height: 300px; object-fit: cover;">
-                        <div class="p-4 text-white"
-                            style="background: linear-gradient(transparent, rgba(0,0,0,0.9)); position: absolute; bottom: 0; left: 0; right: 0;">
-                            <h5 id="galleryPreviewTitle" class="fw-bold mb-1"></h5>
-                            <p id="galleryPreviewDate" class="small opacity-75 mb-0"></p>
+            {{-- [BARU] MODAL PREVIEW GALLERY --}}
+            <div class="modal fade" id="galleryPreviewModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content bg-dark border-0 overflow-hidden shadow-lg" style="border-radius: 20px;">
+                        <div class="modal-body p-0 position-relative">
+                            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
+                                style="z-index: 10;" data-bs-dismiss="modal"></button>
+                            <img src="" id="galleryPreviewImg" class="img-fluid w-100"
+                                style="min-height: 300px; object-fit: cover;">
+                            <div class="p-4 text-white"
+                                style="background: linear-gradient(transparent, rgba(0,0,0,0.9)); position: absolute; bottom: 0; left: 0; right: 0;">
+                                <h5 id="galleryPreviewTitle" class="fw-bold mb-1"></h5>
+                                <p id="galleryPreviewDate" class="small opacity-75 mb-0"></p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
 @endsection
 
