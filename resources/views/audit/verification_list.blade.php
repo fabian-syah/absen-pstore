@@ -434,23 +434,39 @@
             position: relative;
             width: 60px;
             height: 60px;
-            border-radius: 12px; /* Rounded Square */
+            border-radius: 12px; /* Diubah dari bulat ke kotak dengan sudut melengkung */
             overflow: hidden;
             cursor: pointer;
             background: #f1f5f9;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         .photo-thumb:hover {
             transform: scale(1.08) translateY(-2px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+
         .photo-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
-            border-radius: 0; /* Remove redundant radius on image */
+            border-radius: 0; /* Menghapus radius tambahan pada tag img */
+        }
+
+        /* Photo Mobile */
+        .photo-mobile {
+            border-radius: 10px; /* Konsisten dalam bentuk kotak */
+            overflow: hidden;
+            height: 65px;
+            cursor: pointer;
+        }
+
+        .photo-mobile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .photo-overlay {
             position: absolute;
