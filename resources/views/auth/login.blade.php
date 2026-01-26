@@ -120,7 +120,9 @@
         }
 
         .login-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: #1a1a1a;
+            /* Solid fallback for Safari */
+            background: rgba(30, 30, 30, 0.95);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border-radius: 28px;
@@ -130,6 +132,13 @@
                 0 30px 60px -15px rgba(0, 0, 0, 0.6),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
             animation: slideUp 0.6s ease-out;
+        }
+
+        /* Safari fallback */
+        @supports not (backdrop-filter: blur(24px)) {
+            .login-card {
+                background: #1a1a1a;
+            }
         }
 
         @keyframes slideUp {
@@ -232,24 +241,30 @@
         .form-control {
             width: 100%;
             padding: 18px 18px 18px 54px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            background-color: #2a2a2a;
+            /* Solid fallback */
+            background: rgba(50, 50, 50, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.15);
             border-radius: 14px;
             font-size: 15px;
-            color: white;
+            color: #ffffff;
             font-family: 'Inter', sans-serif;
             transition: all 0.3s ease;
             outline: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.35);
+            color: rgba(255, 255, 255, 0.4);
         }
 
         .form-control:focus {
-            border-color: rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.12);
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.5);
+            background-color: #333333;
+            background: rgba(60, 60, 60, 0.95);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
         }
 
         .input-wrapper:focus-within>i {
@@ -330,8 +345,10 @@
 
         /* Info box */
         .info-box {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: #252525;
+            /* Solid fallback */
+            background: rgba(40, 40, 40, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 14px;
             padding: 18px;
             margin-bottom: 28px;
@@ -453,400 +470,402 @@
         }
 
         /* Responsive - All Devices */
-        
+
         /* Large Desktop (1400px+) */
         @media (min-width: 1400px) {
             .login-container {
                 max-width: 480px;
             }
-            
+
             .login-card {
                 padding: 56px 48px;
             }
-            
+
             .logo-icon {
                 width: 90px;
                 height: 90px;
             }
-            
+
             .logo-icon i {
                 font-size: 42px;
             }
-            
+
             .brand-name {
                 font-size: 36px;
             }
         }
-        
+
         /* Desktop (1200px - 1399px) */
         @media (min-width: 1200px) and (max-width: 1399px) {
             .login-container {
                 max-width: 460px;
             }
         }
-        
+
         /* Laptop (992px - 1199px) */
         @media (min-width: 992px) and (max-width: 1199px) {
             .login-container {
                 max-width: 440px;
             }
-            
+
             .login-card {
                 padding: 44px 36px;
             }
         }
-        
+
         /* Tablet Landscape (768px - 991px) */
         @media (min-width: 768px) and (max-width: 991px) {
             .login-container {
                 max-width: 420px;
             }
-            
+
             .login-card {
                 padding: 40px 32px;
             }
-            
+
             .logo-icon {
                 width: 75px;
                 height: 75px;
             }
-            
+
             .logo-icon i {
                 font-size: 35px;
             }
-            
+
             .brand-name {
                 font-size: 30px;
             }
         }
-        
+
         /* Tablet Portrait (600px - 767px) */
         @media (min-width: 600px) and (max-width: 767px) {
             .login-container {
                 max-width: 400px;
                 padding: 24px;
             }
-            
+
             .login-card {
                 padding: 36px 28px;
                 border-radius: 24px;
             }
-            
+
             .logo-section {
                 margin-bottom: 32px;
             }
-            
+
             .logo-icon {
                 width: 72px;
                 height: 72px;
             }
-            
+
             .logo-icon i {
                 font-size: 34px;
             }
-            
+
             .brand-name {
                 font-size: 28px;
                 letter-spacing: 2px;
             }
-            
+
             .brand-tagline {
                 font-size: 13px;
             }
         }
-        
+
         /* Large Mobile (481px - 599px) */
         @media (min-width: 481px) and (max-width: 599px) {
             body {
                 padding: 16px;
             }
-            
+
             .login-container {
                 max-width: 100%;
                 padding: 16px;
             }
-            
+
             .login-card {
                 padding: 32px 24px;
                 border-radius: 22px;
             }
-            
+
             .logo-section {
                 margin-bottom: 28px;
             }
-            
+
             .logo-icon {
                 width: 68px;
                 height: 68px;
             }
-            
+
             .logo-icon i {
                 font-size: 32px;
             }
-            
+
             .brand-name {
                 font-size: 26px;
                 letter-spacing: 2px;
             }
-            
+
             .brand-tagline {
                 font-size: 13px;
             }
-            
+
             .form-group label {
                 font-size: 11px;
                 letter-spacing: 1px;
             }
-            
+
             .form-control {
                 padding: 16px 16px 16px 48px;
                 font-size: 14px;
             }
-            
-            .input-wrapper > i {
+
+            .input-wrapper>i {
                 font-size: 16px;
                 left: 16px;
             }
-            
+
             .password-toggle {
                 right: 14px;
                 font-size: 16px;
             }
-            
+
             .btn-login {
                 padding: 16px;
                 font-size: 14px;
                 letter-spacing: 1.5px;
             }
-            
+
             .info-box {
                 padding: 14px;
                 margin-bottom: 24px;
             }
-            
+
             .info-box-title {
                 font-size: 12px;
             }
-            
+
             .info-box ul {
                 font-size: 12px;
                 padding-left: 24px;
             }
         }
-        
+
         /* Mobile (320px - 480px) - Android & iOS phones */
         @media (max-width: 480px) {
             html {
                 font-size: 14px;
             }
-            
+
             body {
                 padding: 12px;
                 min-height: 100vh;
                 min-height: -webkit-fill-available;
                 overflow-x: hidden;
             }
-            
+
             .shape {
                 filter: blur(60px);
             }
-            
+
             .shape-1 {
                 width: 250px;
                 height: 250px;
                 top: -80px;
                 left: -80px;
             }
-            
+
             .shape-2 {
                 width: 200px;
                 height: 200px;
                 bottom: -60px;
                 right: -60px;
             }
-            
+
             .shape-3 {
                 width: 150px;
                 height: 150px;
             }
-            
+
             .login-container {
                 max-width: 100%;
                 padding: 10px;
                 width: 100%;
             }
-            
+
             .login-card {
                 padding: 28px 20px;
                 border-radius: 20px;
                 width: 100%;
             }
-            
+
             .logo-section {
                 margin-bottom: 24px;
             }
-            
+
             .logo-icon {
                 width: 60px;
                 height: 60px;
                 border-radius: 16px;
             }
-            
+
             .logo-icon i {
                 font-size: 28px;
             }
-            
+
             .brand-name {
                 font-size: 24px;
                 letter-spacing: 1.5px;
                 margin-bottom: 4px;
             }
-            
+
             .brand-tagline {
                 font-size: 12px;
             }
-            
+
             .info-box {
                 padding: 12px;
                 margin-bottom: 20px;
                 border-radius: 12px;
             }
-            
+
             .info-box-title {
                 font-size: 11px;
                 margin-bottom: 8px;
             }
-            
+
             .info-box-title i {
                 font-size: 14px;
                 margin-right: 8px;
             }
-            
+
             .info-box ul {
                 font-size: 11px;
                 padding-left: 20px;
             }
-            
+
             .info-box li {
                 margin-bottom: 3px;
             }
-            
+
             .form-group {
                 margin-bottom: 18px;
             }
-            
+
             .form-group label {
                 font-size: 10px;
                 margin-bottom: 8px;
                 letter-spacing: 1px;
             }
-            
+
             .form-control {
                 padding: 14px 14px 14px 44px;
                 font-size: 14px;
                 border-radius: 12px;
             }
-            
-            .input-wrapper > i {
+
+            .input-wrapper>i {
                 font-size: 15px;
                 left: 14px;
             }
-            
+
             .password-toggle {
                 right: 12px;
                 font-size: 15px;
             }
-            
+
             .btn-login {
                 padding: 14px;
                 font-size: 13px;
                 border-radius: 12px;
                 letter-spacing: 1px;
             }
-            
+
             .btn-login i {
                 margin-right: 8px;
             }
-            
+
             .alert {
                 padding: 12px 14px;
                 font-size: 12px;
                 border-radius: 10px;
                 margin-bottom: 18px;
             }
-            
+
             .alert i {
                 font-size: 16px;
                 margin-right: 10px;
             }
-            
+
             .footer {
                 margin-top: 24px;
                 padding-top: 18px;
             }
-            
+
             .footer p {
                 font-size: 10px;
             }
         }
-        
+
         /* Extra Small Mobile (below 360px) */
         @media (max-width: 359px) {
             body {
                 padding: 8px;
             }
-            
+
             .login-container {
                 padding: 6px;
             }
-            
+
             .login-card {
                 padding: 24px 16px;
             }
-            
+
             .logo-icon {
                 width: 50px;
                 height: 50px;
             }
-            
+
             .logo-icon i {
                 font-size: 24px;
             }
-            
+
             .brand-name {
                 font-size: 20px;
             }
-            
+
             .brand-tagline {
                 font-size: 11px;
             }
-            
+
             .form-control {
                 padding: 12px 12px 12px 40px;
                 font-size: 13px;
             }
-            
-            .input-wrapper > i {
+
+            .input-wrapper>i {
                 font-size: 14px;
                 left: 12px;
             }
-            
+
             .btn-login {
                 padding: 12px;
                 font-size: 12px;
             }
-            
+
             .info-box-title {
                 font-size: 10px;
             }
-            
+
             .info-box ul {
                 font-size: 10px;
             }
         }
-        
+
         /* iOS Safe Area (for notched phones like iPhone X+) */
-        @supports (padding: env(safe - area - inset - top)) {
+        @supports
+        (padding: env(safe - area - inset - top))
+            {
             body {
                 padding-top: env(safe-area-inset-top);
                 padding-bottom: env(safe-area-inset-bottom);
@@ -854,7 +873,7 @@
                 padding-right: env(safe-area-inset-right);
             }
         }
-        
+
         /* Landscape orientation for phones */
         @media (max-height: 500px) and (orientation: landscape) {
             body {
@@ -862,100 +881,105 @@
                 padding: 10px 20px;
                 overflow-y: auto;
             }
-            
+
             .login-container {
                 max-width: 400px;
             }
-            
+
             .login-card {
                 padding: 20px 24px;
             }
-            
+
             .logo-section {
                 margin-bottom: 16px;
             }
-            
+
             .logo-icon {
                 width: 50px;
                 height: 50px;
             }
-            
+
             .logo-icon i {
                 font-size: 24px;
             }
-            
+
             .brand-name {
                 font-size: 22px;
                 margin-bottom: 2px;
             }
-            
+
             .brand-tagline {
                 font-size: 11px;
             }
-            
+
             .info-box {
                 padding: 10px;
                 margin-bottom: 14px;
             }
-            
+
             .form-group {
                 margin-bottom: 12px;
             }
-            
+
             .form-control {
                 padding: 12px 12px 12px 42px;
             }
-            
+
             .btn-login {
                 padding: 12px;
                 margin-top: 4px;
             }
-            
+
             .footer {
                 margin-top: 14px;
                 padding-top: 12px;
             }
-            
+
             .shape {
                 display: none;
             }
         }
-        
+
         /* Touch device optimizations */
         @media (hover: none) and (pointer: coarse) {
             .form-control {
-                font-size: 16px; /* Prevents zoom on iOS */
+                font-size: 16px;
+                /* Prevents zoom on iOS */
             }
-            
+
             .btn-login:hover {
                 transform: none;
             }
-            
+
             .btn-login:active {
                 transform: scale(0.98);
             }
-            
+
             .password-toggle {
                 padding: 8px;
                 margin: -8px;
             }
         }
-        
+
         /* High DPI / Retina displays */
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+        @media (-webkit-min-device-pixel-ratio: 2),
+        (min-resolution: 192dpi) {
             .login-card {
                 border-width: 0.5px;
             }
         }
-        
+
         /* Reduce motion for accessibility */
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
+
+            *,
+            *::before,
+            *::after {
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
             }
-            
+
             .shape,
             .dot {
                 display: none;
@@ -975,7 +999,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Floating dots */
@@ -1003,12 +1029,15 @@
                 transform: translateY(100vh) rotate(0deg);
                 opacity: 0;
             }
+
             10% {
                 opacity: 1;
             }
+
             90% {
                 opacity: 1;
             }
+
             100% {
                 transform: translateY(-100vh) rotate(720deg);
                 opacity: 0;
@@ -1022,7 +1051,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
+            background-image:
                 linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
             background-size: 50px 50px;
@@ -1110,21 +1139,13 @@
             <!-- Login form -->
             <form action="{{ route('login.submit') }}" method="POST" id="loginForm">
                 @csrf
-                
+
                 <div class="form-group">
                     <label for="login_id">ID Login</label>
                     <div class="input-wrapper">
                         <i class="fas fa-user"></i>
-                        <input 
-                            type="text" 
-                            class="form-control" 
-                            id="login_id" 
-                            name="login_id" 
-                            placeholder="Masukkan ID Login..."
-                            value="{{ old('login_id') }}"
-                            required
-                            autofocus
-                        >
+                        <input type="text" class="form-control" id="login_id" name="login_id"
+                            placeholder="Masukkan ID Login..." value="{{ old('login_id') }}" required autofocus>
                     </div>
                 </div>
 
@@ -1132,14 +1153,8 @@
                     <label for="password">Password</label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input 
-                            type="password" 
-                            class="form-control" 
-                            id="password" 
-                            name="password" 
-                            placeholder="Masukkan password..."
-                            required
-                        >
+                        <input type="password" class="form-control" id="password" name="password"
+                            placeholder="Masukkan password..." required>
                         <button type="button" class="password-toggle" onclick="togglePassword()">
                             <i class="fas fa-eye" id="password-icon"></i>
                         </button>
@@ -1177,7 +1192,7 @@
         }
 
         // Form submit loading state
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
             const btn = document.getElementById('submitBtn');
             btn.innerHTML = '<span class="spinner"></span>Memproses...';
             btn.disabled = true;
