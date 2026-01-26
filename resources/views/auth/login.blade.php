@@ -19,51 +19,75 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            touch-action: manipulation;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            min-height: 100vh;
+            min-height: 100%;
+            height: 100%;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d0d0d 100%);
             overflow: hidden;
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            -webkit-overflow-scrolling: none;
+            overscroll-behavior: none;
         }
 
         /* Animated background shapes */
         .shape {
             position: absolute;
             border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.15;
+            filter: blur(120px);
+            opacity: 0.08;
             animation: float 10s ease-in-out infinite;
+            pointer-events: none;
         }
 
         .shape-1 {
             width: 500px;
             height: 500px;
-            background: #ffffff;
-            top: -150px;
-            left: -150px;
+            background: #444444;
+            top: -250px;
+            left: -250px;
             animation-delay: 0s;
         }
 
         .shape-2 {
             width: 400px;
             height: 400px;
-            background: #888888;
-            bottom: -100px;
-            right: -100px;
+            background: #333333;
+            bottom: -200px;
+            right: -200px;
             animation-delay: -3s;
         }
 
         .shape-3 {
             width: 300px;
             height: 300px;
-            background: #cccccc;
-            top: 60%;
-            left: 20%;
+            background: #555555;
+            top: 80%;
+            left: -100px;
             animation-delay: -5s;
+        }
+
+        /* Hide shapes on mobile */
+        @media (max-width: 768px) {
+            .shape {
+                display: none;
+            }
         }
 
         @keyframes float {
