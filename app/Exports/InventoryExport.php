@@ -8,11 +8,12 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 
-class InventoryExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithColumnFormatting
+class InventoryExport extends DefaultValueBinder implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithColumnFormatting, WithCustomValueBinder
 {
     private $inventoryData;
 
@@ -72,13 +73,13 @@ class InventoryExport implements FromCollection, WithHeadings, WithMapping, With
         return [
             $no,
             $inventory->item_name,
-            (string) ($inventory->serial_number ?? '-'), // Cast string explisit
+            $inventory->serial_number ?? '-',
             $inventory->category,
             $inventory->condition,
             $inventory->user->name ?? 'Tanpa Pemilik',
             $inventory->user->division?->name ?? '-',
             $inventory->user->branch?->name ?? '-',
-            $receivedDate, // Menggunakan formatting baru
+            $receivedDate,
             'Aktif'
         ];
     }
@@ -93,7 +94,21 @@ class InventoryExport implements FromCollection, WithHeadings, WithMapping, With
     public function columnFormats(): array
     {
         return [
-            'C' => NumberFormat::FORMAT_TEXT, // Paksa Kolom C (Serial Number) jadi Text
+            'C' => NumberFormat::FORMAT_TEXT,
         ];
+    }
+
+    /**
+     * Custom Binder untuk memaksa Column C (Serial Number) jadi String
+     */
+    public function bindValue(Cell $cell, $value)
+    {
+        if ($cell->getColumn() === 'C') {
+            $cell->setValueExplicit($value, DataType::TYPE_STRING);
+            return true;
+        }
+
+        // Default behavior for other columns
+        return parent::bindValue($cell, $value);
     }
 }
