@@ -636,8 +636,10 @@
             }
 
             .password-toggle {
-                right: 14px;
-                font-size: 16px;
+                right: 12px;
+                font-size: 14px;
+                width: 32px;
+                height: 32px;
             }
 
             .btn-login {
@@ -780,8 +782,10 @@
             }
 
             .password-toggle {
-                right: 12px;
-                font-size: 15px;
+                right: 10px;
+                font-size: 14px;
+                width: 30px;
+                height: 30px;
             }
 
             .btn-login {
