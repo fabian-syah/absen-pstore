@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\InventoryReturn;
+use Illuminate\Support\Str;
 
 class InventoryController extends Controller
 {
@@ -26,12 +27,12 @@ class InventoryController extends Controller
         // [UPDATE] Menambahkan 'leader' agar bisa melihat inventaris user lain saat klik dari profil
         if ($request->has('user_id') && in_array($user->role, ['admin', 'audit', 'leader'])) {
             $query->where('user_id', $request->user_id);
-            
+
             // Ambil nama user target untuk judul halaman
             $targetUser = User::find($request->user_id);
             $pageTitle = 'Inventaris Milik: ' . ($targetUser ? $targetUser->name : 'User Tidak Ditemukan');
         }
-        
+
         // === 2. LOGIKA DEFAULT (HAK AKSES) ===
         // Jika BUKAN Admin (Audit, Leader, Security, User Biasa) DAN TIDAK sedang memfilter user lain (di blok atas)
         elseif ($user->role !== 'admin') {
@@ -39,7 +40,7 @@ class InventoryController extends Controller
             $query->where('user_id', $user->id);
             $pageTitle = 'Inventaris Saya';
         }
-        
+
         // === 3. ADMIN DEFAULT (TANPA PARAMETER) ===
         else {
             $pageTitle = 'Daftar Barang Aktif (Semua User)';
@@ -48,18 +49,18 @@ class InventoryController extends Controller
         // === SEARCH GLOBAL ===
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('item_name', 'like', '%' . $search . '%')
-                  ->orWhere('serial_number', 'like', '%' . $search . '%')
-                  ->orWhere('category', 'like', '%' . $search . '%')
-                  ->orWhereHas('user', function($u) use ($search) {
-                      $u->where('name', 'like', '%' . $search . '%');
-                  });
+                    ->orWhere('serial_number', 'like', '%' . $search . '%')
+                    ->orWhere('category', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($u) use ($search) {
+                        $u->where('name', 'like', '%' . $search . '%');
+                    });
             });
         }
 
         $inventories = $query->latest()->paginate(10)->withQueryString();
-        
+
         return view('inventory.index', compact('inventories', 'pageTitle'));
     }
 
@@ -74,29 +75,29 @@ class InventoryController extends Controller
         }
 
         // 2. QUERY SEMUA DATA
-        $query = Inventory::with(['user', 'user.branch']); 
+        $query = Inventory::with(['user', 'user.branch']);
 
         // 3. FITUR PENCARIAN GLOBAL
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('item_name', 'like', '%' . $search . '%')
-                  ->orWhere('serial_number', 'like', '%' . $search . '%')
-                  ->orWhere('category', 'like', '%' . $search . '%')
-                  ->orWhere('condition', 'like', '%' . $search . '%')
-                  ->orWhereHas('user', function($u) use ($search) {
-                      $u->where('name', 'like', '%' . $search . '%')
-                        ->orWhereHas('branch', function($b) use ($search) {
-                            $b->where('name', 'like', '%' . $search . '%');
-                        });
-                  });
+                    ->orWhere('serial_number', 'like', '%' . $search . '%')
+                    ->orWhere('category', 'like', '%' . $search . '%')
+                    ->orWhere('condition', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($u) use ($search) {
+                        $u->where('name', 'like', '%' . $search . '%')
+                            ->orWhereHas('branch', function ($b) use ($search) {
+                                $b->where('name', 'like', '%' . $search . '%');
+                            });
+                    });
             });
         }
 
         // 4. RETURN VIEW
         $inventories = $query->latest()->paginate(10)->withQueryString();
         $pageTitle = 'Master Data Inventaris (Admin View)';
-        
+
         return view('inventory.index', compact('inventories', 'pageTitle'));
     }
 
@@ -106,37 +107,52 @@ class InventoryController extends Controller
     public function available(Request $request)
     {
         $user = Auth::user();
-        $query = Inventory::whereNull('user_id'); 
+        $query = Inventory::whereNull('user_id');
 
         // === FILTER HAK AKSES BARU ===
         // Jika BUKAN Admin: Filter barang yang ID-nya ada di histori pengembalian oleh user ini.
         if ($user->role !== 'admin') {
             // Ambil semua inventory_id yang user ini pernah kembalikan (status approved)
             $returnedInventoryIds = InventoryReturn::where('user_id', $user->id)
-                                                  ->where('status', 'approved')
-                                                  ->pluck('inventory_id')
-                                                  ->unique();
-            
+                ->where('status', 'approved')
+                ->pluck('inventory_id')
+                ->unique();
+
             // Filter hanya barang yang ada di gudang DAN pernah dikembalikan oleh user ini
             $query->whereIn('id', $returnedInventoryIds);
             $pageTitle = 'Gudang (Barang Saya yang Dikembalikan)';
         } else {
             $pageTitle = 'Daftar Inventaris Available (Gudang)';
         }
-        
+
         // === SEARCH ===
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('item_name', 'like', '%' . $search . '%')
-                  ->orWhere('serial_number', 'like', '%' . $search . '%')
-                  ->orWhere('category', 'like', '%' . $search . '%');
+                    ->orWhere('serial_number', 'like', '%' . $search . '%')
+                    ->orWhere('category', 'like', '%' . $search . '%');
             });
         }
 
         $inventories = $query->latest()->paginate(10)->withQueryString();
-        
+
         return view('inventory.index', compact('inventories', 'pageTitle'));
+    }
+
+    /**
+     * EXPORT EXCEL PER CABANG (ADMIN ONLY)
+     */
+    public function exportBranchInventory($branchId)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $branch = Branch::findOrFail($branchId);
+        $fileName = 'Inventaris_Cabang_' . Str::slug($branch->name) . '_' . date('Y-m-d') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\BranchInventoryExport($branchId), $fileName);
     }
 
     /**
@@ -146,8 +162,8 @@ class InventoryController extends Controller
     {
         $currentUser = Auth::user();
         $targetBranchId = $request->get('branch_id'); // Parameter dari tombol di menu cabang
-        
-        $users = collect(); 
+
+        $users = collect();
         $fixedUser = null; // Jika tidak null, maka form user terkunci ke orang ini
 
         // 1. JIKA ADMIN -> Bebas pilih siapa saja
@@ -158,20 +174,22 @@ class InventoryController extends Controller
                 $users = User::where('is_active', 1)->orderBy('name')->get();
             }
         }
-        
+
         // 2. JIKA AUDIT / LEADER MEMBUKA DARI MENU CABANG
         elseif (($currentUser->role == 'audit' || $currentUser->role == 'leader') && $targetBranchId) {
-            
+
             // Validasi: Apakah Audit/Leader berhak atas cabang ini?
             $canAccess = false;
-            if ($currentUser->role == 'leader' && $currentUser->branch_id == $targetBranchId) $canAccess = true;
-            if ($currentUser->role == 'audit' && in_array($targetBranchId, $currentUser->branches->pluck('id')->toArray())) $canAccess = true;
+            if ($currentUser->role == 'leader' && $currentUser->branch_id == $targetBranchId)
+                $canAccess = true;
+            if ($currentUser->role == 'audit' && in_array($targetBranchId, $currentUser->branches->pluck('id')->toArray()))
+                $canAccess = true;
 
             if ($canAccess) {
                 // AMBIL SEMUA USER DI CABANG TERSEBUT
                 $users = User::where('branch_id', $targetBranchId)->where('is_active', 1)->orderBy('name')->get();
                 // SET FIXED USER JADI NULL AGAR BISA PILIH
-                $fixedUser = null; 
+                $fixedUser = null;
             } else {
                 abort(403, 'Anda tidak memiliki akses untuk menambah aset di cabang ini.');
             }
@@ -181,7 +199,7 @@ class InventoryController extends Controller
         else {
             $fixedUser = $currentUser;
         }
-        
+
         return view('inventory.create', compact('users', 'fixedUser', 'targetBranchId'));
     }
 
@@ -193,15 +211,15 @@ class InventoryController extends Controller
         $user = Auth::user();
 
         $rules = [
-            'item_name'       => 'required|string|max:255',
-            'category'        => 'required|string',
-            'serial_number'   => 'nullable|string|max:100',
-            'received_date'   => 'required|date',
-            'condition'       => 'required|string',
-            'description'     => 'nullable|string|max:1000',
-            'item_photo'      => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'item_name' => 'required|string|max:255',
+            'category' => 'required|string',
+            'serial_number' => 'nullable|string|max:100',
+            'received_date' => 'required|date',
+            'condition' => 'required|string',
+            'description' => 'nullable|string|max:1000',
+            'item_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
             'user_item_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
-            'document'        => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'document' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ];
 
         // Validasi User ID
@@ -218,17 +236,16 @@ class InventoryController extends Controller
             // LOGIC USER ID
             if ($user->role == 'admin') {
                 $data['user_id'] = $request->user_id;
-            } 
+            }
             // LOGIC BARU: Audit/Leader Input untuk user lain di cabang
             elseif ($request->has('target_branch_id') && in_array($user->role, ['audit', 'leader'])) {
                 // Pastikan user yang dipilih benar-benar ada di cabang target (Security Layer)
                 $targetUser = User::find($request->user_id);
-                if($targetUser->branch_id != $request->target_branch_id) {
-                      return back()->with('error', 'User tidak valid untuk cabang ini.');
+                if ($targetUser->branch_id != $request->target_branch_id) {
+                    return back()->with('error', 'User tidak valid untuk cabang ini.');
                 }
                 $data['user_id'] = $request->user_id;
-            }
-            else {
+            } else {
                 // Default: Barang milik diri sendiri
                 $data['user_id'] = $user->id;
             }
@@ -275,9 +292,9 @@ class InventoryController extends Controller
             } else {
                 // Untuk user non-admin, cek apakah dia pernah mengembalikan barang ini
                 $hasReturned = InventoryReturn::where('inventory_id', $inventory->id)
-                                              ->where('user_id', $user->id)
-                                              ->where('status', 'approved')
-                                              ->exists();
+                    ->where('user_id', $user->id)
+                    ->where('status', 'approved')
+                    ->exists();
                 if ($hasReturned) {
                     return view('inventory.show', compact('inventory'));
                 } else {
@@ -318,7 +335,8 @@ class InventoryController extends Controller
      */
     public function edit($id)
     {
-        if (Auth::user()->role !== 'admin') abort(403);
+        if (Auth::user()->role !== 'admin')
+            abort(403);
 
         $inventory = Inventory::findOrFail($id);
         $users = User::where('is_active', 1)->orderBy('name')->get();
@@ -330,18 +348,19 @@ class InventoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (Auth::user()->role !== 'admin') abort(403);
+        if (Auth::user()->role !== 'admin')
+            abort(403);
 
         $inventory = Inventory::findOrFail($id);
 
         $request->validate([
-            'item_name'       => 'required|string|max:255',
-            'user_id'         => 'nullable',
-            'category'        => 'required',
-            'condition'       => 'required',
-            'item_photo'      => 'nullable|image|max:10240',
+            'item_name' => 'required|string|max:255',
+            'user_id' => 'nullable',
+            'category' => 'required',
+            'condition' => 'required',
+            'item_photo' => 'nullable|image|max:10240',
             'user_item_photo' => 'nullable|image|max:10240',
-            'document'        => 'nullable|file|max:10240',
+            'document' => 'nullable|file|max:10240',
         ]);
 
         $data = $request->except(['item_photo', 'user_item_photo', 'document']);
@@ -377,7 +396,8 @@ class InventoryController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        if (Auth::user()->role !== 'admin') abort(403);
+        if (Auth::user()->role !== 'admin')
+            abort(403);
 
         $inventory = Inventory::findOrFail($id);
 

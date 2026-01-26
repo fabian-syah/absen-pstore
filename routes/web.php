@@ -448,6 +448,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/inventaris-cabang/{id}', [BranchInventoryController::class, 'show'])
             ->name('inventory.branch.detail');
 
+        Route::get('/inventaris-cabang/{id}/export', [InventoryController::class, 'exportBranchInventory'])
+            ->name('inventory.branch.export')
+            ->middleware('role:admin');
+
         Route::get('/top-absensi-cabang', [BranchLeaderboardController::class, 'index'])
             ->name('branch-leaderboard.index');
 
@@ -470,57 +474,57 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     })->middleware(['role:admin,audit,security,leader,user_biasa']);
 
     Route::get('/bersihkan-alpha-salah', function () {
-    $tanggalSalah = '2026-01-05';
+        $tanggalSalah = '2026-01-05';
 
-    // Menghapus SEMUA status Alpha pada tanggal tersebut
-    $deleted = \App\Models\Attendance::whereDate('check_in_time', $tanggalSalah)
-        ->where('presence_status', 'Alpha')
-        ->delete();
+        // Menghapus SEMUA status Alpha pada tanggal tersebut
+        $deleted = \App\Models\Attendance::whereDate('check_in_time', $tanggalSalah)
+            ->where('presence_status', 'Alpha')
+            ->delete();
 
-    return "Berhasil menghapus $deleted data Alpha pada tanggal $tanggalSalah. Silakan minta karyawan refresh aplikasinya.";
-});
+        return "Berhasil menghapus $deleted data Alpha pada tanggal $tanggalSalah. Silakan minta karyawan refresh aplikasinya.";
+    });
 
     Route::get('/fix-absen-26', function () {
-    try {
-        $izin = \App\Models\LeaveRequest::where('type', 'telat')
+        try {
+            $izin = \App\Models\LeaveRequest::where('type', 'telat')
                 ->whereDate('start_date', '2025-12-26')
                 ->where('status', 'approved')
                 ->get();
 
-        if ($izin->isEmpty()) {
-            return "Tidak ada data izin telat.";
-        }
+            if ($izin->isEmpty()) {
+                return "Tidak ada data izin telat.";
+            }
 
-        $count = 0;
-        foreach($izin as $i) {
-            $user = \App\Models\User::find($i->user_id);
-            
-            \App\Models\Attendance::updateOrCreate(
-                [
-                    'user_id' => $i->user_id, 
-                    'check_in_time' => $i->start_date->format('Y-m-d') . ' ' . ($i->start_time ?? '08:00:00')
-                ],
-                [
-                    'branch_id' => $user->branch_id,
-                    'presence_status' => 'Masuk',
-                    'status' => 'verified',
-                    'is_late_checkin' => true,
-                    'notes' => 'Sinkronisasi Izin Telat (System Fix)',
-                    'attendance_type' => 'self', 
-                    'verified_by_user_id' => $i->approved_by,
-                    'scheduled_check_in' => $user->check_in_start ?? '08:00:00',
-                    'scheduled_check_out' => $user->check_out_start ?? '17:00:00',
-                    // TAMBAHKAN BARIS INI UNTUK MEMUNCULKAN FOTO
-                    'photo_path' => $i->file_proof 
-                ]
-            );
-            $count++;
+            $count = 0;
+            foreach ($izin as $i) {
+                $user = \App\Models\User::find($i->user_id);
+
+                \App\Models\Attendance::updateOrCreate(
+                    [
+                        'user_id' => $i->user_id,
+                        'check_in_time' => $i->start_date->format('Y-m-d') . ' ' . ($i->start_time ?? '08:00:00')
+                    ],
+                    [
+                        'branch_id' => $user->branch_id,
+                        'presence_status' => 'Masuk',
+                        'status' => 'verified',
+                        'is_late_checkin' => true,
+                        'notes' => 'Sinkronisasi Izin Telat (System Fix)',
+                        'attendance_type' => 'self',
+                        'verified_by_user_id' => $i->approved_by,
+                        'scheduled_check_in' => $user->check_in_start ?? '08:00:00',
+                        'scheduled_check_out' => $user->check_out_start ?? '17:00:00',
+                        // TAMBAHKAN BARIS INI UNTUK MEMUNCULKAN FOTO
+                        'photo_path' => $i->file_proof
+                    ]
+                );
+                $count++;
+            }
+            return "Berhasil memperbarui " . $count . " data beserta foto.";
+        } catch (\Exception $e) {
+            return "Gagal! Error: " . $e->getMessage();
         }
-        return "Berhasil memperbarui " . $count . " data beserta foto.";
-    } catch (\Exception $e) {
-        return "Gagal! Error: " . $e->getMessage();
-    }
-});
+    });
 
     Route::fallback(function () {
         return response()->view('errors.404', [], 404);
@@ -535,5 +539,5 @@ if (app()->environment('local')) {
     Route::get('/debug-session', function () {
         return response()->json(['session' => session()->all(), 'user' => auth()->user()]);
     });
-    
+
 }
