@@ -1011,18 +1011,18 @@
                         @else
                             <div class="active-work-card mb-3 position-relative overflow-hidden"
                                 style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
-                                                                                                                                                        border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
+                                                                                                                                                                                border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
 
                                 {{-- Decorative Elements --}}
                                 <div
                                     style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; 
-                                                                                                                                                            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                                                                                            border-radius: 50%;">
+                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                                                                                    border-radius: 50%;">
                                 </div>
                                 <div
                                     style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; 
-                                                                                                                                                            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
-                                                                                                                                                            border-radius: 50%;">
+                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
+                                                                                                                                                                                    border-radius: 50%;">
                                 </div>
 
                                 <div class="card-body p-4 position-relative" style="z-index: 2;">
@@ -1032,9 +1032,9 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="work-status-icon me-3"
                                                     style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
-                                                                                                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
-                                                                                                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
-                                                                                                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                                                                                                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                                     <i class="mdi mdi-briefcase-check text-white" style="font-size: 28px;"></i>
                                                 </div>
                                                 <div>
@@ -1052,7 +1052,7 @@
                                         {{-- Work Timeline & Info --}}
                                         <div class="work-timeline-card p-3 mb-3"
                                             style="background: rgba(255,255,255,0.95); border-radius: 16px; 
-                                                                                                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                                                                                                                                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
 
                                             <div class="row g-3">
                                                 {{-- Check In Time --}}
@@ -1060,8 +1060,8 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="timeline-dot me-3"
                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #43e97b, #38f9d7); 
-                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
+                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
                                                             <i class="mdi mdi-login text-white fs-5"></i>
                                                         </div>
                                                         <div>
@@ -1084,8 +1084,8 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="timeline-dot me-3"
                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
                                                             <i class="mdi mdi-timer-outline text-white fs-5"></i>
                                                         </div>
                                                         <div>
@@ -1131,8 +1131,8 @@
                                                 <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
                                                     class="checkout-btn btn btn-lg w-100 shadow-lg"
                                                     style="background: rgba(255,255,255,0.95); color: #ef4444; border: none; 
-                                                                                                                                                                                                                                                  border-radius: 14px; padding: 1rem; font-weight: 700; 
-                                                                                                                                                                                                                                                  transition: all 0.3s ease; backdrop-filter: blur(10px);">
+                                                                                                                                                                                                                                                                                          border-radius: 14px; padding: 1rem; font-weight: 700; 
+                                                                                                                                                                                                                                                                                          transition: all 0.3s ease; backdrop-filter: blur(10px);">
                                                     <i class="mdi mdi-logout-variant me-2"></i>
                                                     Absen Pulang Mandiri
                                                 </a>
@@ -1385,8 +1385,8 @@
                 {{-- Decorative elements --}}
                 <div
                     style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
-                                                                                        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                        border-radius: 50%; pointer-events: none;">
+                                                                                                background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                border-radius: 50%; pointer-events: none;">
                 </div>
 
                 <div class="card-body p-4">
@@ -1397,8 +1397,8 @@
                                 {{-- Icon dengan glassmorphism effect --}}
                                 <div class="d-flex align-items-center justify-content-center me-3"
                                     style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
-                                                                                                        border-radius: 16px; backdrop-filter: blur(10px); 
-                                                                                                        border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                                                                                                                border-radius: 16px; backdrop-filter: blur(10px); 
+                                                                                                                border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
                                     <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
                                 </div>
                                 <div>
@@ -1419,21 +1419,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                                border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                                transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                                                                                                    opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
                                                         <i class="mdi mdi-file-document-edit text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -1454,21 +1454,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                                border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                                transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                                                                                                                    opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
-                                                                                                                            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
+                                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
                                                         <i class="mdi mdi-history text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -1698,8 +1698,8 @@
 @push('styles')
     <style>
         /* =================================================================
-                                           DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
-                                           ================================================================= */
+                                                   DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
+                                                   ================================================================= */
 
         /* Section Headers & Separators */
         .section-header {
@@ -1797,8 +1797,8 @@
         }
 
         /* =================================================================
-                                           CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
-                                           ================================================================= */
+                                                   CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
+                                                   ================================================================= */
 
         /* DON'T override backgrounds - only fix text colors */
 
@@ -3672,8 +3672,8 @@
                     });
                 @endif
 
-                                                                        // --- SCRIPT CHART ---
-                                                                        const ctx = document.getElementById('attendancePieChart').getContext('2d');
+                                                                                // --- SCRIPT CHART ---
+                                                                                const ctx = document.getElementById('attendancePieChart').getContext('2d');
             Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
 
             @if (auth()->user()->role == 'admin')
@@ -3683,7 +3683,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                                                                    {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                                                                                                                                                {{ $stats['early'] }}, {{ $stats['pending'] }},
                                 {{ $stats['absent'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
@@ -3769,7 +3769,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                                                                    {{ $stats['early'] }}, {{ $stats['pending'] }}
+                                                                                                                                                                {{ $stats['early'] }}, {{ $stats['pending'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
                             borderWidth: 2,
@@ -3788,8 +3788,8 @@
                 });
             @endif
 
-                                                                        // --- MODAL FOTO PROFIL ---
-                                                                        var profilePhotoModal = document.getElementById('profilePhotoModal');
+                                                                                // --- MODAL FOTO PROFIL ---
+                                                                                var profilePhotoModal = document.getElementById('profilePhotoModal');
             if (profilePhotoModal) {
                 profilePhotoModal.addEventListener('show.bs.modal', function (event) {
                     var button = event.relatedTarget;
@@ -3816,44 +3816,32 @@
             { text: "Jangan biarkan kemarin mengambil terlalu banyak hari ini.", author: "Will Rogers" }
         ];
 
-        let allQuotes = [];
-
-        async function fetchQuotes() {
+        async function fetchRandomQuote() {
             try {
-                // Fetch from local public file
-                const response = await fetch('/quotes.json?v=' + new Date().getTime());
+                // Fetch random quote from api.quotable.io
+                const response = await fetch('https://api.quotable.io/random');
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
-                // Filter valid quotes
-                allQuotes = data.filter(q => q.quote && q.by);
-                console.log('Quotes loaded from local:', allQuotes.length);
-                return true;
+                return {
+                    text: data.content,
+                    author: data.author
+                };
             } catch (error) {
-                console.error('Failed to fetch local quotes:', error);
-                return false;
+                console.error('Failed to fetch quote:', error);
+                return null;
             }
         }
 
         async function getDailyQuote() {
-            // First ensure we have quotes
-            if (allQuotes.length === 0) {
-                const success = await fetchQuotes();
-                if (!success) {
-                    // Fallback logic
-                    const today = new Date();
-                    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-                    const index = dayOfYear % backupQuotes.length;
-                    return backupQuotes[index];
-                }
-            }
+            // Try to fetch a fresh quote first
+            const quote = await fetchRandomQuote();
+            if (quote) return quote;
 
-            // Random quote from API
-            const randomIndex = Math.floor(Math.random() * allQuotes.length);
-            const quoteData = allQuotes[randomIndex];
-            return {
-                text: quoteData.quote,
-                author: quoteData.by
-            };
+            // Fallback
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const index = dayOfYear % backupQuotes.length;
+            return backupQuotes[index];
         }
 
         async function refreshQuote() {
@@ -3863,13 +3851,13 @@
 
             if (quoteEl) quoteEl.style.opacity = '0.5';
 
-            let quote;
-            if (allQuotes.length > 0) {
-                const randomIndex = Math.floor(Math.random() * allQuotes.length);
-                const q = allQuotes[randomIndex];
-                quote = { text: q.quote, author: q.by };
-            } else {
-                quote = await getDailyQuote();
+            // Always try to fetch new random quote
+            let quote = await fetchRandomQuote();
+
+            // If failed, use random backup
+            if (!quote) {
+                const randomIndex = Math.floor(Math.random() * backupQuotes.length);
+                quote = backupQuotes[randomIndex];
             }
 
             displayQuote(quote);
@@ -3936,30 +3924,17 @@
             return natureBackgrounds[index];
         }
 
-        // Initialize quote and background
-        (function initQuote() {
-            const quoteEl = document.getElementById('motivational-quote');
-            const authorEl = document.getElementById('author-name');
-            const bgEl = document.getElementById('quote-bg-image');
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Initial load
+            const quote = await getDailyQuote();
+            displayQuote(quote);
 
-            if (quoteEl && authorEl) {
-                quoteEl.style.transition = 'opacity 0.3s ease';
-                authorEl.style.transition = 'opacity 0.3s ease';
-
-                const dailyQuote = getDailyQuote();
-                quoteEl.textContent = dailyQuote.text;
-                authorEl.textContent = dailyQuote.author;
-            }
-
-            // Set daily background image
-            if (bgEl) {
-                bgEl.style.backgroundImage = `url('${getDailyBackgroundImage()}')`;
-            }
-        })();
-
-        // Optional: Confetti Effect Function (Placeholder)
-        function confettiEffect() {
-            alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
-        }
-    </script>
+            // Initial background
+            refreshBackgroundImage();
+        }); // Optional: Confetti Effect Function (Placeholder)
+                function confettiEffect() {
+                    alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
+                }
+            </script>
 @endpush
