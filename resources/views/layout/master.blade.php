@@ -27,6 +27,40 @@
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
 
     @stack('styles')
+
+    <style>
+        /* CSS AGAR SIDEBAR TETAP IKUT (FIXED/STICKY) */
+        @media (min-width: 992px) {
+            .sidebar {
+                position: sticky;
+                top: 70px; /* Sesuaikan dengan tinggi navbar Anda */
+                height: calc(100vh - 70px);
+                overflow-y: auto;
+            }
+            
+            /* Menghilangkan scrollbar di sidebar agar lebih rapi tapi tetap bisa di-scroll */
+            .sidebar::-webkit-scrollbar {
+                width: 5px;
+            }
+            .sidebar::-webkit-scrollbar-thumb {
+                background: #f1f1f1; 
+                border-radius: 10px;
+            }
+            .sidebar:hover::-webkit-scrollbar-thumb {
+                background: #ccc; 
+            }
+        }
+
+        .main-panel {
+            min-height: calc(100vh - 70px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-wrapper {
+            flex-grow: 1;
+        }
+    </style>
 </head>
 
 <body class="with-welcome-text">
@@ -69,12 +103,10 @@
     {{-- FIREBASE NOTIFICATION LOGIC (KHUSUS AUDIT & ADMIN) --}}
     {{-- ================================================================= --}}
     
-    {{-- 1. Load Library Firebase --}}
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
     <script>
-        // 2. Konfigurasi Firebase dari Config Laravel
         var firebaseConfig = {
             apiKey: "{{ config('services.firebase.api_key') }}",
             authDomain: "{{ config('services.firebase.auth_domain') }}",
@@ -90,10 +122,7 @@
         
         const messaging = firebase.messaging();
 
-        // Hanya jalankan jika User Login adalah AUDIT atau ADMIN
         @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
-            
-            // --- FUNGSI SIMPAN TOKEN KE SERVER ---
             function sendTokenToServer(token) {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 fetch("{{ route('update.fcm.token') }}", { 
@@ -112,56 +141,37 @@
                 });
             }
 
-            // --- PERBAIKAN: MANUAL REGISTER SERVICE WORKER ---
-            // Ini memaksa browser mengaktifkan file background agar siap terima pesan
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/firebase-messaging-sw.js')
                 .then(function(registration) {
                     console.log('Service Worker Registered with scope:', registration.scope);
                     
-                    // Setelah SW aktif, minta izin notifikasi
                     Notification.requestPermission().then((permission) => {
                         if (permission === 'granted') {
-                            console.log('Izin notifikasi diberikan.');
-                            
-                            // Ambil Token menggunakan SW registration yang valid
                             messaging.getToken({ 
                                 vapidKey: "{{ config('services.firebase.vapid_key') }}",
                                 serviceWorkerRegistration: registration 
                             })
                             .then((currentToken) => {
                                 if (currentToken) {
-                                    // Selalu kirim token saat halaman dimuat (untuk jaga-jaga kalau habis logout)
                                     sendTokenToServer(currentToken);
-                                } else {
-                                    console.log('Tidak ada token tersedia.');
                                 }
                             }).catch((err) => {
                                 console.log('Error mengambil token:', err);
                             });
-                        } else {
-                            console.log('Izin notifikasi DITOLAK user.');
                         }
                     });
-
                 }).catch(function(err) {
                     console.log('Service Worker registration failed:', err);
                 });
             }
 
-           // --- HANDLER FOREGROUND (SAAT TAB DIBUKA) ---
             messaging.onMessage((payload) => {
-                console.log('Pesan masuk (Foreground): ', payload);
-                
-                // Ambil data dari payload 'notification' (karena sekarang PHP kirim itu)
                 const title = payload.notification ? payload.notification.title : "Notifikasi Baru";
                 const body = payload.notification ? payload.notification.body : "Cek dashboard.";
                 const icon = 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png';
-                
-                // Ambil URL dari data
                 const url = payload.data ? payload.data.click_action : '/';
 
-                // Tampilkan Notifikasi Native
                 if (Notification.permission === 'granted') {
                     var notif = new Notification(title, {
                         body: body,
@@ -179,8 +189,6 @@
         @endif
     </script>
 
-    {{-- Stack Scripts untuk halaman spesifik --}}
     @stack('scripts')
 </body>
-
 </html>
