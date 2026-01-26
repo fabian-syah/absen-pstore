@@ -25,6 +25,7 @@
             width: 100%;
             position: fixed;
             touch-action: manipulation;
+            background-color: #0a0a0a;
         }
 
         body {
@@ -35,7 +36,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d0d0d 100%);
+            background-color: #0a0a0a;
+            /* Solid fallback */
+            background: #0a0a0a;
             overflow: hidden;
             position: fixed;
             top: 0;
@@ -273,16 +276,20 @@
 
         .password-toggle {
             position: absolute;
-            right: 18px;
-            top: 50%;
-            transform: translateY(-50%);
+            right: 16px;
+            top: 0;
+            bottom: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: none;
             border: none;
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.5);
             cursor: pointer;
             font-size: 18px;
             transition: color 0.3s ease;
-            padding: 0;
+            padding: 0 4px;
         }
 
         .password-toggle:hover {
@@ -863,9 +870,7 @@
         }
 
         /* iOS Safe Area (for notched phones like iPhone X+) */
-        @supports
-        (padding: env(safe - area - inset - top))
-            {
+        @supports (padding: env(safe - area - inset - top)) {
             body {
                 padding-top: env(safe-area-inset-top);
                 padding-bottom: env(safe-area-inset-bottom);
