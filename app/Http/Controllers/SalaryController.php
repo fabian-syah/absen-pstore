@@ -90,34 +90,34 @@ class SalaryController extends Controller
 
             // ALPHA COUNT - LOGIC YANG SAMA DENGAN AttendanceHistoryController
             // Hitung dari total hari dalam bulan dikurangi attendance yang ada
-            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
-            $endDate = $startDate->copy()->endOfMonth();
+            $monthStartDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $monthEndDate = $monthStartDate->copy()->endOfMonth();
             $today = Carbon::now()->endOfDay();
-            $limitDate = ($endDate->gt($today)) ? $today : $endDate;
+            $limitDate = ($monthEndDate->gt($today)) ? $today : $monthEndDate;
 
             // Total hari yang sudah lewat di bulan ini
             $totalDays = $limitDate->day;
 
             // Ambil semua attendance di bulan ini
             $attendances = Attendance::where('user_id', $selectedUserId)
-                ->whereBetween('check_in_time', [$startDate, $endDate])
+                ->whereBetween('check_in_time', [$monthStartDate, $monthEndDate])
                 ->get();
 
             // Ambil semua approved leaves di bulan ini
             $leaves = LeaveRequest::where('user_id', $selectedUserId)
                 ->where('status', 'approved')
-                ->where(function ($query) use ($startDate, $endDate) {
-                    $query->whereBetween('start_date', [$startDate, $endDate])
-                        ->orWhereBetween('end_date', [$startDate, $endDate])
-                        ->orWhere(function ($q) use ($startDate, $endDate) {
-                            $q->where('start_date', '<=', $startDate)
-                                ->where('end_date', '>=', $endDate);
+                ->where(function ($query) use ($monthStartDate, $monthEndDate) {
+                    $query->whereBetween('start_date', [$monthStartDate, $monthEndDate])
+                        ->orWhereBetween('end_date', [$monthStartDate, $monthEndDate])
+                        ->orWhere(function ($q) use ($monthStartDate, $monthEndDate) {
+                            $q->where('start_date', '<=', $monthStartDate)
+                                ->where('end_date', '>=', $monthEndDate);
                         });
                 })->get();
 
             // Hitung berapa hari yang ada attendance atau leave
             $coveredDays = 0;
-            for ($date = $startDate->copy(); $date->lte($limitDate); $date->addDay()) {
+            for ($date = $monthStartDate->copy(); $date->lte($limitDate); $date->addDay()) {
                 $currentDateStr = $date->format('Y-m-d');
 
                 // Cek apakah ada attendance
