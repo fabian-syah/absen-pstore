@@ -428,40 +428,38 @@
         .time-in { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
         .time-out { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
 
-        /* Photo Thumbnail - Square with rounded corners matching card design */
+        /* Photo Thumbnail - Clean & Modern */
         .photo-thumb {
             position: relative;
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
             border-radius: 12px;
             overflow: hidden;
             cursor: pointer;
-            border: 2px solid #e2e8f0;
-            background: #f8fafc;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: all 0.2s ease;
+            background: #f1f5f9; /* Placeholder slightly visible */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Soft shadow */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .photo-thumb:hover {
-            transform: scale(1.08);
-            border-color: var(--primary-color);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+            transform: scale(1.08) translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         .photo-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 10px;
+            display: block; /* Removes bottom space */
         }
         .photo-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.7) 0%, rgba(118, 75, 162, 0.7) 100%);
+            background: rgba(0, 0, 0, 0.3); /* Simple dark overlay */
+            backdrop-filter: blur(2px); /* Glass effect */
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             transition: opacity 0.2s;
-            border-radius: 10px;
         }
         .photo-thumb:hover .photo-overlay {
             opacity: 1;
