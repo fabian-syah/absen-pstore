@@ -429,16 +429,16 @@
         .time-in { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
         .time-out { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
 
-        /* Photo Thumbnail - Clean & Modern */
+        /* Photo Thumbnail - Clean & Modern (Square) */
         .photo-thumb {
             position: relative;
             width: 60px;
             height: 60px;
-            border-radius: 12px;
+            border-radius: 12px; /* Rounded Square */
             overflow: hidden;
             cursor: pointer;
-            background: #f1f5f9; /* Placeholder slightly visible */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Soft shadow */
+            background: #f1f5f9;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .photo-thumb:hover {
@@ -449,13 +449,14 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: block; /* Removes bottom space */
+            display: block;
+            border-radius: 0; /* Remove redundant radius on image */
         }
         .photo-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0, 0, 0, 0.3); /* Simple dark overlay */
-            backdrop-filter: blur(2px); /* Glass effect */
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
             display: flex;
             align-items: center;
             justify-content: center;
