@@ -38,7 +38,7 @@ class SalaryController extends Controller
         // [BARU] Range Tanggal untuk Freelance (Optional)
         // Jika tidak diisi, defaultnya adalah tanggal 1 sampai akhir bulan yang dipilih
         $startDate = $request->query('start_date') ? Carbon::parse($request->query('start_date')) : Carbon::createFromDate($year, $month, 1);
-        $endDate   = $request->query('end_date') ? Carbon::parse($request->query('end_date')) : Carbon::createFromDate($year, $month, 1)->endOfMonth();
+        $endDate = $request->query('end_date') ? Carbon::parse($request->query('end_date')) : Carbon::createFromDate($year, $month, 1)->endOfMonth();
 
         $selectedUser = null;
         $activeLoans = collect([]);
@@ -47,8 +47,11 @@ class SalaryController extends Controller
         $lateCount = 0;
         $masterSalary = null;
         $freelanceAttendance = 0;
-        
-        $cutiCount = 0; $sakitCount = 0; $izinCount = 0; $wfhCount = 0;
+
+        $cutiCount = 0;
+        $sakitCount = 0;
+        $izinCount = 0;
+        $wfhCount = 0;
 
         $users = User::where('is_active', true)->orderBy('name')->get();
 
@@ -64,18 +67,18 @@ class SalaryController extends Controller
                 ->where('status', 'approved')
                 ->whereRaw('total_paid < amount')
                 ->orderBy('created_at', 'asc')->get();
-            
-            foreach($activeLoans as $loan) {
+
+            foreach ($activeLoans as $loan) {
                 $totalRemainingDebt += ($loan->amount - $loan->total_paid);
             }
 
             // --- HITUNG ABSENSI ---
-            
+
             // Absensi Regular (Bulanan) untuk Employee/Promotor
             // Tetap pakai logika bulan penuh
             $telatFisik = Attendance::where('user_id', $selectedUserId)
                 ->whereMonth('check_in_time', $month)->whereYear('check_in_time', $year)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->where('is_late_checkin', true)->orWhere('status', 'late')->orWhere('presence_status', 'like', '%Telat%');
                 })->count();
 
@@ -86,8 +89,8 @@ class SalaryController extends Controller
             $lateCount = $telatFisik + $izinTelat;
 
             $alphaCount = Attendance::where('user_id', $selectedUserId)
-                ->whereMonth('created_at', $month)->whereYear('created_at', $year)
-                ->where(function($q) {
+                ->whereMonth('check_in_time', $month)->whereYear('check_in_time', $year)
+                ->where(function ($q) {
                     $q->where('status', 'alpha')->orWhere('presence_status', 'Alpha');
                 })->count();
 
@@ -96,9 +99,9 @@ class SalaryController extends Controller
             $freelanceAttendance = Attendance::where('user_id', $selectedUserId)
                 ->whereDate('check_in_time', '>=', $startDate)
                 ->whereDate('check_in_time', '<=', $endDate)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->whereIn('presence_status', ['Masuk', 'WFH', 'Telat', 'Izin Telat', 'Dinas Luar'])
-                      ->orWhereIn('status', ['present', 'late', 'wfh']);
+                        ->orWhereIn('status', ['present', 'late', 'wfh']);
                 })->count();
 
             // Info Cuti (Bulanan)
@@ -113,10 +116,22 @@ class SalaryController extends Controller
         }
 
         return view('salaries.create', compact(
-            'users', 'selectedUser', 'activeLoans', 'totalRemainingDebt',
-            'alphaCount', 'lateCount', 'masterSalary', 
-            'month', 'year', 'startDate', 'endDate', 'freelanceAttendance',
-            'cutiCount', 'sakitCount', 'izinCount', 'wfhCount'
+            'users',
+            'selectedUser',
+            'activeLoans',
+            'totalRemainingDebt',
+            'alphaCount',
+            'lateCount',
+            'masterSalary',
+            'month',
+            'year',
+            'startDate',
+            'endDate',
+            'freelanceAttendance',
+            'cutiCount',
+            'sakitCount',
+            'izinCount',
+            'wfhCount'
         ));
     }
 
@@ -124,11 +139,16 @@ class SalaryController extends Controller
     {
         // 1. Clean Rupiah
         $inputsToClean = [
-            'employee_basic_salary', 'employee_position_allowance', 
-            'employee_owner_privilege', 'promotor_bonus', 
-            'dispensation_amount', 'alpha_deduction', 
-            'late_deduction', 'other_deduction',
-            'freelance_daily_salary', 'freelance_total_income' // [NEW] Total income freelance
+            'employee_basic_salary',
+            'employee_position_allowance',
+            'employee_owner_privilege',
+            'promotor_bonus',
+            'dispensation_amount',
+            'alpha_deduction',
+            'late_deduction',
+            'other_deduction',
+            'freelance_daily_salary',
+            'freelance_total_income' // [NEW] Total income freelance
         ];
 
         foreach ($inputsToClean as $field) {
@@ -150,15 +170,16 @@ class SalaryController extends Controller
         ]);
 
         // Cek Duplikasi (Kecuali Freelance boleh berkali-kali karena bisa mingguan)
-        if($request->category != 'freelance') {
+        if ($request->category != 'freelance') {
             $exists = Salary::where('user_id', $request->user_id)
                 ->where('month', $request->month)
                 ->where('year', $request->year)
                 ->exists();
-            if ($exists) return back()->with('error', 'Gaji bulanan karyawan ini sudah dibuat!');
+            if ($exists)
+                return back()->with('error', 'Gaji bulanan karyawan ini sudah dibuat!');
         }
 
-        DB::transaction(function() use ($request) {
+        DB::transaction(function () use ($request) {
             $data = $request->except(['_token', 'send_type', 'scheduled_date', 'selected_loans', 'start_date', 'end_date', 'freelance_total_income']);
             $data['created_by'] = Auth::id();
 
@@ -184,16 +205,23 @@ class SalaryController extends Controller
                     if ($payAmount > 0) {
                         $loan = CashAdvance::find($loanId);
                         $sisa = $loan->amount - $loan->total_paid;
-                        if ($payAmount > $sisa) $payAmount = $sisa; 
+                        if ($payAmount > $sisa)
+                            $payAmount = $sisa;
 
                         CashAdvanceInstallment::create([
-                            'cash_advance_id' => $loan->id, 'user_id' => $request->user_id,
-                            'amount_paid' => $payAmount, 'received_by' => 'SYSTEM (PAYROLL)', 
-                            'status' => 'approved', 'note' => 'Potongan Gaji ' . $request->month . '/' . $request->year
+                            'cash_advance_id' => $loan->id,
+                            'user_id' => $request->user_id,
+                            'amount_paid' => $payAmount,
+                            'received_by' => 'SYSTEM (PAYROLL)',
+                            'status' => 'approved',
+                            'note' => 'Potongan Gaji ' . $request->month . '/' . $request->year
                         ]);
 
                         $loan->total_paid += $payAmount;
-                        if ($loan->total_paid >= $loan->amount) { $loan->status = 'paid'; $loan->repayment_date = now(); }
+                        if ($loan->total_paid >= $loan->amount) {
+                            $loan->status = 'paid';
+                            $loan->repayment_date = now();
+                        }
                         $loan->save();
                         $totalKasbonDeduction += $payAmount;
                     }
@@ -204,11 +232,11 @@ class SalaryController extends Controller
             // Hitung Income
             $income = 0;
             if ($request->category == 'employee') {
-                $income = ($request->employee_basic_salary ?? 0) + 
-                          ($request->employee_position_allowance ?? 0) + 
-                          ($request->employee_owner_privilege ?? 0);
+                $income = ($request->employee_basic_salary ?? 0) +
+                    ($request->employee_position_allowance ?? 0) +
+                    ($request->employee_owner_privilege ?? 0);
             } elseif ($request->category == 'promotor') {
-                $income = ($request->employee_basic_salary ?? 0); 
+                $income = ($request->employee_basic_salary ?? 0);
             } elseif ($request->category == 'freelance') {
                 // Freelance: Gunakan Total Income yang dihitung JS (Rate * Hari)
                 // Kita ambil dari input hidden 'freelance_total_income' atau hitung ulang di server
@@ -216,32 +244,48 @@ class SalaryController extends Controller
                 // Atau lebih aman: Ambil rate dari request, hitung manual jika hari dikirim.
                 // Disini kita pakai nilai yang dikirim frontend 'freelance_total_income' karena hari attendance dinamis di view
                 $income = $request->freelance_total_income ?? 0;
-                
+
                 // Simpan Rate Harian di kolom basic_salary agar tercatat ratenya
-                $data['employee_basic_salary'] = $request->freelance_daily_salary; 
+                $data['employee_basic_salary'] = $request->freelance_daily_salary;
             }
 
             $income += ($request->promotor_bonus ?? 0);
             $income += ($request->dispensation_amount ?? 0);
 
             // Total Deduction
-            $deduction = ($request->alpha_deduction ?? 0) + 
-                         ($request->late_deduction ?? 0) + 
-                         ($totalKasbonDeduction) + 
-                         ($request->other_deduction ?? 0);
+            $deduction = ($request->alpha_deduction ?? 0) +
+                ($request->late_deduction ?? 0) +
+                ($totalKasbonDeduction) +
+                ($request->other_deduction ?? 0);
 
             $data['total_amount'] = $income - $deduction;
-            
+
             Salary::create($data);
         });
 
         return redirect()->route('branch-salary.show', User::find($request->user_id)->branch_id)
             ->with('success', 'Payroll disimpan.');
     }
-    
+
     // ... method lain (show, edit, update, destroy) ...
-    public function show($id) { $salary = Salary::with(['user.branch', 'user.division'])->findOrFail($id); return view('salaries.show', compact('salary')); }
-    public function edit(Salary $salary) { $users = User::orderBy('name')->get(); return view('salaries.edit', compact('salary', 'users')); }
-    public function update(Request $request, Salary $salary) { $salary->update($request->only(['notes'])); return redirect()->route('salaries.index')->with('success', 'Data updated.'); }
-    public function destroy(Salary $salary) { $salary->delete(); return back()->with('success', 'Deleted.'); }
+    public function show($id)
+    {
+        $salary = Salary::with(['user.branch', 'user.division'])->findOrFail($id);
+        return view('salaries.show', compact('salary'));
+    }
+    public function edit(Salary $salary)
+    {
+        $users = User::orderBy('name')->get();
+        return view('salaries.edit', compact('salary', 'users'));
+    }
+    public function update(Request $request, Salary $salary)
+    {
+        $salary->update($request->only(['notes']));
+        return redirect()->route('salaries.index')->with('success', 'Data updated.');
+    }
+    public function destroy(Salary $salary)
+    {
+        $salary->delete();
+        return back()->with('success', 'Deleted.');
+    }
 }
