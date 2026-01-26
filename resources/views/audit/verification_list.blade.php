@@ -413,42 +413,47 @@
         .time-in { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
         .time-out { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
 
-        /* Photo Thumbnail */
+        /* Photo Thumbnail - Square with rounded corners matching card design */
         .photo-thumb {
             position: relative;
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
             overflow: hidden;
             cursor: pointer;
             border: 2px solid #e2e8f0;
+            background: #f8fafc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             transition: all 0.2s ease;
         }
         .photo-thumb:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
             border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
         }
         .photo-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 10px;
         }
         .photo-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.4);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.7) 0%, rgba(118, 75, 162, 0.7) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             transition: opacity 0.2s;
+            border-radius: 10px;
         }
         .photo-thumb:hover .photo-overlay {
             opacity: 1;
         }
         .photo-overlay i {
             color: white;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
         }
 
         /* Notes */
