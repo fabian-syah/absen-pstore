@@ -20,7 +20,7 @@
 @section('content')
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: BIRTHDAY CELEBRATION (Hanya Muncul Jika H-30 atau Hari H)  --}}
+    {{-- BAGIAN BARU: BIRTHDAY CELEBRATION (Hanya Muncul Jika H-30 atau Hari H) --}}
     {{-- ======================================================================= --}}
     @if (isset($birthdayData) && $birthdayData)
         <div class="row mb-4 animate-enter">
@@ -67,12 +67,10 @@
                             {{-- KANAN: COUNTDOWN TIMER --}}
                             <div class="col-md-5 mt-4 mt-md-0 text-center text-md-end">
                                 @if (!$birthdayData['is_today'])
-                                    <div class="d-flex justify-content-center justify-content-md-end gap-2"
-                                        id="birthday-countdown">
+                                    <div class="d-flex justify-content-center justify-content-md-end gap-2" id="birthday-countdown">
                                         {{-- Hari --}}
                                         <div class="countdown-box glass-box">
-                                            <span class="d-block fw-bold fs-3"
-                                                id="cd-days">{{ $birthdayData['days_left'] }}</span>
+                                            <span class="d-block fw-bold fs-3" id="cd-days">{{ $birthdayData['days_left'] }}</span>
                                             <small class="text-uppercase" style="font-size: 9px;">Hari</small>
                                         </div>
                                         {{-- Jam --}}
@@ -109,7 +107,7 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- [UPGRADED] RAMADHAN COUNTDOWN: THE ROYAL ISLAMIC EDITION               --}}
+    {{-- [UPGRADED] RAMADHAN COUNTDOWN: THE ROYAL ISLAMIC EDITION --}}
     {{-- ======================================================================= --}}
     @if (isset($ramadanData) && $ramadanData)
         <div class="row mb-5 animate-enter" style="animation-delay: 0.1s">
@@ -174,8 +172,7 @@
                                             {{-- HARI --}}
                                             <div class="royal-timer-box">
                                                 <div class="timer-circle-bg"></div>
-                                                <span class="royal-time"
-                                                    id="royal-days">{{ $ramadanData['days_left'] }}</span>
+                                                <span class="royal-time" id="royal-days">{{ $ramadanData['days_left'] }}</span>
                                                 <span class="royal-label">HARI</span>
                                             </div>
 
@@ -421,8 +418,7 @@
                         <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
                             @foreach ($lastMonthWinners as $history)
                                 <div class="col">
-                                    <div
-                                        class="winner-memory-card text-center p-3 h-100 d-flex flex-column align-items-center">
+                                    <div class="winner-memory-card text-center p-3 h-100 d-flex flex-column align-items-center">
                                         <div class="position-relative mb-3 mt-2">
                                             {{-- Badge Rank dinamis berdasarkan urutan hasil query --}}
                                             <div
@@ -451,8 +447,7 @@
                                         <div class="mt-auto">
                                             <span class="badge bg-light text-dark opacity-75 py-2 px-3"
                                                 style="font-size: 11px; border-radius: 50px;">
-                                                <i
-                                                    class="mdi mdi-calendar-check me-1"></i>{{ $history->total_attendance }}
+                                                <i class="mdi mdi-calendar-check me-1"></i>{{ $history->total_attendance }}
                                                 Hari
                                             </span>
                                         </div>
@@ -467,7 +462,7 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN 2: LEADERBOARD PODIUM MEWAH (TOP 3)                              --}}
+    {{-- BAGIAN 2: LEADERBOARD PODIUM MEWAH (TOP 3) --}}
     {{-- ======================================================================= --}}
 
     <div class="row mb-5 animate-enter" style="animation-delay: 0.4s">
@@ -510,9 +505,11 @@
                                     <div class="podium-block silver-block text-center">
                                         <div class="podium-content">
                                             <h6 class="fw-bold text-dark mb-1">
-                                                {{ Str::limit($leaderboard[1]->user->name, 12) }}</h6>
+                                                {{ Str::limit($leaderboard[1]->user->name, 12) }}
+                                            </h6>
                                             <p class="small text-muted mb-2">
-                                                {{ $leaderboard[1]->user->division->name ?? '-' }}</p>
+                                                {{ $leaderboard[1]->user->division->name ?? '-' }}
+                                            </p>
                                             <div class="stat-pill mb-1">
                                                 <i
                                                     class="mdi mdi-check-circle text-success me-1"></i>{{ $leaderboard[1]->total_attendance }}
@@ -529,11 +526,9 @@
 
                             {{-- JUARA 1 (TENGAH - TERTINGGI) --}}
                             @if (isset($leaderboard[0]))
-                                <div class="podium-step-container main-winner animate-enter"
-                                    style="animation-delay: 0.5s">
+                                <div class="podium-step-container main-winner animate-enter" style="animation-delay: 0.5s">
                                     <div class="crown-floating">
-                                        <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown"
-                                            width="50">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown" width="50">
                                     </div>
                                     <div class="podium-avatar-wrapper gold-glow">
                                         @if ($leaderboard[0]->user->profile_photo_path)
@@ -552,9 +547,11 @@
                                         <div class="sparkle s3"></div>
                                         <div class="podium-content pt-3">
                                             <h5 class="fw-bold text-dark mb-1">
-                                                {{ Str::limit($leaderboard[0]->user->name, 15) }}</h5>
+                                                {{ Str::limit($leaderboard[0]->user->name, 15) }}
+                                            </h5>
                                             <p class="small text-muted mb-2">
-                                                {{ $leaderboard[0]->user->division->name ?? '-' }}</p>
+                                                {{ $leaderboard[0]->user->division->name ?? '-' }}
+                                            </p>
                                             <div class="stat-pill gold mb-2">
                                                 <i class="mdi mdi-star me-1"></i>{{ $leaderboard[0]->total_attendance }}
                                                 Kehadiran
@@ -585,9 +582,11 @@
                                     <div class="podium-block bronze-block text-center">
                                         <div class="podium-content">
                                             <h6 class="fw-bold text-dark mb-1">
-                                                {{ Str::limit($leaderboard[2]->user->name, 12) }}</h6>
+                                                {{ Str::limit($leaderboard[2]->user->name, 12) }}
+                                            </h6>
                                             <p class="small text-muted mb-2">
-                                                {{ $leaderboard[2]->user->division->name ?? '-' }}</p>
+                                                {{ $leaderboard[2]->user->division->name ?? '-' }}
+                                            </p>
                                             <div class="stat-pill mb-1">
                                                 <i class="mdi mdi-check me-1"></i>{{ $leaderboard[2]->total_attendance }}
                                                 Hadir
@@ -608,9 +607,10 @@
 
         {{-- 2. TOP SCANNER (ADMIN & SECURITY) -- SAME PODIUM STYLE --}}
         @if (
-            (auth()->user()->role == 'admin' || auth()->user()->role == 'security') &&
+                (auth()->user()->role == 'admin' || auth()->user()->role == 'security') &&
                 isset($topScanners) &&
-                count($topScanners) > 0)
+                count($topScanners) > 0
+            )
             <div class="col-12 mt-4">
                 <div class="card border-0 shadow-lg luxury-card overflow-hidden">
                     <div class="luxury-bg-pattern"></div>
@@ -634,7 +634,8 @@
                                                 class="luxury-avatar">
                                         @else
                                             <div class="luxury-avatar-placeholder bg-secondary">
-                                                {{ substr($topScanners[1]->name, 0, 1) }}</div>
+                                                {{ substr($topScanners[1]->name, 0, 1) }}
+                                            </div>
                                         @endif
                                         <div class="rank-circle silver">2</div>
                                     </div>
@@ -653,16 +654,16 @@
                             {{-- JUARA 1 --}}
                             @if (isset($topScanners[0]))
                                 <div class="podium-step-container main-winner">
-                                    <div class="crown-floating"><img
-                                            src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown"
-                                            width="50"></div>
+                                    <div class="crown-floating"><img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png"
+                                            alt="Crown" width="50"></div>
                                     <div class="podium-avatar-wrapper gold-glow">
                                         @if ($topScanners[0]->profile_photo_path)
                                             <img src="{{ asset('storage/' . $topScanners[0]->profile_photo_path) }}"
                                                 class="luxury-avatar">
                                         @else
                                             <div class="luxury-avatar-placeholder gold-gradient">
-                                                {{ substr($topScanners[0]->name, 0, 1) }}</div>
+                                                {{ substr($topScanners[0]->name, 0, 1) }}
+                                            </div>
                                         @endif
                                         <div class="rank-circle gold">1</div>
                                     </div>
@@ -687,7 +688,8 @@
                                                 class="luxury-avatar">
                                         @else
                                             <div class="luxury-avatar-placeholder" style="background: #CD7F32;">
-                                                {{ substr($topScanners[2]->name, 0, 1) }}</div>
+                                                {{ substr($topScanners[2]->name, 0, 1) }}
+                                            </div>
                                         @endif
                                         <div class="rank-circle bronze">3</div>
                                     </div>
@@ -712,7 +714,7 @@
     </div>
 
     {{-- ======================================================================= --}}
-    {{-- [BARU] BAGIAN GALLERY: LEMBARAN CERITA BULAN INI (NOSTALGIA)            --}}
+    {{-- [BARU] BAGIAN GALLERY: LEMBARAN CERITA BULAN INI (NOSTALGIA) --}}
     {{-- ======================================================================= --}}
     <div class="row mt-4 mb-5 animate-enter" style="animation-delay: 0.5s">
         <div class="col-12">
@@ -751,8 +753,7 @@
                             </div>
                         @endif
                     @empty
-                        <div class="col-12 text-center py-5 bg-light rounded-3 border-dashed w-100"
-                            style="min-width: 300px;">
+                        <div class="col-12 text-center py-5 bg-light rounded-3 border-dashed w-100" style="min-width: 300px;">
                             <i class="mdi mdi-image-filter-hdr display-4 text-muted opacity-25"></i>
                             <p class="text-muted mt-2">Belum ada potret cerita untuk bulan ini...</p>
                         </div>
@@ -764,7 +765,7 @@
 
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN 3: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI)                  --}}
+    {{-- BAGIAN 3: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI) --}}
     {{-- ======================================================================= --}}
 
     <div class="row animate-enter" style="animation-delay: 0.5s">
@@ -786,8 +787,7 @@
                                 <div class="card-id-photo-wrapper">
                                     @if (Auth::user()->profile_photo_path)
                                         <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="Profile"
-                                            class="id-card-img" data-bs-toggle="modal"
-                                            data-bs-target="#profilePhotoModal"
+                                            class="id-card-img" data-bs-toggle="modal" data-bs-target="#profilePhotoModal"
                                             data-src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
                                             title="Klik untuk memperbesar">
                                     @else
@@ -940,8 +940,7 @@
 
                                 <div class="d-flex align-items-center position-relative z-index-1">
                                     <div class="status-icon shadow pulse-animation">
-                                        <i
-                                            class="mdi {{ $isCrossDay ? 'mdi-clock-alert-outline' : 'mdi-clock-check' }}"></i>
+                                        <i class="mdi {{ $isCrossDay ? 'mdi-clock-alert-outline' : 'mdi-clock-check' }}"></i>
                                     </div>
                                     <div class="flex-grow-1">
                                         @if ($isCrossDay)
@@ -997,8 +996,7 @@
                                                             </div>
 
                                                             {{-- OPSI 2: TOMBOL LEWATI (TANPA FOTO) --}}
-                                                            <form
-                                                                action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
+                                                            <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}"
                                                                 method="POST">
                                                                 @csrf
                                                                 <p class="text-muted small mb-1">
@@ -1006,8 +1004,7 @@
                                                                         2:</strong>
                                                                     Lupa Absen (Tanpa Foto)
                                                                 </p>
-                                                                <button type="submit"
-                                                                    class="btn btn-outline-danger w-100 py-2 shadow-sm"
+                                                                <button type="submit" class="btn btn-outline-danger w-100 py-2 shadow-sm"
                                                                     onclick="return confirm('Pilih ini jika Anda LUPA absen pulang kemarin.\nSesi akan ditutup otomatis TANPA FOTO.\n\nLanjutkan?');">
                                                                     <i class="mdi mdi-skip-forward me-2"></i>Lewati & Tutup
                                                                     Sesi
@@ -1017,7 +1014,8 @@
                                                     @endif
 
                                                     {{-- FASE 3: CAMERA BUTTON --}}
-                                                    {{-- Tampil otomatis jika sudah confirm (is_extended_shift == true) ATAU setelah slide selesai (via JS) --}}
+                                                    {{-- Tampil otomatis jika sudah confirm (is_extended_shift == true) ATAU setelah
+                                                    slide selesai (via JS) --}}
                                                     <div id="camera-view"
                                                         class="{{ $myAttendanceToday->is_extended_shift ? '' : 'd-none' }} text-center animate-enter mt-3">
                                                         <div class="mb-3">
@@ -1139,12 +1137,10 @@
                                 @else
                                     {{-- LOGIKA LAMA (Untuk Sakit/Cuti/WFH yang masuk lebih awal) --}}
                                     <p class="small text-muted mb-2">Berubah pikiran atau sudah sampai kantor?</p>
-                                    <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}"
-                                        method="POST">
+                                    <form action="{{ route('leave-requests.finish-early', $myLeaveToday->id) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
-                                        <button type="submit"
-                                            class="btn btn-outline-danger btn-sm w-100 shadow-sm hover-scale"
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100 shadow-sm hover-scale"
                                             onclick="return confirm('Apakah Anda yakin? Status izin hari ini akan dibatalkan dan Anda bisa absen kembali.');">
                                             <i class="mdi mdi-map-marker-radius me-2"></i>Batalkan Izin & Absen Masuk
                                         </button>
@@ -1178,8 +1174,7 @@
                                                 </button>
                                             </div>
                                         @else
-                                            <a href="{{ route('self.attend.create') }}"
-                                                class="btn btn-outline-info shadow hover-scale">
+                                            <a href="{{ route('self.attend.create') }}" class="btn btn-outline-info shadow hover-scale">
                                                 <i class="mdi mdi-fingerprint me-2"></i>Absen Shift Baru
                                             </a>
                                         @endif
@@ -1209,8 +1204,7 @@
                                                 </small>
                                             </div>
                                         @else
-                                            <a href="{{ route('self.attend.create') }}"
-                                                class="btn btn-dark shadow hover-scale">
+                                            <a href="{{ route('self.attend.create') }}" class="btn btn-dark shadow hover-scale">
                                                 <i class="mdi mdi-fingerprint me-2"></i>Absen Mandiri
                                             </a>
                                         @endif
@@ -1231,7 +1225,7 @@
     </div>
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS)                                --}}
+    {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS) --}}
     {{-- ======================================================================= --}}
     <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
         <div class="col-12">
@@ -1301,8 +1295,8 @@
                         data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
 
                     <div class="p-3">
-                        <img src="" id="profileModalImageSrc" class="img-fluid rounded shadow-lg"
-                            alt="Profile Photo" style="max-height: 80vh; max-width: 100%; object-fit: contain;">
+                        <img src="" id="profileModalImageSrc" class="img-fluid rounded shadow-lg" alt="Profile Photo"
+                            style="max-height: 80vh; max-width: 100%; object-fit: contain;">
                     </div>
                     <div class="mt-2 mb-3 text-white">
                         <h5 class="mb-0">{{ Auth::user()->name }}</h5>
@@ -1354,6 +1348,108 @@
 
 @push('styles')
     <style>
+        /* =================================================================
+               CRITICAL FIX: ENSURE TEXT VISIBILITY ON ALL BACKGROUNDS
+               ================================================================= */
+
+        /* Override for all text elements to ensure visibility */
+        .card-title,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        span,
+        small,
+        label,
+        .text-dark,
+        .fw-bold,
+        .fw-semibold {
+            color: #212529 !important;
+        }
+
+        /* Specific fix for card bank stats */
+        .card-bank .card-body * {
+            color: #ffffff !important;
+        }
+
+        .card-bank-label {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-bank-value {
+            color: #ffffff !important;
+            font-size: 2.5rem !important;
+            font-weight: 700 !important;
+            line-height: 1.2;
+        }
+
+        .card-bank-desc {
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-size: 13px !important;
+        }
+
+        /* Ensure text on white/light backgrounds is dark */
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) .card-body,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) .card-title,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h1,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h2,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h3,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-face):not(.royal-ramadan-card):not(.birthday-card) h4,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h5,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h6 {
+            color: #212529 !important;
+        }
+
+        /* Ensure muted text is visible */
+        .text-muted {
+            color: #6c757d !important;
+        }
+
+        /* Ensure primary text is visible */
+        .text-primary {
+            color: #0d6efd !important;
+        }
+
+        /* Ensure badges are readable */
+        .badge {
+            font-weight: 600 !important;
+        }
+
+        /* Fix for stat pillsand labels */
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: #212529 !important;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-pill.gold {
+            background: rgba(255, 215, 0, 0.3) !important;
+            color: #856404 !important;
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+
+        /* Ensure podium text is visible */
+        .podium-content h5,
+        .podium-content h6,
+        .podium-content p,
+        .podium-content .small {
+            color: #212529 !important;
+        }
+
+        /* Ensure luxury card titles are visible */
+        .luxury-card .card-title,
+        .luxury-card h3,
+        .luxury-card h4 {
+            color: #333 !important;
+        }
+
         /* === ROYAL RAMADHAN THEME === */
         @import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@700&display=swap');
 
@@ -2869,7 +2965,7 @@
             setInterval(updateRoyalCountdown, 1000);
             updateRoyalCountdown(); // Run immediately
         @endif
-        {{-- [BARU] SCRIPT PREVIEW GALLERY --}}
+        {{ --[BARU] SCRIPT PREVIEW GALLERY-- }}
 
         function previewGalleryImage(src, title, date) {
             const modal = new bootstrap.Modal(document.getElementById('galleryPreviewModal'));
@@ -2879,7 +2975,7 @@
             modal.show();
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
 
             // --- [BARU] SLIDER LOGIC ---
             const track = document.getElementById('slide-track');
@@ -2966,13 +3062,13 @@
                     const attendanceId = "{{ $myAttendanceToday->id ?? 0 }}";
 
                     fetch(`/attendance/${attendanceId}/confirm-overtime`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            }
-                        })
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    })
                         .then(response => response.json())
                         .then(data => {
                             // Success
@@ -3082,33 +3178,33 @@
                 updateCountdown();
             @endif
 
-            // --- SCRIPT QR CODE ---
-            @if (Auth::user()->qr_code_value)
-                const qrValue = "{{ Auth::user()->qr_code_value }}";
+                // --- SCRIPT QR CODE ---
+                @if (Auth::user()->qr_code_value)
+                    const qrValue = "{{ Auth::user()->qr_code_value }}";
 
-                new QRCode(document.getElementById("dashboard-qrcode"), {
-                    text: qrValue,
-                    width: 64,
-                    height: 64,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-
-                var qrModal = document.getElementById('qrModal');
-                qrModal.addEventListener('show.bs.modal', function(event) {
-                    var qrContainer = document.getElementById('qrcode-modal-display');
-                    qrContainer.innerHTML = '';
-                    new QRCode(qrContainer, {
+                    new QRCode(document.getElementById("dashboard-qrcode"), {
                         text: qrValue,
-                        width: 256,
-                        height: 256,
+                        width: 64,
+                        height: 64,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
                     });
-                });
-            @endif
 
-            // --- SCRIPT CHART ---
-            const ctx = document.getElementById('attendancePieChart').getContext('2d');
+                    var qrModal = document.getElementById('qrModal');
+                    qrModal.addEventListener('show.bs.modal', function (event) {
+                        var qrContainer = document.getElementById('qrcode-modal-display');
+                        qrContainer.innerHTML = '';
+                        new QRCode(qrContainer, {
+                            text: qrValue,
+                            width: 256,
+                            height: 256,
+                        });
+                    });
+                @endif
+
+                // --- SCRIPT CHART ---
+                const ctx = document.getElementById('attendancePieChart').getContext('2d');
             Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
 
             @if (auth()->user()->role == 'admin')
@@ -3118,7 +3214,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                        {{ $stats['early'] }}, {{ $stats['pending'] }},
                                 {{ $stats['absent'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
@@ -3204,7 +3300,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                {{ $stats['early'] }}, {{ $stats['pending'] }}
+                                        {{ $stats['early'] }}, {{ $stats['pending'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
                             borderWidth: 2,
@@ -3223,10 +3319,10 @@
                 });
             @endif
 
-            // --- MODAL FOTO PROFIL ---
-            var profilePhotoModal = document.getElementById('profilePhotoModal');
+                // --- MODAL FOTO PROFIL ---
+                var profilePhotoModal = document.getElementById('profilePhotoModal');
             if (profilePhotoModal) {
-                profilePhotoModal.addEventListener('show.bs.modal', function(event) {
+                profilePhotoModal.addEventListener('show.bs.modal', function (event) {
                     var button = event.relatedTarget;
                     var src = button.getAttribute('data-src');
                     var modalImg = document.getElementById('profileModalImageSrc');
