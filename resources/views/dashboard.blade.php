@@ -1228,40 +1228,142 @@
     </div>
 
     {{-- ======================================================================= --}}
-    {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS) --}}
+    {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS) - MODERN REDESIGN --}}
     {{-- ======================================================================= --}}
     <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
         <div class="col-12">
-            <div class="card shadow-sm border-0" style="background: linear-gradient(to right, #ffffff, #f8f9fa);">
-                <div class="card-body py-3">
-                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
-                        <div class="d-flex align-items-center mb-3 mb-md-0">
-                            <div class="icon-box bg-light text-warning rounded-circle p-2 me-3 shadow-sm">
-                                <i class="mdi mdi-lightning-bolt fs-4"></i>
-                            </div>
-                            <div>
-                                <h5 class="fw-bold mb-0 text-dark">Menu Cepat</h5>
-                                <small class="text-muted">Butuh izin untuk hari lain? Ajukan di sini.</small>
+            {{-- Container dengan gradient background --}}
+            <div class="card border-0 shadow-lg overflow-hidden"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px;">
+
+                {{-- Decorative elements --}}
+                <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
+                                background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                border-radius: 50%; pointer-events: none;"></div>
+
+                <div class="card-body p-4">
+                    <div class="row align-items-center g-3">
+                        {{-- LEFT: Icon & Title --}}
+                        <div class="col-lg-4">
+                            <div class="d-flex align-items-center">
+                                {{-- Icon dengan glassmorphism effect --}}
+                                <div class="d-flex align-items-center justify-content-center me-3"
+                                    style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
+                                                border-radius: 16px; backdrop-filter: blur(10px); 
+                                                border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                                    <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-bold mb-1 text-white">Menu Cepat</h4>
+                                    <p class="mb-0 small" style="color: rgba(255, 255, 255, 0.85);">
+                                        Akses cepat untuk pengajuan izin
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <div class="d-flex gap-2 w-100 w-md-auto">
-                            {{-- Tombol Pengajuan Izin --}}
-                            <a href="{{ route('leave-requests.create') }}"
-                                class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold flex-grow-1 flex-md-grow-0 hover-scale">
-                                <i class="mdi mdi-file-document-edit-outline me-2"></i> Ajukan Izin / Sakit
-                            </a>
 
-                            {{-- Tombol Riwayat (Opsional, agar seimbang) --}}
-                            <a href="{{ route('attendance.history') }}"
-                                class="btn btn-outline-secondary rounded-pill px-4 shadow-sm fw-bold flex-grow-1 flex-md-grow-0 hover-scale">
-                                <i class="mdi mdi-history me-2"></i> Riwayat
-                            </a>
+                        {{-- RIGHT: Action Buttons --}}
+                        <div class="col-lg-8">
+                            <div class="row g-3">
+                                {{-- Button 1: Ajukan Izin --}}
+                                <div class="col-md-6">
+                                    <a href="{{ route('leave-requests.create') }}"
+                                        class="quick-action-card d-block text-decoration-none">
+                                        <div class="p-4 h-100 d-flex flex-column" style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
+                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
+
+                                            {{-- Hover gradient effect --}}
+                                            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                                            opacity: 0; transition: opacity 0.3s ease;"
+                                                class="hover-gradient"></div>
+
+                                            <div style="position: relative; z-index: 1;">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="icon-wrapper me-3" style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
+                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                                        <i class="mdi mdi-file-document-edit text-white fs-4"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 class="fw-bold mb-0 text-title">Ajukan Izin / Sakit</h5>
+                                                    </div>
+                                                </div>
+                                                <p class="small mb-0 text-desc" style="color: #6c757d;">
+                                                    Izin, Sakit, Cuti, WFH, atau Telat
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                {{-- Button 2: Riwayat --}}
+                                <div class="col-md-6">
+                                    <a href="{{ route('attendance.history') }}"
+                                        class="quick-action-card d-block text-decoration-none">
+                                        <div class="p-4 h-100 d-flex flex-column" style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
+                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
+
+                                            {{-- Hover gradient effect --}}
+                                            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+                                                            opacity: 0; transition: opacity 0.3s ease;"
+                                                class="hover-gradient"></div>
+
+                                            <div style="position: relative; z-index: 1;">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="icon-wrapper me-3" style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
+                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
+                                                        <i class="mdi mdi-history text-white fs-4"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 class="fw-bold mb-0 text-title">Riwayat Absensi</h5>
+                                                    </div>
+                                                </div>
+                                                <p class="small mb-0 text-desc" style="color: #6c757d;">
+                                                    Lihat semua riwayat kehadiran Anda
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        /* Hover effects untuk quick action cards */
+        .quick-action-card:hover .hover-gradient {
+            opacity: 1;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .quick-action-card:hover .text-title,
+        .quick-action-card:hover .text-desc {
+            color: white !important;
+        }
+
+        .quick-action-card:hover .icon-wrapper {
+            background: white !important;
+        }
+
+        .quick-action-card:hover .icon-wrapper i {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 
     {{-- CHART SECTION --}}
     <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
@@ -1352,8 +1454,8 @@
 @push('styles')
     <style>
         /* =================================================================
-                               CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
-                               ================================================================= */
+                                   CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
+                                   ================================================================= */
 
         /* DON'T override backgrounds - only fix text colors */
 
@@ -3227,8 +3329,8 @@
                     });
                 @endif
 
-                                    // --- SCRIPT CHART ---
-                                    const ctx = document.getElementById('attendancePieChart').getContext('2d');
+                                        // --- SCRIPT CHART ---
+                                        const ctx = document.getElementById('attendancePieChart').getContext('2d');
             Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
 
             @if (auth()->user()->role == 'admin')
@@ -3238,7 +3340,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                            {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                                                                    {{ $stats['early'] }}, {{ $stats['pending'] }},
                                 {{ $stats['absent'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
@@ -3324,7 +3426,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                            {{ $stats['early'] }}, {{ $stats['pending'] }}
+                                                                                    {{ $stats['early'] }}, {{ $stats['pending'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
                             borderWidth: 2,
@@ -3343,8 +3445,8 @@
                 });
             @endif
 
-                                    // --- MODAL FOTO PROFIL ---
-                                    var profilePhotoModal = document.getElementById('profilePhotoModal');
+                                        // --- MODAL FOTO PROFIL ---
+                                        var profilePhotoModal = document.getElementById('profilePhotoModal');
             if (profilePhotoModal) {
                 profilePhotoModal.addEventListener('show.bs.modal', function (event) {
                     var button = event.relatedTarget;
