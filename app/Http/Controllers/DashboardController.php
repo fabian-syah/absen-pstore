@@ -39,7 +39,7 @@ class DashboardController extends Controller
         $yyLahir = $birthDate->format('y');
         $mmLahir = $birthDate->format('m');
         $ddLahir = $birthDate->format('d');
-        $noUrut  = str_pad($user->id, 3, '0', STR_PAD_LEFT);
+        $noUrut = str_pad($user->id, 3, '0', STR_PAD_LEFT);
 
         $data['idCardNumber'] = "{$yyMasuk}{$mmMasuk}{$yyLahir} {$mmLahir}{$ddLahir}{$noUrut}";
 
@@ -49,11 +49,11 @@ class DashboardController extends Controller
         $scheduleText = 'Fleksibel / Bebas';
         if ($user->check_in_start && $user->check_out_start) {
             $start = \Carbon\Carbon::parse($user->check_in_start)->format('H:i');
-            $end   = \Carbon\Carbon::parse($user->check_out_start)->format('H:i');
+            $end = \Carbon\Carbon::parse($user->check_out_start)->format('H:i');
             $scheduleText = "$start - $end";
         } elseif ($user->workSchedule) {
             $start = \Carbon\Carbon::parse($user->workSchedule->start_time)->format('H:i');
-            $end   = \Carbon\Carbon::parse($user->workSchedule->end_time)->format('H:i');
+            $end = \Carbon\Carbon::parse($user->workSchedule->end_time)->format('H:i');
             $scheduleText = "$start - $end";
         } else {
             $todaysAttendance = Attendance::where('user_id', $user->id)
@@ -61,7 +61,7 @@ class DashboardController extends Controller
                 ->first();
             if ($todaysAttendance && $todaysAttendance->scheduled_check_in && $todaysAttendance->scheduled_check_out) {
                 $start = \Carbon\Carbon::parse($todaysAttendance->scheduled_check_in)->format('H:i');
-                $end   = \Carbon\Carbon::parse($todaysAttendance->scheduled_check_out)->format('H:i');
+                $end = \Carbon\Carbon::parse($todaysAttendance->scheduled_check_out)->format('H:i');
                 $scheduleText = "$start - $end (Terekam)";
             }
         }
@@ -120,15 +120,15 @@ class DashboardController extends Controller
         // Logic Penentuan Status Dashboard
         $data['myAttendanceToday'] = null;
         $data['justFinishedOvertime'] = false;
-        $data['isStillWorkingOvertime'] = false; 
+        $data['isStillWorkingOvertime'] = false;
         $data['overtimeDuration'] = null;
 
         if ($activeSession) {
             $checkInDate = $activeSession->check_in_time->format('Y-m-d');
             if ($checkInDate !== $todayInBranch) {
                 $data['isStillWorkingOvertime'] = true;
-                $data['myAttendanceToday'] = $activeSession; 
-                $data['overtimeDuration'] = $activeSession->check_in_time->diff($nowInBranch); 
+                $data['myAttendanceToday'] = $activeSession;
+                $data['overtimeDuration'] = $activeSession->check_in_time->diff($nowInBranch);
             } else {
                 $data['myAttendanceToday'] = $activeSession;
             }
@@ -219,16 +219,31 @@ class DashboardController extends Controller
 
         // =========================================================================
         // [BARU] LOGIKA GALLERY NOSTALGIA BULANAN
+        // Hanya tampilkan 1 hari sebelum akhir bulan
         // =========================================================================
-        $data['attendanceGallery'] = Attendance::where('user_id', $user->id)
-            ->whereMonth('check_in_time', $nowInBranch->month)
-            ->whereYear('check_in_time', $nowInBranch->year)
-            ->where(function($q) {
-                $q->whereNotNull('photo_path')
-                  ->orWhereNotNull('photo_out_path');
-            })
-            ->orderBy('check_in_time', 'asc')
-            ->get();
+
+        // Cek apakah sekarang adalah 1 hari sebelum akhir bulan
+        $lastDayOfMonth = $nowInBranch->copy()->endOfMonth()->day;
+        $currentDay = $nowInBranch->day;
+        $isOneDayBeforeEndOfMonth = ($currentDay == $lastDayOfMonth - 1);
+
+        $data['showGallery'] = $isOneDayBeforeEndOfMonth;
+
+        // Ambil data gallery hanya jika sudah waktunya ditampilkan
+        if ($isOneDayBeforeEndOfMonth) {
+            $data['attendanceGallery'] = Attendance::where('user_id', $user->id)
+                ->whereMonth('check_in_time', $nowInBranch->month)
+                ->whereYear('check_in_time', $nowInBranch->year)
+                ->where(function ($q) {
+                    $q->whereNotNull('photo_path')
+                        ->orWhereNotNull('photo_out_path');
+                })
+                ->orderBy('check_in_time', 'asc')
+                ->get();
+        } else {
+            $data['attendanceGallery'] = collect(); // Empty collection
+        }
+
         $data['currentMonthName'] = $nowInBranch->translatedFormat('F Y');
 
         // =========================================================================
@@ -266,8 +281,10 @@ class DashboardController extends Controller
         if (!isset($data['attendanceStats'])) {
             $data['attendanceStats'] = isset($data['stats']) ? $data['stats'] : $personalStats;
         }
-        if (!isset($data['leaderboard'])) $data['leaderboard'] = [];
-        if (!isset($data['topScanners'])) $data['topScanners'] = [];
+        if (!isset($data['leaderboard']))
+            $data['leaderboard'] = [];
+        if (!isset($data['topScanners']))
+            $data['topScanners'] = [];
 
         // =========================================================================
         // 7. ULANG TAHUN LOGIC
@@ -297,55 +314,55 @@ class DashboardController extends Controller
 // =========================================================================
 // [FIXED] LOGIKA HALL OF FAME: HITUNG LIVE PER CABANG
 // =========================================================================
-$lastMonth = $nowInBranch->copy()->subMonth();
-$data['lastMonthName'] = $lastMonth->translatedFormat('F Y');
+        $lastMonth = $nowInBranch->copy()->subMonth();
+        $data['lastMonthName'] = $lastMonth->translatedFormat('F Y');
 
-// Kita hitung langsung dari tabel Attendance agar angka sinkron dengan Riwayat Absensi
-$data['lastMonthWinners'] = Attendance::select(
-        'user_id', 
-        DB::raw('count(*) as total_attendance')
-    )
-    ->whereMonth('check_in_time', $lastMonth->month)
-    ->whereYear('check_in_time', $lastMonth->year)
-    // FILTER PER CABANG: Hanya ambil karyawan yang satu cabang dengan user yang login
-    ->where('branch_id', $user->branch_id) 
-    ->where('status', 'verified')
-    // Filter status yang dianggap "Masuk" (Sama dengan logic Riwayat Absensi)
-    ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar', 'Telat', 'Izin Telat'])
-    ->whereHas('user', function($q) {
-        $q->where('is_active', true)
-          ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk Hall of Fame
-    })
-    ->groupBy('user_id')
-    ->orderByDesc('total_attendance') // Urutkan dari yang masuk paling banyak
-    ->limit(3) // Ambil Top 3
-    ->with(['user', 'user.division'])
-    ->get()
-    ->map(function($winner, $key) {
-        // Tambahkan property rank secara manual agar Blade tidak error
-        $winner->rank = $key + 1;
-        return $winner;
-    });
+        // Kita hitung langsung dari tabel Attendance agar angka sinkron dengan Riwayat Absensi
+        $data['lastMonthWinners'] = Attendance::select(
+            'user_id',
+            DB::raw('count(*) as total_attendance')
+        )
+            ->whereMonth('check_in_time', $lastMonth->month)
+            ->whereYear('check_in_time', $lastMonth->year)
+            // FILTER PER CABANG: Hanya ambil karyawan yang satu cabang dengan user yang login
+            ->where('branch_id', $user->branch_id)
+            ->where('status', 'verified')
+            // Filter status yang dianggap "Masuk" (Sama dengan logic Riwayat Absensi)
+            ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar', 'Telat', 'Izin Telat'])
+            ->whereHas('user', function ($q) {
+                $q->where('is_active', true)
+                    ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk Hall of Fame
+            })
+            ->groupBy('user_id')
+            ->orderByDesc('total_attendance') // Urutkan dari yang masuk paling banyak
+            ->limit(3) // Ambil Top 3
+            ->with(['user', 'user.division'])
+            ->get()
+            ->map(function ($winner, $key) {
+                // Tambahkan property rank secara manual agar Blade tidak error
+                $winner->rank = $key + 1;
+                return $winner;
+            });
 
-    // ... Logika Birthday yang sudah ada ...
+        // ... Logika Birthday yang sudah ada ...
 
-// =========================================================================
+        // =========================================================================
 // 8. [BARU] LOGIKA RAMADHAN COUNTDOWN (Estimasi 18 Feb 2026)
 // =========================================================================
 // Ganti tanggal ini sesuai ketetapan pemerintah nanti
-$ramadanDate = Carbon::createFromDate(2026, 2, 18, $userTimezone)->startOfDay(); 
-$diffRamadan = $nowInBranch->startOfDay()->diffInDays($ramadanDate, false);
+        $ramadanDate = Carbon::createFromDate(2026, 2, 18, $userTimezone)->startOfDay();
+        $diffRamadan = $nowInBranch->startOfDay()->diffInDays($ramadanDate, false);
 
-$ramadanData = null;
-// Tampilkan jika H-60 sampai Hari H
-if ($diffRamadan >= 0 && $diffRamadan <= 60) {
-    $ramadanData = [
-        'days_left' => $diffRamadan,
-        'date' => $ramadanDate->format('Y-m-d'),
-        'is_today' => $diffRamadan === 0
-    ];
-}
-$data['ramadanData'] = $ramadanData;
+        $ramadanData = null;
+        // Tampilkan jika H-60 sampai Hari H
+        if ($diffRamadan >= 0 && $diffRamadan <= 60) {
+            $ramadanData = [
+                'days_left' => $diffRamadan,
+                'date' => $ramadanDate->format('Y-m-d'),
+                'is_today' => $diffRamadan === 0
+            ];
+        }
+        $data['ramadanData'] = $ramadanData;
 
         return view('dashboard', $data);
     }
@@ -372,7 +389,8 @@ $data['ramadanData'] = $ramadanData;
     private function getAdminAttendanceStats($branch_id = null, $todayDate)
     {
         $query = Attendance::whereDate('check_in_time', $todayDate)->where('presence_status', '!=', 'Alpha');
-        if ($branch_id) $query->where('branch_id', $branch_id);
+        if ($branch_id)
+            $query->where('branch_id', $branch_id);
         $totalUsers = User::when($branch_id, function ($q) use ($branch_id) {
             return $q->where('branch_id', $branch_id);
         })->where('role', '!=', 'admin')->where('is_active', true)->count();
@@ -427,7 +445,8 @@ $data['ramadanData'] = $ramadanData;
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
             ->where('presence_status', '!=', 'Alpha');
-        if ($branch_id) $query->where('branch_id', $branch_id);
+        if ($branch_id)
+            $query->where('branch_id', $branch_id);
         return $this->calculateStats($query, 0);
     }
 
@@ -490,7 +509,8 @@ $data['ramadanData'] = $ramadanData;
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
 
         $allBranchIds = [];
-        if ($user->branch_id) $allBranchIds[] = $user->branch_id;
+        if ($user->branch_id)
+            $allBranchIds[] = $user->branch_id;
         $extraBranches = $user->branches()->pluck('branches.id')->toArray();
         $allBranchIds = array_merge($allBranchIds, $extraBranches);
         $allBranchIds = array_values(array_unique($allBranchIds));
