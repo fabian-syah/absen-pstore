@@ -253,14 +253,19 @@
     {{-- ======================================================================= --}}
     <div class="row mb-4 animate-enter" style="animation-delay: 0.15s">
         <div class="col-12">
-            <div class="card border-0 shadow-lg overflow-hidden quote-card"
-                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px;">
-                <div class="card-body py-4 px-4 position-relative">
-                    {{-- Decorative elements --}}
-                    <div class="quote-decoration-1"></div>
-                    <div class="quote-decoration-2"></div>
+            <div class="card border-0 shadow-lg overflow-hidden quote-card" id="quote-card"
+                style="border-radius: 20px; min-height: 160px; position: relative;">
+                {{-- Background Image Container --}}
+                <div class="quote-bg-image" id="quote-bg-image"
+                    style="position: absolute; inset: 0; background-size: cover; background-position: center; transition: opacity 0.5s ease;">
+                </div>
+                {{-- Dark Overlay for text readability --}}
+                <div
+                    style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 100%);">
+                </div>
 
-                    <div class="row align-items-center position-relative" style="z-index: 2;">
+                <div class="card-body py-4 px-4 position-relative" style="z-index: 2;">
+                    <div class="row align-items-center">
                         <div class="col-lg-9">
                             <div class="d-flex align-items-start">
                                 <div class="quote-icon me-3 d-none d-md-flex">
@@ -1002,15 +1007,15 @@
                         @else
                             <div class="active-work-card mb-3 position-relative overflow-hidden"
                                 style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
-                                                                    border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
+                                                                                            border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
 
                                 {{-- Decorative Elements --}}
                                 <div style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; 
-                                                                        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                        border-radius: 50%;"></div>
+                                                                                                background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                border-radius: 50%;"></div>
                                 <div style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; 
-                                                                        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
-                                                                        border-radius: 50%;"></div>
+                                                                                                background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
+                                                                                                border-radius: 50%;"></div>
 
                                 <div class="card-body p-4 position-relative" style="z-index: 2;">
                                     @if (!$isCrossDay)
@@ -1019,9 +1024,9 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="work-status-icon me-3"
                                                     style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
-                                                                                                border-radius: 16px; display: flex; align-items: center; 
-                                                                                                justify-content: center; backdrop-filter: blur(10px); 
-                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                                     <i class="mdi mdi-briefcase-check text-white" style="font-size: 28px;"></i>
                                                 </div>
                                                 <div>
@@ -1037,8 +1042,9 @@
                                         </div>
 
                                         {{-- Work Timeline & Info --}}
-                                        <div class="work-timeline-card p-3 mb-3" style="background: rgba(255,255,255,0.95); border-radius: 16px; 
-                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                                        <div class="work-timeline-card p-3 mb-3"
+                                            style="background: rgba(255,255,255,0.95); border-radius: 16px; 
+                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
 
                                             <div class="row g-3">
                                                 {{-- Check In Time --}}
@@ -1046,8 +1052,8 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="timeline-dot me-3"
                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #43e97b, #38f9d7); 
-                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
+                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
                                                             <i class="mdi mdi-login text-white fs-5"></i>
                                                         </div>
                                                         <div>
@@ -1070,8 +1076,8 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="timeline-dot me-3"
                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
                                                             <i class="mdi mdi-timer-outline text-white fs-5"></i>
                                                         </div>
                                                         <div>
@@ -1117,8 +1123,8 @@
                                                 <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
                                                     class="checkout-btn btn btn-lg w-100 shadow-lg"
                                                     style="background: rgba(255,255,255,0.95); color: #ef4444; border: none; 
-                                                                                                      border-radius: 14px; padding: 1rem; font-weight: 700; 
-                                                                                                      transition: all 0.3s ease; backdrop-filter: blur(10px);">
+                                                                                                                                              border-radius: 14px; padding: 1rem; font-weight: 700; 
+                                                                                                                                              transition: all 0.3s ease; backdrop-filter: blur(10px);">
                                                     <i class="mdi mdi-logout-variant me-2"></i>
                                                     Absen Pulang Mandiri
                                                 </a>
@@ -1370,8 +1376,8 @@
 
                 {{-- Decorative elements --}}
                 <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
-                                                            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                            border-radius: 50%; pointer-events: none;"></div>
+                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                    border-radius: 50%; pointer-events: none;"></div>
 
                 <div class="card-body p-4">
                     <div class="row align-items-center g-3">
@@ -1381,8 +1387,8 @@
                                 {{-- Icon dengan glassmorphism effect --}}
                                 <div class="d-flex align-items-center justify-content-center me-3"
                                     style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
-                                                                            border-radius: 16px; backdrop-filter: blur(10px); 
-                                                                            border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                                                                                    border-radius: 16px; backdrop-filter: blur(10px); 
+                                                                                    border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
                                     <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
                                 </div>
                                 <div>
@@ -1403,21 +1409,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                    border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                    transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                            border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                            transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                                                                        opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                                                                                        border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
                                                         <i class="mdi mdi-file-document-edit text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -1438,21 +1444,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                    border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                    transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                            border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                            transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                                                                                        opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
-                                                                                                border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
+                                                                                                        border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
                                                         <i class="mdi mdi-history text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -1681,8 +1687,8 @@
 @push('styles')
     <style>
         /* =================================================================
-                       DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
-                       ================================================================= */
+                               DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
+                               ================================================================= */
 
         /* Section Headers & Separators */
         .section-header {
@@ -1780,8 +1786,8 @@
         }
 
         /* =================================================================
-                       CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
-                       ================================================================= */
+                               CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
+                               ================================================================= */
 
         /* DON'T override backgrounds - only fix text colors */
 
@@ -3655,8 +3661,8 @@
                     });
                 @endif
 
-                                                    // --- SCRIPT CHART ---
-                                                    const ctx = document.getElementById('attendancePieChart').getContext('2d');
+                                                            // --- SCRIPT CHART ---
+                                                            const ctx = document.getElementById('attendancePieChart').getContext('2d');
             Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
 
             @if (auth()->user()->role == 'admin')
@@ -3666,7 +3672,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                            {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                                                                                                            {{ $stats['early'] }}, {{ $stats['pending'] }},
                                 {{ $stats['absent'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
@@ -3752,7 +3758,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                            {{ $stats['early'] }}, {{ $stats['pending'] }}
+                                                                                                                            {{ $stats['early'] }}, {{ $stats['pending'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
                             borderWidth: 2,
@@ -3771,8 +3777,8 @@
                 });
             @endif
 
-                                                    // --- MODAL FOTO PROFIL ---
-                                                    var profilePhotoModal = document.getElementById('profilePhotoModal');
+                                                            // --- MODAL FOTO PROFIL ---
+                                                            var profilePhotoModal = document.getElementById('profilePhotoModal');
             if (profilePhotoModal) {
                 profilePhotoModal.addEventListener('show.bs.modal', function (event) {
                     var button = event.relatedTarget;
@@ -3784,74 +3790,118 @@
         });
 
         // ===============================================
-            // MOTIVATIONAL QUOTE FUNCTIONALITY
-            // ===============================================
-            const motivationalQuotes = [
-                { text: "Kesuksesan adalah hasil dari persiapan, kerja keras, dan belajar dari kegagalan.", author: "Colin Powell" },
-                { text: "Satu-satunya cara untuk melakukan pekerjaan hebat adalah dengan mencintai apa yang kamu lakukan.", author: "Steve Jobs" },
-                { text: "Jangan menunggu. Waktu tidak akan pernah tepat.", author: "Napoleon Hill" },
-                { text: "Kualitas bukanlah tindakan, melainkan kebiasaan.", author: "Aristoteles" },
-                { text: "Masa depan adalah milik mereka yang percaya pada keindahan mimpi-mimpi mereka.", author: "Eleanor Roosevelt" },
-                { text: "Kerja keras mengalahkan bakat ketika bakat tidak bekerja keras.", author: "Tim Notke" },
-                { text: "Setiap pencapaian besar dimulai dengan keputusan untuk mencoba.", author: "John F. Kennedy" },
-                { text: "Jangan biarkan kemarin mengambil terlalu banyak hari ini.", author: "Will Rogers" },
-                { text: "Peluang tidak terjadi, kamu yang menciptakannya.", author: "Chris Grosser" },
-                { text: "Rahasia untuk maju adalah memulai.", author: "Mark Twain" },
-                { text: "Semakin keras kamu bekerja untuk sesuatu, semakin besar perasaanmu saat mencapainya.", author: "Anonim" },
-                { text: "Mimpi tidak bekerja kecuali kamu yang bekerja.", author: "John C. Maxwell" },
-                { text: "Sukses biasanya datang kepada mereka yang terlalu sibuk untuk mencarinya.", author: "Henry David Thoreau" },
-                { text: "Jangan takut gagal. Takutlah untuk tidak mencoba.", author: "Roy T. Bennett" },
-                { text: "Hal-hal hebat tidak pernah datang dari zona nyaman.", author: "Roy T. Bennett" },
-                { text: "Keyakinan kamu menentukan langkahmu, langkahmu menentukan hasil.", author: "Anonim" },
-                { text: "Hari ini adalah hari yang sempurna untuk menjadi versi terbaikmu.", author: "Anonim" },
-                { text: "Fokus pada kemajuan, bukan kesempurnaan.", author: "Bill Phillips" },
-                { text: "Setiap hari adalah kesempatan baru untuk membuat perubahan.", author: "Anonim" },
-                { text: "Kerja tim membuat mimpi bekerja.", author: "John C. Maxwell" },
-                { text: "Bersyukurlah atas apa yang kamu miliki sambil bekerja untuk apa yang kamu inginkan.", author: "Helen Keller" },
-                { text: "Produktivitas bukan tentang melakukan lebih banyak hal, tapi tentang melakukan hal yang benar.", author: "Anonim" },
-                { text: "Waktu adalah sumber daya paling berharga yang tidak bisa dibeli.", author: "Anonim" },
-                { text: "Konsistensi adalah kunci keberhasilan.", author: "Dwayne Johnson" },
-                { text: "Mulailah dari mana kamu berada. Gunakan apa yang kamu punya. Lakukan apa yang kamu bisa.", author: "Arthur Ashe" },
-                { text: "Kepercayaan diri datang bukan dari selalu benar, tapi dari tidak takut salah.", author: "Peter T. McIntyre" },
-                { text: "Jadilah perubahan yang ingin kamu lihat di dunia.", author: "Mahatma Gandhi" },
-                { text: "Jangan hitung hari, buatlah setiap hari berarti.", author: "Muhammad Ali" },
-                { text: "Kesabaran adalah kunci yang membuka pintu semua kesulitan.", author: "Ali bin Abi Thalib" },
-                { text: "Bekerjalah dalam diam, biarkan kesuksesanmu yang berbicara.", author: "Frank Ocean" }
+        // MOTIVATIONAL QUOTE FUNCTIONALITY
+        // ===============================================
+        const motivationalQuotes = [
+            { text: "Kesuksesan adalah hasil dari persiapan, kerja keras, dan belajar dari kegagalan.", author: "Colin Powell" },
+            { text: "Satu-satunya cara untuk melakukan pekerjaan hebat adalah dengan mencintai apa yang kamu lakukan.", author: "Steve Jobs" },
+            { text: "Jangan menunggu. Waktu tidak akan pernah tepat.", author: "Napoleon Hill" },
+            { text: "Kualitas bukanlah tindakan, melainkan kebiasaan.", author: "Aristoteles" },
+            { text: "Masa depan adalah milik mereka yang percaya pada keindahan mimpi-mimpi mereka.", author: "Eleanor Roosevelt" },
+            { text: "Kerja keras mengalahkan bakat ketika bakat tidak bekerja keras.", author: "Tim Notke" },
+            { text: "Setiap pencapaian besar dimulai dengan keputusan untuk mencoba.", author: "John F. Kennedy" },
+            { text: "Jangan biarkan kemarin mengambil terlalu banyak hari ini.", author: "Will Rogers" },
+            { text: "Peluang tidak terjadi, kamu yang menciptakannya.", author: "Chris Grosser" },
+            { text: "Rahasia untuk maju adalah memulai.", author: "Mark Twain" },
+            { text: "Semakin keras kamu bekerja untuk sesuatu, semakin besar perasaanmu saat mencapainya.", author: "Anonim" },
+            { text: "Mimpi tidak bekerja kecuali kamu yang bekerja.", author: "John C. Maxwell" },
+            { text: "Sukses biasanya datang kepada mereka yang terlalu sibuk untuk mencarinya.", author: "Henry David Thoreau" },
+            { text: "Jangan takut gagal. Takutlah untuk tidak mencoba.", author: "Roy T. Bennett" },
+            { text: "Hal-hal hebat tidak pernah datang dari zona nyaman.", author: "Roy T. Bennett" },
+            { text: "Keyakinan kamu menentukan langkahmu, langkahmu menentukan hasil.", author: "Anonim" },
+            { text: "Hari ini adalah hari yang sempurna untuk menjadi versi terbaikmu.", author: "Anonim" },
+            { text: "Fokus pada kemajuan, bukan kesempurnaan.", author: "Bill Phillips" },
+            { text: "Setiap hari adalah kesempatan baru untuk membuat perubahan.", author: "Anonim" },
+            { text: "Kerja tim membuat mimpi bekerja.", author: "John C. Maxwell" },
+            { text: "Bersyukurlah atas apa yang kamu miliki sambil bekerja untuk apa yang kamu inginkan.", author: "Helen Keller" },
+            { text: "Produktivitas bukan tentang melakukan lebih banyak hal, tapi tentang melakukan hal yang benar.", author: "Anonim" },
+            { text: "Waktu adalah sumber daya paling berharga yang tidak bisa dibeli.", author: "Anonim" },
+            { text: "Konsistensi adalah kunci keberhasilan.", author: "Dwayne Johnson" },
+            { text: "Mulailah dari mana kamu berada. Gunakan apa yang kamu punya. Lakukan apa yang kamu bisa.", author: "Arthur Ashe" },
+            { text: "Kepercayaan diri datang bukan dari selalu benar, tapi dari tidak takut salah.", author: "Peter T. McIntyre" },
+            { text: "Jadilah perubahan yang ingin kamu lihat di dunia.", author: "Mahatma Gandhi" },
+            { text: "Jangan hitung hari, buatlah setiap hari berarti.", author: "Muhammad Ali" },
+            { text: "Kesabaran adalah kunci yang membuka pintu semua kesulitan.", author: "Ali bin Abi Thalib" },
+            { text: "Bekerjalah dalam diam, biarkan kesuksesanmu yang berbicara.", author: "Frank Ocean" }
+        ];
+
+        function getDailyQuote() {
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const index = dayOfYear % motivationalQuotes.length;
+            return motivationalQuotes[index];
+        }
+
+        function refreshQuote() {
+            const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+            displayQuote(motivationalQuotes[randomIndex]);
+        }
+
+        function displayQuote(quote) {
+            const quoteEl = document.getElementById('motivational-quote');
+            const authorEl = document.getElementById('author-name');
+
+            if (!quoteEl || !authorEl) return;
+
+            quoteEl.style.opacity = '0';
+            authorEl.style.opacity = '0';
+
+            setTimeout(() => {
+                quoteEl.textContent = quote.text;
+                authorEl.textContent = quote.author;
+                quoteEl.style.opacity = '1';
+                authorEl.style.opacity = '1';
+            }, 300);
+        // Also refresh background image
+                refreshBackgroundImage();
+            }
+
+            // Nature background images from Unsplash (reliable, high-quality)
+            const natureBackgrounds = [
+                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=400&fit=crop', // Mountains
+                'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&h=400&fit=crop', // Forest
+                'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&h=400&fit=crop', // Foggy mountains
+                'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&h=400&fit=crop', // Forest light
+                'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&h=400&fit=crop', // Mountain lake
+                'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1200&h=400&fit=crop', // Valley
+                'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1200&h=400&fit=crop', // Green hills
+                'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&h=400&fit=crop', // Lake sunset
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=400&fit=crop', // Beach
+                'https://images.unsplash.com/photo-1518173946687-a4c036bc8ce8?w=1200&h=400&fit=crop', // Sky clouds
+                'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&h=400&fit=crop', // Starry mountain
+                'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=1200&h=400&fit=crop', // Waterfall
+                'https://images.unsplash.com/photo-1465919292999-00f5a4e5861b?w=1200&h=400&fit=crop', // Misty forest
+                'https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=1200&h=400&fit=crop', // Aurora
+                'https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=1200&h=400&fit=crop'  // Night sky
             ];
 
-            function getDailyQuote() {
+            function refreshBackgroundImage() {
+                const bgEl = document.getElementById('quote-bg-image');
+                if (!bgEl) return;
+
+                bgEl.style.opacity = '0.3';
+
+                const randomIndex = Math.floor(Math.random() * natureBackgrounds.length);
+                const newImage = new Image();
+                newImage.onload = function() {
+                    bgEl.style.backgroundImage = `url('${natureBackgrounds[randomIndex]}')`;
+                    bgEl.style.opacity = '1';
+                };
+                newImage.src = natureBackgrounds[randomIndex];
+            }
+
+            function getDailyBackgroundImage() {
                 const today = new Date();
                 const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-                const index = dayOfYear % motivationalQuotes.length;
-                return motivationalQuotes[index];
+                const index = dayOfYear % natureBackgrounds.length;
+                return natureBackgrounds[index];
             }
 
-            function refreshQuote() {
-                const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
-                displayQuote(motivationalQuotes[randomIndex]);
-            }
-
-            function displayQuote(quote) {
-                const quoteEl = document.getElementById('motivational-quote');
-                const authorEl = document.getElementById('author-name');
-
-                if (!quoteEl || !authorEl) return;
-
-                quoteEl.style.opacity = '0';
-                authorEl.style.opacity = '0';
-
-                setTimeout(() => {
-                    quoteEl.textContent = quote.text;
-                    authorEl.textContent = quote.author;
-                    quoteEl.style.opacity = '1';
-                    authorEl.style.opacity = '1';
-                }, 300);
-            }
-
-            // Initialize quote
+            // Initialize quote and background
             (function initQuote() {
                 const quoteEl = document.getElementById('motivational-quote');
                 const authorEl = document.getElementById('author-name');
+                const bgEl = document.getElementById('quote-bg-image');
 
                 if (quoteEl && authorEl) {
                     quoteEl.style.transition = 'opacity 0.3s ease';
@@ -3860,6 +3910,11 @@
                     const dailyQuote = getDailyQuote();
                     quoteEl.textContent = dailyQuote.text;
                     authorEl.textContent = dailyQuote.author;
+                }
+
+                // Set daily background image
+                if (bgEl) {
+                    bgEl.style.backgroundImage = `url('${getDailyBackgroundImage()}')`;
                 }
             })();
 
