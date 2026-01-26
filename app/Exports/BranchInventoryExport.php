@@ -8,9 +8,11 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithColumnFormatting
 {
     protected $branchId;
     private $inventoryData;
@@ -72,12 +74,12 @@ class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping
         return [
             $no,
             $inventory->item_name,
-            $inventory->serial_number ?? '-',
+            (string) ($inventory->serial_number ?? '-'), // Cast string
             $inventory->category,
             $inventory->condition,
             $inventory->user->name ?? 'Tanpa Pemilik (Gudang)',
             $inventory->user->division?->name ?? '-',
-            $receivedDate, // Update formatting
+            $receivedDate,
             $inventory->user_id ? 'Aktif' : 'Gudang'
         ];
     }
@@ -86,6 +88,13 @@ class BranchInventoryExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             1 => ['font' => ['bold' => true]],
+        ];
+    }
+
+    public function columnFormats(): array
+    {
+        return [
+            'C' => NumberFormat::FORMAT_TEXT, // Paksa Kolom C (Serial Number) jadi Text
         ];
     }
 }

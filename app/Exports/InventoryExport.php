@@ -8,9 +8,10 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class InventoryExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class InventoryExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithColumnFormatting
 {
     private $inventoryData;
 
@@ -70,7 +71,7 @@ class InventoryExport implements FromCollection, WithHeadings, WithMapping, With
         return [
             $no,
             $inventory->item_name,
-            $inventory->serial_number ?? '-',
+            (string) ($inventory->serial_number ?? '-'), // Cast string explisit
             $inventory->category,
             $inventory->condition,
             $inventory->user->name ?? 'Tanpa Pemilik',
@@ -85,6 +86,13 @@ class InventoryExport implements FromCollection, WithHeadings, WithMapping, With
     {
         return [
             1 => ['font' => ['bold' => true]],
+        ];
+    }
+
+    public function columnFormats(): array
+    {
+        return [
+            'C' => NumberFormat::FORMAT_TEXT, // Paksa Kolom C (Serial Number) jadi Text
         ];
     }
 }
