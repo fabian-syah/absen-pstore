@@ -67,8 +67,8 @@ class InventoryExport implements FromCollection, WithHeadings, WithMapping, With
             $inventory->category,
             $inventory->condition,
             $inventory->user->name ?? 'Tanpa Pemilik',
-            $inventory->user->division->name ?? '-',
-            $inventory->user->branch->name ?? '-',
+            $inventory->user->division?->name ?? '-',
+            $inventory->user->branch?->name ?? '-',
             $inventory->received_date,
             'Aktif'
         ];
