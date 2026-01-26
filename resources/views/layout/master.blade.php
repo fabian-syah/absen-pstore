@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>@yield('title') </title>
+    <title>@yield('title') | PStore System</title>
 
     {{-- Meta Token & Manifest --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -28,62 +28,62 @@
 
     <style>
         /* ==========================================================
-           FIX SIDEBAR STICKY LOGIC
+            FIX SIDEBAR STICKY LOGIC & NEW MODERN UI
            ========================================================== */
+        :root {
+            --pstore-primary: #0d6efd;
+            --pstore-dark: #1a1a1a;
+            --sidebar-width: 245px;
+        }
+
+        body {
+            background-color: #f4f7fa;
+            font-family: 'Inter', sans-serif;
+        }
+
         @media (min-width: 992px) {
-            /* Pastikan pembungkus utama tidak membatasi sticky */
-            .container-scroller, 
-            .page-body-wrapper {
+            .container-scroller, .page-body-wrapper {
                 overflow: visible !important;
             }
 
             .sidebar {
-                position: fixed !important; /* Paksa posisi tetap */
-                top: 97px; /* Sesuaikan dengan tinggi navbar pstore */
-                height: calc(100vh - 97px);
+                position: fixed !important;
+                top: 70px;
+                height: calc(100vh - 70px);
                 overflow-y: auto;
                 z-index: 1000;
-                transition: width 0.25s ease, background 0.25s ease;
+                width: var(--sidebar-width);
+                transition: width 0.25s ease;
+                border-right: 1px solid #e9ecef;
             }
 
-            /* Berikan space di sebelah kiri panel utama agar tidak tertutup sidebar */
             .main-panel {
-                margin-left: 235px; /* Sesuaikan dengan lebar sidebar standard */
-                width: calc(100% - 235px);
-                min-height: calc(100vh - 97px);
+                margin-left: var(--sidebar-width);
+                width: calc(100% - var(--sidebar-width));
+                min-height: calc(100vh - 70px);
                 display: flex;
                 flex-direction: column;
             }
 
-            /* Penyesuaian saat sidebar di-minimize (jika ada fitur toggle) */
-            body.sidebar-icon-only .sidebar {
-                width: 70px;
-            }
-            body.sidebar-icon-only .main-panel {
-                margin-left: 70px;
-                width: calc(100% - 70px);
-            }
-        }
-
-        /* Styling scrollbar halus untuk sidebar */
-        .sidebar::-webkit-scrollbar {
-            width: 4px;
-        }
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #e0e0e0;
-            border-radius: 10px;
-        }
-        .sidebar:hover::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
+            body.sidebar-icon-only .sidebar { width: 70px; }
+            body.sidebar-icon-only .main-panel { margin-left: 70px; width: calc(100% - 70px); }
         }
 
         .content-wrapper {
+            padding: 1.5rem 1.7rem !important;
+            background: #f4f7fa;
             flex-grow: 1;
-            background: #f4f5f7;
         }
 
-        .footer {
-            background: #fff;
+        /* Custom Scrollbar for Sidebar */
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+        
+        /* Modern Card Shadow */
+        .card {
+            border: none !important;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+            border-radius: 12px !important;
         }
     </style>
 </head>
@@ -199,5 +199,4 @@
 
     @stack('scripts')
 </body>
-
 </html>

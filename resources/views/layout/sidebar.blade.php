@@ -1,333 +1,102 @@
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <ul class="nav">
-        {{-- =================================== --}}
-        {{--       DASHBOARD (SEMUA ROLE)        --}}
-        {{-- =================================== --}}
+        {{-- Dashboard Section --}}
         <li class="nav-item">
             <a class="nav-link" href="/">
-                <i class="mdi mdi-grid-large menu-icon"></i>
+                <i class="mdi mdi-view-dashboard-outline menu-icon"></i>
                 <span class="menu-title">Dashboard</span>
             </a>
         </li>
 
-        {{-- =================================== --}}
-        {{--   RIWAYAT ABSENSI (EXCEPT GAJI)     --}}
-        {{-- =================================== --}}
+        {{-- Personal Attendance --}}
         @if (auth()->user()->role != 'admin_gaji')
+            <li class="nav-item nav-category">Absensi Saya</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('attendance.history') }}">
-                    <i class="mdi mdi-history menu-icon"></i>
+                    <i class="mdi mdi-calendar-text-outline menu-icon"></i>
                     <span class="menu-title">Riwayat Absensi</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('attendance.summary') }}">
-                    <i class="mdi mdi-text-box-multiple-outline menu-icon"></i>
-                    <span class="menu-title">Ringkasan Tahunan</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" href="{{ route('leave-requests.personal-history') }}">
-                    <i class="mdi mdi-calendar-check menu-icon"></i>
+                    <i class="mdi mdi-message-alert-outline menu-icon"></i>
                     <span class="menu-title">Riwayat Izin</span>
                 </a>
             </li>
         @endif
 
-        {{-- =================================== --}}
-        {{--    MENU UMUM (EXCEPT ADMIN GAJI)    --}}
-        {{-- =================================== --}}
-        @if (auth()->user()->role != 'admin_gaji')
-            <li class="nav-item nav-category">Menu Umum</li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('inventory.index') }}">
-                    <i class="menu-icon mdi mdi-package-variant"></i>
-                    <span class="menu-title">Inventaris</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('job-targets.index') }}">
-                    <i class="menu-icon mdi mdi-clipboard-list"></i>
-                    <span class="menu-title">Job Desk / Target</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('employment-history.index') }}">
-                    <i class="menu-icon mdi mdi-history"></i>
-                    <span class="menu-title">Riwayat Divisi / Cabang</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('violations.index') }}">
-                    <i class="menu-icon mdi mdi-alert-circle-outline"></i>
-                    <span class="menu-title">Riwayat Pelanggaran</span>
-                </a>
-            </li>
-        @endif
-
-        {{-- =================================== --}}
-        {{--        GAJI KU (SEMUA ROLE)         --}}
-        {{-- =================================== --}}
+        {{-- Financial Section --}}
         @if (auth()->user()->role != 'admin')
-        <li class="nav-item nav-category">Keuangan</li>
-        
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('my-salary.index') }}">
-                <i class="menu-icon mdi mdi-wallet-outline"></i>
-                <span class="menu-title">Gaji Ku</span>
-            </a>
-        </li>
-        @endif
-
-        @if (auth()->user()->role != 'admin')
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('salary-summary.index') }}">
-                <i class="menu-icon mdi mdi-file-chart-outline"></i>
-                <span class="menu-title">Ringkasan Gaji Tahunan</span>
-            </a>
-        </li>
-        @endif
-
-        {{-- =================================== --}}
-        {{--           MENU KASBON               --}}
-        {{-- =================================== --}}
-        
-        {{-- 1. Menu Utama Kasbon (Semua Role bisa akses untuk pengajuan/lihat data) --}}
-        @if (auth()->user()->role != 'admin')
+            <li class="nav-item nav-category">Keuangan</li>
             <li class="nav-item">
-            <a class="nav-link" href="{{ route('kasbon.index') }}">
-                <i class="menu-icon mdi mdi-cash-multiple"></i>
-                <span class="menu-title">
-                {{ in_array(auth()->user()->role, ['admin_gaji']) ? 'Data Kasbon' : 'Kasbon Saya' }}
-                </span>
-            </a>
+                <a class="nav-link" href="{{ route('my-salary.index') }}">
+                    <i class="mdi mdi-wallet-outline menu-icon"></i>
+                    <span class="menu-title">Gaji Ku</span>
+                </a>
             </li>
-        @elseif (auth()->user()->role == 'admin_gaji')
             <li class="nav-item">
-            <a class="nav-link" href="{{ route('kasbon.index') }}">
-                <i class="menu-icon mdi mdi-cash-multiple"></i>
-                <span class="menu-title">Data Kasbon</span>
-            </a>
+                <a class="nav-link" href="{{ route('kasbon.index') }}">
+                    <i class="mdi mdi-cash-multiple menu-icon"></i>
+                    <span class="menu-title">{{ auth()->user()->role == 'admin_gaji' ? 'Data Kasbon' : 'Kasbon Saya' }}</span>
+                </a>
             </li>
         @endif
 
-        {{-- 2. Menu Verifikasi Pembayaran (HANYA ADMIN GAJI) --}}
-        @if(auth()->user()->role === 'admin_gaji')
-            @php
-            // Hitung jumlah cicilan yang statusnya 'pending'
-            $pendingCount = \App\Models\CashAdvanceInstallment::where('status', 'pending')->count();
-            @endphp
-            <li class="nav-item">
-            <a class="nav-link" href="{{ route('kasbon.verification') }}">
-                <i class="menu-icon mdi mdi-cash-check"></i>
-                <span class="menu-title">Verifikasi Bayar</span>
-                
-                {{-- Badge Merah jika ada yang pending --}}
-                @if($pendingCount > 0)
-                <span class="badge badge-danger rounded-pill ms-auto">{{ $pendingCount }}</span>
-                @endif
-            </a>
-            </li>
-        @endif
-
-        {{-- =================================== --}}
-        {{--   MANAJEMEN GAJI (ADMIN & GAJI)     --}}
-        {{-- =================================== --}}
+        {{-- Role Specific: ADMIN GAJI --}}
         @if (auth()->user()->role == 'admin_gaji')
             <li class="nav-item nav-category">Admin Gaji</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('employee-salaries.index') }}">
-                    <i class="menu-icon mdi mdi-bank-outline"></i>
-                    <span class="menu-title">Master Gaji User</span>
+                    <i class="mdi mdi-database-outline menu-icon"></i>
+                    <span class="menu-title">Master Gaji</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('branch-salary.index') }}">
-                    <i class="menu-icon mdi mdi-cash-register"></i>
-                    <span class="menu-title">Penggajian Cabang</span>
+                <a class="nav-link" href="{{ route('kasbon.verification') }}">
+                    <i class="mdi mdi-cash-check menu-icon"></i>
+                    <span class="menu-title">Verifikasi Bayar</span>
+                    @php $pendingCount = \App\Models\CashAdvanceInstallment::where('status', 'pending')->count(); @endphp
+                    @if($pendingCount > 0)
+                        <span class="badge badge-danger rounded-pill ms-auto">{{ $pendingCount }}</span>
+                    @endif
                 </a>
             </li>
         @endif
 
-        {{-- =================================== --}}
-        {{--     MENU KHUSUS SUPER ADMIN         --}}
-        {{-- =================================== --}}
-        @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
-            <li class="nav-item nav-category">Menu Cabang</li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('branches.index') }}">
-                    <i class="menu-icon mdi mdi-domain"></i>
-                    <span class="menu-title">Data Cabang</span>
-                </a>
-            </li>
-        @endif
-
-        @if (auth()->user()->role == 'admin')
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('admin.correction.index') }}">
-                    <i class="menu-icon mdi mdi-eraser"></i>
-                    <span class="menu-title">Koreksi Absensi</span>
-                    <span class="badge badge-danger ms-2" style="font-size: 0.6rem;">Admin</span>
-                </a>
-            </li>
-        @endif
-
-        {{-- =================================== --}}
-        {{--     MANAJEMEN TIM (ADMIN ONLY)      --}}
-        {{-- =================================== --}}
-        @if (auth()->user()->role == 'admin')
-            <li class="nav-item nav-category">Manajemen Tim</li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('divisions.index') }}">
-                    <i class="menu-icon mdi mdi-sitemap"></i>
-                    <span class="menu-title">Data Divisi</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('users.index') }}">
-                    <i class="menu-icon mdi mdi-account-group"></i>
-                    <span class="menu-title">Data User</span>
-                </a>
-            </li>
-        @endif
-
-        {{-- =================================== --}}
-        {{--    MANAJEMEN TIM (AUDIT ONLY)       --}}
-        {{-- =================================== --}}
-        @if (auth()->user()->role == 'audit')
-            <li class="nav-item nav-category">Manajemen Tim</li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('users.index') }}">
-                    <i class="menu-icon mdi mdi-account-group"></i>
-                    <span class="menu-title">Data User</span>
-                </a>
-            </li>
-        @endif
-
-        {{-- =================================== --}}
-        {{--    VERIFIKASI (ADMIN & AUDIT)       --}}
-        {{-- =================================== --}}
-        @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')
-            <li class="nav-item nav-category">Verifikasi</li>
-
+        {{-- Role Specific: ADMIN / AUDIT --}}
+        @if (in_array(auth()->user()->role, ['admin', 'audit']))
+            <li class="nav-item nav-category">Manajemen</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('audit.verify.list') }}">
-                    <i class="menu-icon mdi mdi-checkbox-marked-outline"></i>
-                    <span class="menu-title">Verifikasi Absensi</span>
+                    <i class="mdi mdi-shield-check-outline menu-icon"></i>
+                    <span class="menu-title">Verifikasi Absen</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.index') }}">
-                    <i class="menu-icon mdi mdi-clock-alert-outline"></i>
-                    <span class="menu-title">Daftar Izin / Telat</span>
+                <a class="nav-link" href="{{ route('users.index') }}">
+                    <i class="mdi mdi-account-group-outline menu-icon"></i>
+                    <span class="menu-title">Data User</span>
                 </a>
             </li>
-
-            {{-- Menu KHUSUS ADMIN --}}
-            @if (auth()->user()->role == 'admin')
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('users.photo-requests') }}">
-                        <i class="menu-icon mdi mdi-camera-retake-outline"></i>
-                        <span class="menu-title">Permintaan Ganti Foto</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('users.ktp-requests') }}">
-                        <i class="menu-icon mdi mdi-card-account-details-outline"></i>
-                        <span class="menu-title">Req. Ganti KTP</span>
-                        @php
-                            $ktpPendingCount = \App\Models\User::where('ktp_request_status', 'pending')->count();
-                        @endphp
-                        @if ($ktpPendingCount > 0)
-                            <span class="badge badge-danger ms-2">{{ $ktpPendingCount }}</span>
-                        @endif
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('inventory-returns.index') }}">
-                        <i class="menu-icon mdi mdi-package-variant-minus"></i>
-                        <span class="menu-title">History Pengembalian</span>
-                    </a>
-                </li>
-            @endif
         @endif
 
-        {{-- =================================== --}}
-        {{--        MENU SECURITY                --}}
-        {{-- =================================== --}}
+        {{-- Security Section --}}
         @if (auth()->user()->role == 'security' || auth()->user()->role == 'admin')
-            <li class="nav-item nav-category">Menu Security</li>
-
+            <li class="nav-item nav-category">Keamanan</li>
             @if (auth()->user()->role == 'security')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('security.scan') }}">
-                        <i class="menu-icon mdi mdi-qrcode-scan"></i>
-                        <span class="menu-title">Pindai Absensi</span>
+                        <i class="mdi mdi-qrcode-scan menu-icon"></i>
+                        <span class="menu-title">Pindai QR</span>
                     </a>
                 </li>
             @endif
-
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('security.history') }}">
-                    <i class="menu-icon mdi mdi-history"></i>
+                    <i class="mdi mdi-history menu-icon"></i>
                     <span class="menu-title">Riwayat Scan</span>
                 </a>
             </li>
         @endif
-
-        {{-- =================================== --}}
-        {{--   MENU PENGGUNA (TEAM/BRANCH)       --}}
-        {{-- =================================== --}}
-        @if (in_array(auth()->user()->role, ['user_biasa', 'leader', 'audit', 'security', 'admin']))
-
-            <li class="nav-item nav-category">Menu Pengguna</li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('team.index') }}">
-                    <i class="menu-icon mdi mdi-account-multiple-outline"></i>
-                    <span class="menu-title">Tim Saya</span>
-                </a>
-            </li>
-
-            @if (in_array(auth()->user()->role, ['audit', 'leader', 'admin']))
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('team.my-branches') }}">
-                        <i class="menu-icon mdi mdi-office-building-marker"></i>
-                        <span class="menu-title">Cabang Saya</span>
-                    </a>
-                </li>
-            @endif
-        @endif
-
-        {{-- =================================== --}}
-        {{--   MONITORING (ADMIN, AUDIT, LEADER) --}}
-        {{-- =================================== --}}
-        @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
-            <li class="nav-item nav-category">Monitoring Wilayah</li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('branch-leaderboard.index') }}">
-                    <i class="menu-icon mdi mdi-trophy-award"></i>
-                    <span class="menu-title">Top Absensi Cabang</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('inventory.branches') }}">
-                    <i class="menu-icon mdi mdi-package-variant-closed"></i>
-                    <span class="menu-title">Inventaris Cabang</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('branch-targets.index') }}">
-                    <i class="menu-icon mdi mdi-target"></i>
-                    <span class="menu-title">Target Cabang</span>
-                </a>
-            </li>
-        @endif
-
     </ul>
 </nav>
