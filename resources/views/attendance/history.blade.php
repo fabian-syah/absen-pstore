@@ -431,7 +431,7 @@
                                         <select name="presence_status" class="form-select" required>
                                             <option value="Masuk">✅ Masuk</option>
                                             <option value="WFH">🏠 WFH</option>
-                                            <option value="Dinas Luar">🚗 Dinas Luar</option>
+                                            <!-- <option value="Dinas Luar">🚗 Dinas Luar</option> -->
                                             <option value="Sakit">🤒 Sakit</option>
                                             <option value="Izin">📝 Izin</option>
                                             <option value="Cuti">🏖️ Cuti</option>
