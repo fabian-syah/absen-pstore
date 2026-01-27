@@ -499,7 +499,7 @@
                                             <option value="Alpha" {{ $att->presence_status == 'Alpha' ? 'selected' : '' }}>❌ Alpha</option>
                                         </select>
                                     </div>
-                                    <div class="mb-3"><label class="form-label small fw-bold text-danger">Wajib Foto Bukti Audit</label><input type="file" name="audit_photo" class="form-control mb-2" {{ $att->audit_photo_path ? '' : 'required' }}></div>
+                                    <div class="mb-3"><label class="form-label small fw-bold text-danger">Foto Bukti Audit</label><input type="file" name="audit_photo" class="form-control mb-2" accept="image/*"></div>
                                     <textarea name="audit_note" class="form-control" placeholder="Alasan koreksi...">{{ $att->audit_note }}</textarea>
                                     <input type="hidden" name="status" value="verified">
                                 </div>
