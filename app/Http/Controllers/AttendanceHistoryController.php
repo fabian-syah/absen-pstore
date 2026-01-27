@@ -115,6 +115,7 @@ class AttendanceHistoryController extends Controller
                         'izin' => 'Izin',
                         'sakit' => 'Sakit',
                         'cuti' => 'Cuti',
+                        'libur' => 'Libur',
                     ];
 
                     $att->presence_status = $presenceStatusMap[$leave->type] ?? ucfirst($leave->type);
@@ -142,6 +143,7 @@ class AttendanceHistoryController extends Controller
                         'izin' => 'Izin',
                         'sakit' => 'Sakit',
                         'cuti' => 'Cuti',
+                        'libur' => 'Libur',
                     ];
 
                     $fakeAtt->presence_status = $presenceStatusMap[$leave->type] ?? ucfirst($leave->type);
@@ -192,6 +194,10 @@ class AttendanceHistoryController extends Controller
             'cuti' => $history->filter(
                 fn($i) =>
                 strtolower($i->presence_status ?? '') === 'cuti'
+            )->count(),
+            'libur' => $history->filter(
+                fn($i) =>
+                strtolower($i->presence_status ?? '') === 'libur'
             )->count(),
             'alpha' => $history->filter(
                 fn($i) =>
