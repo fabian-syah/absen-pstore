@@ -515,6 +515,7 @@ class TeamController extends Controller
             })->count(),
             'sakit' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'sakit')->count(),
             'izin' => $history->filter(fn($i) => in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti', 'offday']))->count(),
+            'libur' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'libur')->count(),
             'alpha' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'alpha')->count(),
             'telat' => $history->where('is_late_checkin', true)->count(),
             'pulang_cepat' => $history->where('is_early_checkout', true)->count(),

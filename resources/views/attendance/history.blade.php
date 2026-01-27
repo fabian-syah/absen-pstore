@@ -234,9 +234,10 @@
             </div>
 
             <div class="row g-3 mb-4">
-                <div class="col-4"><div class="p-2 rounded-3 text-center border" style="background: #fff3cd; color: #856404; border-color: #ffeeba!important;"><small class="fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Terlambat</small><span class="fs-5 fw-bold">{{ $summary['telat'] }}</span></div></div>
-                <div class="col-4"><div class="p-2 rounded-3 text-center border" style="background: #f8d7da; color: #721c24; border-color: #f5c6cb!important;"><small class="fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Plg Cepat</small><span class="fs-5 fw-bold">{{ $summary['pulang_cepat'] }}</span></div></div>
-                <div class="col-4"><div class="p-2 rounded-3 text-center border" style="background: #e2e3e5; color: #383d41; border-color: #d6d8db!important;"><small class="fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Pending</small><span class="fs-5 fw-bold">{{ $summary['pending'] }}</span></div></div>
+                <div class="col-3"><div class="p-2 rounded-3 text-center border" style="background: #fff3cd; color: #856404; border-color: #ffeeba!important;"><small class="fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Terlambat</small><span class="fs-5 fw-bold">{{ $summary['telat'] }}</span></div></div>
+                <div class="col-3"><div class="p-2 rounded-3 text-center border" style="background: #f8d7da; color: #721c24; border-color: #f5c6cb!important;"><small class="fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Plg Cepat</small><span class="fs-5 fw-bold">{{ $summary['pulang_cepat'] }}</span></div></div>
+                <div class="col-3"><div class="p-2 rounded-3 text-center border" style="background: #d4edda; color: #155724; border-color: #c3e6cb!important;"><small class="fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Libur</small><span class="fs-5 fw-bold">{{ $summary['libur'] }}</span></div></div>
+                <div class="col-3"><div class="p-2 rounded-3 text-center border" style="background: #e2e3e5; color: #383d41; border-color: #d6d8db!important;"><small class="fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Pending</small><span class="fs-5 fw-bold">{{ $summary['pending'] }}</span></div></div>
             </div>
 
             {{-- DETAIL TABEL --}}
