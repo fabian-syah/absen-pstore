@@ -461,6 +461,7 @@
                                             <!-- <option value="Dinas Luar" {{ $att->presence_status == 'Dinas Luar' ? 'selected' : '' }}>🚗 Dinas Luar</option> -->
                                             <option value="Sakit" {{ $att->presence_status == 'Sakit' ? 'selected' : '' }}>🤒 Sakit</option>
                                             <option value="Izin" {{ $att->presence_status == 'Izin' ? 'selected' : '' }}>📝 Izin</option>
+                                            <option value="Libur" {{ $att->presence_status == 'Libur' ? 'selected' : '' }}>📅 Libur (Off Day)</option>
                                             <option value="Cuti" {{ $att->presence_status == 'Cuti' ? 'selected' : '' }}>🏖️ Cuti</option>
                                         </select>
                                     </div>
@@ -492,6 +493,7 @@
                                             <!-- <option value="Dinas Luar" {{ $att->presence_status == 'Dinas Luar' ? 'selected' : '' }}>🚗 Dinas Luar</option> -->
                                             <option value="Sakit" {{ $att->presence_status == 'Sakit' ? 'selected' : '' }}>🤒 Sakit</option>
                                             <option value="Izin" {{ $att->presence_status == 'Izin' ? 'selected' : '' }}>📝 Izin</option>
+                                            <option value="Libur" {{ $att->presence_status == 'Libur' ? 'selected' : '' }}>📅 Libur (Off Day)</option>
                                             <option value="Cuti" {{ $att->presence_status == 'Cuti' ? 'selected' : '' }}>🏖️ Cuti</option>
                                             <option value="Alpha" {{ $att->presence_status == 'Alpha' ? 'selected' : '' }}>❌ Alpha</option>
                                         </select>
