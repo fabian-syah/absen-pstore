@@ -30,28 +30,30 @@
                 <div class="d-flex align-items-center gap-2">
                     @if ($prevEmployee)
                         <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $prevEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                            class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" title="{{ $prevEmployee->name }}">
+                            class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3 shadow-sm"
+                            title="{{ $prevEmployee->name }}">
                             <i class="mdi mdi-chevron-left"></i> <span
                                 class="d-none d-md-inline">{{ Str::limit($prevEmployee->name, 15) }}</span>
                         </a>
                     @else
-                        <button class="btn btn-sm btn-secondary rounded-pill px-3 opacity-50" disabled>
+                        <button class="btn btn-sm btn-secondary text-white rounded-pill px-3" disabled style="opacity: 0.5;">
                             <i class="mdi mdi-chevron-left"></i>
                         </button>
                     @endif
 
-                    <span class="badge bg-white text-dark border shadow-sm px-3 py-2 fw-bold" style="font-size: 0.8rem;">
+                    <span class="badge bg-white text-primary border-0 shadow-sm px-3 py-2 fw-bold" style="font-size: 0.85rem;">
                         {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount ?? 1 }}
                     </span>
 
                     @if ($nextEmployee)
                         <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                            class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" title="{{ $nextEmployee->name }}">
+                            class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3 shadow-sm"
+                            title="{{ $nextEmployee->name }}">
                             <span class="d-none d-md-inline">{{ Str::limit($nextEmployee->name, 15) }}</span> <i
                                 class="mdi mdi-chevron-right"></i>
                         </a>
                     @else
-                        <button class="btn btn-sm btn-secondary rounded-pill px-3 opacity-50" disabled>
+                        <button class="btn btn-sm btn-secondary text-white rounded-pill px-3" disabled style="opacity: 0.5;">
                             <i class="mdi mdi-chevron-right"></i>
                         </button>
                     @endif
