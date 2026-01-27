@@ -1011,18 +1011,18 @@
                         @else
                             <div class="active-work-card mb-3 position-relative overflow-hidden"
                                 style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
-                                                                                                                                                                                                        border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
+                                                                                                                                                                                                                                border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
 
                                 {{-- Decorative Elements --}}
                                 <div
                                     style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; 
-                                                                                                                                                                                                            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                                                                                                                                            border-radius: 50%;">
+                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                                                                                                                                    border-radius: 50%;">
                                 </div>
                                 <div
                                     style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; 
-                                                                                                                                                                                                            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
-                                                                                                                                                                                                            border-radius: 50%;">
+                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
+                                                                                                                                                                                                                                    border-radius: 50%;">
                                 </div>
 
                                 <div class="card-body p-4 position-relative" style="z-index: 2;">
@@ -1032,9 +1032,9 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="work-status-icon me-3"
                                                     style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
-                                                                                                                                                                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
-                                                                                                                                                                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                                                                                                                                                                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                                     <i class="mdi mdi-briefcase-check text-white" style="font-size: 28px;"></i>
                                                 </div>
                                                 <div>
@@ -1052,7 +1052,7 @@
                                         {{-- Work Timeline & Info --}}
                                         <div class="work-timeline-card p-3 mb-3"
                                             style="background: rgba(255,255,255,0.95); border-radius: 16px; 
-                                                                                                                                                                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                                                                                                                                                                                                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
 
                                             <div class="row g-3">
                                                 {{-- Check In Time --}}
@@ -1060,8 +1060,8 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="timeline-dot me-3"
                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #43e97b, #38f9d7); 
-                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
+                                                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
                                                             <i class="mdi mdi-login text-white fs-5"></i>
                                                         </div>
                                                         <div>
@@ -1084,8 +1084,8 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="timeline-dot me-3"
                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+                                                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
                                                             <i class="mdi mdi-timer-outline text-white fs-5"></i>
                                                         </div>
                                                         <div>
@@ -1115,6 +1115,34 @@
                                         </div>
                                     @endif
 
+                                    @if ($isCrossDay)
+                                        {{-- ========================================================= --}}
+                                        {{-- HEADER STATUS LEMBUR LINTAS HARI --}}
+                                        {{-- ========================================================= --}}
+                                        <div class="d-flex align-items-center justify-content-between mb-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="work-status-icon me-3"
+                                                    style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
+                                                                                                                                                                                                                                                                                                    border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                    justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                                                                                                                    border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                    <i class="mdi mdi-clock-alert-outline text-white" style="font-size: 28px;"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                                                        Lembur Lintas Hari
+                                                        <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">PERLU
+                                                            AKSI</span>
+                                                    </h4>
+                                                    <p class="mb-0 text-white" style="opacity: 0.9; font-size: 0.875rem;">
+                                                        Masuk: {{ $myAttendanceToday->check_in_time->translatedFormat('l, d M') }}
+                                                        {{ $myAttendanceToday->check_in_time->format('H:i') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
                                     {{-- Action Button --}}
                                     <div class="text-center">
                                         @if (!$isCrossDay)
@@ -1131,12 +1159,118 @@
                                                 <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
                                                     class="checkout-btn btn btn-lg w-100 shadow-lg"
                                                     style="background: rgba(255,255,255,0.95); color: #ef4444; border: none; 
-                                                                                                                                                                                                                                                                                                                                  border-radius: 14px; padding: 1rem; font-weight: 700; 
-                                                                                                                                                                                                                                                                                                                                  transition: all 0.3s ease; backdrop-filter: blur(10px);">
+                                                                                                                                                                                                                                                                                                                                                                          border-radius: 14px; padding: 1rem; font-weight: 700; 
+                                                                                                                                                                                                                                                                                                                                                                          transition: all 0.3s ease; backdrop-filter: blur(10px);">
                                                     <i class="mdi mdi-logout-variant me-2"></i>
                                                     Absen Pulang Mandiri
                                                 </a>
                                             @endif
+                                        @else
+                                            {{-- ========================================================= --}}
+                                            {{-- KONDISI LEMBUR LINTAS HARI (CrossDay = True) --}}
+                                            {{-- ========================================================= --}}
+                                            <div class="cross-day-container"
+                                                style="background: rgba(255,255,255,0.15); border-radius: 16px; padding: 1.25rem; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.25);">
+
+                                                {{-- Header Info Lembur --}}
+                                                <div class="text-white mb-3">
+                                                    <div class="d-flex align-items-center justify-content-center mb-2">
+                                                        <i class="mdi mdi-clock-alert-outline"
+                                                            style="font-size: 2rem; margin-right: 8px;"></i>
+                                                        <span class="badge bg-warning text-dark fw-bold px-3 py-2">LEMBUR LINTAS
+                                                            HARI</span>
+                                                    </div>
+                                                    <p class="small mb-0" style="opacity: 0.9;">
+                                                        Anda masuk kemarin pukul
+                                                        <strong>{{ $myAttendanceToday->check_in_time->format('H:i') }}</strong>
+                                                        ({{ $myAttendanceToday->check_in_time->translatedFormat('l, d M') }})<br>
+                                                        dan belum absen pulang. Silakan pilih aksi di bawah:
+                                                    </p>
+                                                </div>
+
+                                                {{-- Wrapper untuk aksi-aksi --}}
+                                                <div id="confirmation-wrapper">
+                                                    {{-- SLIDER KONFIRMASI LEMBUR --}}
+                                                    <div class="mb-3" id="slider-view">
+                                                        <p class="text-white small mb-2 fw-bold">
+                                                            <i class="mdi mdi-gesture-swipe-horizontal me-1"></i>
+                                                            Geser untuk Konfirmasi Lembur & Absen Pulang
+                                                        </p>
+                                                        <div class="overtime-slide-track" id="slide-track"
+                                                            style="
+                                                                                            background: rgba(255,255,255,0.95);
+                                                                                            height: 56px;
+                                                                                            border-radius: 50px;
+                                                                                            position: relative;
+                                                                                            display: flex;
+                                                                                            align-items: center;
+                                                                                            overflow: hidden;
+                                                                                            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+
+                                                            <span style="
+                                                                                                position: absolute;
+                                                                                                left: 0; width: 100%;
+                                                                                                text-align: center;
+                                                                                                color: #10b981;
+                                                                                                font-weight: 700;
+                                                                                                font-size: 0.85rem;
+                                                                                                letter-spacing: 1px;
+                                                                                                user-select: none;
+                                                                                                opacity: 0.75;">
+                                                                GESER KE KANAN >>
+                                                            </span>
+
+                                                            <div id="slide-thumb" style="
+                                                                                                width: 48px; height: 48px;
+                                                                                                background: linear-gradient(135deg, #43e97b, #38f9d7);
+                                                                                                border-radius: 50%;
+                                                                                                margin-left: 4px;
+                                                                                                display: flex; align-items: center; justify-content: center;
+                                                                                                color: white; font-size: 1.4rem;
+                                                                                                box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
+                                                                                                cursor: grab;
+                                                                                                transition: transform 0.2s ease-out;
+                                                                                                touch-action: none;">
+                                                                <i class="mdi mdi-chevron-double-right"></i>
+                                                            </div>
+                                                        </div>
+                                                        <small class="text-white-50 d-block mt-2" style="font-size: 0.7rem;">
+                                                            * Setelah geser, kamera akan terbuka untuk foto pulang
+                                                        </small>
+                                                    </div>
+
+                                                    {{-- DIVIDER --}}
+                                                    <div class="d-flex align-items-center my-3">
+                                                        <hr class="flex-grow-1" style="border-color: rgba(255,255,255,0.3);">
+                                                        <span class="text-white-50 small mx-2">atau</span>
+                                                        <hr class="flex-grow-1" style="border-color: rgba(255,255,255,0.3);">
+                                                    </div>
+
+                                                    {{-- TOMBOL LUPA ABSEN PULANG --}}
+                                                    <form action="{{ route('self.attend.skip', $myAttendanceToday->id) }}" method="POST"
+                                                        onsubmit="return confirm('Apakah Anda yakin? Sesi kemarin akan ditutup otomatis (jam 23:59) tanpa foto pulang.');">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-outline-light w-100 shadow-sm"
+                                                            style="border-radius: 14px; padding: 0.85rem;">
+                                                            <i class="mdi mdi-clock-remove-outline me-2"></i>
+                                                            <span class="fw-bold">Lupa Absen Pulang</span>
+                                                        </button>
+                                                    </form>
+                                                    <small class="text-white-50 d-block mt-2" style="font-size: 0.7rem;">
+                                                        * Sesi akan ditutup pada jam 23:59 tanggal kemarin
+                                                    </small>
+                                                </div>
+
+                                                {{-- VIEW KAMERA (Hidden by default, muncul setelah slide) --}}
+                                                <div id="camera-view" class="d-none">
+                                                    <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
+                                                        class="btn btn-light btn-lg w-100 shadow-lg"
+                                                        style="border-radius: 14px; padding: 1rem; font-weight: 700; color: #10b981;">
+                                                        <i class="mdi mdi-camera me-2"></i>
+                                                        Buka Kamera Untuk Pulang
+                                                    </a>
+                                                </div>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>
@@ -1385,8 +1519,8 @@
                 {{-- Decorative elements --}}
                 <div
                     style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
-                                                                                                        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                                        border-radius: 50%; pointer-events: none;">
+                                                                                                                background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                border-radius: 50%; pointer-events: none;">
                 </div>
 
                 <div class="card-body p-4">
@@ -1397,8 +1531,8 @@
                                 {{-- Icon dengan glassmorphism effect --}}
                                 <div class="d-flex align-items-center justify-content-center me-3"
                                     style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
-                                                                                                                        border-radius: 16px; backdrop-filter: blur(10px); 
-                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                                                                                                                                border-radius: 16px; backdrop-filter: blur(10px); 
+                                                                                                                                border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
                                     <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
                                 </div>
                                 <div>
@@ -1419,21 +1553,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                                                border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                                                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                                                transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                                                                                                                    opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                                            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                                            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
                                                         <i class="mdi mdi-file-document-edit text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -1454,21 +1588,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                                                border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                                                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                                                transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                                                                                                                                    opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
-                                                                                                                                            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                                            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
+                                                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                                    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
                                                         <i class="mdi mdi-history text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -1698,8 +1832,8 @@
 @push('styles')
     <style>
         /* =================================================================
-                                                           DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
-                                                           ================================================================= */
+                                                                   DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
+                                                                   ================================================================= */
 
         /* Section Headers & Separators */
         .section-header {
@@ -1797,8 +1931,8 @@
         }
 
         /* =================================================================
-                                                           CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
-                                                           ================================================================= */
+                                                                   CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
+                                                                   ================================================================= */
 
         /* DON'T override backgrounds - only fix text colors */
 
@@ -3672,291 +3806,291 @@
                     });
                 @endif
 
-                                                                                        // --- SCRIPT CHART ---
-                                                                                        const ctx = document.getElementById('attendancePieChart').getContext                ('2d');
-                Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+                                                                                                // --- SCRIPT CHART ---
+                                                                                                const ctx = document.getElementById('attendancePieChart').getContext('2d');
+            Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
 
-                @if (auth()->user()->role == 'admin')
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
-                            datasets: [{
-                                data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                                                                                            {{ $stats['early'] }}, {{ $stats['pending'] }},
-                                    {{ $stats['absent'] }}
-                                ],
-                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
-                                    '#8c94a3'
-                                ],
-                                borderWidth: 0,
-                                hoverOffset: 10 // Efek hover keluar
-                            }]
+            @if (auth()->user()->role == 'admin')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
+                        datasets: [{
+                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                                                                                                                                                                            {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                {{ $stats['absent'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
+                                '#8c94a3'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 10 // Efek hover keluar
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true
                         },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            animation: {
-                                animateScale: true,
-                                animateRotate: true
-                            },
-                            plugins: {
-                                legend: {
-                                    position: 'right',
-                                    labels: {
-                                        usePointStyle: true,
-                                        padding: 20
-                                    }
-                                }
-                            },
-                            cutout: '75%'
-                        }
-                    });
-                @elseif (auth()->user()->role == 'audit')
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Terverifikasi', 'Pending', 'Terlambat'],
-                            datasets: [{
-                                data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
-                                    {{ $stats['late'] }}
-                                ],
-                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
-                                borderWidth: 0,
-                                hoverOffset: 10
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '70%',
-                            plugins: {
-                                legend: {
-                                    position: 'bottom'
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
                                 }
                             }
-                        }
-                    });
-                @elseif (auth()->user()->role == 'security')
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Scan Masuk', 'Scan Pulang'],
-                            datasets: [{
-                                data: [{{ $stats['check_in_scans'] }},
-                                    {{ $stats['check_out_scans'] }}
-                                ],
-                                backgroundColor: ['#00d25b', '#0090e7'],
-                                borderWidth: 0,
-                                hoverOffset: 10
-                            }]
                         },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '60%',
-                            plugins: {
-                                legend: {
-                                    position: 'bottom'
-                                }
-                            }
-                        }
-                    });
-                @else
-                    new Chart(ctx, {
-                        type: 'pie',
-                        data: {
-                            labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
-                            datasets: [{
-                                data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                                                                                            {{ $stats['early'] }}, {{ $stats['pending'] }}
-                                ],
-                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
-                                borderWidth: 2,
-                                borderColor: '#ffffff'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom'
-                                }
-                            }
-                        }
-                    });
-                @endif
-
-                                                                                        // --- MODAL FOTO PROFIL ---
-                                                                                        var profilePhotoModal = document.getElementById('profilePhotoModal');
-                if (profilePhotoModal) {
-                    profilePhotoModal.addEventListener('show.bs.modal', function (event) {
-                        var button = event.relatedTarget;
-                        var src = button.getAttribute('data-src');
-                        var modalImg = document.getElementById('profileModalImageSrc');
-                        modalImg.src = src;
-                    });
-                }
-            });
-
-            // ===============================================
-            // MOTIVATIONAL QUOTE FUNCTIONALITY
-            // ===============================================
-            // ===============================================
-            // MOTIVATIONAL QUOTE FUNCTIONALITY
-            // ===============================================
-
-            // Backup quotes in case API fails
-            const backupQuotes = [
-                { text: "Kesuksesan adalah hasil dari persiapan, kerja keras, dan belajar dari kegagalan.", author: "Colin Powell" },
-                { text: "Satu-satunya cara untuk melakukan pekerjaan hebat adalah dengan mencintai apa yang kamu lakukan.", author: "Steve Jobs" },
-                { text: "Jangan menunggu. Waktu tidak akan pernah tepat.", author: "Napoleon Hill" },
-                { text: "Masa depan adalah milik mereka yang percaya pada keindahan mimpi-mimpi mereka.", author: "Eleanor Roosevelt" },
-                { text: "Jangan biarkan kemarin mengambil terlalu banyak hari ini.", author: "Will Rogers" }
-            ];
-
-            async function fetchRandomQuote() {
-                try {
-                    // 1. Fetch random quote from dummyjson.com (more reliable)
-                    const response = await fetch('https://dummyjson.com/quotes/random');
-                    if (!response.ok) throw new Error('Quote API response was not ok');
-                    const data = await response.json();
-
-                    const originalText = data.quote;
-                    const author = data.author;
-
-                    // 2. Translate to Indonesian
-                    try {
-                        const translateUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(originalText)}&langpair=en|id`;
-                        const trResponse = await fetch(translateUrl);
-                        const trData = await trResponse.json();
-
-                        if (trData && trData.responseData && trData.responseData.translatedText) {
-                            return {
-                                text: trData.responseData.translatedText,
-                                author: author
-                            };
-                        }
-                    } catch (trError) {
-                        console.warn('Translation failed, showing English:', trError);
+                        cutout: '75%'
                     }
+                });
+            @elseif (auth()->user()->role == 'audit')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Terverifikasi', 'Pending', 'Terlambat'],
+                        datasets: [{
+                            data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
+                                {{ $stats['late'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @elseif (auth()->user()->role == 'security')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Scan Masuk', 'Scan Pulang'],
+                        datasets: [{
+                            data: [{{ $stats['check_in_scans'] }},
+                                {{ $stats['check_out_scans'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#0090e7'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @else
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
+                        datasets: [{
+                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                                                                                                                                                                            {{ $stats['early'] }}, {{ $stats['pending'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @endif
 
-                    // Fallback: Show original English if translation fails
-                    return {
-                        text: originalText,
-                        author: author
-                    };
+                                                                                                // --- MODAL FOTO PROFIL ---
+                                                                                                var profilePhotoModal = document.getElementById('profilePhotoModal');
+            if (profilePhotoModal) {
+                profilePhotoModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    var src = button.getAttribute('data-src');
+                    var modalImg = document.getElementById('profileModalImageSrc');
+                    modalImg.src = src;
+                });
+            }
+        });
 
-                } catch (error) {
-                    console.error('Failed to fetch quote:', error);
-                    return null;
+        // ===============================================
+        // MOTIVATIONAL QUOTE FUNCTIONALITY
+        // ===============================================
+        // ===============================================
+        // MOTIVATIONAL QUOTE FUNCTIONALITY
+        // ===============================================
+
+        // Backup quotes in case API fails
+        const backupQuotes = [
+            { text: "Kesuksesan adalah hasil dari persiapan, kerja keras, dan belajar dari kegagalan.", author: "Colin Powell" },
+            { text: "Satu-satunya cara untuk melakukan pekerjaan hebat adalah dengan mencintai apa yang kamu lakukan.", author: "Steve Jobs" },
+            { text: "Jangan menunggu. Waktu tidak akan pernah tepat.", author: "Napoleon Hill" },
+            { text: "Masa depan adalah milik mereka yang percaya pada keindahan mimpi-mimpi mereka.", author: "Eleanor Roosevelt" },
+            { text: "Jangan biarkan kemarin mengambil terlalu banyak hari ini.", author: "Will Rogers" }
+        ];
+
+        async function fetchRandomQuote() {
+            try {
+                // 1. Fetch random quote from dummyjson.com (more reliable)
+                const response = await fetch('https://dummyjson.com/quotes/random');
+                if (!response.ok) throw new Error('Quote API response was not ok');
+                const data = await response.json();
+
+                const originalText = data.quote;
+                const author = data.author;
+
+                // 2. Translate to Indonesian
+                try {
+                    const translateUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(originalText)}&langpair=en|id`;
+                    const trResponse = await fetch(translateUrl);
+                    const trData = await trResponse.json();
+
+                    if (trData && trData.responseData && trData.responseData.translatedText) {
+                        return {
+                            text: trData.responseData.translatedText,
+                            author: author
+                        };
+                    }
+                } catch (trError) {
+                    console.warn('Translation failed, showing English:', trError);
                 }
-            }
 
-            async function getDailyQuote() {
-                // Try to fetch a fresh quote first
-                const quote = await fetchRandomQuote();
-                if (quote) return quote;
-
-                // Fallback
-                const today = new Date();
-                const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-                const index = dayOfYear % backupQuotes.length;
-                return backupQuotes[index];
-            }
-
-            async function refreshQuote() {
-                // Show loading state
-                const quoteEl = document.getElementById('motivational-quote');
-                const authorEl = document.getElementById('author-name');
-
-                if (quoteEl) quoteEl.style.opacity = '0.5';
-
-                // Always try to fetch new random quote
-                let quote = await fetchRandomQuote();
-
-                // If failed, use random backup
-                if (!quote) {
-                    const randomIndex = Math.floor(Math.random() * backupQuotes.length);
-                    quote = backupQuotes[randomIndex];
-                }
-
-                displayQuote(quote);
-            }
-
-            function displayQuote(quote) {
-                const quoteEl = document.getElementById('motivational-quote');
-                const authorEl = document.getElementById('author-name');
-
-                if (!quoteEl || !authorEl) return;
-
-                quoteEl.style.opacity = '0';
-                authorEl.style.opacity = '0';
-
-                setTimeout(() => {
-                    quoteEl.textContent = quote.text;
-                    authorEl.textContent = quote.author;
-                    quoteEl.style.opacity = '1';
-                    authorEl.style.opacity = '1';
-                }, 300);
-
-                // Also refresh background image
-                refreshBackgroundImage();
-            }
-
-            // Nature background images from Unsplash (reliable, high-quality)
-            const natureBackgrounds = [
-                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=400&fit=crop', // Mountains
-                'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&h=400&fit=crop', // Forest
-                'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&h=400&fit=crop', // Foggy mountains
-                'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&h=400&fit=crop', // Forest light
-                'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&h=400&fit=crop', // Mountain lake
-                'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1200&h=400&fit=crop', // Valley
-                'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1200&h=400&fit=crop', // Green hills
-                'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&h=400&fit=crop', // Lake sunset
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=400&fit=crop', // Beach
-                'https://images.unsplash.com/photo-1518173946687-a4c036bc8ce8?w=1200&h=400&fit=crop', // Sky clouds
-                'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&h=400&fit=crop', // Starry mountain
-                'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=1200&h=400&fit=crop', // Waterfall
-                'https://images.unsplash.com/photo-1465919292999-00f5a4e5861b?w=1200&h=400&fit=crop', // Misty forest
-                'https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=1200&h=400&fit=crop', // Aurora
-                'https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=1200&h=400&fit=crop'  // Night sky
-            ];
-
-            function refreshBackgroundImage() {
-                const bgEl = document.getElementById('quote-bg-image');
-                if (!bgEl) return;
-
-                bgEl.style.opacity = '0.3';
-
-                const randomIndex = Math.floor(Math.random() * natureBackgrounds.length);
-                const newImage = new Image();
-                newImage.onload = function () {
-                    bgEl.style.backgroundImage = `url('${natureBackgrounds[randomIndex]}')`;
-                    bgEl.style.opacity = '1';
+                // Fallback: Show original English if translation fails
+                return {
+                    text: originalText,
+                    author: author
                 };
-                newImage.src = natureBackgrounds[randomIndex];
+
+            } catch (error) {
+                console.error('Failed to fetch quote:', error);
+                return null;
+            }
+        }
+
+        async function getDailyQuote() {
+            // Try to fetch a fresh quote first
+            const quote = await fetchRandomQuote();
+            if (quote) return quote;
+
+            // Fallback
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const index = dayOfYear % backupQuotes.length;
+            return backupQuotes[index];
+        }
+
+        async function refreshQuote() {
+            // Show loading state
+            const quoteEl = document.getElementById('motivational-quote');
+            const authorEl = document.getElementById('author-name');
+
+            if (quoteEl) quoteEl.style.opacity = '0.5';
+
+            // Always try to fetch new random quote
+            let quote = await fetchRandomQuote();
+
+            // If failed, use random backup
+            if (!quote) {
+                const randomIndex = Math.floor(Math.random() * backupQuotes.length);
+                quote = backupQuotes[randomIndex];
             }
 
-            function getDailyBackgroundImage() {
-                const today = new Date();
-                const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-                const index = dayOfYear % natureBackgrounds.length;
-                return natureBackgrounds[index];
-            }
+            displayQuote(quote);
+        }
 
-            // Initialize
-            document.addEventListener('DOMContentLoaded', async function () {
-                // Initial load
-                const quote = await getDailyQuote();
-                displayQuote(quote);
+        function displayQuote(quote) {
+            const quoteEl = document.getElementById('motivational-quote');
+            const authorEl = document.getElementById('author-name');
 
-                // Initial background
-                refreshBackgroundImage();
-            }); // Optional: Confetti Effect Function (Placeholder)
-            function confettiEffect() {
-                alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
-            }
-        </script>
+            if (!quoteEl || !authorEl) return;
+
+            quoteEl.style.opacity = '0';
+            authorEl.style.opacity = '0';
+
+            setTimeout(() => {
+                quoteEl.textContent = quote.text;
+                authorEl.textContent = quote.author;
+                quoteEl.style.opacity = '1';
+                authorEl.style.opacity = '1';
+            }, 300);
+
+            // Also refresh background image
+            refreshBackgroundImage();
+        }
+
+        // Nature background images from Unsplash (reliable, high-quality)
+        const natureBackgrounds = [
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=400&fit=crop', // Mountains
+            'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&h=400&fit=crop', // Forest
+            'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&h=400&fit=crop', // Foggy mountains
+            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&h=400&fit=crop', // Forest light
+            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&h=400&fit=crop', // Mountain lake
+            'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1200&h=400&fit=crop', // Valley
+            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1200&h=400&fit=crop', // Green hills
+            'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&h=400&fit=crop', // Lake sunset
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=400&fit=crop', // Beach
+            'https://images.unsplash.com/photo-1518173946687-a4c036bc8ce8?w=1200&h=400&fit=crop', // Sky clouds
+            'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&h=400&fit=crop', // Starry mountain
+            'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=1200&h=400&fit=crop', // Waterfall
+            'https://images.unsplash.com/photo-1465919292999-00f5a4e5861b?w=1200&h=400&fit=crop', // Misty forest
+            'https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=1200&h=400&fit=crop', // Aurora
+            'https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=1200&h=400&fit=crop'  // Night sky
+        ];
+
+        function refreshBackgroundImage() {
+            const bgEl = document.getElementById('quote-bg-image');
+            if (!bgEl) return;
+
+            bgEl.style.opacity = '0.3';
+
+            const randomIndex = Math.floor(Math.random() * natureBackgrounds.length);
+            const newImage = new Image();
+            newImage.onload = function () {
+                bgEl.style.backgroundImage = `url('${natureBackgrounds[randomIndex]}')`;
+                bgEl.style.opacity = '1';
+            };
+            newImage.src = natureBackgrounds[randomIndex];
+        }
+
+        function getDailyBackgroundImage() {
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const index = dayOfYear % natureBackgrounds.length;
+            return natureBackgrounds[index];
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Initial load
+            const quote = await getDailyQuote();
+            displayQuote(quote);
+
+            // Initial background
+            refreshBackgroundImage();
+        }); // Optional: Confetti Effect Function (Placeholder)
+        function confettiEffect() {
+            alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
+        }
+    </script>
 @endpush
