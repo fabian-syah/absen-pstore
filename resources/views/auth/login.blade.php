@@ -877,9 +877,7 @@
         }
 
         /* iOS Safe Area (for notched phones like iPhone X+) */
-        @supports
-        (padding: env(safe - area - inset - top))
-            {
+        @supports (padding: env(safe - area - inset - top)) {
             body {
                 padding-top: env(safe-area-inset-top);
                 padding-bottom: env(safe-area-inset-bottom);
@@ -1105,7 +1103,8 @@
                 </div>
                 <ul>
                     <li>Gunakan <strong>ID Login</strong> yang diberikan</li>
-                    <li>Huruf besar/kecil tidak berpengaruh</li>
+                    <li>Huruf besar/kecil <strong>ID Login</strong> tidak berpengaruh</li>
+                    <li>Password <strong>sensitif</strong> (huruf besar/kecil berpengaruh)</li>
                 </ul>
             </div>
 

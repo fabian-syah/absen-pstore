@@ -26,7 +26,7 @@ class LoginController extends Controller
         $user = User::whereRaw('LOWER(login_id) = ?', [strtolower($request->login_id)])->first();
 
         // Case-insensitive password check
-        if ($user && (Hash::check(strtolower($request->password), $user->password))) {
+        if ($user && Hash::check($request->password, $user->password)) {
 
             if ($user->is_active == 0) {
                 return back()->withErrors(['login_id' => 'Akun Anda dinonaktifkan.'])->withInput();
