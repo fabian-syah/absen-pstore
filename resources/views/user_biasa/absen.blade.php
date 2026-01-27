@@ -249,7 +249,7 @@
             font-size: 1.25rem;
             text-decoration: none;
             transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         .back-btn:hover {
@@ -495,8 +495,8 @@
         .camera-icon-wrapper {
             width: 80px;
             height: 80px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px;
             display: flex;
             align-items: center;
@@ -729,7 +729,7 @@
         .info-content span {
             display: block;
             font-size: 0.9rem;
-            color: white;
+            color: var(--text-primary);
             font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
@@ -738,19 +738,19 @@
 
         .info-badge {
             padding: 0.35rem 0.75rem;
-            background: rgba(255, 255, 255, 0.1);
+            background: #e5e7eb;
             border-radius: 20px;
             font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-secondary);
         }
 
         .info-badge.success {
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.15);
             color: var(--success);
         }
 
         .info-badge.error {
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.15);
             color: var(--danger);
         }
 
@@ -763,7 +763,7 @@
             width: 100%;
             background: transparent;
             border: none;
-            color: white;
+            color: var(--text-primary);
             font-size: 0.9rem;
             resize: none;
             height: 2.5rem;
@@ -771,7 +771,7 @@
         }
 
         .notes-card textarea::placeholder {
-            color: rgba(255, 255, 255, 0.4);
+            color: #9ca3af;
         }
 
         /* === SUBMIT SLIDER === */
@@ -782,7 +782,7 @@
         .slide-track {
             position: relative;
             height: 56px;
-            background: rgba(255, 255, 255, 0.08);
+            background: #e5e7eb;
             border-radius: 28px;
             overflow: hidden;
             transition: all 0.3s;
@@ -794,7 +794,7 @@
         }
 
         .slide-track.active {
-            background: rgba(99, 102, 241, 0.2);
+            background: rgba(99, 102, 241, 0.15);
         }
 
         .slide-track.submitted {
@@ -809,13 +809,13 @@
             font-size: 0.8rem;
             font-weight: 700;
             letter-spacing: 1px;
-            color: rgba(255, 255, 255, 0.5);
+            color: #9ca3af;
             transition: all 0.3s;
             white-space: nowrap;
         }
 
         .slide-track.active .slide-text {
-            color: var(--primary-light);
+            color: var(--primary);
         }
 
         .slide-progress {
