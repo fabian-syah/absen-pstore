@@ -80,6 +80,7 @@
             background-color: #f8f9fa;
             border-bottom: 2px solid #e9ecef;
             white-space: nowrap;
+            color: #495057;
         }
 
         .border-dashed-start {
@@ -112,6 +113,73 @@
             max-width: 120px;
             word-wrap: break-word;
             color: #495057;
+        }
+
+        /* === LATE APPROVAL BADGE === */
+        .late-approval-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            font-size: 0.6rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            animation: pulse-warning 2s infinite;
+        }
+
+        @keyframes pulse-warning {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 4px rgba(245, 158, 11, 0);
+            }
+        }
+
+        .approver-info {
+            font-size: 0.65rem;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .approver-name {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        /* === INTERACTIVE ROW === */
+        .table tbody tr {
+            transition: all 0.15s ease;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f0f4ff !important;
+        }
+
+        /* === FIX FONT CONTRAST === */
+        .bg-success .text-white-50,
+        .bg-primary .text-white-50,
+        .bg-info .text-white-50,
+        .bg-secondary .text-white-50 {
+            color: rgba(255, 255, 255, 0.75) !important;
+        }
+
+        .verifier-box .badge {
+            min-width: 38px;
+            text-align: center;
+        }
+
+        .verifier-box .lh-sm span.d-block {
+            color: #1f2937 !important;
+        }
+
+        .verifier-box .lh-sm small {
+            color: #6b7280 !important;
         }
     </style>
 @endpush
@@ -338,6 +406,15 @@
                                                 $att->scheduled_check_out ??
                                                 ($att->user->check_out_start ??
                                                     ($att->user->workSchedule->end_time ?? null));
+
+                                            // Late Approval Detection
+                                            $isLateApproval = $att->verified_by_user_id
+                                                && $att->updated_at
+                                                && $att->updated_at->gt($att->check_in_time->endOfDay());
+                                            $approvalDelay = $isLateApproval
+                                                ? $att->check_in_time->startOfDay()->diffInDays($att->updated_at->startOfDay())
+                                                : 0;
+                                            $approverName = $att->verifier->name ?? null;
                                         @endphp
                                         <tr>
                                             {{-- TANGGAL --}}
@@ -620,6 +697,22 @@
                                                                     <small class="text-muted" style="font-size: 0.65rem;">Auto</small>
                                                                 @endif
                                                             </div>
+                                                        </div>
+                                                    @endif
+
+                                                    {{-- LATE APPROVAL BADGE --}}
+                                                    @if ($isLateApproval && $approvalDelay > 0)
+                                                        <div class="mt-2">
+                                                            <span class="late-approval-badge"
+                                                                title="Diapprove {{ $att->updated_at->format('d M Y H:i') }}">
+                                                                <i class="mdi mdi-clock-alert-outline"></i>
+                                                                Telat Approve (+{{ $approvalDelay }} hari)
+                                                            </span>
+                                                            @if ($approverName)
+                                                                <div class="approver-info">
+                                                                    oleh <span class="approver-name">{{ $approverName }}</span>
+                                                                </div>
+                                                            @endif
                                                         </div>
                                                     @endif
                                                 </div>
