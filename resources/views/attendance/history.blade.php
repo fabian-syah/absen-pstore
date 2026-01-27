@@ -30,39 +30,42 @@
                 <div class="d-flex align-items-center gap-2">
                     @if ($prevEmployee)
                         <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $prevEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                            class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3 shadow-sm"
-                            title="{{ $prevEmployee->name }}">
-                            <i class="mdi mdi-chevron-left"></i> <span
-                                class="d-none d-md-inline">{{ Str::limit($prevEmployee->name, 15) }}</span>
-                        </a>
+                            class="btn btn-sm rounded-pill px-3 shadow-sm" 
+                                            style="background-color: #ffffff !important; color: #1a73e8 !important; font-weight: 600;"
+                                            title="{{ $prevEmployee->name }}">
+                                            <i class="mdi mdi-chevron-left"></i> <span class="d-none d-md-inline">{{ Str::limit($prevEmployee->name, 15) }}</span>
+                                        </a>
                     @else
-                        <button class="btn btn-sm btn-secondary text-white rounded-pill px-3" disabled style="opacity: 0.5;">
-                            <i class="mdi mdi-chevron-left"></i>
-                        </button>
-                    @endif
+                                    <button class="btn btn-sm rounded-pill px-3" disabled 
+                                        style="background-color: #6c757d !important; color: #ffffff !important; opacity: 0.5;">
+                                        <i class="mdi mdi-chevron-left"></i>
+                                    </button>
+                                @endif
 
-                    <span class="badge bg-white text-primary border-0 shadow-sm px-3 py-2 fw-bold" style="font-size: 0.85rem;">
-                        {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount ?? 1 }}
-                    </span>
+                                <span class="badge rounded-pill px-3 py-2" 
+                                    style="background-color: #ffffff !important; color: #1a73e8 !important; font-size: 0.85rem; font-weight: 700;">
+                                    {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount ?? 1 }}
+                                </span>
 
-                    @if ($nextEmployee)
-                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                            class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3 shadow-sm"
-                            title="{{ $nextEmployee->name }}">
-                            <span class="d-none d-md-inline">{{ Str::limit($nextEmployee->name, 15) }}</span> <i
-                                class="mdi mdi-chevron-right"></i>
-                        </a>
-                    @else
-                        <button class="btn btn-sm btn-secondary text-white rounded-pill px-3" disabled style="opacity: 0.5;">
-                            <i class="mdi mdi-chevron-right"></i>
-                        </button>
-                    @endif
-                </div>
+                                @if ($nextEmployee)
+                                    <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
+                                        class="btn btn-sm rounded-pill px-3 shadow-sm" 
+                                        style="background-color: #ffffff !important; color: #1a73e8 !important; font-weight: 600;"
+                                        title="{{ $nextEmployee->name }}">
+                                        <span class="d-none d-md-inline">{{ Str::limit($nextEmployee->name, 15) }}</span> <i class="mdi mdi-chevron-right"></i>
+                                    </a>
+                                @else
+                                    <button class="btn btn-sm rounded-pill px-3" disabled 
+                                        style="background-color: #6c757d !important; color: #ffffff !important; opacity: 0.5;">
+                                        <i class="mdi mdi-chevron-right"></i>
+                                    </button>
+                                @endif
+                            </div>
             @endif
-        </div>
+                </div>
     @else
-        <h4 class="mb-0 fw-bold">Riwayat Absensi Saya</h4>
-    @endif
+            <h4 class="mb-0 fw-bold">Riwayat Absensi Saya</h4>
+        @endif
 @endsection
 
 @push('styles')
