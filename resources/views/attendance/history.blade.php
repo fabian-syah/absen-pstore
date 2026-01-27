@@ -24,45 +24,10 @@
                     </small>
                 </div>
             </div>
-
-            {{-- NAVIGASI KARYAWAN DALAM CABANG --}}
-            @if(isset($employeeCount) && $employeeCount > 1)
-                <div class="d-flex align-items-center gap-2">
-                    <small class="text-muted me-2">
-                        {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount }}
-                    </small>
-
-                    @if($prevEmployee)
-                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $prevEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                            class="btn btn-sm btn-outline-primary rounded-pill shadow-sm px-3 d-flex align-items-center gap-2"
-                                           title="Karyawan Sebelumnya: {{ $prevEmployee->name }}">
-                                            <i class="mdi mdi-chevron-left"></i>
-                                            <span class="d-none d-md-inline small fw-bold">{{ $prevEmployee->name }}</span>
-                                        </a>
-                    @else
-                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" disabled>
-                                        <i class="mdi mdi-chevron-left"></i>
-                                    </button>
-                                @endif
-
-                                @if($nextEmployee)
-                                    <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                                       class="btn btn-sm btn-outline-primary rounded-pill shadow-sm px-3 d-flex align-items-center gap-2"
-                                       title="Karyawan Berikutnya: {{ $nextEmployee->name }}">
-                                        <span class="d-none d-md-inline small fw-bold">{{ $nextEmployee->name }}</span>
-                                        <i class="mdi mdi-chevron-right"></i>
-                                    </a>
-                                @else
-                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" disabled>
-                                        <i class="mdi mdi-chevron-right"></i>
-                                    </button>
-                                @endif
-                            </div>
-            @endif
-                </div>
+        </div>
     @else
-            <h4 class="mb-0 fw-bold">Riwayat Absensi Saya</h4>
-        @endif
+        <h4 class="mb-0 fw-bold">Riwayat Absensi Saya</h4>
+    @endif
 @endsection
 
 @push('styles')
@@ -150,6 +115,11 @@
             max-width: 120px;
             word-wrap: break-word;
             color: #495057;
+        }
+
+        /* CSS TAMBAHAN AGAR NAMA TETAP KELIHATAN SAAT HOVER */
+        .btn-outline-primary:hover span {
+            color: #fff !important;
         }
 
         /* === LATE APPROVAL BADGE === */
@@ -241,29 +211,44 @@
                 <div class="card-body py-3">
                     <div class="row align-items-center justify-content-between g-3">
 
-                        {{-- NAVIGASI KIRI --}}
+                        {{-- NAVIGASI KARYAWAN DALAM CABANG (KIRI) --}}
                         <div class="col-auto">
-                            @php
-                                $prevParams = ['month' => $prevMonth, 'year' => $prevYear];
-                                if (isset($employee)) {
-                                    $prevRoute = route(
-                                        'team.branch.employee.history',
-                                        array_merge(
-                                            ['branchId' => $employee->branch_id, 'employeeId' => $employee->id],
-                                            $prevParams,
-                                        ),
-                                    );
-                                } else {
-                                    $prevRoute = route('attendance.history', $prevParams);
-                                }
-                            @endphp
-                            <a href="{{ $prevRoute }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold"
-                                title="Bulan Sebelumnya">
-                                <i class="mdi mdi-chevron-left me-1"></i> Prev
-                            </a>
+                            @if(isset($employeeCount) && $employeeCount > 1)
+                                <div class="d-flex align-items-center gap-2">
+                                    @if($prevEmployee)
+                                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $prevEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
+                                            class="btn btn-sm btn-outline-primary rounded-pill shadow-sm px-3 d-flex align-items-center gap-2"
+                                            title="Karyawan Sebelumnya: {{ $prevEmployee->name }}">
+                                            <i class="mdi mdi-chevron-left"></i>
+                                            <span class="d-none d-md-inline small fw-bold">{{ $prevEmployee->name }}</span>
+                                        </a>
+                                    @else
+                                        <button class="btn btn-sm btn-outline-secondary rounded-circle" disabled>
+                                            <i class="mdi mdi-chevron-left"></i>
+                                        </button>
+                                    @endif
+
+                                    <small class="text-muted fw-bold mx-1">
+                                        {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount }}
+                                    </small>
+
+                                    @if($nextEmployee)
+                                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
+                                           class="btn btn-sm btn-outline-primary rounded-pill shadow-sm px-3 d-flex align-items-center gap-2"
+                                           title="Karyawan Berikutnya: {{ $nextEmployee->name }}">
+                                            <span class="d-none d-md-inline small fw-bold">{{ $nextEmployee->name }}</span>
+                                            <i class="mdi mdi-chevron-right"></i>
+                                        </a>
+                                    @else
+                                        <button class="btn btn-sm btn-outline-secondary rounded-circle" disabled>
+                                            <i class="mdi mdi-chevron-right"></i>
+                                        </button>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
 
-                        {{-- FORM FILTER TENGAH --}}
+                        {{-- FORM FILTER PERIODE (TENGAH) --}}
                         <div class="col-auto">
                             <form
                                 action="{{ isset($employee) ? route('team.branch.employee.history', ['branchId' => $employee->branch_id, 'employeeId' => $employee->id]) : route('attendance.history') }}"
@@ -271,11 +256,12 @@
 
                                 <div class="col-auto d-none d-md-block">
                                     <label class="fw-bold mb-0 text-muted small text-uppercase"><i
-                                            class="mdi mdi-calendar-month me-1"></i> Periode:</label>
+                                            class="mdi mdi-calendar-month me-1"></i> PERIODE:</label>
                                 </div>
                                 <div class="col-auto">
                                     <select name="month"
                                         class="form-select form-select-sm form-select-custom rounded-pill px-3"
+                                        style="min-width: 110px;"
                                         onchange="this.form.submit()">
                                         @foreach (range(1, 12) as $m)
                                             <option value="{{ $m }}" {{ $selectedMonth == $m ? 'selected' : '' }}>
@@ -287,6 +273,7 @@
                                 <div class="col-auto">
                                     <select name="year"
                                         class="form-select form-select-sm form-select-custom rounded-pill px-3"
+                                        style="min-width: 85px;"
                                         onchange="this.form.submit()">
                                         @php
                                             $startYear = 2025;
@@ -303,29 +290,10 @@
                             </form>
                         </div>
 
-                        {{-- NAVIGASI KANAN --}}
-                        <div class="col-auto d-flex gap-2">
-                            @php
-                                $nextParams = ['month' => $nextMonth, 'year' => $nextYear];
-                                if (isset($employee)) {
-                                    $nextRoute = route(
-                                        'team.branch.employee.history',
-                                        array_merge(
-                                            ['branchId' => $employee->branch_id, 'employeeId' => $employee->id],
-                                            $nextParams,
-                                        ),
-                                    );
-                                } else {
-                                    $nextRoute = route('attendance.history', $nextParams);
-                                }
-                            @endphp
-                            <a href="{{ $nextRoute }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold"
-                                title="Bulan Selanjutnya">
-                                Next <i class="mdi mdi-chevron-right ms-1"></i>
-                            </a>
-
+                        {{-- ACTION PDF (KANAN) --}}
+                        <div class="col-auto">
                             <a href="{{ route('attendance.export.pdf', ['month' => $selectedMonth, 'year' => $selectedYear, 'employeeId' => isset($employee) ? $employee->id : null]) }}"
-                                class="btn btn-danger btn-sm text-white ms-2 rounded-pill px-3 shadow-sm">
+                                class="btn btn-danger btn-sm text-white rounded-pill px-3 shadow-sm">
                                 <i class="mdi mdi-file-pdf-box me-1"></i> PDF
                             </a>
                         </div>
