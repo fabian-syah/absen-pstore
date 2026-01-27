@@ -23,7 +23,8 @@ class SelfAttendanceController extends Controller
     /**
      * Helper untuk mendapatkan Offset Timezone (contoh: +07:00)
      */
-    private function getOffset($timezone) {
+    private function getOffset($timezone)
+    {
         return Carbon::now($timezone)->format('P');
     }
 
@@ -33,7 +34,7 @@ class SelfAttendanceController extends Controller
     public function create()
     {
         $user = Auth::user();
-        
+
         // Setup Timezone Cabang
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $localTime = Carbon::now($branchTimezone);
@@ -47,21 +48,20 @@ class SelfAttendanceController extends Controller
         // 2. CEK SESI AKTIF (Termasuk Lembur Lintas Hari)
         // Cari sesi yang belum checkout dan check_in dalam batas wajar (32 jam terakhir)
         $activeSession = Attendance::where('user_id', $user->id)
-    ->whereNull('check_out_time')
-    // UBAH dari subHours(24) menjadi 32
-    ->where('check_in_time', '>=', now()->subHours(24)) 
-    ->where('status', '!=', 'alpha')
-    ->latest('check_in_time')
-    ->first();
+            ->whereNull('check_out_time')
+            // UBAH dari subHours(24) menjadi 32
+            ->where('check_in_time', '>=', now()->subHours(24))
+            ->where('status', '!=', 'alpha')
+            ->latest('check_in_time')
+            ->first();
 
         if ($activeSession) {
             // Jika ada sesi aktif -> Mode PULANG (Otomatis Lembur jika lewat hari)
             $mode = 'pulang';
             $attendance = $activeSession;
-        } 
-        else {
+        } else {
             // === MODE MASUK ===
-            
+
             // 3. Cek Status Cuti / Izin (Selain Telat)
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
                 ->where('status', 'approved')
@@ -85,7 +85,7 @@ class SelfAttendanceController extends Controller
                 ->whereNotNull('check_out_time')
                 ->where('status', '!=', 'alpha')
                 ->exists();
-            
+
             if ($finishedToday) {
                 return redirect()->route('dashboard')->with('success', 'Anda sudah menyelesaikan absensi hari ini.');
             }
@@ -128,12 +128,12 @@ class SelfAttendanceController extends Controller
 
         $user = Auth::user();
         $currentTime = now(); // Waktu Server
-        
+
         // Setup Timezone
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $localTime = Carbon::now($branchTimezone);
         $todayDateLocal = $localTime->format('Y-m-d');
-        
+
         $branchName = $user->branch->name ?? '-';
         $attendanceToUpdate = null;
 
@@ -141,10 +141,10 @@ class SelfAttendanceController extends Controller
         if ($request->filled('attendance_id')) {
             $attendanceToUpdate = Attendance::find($request->attendance_id);
         }
-        
+
         // Fallback jika ID tidak dikirim tapi mode pulang
         if (!$attendanceToUpdate && $request->has('mode') && $request->mode == 'pulang') {
-             $attendanceToUpdate = Attendance::where('user_id', $user->id)
+            $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', now()->subHours(24))
                 ->latest('check_in_time')
@@ -156,16 +156,19 @@ class SelfAttendanceController extends Controller
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
             $filename = 'public/foto_mandiri/' . Str::random(40) . '.jpg';
-            
-            // Resize & Compress
+
+            // Di SelfAttendanceController.php
             $img = Image::make($file);
             $img->orientate();
-            $img->resize(800, null, function ($constraint) {
+
+            // Hanya resize jika gambar aslinya lebih besar dari 1000px
+            $img->resize(1000, null, function ($constraint) {
                 $constraint->aspectRatio();
-                $constraint->upsize();
+                $constraint->upsize(); // Menghindari gambar kecil ditarik jadi besar
             });
-            
-            $compressedImage = (string) $img->encode('jpg', 70);
+
+            // Naikkan ke 80 agar tidak terlalu banyak artifak kompresi
+            $compressedImage = (string) $img->encode('jpg', 80);
             Storage::disk('public')->put($filename, $compressedImage);
             $path = $filename;
         }
@@ -179,60 +182,60 @@ class SelfAttendanceController extends Controller
         // CASE 1: ABSEN PULANG (UPDATE)
         // =====================================================================
         if ($attendanceToUpdate) {
-            
-            if($attendanceToUpdate->user_id != $user->id){
-                 return redirect()->route('dashboard')->with('error', 'Sesi absensi tidak valid.');
+
+            if ($attendanceToUpdate->user_id != $user->id) {
+                return redirect()->route('dashboard')->with('error', 'Sesi absensi tidak valid.');
             }
 
             // Cek Pulang Cepat (Early Checkout)
             $isEarly = false;
             if ($workSchedule && $workSchedule->check_out_start) {
-                 $scheduleStartStr = Carbon::parse($workSchedule->check_out_start)->format('H:i:s');
-                 $scheduleStartLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleStartStr, $branchTimezone);
-                 
-                 if ($localTime->lt($scheduleStartLocal)) {
-                     $isEarly = true;
-                 }
+                $scheduleStartStr = Carbon::parse($workSchedule->check_out_start)->format('H:i:s');
+                $scheduleStartLocal = Carbon::createFromFormat('Y-m-d H:i:s', $localTime->format('Y-m-d') . ' ' . $scheduleStartStr, $branchTimezone);
+
+                if ($localTime->lt($scheduleStartLocal)) {
+                    $isEarly = true;
+                }
             }
 
             // Logic Notes
             $finalNotes = $attendanceToUpdate->notes;
             $userNote = $request->notes ? ": " . $request->notes : "";
-            
+
             // Cek Lembur Lintas Hari (Check In Kemarin, Pulang Hari Ini)
             $checkInLocal = Carbon::parse($attendanceToUpdate->check_in_time)->timezone($branchTimezone);
             $isCrossDay = !$checkInLocal->isSameDay($localTime);
 
             $currentStatus = $attendanceToUpdate->status;
-            $newStatus = $currentStatus; 
+            $newStatus = $currentStatus;
 
             // Aturan Status:
             // 1. Jika sebelumnya rejected/alpha -> ubah jadi pending verification.
             if (in_array($currentStatus, ['rejected', 'alpha'])) {
                 $newStatus = 'pending_verification';
             }
-            
+
             // 2. Auto Verify untuk Lembur Lintas Hari jika sebelumnya sudah Verified
             if ($isCrossDay) {
                 $extraNote = "[Lembur/Lintas Hari] ";
                 // Jika sudah verified (biasanya karena selfie masuk), maka checkout juga verified
                 if ($currentStatus == 'verified') {
-                    $newStatus = 'verified'; 
+                    $newStatus = 'verified';
                 }
             } else {
                 $extraNote = "";
             }
 
             $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $extraNote . "Pulang (Selfie)" . $userNote;
-            
+
             $attendanceToUpdate->update([
-                'check_out_time'    => $currentTime,
-                'photo_out_path'    => $path,
+                'check_out_time' => $currentTime,
+                'photo_out_path' => $path,
                 'is_early_checkout' => $isEarly,
-                'status'            => $newStatus,
-                'notes'             => $finalNotes,
-                'latitude_out'      => $request->latitude,
-                'longitude_out'     => $request->longitude,
+                'status' => $newStatus,
+                'notes' => $finalNotes,
+                'latitude_out' => $request->latitude,
+                'longitude_out' => $request->longitude,
             ]);
 
             $message = "Berhasil absen pulang.";
@@ -246,19 +249,19 @@ class SelfAttendanceController extends Controller
                 $notifBody = "{$user->name} absen pulang di {$branchName}";
             }
 
-        } 
+        }
         // =====================================================================
         // CASE 2: ABSEN MASUK (CREATE BARU)
         // =====================================================================
         else {
             $checkAgain = Attendance::where('user_id', $user->id)
-    ->whereNull('check_out_time')
-    // Pastikan pengecekan masuk baru juga konsisten 32 jam
-    ->where('check_in_time', '>=', now()->subHours(24))
-    ->first();
-            
+                ->whereNull('check_out_time')
+                // Pastikan pengecekan masuk baru juga konsisten 32 jam
+                ->where('check_in_time', '>=', now()->subHours(24))
+                ->first();
+
             if ($checkAgain) {
-                 return redirect()->route('dashboard')->with('error', 'Anda masih memiliki sesi aktif. Mohon refresh halaman.');
+                return redirect()->route('dashboard')->with('error', 'Anda masih memiliki sesi aktif. Mohon refresh halaman.');
             }
 
             $appOffset = $this->getOffset(config('app.timezone'));
@@ -281,7 +284,7 @@ class SelfAttendanceController extends Controller
             if ($workSchedule && $workSchedule->check_in_end) {
                 $scheduleEndStr = Carbon::parse($workSchedule->check_in_end)->format('H:i:s');
                 $scheduleEndLocal = Carbon::createFromFormat('Y-m-d H:i:s', $todayDateLocal . ' ' . $scheduleEndStr, $branchTimezone);
-                
+
                 if ($localTime->gt($scheduleEndLocal)) {
                     $isLate = true;
                 }
@@ -301,24 +304,26 @@ class SelfAttendanceController extends Controller
             }
 
             $snapIn = $user->check_in_start;
-            if (!$snapIn && $workSchedule) $snapIn = $workSchedule->check_in_start;
+            if (!$snapIn && $workSchedule)
+                $snapIn = $workSchedule->check_in_start;
             $snapOut = $user->check_out_start;
-            if (!$snapOut && $workSchedule) $snapOut = $workSchedule->check_out_start;
+            if (!$snapOut && $workSchedule)
+                $snapOut = $workSchedule->check_out_start;
 
             Attendance::create([
-                'user_id'           => $user->id,
-                'branch_id'         => $user->branch_id,
-                'check_in_time'     => $currentTime,
-                'status'            => 'pending_verification',
-                'presence_status'   => 'Masuk',
-                'attendance_type'   => 'self',
-                'photo_path'        => $path,
-                'latitude'          => $request->latitude,
-                'longitude'         => $request->longitude,
-                'work_schedule_id'  => $workSchedule?->id,
-                'is_late_checkin'   => $isLate,
-                'notes'             => $finalNotes,
-                'verified_by_user_id' => null, 
+                'user_id' => $user->id,
+                'branch_id' => $user->branch_id,
+                'check_in_time' => $currentTime,
+                'status' => 'pending_verification',
+                'presence_status' => 'Masuk',
+                'attendance_type' => 'self',
+                'photo_path' => $path,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'work_schedule_id' => $workSchedule?->id,
+                'is_late_checkin' => $isLate,
+                'notes' => $finalNotes,
+                'verified_by_user_id' => null,
                 'scheduled_check_in' => $snapIn,
                 'scheduled_check_out' => $snapOut,
             ]);
@@ -338,11 +343,11 @@ class SelfAttendanceController extends Controller
                 Log::error("FCM Error: " . $e->getMessage());
             }
         }
-        */  
+        */
 
         return redirect()->route('dashboard')->with('success', $message);
     }
-    
+
     public function skipCheckOut($id)
     {
         $user = Auth::user();
@@ -353,16 +358,16 @@ class SelfAttendanceController extends Controller
 
         if ($attendance) {
             $endOfPreviousDay = Carbon::parse($attendance->check_in_time)->endOfDay();
-            
-            $status = ($attendance->status == 'verified' || $attendance->status == 'present') 
-                        ? $attendance->status 
-                        : 'pending_verification';
-            
+
+            $status = ($attendance->status == 'verified' || $attendance->status == 'present')
+                ? $attendance->status
+                : 'pending_verification';
+
             $attendance->update([
                 'check_out_time' => $endOfPreviousDay,
-                'photo_out_path' => null, 
-                'status'         => $status,
-                'notes'          => $attendance->notes . ' | User LEWATI absen pulang (Lupa/Skip)',
+                'photo_out_path' => null,
+                'status' => $status,
+                'notes' => $attendance->notes . ' | User LEWATI absen pulang (Lupa/Skip)',
             ]);
             return redirect()->route('dashboard')->with('success', 'Sesi kemarin ditutup. Anda bisa absen masuk baru sekarang.');
         }
@@ -373,9 +378,9 @@ class SelfAttendanceController extends Controller
     {
         $request->validate(['message' => 'required|string|max:255']);
         $user = Auth::user();
-        
+
         LateNotification::where('user_id', $user->id)->update(['is_active' => false]);
-        
+
         LateNotification::create([
             'user_id' => $user->id,
             'branch_id' => $user->branch_id,
@@ -393,12 +398,12 @@ class SelfAttendanceController extends Controller
     }
 
     public function deleteLateStatus()
-    {   
+    {
         $notification = LateNotification::where('user_id', Auth::id())
             ->where('is_active', true)
             ->whereDate('created_at', today())
             ->first();
-            
+
         if ($notification) {
             $notification->delete();
             return redirect()->route('dashboard')->with('success', 'Laporan telat dihapus. Silahkan absen.');

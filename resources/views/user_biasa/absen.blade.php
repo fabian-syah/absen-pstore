@@ -977,11 +977,10 @@
                 const constraints = {
                     video: {
                         facingMode: 'user',
-                        width: { ideal: enableAI ? 320 : 640 },
-                        height: { ideal: enableAI ? 240 : 480 },
+                        width: { ideal: 1080 }, // Gunakan resolusi tinggi
+                        height: { ideal: 1440 },
                         frameRate: { ideal: 24 }
-                    },
-                    audio: false
+                    }
                 };
 
                 navigator.mediaDevices.getUserMedia(constraints)
