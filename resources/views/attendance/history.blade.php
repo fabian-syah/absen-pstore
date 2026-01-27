@@ -62,6 +62,14 @@
 
 @push('styles')
     <style>
+        /* FORCE DISPLAY HEADING */
+        .navbar .navbar-menu-wrapper .navbar-nav .nav-item .welcome-text {
+            display: block !important;
+            margin-bottom: 0 !important;
+            color: #1F3BB3 !important;
+            /* Default color override */
+        }
+
         /* Perbaikan navigasi agar terlihat di background biru */
         .employee-nav-wrapper {
             background: rgba(0, 0, 0, 0.2);
@@ -72,6 +80,8 @@
             align-items: center;
             gap: 8px;
             border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 10;
         }
 
         .nav-btn-highlight {
