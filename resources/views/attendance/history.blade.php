@@ -26,83 +26,83 @@
             </div>
 
             {{-- NAVIGASI KARYAWAN - VERSI FIX DENGAN INLINE STYLE --}}
-@if (isset($branchId) && (isset($prevEmployee) || isset($nextEmployee)))
-    <div class="nav-container-fixed shadow-sm" style="background: #ffffff !important; border: 2px solid #ffc107 !important; border-radius: 50px !important; padding: 5px 10px !important; display: flex !important; align-items: center !important;">
-        {{-- Tombol Prev --}}
-        @if ($prevEmployee)
-            <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $prevEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                class="nav-btn-action" 
-                style="color: #000000 !important; text-decoration: none !important; padding: 5px 10px !important; font-weight: 800 !important;"
-                title="{{ $prevEmployee->name }}">
-                <i class="mdi mdi-chevron-left" style="color: #000000 !important;"></i>
-                <span class="d-none d-lg-inline" style="color: #000000 !important;">
-                    {{ Str::limit($prevEmployee->name, 8) }}
-                </span>
-            </a>
-        @endif
+            @if (isset($branchId) && (isset($prevEmployee) || isset($nextEmployee)))
+                <div class="nav-container-fixed shadow-sm" style="background: #ffffff !important; border: 2px solid #ffc107 !important; border-radius: 50px !important; padding: 5px 10px !important; display: flex !important; align-items: center !important;">
+                    {{-- Tombol Prev --}}
+                    @if ($prevEmployee)
+                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $prevEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
+                            class="nav-btn-action" 
+                            style="color: #000000 !important; text-decoration: none !important; padding: 5px 10px !important; font-weight: 800 !important;"
+                            title="{{ $prevEmployee->name }}">
+                            <i class="mdi mdi-chevron-left" style="color: #000000 !important;"></i>
+                            <span class="d-none d-lg-inline" style="color: #000000 !important;">
+                                {{ Str::limit($prevEmployee->name, 8) }}
+                            </span>
+                        </a>
+                    @endif
 
-        {{-- Indikator Angka (2/6) --}}
-        <div class="nav-number-badge" 
-             style="background: #ffc107 !important; color: #000000 !important; padding: 4px 15px !important; border-radius: 50px !important; font-weight: 900 !important; margin: 0 5px !important;">
-            {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount ?? 1 }}
-        </div>
+                    {{-- Indikator Angka (2/6) --}}
+                    <div class="nav-number-badge" 
+                         style="background: #ffc107 !important; color: #000000 !important; padding: 4px 15px !important; border-radius: 50px !important; font-weight: 900 !important; margin: 0 5px !important;">
+                        {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount ?? 1 }}
+                    </div>
 
-        {{-- Tombol Next --}}
-        @if ($nextEmployee)
-            <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                class="nav-btn-action"
-                style="color: #000000 !important; text-decoration: none !important; padding: 5px 10px !important; font-weight: 800 !important;"
-                title="{{ $nextEmployee->name }}">
-                <span class="d-none d-lg-inline" style="color: #000000 !important;">
-                    {{ Str::limit($nextEmployee->name, 8) }}
-                </span>
-                <i class="mdi mdi-chevron-right" style="color: #000000 !important;"></i>
-            </a>
-        @endif
-    </div>
-@endif
+                    {{-- Tombol Next --}}
+                    @if ($nextEmployee)
+                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
+                            class="nav-btn-action"
+                            style="color: #000000 !important; text-decoration: none !important; padding: 5px 10px !important; font-weight: 800 !important;"
+                            title="{{ $nextEmployee->name }}">
+                            <span class="d-none d-lg-inline" style="color: #000000 !important;">
+                                {{ Str::limit($nextEmployee->name, 8) }}
+                            </span>
+                            <i class="mdi mdi-chevron-right" style="color: #000000 !important;"></i>
+                        </a>
+                    @endif
                 </div>
+            @endif
+        </div> {{-- Tutup div pertama --}}
     @else
-            <h4 class="mb-0 fw-bold text-white">Riwayat Absensi Saya</h4>
-        @endif
+        <h4 class="mb-0 fw-bold text-white">Riwayat Absensi Saya</h4>
+    @endif
 @endsection
 
 @push('styles')
     <style>
-
         /* ============================================================
-   FIX NAVIGASI: WARNA TEKS PUTIH DI BACKGROUND BIRU
-   ============================================================ */
+           FIX NAVIGASI: WARNA TEKS PUTIH DI BACKGROUND BIRU
+           ============================================================ */
 
-/* Container navigasi - background putih solid */
-.employee-nav-wrapper {
-    background: #ffffff !important;
-    border: 2px solid #ffc107 !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-}
+        /* Container navigasi - background putih solid */
+        .employee-nav-wrapper {
+            background: #ffffff !important;
+            border: 2px solid #ffc107 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        }
 
-/* Teks nama karyawan di tombol - HITAM */
-.nav-btn-action,
-.nav-btn-action span,
-.nav-btn-action i {
-    color: #000000 !important;
-    font-weight: 700 !important;
-}
+        /* Teks nama karyawan di tombol - HITAM */
+        .nav-btn-action,
+        .nav-btn-action span,
+        .nav-btn-action i {
+            color: #000000 !important;
+            font-weight: 700 !important;
+        }
 
-/* Badge angka - background kuning, teks hitam */
-.badge-indicator {
-    background-color: #ffc107 !important;
-    color: #000000 !important;
-    border: 2px solid #ffffff !important;
-    font-weight: 900 !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-}
+        /* Badge angka - background kuning, teks hitam */
+        .badge-indicator {
+            background-color: #ffc107 !important;
+            color: #000000 !important;
+            border: 2px solid #ffffff !important;
+            font-weight: 900 !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+        }
 
-/* Hover effect */
-.nav-btn-action:hover {
-    background-color: #f8f9fa !important;
-    color: #000000 !important;
-}
+        /* Hover effect */
+        .nav-btn-action:hover {
+            background-color: #f8f9fa !important;
+            color: #000000 !important;
+        }
+
         /* ============================================================
            FIX NAVIGASI: MEMAKSA WARNA HITAM PEKAT PADA TEKS & ICON
            ============================================================ */
@@ -120,7 +120,6 @@
         }
 
         /* Memaksa teks Nama Karyawan dan Icon menjadi HITAM PEKAT */
-        /* Menggunakan selector super spesifik untuk menembus CSS template */
         .nav-container-fixed a.nav-btn-action, 
         .nav-container-fixed a.nav-btn-action span, 
         .nav-container-fixed a.nav-btn-action i {
@@ -135,11 +134,11 @@
             visibility: visible !important;
         }
 
-        /* .nav-container-fixed a.nav-btn-action:hover {
+        .nav-btn-action:hover {
             background-color: #f2f2f2 !important;
             border-radius: 50px !important;
             color: #000000 !important;
-        } */
+        }
 
         /* Badge Angka (Contoh: 2/6) - Background Kuning, Teks Hitam */
         .nav-number-badge {
@@ -742,6 +741,9 @@
                     modalImg.src = imgSrc;
                 });
             }
+            
+            // Untuk memastikan navigasi terlihat
+            console.log('Navigasi karyawan seharusnya terlihat dengan warna hitam di background putih');
         });
     </script>
 @endpush
