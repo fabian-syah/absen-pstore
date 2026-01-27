@@ -10,58 +10,108 @@
 
 @section('heading')
     @if (isset($employee))
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 w-100">
             <div class="d-flex align-items-center">
                 <a href="{{ route('team.branch.detail', $employee->branch_id) }}"
                     class="btn btn-sm btn-light btn-icon me-3 rounded-circle shadow-sm">
                     <i class="mdi mdi-arrow-left text-primary"></i>
                 </a>
                 <div>
-                    <h4 class="mb-0 fw-bold">Riwayat Absensi: {{ $employee->name }}</h4>
-                    <small class="text-muted">
-                        <i class="mdi mdi-domain me-1"></i> {{ $employee->division->name ?? '-' }} | <i
-                            class="mdi mdi-office-building me-1"></i> {{ $employee->branch->name ?? '-' }}
+                    <h4 class="mb-0 fw-bold text-white">Riwayat Absensi: {{ $employee->name }}</h4>
+                    <small class="text-white-50">
+                        <i class="mdi mdi-domain me-1"></i> {{ $employee->division->name ?? '-' }} |
+                        <i class="mdi mdi-office-building me-1"></i> {{ $employee->branch->name ?? '-' }}
                     </small>
                 </div>
             </div>
 
-            {{-- EMPLOYEE NAVIGATION IMPROVED --}}
+            {{-- NAVIGASI KARYAWAN - VERSI FIX --}}
             @if (isset($branchId) && (isset($prevEmployee) || isset($nextEmployee)))
-                <div class="employee-nav-wrapper shadow-sm">
-
-                    {{-- Prev Button --}}
+                <div class="nav-container-fixed shadow-sm">
+                    {{-- Tombol Prev --}}
                     @if ($prevEmployee)
                         <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $prevEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                            class="btn btn-sm nav-btn-highlight rounded-pill px-3" title="{{ $prevEmployee->name }}">
+                            class="nav-btn-action" title="{{ $prevEmployee->name }}">
                             <i class="mdi mdi-chevron-left"></i>
-                            <span class="d-none d-md-inline ms-1">{{ Str::limit($prevEmployee->name, 10) }}</span>
+                            <span class="d-none d-lg-inline">{{ Str::limit($prevEmployee->name, 8) }}</span>
                         </a>
                     @endif
 
-                    {{-- Indikator 1/6 --}}
-                    <span class="badge badge-indicator rounded-pill px-3 py-2">
+                    {{-- Indikator Angka (2/6) --}}
+                    <div class="nav-number-badge">
                         {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount ?? 1 }}
-                    </span>
+                    </div>
 
-                    {{-- Next Button --}}
+                    {{-- Tombol Next --}}
                     @if ($nextEmployee)
                         <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                            class="btn btn-sm nav-btn-highlight rounded-pill px-3" title="{{ $nextEmployee->name }}">
-                            <span class="d-none d-md-inline me-1">{{ Str::limit($nextEmployee->name, 10) }}</span>
+                            class="nav-btn-action" title="{{ $nextEmployee->name }}">
+                            <span class="d-none d-lg-inline">{{ Str::limit($nextEmployee->name, 8) }}</span>
                             <i class="mdi mdi-chevron-right"></i>
                         </a>
                     @endif
-
                 </div>
             @endif
         </div>
     @else
-        <h4 class="mb-0 fw-bold">Riwayat Absensi Saya</h4>
+        <h4 class="mb-0 fw-bold text-white">Riwayat Absensi Saya</h4>
     @endif
 @endsection
 
 @push('styles')
     <style>
+        /* Container utama navigasi */
+        .nav-container-fixed {
+            display: flex !important;
+            align-items: center !important;
+            background: #ffffff !important;
+            /* Latar belakang putih agar kontras dengan header biru */
+            padding: 4px !important;
+            border-radius: 50px !important;
+            border: 2px solid #ffc107 !important;
+            /* Border kuning supaya mencolok */
+            z-index: 9999 !important;
+        }
+
+        /* Tombol navigasi (Nama Karyawan) */
+        .nav-btn-action {
+            background: transparent !important;
+            color: #0d47a1 !important;
+            /* Teks biru tua di atas putih */
+            text-decoration: none !important;
+            padding: 5px 12px !important;
+            font-weight: 800 !important;
+            font-size: 0.8rem !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+
+        .nav-btn-action:hover {
+            background: #f0f4ff !important;
+            border-radius: 50px !important;
+        }
+
+        /* Badge Angka (2/6) */
+        .nav-number-badge {
+            background: #ffc107 !important;
+            /* Kuning cerah */
+            color: #000000 !important;
+            /* Teks hitam */
+            padding: 4px 12px !important;
+            border-radius: 50px !important;
+            font-weight: 900 !important;
+            font-size: 0.85rem !important;
+            min-width: 45px !important;
+            text-align: center !important;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Memastikan teks judul tetap putih karena di header biru */
+        h4.text-white {
+            color: #ffffff !important;
+        }
+
         /* FORCE DISPLAY HEADING */
         .navbar .navbar-menu-wrapper .navbar-nav .nav-item .welcome-text {
             display: block !important;
