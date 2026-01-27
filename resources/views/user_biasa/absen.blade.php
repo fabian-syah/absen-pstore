@@ -182,10 +182,14 @@
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
-            --dark: #0f172a;
-            --dark-light: #1e293b;
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.15);
+            --dark: #1f2937;
+            --dark-light: #374151;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --bg-light: #f8fafc;
+            --bg-card: #ffffff;
+            --glass: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(0, 0, 0, 0.08);
         }
 
         /* === PAGE LAYOUT === */
@@ -202,7 +206,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 50%, #f8fafc 100%);
             z-index: -2;
         }
 
@@ -212,7 +216,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: radial-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px);
+            background-image: radial-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px);
             background-size: 30px 30px;
             z-index: -1;
         }
@@ -238,18 +242,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--glass);
+            background: var(--bg-card);
             border: 1px solid var(--glass-border);
             border-radius: 14px;
-            color: white;
+            color: var(--text-primary);
             font-size: 1.25rem;
             text-decoration: none;
             transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
         .back-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
+            background: #f1f5f9;
+            color: var(--text-primary);
         }
 
         .header-center {
@@ -258,7 +263,7 @@
         }
 
         .header-center h1 {
-            color: white;
+            color: var(--text-primary);
             font-size: 1.5rem;
             font-weight: 700;
             margin: 0;
@@ -266,7 +271,7 @@
         }
 
         .header-center p {
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-secondary);
             font-size: 0.8rem;
             margin: 0.25rem 0 0;
         }
@@ -321,14 +326,14 @@
 
         /* === CHECKIN INFO === */
         .checkin-info {
-            background: rgba(99, 102, 241, 0.15);
-            border: 1px solid rgba(99, 102, 241, 0.25);
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
             border-radius: 12px;
             padding: 0.75rem 1rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            color: var(--primary-light);
+            color: var(--primary);
             font-size: 0.85rem;
             margin-bottom: 1rem;
         }
@@ -338,18 +343,16 @@
         }
 
         .checkin-info strong {
-            color: white;
+            color: var(--text-primary);
         }
 
         /* === CAMERA CARD === */
         .camera-card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: var(--bg-card);
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             padding: 1.25rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
         }
 
         /* === CAMERA WRAPPER === */
@@ -478,7 +481,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, var(--dark) 0%, var(--dark-light) 100%);
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -492,8 +495,8 @@
         .camera-icon-wrapper {
             width: 80px;
             height: 80px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
             border-radius: 24px;
             display: flex;
             align-items: center;
@@ -504,7 +507,7 @@
 
         .camera-icon-wrapper i {
             font-size: 2.5rem;
-            color: var(--primary-light);
+            color: white;
         }
 
         @keyframes float {
@@ -548,7 +551,7 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.8);
             font-size: 0.9rem;
         }
 
@@ -637,7 +640,7 @@
             width: 72px;
             height: 72px;
             border-radius: 50%;
-            border: 4px solid rgba(255, 255, 255, 0.3);
+            border: 4px solid #e5e7eb;
             background: transparent;
             padding: 4px;
             cursor: pointer;
@@ -653,13 +656,13 @@
         .capture-inner {
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.3);
+            background: #e5e7eb;
             border-radius: 50%;
             transition: all 0.3s;
         }
 
         .capture-btn.ready {
-            border-color: var(--primary-light);
+            border-color: var(--primary);
         }
 
         .capture-btn.ready .capture-inner {
@@ -676,8 +679,8 @@
 
         /* === INFO CARDS === */
         .info-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
             border-radius: 16px;
             padding: 0.875rem 1rem;
             display: flex;
@@ -689,18 +692,18 @@
         }
 
         .info-card:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: #f1f5f9;
         }
 
         .info-icon {
             width: 40px;
             height: 40px;
-            background: rgba(99, 102, 241, 0.2);
+            background: rgba(99, 102, 241, 0.1);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--primary-light);
+            color: var(--primary);
             font-size: 1.2rem;
             flex-shrink: 0;
         }
@@ -717,7 +720,7 @@
         .info-content label {
             display: block;
             font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 0.15rem;
