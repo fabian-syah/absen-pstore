@@ -86,7 +86,7 @@ class LeaveRequestController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:telat,wfh,izin,sakit,cuti',
+            'type' => 'required|in:telat,wfh,izin,sakit,cuti,libur',
             'reason' => 'required|string|max:255',
             'file_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'start_date' => 'required|date',
@@ -152,6 +152,7 @@ class LeaveRequestController extends Controller
                 'izin' => 'Izin',
                 'sakit' => 'Sakit',
                 'cuti' => 'Cuti',
+                'libur' => 'Libur',
                 'dinas' => 'Dinas Luar',
             ];
 
@@ -283,7 +284,7 @@ class LeaveRequestController extends Controller
                 ->with('info', 'Izin telat tercatat. Silahkan lakukan foto selfie untuk jam masuk kehadiran.');
         }
 
-        if (!in_array($leaveRequest->type, ['sakit', 'izin', 'cuti', 'wfh'])) {
+        if (!in_array($leaveRequest->type, ['sakit', 'izin', 'cuti', 'wfh', 'libur'])) {
             return back()->with('error', 'Tipe izin ini tidak bisa diselesaikan lebih awal.');
         }
 

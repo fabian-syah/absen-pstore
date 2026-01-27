@@ -41,11 +41,14 @@
                                     <label for="type">Jenis Pengajuan <span class="text-danger">*</span></label>
                                     <select class="form-control form-control-lg" id="type" name="type" required>
                                         <option value="">-- Pilih Jenis Pengajuan --</option>
-                                        <option value="sakit" {{ old('type') == 'sakit' ? 'selected' : '' }}>Izin Sakit</option>
-                                        <option value="telat" {{ old('type') == 'telat' ? 'selected' : '' }}>Izin Telat</option>
-                                        <option value="cuti" {{ old('type') == 'cuti' ? 'selected' : '' }}>Cuti Tahunan</option>
-                                        <option value="libur_mingguan" {{ old('type') == 'libur_mingguan' ? 'selected' : '' }}>
-                                            Pengajuan Libur Mingguan
+                                        <option value="sakit" {{ old('type') == 'sakit' ? 'selected' : '' }}>Izin Sakit
+                                        </option>
+                                        <option value="telat" {{ old('type') == 'telat' ? 'selected' : '' }}>Izin Telat
+                                        </option>
+                                        <option value="cuti" {{ old('type') == 'cuti' ? 'selected' : '' }}>Cuti Tahunan
+                                        </option>
+                                        <option value="libur" {{ old('type') == 'libur' ? 'selected' : '' }}>
+                                            Libur (Off Day)
                                         </option>
                                     </select>
                                 </div>
@@ -66,9 +69,8 @@
                             <div class="col-md-6" id="end_date_wrapper" style="display: none;">
                                 <div class="form-group">
                                     <label for="end_date">Tanggal Selesai <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control form-control-lg" id="end_date"
-                                        name="end_date" placeholder="Pilih tanggal..." value="{{ old('end_date') }}"
-                                        readonly>
+                                    <input type="text" class="form-control form-control-lg" id="end_date" name="end_date"
+                                        placeholder="Pilih tanggal..." value="{{ old('end_date') }}" readonly>
                                 </div>
                             </div>
 
@@ -77,15 +79,18 @@
                                 <div class="form-group">
                                     <label for="reason">Alasan / Keterangan <span class="text-danger">*</span></label>
                                     <textarea class="form-control form-control-lg" id="reason" name="reason" rows="4"
-                                        placeholder="Jelaskan alasan pengajuan Anda..." required>{{ old('reason') }}</textarea>
+                                        placeholder="Jelaskan alasan pengajuan Anda..."
+                                        required>{{ old('reason') }}</textarea>
                                 </div>
                             </div>
 
                             {{-- Bukti Foto (Untuk Sakit & Telat) --}}
                             <div class="col-12" id="file_proof_wrapper" style="display: none;">
                                 <div class="form-group">
-                                    <label for="file_proof">Bukti Foto (Surat Dokter, Kendala, dll) <span class="text-danger">*</span></label>
-                                    <input type="file" class="form-control form-control-lg" id="file_proof" name="file_proof" accept="image/*">
+                                    <label for="file_proof">Bukti Foto (Surat Dokter, Kendala, dll) <span
+                                            class="text-danger">*</span></label>
+                                    <input type="file" class="form-control form-control-lg" id="file_proof"
+                                        name="file_proof" accept="image/*">
                                     <small class="text-muted">Wajib diisi untuk Izin Sakit dan Izin Telat.</small>
                                 </div>
                             </div>
@@ -108,7 +113,8 @@
 
 @push('styles')
     {{-- Style untuk Bootstrap Datepicker (sesuaikan jika Anda pakai library lain) --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
     <style>
         /* Form Control */
         .form-control-lg {
@@ -135,7 +141,8 @@
             border: none;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
-            height: 100%; /* Menyamakan tinggi */
+            height: 100%;
+            /* Menyamakan tinggi */
         }
 
         /* Buttons */
@@ -177,7 +184,7 @@
     {{-- Pastikan jQuery sudah dimuat di master.blade.php SEBELUM @stack('scripts') --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // --- Logika untuk Form Dinamis ---
             const typeSelect = $('#type');
             const endDateWrapper = $('#end_date_wrapper');
@@ -204,19 +211,19 @@
 
                     fileProofWrapper.show();
                     fileProofInput.prop('required', true);
-                    
+
                 } else if (selectedType === 'telat') {
                     // Telat: Perlu foto, tanggal hanya 1 (start_date)
                     fileProofWrapper.show();
                     fileProofInput.prop('required', true);
-                    
+
                 } else if (selectedType === 'cuti') {
                     // Cuti: Perlu rentang tanggal, tidak perlu foto
                     endDateWrapper.show();
                     endDateInput.prop('required', true);
-                    
-                } else if (selectedType === 'libur_mingguan') {
-                    // Libur Mingguan: Hanya 1 tanggal, tidak perlu foto
+
+                } else if (selectedType === 'libur') {
+                    // Libur: Hanya 1 tanggal, tidak perlu foto
                     // Tidak ada field tambahan
                 }
             }
@@ -234,12 +241,12 @@
                 autoclose: true,
                 todayHighlight: true,
                 orientation: "bottom"
-            }).on('changeDate', function(e) {
+            }).on('changeDate', function (e) {
                 // Set tanggal minimal untuk end_date
                 endDateInput.datepicker('setStartDate', e.date);
                 // Jika jenisnya bukan cuti/sakit, otomatis set end_date = start_date
                 const selectedType = typeSelect.val();
-                if (selectedType === 'telat' || selectedType === 'libur_mingguan') {
+                if (selectedType === 'telat' || selectedType === 'libur') {
                     endDateInput.datepicker('setDate', e.date);
                 }
             });
@@ -254,18 +261,13 @@
             // Logika untuk Libur Mingguan (Maksimal 1 per minggu)
             // Ini HANYA bisa divalidasi di backend (controller)
             // Tapi kita bisa bantu di frontend dengan membatasi pilihan
-            if (typeSelect.val() === 'libur_mingguan') {
-                startDateInput.datepicker('setDaysOfWeekDisabled', [0, 1, 2, 3, 4, 5]); // Contoh: Hanya boleh hari Sabtu (6)
-                // Logika lebih kompleks (cek sudah ada 1 di minggu itu) perlu AJAX ke server
+            if (typeSelect.val() === 'libur') {
+                // Libur: Tidak ada batasan hari
             }
 
-            typeSelect.on('change', function() {
-                if ($(this).val() === 'libur_mingguan') {
-                    // Contoh: Hanya boleh pilih hari Sabtu (index 6)
-                    // Minggu = 0, Senin = 1, ..., Sabtu = 6
-                    // startDateInput.datepicker('setDaysOfWeekDisabled', [0, 1, 2, 3, 4, 5]);
-                    // Anda bisa sesuaikan ini, misal [0, 6] untuk melarang weekend
-                    // atau [1, 2, 3, 4, 5] untuk melarang hari kerja
+            typeSelect.on('change', function () {
+                if ($(this).val() === 'libur') {
+                    // Libur: Tidak ada batasan hari khusus
                     // Untuk "hanya boleh 1 hari/minggu" validasi terbaik ada di server.
                     alert("Validasi untuk libur mingguan (maks 1 per minggu) akan dilakukan oleh server saat submit.");
                 } else {

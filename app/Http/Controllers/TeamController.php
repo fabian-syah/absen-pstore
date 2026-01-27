@@ -132,7 +132,7 @@ class TeamController extends Controller
 
             if ($att || $isWfh || $isOvertime)
                 $stats['present']++;
-            elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti']))
+            elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti', 'libur']))
                 $stats['izin_sakit']++;
         }
 
@@ -307,7 +307,7 @@ class TeamController extends Controller
             $todayLeave = LeaveRequest::where('user_id', $emp->id)->where('status', 'approved')->where('is_active', true)
                 ->where(function ($q) use ($todayInBranch) {
                     $q->where(function ($sub) use ($todayInBranch) {
-                        $sub->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh'])
+                        $sub->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh', 'libur'])
                             ->whereDate('start_date', '<=', $todayInBranch)->whereDate('end_date', '>=', $todayInBranch);
                     })->orWhere(function ($sub) use ($todayInBranch) {
                         $sub->where('type', 'telat')->whereDate('start_date', $todayInBranch);
@@ -349,6 +349,8 @@ class TeamController extends Controller
                     $attendanceGroups['Izin'][] = $emp;
                 elseif ($todayLeave->type == 'cuti')
                     $attendanceGroups['Cuti'][] = $emp;
+                elseif ($todayLeave->type == 'libur')
+                    $attendanceGroups['Libur'][] = $emp;
                 elseif ($todayLeave->type == 'wfh')
                     $attendanceGroups['WFH / Dinas Luar'][] = $emp;
                 else

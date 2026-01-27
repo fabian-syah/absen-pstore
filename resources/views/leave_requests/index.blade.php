@@ -77,8 +77,9 @@
                                                 <div>
                                                     <span class="fw-bold d-block text-dark">{{ $req->user->name }}</span>
                                                     <small class="text-muted" style="font-size:11px;">
-                                                        {{ $req->user->division->name ?? '-' }} | 
-                                                        <span class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
+                                                        {{ $req->user->division->name ?? '-' }} |
+                                                        <span
+                                                            class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
                                                     </small>
                                                 </div>
                                             </div>
@@ -90,6 +91,8 @@
                                                 <span class="badge bg-danger text-white">Sakit</span>
                                             @elseif($req->type == 'izin')
                                                 <span class="badge bg-info text-white">Izin</span>
+                                            @elseif($req->type == 'libur')
+                                                <span class="badge bg-secondary text-white">Libur</span>
                                             @elseif($req->type == 'wfh')
                                                 <span class="badge bg-primary text-white">WFH / Dinas</span>
                                             @elseif($req->type == 'cuti')
@@ -124,10 +127,9 @@
                                         {{-- 5. BUKTI --}}
                                         <td>
                                             @if ($req->file_proof)
-                                                <a href="javascript:void(0)" 
-                                                   onclick="window.showImageModal('{{ asset('storage/' . $req->file_proof) }}')"
-                                                   class="btn btn-inverse-secondary btn-icon btn-sm"
-                                                   title="Lihat Bukti">
+                                                <a href="javascript:void(0)"
+                                                    onclick="window.showImageModal('{{ asset('storage/' . $req->file_proof) }}')"
+                                                    class="btn btn-inverse-secondary btn-icon btn-sm" title="Lihat Bukti">
                                                     <i class="mdi mdi-eye"></i>
                                                 </a>
                                             @else
@@ -144,8 +146,8 @@
                                         <td>
                                             {{-- USER: BATALKAN --}}
                                             @if (auth()->id() == $req->user_id)
-                                                <form action="{{ route('leave-requests.cancel', $req->id) }}"
-                                                    method="POST" class="d-inline"
+                                                <form action="{{ route('leave-requests.cancel', $req->id) }}" method="POST"
+                                                    class="d-inline"
                                                     onsubmit="return confirm('Yakin ingin membatalkan pengajuan?')">
                                                     @csrf @method('PATCH')
                                                     <button type="submit" class="btn btn-light btn-sm text-danger" title="Batalkan">
@@ -156,17 +158,17 @@
 
                                             {{-- ADMIN/AUDIT: APPROVE & REJECT --}}
                                             @if (in_array(auth()->user()->role, ['admin', 'audit']))
-                                                <form action="{{ route('late.approve', $req->id) }}" method="POST"
-                                                    class="d-inline" onsubmit="return confirm('Setujui pengajuan ini?')">
+                                                <form action="{{ route('late.approve', $req->id) }}" method="POST" class="d-inline"
+                                                    onsubmit="return confirm('Setujui pengajuan ini?')">
                                                     @csrf
                                                     <button class="btn btn-success btn-sm p-2" title="Setujui">
                                                         <i class="mdi mdi-check"></i>
                                                     </button>
                                                 </form>
-                                                
+
                                                 {{-- Tombol Reject dengan data dinamis untuk iPhone --}}
-                                                <button type="button" class="btn btn-danger btn-sm p-2" 
-                                                        onclick="window.openRejectModal('{{ $req->id }}', '{{ route('late.reject', $req->id) }}')">
+                                                <button type="button" class="btn btn-danger btn-sm p-2"
+                                                    onclick="window.openRejectModal('{{ $req->id }}', '{{ route('late.reject', $req->id) }}')">
                                                     <i class="mdi mdi-close"></i>
                                                 </button>
                                             @endif
@@ -176,7 +178,8 @@
                                     <tr>
                                         <td colspan="7" class="text-center py-5">
                                             <div class="d-flex flex-column align-items-center">
-                                                <div class="bg-light rounded-circle mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                                <div class="bg-light rounded-circle mb-3 d-flex align-items-center justify-content-center"
+                                                    style="width: 80px; height: 80px;">
                                                     <i class="mdi mdi-check-all text-success" style="font-size: 40px;"></i>
                                                 </div>
                                                 <h4 class="fw-bold text-dark">Semua Beres!</h4>
@@ -188,7 +191,7 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     {{-- Pagination --}}
                     <div class="mt-4 d-flex justify-content-end">
                         {{ $requests->links('pagination::bootstrap-5') }}
@@ -210,8 +213,10 @@
                     @csrf
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold">Alasan Penolakan <span class="text-danger">*</span></label>
-                            <textarea name="rejection_reason" class="form-control text-dark" rows="3" required placeholder="Tulis alasan penolakan..."></textarea>
+                            <label class="form-label font-weight-bold">Alasan Penolakan <span
+                                    class="text-danger">*</span></label>
+                            <textarea name="rejection_reason" class="form-control text-dark" rows="3" required
+                                placeholder="Tulis alasan penolakan..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -229,13 +234,16 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Bukti Lampiran</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center bg-light">
-                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 70vh; width: auto;">
+                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm"
+                        style="max-height: 70vh; width: auto;">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                        data-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -246,13 +254,13 @@
 
     <script>
         // FUNGSI UNTUK MODAL REJECT (SOLUSI IPHONE)
-        window.openRejectModal = function(reqId, actionUrl) {
+        window.openRejectModal = function (reqId, actionUrl) {
             var modalElement = document.getElementById('rejectModalDynamic');
             var formElement = document.getElementById('formRejectDynamic');
-            
+
             // Set action URL secara dinamis
             formElement.action = actionUrl;
-            
+
             // Buka Modal
             try {
                 $(modalElement).modal('show');
@@ -263,7 +271,7 @@
         };
 
         // FUNGSI UNTUK PREVIEW GAMBAR
-        window.showImageModal = function(imageUrl) {
+        window.showImageModal = function (imageUrl) {
             var imgElement = document.getElementById('modalImagePreview');
             if (imgElement) {
                 imgElement.src = imageUrl;
@@ -278,11 +286,11 @@
         };
 
         // Reset data saat modal ditutup agar tidak conflict
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('#imageModal').on('hidden.bs.modal', function () {
                 $('#modalImagePreview').attr('src', '');
             });
-            
+
             $('#rejectModalDynamic').on('hidden.bs.modal', function () {
                 $('#formRejectDynamic').attr('action', '');
                 $(this).find('textarea').val('');

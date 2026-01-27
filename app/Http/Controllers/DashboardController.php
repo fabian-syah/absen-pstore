@@ -374,7 +374,7 @@ class DashboardController extends Controller
             ->where('status', $status)
             ->where(function ($query) use ($todayDate) {
                 $query->where(function ($q) use ($todayDate) {
-                    $q->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh'])
+                    $q->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh', 'libur'])
                         ->whereDate('start_date', '<=', $todayDate)
                         ->whereDate('end_date', '>=', $todayDate);
                 })->orWhere(function ($q) use ($todayDate) {

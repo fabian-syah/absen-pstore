@@ -14,7 +14,7 @@
                             <h4 class="card-title mb-1">Riwayat Izin Saya</h4>
                             <p class="text-muted small">Daftar pengajuan izin, sakit, cuti, dan keterlambatan.</p>
                         </div>
-                        
+
                         {{-- Tombol kembali --}}
                         <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm shadow-sm">
                             <i class="mdi mdi-arrow-left"></i> Kembali ke Dashboard
@@ -38,17 +38,22 @@
                                         {{-- KOLOM TIPE --}}
                                         <td class="ps-3">
                                             @php
-                                                $badgeClass = match($req->type) {
+                                                $badgeClass = match ($req->type) {
                                                     'sakit' => 'bg-danger text-white',
                                                     'izin' => 'bg-info text-white',
                                                     'telat' => 'bg-warning text-dark',
                                                     'cuti' => 'bg-primary text-white',
                                                     'wfh' => 'bg-success text-white',
-                                                    default => 'bg-secondary text-white'
+                                                    'libur' => 'bg-secondary text-white',
+                                                    default => 'bg-dark text-white'
                                                 };
-                                                
-                                                // Label khusus untuk telat
-                                                $typeLabel = $req->type == 'telat' ? 'Izin Telat' : ucfirst($req->type);
+
+                                                // Label khusus untuk telat dan libur
+                                                $typeLabel = match ($req->type) {
+                                                    'telat' => 'Izin Telat',
+                                                    'libur' => 'Libur (Off Day)',
+                                                    default => ucfirst($req->type)
+                                                };
                                             @endphp
                                             <span class="badge {{ $badgeClass }} border px-3 py-2 rounded-pill">
                                                 {{ $typeLabel }}
@@ -61,7 +66,7 @@
                                                 <span class="fw-bold text-dark">
                                                     {{ \Carbon\Carbon::parse($req->start_date)->translatedFormat('d M Y') }}
                                                 </span>
-                                                
+
                                                 {{-- Jika Telat, Tampilkan Jam --}}
                                                 @if ($req->type == 'telat')
                                                     <small class="text-muted mt-1">
@@ -73,8 +78,8 @@
                                                             -
                                                         @endif
                                                     </small>
-                                                
-                                                {{-- Jika Cuti/Sakit/Izin > 1 Hari, Tampilkan Sampai Tanggal --}}
+
+                                                    {{-- Jika Cuti/Sakit/Izin > 1 Hari, Tampilkan Sampai Tanggal --}}
                                                 @elseif($req->end_date && $req->end_date != $req->start_date)
                                                     <small class="text-muted mt-1">
                                                         s/d {{ \Carbon\Carbon::parse($req->end_date)->translatedFormat('d M Y') }}
@@ -94,17 +99,16 @@
                                                 </div>
                                             @endif
                                         </td>
-                                        
+
                                         {{-- KOLOM BUKTI --}}
                                         <td>
                                             @if($req->file_proof)
                                                 <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                                                   data-bs-toggle="modal" 
-                                                   data-bs-target="#imageModal"
-                                                   data-src="{{ asset('storage/' . $req->file_proof) }}">
+                                                    data-bs-toggle="modal" data-bs-target="#imageModal"
+                                                    data-src="{{ asset('storage/' . $req->file_proof) }}">
                                                     <i class="mdi mdi-image-area me-1"></i> Lihat
                                                 </button>
-                                            @else 
+                                            @else
                                                 <span class="text-muted small fst-italic">- Tidak ada -</span>
                                             @endif
                                         </td>
@@ -136,7 +140,8 @@
                                     <tr>
                                         <td colspan="5" class="text-center py-5">
                                             <div class="d-flex flex-column align-items-center">
-                                                <i class="mdi mdi-file-document-outline text-muted" style="font-size: 3rem;"></i>
+                                                <i class="mdi mdi-file-document-outline text-muted"
+                                                    style="font-size: 3rem;"></i>
                                                 <p class="text-muted mt-2">Belum ada riwayat pengajuan izin.</p>
                                             </div>
                                         </td>
@@ -144,7 +149,7 @@
                                 @endforelse
                             </tbody>
                         </table>
-                        
+
                         <div class="mt-4 px-3 d-flex justify-content-end">
                             {{ $requests->links('pagination::bootstrap-5') }}
                         </div>
@@ -163,7 +168,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center bg-light p-4">
-                    <img id="modalImagePreview" src="" class="img-fluid rounded shadow-sm" style="max-height: 500px; object-fit: contain;">
+                    <img id="modalImagePreview" src="" class="img-fluid rounded shadow-sm"
+                        style="max-height: 500px; object-fit: contain;">
                 </div>
             </div>
         </div>
