@@ -10,18 +10,53 @@
 
 @section('heading')
     @if (isset($employee))
-        <div class="d-flex align-items-center">
-            <a href="{{ route('team.branch.detail', $employee->branch_id) }}"
-                class="btn btn-sm btn-light btn-icon me-3 rounded-circle shadow-sm">
-                <i class="mdi mdi-arrow-left text-primary"></i>
-            </a>
-            <div>
-                <h4 class="mb-0 fw-bold">Riwayat Absensi: {{ $employee->name }}</h4>
-                <small class="text-muted">
-                    <i class="mdi mdi-domain me-1"></i> {{ $employee->division->name ?? '-' }} | <i
-                        class="mdi mdi-office-building me-1"></i> {{ $employee->branch->name ?? '-' }}
-                </small>
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <a href="{{ route('team.branch.detail', $employee->branch_id) }}"
+                    class="btn btn-sm btn-light btn-icon me-3 rounded-circle shadow-sm">
+                    <i class="mdi mdi-arrow-left text-primary"></i>
+                </a>
+                <div>
+                    <h4 class="mb-0 fw-bold">Riwayat Absensi: {{ $employee->name }}</h4>
+                    <small class="text-muted">
+                        <i class="mdi mdi-domain me-1"></i> {{ $employee->division->name ?? '-' }} | <i
+                            class="mdi mdi-office-building me-1"></i> {{ $employee->branch->name ?? '-' }}
+                    </small>
+                </div>
             </div>
+            
+            {{-- NAVIGASI KARYAWAN DALAM CABANG --}}
+            @if(isset($employeeCount) && $employeeCount > 1)
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted me-2">
+                        {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount }}
+                    </small>
+                    
+                    @if($prevEmployee)
+                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $prevEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
+                           class="btn btn-sm btn-outline-primary rounded-circle shadow-sm"
+                           title="Karyawan Sebelumnya: {{ $prevEmployee->name }}">
+                            <i class="mdi mdi-chevron-left"></i>
+                        </a>
+                    @else
+                        <button class="btn btn-sm btn-outline-secondary rounded-circle" disabled>
+                            <i class="mdi mdi-chevron-left"></i>
+                        </button>
+                    @endif
+                    
+                    @if($nextEmployee)
+                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
+                           class="btn btn-sm btn-outline-primary rounded-circle shadow-sm"
+                           title="Karyawan Berikutnya: {{ $nextEmployee->name }}">
+                            <i class="mdi mdi-chevron-right"></i>
+                        </a>
+                    @else
+                        <button class="btn btn-sm btn-outline-secondary rounded-circle" disabled>
+                            <i class="mdi mdi-chevron-right"></i>
+                        </button>
+                    @endif
+                </div>
+            @endif
         </div>
     @else
         <h4 class="mb-0 fw-bold">Riwayat Absensi Saya</h4>
