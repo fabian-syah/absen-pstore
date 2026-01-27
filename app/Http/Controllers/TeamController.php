@@ -21,8 +21,10 @@ class TeamController extends Controller
 
         // 1. Setup Cabang & Timezone
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
-        if ($user->branch_id) $myBranchIds[] = $user->branch_id;
-        if ($user->role == 'admin' && $user->branch_id == null) $myBranchIds = Branch::pluck('id')->toArray();
+        if ($user->branch_id)
+            $myBranchIds[] = $user->branch_id;
+        if ($user->role == 'admin' && $user->branch_id == null)
+            $myBranchIds = Branch::pluck('id')->toArray();
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
         // Default Timezone
@@ -95,10 +97,12 @@ class TeamController extends Controller
                 $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($memberTz) : null;
 
                 // Case 1: Masuk Hari Ini (Normal)
-                if ($checkIn->format('Y-m-d') === $todayDate) return true;
+                if ($checkIn->format('Y-m-d') === $todayDate)
+                    return true;
 
                 // Case 2: Selesai Lembur Hari Ini (Check in kemarin, checkout hari ini)
-                if ($checkOut && $checkOut->format('Y-m-d') === $todayDate && $checkIn->format('Y-m-d') < $todayDate) return true;
+                if ($checkOut && $checkOut->format('Y-m-d') === $todayDate && $checkIn->format('Y-m-d') < $todayDate)
+                    return true;
 
                 // Case 3: MASIH Lembur (Check in kemarin, belum checkout)
                 if (!$checkOut && $checkIn->diffInHours($now) < 32 && $checkIn->format('Y-m-d') < $todayDate) {
@@ -126,17 +130,22 @@ class TeamController extends Controller
                 }
             }
 
-            if ($att || $isWfh || $isOvertime) $stats['present']++;
-            elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti'])) $stats['izin_sakit']++;
+            if ($att || $isWfh || $isOvertime)
+                $stats['present']++;
+            elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti']))
+                $stats['izin_sakit']++;
         }
 
         $stats['belum_present'] = $stats['total'] - ($stats['present'] + $stats['izin_sakit']);
-        if ($stats['belum_present'] < 0) $stats['belum_present'] = 0;
+        if ($stats['belum_present'] < 0)
+            $stats['belum_present'] = 0;
 
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
-            ->withCount(['users' => function ($q) {
-                $q->where('is_active', true);
-            }])
+            ->withCount([
+                'users' => function ($q) {
+                    $q->where('is_active', true);
+                }
+            ])
             ->orderBy('name', 'asc')->get();
 
         // --- QUERY AUDIT MULTI BRANCH ---
@@ -144,12 +153,12 @@ class TeamController extends Controller
         if (!empty($myBranchIds)) {
             $assignedAudits = User::where('role', 'audit')
                 ->where('is_active', true)
-                ->with(['branches', 'branch']) 
-                ->where(function($q) use ($myBranchIds) {
+                ->with(['branches', 'branch'])
+                ->where(function ($q) use ($myBranchIds) {
                     $q->whereIn('branch_id', $myBranchIds)
-                      ->orWhereHas('branches', function ($sq) use ($myBranchIds) {
-                          $sq->whereIn('branches.id', $myBranchIds);
-                      });
+                        ->orWhereHas('branches', function ($sq) use ($myBranchIds) {
+                            $sq->whereIn('branches.id', $myBranchIds);
+                        });
                 })
                 ->get();
         }
@@ -160,11 +169,14 @@ class TeamController extends Controller
     public function myBranches()
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['audit', 'leader', 'admin'])) abort(403);
+        if (!in_array($user->role, ['audit', 'leader', 'admin']))
+            abort(403);
 
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
-        if ($user->branch_id) $myBranchIds[] = $user->branch_id;
-        if ($user->role == 'admin' && $user->branch_id == null) $myBranchIds = Branch::pluck('id')->toArray();
+        if ($user->branch_id)
+            $myBranchIds[] = $user->branch_id;
+        if ($user->role == 'admin' && $user->branch_id == null)
+            $myBranchIds = Branch::pluck('id')->toArray();
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
@@ -176,14 +188,17 @@ class TeamController extends Controller
                 $dateLimit = Carbon::now($tz)->subDays(2)->format('Y-m-d 00:00:00');
 
                 $users = User::where('branch_id', $branch->id)->where('is_active', true)
-                    ->with(['attendances' => function ($q) use ($dateLimit) {
-                        $q->where('check_in_time', '>=', $dateLimit)
-                            ->orderBy('check_in_time', 'desc');
-                    }, 'leaveRequests' => function ($q) use ($todayInBranch) {
-                        $q->where('status', 'approved')
-                            ->whereDate('start_date', '<=', $todayInBranch)
-                            ->whereDate('end_date', '>=', $todayInBranch);
-                    }])->get();
+                    ->with([
+                        'attendances' => function ($q) use ($dateLimit) {
+                            $q->where('check_in_time', '>=', $dateLimit)
+                                ->orderBy('check_in_time', 'desc');
+                        },
+                        'leaveRequests' => function ($q) use ($todayInBranch) {
+                            $q->where('status', 'approved')
+                                ->whereDate('start_date', '<=', $todayInBranch)
+                                ->whereDate('end_date', '>=', $todayInBranch);
+                        }
+                    ])->get();
 
                 $branch->users_count = $users->count();
                 $present = 0;
@@ -197,9 +212,12 @@ class TeamController extends Controller
                         $checkIn = Carbon::parse($att->check_in_time)->setTimezone($tz);
                         $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($tz) : null;
 
-                        if ($checkIn->format('Y-m-d') === $todayInBranch) return true;
-                        if ($checkOut && $checkOut->format('Y-m-d') === $todayInBranch && $checkIn->format('Y-m-d') < $todayInBranch) return true;
-                        if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 32 && $checkIn->format('Y-m-d') < $todayInBranch) return true;
+                        if ($checkIn->format('Y-m-d') === $todayInBranch)
+                            return true;
+                        if ($checkOut && $checkOut->format('Y-m-d') === $todayInBranch && $checkIn->format('Y-m-d') < $todayInBranch)
+                            return true;
+                        if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 32 && $checkIn->format('Y-m-d') < $todayInBranch)
+                            return true;
                         return false;
                     });
 
@@ -216,12 +234,17 @@ class TeamController extends Controller
                         }
                     }
 
-                    if ($att || $isOvertime) $present++;
+                    if ($att || $isOvertime)
+                        $present++;
                     elseif ($leave) {
-                        if ($leave->type == 'sakit') $sakit++;
-                        elseif ($leave->type == 'wfh') $present++;
-                        else $izin_cuti++;
-                    } else $alpha++;
+                        if ($leave->type == 'sakit')
+                            $sakit++;
+                        elseif ($leave->type == 'wfh')
+                            $present++;
+                        else
+                            $izin_cuti++;
+                    } else
+                        $alpha++;
                 }
 
                 $branch->stats_today = ['present' => $present, 'sakit' => $sakit, 'izin' => $izin_cuti, 'alpha' => $alpha, 'lembur' => $lembur];
@@ -254,22 +277,29 @@ class TeamController extends Controller
 
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
-            if ($user->branch_id) $allowedBranches[] = $user->branch_id;
-            if (!in_array($id, $allowedBranches)) abort(403);
+            if ($user->branch_id)
+                $allowedBranches[] = $user->branch_id;
+            if (!in_array($id, $allowedBranches))
+                abort(403);
         } elseif ($user->role == 'leader') {
             if ($user->branch_id != $id) {
                 $pivotIds = $user->branches->pluck('id')->toArray();
-                if (!in_array($id, $pivotIds)) abort(403);
+                if (!in_array($id, $pivotIds))
+                    abort(403);
             }
         } elseif ($user->role == 'admin') {
-            if ($user->branch_id && $user->branch_id != $id) abort(403);
+            if ($user->branch_id && $user->branch_id != $id)
+                abort(403);
         }
 
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)
-            ->with(['division', 'attendances' => function ($q) use ($dateLimit) {
-                $q->where('check_in_time', '>=', $dateLimit)
-                    ->orderBy('check_in_time', 'desc');
-            }])->get();
+            ->with([
+                'division',
+                'attendances' => function ($q) use ($dateLimit) {
+                    $q->where('check_in_time', '>=', $dateLimit)
+                        ->orderBy('check_in_time', 'desc');
+                }
+            ])->get();
 
         $attendanceGroups = ['Masuk' => [], 'Izin' => [], 'Sakit' => [], 'Cuti' => [], 'WFH / Dinas Luar' => [], 'Alpha / Belum Absen' => [], 'Lembur' => []];
 
@@ -289,9 +319,12 @@ class TeamController extends Controller
                 $checkIn = Carbon::parse($att->check_in_time)->setTimezone($branchTimezone);
                 $checkOut = $att->check_out_time ? Carbon::parse($att->check_out_time)->setTimezone($branchTimezone) : null;
 
-                if ($checkIn->format('Y-m-d') === $todayInBranch) return true;
-                if ($checkOut && $checkOut->format('Y-m-d') === $todayInBranch && $checkIn->format('Y-m-d') < $todayInBranch) return true;
-                if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 32 && $checkIn->format('Y-m-d') < $todayInBranch) return true;
+                if ($checkIn->format('Y-m-d') === $todayInBranch)
+                    return true;
+                if ($checkOut && $checkOut->format('Y-m-d') === $todayInBranch && $checkIn->format('Y-m-d') < $todayInBranch)
+                    return true;
+                if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 32 && $checkIn->format('Y-m-d') < $todayInBranch)
+                    return true;
                 return false;
             });
 
@@ -301,18 +334,27 @@ class TeamController extends Controller
             $isOvertime = false;
             if ($attendance) {
                 $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($branchTimezone)->format('Y-m-d');
-                if ($checkInDate !== $todayInBranch) $isOvertime = true;
+                if ($checkInDate !== $todayInBranch)
+                    $isOvertime = true;
             }
 
-            if ($isOvertime) $attendanceGroups['Lembur'][] = $emp;
-            elseif ($attendance) $attendanceGroups['Masuk'][] = $emp;
+            if ($isOvertime)
+                $attendanceGroups['Lembur'][] = $emp;
+            elseif ($attendance)
+                $attendanceGroups['Masuk'][] = $emp;
             elseif ($todayLeave) {
-                if ($todayLeave->type == 'sakit') $attendanceGroups['Sakit'][] = $emp;
-                elseif ($todayLeave->type == 'izin') $attendanceGroups['Izin'][] = $emp;
-                elseif ($todayLeave->type == 'cuti') $attendanceGroups['Cuti'][] = $emp;
-                elseif ($todayLeave->type == 'wfh') $attendanceGroups['WFH / Dinas Luar'][] = $emp;
-                else $attendanceGroups['Alpha / Belum Absen'][] = $emp;
-            } else $attendanceGroups['Alpha / Belum Absen'][] = $emp;
+                if ($todayLeave->type == 'sakit')
+                    $attendanceGroups['Sakit'][] = $emp;
+                elseif ($todayLeave->type == 'izin')
+                    $attendanceGroups['Izin'][] = $emp;
+                elseif ($todayLeave->type == 'cuti')
+                    $attendanceGroups['Cuti'][] = $emp;
+                elseif ($todayLeave->type == 'wfh')
+                    $attendanceGroups['WFH / Dinas Luar'][] = $emp;
+                else
+                    $attendanceGroups['Alpha / Belum Absen'][] = $emp;
+            } else
+                $attendanceGroups['Alpha / Belum Absen'][] = $emp;
         }
 
         $statsCounts = [
@@ -333,17 +375,37 @@ class TeamController extends Controller
         $employee = User::with(['division', 'branch'])->findOrFail($employeeId);
         $selectedMonth = $request->get('month', date('m'));
         $selectedYear = $request->get('year', date('Y'));
-        
+
         $data = $this->getHistoryData($employee, $selectedMonth, $selectedYear);
-        
+
+        // Get all employees in this branch for prev/next navigation
+        $branchEmployees = User::where('branch_id', $branchId)
+            ->where('is_active', true)
+            ->where('role', '!=', 'admin')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        // Find current position and get prev/next
+        $employeeIds = $branchEmployees->pluck('id')->toArray();
+        $currentIndex = array_search((int) $employeeId, $employeeIds);
+
+        $prevEmployee = $currentIndex > 0 ? $branchEmployees[$currentIndex - 1] : null;
+        $nextEmployee = $currentIndex !== false && $currentIndex < count($employeeIds) - 1
+            ? $branchEmployees[$currentIndex + 1] : null;
+
         return view('attendance.history', array_merge($data, [
             'selectedMonth' => $selectedMonth,
             'selectedYear' => $selectedYear,
             'employee' => $employee,
+            'branchId' => $branchId,
             'prevMonth' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->subMonth()->month,
             'prevYear' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->subMonth()->year,
             'nextMonth' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->addMonth()->month,
             'nextYear' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->addMonth()->year,
+            'prevEmployee' => $prevEmployee,
+            'nextEmployee' => $nextEmployee,
+            'employeeCount' => count($employeeIds),
+            'currentEmployeeIndex' => $currentIndex !== false ? $currentIndex + 1 : 1,
         ]));
     }
 
@@ -354,7 +416,7 @@ class TeamController extends Controller
         // 1. Tentukan Range Awal dan Akhir Bulan yang sedang dilihat
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
-        
+
         // Batasi penampilan sampai hari ini saja (jika melihat bulan berjalan)
         $today = Carbon::now()->timezone($branchTimezone)->startOfDay();
         $limitDate = ($endDate->gt($today)) ? $today : $endDate;
@@ -372,11 +434,11 @@ class TeamController extends Controller
             ->where('is_active', true)
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('start_date', [$startDate, $endDate])
-                      ->orWhereBetween('end_date', [$startDate, $endDate])
-                      ->orWhere(function ($q) use ($startDate, $endDate) {
-                          $q->where('start_date', '<=', $startDate)
+                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                    ->orWhere(function ($q) use ($startDate, $endDate) {
+                        $q->where('start_date', '<=', $startDate)
                             ->where('end_date', '>=', $endDate);
-                      });
+                    });
             })
             ->get();
 
@@ -394,8 +456,8 @@ class TeamController extends Controller
 
             if ($att) {
                 $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
-                if ($att->check_out_time) { 
-                    $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone); 
+                if ($att->check_out_time) {
+                    $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
                 }
                 $historyCollection->push($att);
             } else {
@@ -410,18 +472,20 @@ class TeamController extends Controller
                 $fakeAtt->user_id = $user->id;
                 $fakeAtt->user = $user;
                 $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0);
-                
+
                 if ($leave) {
                     $typeLabel = ucfirst($leave->type);
-                    if ($leave->type == 'telat') $typeLabel = 'Izin Telat';
-                    if ($leave->type == 'wfh') $typeLabel = 'WFH';
+                    if ($leave->type == 'telat')
+                        $typeLabel = 'Izin Telat';
+                    if ($leave->type == 'wfh')
+                        $typeLabel = 'WFH';
 
                     $fakeAtt->presence_status = $typeLabel;
                     $fakeAtt->status = 'verified';
                     $fakeAtt->attendance_type = 'leave';
                     $fakeAtt->notes = "Izin: " . $leave->reason;
                     $fakeAtt->is_late_checkin = ($leave->type == 'telat');
-                    
+
                     // Snapshot Jadwal
                     $fakeAtt->scheduled_check_in = $user->check_in_start;
                     $fakeAtt->scheduled_check_out = $user->check_out_start;
@@ -444,8 +508,8 @@ class TeamController extends Controller
             'total' => $history->count(),
             'present' => $history->filter(function ($item) {
                 $s = strtolower($item->presence_status ?? '');
-                return in_array($s, ['masuk', 'wfh', 'izin telat']) || str_contains($s, 'dinas') || 
-                       (empty($s) && in_array($item->attendance_type, ['scan', 'self', 'manual']));
+                return in_array($s, ['masuk', 'wfh', 'izin telat']) || str_contains($s, 'dinas') ||
+                    (empty($s) && in_array($item->attendance_type, ['scan', 'self', 'manual']));
             })->count(),
             'sakit' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'sakit')->count(),
             'izin' => $history->filter(fn($i) => in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti', 'offday']))->count(),

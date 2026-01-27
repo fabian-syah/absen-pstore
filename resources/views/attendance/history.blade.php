@@ -10,18 +10,53 @@
 
 @section('heading')
     @if (isset($employee))
-        <div class="d-flex align-items-center">
-            <a href="{{ route('team.branch.detail', $employee->branch_id) }}"
-                class="btn btn-sm btn-light btn-icon me-3 rounded-circle shadow-sm">
-                <i class="mdi mdi-arrow-left text-primary"></i>
-            </a>
-            <div>
-                <h4 class="mb-0 fw-bold">Riwayat Absensi: {{ $employee->name }}</h4>
-                <small class="text-muted">
-                    <i class="mdi mdi-domain me-1"></i> {{ $employee->division->name ?? '-' }} | <i
-                        class="mdi mdi-office-building me-1"></i> {{ $employee->branch->name ?? '-' }}
-                </small>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center">
+                <a href="{{ route('team.branch.detail', $employee->branch_id) }}"
+                    class="btn btn-sm btn-light btn-icon me-3 rounded-circle shadow-sm">
+                    <i class="mdi mdi-arrow-left text-primary"></i>
+                </a>
+                <div>
+                    <h4 class="mb-0 fw-bold">Riwayat Absensi: {{ $employee->name }}</h4>
+                    <small class="text-muted">
+                        <i class="mdi mdi-domain me-1"></i> {{ $employee->division->name ?? '-' }} | <i
+                            class="mdi mdi-office-building me-1"></i> {{ $employee->branch->name ?? '-' }}
+                    </small>
+                </div>
             </div>
+
+            {{-- EMPLOYEE NAVIGATION --}}
+            @if (isset($branchId) && (isset($prevEmployee) || isset($nextEmployee)))
+                <div class="d-flex align-items-center gap-2">
+                    @if ($prevEmployee)
+                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $prevEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
+                            class="btn btn-sm btn-outline-primary rounded-pill px-3" title="{{ $prevEmployee->name }}">
+                            <i class="mdi mdi-chevron-left"></i> <span
+                                class="d-none d-md-inline">{{ Str::limit($prevEmployee->name, 15) }}</span>
+                        </a>
+                    @else
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" disabled>
+                            <i class="mdi mdi-chevron-left"></i>
+                        </button>
+                    @endif
+
+                    <span class="badge bg-light text-dark border px-2 py-1" style="font-size: 0.75rem;">
+                        {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount ?? 1 }}
+                    </span>
+
+                    @if ($nextEmployee)
+                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
+                            class="btn btn-sm btn-outline-primary rounded-pill px-3" title="{{ $nextEmployee->name }}">
+                            <span class="d-none d-md-inline">{{ Str::limit($nextEmployee->name, 15) }}</span> <i
+                                class="mdi mdi-chevron-right"></i>
+                        </a>
+                    @else
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" disabled>
+                            <i class="mdi mdi-chevron-right"></i>
+                        </button>
+                    @endif
+                </div>
+            @endif
         </div>
     @else
         <h4 class="mb-0 fw-bold">Riwayat Absensi Saya</h4>
