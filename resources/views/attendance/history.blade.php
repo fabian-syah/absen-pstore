@@ -27,49 +27,79 @@
 
             {{-- EMPLOYEE NAVIGATION --}}
             @if (isset($branchId) && (isset($prevEmployee) || isset($nextEmployee)))
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 employee-nav-container shadow-sm">
+                    {{-- Tombol Prev --}}
                     @if ($prevEmployee)
                         <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $prevEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                            class="btn btn-sm rounded-pill px-3 shadow-sm" 
-                                            style="background-color: #ffffff !important; color: #1a73e8 !important; font-weight: 600;"
-                                            title="{{ $prevEmployee->name }}">
-                                            <i class="mdi mdi-chevron-left"></i> <span class="d-none d-md-inline">{{ Str::limit($prevEmployee->name, 15) }}</span>
-                                        </a>
+                            class="btn btn-sm nav-btn-custom rounded-pill px-3" title="{{ $prevEmployee->name }}">
+                            <i class="mdi mdi-chevron-left"></i>
+                            <span class="d-none d-md-inline">{{ Str::limit($prevEmployee->name, 12) }}</span>
+                        </a>
                     @else
-                                    <button class="btn btn-sm rounded-pill px-3" disabled 
-                                        style="background-color: #6c757d !important; color: #ffffff !important; opacity: 0.5;">
-                                        <i class="mdi mdi-chevron-left"></i>
-                                    </button>
-                                @endif
+                        <button class="btn btn-sm rounded-pill px-3" disabled
+                            style="background-color: #e9ecef !important; color: #adb5bd !important;">
+                            <i class="mdi mdi-chevron-left"></i>
+                        </button>
+                    @endif
 
-                                <span class="badge rounded-pill px-3 py-2" 
-                                    style="background-color: #ffffff !important; color: #1a73e8 !important; font-size: 0.85rem; font-weight: 700;">
-                                    {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount ?? 1 }}
-                                </span>
+                    {{-- Indikator Angka (misal 1/6) --}}
+                    <span class="badge badge-count rounded-pill px-3 py-2">
+                        {{ $currentEmployeeIndex ?? 1 }} / {{ $employeeCount ?? 1 }}
+                    </span>
 
-                                @if ($nextEmployee)
-                                    <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                                        class="btn btn-sm rounded-pill px-3 shadow-sm" 
-                                        style="background-color: #ffffff !important; color: #1a73e8 !important; font-weight: 600;"
-                                        title="{{ $nextEmployee->name }}">
-                                        <span class="d-none d-md-inline">{{ Str::limit($nextEmployee->name, 15) }}</span> <i class="mdi mdi-chevron-right"></i>
-                                    </a>
-                                @else
-                                    <button class="btn btn-sm rounded-pill px-3" disabled 
-                                        style="background-color: #6c757d !important; color: #ffffff !important; opacity: 0.5;">
-                                        <i class="mdi mdi-chevron-right"></i>
-                                    </button>
-                                @endif
-                            </div>
-            @endif
+                    {{-- Tombol Next --}}
+                    @if ($nextEmployee)
+                        <a href="{{ route('team.branch.employee.history', ['branchId' => $branchId, 'employeeId' => $nextEmployee->id, 'month' => $selectedMonth, 'year' => $selectedYear]) }}"
+                            class="btn btn-sm nav-btn-custom rounded-pill px-3" title="{{ $nextEmployee->name }}">
+                            <span class="d-none d-md-inline">{{ Str::limit($nextEmployee->name, 12) }}</span>
+                            <i class="mdi mdi-chevron-right"></i>
+                        </a>
+                    @else
+                        <button class="btn btn-sm rounded-pill px-3" disabled
+                            style="background-color: #e9ecef !important; color: #adb5bd !important;">
+                            <i class="mdi mdi-chevron-right"></i>
+                        </button>
+                    @endif
                 </div>
+            @endif
+        </div>
     @else
-            <h4 class="mb-0 fw-bold">Riwayat Absensi Saya</h4>
-        @endif
+        <h4 class="mb-0 fw-bold">Riwayat Absensi Saya</h4>
+    @endif
 @endsection
 
 @push('styles')
     <style>
+        /* Update style untuk navigasi karyawan agar lebih kontras */
+        .employee-nav-container {
+            background: #f8f9fa;
+            /* Abu-abu sangat muda */
+            padding: 5px 10px;
+            border-radius: 50px;
+            border: 1px solid #e9ecef;
+        }
+
+        .nav-btn-custom {
+            background-color: #ffffff !important;
+            color: #1a73e8 !important;
+            border: 1px solid #dee2e6 !important;
+            /* Tambahkan border agar terlihat */
+            font-weight: 700 !important;
+        }
+
+        .nav-btn-custom:hover {
+            background-color: #1a73e8 !important;
+            color: #ffffff !important;
+        }
+
+        .badge-count {
+            background-color: #1a73e8 !important;
+            color: #ffffff !important;
+            font-size: 0.85rem;
+            font-weight: 800;
+            min-width: 50px;
+        }
+
         .verification-badge {
             font-size: 0.7rem;
             padding: 0.35rem 0.6rem;
