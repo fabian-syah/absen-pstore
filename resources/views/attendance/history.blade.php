@@ -60,54 +60,63 @@
 
 @push('styles')
     <style>
-        /* Container utama navigasi */
+        /* Container utama navigasi - Dibuat Putih Bersih */
         .nav-container-fixed {
             display: flex !important;
             align-items: center !important;
-            background: #ffffff !important;
-            /* Latar belakang putih agar kontras dengan header biru */
-            padding: 4px !important;
+            background-color: #ffffff !important;
+            padding: 5px !important;
             border-radius: 50px !important;
             border: 2px solid #ffc107 !important;
-            /* Border kuning supaya mencolok */
+            /* Border Kuning tetap untuk aksen */
             z-index: 9999 !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
         }
 
-        /* Tombol navigasi (Nama Karyawan) */
+        /* Tombol navigasi (Teks Nama Karyawan) - DIUBAH JADI HITAM */
         .nav-btn-action {
             background: transparent !important;
-            color: #0d47a1 !important;
-            /* Teks biru tua di atas putih */
+            color: #000000 !important;
+            /* PAKSA WARNA HITAM */
             text-decoration: none !important;
-            padding: 5px 12px !important;
+            padding: 5px 15px !important;
             font-weight: 800 !important;
-            font-size: 0.8rem !important;
+            /* Font lebih tebal */
+            font-size: 0.85rem !important;
             display: flex !important;
             align-items: center !important;
-            gap: 4px !important;
+            gap: 5px !important;
+        }
+
+        /* Memastikan Icon Panah juga Hitam */
+        .nav-btn-action i {
+            color: #000000 !important;
+            font-weight: 900 !important;
         }
 
         .nav-btn-action:hover {
-            background: #f0f4ff !important;
+            background-color: #f0f0f0 !important;
             border-radius: 50px !important;
+            color: #000000 !important;
         }
 
-        /* Badge Angka (2/6) */
+        /* Badge Angka (Contoh: 2/6) - DIUBAH JADI HITAM TEBAL */
         .nav-number-badge {
-            background: #ffc107 !important;
-            /* Kuning cerah */
+            background-color: #ffc107 !important;
+            /* Background Kuning */
             color: #000000 !important;
-            /* Teks hitam */
-            padding: 4px 12px !important;
+            /* Teks Hitam */
+            padding: 4px 14px !important;
             border-radius: 50px !important;
             font-weight: 900 !important;
-            font-size: 0.85rem !important;
-            min-width: 45px !important;
+            /* Sangat Tebal */
+            font-size: 0.9rem !important;
+            min-width: 50px !important;
             text-align: center !important;
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
         }
 
-        /* Memastikan teks judul tetap putih karena di header biru */
+        /* Pastikan Judul di Header tetap Putih agar kontras dengan background biru master */
         h4.text-white {
             color: #ffffff !important;
         }
