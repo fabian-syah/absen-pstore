@@ -411,12 +411,6 @@
             storageBucket: "{{ config('services.firebase.storage_bucket') }}",
             messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
             appId: "{{ config('services.firebase.app_id') }}"
-            apiKey: "{{ config('services.firebase.api_key') }}",
-            authDomain: "{{ config('services.firebase.auth_domain') }}",
-            projectId: "{{ config('services.firebase.project_id') }}",
-            storageBucket: "{{ config('services.firebase.storage_bucket') }}",
-            messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
-            appId: "{{ config('services.firebase.app_id') }}"
         };
         console.log("🔥 Firebase Config:", firebaseConfig); // DEBUG LOG
 
