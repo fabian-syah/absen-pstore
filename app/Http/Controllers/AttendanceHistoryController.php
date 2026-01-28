@@ -52,26 +52,25 @@ class AttendanceHistoryController extends Controller
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        // 1. Ambil timezone spesifik cabang dari database
+        // 1. Ambil timezone spesifik cabang dari database agar sinkron (WIB/WITA/WIT)
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
 
-        // 2. Buat objek tanggal berdasarkan timezone cabang tersebut
+        // 2. Inisialisasi rentang bulan berdasarkan timezone cabang
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
-        // 3. Ambil waktu "Hari Ini" berdasarkan timezone cabang (BUKAN hardcode Jakarta)
-        $today = Carbon::now($branchTimezone)->endOfDay();
+        // 3. Ambil waktu "Sekarang" di cabang tersebut (penting untuk Gorontalo yang lebih cepat 1 jam)
+        $todayInBranch = Carbon::now($branchTimezone)->endOfDay();
 
-        // Ini yang menentukan apakah tanggal 28 muncul atau tidak
-        $limitDate = ($endDate->gt($today)) ? $today : $endDate;
+        // Tentukan limit: Jika melihat bulan berjalan, limit adalah AKHIR hari ini di cabang tsb
+        $limitDate = ($endDate->gt($todayInBranch)) ? $todayInBranch : $endDate;
 
-        // 4. Query Database (Database biasanya menyimpan UTC/WIB, 
-        // pastikan range query mencakup kemungkinan selisih jam)
+        // 4. Query Database dengan range yang sedikit lebih lebar untuk menangkap selisih jam server
         $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
             ->where('user_id', $user->id)
             ->whereBetween('check_in_time', [
-                $startDate->copy()->startOfDay()->setTimezone('UTC'),
-                $endDate->copy()->endOfDay()->setTimezone('UTC')
+                $startDate->copy()->subDay()->startOfDay(),
+                $endDate->copy()->addDay()->endOfDay()
             ])
             ->get();
 
@@ -87,14 +86,14 @@ class AttendanceHistoryController extends Controller
                     });
             })->get();
 
-        // 4. Pastikan pembuatan period juga menggunakan timezone yang sama
         $historyCollection = collect();
-        $period = CarbonPeriod::create($startDate->startOfDay(), $limitDate->startOfDay());
+        // 5. Buat period dari tanggal 1 sampai limitDate (misal tanggal 28)
+        $period = CarbonPeriod::create($startDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
 
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
 
-            // Filter attendance berdasarkan timezone cabang
+            // Cocokkan attendance dengan memparse check_in ke timezone cabang
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
             })->first();
@@ -108,16 +107,12 @@ class AttendanceHistoryController extends Controller
             })->first();
 
             if ($att) {
-                // Ada attendance
                 $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
                 if ($att->check_out_time) {
                     $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
                 }
 
-
-                // Jika ada leave untuk tanggal ini, update status
                 if ($leave) {
-                    // Map leave type to correct presence status (must match what's in DB)
                     $presenceStatusMap = [
                         'telat' => 'Masuk',
                         'wfh' => 'WFH',
@@ -127,25 +122,19 @@ class AttendanceHistoryController extends Controller
                         'cuti' => 'Cuti',
                         'libur' => 'Libur',
                     ];
-
                     $att->presence_status = $presenceStatusMap[$leave->type] ?? ucfirst($leave->type);
-
                     if ($leave->type == 'telat') {
                         $att->is_late_checkin = true;
                     }
                 }
-
                 $historyCollection->push($att);
             } else {
-                // Tidak ada attendance
-                if ($leave) {
-                    // Ada leave
-                    $fakeAtt = new Attendance();
-                    $fakeAtt->user_id = $user->id;
-                    $fakeAtt->user = $user;
-                    $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0);
+                $fakeAtt = new Attendance();
+                $fakeAtt->user_id = $user->id;
+                $fakeAtt->user = $user;
+                $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0);
 
-                    // Map leave type to correct presence status
+                if ($leave) {
                     $presenceStatusMap = [
                         'telat' => 'Masuk',
                         'wfh' => 'WFH',
@@ -155,64 +144,38 @@ class AttendanceHistoryController extends Controller
                         'cuti' => 'Cuti',
                         'libur' => 'Libur',
                     ];
-
                     $fakeAtt->presence_status = $presenceStatusMap[$leave->type] ?? ucfirst($leave->type);
-
                     if ($leave->type == 'telat') {
                         $fakeAtt->is_late_checkin = true;
                     }
-                    $fakeAtt->status = 'verified';
                     $fakeAtt->attendance_type = 'leave';
                     $fakeAtt->notes = $leave->reason;
                     $fakeAtt->setRelation('leaveRequest', $leave);
                     $fakeAtt->setRelation('verifier', $leave->verifier);
-                    $historyCollection->push($fakeAtt);
                 } else {
-                    // Alpha
-                    $fakeAtt = new Attendance();
-                    $fakeAtt->user_id = $user->id;
-                    $fakeAtt->user = $user;
-                    $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0);
                     $fakeAtt->presence_status = 'Alpha';
-                    $fakeAtt->status = 'verified';
                     $fakeAtt->attendance_type = 'system';
-                    $historyCollection->push($fakeAtt);
                 }
+                $fakeAtt->status = 'verified';
+                $historyCollection->push($fakeAtt);
             }
         }
 
-        // Sorting
         $history = $historyCollection->sortByDesc(function ($item) {
             return $item->check_in_time->timestamp;
         });
 
-        // Hitung Summary - LOGIKA YANG SAMA
         $summary = [
             'total' => $history->count(),
             'present' => $history->filter(function ($item) {
                 $s = strtolower($item->presence_status ?? '');
                 return in_array($s, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat']);
             })->count(),
-            'sakit' => $history->filter(
-                fn($i) =>
-                strtolower($i->presence_status ?? '') === 'sakit'
-            )->count(),
-            'izin' => $history->filter(
-                fn($i) =>
-                strtolower($i->presence_status ?? '') === 'izin'
-            )->count(),
-            'cuti' => $history->filter(
-                fn($i) =>
-                strtolower($i->presence_status ?? '') === 'cuti'
-            )->count(),
-            'libur' => $history->filter(
-                fn($i) =>
-                strtolower($i->presence_status ?? '') === 'libur'
-            )->count(),
-            'alpha' => $history->filter(
-                fn($i) =>
-                strtolower($i->presence_status ?? '') === 'alpha'
-            )->count(),
+            'sakit' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'sakit')->count(),
+            'izin' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'izin')->count(),
+            'cuti' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'cuti')->count(),
+            'libur' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'libur')->count(),
+            'alpha' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'alpha')->count(),
             'telat' => $history->where('is_late_checkin', true)->count(),
             'pulang_cepat' => $history->where('is_early_checkout', true)->count(),
             'pending' => $history->where('status', 'pending_verification')->count(),
@@ -237,7 +200,6 @@ class AttendanceHistoryController extends Controller
         }
 
         $attendance = Attendance::findOrFail($id);
-
         $request->validate([
             'presence_status' => 'required|string',
             'check_in_time' => 'required',
@@ -249,16 +211,11 @@ class AttendanceHistoryController extends Controller
 
         $originalDate = $attendance->check_in_time->format('Y-m-d');
         $newCheckIn = Carbon::parse($originalDate . ' ' . $request->check_in_time);
-
-        $newCheckOut = null;
-        if ($request->check_out_time) {
-            $newCheckOut = Carbon::parse($originalDate . ' ' . $request->check_out_time);
-            if ($newCheckOut->lt($newCheckIn)) {
-                $newCheckOut->addDay();
-            }
+        $newCheckOut = $request->check_out_time ? Carbon::parse($originalDate . ' ' . $request->check_out_time) : null;
+        if ($newCheckOut && $newCheckOut->lt($newCheckIn)) {
+            $newCheckOut->addDay();
         }
 
-        // Logic Hitung Telat Berdasarkan Snapshot Jadwal di Model
         $isLate = false;
         if ($request->presence_status == 'Masuk' && $attendance->scheduled_check_in) {
             $scheduleIn = Carbon::parse($originalDate . ' ' . $attendance->scheduled_check_in);
@@ -270,7 +227,6 @@ class AttendanceHistoryController extends Controller
             $auditPhotoPath = $request->file('audit_photo')->store('audit-proofs', 'public');
         }
 
-        // Update menggunakan field yang ada di $fillable
         $attendance->update([
             'presence_status' => $request->presence_status,
             'check_in_time' => $newCheckIn,
@@ -280,7 +236,7 @@ class AttendanceHistoryController extends Controller
             'audit_note' => $request->audit_note,
             'audit_photo_path' => $auditPhotoPath,
             'verified_by_user_id' => Auth::id(),
-            'attendance_type' => 'manual', // Set ke manual karena diedit audit
+            'attendance_type' => 'manual',
         ]);
 
         return back()->with('success', 'Data absensi berhasil diperbarui.');
