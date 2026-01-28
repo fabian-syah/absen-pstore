@@ -62,6 +62,7 @@ class User extends Authenticatable
         'check_out_start',
         'check_in_end',
         'check_out_end',
+        'fcm_token',
         'last_login_at',
     ];
 

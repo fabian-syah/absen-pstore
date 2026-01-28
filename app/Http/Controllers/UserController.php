@@ -45,45 +45,46 @@ class UserController extends Controller
     }
 
     public function index(Request $request)
-{
-    $user = Auth::user();
-    $search = $request->search;
+    {
+        $user = Auth::user();
+        $search = $request->search;
 
-    // 1. Base query untuk user Aktif (Tetap menggunakan filter keamanan)
-    $activeQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', true);
+        // 1. Base query untuk user Aktif (Tetap menggunakan filter keamanan)
+        $activeQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', true);
 
-    // 2. Base query untuk user Non-Aktif (Hapus filter branch agar semua EX muncul)
-    $inactiveQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', false);
+        // 2. Base query untuk user Non-Aktif (Hapus filter branch agar semua EX muncul)
+        $inactiveQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', false);
 
-    // --- FILTER UNTUK USER AKTIF SAJA ---
-    if ($user->role == 'admin' && $user->branch_id != null) {
-        $activeQuery->where('branch_id', $user->branch_id);
-    } elseif (in_array($user->role, ['audit', 'leader'])) {
-        $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
-        if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
-        $activeQuery->whereIn('branch_id', array_unique($allowedBranchIds));
+        // --- FILTER UNTUK USER AKTIF SAJA ---
+        if ($user->role == 'admin' && $user->branch_id != null) {
+            $activeQuery->where('branch_id', $user->branch_id);
+        } elseif (in_array($user->role, ['audit', 'leader'])) {
+            $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
+            if ($user->branch_id)
+                $allowedBranchIds[] = $user->branch_id;
+            $activeQuery->whereIn('branch_id', array_unique($allowedBranchIds));
+        }
+
+        // --- PENCARIAN (Berlaku untuk keduanya) ---
+        if ($search != '') {
+            $activeQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('login_id', 'like', "%{$search}%");
+            });
+
+            $inactiveQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('login_id', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $activeQuery->latest()->paginate(10, ['*'], 'active_page')->appends(['search' => $search]);
+        $inactiveUsers = $inactiveQuery->latest()->paginate(10, ['*'], 'inactive_page')->appends(['search' => $search]);
+
+        return view('users.user_index', compact('users', 'inactiveUsers'));
     }
-
-    // --- PENCARIAN (Berlaku untuk keduanya) ---
-    if ($search != '') {
-        $activeQuery->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('login_id', 'like', "%{$search}%");
-        });
-        
-        $inactiveQuery->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('login_id', 'like', "%{$search}%");
-        });
-    }
-
-    $users = $activeQuery->latest()->paginate(10, ['*'], 'active_page')->appends(['search' => $search]);
-    $inactiveUsers = $inactiveQuery->latest()->paginate(10, ['*'], 'inactive_page')->appends(['search' => $search]);
-
-    return view('users.user_index', compact('users', 'inactiveUsers'));
-}
 
     public function create()
     {
@@ -156,12 +157,12 @@ class UserController extends Controller
                 $data['check_out_start'] = null;
             }
         } else {
-            $data['check_in_start']  = $request->check_in_start ?: null;
+            $data['check_in_start'] = $request->check_in_start ?: null;
             $data['check_out_start'] = $request->check_out_start ?: null;
         }
 
-        $data['check_in_end']    = null;
-        $data['check_out_end']   = null;
+        $data['check_in_end'] = null;
+        $data['check_out_end'] = null;
 
         $data['division_id'] = ($request->has('multi_divisions') && count($request->multi_divisions) > 0) ? $request->multi_divisions[0] : null;
 
@@ -203,13 +204,15 @@ class UserController extends Controller
 
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
-            if ($auth_user->branch_id) $allowedBranchIds[] = $auth_user->branch_id;
+            if ($auth_user->branch_id)
+                $allowedBranchIds[] = $auth_user->branch_id;
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
             }
         }
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
-            if ($user->branch_id != $auth_user->branch_id) abort(403);
+            if ($user->branch_id != $auth_user->branch_id)
+                abort(403);
         }
 
         if (in_array($auth_user->role, ['audit', 'leader'])) {
@@ -270,7 +273,8 @@ class UserController extends Controller
 
         if (in_array(Auth::user()->role, ['audit', 'leader']) && $request->filled('branch_id')) {
             $allowedBranchIds = Auth::user()->branches()->pluck('branches.id')->toArray();
-            if (Auth::user()->branch_id) $allowedBranchIds[] = Auth::user()->branch_id;
+            if (Auth::user()->branch_id)
+                $allowedBranchIds[] = Auth::user()->branch_id;
             if (!in_array($request->branch_id, $allowedBranchIds)) {
                 return back()->with('error', 'Anda tidak memiliki akses untuk memindahkan user ke cabang tersebut.');
             }
@@ -309,15 +313,16 @@ class UserController extends Controller
                 $data['check_out_start'] = null;
             }
         } else {
-            $data['check_in_start']  = $request->check_in_start ?: null;
+            $data['check_in_start'] = $request->check_in_start ?: null;
             $data['check_out_start'] = $request->check_out_start ?: null;
         }
 
-        $data['check_in_end']    = null;
-        $data['check_out_end']   = null;
+        $data['check_in_end'] = null;
+        $data['check_out_end'] = null;
 
         if ($request->hasFile('profile_photo_path')) {
-            if ($user->profile_photo_path) Storage::disk('public')->delete($user->profile_photo_path);
+            if ($user->profile_photo_path)
+                Storage::disk('public')->delete($user->profile_photo_path);
             $data['profile_photo_path'] = $request->file('profile_photo_path')->store('profile-photos', 'public');
         }
 
@@ -357,8 +362,10 @@ class UserController extends Controller
         }
 
         try {
-            if ($user->profile_photo_path) Storage::disk('public')->delete($user->profile_photo_path);
-            if ($user->ktp_photo_path) Storage::disk('public')->delete($user->ktp_photo_path);
+            if ($user->profile_photo_path)
+                Storage::disk('public')->delete($user->profile_photo_path);
+            if ($user->ktp_photo_path)
+                Storage::disk('public')->delete($user->ktp_photo_path);
             $user->branches()->detach();
             $user->divisions()->detach();
             $user->delete();
@@ -373,12 +380,14 @@ class UserController extends Controller
         $auth_user = Auth::user();
 
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
-            if ($user->branch_id != $auth_user->branch_id) abort(403);
+            if ($user->branch_id != $auth_user->branch_id)
+                abort(403);
         }
 
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
-            if ($auth_user->branch_id) $allowedBranchIds[] = $auth_user->branch_id;
+            if ($auth_user->branch_id)
+                $allowedBranchIds[] = $auth_user->branch_id;
 
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
                 abort(403, 'Akses Ditolak: User ini berada di luar wilayah cabang Anda.');
@@ -477,7 +486,8 @@ class UserController extends Controller
             $query->where('branch_id', $user->branch_id);
         } elseif (in_array($user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
-            if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
+            if ($user->branch_id)
+                $allowedBranchIds[] = $user->branch_id;
             $query->whereIn('branch_id', $allowedBranchIds);
         }
 
@@ -494,7 +504,8 @@ class UserController extends Controller
             $query->where('branch_id', $user->branch_id);
         } elseif (in_array($user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
-            if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
+            if ($user->branch_id)
+                $allowedBranchIds[] = $user->branch_id;
             $query->whereIn('branch_id', $allowedBranchIds);
         }
 
@@ -504,30 +515,36 @@ class UserController extends Controller
 
     public function approvePhotoRequest(User $user)
     {
-        if (!$user->profile_photo_temp_path) return back()->with('error', 'Tidak ada file pengajuan foto baru.');
-        if ($user->profile_photo_path) if (Storage::disk('public')->exists($user->profile_photo_path)) Storage::disk('public')->delete($user->profile_photo_path);
+        if (!$user->profile_photo_temp_path)
+            return back()->with('error', 'Tidak ada file pengajuan foto baru.');
+        if ($user->profile_photo_path) if (Storage::disk('public')->exists($user->profile_photo_path))
+            Storage::disk('public')->delete($user->profile_photo_path);
         $user->update(['profile_photo_path' => $user->profile_photo_temp_path, 'profile_photo_temp_path' => null, 'photo_request_status' => 'approved']);
         return back()->with('success', 'Izin ganti foto diberikan & foto lama dihapus.');
     }
 
     public function rejectPhotoRequest(User $user)
     {
-        if ($user->profile_photo_temp_path) if (Storage::disk('public')->exists($user->profile_photo_temp_path)) Storage::disk('public')->delete($user->profile_photo_temp_path);
+        if ($user->profile_photo_temp_path) if (Storage::disk('public')->exists($user->profile_photo_temp_path))
+            Storage::disk('public')->delete($user->profile_photo_temp_path);
         $user->update(['profile_photo_temp_path' => null, 'photo_request_status' => 'rejected']);
         return back()->with('success', 'Pengajuan foto ditolak. File pengajuan dihapus.');
     }
 
     public function approveKtpRequest(User $user)
     {
-        if (!$user->ktp_photo_temp_path) return back()->with('error', 'Tidak ada file pengajuan KTP baru.');
-        if ($user->ktp_photo_path) if (Storage::disk('public')->exists($user->ktp_photo_path)) Storage::disk('public')->delete($user->ktp_photo_path);
+        if (!$user->ktp_photo_temp_path)
+            return back()->with('error', 'Tidak ada file pengajuan KTP baru.');
+        if ($user->ktp_photo_path) if (Storage::disk('public')->exists($user->ktp_photo_path))
+            Storage::disk('public')->delete($user->ktp_photo_path);
         $user->update(['ktp_photo_path' => $user->ktp_photo_temp_path, 'ktp_photo_temp_path' => null, 'ktp_request_status' => 'none']);
         return back()->with('success', 'Permintaan ganti KTP disetujui & file lama dihapus.');
     }
 
     public function rejectKtpRequest(User $user)
     {
-        if ($user->ktp_photo_temp_path) if (Storage::disk('public')->exists($user->ktp_photo_temp_path)) Storage::disk('public')->delete($user->ktp_photo_temp_path);
+        if ($user->ktp_photo_temp_path) if (Storage::disk('public')->exists($user->ktp_photo_temp_path))
+            Storage::disk('public')->delete($user->ktp_photo_temp_path);
         $user->update(['ktp_photo_temp_path' => null, 'ktp_request_status' => 'rejected']);
         return back()->with('success', 'Permintaan ganti KTP ditolak.');
     }
@@ -571,16 +588,16 @@ class UserController extends Controller
         return ['total' => $presentCount, 'present' => $presentCount, 'alpha' => 0, 'late' => 0, 'early' => 0, 'pending' => 0, 'on_time' => 0, 'on_time_percentage' => 0, 'late_percentage' => 0, 'current_month' => Carbon::now()->format('F Y')];
     }
 
-    // public function updateFcmToken(Request $request)
-    // {
-    //     try {
-    //         $request->validate(['token' => 'required|string']);
-    //         $user = Auth::user();
-    //         $user->fcm_token = $request->token;
-    //         $user->save();
-    //         return response()->json(['success' => true, 'message' => 'Token updated']);
-    //     } catch (\Exception $e) {
-    //         return response()->json(['success' => false], 500);
-    //     }
-    // }
+    public function updateFcmToken(Request $request)
+    {
+        try {
+            $request->validate(['token' => 'required|string']);
+            $user = Auth::user();
+            $user->fcm_token = $request->token;
+            $user->save();
+            return response()->json(['success' => true, 'message' => 'Token updated']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false], 500);
+        }
+    }
 }

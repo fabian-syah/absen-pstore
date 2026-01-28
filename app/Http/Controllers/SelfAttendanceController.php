@@ -15,6 +15,7 @@ use Intervention\Image\Facades\Image;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\SendAuditNotificationJob;
 
 class SelfAttendanceController extends Controller
 {
@@ -334,16 +335,15 @@ class SelfAttendanceController extends Controller
             $notifBody = "{$user->name} absen masuk (Selfie) di {$branchName}";
         }
 
-        /* <-- TAMBAHKAN INI DI AWAL
+        // <-- TAMBAHKAN INI DI AWAL
         if ($shouldSendNotif) {
             try {
-                // Fungsi ini yang bikin loading lama karena nunggu koneksi Firebase
-                $this->sendNotificationToBranchRoles(['audit', 'admin'], $user->branch_id, $notifTitle, $notifBody);
+                // Menggunakan Job Queue agar tidak loading lama
+                SendAuditNotificationJob::dispatch(['audit', 'admin'], $user->branch_id, $notifTitle, $notifBody);
             } catch (\Exception $e) {
-                Log::error("FCM Error: " . $e->getMessage());
+                Log::error("FCM Dispatch Error: " . $e->getMessage());
             }
         }
-        */
 
         return redirect()->route('dashboard')->with('success', $message);
     }

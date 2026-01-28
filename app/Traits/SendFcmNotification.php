@@ -26,11 +26,11 @@ trait SendFcmNotification
 
         // 2. Ambil Access Token
         $credentialsPath = storage_path('app/firebase_credentials.json');
-        
+
         try {
             $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
             $credentials = new ServiceAccountCredentials($scopes, $credentialsPath);
-            
+
             // Bypass SSL (Fix cURL error 60)
             $httpClient = new Client(['verify' => false]);
             $accessToken = $credentials->fetchAuthToken($httpClient);
@@ -53,11 +53,12 @@ trait SendFcmNotification
             $payload = [
                 "message" => [
                     "token" => $token,
-                    
+
                     // A. Bagian NOTIFICATION (Standar agar muncul otomatis di Background)
                     "notification" => [
                         "title" => $title,
-                        "body"  => $body,
+                        "body" => $body,
+                        "sound" => "default"
                     ],
 
                     // B. Bagian WEBPUSH (Khusus Chrome/Edge Desktop/Android)
@@ -67,8 +68,8 @@ trait SendFcmNotification
                         ],
                         "notification" => [
                             "title" => $title,
-                            "body"  => $body,
-                            "icon"  => "https://cdn-icons-png.flaticon.com/512/1827/1827301.png", // Icon Online (Aman)
+                            "body" => $body,
+                            "icon" => "https://cdn-icons-png.flaticon.com/512/1827/1827301.png", // Icon Online (Aman)
                             "click_action" => $link
                         ],
                         "fcm_options" => [
@@ -79,9 +80,9 @@ trait SendFcmNotification
                     // C. Bagian DATA (Untuk custom handler di JS Foreground)
                     "data" => [
                         "title" => (string) $title,
-                        "body"  => (string) $body,
-                        "url"   => (string) $link,
-                        "type"  => "audit_alert"
+                        "body" => (string) $body,
+                        "url" => (string) $link,
+                        "type" => "audit_alert"
                     ]
                 ]
             ];
