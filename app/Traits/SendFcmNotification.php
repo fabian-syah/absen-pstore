@@ -31,7 +31,7 @@ trait SendFcmNotification
         if (empty($tokens)) {
             echo " [FCM SKIP] Tidak ada token ditemukan.\n";
             Log::info("FCM: Tidak ada token user audit/admin ditemukan untuk cabang ID $branchId");
-            return;
+            return [['status' => 'SKIP', 'reason' => 'Zero tokens found for query']];
         }
 
         // 2. Ambil Access Token
@@ -47,11 +47,11 @@ trait SendFcmNotification
 
             if (!isset($accessToken['access_token'])) {
                 Log::error('FCM Error: Gagal generate access token.');
-                return;
+                return [['status' => 'FAIL', 'reason' => 'Gagal generate access token google/auth']];
             }
         } catch (\Exception $e) {
             Log::error('FCM Auth Error: ' . $e->getMessage());
-            return;
+            return [['status' => 'ERROR', 'reason' => 'Exception Auth: ' . $e->getMessage()]];
         }
 
         $projectId = env('FIREBASE_PROJECT_ID', 'bote-1a4b9');
