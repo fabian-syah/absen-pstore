@@ -43,6 +43,7 @@ class SendAuditNotificationJob implements ShouldQueue
             // Using the trait method to send notification
             $this->sendNotificationToBranchRoles($this->roles, $this->branchId, $this->title, $this->body);
         } catch (\Throwable $e) {
+            echo " [ERROR] " . $e->getMessage() . "\n";
             Log::error("FCM Background Job Error: " . $e->getMessage());
             Log::error($e->getTraceAsString());
             $this->fail($e); // Mark job as failed so we can retry or inspect
