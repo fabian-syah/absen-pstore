@@ -52,18 +52,17 @@ class AttendanceHistoryController extends Controller
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        // 1. Ambil Timezone spesifik cabang karyawan
+        // 1. Ambil timezone spesifik cabang dari database
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
 
-        // 2. Buat awal dan akhir bulan berdasarkan Timezone Cabang
+        // 2. Buat objek tanggal berdasarkan timezone cabang tersebut
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
-        // 3. Ambil "Hari Ini" juga berdasarkan Timezone Cabang
+        // 3. Ambil waktu "Hari Ini" berdasarkan timezone cabang (BUKAN hardcode Jakarta)
         $today = Carbon::now($branchTimezone)->endOfDay();
 
-        // Jika bulan yang dipilih adalah bulan depan, limit tetap di akhir bulan berjalan
-        // Jika bulan yang dipilih adalah bulan ini, limit adalah 'Hari Ini' di cabang tersebut
+        // Ini yang menentukan apakah tanggal 28 muncul atau tidak
         $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
         // 4. Query Database (Database biasanya menyimpan UTC/WIB, 
@@ -88,14 +87,14 @@ class AttendanceHistoryController extends Controller
                     });
             })->get();
 
+        // 4. Pastikan pembuatan period juga menggunakan timezone yang sama
         $historyCollection = collect();
         $period = CarbonPeriod::create($startDate->startOfDay(), $limitDate->startOfDay());
 
         foreach ($period as $date) {
-            // Gunakan $date yang sudah membawa konteks Timezone Cabang
             $currentDateStr = $date->format('Y-m-d');
 
-            // Cek matching attendance
+            // Filter attendance berdasarkan timezone cabang
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
             })->first();
