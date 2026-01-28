@@ -12,31 +12,70 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use PDF;
+use App\Traits\SendFcmNotification; // Import Trait
 
 use App\Jobs\SendAuditNotificationJob;
 
 class DashboardController extends Controller
 {
+    use SendFcmNotification; // Use Trait
+
     public function testNotification()
     {
         $user = Auth::user();
 
-        if (!$user->fcm_token) {
-            return redirect()->back()->with('error', 'Token FCM belum tersimpan! Pastikan Anda mengklik "Allow" pada notifikasi browser.');
+        // 1. Debug Target Audience
+        $roles = [$user->role];
+        $branchId = $user->branch_id;
+
+        $targetQuery = User::whereIn('role', $roles)->whereNotNull('fcm_token');
+        if ($branchId) {
+            $targetQuery->where('branch_id', $branchId);
+        }
+        $candidates = $targetQuery->get();
+
+        $tokens = $candidates->pluck('fcm_token')->unique()->values();
+
+        $debugInfo = [
+            'requester' => $user->name,
+            'role' => $user->role,
+            'branch_id' => $branchId,
+            'target_candidates_count' => $candidates->count(),
+            'tokens_found' => $tokens->count(),
+            'tokens' => $tokens->take(5)->toArray(), // Show max 5 tokens
+            'config_api_key_check' => substr(config('services.firebase.api_key'), 0, 8) . '...'
+        ];
+
+        // Jika tidak ada token, langsung lapor
+        if ($tokens->isEmpty()) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Tidak ada token FCM ditemukan. Cek apakah Anda sudah punya branch_id yang sesuai?',
+                'debug' => $debugInfo
+            ], 404);
         }
 
-        // Send Custom Test Notification
-        $title = "Test Notifikasi";
-        $body = "this testing dibuat oleh bian";
+        // 2. Send Direct Notification (Sync)
+        $title = "Test Notifikasi Langsung";
+        $body = "Halo, ini test debug langsung dari server. Jam: " . now()->toTimeString();
 
         try {
-            // Dispatch job specifically to this user's role and branch (or just force it for testing)
-            // Using logic similar to SendAuditNotificationJob but targeting this specific user/role context
-            SendAuditNotificationJob::dispatch([$user->role], $user->branch_id, $title, $body);
+            // Panggil fungsi trait langsung (tanpa job queue)
+            // Note: Trait ini akan echo/log, kita tangkap outputnya jika bisa, atau biarkan log server mencatat
+            $this->sendNotificationToBranchRoles($roles, $branchId, $title, $body);
 
-            return redirect()->back()->with('success', 'Notifikasi test telah dikirim! Cek HP Anda. ID: ' . now()->timestamp);
+            return response()->json([
+                'status' => 'SUCCESS',
+                'message' => 'Fungsi kirim sudah dijalankan. Cek notifikasi di HP.',
+                'debug' => $debugInfo,
+                'note' => 'Cek log server jika masih gagal.'
+            ]);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal kirim: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'EXCEPTION',
+                'message' => $e->getMessage(),
+                'debug' => $debugInfo
+            ], 500);
         }
     }
     public function index()
