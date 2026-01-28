@@ -51,7 +51,7 @@ trait SendFcmNotification
             }
         } catch (\Exception $e) {
             Log::error('FCM Auth Error: ' . $e->getMessage());
-            return [['status' => 'ERROR', 'reason' => 'Exception Auth: ' . $e->getMessage()]];
+            return [['status' => 'ERROR', 'reason' => 'Exception Auth: ' . $e->getMessage() . ' | Path: ' . $credentialsPath]];
         }
 
         $projectId = env('FIREBASE_PROJECT_ID', 'bote-1a4b9');
