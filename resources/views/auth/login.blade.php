@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
-    <title>PStore - Sambut Ramadan</title>
+    <title>PStore - Menuju Ramadan</title>
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
     <link
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=Amiri:wght@400;700&display=swap"
@@ -17,9 +17,9 @@
             --primary-gold: #D4AF37;
             --soft-gold: #F4C430;
             --emerald-deep: #002B1D;
-            --emerald-gradient: radial-gradient(circle at center, #003d29 0%, #00150E 100%);
+            --emerald-gradient: linear-gradient(135deg, #002B1D 0%, #00150E 100%);
             --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(212, 175, 55, 0.25);
+            --glass-border: rgba(212, 175, 55, 0.2);
         }
 
         * {
@@ -49,25 +49,19 @@
             z-index: 1;
         }
 
-        /* Islamic Geometric Backdrop */
-        .geometry-overlay {
-            position: absolute;
-            inset: 0;
-            opacity: 0.05;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M40 0 L45 35 L80 40 L45 45 L40 80 L35 45 L0 40 L35 35 Z' fill='%23D4AF37'/%3E%3C/svg%3E");
-            background-size: 60px 60px;
-        }
-
+        /* Bintang Berkelap-kelip */
         .stars {
             position: absolute;
             width: 100%;
             height: 100%;
+            background: transparent;
         }
 
         .star {
             position: absolute;
             background: white;
             border-radius: 50%;
+            opacity: 0.5;
             animation: twinkle var(--duration) infinite ease-in-out;
         }
 
@@ -75,90 +69,39 @@
 
             0%,
             100% {
-                opacity: 0.2;
+                opacity: 0.3;
                 transform: scale(1);
             }
 
             50% {
                 opacity: 1;
-                transform: scale(1.3);
+                transform: scale(1.2);
             }
         }
 
-        /* Shooting Star Effect */
-        .shooting-star {
+        .moon-glow {
             position: absolute;
-            width: 2px;
-            height: 2px;
-            background: linear-gradient(90deg, #fff, transparent);
-            animation: shooting 4s linear infinite;
+            top: 5%;
+            right: 8%;
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle at 30% 30%, #fff 0%, #f4c430 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 60px rgba(244, 196, 48, 0.3);
+            animation: moonPulse 4s infinite alternate;
         }
 
-        @keyframes shooting {
-            0% {
-                transform: translateX(0) translateY(0) rotate(-45deg);
-                opacity: 1;
-                width: 0;
-            }
-
-            10% {
-                width: 100px;
-            }
-
-            20% {
-                transform: translateX(-500px) translateY(500px) rotate(-45deg);
-                opacity: 0;
-            }
-
-            100% {
-                opacity: 0;
-            }
-        }
-
-        /* Realistik Lanterns */
-        .lantern-hanging {
+        /* Islamic Geometry Pattern */
+        .geometry-pattern {
             position: absolute;
-            top: -20px;
-            z-index: 5;
-            text-align: center;
-            animation: swing 4s ease-in-out infinite alternate;
-            transform-origin: top center;
-        }
-
-        .lantern-hanging.left {
-            left: 10%;
-        }
-
-        .lantern-hanging.right {
-            right: 10%;
-            animation-delay: -2s;
-        }
-
-        .lantern-hanging i {
-            font-size: 3rem;
-            color: var(--primary-gold);
-            filter: drop-shadow(0 0 15px var(--soft-gold));
-        }
-
-        .lantern-hanging::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 2px;
-            height: 80px;
-            background: linear-gradient(to bottom, transparent, var(--primary-gold));
-            transform: translateX(-50%);
-        }
-
-        @keyframes swing {
-            from {
-                transform: rotate(-4deg);
-            }
-
-            to {
-                transform: rotate(4deg);
-            }
+            bottom: -50px;
+            left: -50px;
+            width: 300px;
+            height: 300px;
+            opacity: 0.1;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M50 0 L61.2 38.8 L100 50 L61.2 61.2 L50 100 L38.8 61.2 L0 50 L38.8 38.8 Z' fill='%23D4AF37'/%3E%3C/svg%3E");
+            background-size: 80px 80px;
+            transform: rotate(15deg);
         }
 
         /* --- Main UI --- */
@@ -167,19 +110,7 @@
             z-index: 10;
             width: 90%;
             max-width: 420px;
-            animation: containerIn 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes containerIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9) translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
+            animation: fadeInUp 1s ease-out;
         }
 
         .header {
@@ -189,30 +120,33 @@
 
         .header .arabic {
             font-family: 'Amiri', serif;
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             color: var(--primary-gold);
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
             display: block;
+            margin-bottom: 5px;
         }
 
         .header h1 {
             font-weight: 800;
-            font-size: 2rem;
-            letter-spacing: -1px;
-            color: #fff;
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to bottom, #fff 40%, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .card {
-            background: rgba(1, 40, 27, 0.7);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
+            background: rgba(1, 40, 27, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-border);
-            border-radius: 40px;
-            padding: 3.5rem 2rem 2rem;
-            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(212, 175, 55, 0.05);
+            border-radius: 35px;
+            padding: 3rem 2rem 2rem;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
             position: relative;
         }
 
+        /* Floating Logo */
         .logo-wrap {
             position: absolute;
             top: -45px;
@@ -220,143 +154,171 @@
             transform: translateX(-50%);
             width: 90px;
             height: 90px;
-            background: linear-gradient(135deg, var(--soft-gold), var(--primary-gold));
-            border: 8px solid #002B1D;
-            border-radius: 30px;
+            background: var(--primary-gold);
+            border: 8px solid var(--emerald-deep);
+            border-radius: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
         }
 
         .logo-wrap i {
-            font-size: 38px;
-            color: #002B1D;
+            font-size: 36px;
+            color: var(--emerald-deep);
         }
 
-        /* Countdown Widget */
-        .countdown-timer {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-around;
-            text-align: center;
-        }
-
-        .timer-item span {
-            display: block;
-        }
-
-        .timer-val {
-            font-weight: 800;
-            color: var(--soft-gold);
-            font-size: 1.1rem;
-        }
-
-        .timer-label {
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            opacity: 0.6;
-        }
-
-        /* Inputs */
+        /* Form Controls */
         .input-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--primary-gold);
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+            margin-left: 4px;
+            letter-spacing: 1px;
         }
 
         .input-box {
             position: relative;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: 0.3s;
         }
 
         .input-box:focus-within {
             border-color: var(--primary-gold);
-            background: rgba(0, 0, 0, 0.6);
-            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
         }
 
-        .input-box input {
-            width: 100%;
-            padding: 1.2rem 1rem 1.2rem 3.5rem;
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-size: 1rem;
-        }
-
-        .field-icon {
+        .input-box i.field-icon {
             position: absolute;
             left: 1.2rem;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--primary-gold);
-            opacity: 0.6;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 1.1rem;
+        }
+
+        .input-box input {
+            width: 100%;
+            padding: 1.1rem 1rem 1.1rem 3.2rem;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .input-box input:focus {
+            outline: none;
         }
 
         .btn-login {
             width: 100%;
-            padding: 1.2rem;
+            margin-top: 1.5rem;
+            padding: 1.1rem;
             background: linear-gradient(135deg, #D4AF37, #B8860B);
             border: none;
-            border-radius: 20px;
-            color: #002B1D;
+            border-radius: 18px;
+            color: #002216;
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            letter-spacing: 1px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
-            box-shadow: 0 15px 30px rgba(212, 175, 55, 0.2);
-            transition: 0.3s;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .btn-login:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(212, 175, 55, 0.4);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(212, 175, 55, 0.3);
         }
 
-        /* Particles */
-        .particle {
-            position: absolute;
-            background: var(--soft-gold);
-            border-radius: 50%;
-            pointer-events: none;
-            opacity: 0.3;
-            animation: float 10s infinite linear;
+        /* --- Info Section --- */
+        .ramadan-notice {
+            background: rgba(212, 175, 55, 0.08);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 0.8rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        @keyframes float {
-            0% {
-                transform: translateY(0) rotate(0);
+        /* --- Animations --- */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
             }
 
-            100% {
-                transform: translateY(-100vh) rotate(360deg);
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
+        @keyframes moonPulse {
+            from {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            to {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        /* Mobile Adjustments */
         @media (max-width: 480px) {
             .container {
-                width: 90%;
+                width: 85%;
             }
 
             .card {
                 padding: 3rem 1.5rem 1.5rem;
             }
 
-            .header .arabic {
-                font-size: 1.4rem;
+            .header h1 {
+                font-size: 1.5rem;
             }
 
-            .header h1 {
-                font-size: 1.6rem;
+            .moon-glow {
+                width: 50px;
+                height: 50px;
+                right: 5%;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top: 3px solid #002216;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
             }
         }
     </style>
@@ -364,22 +326,20 @@
 
 <body>
 
-    <div class="scene">
-        <div class="geometry-overlay"></div>
+    <div class="scene" id="scene">
         <div class="stars" id="stars-container"></div>
-        <div id="particles"></div>
-
-        <div class="lantern-hanging left"><i class="fas fa-lantern"></i></div>
-        <div class="lantern-hanging right"><i class="fas fa-lantern"></i></div>
+        <div class="moon-glow"></div>
+        <div class="geometry-pattern"></div>
 
         <div
-            style="position: absolute; top: 5%; right: 5%; width: 60px; height: 60px; background: radial-gradient(circle at 30% 30%, #fff 0%, #f4c430 100%); border-radius: 50%; box-shadow: 0 0 50px rgba(244, 196, 48, 0.4);">
+            style="position:absolute; top: -10px; left: 10%; opacity: 0.4; animation: swing 4s ease-in-out infinite alternate; transform-origin: top center;">
+            <i class="fas fa-fan" style="color: var(--primary-gold); font-size: 1.5rem;"></i>
         </div>
     </div>
 
     <div class="container">
         <header class="header">
-            <span class="arabic">رمضان كريم</span>
+            <span class="arabic">أهلاً يا رمضان</span>
             <h1>PStore Absensi</h1>
         </header>
 
@@ -388,40 +348,35 @@
                 <i class="fas fa-fingerprint"></i>
             </div>
 
-            <div class="countdown-timer">
-                <div class="timer-item">
-                    <span class="timer-val" id="days">00</span>
-                    <span class="timer-label">Hari</span>
-                </div>
-                <div class="timer-item">
-                    <span class="timer-val" id="hours">00</span>
-                    <span class="timer-label">Jam</span>
-                </div>
-                <div class="timer-item">
-                    <span class="timer-val" id="mins">00</span>
-                    <span class="timer-label">Menit</span>
-                </div>
-                <div
-                    style="font-size: 0.7rem; color: var(--primary-gold); align-self: center; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 10px;">
-                    Menuju<br>Ramadan
-                </div>
+            <div class="ramadan-notice">
+                <i class="fas fa-moon" style="color: var(--primary-gold)"></i>
+                <span>Menyambut Berkah Ramadan</span>
             </div>
+
+            @if(session('error'))
+                <div
+                    style="background: rgba(255, 77, 77, 0.1); border-left: 4px solid #ff4d4d; padding: 12px; border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.8rem;">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i> {{ session('error') }}
+                </div>
+            @endif
 
             <form action="{{ route('login.submit') }}" method="POST" id="loginForm">
                 @csrf
                 <div class="input-group">
+                    <label>ID Login</label>
                     <div class="input-box">
-                        <i class="fas fa-id-badge field-icon"></i>
-                        <input type="text" name="login_id" placeholder="ID Pegawai" required autofocus>
+                        <i class="fas fa-user-circle field-icon"></i>
+                        <input type="text" name="login_id" placeholder="Masukkan ID Anda" required autofocus>
                     </div>
                 </div>
 
                 <div class="input-group">
+                    <label>Kata Sandi</label>
                     <div class="input-box">
-                        <i class="fas fa-lock field-icon"></i>
-                        <input type="password" id="password" name="password" placeholder="Kata Sandi" required>
+                        <i class="fas fa-shield-halved field-icon"></i>
+                        <input type="password" id="password" name="password" placeholder="••••••••" required>
                         <button type="button" onclick="togglePassword()"
-                            style="position: absolute; right: 1.2rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: #555; cursor: pointer;">
+                            style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #555; cursor: pointer; padding: 5px;">
                             <i class="fas fa-eye" id="eye-icon"></i>
                         </button>
                     </div>
@@ -429,68 +384,33 @@
 
                 <button type="submit" class="btn-login" id="submitBtn">
                     <span>MASUK SISTEM</span>
-                    <i class="fas fa-arrow-right"></i>
+                    <i class="fas fa-sign-in-alt"></i>
                 </button>
             </form>
 
             <footer
-                style="margin-top: 2rem; text-align: center; color: rgba(255,255,255,0.2); font-size: 0.7rem; letter-spacing: 1px;">
-                &copy; {{ date('Y') }} PSTORE DIGITAL HUB<br>
-                Memberikan yang Terbaik
+                style="margin-top: 2rem; text-align: center; color: rgba(255,255,255,0.2); font-size: 0.65rem; letter-spacing: 0.5px;">
+                &copy; {{ date('Y') }} PSTORE DIGITAL TECHNOLOGY<br>
+                Crafted for Excellence
             </footer>
         </div>
     </div>
 
     <script>
-        // Stars Generator
-        function initScene() {
+        // Generate Twinkling Stars
+        function createStars() {
             const container = document.getElementById('stars-container');
-            for (let i = 0; i < 50; i++) {
+            const count = 40;
+            for (let i = 0; i < count; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
-                const size = Math.random() * 2 + 'px';
+                const size = Math.random() * 3 + 'px';
                 star.style.width = size;
                 star.style.height = size;
                 star.style.left = Math.random() * 100 + '%';
                 star.style.top = Math.random() * 100 + '%';
                 star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
                 container.appendChild(star);
-            }
-
-            // Shooting star
-            setInterval(() => {
-                const ss = document.createElement('div');
-                ss.className = 'shooting-star';
-                ss.style.top = Math.random() * 50 + '%';
-                ss.style.right = '0';
-                document.body.appendChild(ss);
-                setTimeout(() => ss.remove(), 4000);
-            }, 6000);
-
-            // Gold Particles
-            const pContainer = document.getElementById('particles');
-            for (let i = 0; i < 15; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.width = Math.random() * 4 + 'px';
-                p.style.height = p.style.width;
-                p.style.left = Math.random() * 100 + '%';
-                p.style.top = '100%';
-                p.style.animationDelay = Math.random() * 10 + 's';
-                pContainer.appendChild(p);
-            }
-        }
-
-        // Countdown Timer Ramadan 2026 (Estimasi 1 Maret)
-        function updateCountdown() {
-            const ramadanDate = new Date('March 1, 2026 00:00:00').getTime();
-            const now = new Date().getTime();
-            const diff = ramadanDate - now;
-
-            if (diff > 0) {
-                document.getElementById('days').innerText = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
-                document.getElementById('hours').innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-                document.getElementById('mins').innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
             }
         }
 
@@ -508,13 +428,12 @@
 
         document.getElementById('loginForm').onsubmit = function () {
             const btn = document.getElementById('submitBtn');
-            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memproses...';
-            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div>';
+            btn.style.opacity = '0.8';
+            btn.style.pointerEvents = 'none';
         };
 
-        initScene();
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
+        createStars();
     </script>
 </body>
 
