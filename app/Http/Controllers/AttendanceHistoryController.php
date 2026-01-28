@@ -57,7 +57,7 @@ class AttendanceHistoryController extends Controller
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
-        $today = Carbon::now($branchTimezone)->endOfDay();
+        $today = Carbon::now()->endOfDay(); // Gunakan waktu server (WIB) untuk limit, agar Audit melihat sampai hari ini
         $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
         // Ambil data
