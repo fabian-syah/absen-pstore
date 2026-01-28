@@ -50,14 +50,131 @@
             overscroll-behavior: none;
         }
 
-        /* Animated background shapes */
-        .shape {
+        /* Ramadan Decorations */
+        .ramadan-pattern {
             position: absolute;
-            border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.08;
-            animation: float 10s ease-in-out infinite;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 50% 50%, transparent 0%, transparent 10%, rgba(255,255,255,0.03) 10.1%, rgba(255,255,255,0.03) 11%, transparent 11.1%),
+                radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 20%);
+            background-size: 60px 60px, 100% 100%, 100% 100%;
+            opacity: 0.6;
             pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Hanging Lanterns */
+        .lantern-container {
+            position: absolute;
+            top: -20px;
+            z-index: 5;
+            animation: swing ease-in-out infinite alternate;
+            transform-origin: top center;
+        }
+
+        .lantern-container:nth-child(even) { animation-duration: 3.5s; }
+        .lantern-container:nth-child(odd) { animation-duration: 4s; }
+
+        /* Lantern Positions */
+        .lantern-container:nth-of-type(3) { left: 10%; }
+        .lantern-container:nth-of-type(4) { left: 20%; top: -10px; }
+        .lantern-container:nth-of-type(5) { right: 10%; }
+        .lantern-container:nth-of-type(6) { right: 20%; top: -15px; }
+
+        .string {
+            width: 2px;
+            height: 100px;
+            background: rgba(255, 215, 0, 0.6);
+            margin: 0 auto;
+        }
+
+        .lantern {
+            width: 40px;
+            height: 60px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            border-radius: 10px 10px 20px 20px;
+            margin: 0 auto;
+            position: relative;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lantern::after {
+            content: '';
+            width: 20px;
+            height: 30px;
+            background: rgba(255, 255, 220, 0.9);
+            border-radius: 5px;
+            box-shadow: 0 0 15px #fff;
+        }
+
+        .lantern::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            width: 10px;
+            height: 5px;
+            background: #D4AF37;
+        }
+
+        @keyframes swing {
+            0% { transform: rotate(-3deg); }
+            100% { transform: rotate(3deg); }
+        }
+
+        /* Mosque Silhouette */
+        .mosque-landscape {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 250px;
+            background-repeat: repeat-x;
+            background-position: bottom;
+            background-size: auto 100%;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.3;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23004d2e' fill-opacity='1' d='M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,261.3C960,256,1056,224,1152,208C1248,192,1344,192,1392,192L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .ramadan-greeting {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #FFD700;
+            font-family: 'Times New Roman', serif;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            animation: fadeIn 2s ease-in;
+            position: relative;
+            z-index: 20;
+        }
+
+        .ramadan-greeting h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #FFD700, #FDB931, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ramadan-greeting p {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .shape-1 {
@@ -1100,7 +1217,22 @@
     <!-- Floating dots -->
     <div class="dots" id="dots"></div>
 
+    <!-- Ramadan Decorations -->
+    <div class="ramadan-pattern"></div>
+    <div class="mosque-landscape"></div>
+    
+    <!-- Animated Lanterns -->
+    <div class="lantern-container"><div class="string"></div><div class="lantern"></div></div>
+    <div class="lantern-container"><div class="string"></div><div class="lantern"></div></div>
+    <div class="lantern-container"><div class="string"></div><div class="lantern"></div></div>
+    <div class="lantern-container"><div class="string"></div><div class="lantern"></div></div>
+
     <div class="login-container">
+        <!-- Ramadan Greeting -->
+        <div class="ramadan-greeting">
+            <h1>RAMADAN MUBARAK</h1>
+            <p>SELAMAT MENUNAIKAN IBADAH PUASA</p>
+        </div>
         <div class="login-card">
             <!-- Logo section -->
             <div class="logo-section">
