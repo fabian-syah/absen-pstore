@@ -114,9 +114,21 @@ trait SendFcmNotification
                     echo " [FCM SUCCESS] " . json_encode($responseBody) . "\n";
                     Log::info('FCM Success: ' . substr($response->body(), 0, 50));
                 } else {
+                    $responseBody = $response->json();
+
+                    // CEK JIKA TOKEN SUDAH TIDAK VALID
+                    if (
+                        isset($responseBody['error']['details'][0]['errorCode']) &&
+                        $responseBody['error']['details'][0]['errorCode'] === 'UNREGISTERED'
+                    ) {
+
+                        // Hapus token dari database agar tidak dikirim lagi nanti
+                        \App\Models\User::where('fcm_token', $token)->update(['fcm_token' => null]);
+
+                        Log::warning("FCM: Token tidak valid (UNREGISTERED). Menghapus token dari database.");
+                    }
+
                     $detailedResponses[] = ['status' => 'FAIL', 'token' => substr($token, 0, 10) . '...', 'response' => $response->body()];
-                    echo " [FCM FAIL] " . $response->body() . "\n";
-                    Log::error('FCM Failed: ' . $response->body());
                 }
             } catch (\Exception $e) {
                 Log::error('FCM Send Error: ' . $e->getMessage());
