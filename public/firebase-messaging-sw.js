@@ -3,12 +3,12 @@ importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js')
 
 // --- KONFIGURASI FIREBASE (Wajib Diisi sama dengan di .env) ---
 firebase.initializeApp({
-    apiKey: "ISI_API_KEY_DISINI",
-    authDomain: "ISI_AUTH_DOMAIN_DISINI",
-    projectId: "ISI_PROJECT_ID_DISINI",
-    storageBucket: "ISI_STORAGE_BUCKET_DISINI",
-    messagingSenderId: "ISI_SENDER_ID_DISINI",
-    appId: "ISI_APP_ID_DISINI"
+    apiKey: "AIzaSyA27iUWIsqv_6A4kzGq12qt0eEicfkgOmI",
+    authDomain: "bote-1a4b9.firebaseapp.com",
+    projectId: "bote-1a4b9",
+    storageBucket: "bote-1a4b9.firebasestorage.app",
+    messagingSenderId: "898324022444",
+    appId: "1:898324022444:web:e930d0fa96262ddf6c4b09"
 });
 
 const messaging = firebase.messaging();
