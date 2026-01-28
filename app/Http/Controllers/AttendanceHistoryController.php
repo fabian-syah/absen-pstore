@@ -54,10 +54,12 @@ class AttendanceHistoryController extends Controller
     {
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
 
-        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
+        // Explicitly use Asia/Jakarta for the timeline skeleton to ensure consistency
+        // This ensures Audit (WIB) always sees up to "Today" WIB, regardless of other factors
+        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, 'Asia/Jakarta')->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
-        $today = Carbon::now()->endOfDay(); // Gunakan waktu server (WIB) untuk limit, agar Audit melihat sampai hari ini
+        $today = Carbon::now('Asia/Jakarta')->endOfDay();
         $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
         // Ambil data
