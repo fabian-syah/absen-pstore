@@ -177,6 +177,36 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .lantern-container:nth-of-type(3),
+            .lantern-container:nth-of-type(6) {
+                display: none; /* Hide outer lanterns on mobile */
+            }
+
+            .lantern-container:nth-of-type(4) { left: 5%; transform: scale(0.8); }
+            .lantern-container:nth-of-type(5) { right: 5%; transform: scale(0.8); }
+
+            .ramadan-greeting h1 {
+                font-size: 1.5rem;
+                letter-spacing: 1px;
+            }
+
+            .ramadan-greeting p {
+                font-size: 0.75rem;
+                letter-spacing: 2px;
+            }
+
+            .mosque-landscape {
+                height: 150px; /* Reduce mosque height */
+                opacity: 0.2;
+            }
+            
+            .login-container {
+                padding-top: 20px;
+            }
+        }
+
         .shape-1 {
             width: 500px;
             height: 500px;
