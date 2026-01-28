@@ -12,6 +12,8 @@ trait SendFcmNotification
 {
     public function sendNotificationToBranchRoles($roles, $branchId, $title, $body)
     {
+        $detailedResponses = [];
+
         // 1. Cari Token
         Log::info("FCM: Mencari token untuk Role: " . json_encode($roles) . " Branch ID: " . $branchId);
 
@@ -103,9 +105,11 @@ trait SendFcmNotification
 
                 if ($response->successful()) {
                     $responseBody = $response->json();
+                    $detailedResponses[] = ['status' => 'SUCCESS', 'token' => substr($token, 0, 10) . '...', 'response' => $responseBody];
                     echo " [FCM SUCCESS] " . json_encode($responseBody) . "\n";
                     Log::info('FCM Success: ' . substr($response->body(), 0, 50));
                 } else {
+                    $detailedResponses[] = ['status' => 'FAIL', 'token' => substr($token, 0, 10) . '...', 'response' => $response->body()];
                     echo " [FCM FAIL] " . $response->body() . "\n";
                     Log::error('FCM Failed: ' . $response->body());
                 }
@@ -113,5 +117,7 @@ trait SendFcmNotification
                 Log::error('FCM Send Error: ' . $e->getMessage());
             }
         }
+
+        return $detailedResponses;
     }
 }

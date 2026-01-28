@@ -60,14 +60,25 @@ class DashboardController extends Controller
         $body = "Tes notif ke semua Admin & Audit. By: " . $user->name . " @ " . now()->toTimeString();
 
         try {
-            // Panggil fungsi trait langsung (tanpa job queue)
-            // Note: Trait ini akan echo/log, kita tangkap outputnya jika bisa, atau biarkan log server mencatat
-            $this->sendNotificationToBranchRoles($roles, $branchId, $title, $body);
+            // Group user by Branch ID supaya bisa pakai Trait secara "legal"
+            $groupedByBranch = $candidates->groupBy('branch_id');
+            $sentCount = 0;
+            $allResponses = [];
+
+            foreach ($groupedByBranch as $branchId => $users) {
+                // Panggil trait untuk branch ini (abaikan filter di dalam trait karena logic kita sudah ensure user exist)
+                $responses = $this->sendNotificationToBranchRoles($roles, $branchId, $title, $body);
+                if (is_array($responses)) {
+                    $allResponses = array_merge($allResponses, $responses);
+                }
+                $sentCount++;
+            }
 
             return response()->json([
                 'status' => 'SUCCESS',
-                'message' => 'Fungsi kirim sudah dijalankan. Cek notifikasi di HP.',
+                'message' => "Broadcast dijalankan ke $sentCount kelompok branch.",
                 'debug' => $debugInfo,
+                'fcm_responses' => $allResponses,
                 'note' => 'Cek log server jika masih gagal.'
             ]);
         } catch (\Exception $e) {
