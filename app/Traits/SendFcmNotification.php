@@ -13,13 +13,21 @@ trait SendFcmNotification
     public function sendNotificationToBranchRoles($roles, $branchId, $title, $body)
     {
         // 1. Cari Token
-        $tokens = User::whereIn('role', $roles)
-            ->where('branch_id', $branchId)
-            ->whereNotNull('fcm_token')
-            ->pluck('fcm_token')
-            ->toArray();
+        Log::info("FCM: Mencari token untuk Role: " . json_encode($roles) . " Branch ID: " . $branchId);
+
+        $query = User::whereIn('role', $roles)
+            ->whereNotNull('fcm_token');
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+
+        $tokens = $query->pluck('fcm_token')->toArray();
+
+        Log::info("FCM: Ditemukan " . count($tokens) . " token.");
 
         if (empty($tokens)) {
+            echo " [FCM SKIP] Tidak ada token ditemukan.\n";
             Log::info("FCM: Tidak ada token user audit/admin ditemukan untuk cabang ID $branchId");
             return;
         }
