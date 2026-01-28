@@ -69,14 +69,14 @@ trait SendFcmNotification
                 "message" => [
                     "token" => $token,
 
-                    // A. Bagian NOTIFICATION (Standar agar muncul otomatis di Background)
+                    // A. Bagian NOTIFICATION (Hapus 'sound' dari sini)
                     "notification" => [
                         "title" => $title,
                         "body" => $body,
-                        "sound" => "default"
+                        // "sound" => "default" <-- Hapus baris ini, ini penyebab error 400
                     ],
 
-                    // B. Bagian WEBPUSH (Khusus Chrome/Edge Desktop/Android)
+                    // B. Bagian WEBPUSH (Khusus Chrome/Edge/Android)
                     "webpush" => [
                         "headers" => [
                             "Urgency" => "high"
@@ -84,7 +84,7 @@ trait SendFcmNotification
                         "notification" => [
                             "title" => $title,
                             "body" => $body,
-                            "icon" => "https://cdn-icons-png.flaticon.com/512/1827/1827301.png", // Icon Online (Aman)
+                            "icon" => "https://cdn-icons-png.flaticon.com/512/1827/1827301.png",
                             "click_action" => $link
                         ],
                         "fcm_options" => [
@@ -92,7 +92,7 @@ trait SendFcmNotification
                         ]
                     ],
 
-                    // C. Bagian DATA (Untuk custom handler di JS Foreground)
+                    // C. Bagian DATA
                     "data" => [
                         "title" => (string) $title,
                         "body" => (string) $body,
