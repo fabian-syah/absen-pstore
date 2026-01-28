@@ -52,20 +52,28 @@ class AttendanceHistoryController extends Controller
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
+        // 1. Ambil Timezone spesifik cabang karyawan
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
 
-        // Explicitly use Asia/Jakarta for the timeline skeleton to ensure consistency
-        // This ensures Audit (WIB) always sees up to "Today" WIB, regardless of other factors
-        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, 'Asia/Jakarta')->startOfMonth();
+        // 2. Buat awal dan akhir bulan berdasarkan Timezone Cabang
+        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
-        $today = Carbon::now('Asia/Jakarta')->endOfDay();
+        // 3. Ambil "Hari Ini" juga berdasarkan Timezone Cabang
+        $today = Carbon::now($branchTimezone)->endOfDay();
+
+        // Jika bulan yang dipilih adalah bulan depan, limit tetap di akhir bulan berjalan
+        // Jika bulan yang dipilih adalah bulan ini, limit adalah 'Hari Ini' di cabang tersebut
         $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
-        // Ambil data
+        // 4. Query Database (Database biasanya menyimpan UTC/WIB, 
+        // pastikan range query mencakup kemungkinan selisih jam)
         $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
             ->where('user_id', $user->id)
-            ->whereBetween('check_in_time', [$startDate, $endDate])
+            ->whereBetween('check_in_time', [
+                $startDate->copy()->startOfDay()->setTimezone('UTC'),
+                $endDate->copy()->endOfDay()->setTimezone('UTC')
+            ])
             ->get();
 
         $leaves = LeaveRequest::with('verifier')
@@ -81,12 +89,13 @@ class AttendanceHistoryController extends Controller
             })->get();
 
         $historyCollection = collect();
-        $period = CarbonPeriod::create($startDate, $limitDate);
+        $period = CarbonPeriod::create($startDate->startOfDay(), $limitDate->startOfDay());
 
         foreach ($period as $date) {
+            // Gunakan $date yang sudah membawa konteks Timezone Cabang
             $currentDateStr = $date->format('Y-m-d');
 
-            // Cek attendance
+            // Cek matching attendance
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
             })->first();
