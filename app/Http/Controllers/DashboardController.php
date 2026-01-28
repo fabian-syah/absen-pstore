@@ -25,8 +25,8 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // 1. Debug Target Audience
-        $roles = [$user->role];
-        $branchId = $user->branch_id;
+        $roles = ['admin', 'audit']; // Broadcast ke semua
+        $branchId = null; // Force Global (Ignore Branch)
 
         $targetQuery = User::whereIn('role', $roles)->whereNotNull('fcm_token');
         if ($branchId) {
@@ -56,8 +56,8 @@ class DashboardController extends Controller
         }
 
         // 2. Send Direct Notification (Sync)
-        $title = "Test Notifikasi Langsung";
-        $body = "Halo, ini test debug langsung dari server. Jam: " . now()->toTimeString();
+        $title = "Test Broadcast Global";
+        $body = "Tes notif ke semua Admin & Audit. By: " . $user->name . " @ " . now()->toTimeString();
 
         try {
             // Panggil fungsi trait langsung (tanpa job queue)
