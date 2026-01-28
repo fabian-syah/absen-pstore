@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
     <title>PStore - Menuju Ramadan</title>
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
     <link
@@ -33,10 +34,10 @@
             --soft-gold: #D4AF37;
             --deep-emerald: #fdfbf0;
             --darker-emerald: #ffffff;
-            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.95);
             --glass-border: rgba(184, 134, 11, 0.3);
             --body-bg: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
-            --text-main: #2c3e50;
+            --text-main: #1a1a1a;
             --text-muted: #5d6d7e;
             --input-bg: #f4f7f6;
             --footer-border: rgba(184, 134, 11, 0.1);
@@ -47,7 +48,7 @@
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
         }
 
         body {
@@ -62,7 +63,46 @@
             color: var(--text-main);
         }
 
-        /* Animated Background Elements */
+        /* --- Theme Toggle Area --- */
+        .theme-toggle-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            /* Pastikan paling atas di HP */
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        .moon-sun-icon {
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle at 30% 30%, #fff 0%, #f4c430 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(244, 196, 48, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: glow 4s ease-in-out infinite alternate;
+            transition: 0.5s transform;
+        }
+
+        .moon-sun-icon:active {
+            transform: scale(0.9);
+        }
+
+        body.light-mode .moon-sun-icon {
+            background: radial-gradient(circle at 30% 30%, #ffcc00 0%, #ff8800 100%);
+            box-shadow: 0 0 50px rgba(255, 165, 0, 0.6);
+        }
+
+        .moon-sun-icon i {
+            color: #fff;
+            font-size: 22px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Layout --- */
         .bg-ornaments {
             position: fixed;
             inset: 0;
@@ -70,49 +110,6 @@
             z-index: 1;
         }
 
-        /* Theme Toggle (Bulan/Matahari) */
-        .theme-toggle {
-            position: absolute;
-            top: 5%;
-            right: 10%;
-            width: 80px;
-            height: 80px;
-            cursor: pointer;
-            pointer-events: all;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .moon-sun-icon {
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle at 30% 30%, #fff 0%, #f4c430 100%);
-            border-radius: 50%;
-            box-shadow: 0 0 50px rgba(244, 196, 48, 0.4);
-            animation: glow 4s ease-in-out infinite alternate;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Light mode matahari adjustments */
-        body.light-mode .moon-sun-icon {
-            background: radial-gradient(circle at 30% 30%, #ffcc00 0%, #ff8800 100%);
-            box-shadow: 0 0 60px rgba(255, 165, 0, 0.6);
-        }
-
-        .moon-sun-icon i {
-            color: #fff;
-            font-size: 24px;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Lantern Styling */
         .lantern {
             position: absolute;
             top: -20px;
@@ -121,11 +118,11 @@
         }
 
         .lantern-1 {
-            left: 15%;
+            left: 10%;
         }
 
         .lantern-2 {
-            right: 15%;
+            right: 10%;
             animation-delay: -1.5s;
         }
 
@@ -135,242 +132,201 @@
             filter: drop-shadow(0 0 10px var(--soft-gold));
         }
 
-        .lantern::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 1px;
-            height: 80px;
-            background: var(--glass-border);
-        }
-
-        /* Main Container */
         .login-wrapper {
             position: relative;
             z-index: 10;
             width: 90%;
             max-width: 400px;
-            perspective: 1000px;
+            padding-top: 40px;
         }
 
         .greeting-header {
             text-align: center;
             margin-bottom: 2rem;
-            animation: fadeInDown 1s ease-out;
         }
 
         .greeting-header span {
             font-family: 'Amiri', serif;
             color: var(--primary-gold);
-            font-size: 1.2rem;
-            letter-spacing: 2px;
+            font-size: 1.3rem;
         }
 
         .greeting-header h2 {
             font-weight: 800;
             font-size: 1.8rem;
-            background: linear-gradient(to right, var(--text-main), var(--soft-gold));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            margin-top: 5px;
         }
 
-        /* Card Styling */
         .login-card {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 2.5rem 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: cardEntrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .brand-box {
-            text-align: center;
-            margin-bottom: 2rem;
+            border-radius: 35px;
+            padding: 2.5rem 1.8rem;
+            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.5);
         }
 
         .logo-ring {
-            width: 70px;
-            height: 70px;
-            margin: 0 auto 1rem;
+            width: 75px;
+            height: 75px;
+            margin: 0 auto 1.5rem;
             background: var(--primary-gold);
-            border-radius: 20px;
+            border-radius: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transform: rotate(-10deg);
-            transition: 0.5s;
+            transform: rotate(-8deg);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
         .logo-ring i {
-            font-size: 30px;
+            font-size: 32px;
             color: var(--darker-emerald);
-            transform: rotate(10deg);
         }
 
-        /* Input Styling */
-        .form-group {
+        /* --- Badges & Notes --- */
+        .pre-ramadan-badge {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px dashed var(--primary-gold);
+            padding: 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            margin-bottom: 0.8rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .theme-note {
+            font-size: 0.75rem;
+            color: var(--soft-gold);
+            text-align: center;
             margin-bottom: 1.5rem;
+            opacity: 0.8;
+            font-weight: 500;
+            animation: pulse 2s infinite;
+        }
+
+        /* --- Form --- */
+        .form-group {
+            margin-bottom: 1.2rem;
         }
 
         .form-group label {
             display: block;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: 700;
             color: var(--primary-gold);
-            margin-bottom: 0.5rem;
-            margin-left: 0.5rem;
+            margin-bottom: 0.6rem;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .input-box {
             position: relative;
         }
 
-        .input-box i {
+        .input-box i:not(.fa-eye) {
             position: absolute;
             left: 1.2rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--primary-gold);
             opacity: 0.6;
-            transition: 0.3s;
         }
 
         .form-control {
             width: 100%;
-            padding: 1rem 1rem 1rem 3rem;
+            padding: 1.1rem 1rem 1.1rem 3.2rem;
             background: var(--input-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 15px;
+            border-radius: 18px;
             color: var(--text-main);
-            font-size: 0.95rem;
-            transition: 0.3s;
+            font-size: 1rem;
         }
 
         .form-control:focus {
             outline: none;
             border-color: var(--primary-gold);
-            background: var(--input-bg);
             box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
         }
 
-        /* Button Styling */
         .btn-submit {
             width: 100%;
-            padding: 1rem;
+            padding: 1.1rem;
             background: linear-gradient(135deg, var(--primary-gold), #b8860b);
             border: none;
-            border-radius: 15px;
+            border-radius: 18px;
             color: #fff;
             font-weight: 800;
             font-size: 1rem;
             cursor: pointer;
-            transition: 0.3s;
+            margin-top: 1.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin-top: 2rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        body.light-mode .btn-submit {
-            color: #ffffff;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
-            filter: brightness(1.1);
-        }
-
-        .btn-submit:active {
-            transform: translateY(0);
-        }
-
-        /* Mobile Specifics */
-        @media (max-width: 480px) {
-            .login-card {
-                padding: 2rem 1.5rem;
-            }
-
-            .greeting-header h2 {
-                font-size: 1.5rem;
-            }
-
-            .theme-toggle {
-                width: 60px;
-                height: 60px;
-                top: 2%;
-                right: 5%;
-            }
-
-            .moon-sun-icon {
-                width: 60px;
-                height: 60px;
-            }
-
-            .lantern-1 {
-                left: 5%;
-            }
-
-            .lantern-2 {
-                right: 5%;
-            }
-        }
-
-        /* Animations */
+        /* --- Keyframes --- */
         @keyframes swing {
             from {
-                transform: rotate(-5deg);
+                transform: rotate(-4deg);
             }
 
             to {
-                transform: rotate(5deg);
+                transform: rotate(4deg);
             }
         }
 
         @keyframes glow {
             from {
-                opacity: 0.6;
+                opacity: 0.8;
+                transform: scale(1);
             }
 
             to {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
                 opacity: 1;
             }
         }
 
-        @keyframes cardEntrance {
-            from {
-                opacity: 0;
-                transform: translateY(30px) rotateX(-10deg);
+        @media (max-width: 480px) {
+            .moon-sun-icon {
+                width: 60px;
+                height: 60px;
             }
 
-            to {
-                opacity: 1;
-                transform: translateY(0) rotateX(0);
-            }
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
+            .login-card {
+                padding: 2rem 1.4rem;
             }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            .greeting-header h2 {
+                font-size: 1.5rem;
             }
         }
 
         .spinner {
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(0, 0, 0, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-top: 3px solid #fff;
             border-radius: 50%;
             animation: spin 1s linear infinite;
@@ -381,26 +337,14 @@
                 transform: rotate(360deg);
             }
         }
-
-        /* Info Style */
-        .pre-ramadan-badge {
-            background: rgba(212, 175, 55, 0.1);
-            border: 1px dashed var(--primary-gold);
-            padding: 0.8rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
     </style>
 </head>
 
 <body>
 
     <div class="bg-ornaments">
-        <div class="theme-toggle" onclick="toggleTheme()">
-            <div class="moon-sun-icon" id="theme-btn">
+        <div class="theme-toggle-container" onclick="toggleTheme()">
+            <div class="moon-sun-icon">
                 <i class="fas fa-moon" id="theme-icon"></i>
             </div>
         </div>
@@ -408,7 +352,7 @@
         <div class="lantern lantern-1"><i class="fas fa-kaaba"></i></div>
         <div class="lantern lantern-2"><i class="fas fa-mosque"></i></div>
 
-        <svg width="100%" height="100%" opacity="0.05">
+        <svg width="100%" height="100%" opacity="0.03">
             <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
                 <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="1" />
             </pattern>
@@ -427,55 +371,50 @@
                 <div class="logo-ring">
                     <i class="fas fa-fingerprint"></i>
                 </div>
-                <p style="color: var(--text-muted); font-size: 0.85rem;">Silahkan login untuk melanjutkan</p>
             </div>
 
             <div class="pre-ramadan-badge">
-                <i class="fas fa-moon" style="margin-right: 5px; color: var(--primary-gold)"></i>
-                Menyambut Bulan Suci Ramadan
+                <i class="fas fa-star-and-crescent"></i>
+                Menyambut Berkah Ramadan
             </div>
 
-            @if(session('error'))
-                <div
-                    style="background: rgba(255,0,0,0.1); border-left: 3px solid #ff4d4d; padding: 10px; margin-bottom: 15px; font-size: 0.8rem; border-radius: 5px; color: #ff4d4d;">
-                    {{ session('error') }}
-                </div>
-            @endif
+            <div class="theme-note">
+                <i class="fas fa-lightbulb"></i> Klik ikon bulan/matahari untuk ganti mode
+            </div>
 
             <form action="{{ route('login.submit') }}" method="POST" id="loginForm">
                 @csrf
                 <div class="form-group">
-                    <label>ID Login</label>
+                    <label>ID Pegawai</label>
                     <div class="input-box">
-                        <input type="text" name="login_id" class="form-control" placeholder="ID Pegawai" required
+                        <input type="text" name="login_id" class="form-control" placeholder="Masukkan ID Login" required
                             autofocus>
-                        <i class="fas fa-user-tag"></i>
+                        <i class="fas fa-user-circle"></i>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Password</label>
+                    <label>Kata Sandi</label>
                     <div class="input-box">
                         <input type="password" id="password" name="password" class="form-control" placeholder="••••••••"
                             required>
-                        <i class="fas fa-key"></i>
+                        <i class="fas fa-lock"></i>
                         <button type="button" onclick="togglePass()"
                             style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #777; cursor: pointer;">
-                            <i class="fas fa-eye" id="eye-icon"
-                                style="position: static; transform: none; font-size: 14px;"></i>
+                            <i class="fas fa-eye" id="eye-icon" style="font-size: 14px;"></i>
                         </button>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-submit" id="btnSumbit">
+                <button type="submit" class="btn-submit" id="btnSubmit">
                     <span>MASUK SISTEM</span>
-                    <i class="fas fa-arrow-right"></i>
+                    <i class="fas fa-sign-in-alt"></i>
                 </button>
             </form>
 
             <footer
-                style="margin-top: 2rem; text-align: center; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid var(--footer-border); padding-top: 1rem;">
-                &copy; {{ date('Y') }} PStore Team • Crafted with Spirit
+                style="margin-top: 2rem; text-align: center; font-size: 0.65rem; color: var(--text-muted); border-top: 1px solid var(--footer-border); padding-top: 1rem;">
+                &copy; {{ date('Y') }} PStore Team • Build with Passion
             </footer>
         </div>
     </div>
@@ -493,7 +432,7 @@
             }
         }
 
-        // Logic Theme Switcher
+        // Logic Theme Switcher yang lebih kuat untuk Mobile
         function toggleTheme() {
             const body = document.body;
             const icon = document.getElementById('theme-icon');
@@ -502,13 +441,22 @@
 
             if (body.classList.contains('light-mode')) {
                 icon.classList.replace('fa-moon', 'fa-sun');
+                // Simpan pilihan ke localStorage agar tidak reset saat refresh
+                localStorage.setItem('theme', 'light');
             } else {
                 icon.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('theme', 'dark');
             }
         }
 
+        // Cek preferensi user saat reload
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+        }
+
         document.getElementById('loginForm').onsubmit = function () {
-            const btn = document.getElementById('btnSumbit');
+            const btn = document.getElementById('btnSubmit');
             btn.innerHTML = '<div class="spinner"></div>';
             btn.style.opacity = '0.7';
             btn.style.pointerEvents = 'none';
