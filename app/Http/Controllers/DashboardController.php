@@ -13,8 +13,32 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use PDF;
 
+use App\Jobs\SendAuditNotificationJob;
+
 class DashboardController extends Controller
 {
+    public function testNotification()
+    {
+        $user = Auth::user();
+
+        if (!$user->fcm_token) {
+            return redirect()->back()->with('error', 'Token FCM belum tersimpan! Pastikan Anda mengklik "Allow" pada notifikasi browser.');
+        }
+
+        // Send Custom Test Notification
+        $title = "Test Notifikasi";
+        $body = "this testing dibuat oleh bian";
+
+        try {
+            // Dispatch job specifically to this user's role and branch (or just force it for testing)
+            // Using logic similar to SendAuditNotificationJob but targeting this specific user/role context
+            SendAuditNotificationJob::dispatch([$user->role], $user->branch_id, $title, $body);
+
+            return redirect()->back()->with('success', 'Notifikasi test telah dikirim! Cek HP Anda. ID: ' . now()->timestamp);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal kirim: ' . $e->getMessage());
+        }
+    }
     public function index()
     {
         $user = Auth::user();

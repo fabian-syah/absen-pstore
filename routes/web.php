@@ -63,6 +63,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
+    // Route Test Notifikasi
+    Route::get('/test-notification', [DashboardController::class, 'testNotification'])->name('test.notification');
+
     Route::post('/update-fcm-token', [UserController::class, 'updateFcmToken'])->name('update.fcm.token');
     Route::get('/kasbon/export', [App\Http\Controllers\CashAdvanceController::class, 'export'])->name('kasbon.export');
 

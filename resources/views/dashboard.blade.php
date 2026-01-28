@@ -10,10 +10,15 @@
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
             <h3 class="fw-bold mb-0">{{ Auth::user()->name }}!</h3>
         </div>
-        {{-- <div class="text-end d-none d-md-block">
+        <div class="text-end d-none d-md-block">
+            @if(in_array(Auth::user()->role, ['audit', 'admin']))
+                <a href="{{ route('test.notification') }}" class="btn btn-sm btn-info text-white me-2">
+                    <i class="mdi mdi-bell-ring"></i> Test Notif
+                </a>
+            @endif
             <h5 class="fw-bold mb-0 text-primary" id="header-clock">--:--:--</h5>
             <small class="text-muted">{{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}</small>
-        </div> --}}
+        </div>
     </div>
 @endsection
 
@@ -1052,18 +1057,18 @@
                         @else
                             <div class="active-work-card mb-3 position-relative overflow-hidden"
                                 style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
-                                                                                                                                                                                                                                                                    border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
+                                                                                                                                                                                                                                                                                border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
 
                                 {{-- Decorative Elements --}}
                                 <div
                                     style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; 
-                                                                                                                                                                                                                                                                        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                                                                                                                                                                                                        border-radius: 50%;">
+                                                                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                                                                                                                                                                                    border-radius: 50%;">
                                 </div>
                                 <div
                                     style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; 
-                                                                                                                                                                                                                                                                        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
-                                                                                                                                                                                                                                                                        border-radius: 50%;">
+                                                                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
+                                                                                                                                                                                                                                                                                    border-radius: 50%;">
                                 </div>
 
                                 <div class="card-body p-4 position-relative" style="z-index: 2;">
@@ -1073,9 +1078,9 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="work-status-icon me-3"
                                                     style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
-                                                                                                                                                                                                                                                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
-                                                                                                                                                                                                                                                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                                                                                                                                                                                                                                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                                                                                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                                     <i class="mdi mdi-briefcase-check text-white" style="font-size: 28px;"></i>
                                                 </div>
                                                 <div>
@@ -1093,7 +1098,7 @@
                                         {{-- Work Timeline & Info --}}
                                         <div class="work-timeline-card p-3 mb-3"
                                             style="background: rgba(255,255,255,0.95); border-radius: 16px; 
-                                                                                                                                                                                                                                                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                                                                                                                                                                                                                                                                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
 
                                             <div class="row g-3">
                                                 {{-- Check In Time --}}
@@ -1101,8 +1106,8 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="timeline-dot me-3"
                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #43e97b, #38f9d7); 
-                                                                                                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
+                                                                                                                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
                                                             <i class="mdi mdi-login text-white fs-5"></i>
                                                         </div>
                                                         <div>
@@ -1125,8 +1130,8 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="timeline-dot me-3"
                                                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+                                                                                                                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
                                                             <i class="mdi mdi-timer-outline text-white fs-5"></i>
                                                         </div>
                                                         <div>
@@ -1164,9 +1169,9 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="work-status-icon me-3"
                                                     style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
-                                                                                                                                                                                                                                                                                                                                                    border-radius: 16px; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                    justify-content: center; backdrop-filter: blur(10px); 
-                                                                                                                                                                                                                                                                                                                                                    border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                                                                                                                                                                                                                                                                                                                                    border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                    justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                                                                                                                                                                                    border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                                     <i class="mdi mdi-clock-alert-outline text-white" style="font-size: 28px;"></i>
                                                 </div>
                                                 <div>
@@ -1200,8 +1205,8 @@
                                                 <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
                                                     class="checkout-btn btn btn-lg w-100 shadow-lg"
                                                     style="background: rgba(255,255,255,0.95); color: #ef4444; border: none; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                      border-radius: 14px; padding: 1rem; font-weight: 700; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                      transition: all 0.3s ease; backdrop-filter: blur(10px);">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                          border-radius: 14px; padding: 1rem; font-weight: 700; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                          transition: all 0.3s ease; backdrop-filter: blur(10px);">
                                                     <i class="mdi mdi-logout-variant me-2"></i>
                                                     Absen Pulang Mandiri
                                                 </a>
@@ -1256,41 +1261,41 @@
                                                             </p>
                                                             <div class="overtime-slide-track" id="slide-track"
                                                                 style="
-                                                                                                                                                        background: rgba(255,255,255,0.95);
-                                                                                                                                                        height: 56px;
-                                                                                                                                                        border-radius: 50px;
-                                                                                                                                                        position: relative;
-                                                                                                                                                        display: flex;
-                                                                                                                                                        align-items: center;
-                                                                                                                                                        overflow: hidden;
-                                                                                                                                                        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                                                                                                                                                                            background: rgba(255,255,255,0.95);
+                                                                                                                                                                            height: 56px;
+                                                                                                                                                                            border-radius: 50px;
+                                                                                                                                                                            position: relative;
+                                                                                                                                                                            display: flex;
+                                                                                                                                                                            align-items: center;
+                                                                                                                                                                            overflow: hidden;
+                                                                                                                                                                            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
 
                                                                 <span
                                                                     style="
-                                                                                                                                                            position: absolute;
-                                                                                                                                                            left: 0; width: 100%;
-                                                                                                                                                            text-align: center;
-                                                                                                                                                            color: #10b981;
-                                                                                                                                                            font-weight: 700;
-                                                                                                                                                            font-size: 0.85rem;
-                                                                                                                                                            letter-spacing: 1px;
-                                                                                                                                                            user-select: none;
-                                                                                                                                                            opacity: 0.75;">
+                                                                                                                                                                                position: absolute;
+                                                                                                                                                                                left: 0; width: 100%;
+                                                                                                                                                                                text-align: center;
+                                                                                                                                                                                color: #10b981;
+                                                                                                                                                                                font-weight: 700;
+                                                                                                                                                                                font-size: 0.85rem;
+                                                                                                                                                                                letter-spacing: 1px;
+                                                                                                                                                                                user-select: none;
+                                                                                                                                                                                opacity: 0.75;">
                                                                     GESER KE KANAN >>
                                                                 </span>
 
                                                                 <div id="slide-thumb"
                                                                     style="
-                                                                                                                                                            width: 48px; height: 48px;
-                                                                                                                                                            background: linear-gradient(135deg, #43e97b, #38f9d7);
-                                                                                                                                                            border-radius: 50%;
-                                                                                                                                                            margin-left: 4px;
-                                                                                                                                                            display: flex; align-items: center; justify-content: center;
-                                                                                                                                                            color: white; font-size: 1.4rem;
-                                                                                                                                                            box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
-                                                                                                                                                            cursor: grab;
-                                                                                                                                                            transition: transform 0.2s ease-out;
-                                                                                                                                                            touch-action: none;">
+                                                                                                                                                                                width: 48px; height: 48px;
+                                                                                                                                                                                background: linear-gradient(135deg, #43e97b, #38f9d7);
+                                                                                                                                                                                border-radius: 50%;
+                                                                                                                                                                                margin-left: 4px;
+                                                                                                                                                                                display: flex; align-items: center; justify-content: center;
+                                                                                                                                                                                color: white; font-size: 1.4rem;
+                                                                                                                                                                                box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
+                                                                                                                                                                                cursor: grab;
+                                                                                                                                                                                transition: transform 0.2s ease-out;
+                                                                                                                                                                                touch-action: none;">
                                                                     <i class="mdi mdi-chevron-double-right"></i>
                                                                 </div>
                                                             </div>
@@ -1559,8 +1564,8 @@
                 {{-- Decorative elements --}}
                 <div
                     style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
-                                                                                                                            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                                                            border-radius: 50%; pointer-events: none;">
+                                                                                                                                background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                                border-radius: 50%; pointer-events: none;">
                 </div>
 
                 <div class="card-body p-4">
@@ -1571,8 +1576,8 @@
                                 {{-- Icon dengan glassmorphism effect --}}
                                 <div class="d-flex align-items-center justify-content-center me-3"
                                     style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
-                                                                                                                                            border-radius: 16px; backdrop-filter: blur(10px); 
-                                                                                                                                            border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                                                                                                                                                border-radius: 16px; backdrop-filter: blur(10px); 
+                                                                                                                                                border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
                                     <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
                                 </div>
                                 <div>
@@ -1593,21 +1598,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                                                                    border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                                                                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                                                                    transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                                                                                                                                        opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                                                                border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                                                                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                                                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                                                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
                                                         <i class="mdi mdi-file-document-edit text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -1628,21 +1633,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                                                                    border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                                                                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                                                                    transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                                                                                                                                                        opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
-                                                                                                                                                                border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                                                                box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
+                                                                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                                                    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
                                                         <i class="mdi mdi-history text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -1872,8 +1877,8 @@
 @push('styles')
     <style>
         /* =================================================================
-                                                                               DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
-                                                                               ================================================================= */
+                                                                                   DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
+                                                                                   ================================================================= */
 
         /* Section Headers & Separators */
         .section-header {
@@ -1971,8 +1976,8 @@
         }
 
         /* =================================================================
-                                                                               CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
-                                                                               ================================================================= */
+                                                                                   CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
+                                                                                   ================================================================= */
 
         /* DON'T override backgrounds - only fix text colors */
 
@@ -3611,552 +3616,552 @@
             @endif
 
         // --- DISMISS LIBUR NOTICE POPUP ---
-            function dismissLiburNotice() {
-                const popup = document.getElementById('libur-notice-popup');
-                if (popup) {
-                    popup.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                    popup.style.opacity = '0';
-                    popup.style.transform = 'translateY(-20px)';
-                    setTimeout(() => popup.remove(), 300);
-                    // Simpan ke localStorage agar tidak muncul lagi selama 7 hari
-                    localStorage.setItem('libur_notice_dismissed', Date.now());
+        function dismissLiburNotice() {
+            const popup = document.getElementById('libur-notice-popup');
+            if (popup) {
+                popup.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                popup.style.opacity = '0';
+                popup.style.transform = 'translateY(-20px)';
+                setTimeout(() => popup.remove(), 300);
+                // Simpan ke localStorage agar tidak muncul lagi selama 7 hari
+                localStorage.setItem('libur_notice_dismissed', Date.now());
+            }
+        }
+
+        // Cek localStorage saat load - sembunyikan jika sudah di-dismiss dalam 7 hari terakhir
+        document.addEventListener('DOMContentLoaded', function () {
+            const dismissed = localStorage.getItem('libur_notice_dismissed');
+            if (dismissed) {
+                const dismissedTime = parseInt(dismissed);
+                const sevenDays = 7 * 24 * 60 * 60 * 1000;
+                if (Date.now() - dismissedTime < sevenDays) {
+                    const popup = document.getElementById('libur-notice-popup');
+                    if (popup) popup.remove();
                 }
             }
+        });
 
-            // Cek localStorage saat load - sembunyikan jika sudah di-dismiss dalam 7 hari terakhir
-            document.addEventListener('DOMContentLoaded', function() {
-                const dismissed = localStorage.getItem('libur_notice_dismissed');
-                if (dismissed) {
-                    const dismissedTime = parseInt(dismissed);
-                    const sevenDays = 7 * 24 * 60 * 60 * 1000;
-                    if (Date.now() - dismissedTime < sevenDays) {
-                        const popup = document.getElementById('libur-notice-popup');
-                        if (popup) popup.remove();
-                    }
-                }
-            });
+        function previewGalleryImage(src, title, date) {
+            const modal = new bootstrap.Modal(document.getElementById('galleryPreviewModal'));
+            document.getElementById('galleryPreviewImg').src = src;
+            document.getElementById('galleryPreviewTitle').innerText = title;
+            document.getElementById('galleryPreviewDate').innerText = date;
+            modal.show();
+        }
 
-            function previewGalleryImage(src, title, date) {
-                const modal = new bootstrap.Modal(document.getElementById('galleryPreviewModal'));
-                document.getElementById('galleryPreviewImg').src = src;
-                document.getElementById('galleryPreviewTitle').innerText = title;
-                document.getElementById('galleryPreviewDate').innerText = date;
-                modal.show();
-            }
+        document.addEventListener('DOMContentLoaded', function () {
 
-            document.addEventListener('DOMContentLoaded', function () {
+            // --- [BARU] SLIDER LOGIC ---
+            const track = document.getElementById('slide-track');
+            const thumb = document.getElementById('slide-thumb');
+            const sliderView = document.getElementById('slider-view');
+            const cameraView = document.getElementById('camera-view');
+            const actionsContainer = document.getElementById('cross-day-actions'); // Container tombol2
 
-                // --- [BARU] SLIDER LOGIC ---
-                const track = document.getElementById('slide-track');
-                const thumb = document.getElementById('slide-thumb');
-                const sliderView = document.getElementById('slider-view');
-                const cameraView = document.getElementById('camera-view');
-                const actionsContainer = document.getElementById('cross-day-actions'); // Container tombol2
+            if (track && thumb) {
+                let isDragging = false;
+                let startX;
+                let trackWidth = track.clientWidth;
+                let thumbWidth = thumb.clientWidth;
+                let maxMove = trackWidth - thumbWidth - 8; // 8px padding adjustment
 
-                if (track && thumb) {
-                    let isDragging = false;
-                    let startX;
-                    let trackWidth = track.clientWidth;
-                    let thumbWidth = thumb.clientWidth;
-                    let maxMove = trackWidth - thumbWidth - 8; // 8px padding adjustment
-
-                    // Init size update
-                    window.addEventListener('resize', () => {
-                        trackWidth = track.clientWidth;
-                        maxMove = trackWidth - thumbWidth - 8;
-                    });
-
-                    // Start
-                    const startDrag = (e) => {
-                        isDragging = true;
-                        startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
-                        thumb.style.transition = 'none';
-                    };
-
-                    // Move
-                    const drag = (e) => {
-                        if (!isDragging) return;
-
-                        const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
-                        const deltaX = clientX - startX;
-
-                        // Limit 0 to maxMove
-                        let moveX = Math.max(0, Math.min(deltaX, maxMove));
-                        thumb.style.transform = `translateX(${moveX}px)`;
-
-                        // Fade text based on percentage
-                        const percentage = moveX / maxMove;
-                        const text = track.querySelector('span');
-                        if (text) text.style.opacity = 1 - percentage;
-                    };
-
-                    // End
-                    const endDrag = () => {
-                        if (!isDragging) return;
-                        isDragging = false;
-                        thumb.style.transition = 'transform 0.2s ease-out';
-
-                        const style = window.getComputedStyle(thumb);
-                        const matrix = new DOMMatrix(style.transform);
-                        const currentTranslateX = matrix.m41;
-
-                        if (currentTranslateX > (maxMove * 0.8)) {
-                            // SUCCESS
-                            thumb.style.transform = `translateX(${maxMove}px)`;
-                            finishSlide();
-                        } else {
-                            // RESET
-                            thumb.style.transform = `translateX(0px)`;
-                            const text = track.querySelector('span');
-                            if (text) text.style.opacity = 0.75;
-                        }
-                    };
-
-                    // Add Listeners
-                    thumb.addEventListener('mousedown', startDrag);
-                    thumb.addEventListener('touchstart', startDrag);
-
-                    document.addEventListener('mousemove', drag);
-                    document.addEventListener('touchmove', drag);
-
-                    document.addEventListener('mouseup', endDrag);
-                    document.addEventListener('touchend', endDrag);
-
-                    function finishSlide() {
-                        // 1. UI Changes (Visual Feedback)
-                        thumb.innerHTML = '<i class="mdi mdi-loading mdi-spin text-success fs-4"></i>'; // Loading icon
-                        track.style.backgroundColor = '#d1fae5';
-
-                        // 2. AJAX Request to Confirm Overtime
-                        const attendanceId = "{{ $myAttendanceToday->id ?? 0 }}";
-
-                        fetch(`/attendance/${attendanceId}/confirm-overtime`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            }
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                // Success
-                                thumb.innerHTML = '<i class="mdi mdi-check text-success fs-4"></i>';
-
-                                setTimeout(() => {
-                                    // Sembunyikan wrapper slider & tombol skip
-                                    const confirmationWrapper = document.getElementById(
-                                        'confirmation-wrapper');
-                                    if (confirmationWrapper) confirmationWrapper.classList.add('d-none');
-
-                                    // Munculkan kamera
-                                    if (cameraView) cameraView.classList.remove('d-none');
-                                }, 500);
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                alert('Gagal mengupdate status lembur. Silahkan refresh halaman.');
-                            });
-                    }
-                }
-
-                // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
-                function updateClock() {
-                    // Gunakan Timezone yang dikirim dari Controller
-                    const timeZone = "{{ $current_timezone }}";
-
-                    const now = new Date();
-                    const timeString = now.toLocaleTimeString('en-US', {
-                        timeZone: timeZone, // Kunci utama: Pakai timezone cabang
-                        hour12: false,
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-
-                    const clockElement = document.getElementById('realtime-clock');
-                    if (clockElement) clockElement.innerText = timeString;
-
-                    // Greeting logic (Sesuai jam lokal cabang)
-                    // Kita perlu ambil jam (0-23) dari string waktu lokal
-                    const localHour = parseInt(timeString.split(':')[0]);
-                    const greetingElement = document.getElementById('greeting-text');
-
-                    let greeting = 'Selamat Datang,';
-                    if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
-                    else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
-                    else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
-                    else greeting = 'Selamat Malam,';
-
-                    if (greetingElement) greetingElement.innerText = greeting;
-                }
-
-                setInterval(updateClock, 1000);
-                updateClock(); // Run immediately
-
-                // 2. [BARU] COUNT UP ANIMATION (Angka naik dari 0)
-                const counters = document.querySelectorAll('.count-up');
-                counters.forEach(counter => {
-                    const target = +counter.getAttribute('data-target');
-                    const duration = 2000; // 2 detik
-                    const increment = target / (duration / 16); // 60fps
-
-                    let current = 0;
-                    const updateCounter = () => {
-                        current += increment;
-                        if (current < target) {
-                            counter.innerText = Math.ceil(current);
-                            requestAnimationFrame(updateCounter);
-                        } else {
-                            counter.innerText = target;
-                        }
-                    };
-                    updateCounter();
+                // Init size update
+                window.addEventListener('resize', () => {
+                    trackWidth = track.clientWidth;
+                    maxMove = trackWidth - thumbWidth - 8;
                 });
 
-                // --- [BARU] BIRTHDAY COUNTDOWN SCRIPT ---
-                @if (isset($birthdayData) && !$birthdayData['is_today'])
-                    const targetDate = new Date("{{ $birthdayData['date'] }}T00:00:00");
+                // Start
+                const startDrag = (e) => {
+                    isDragging = true;
+                    startX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
+                    thumb.style.transition = 'none';
+                };
 
-                    function updateCountdown() {
-                        const now = new Date();
-                        const diff = targetDate - now;
+                // Move
+                const drag = (e) => {
+                    if (!isDragging) return;
 
-                        if (diff <= 0) {
-                            // Jika waktu habis (masuk jam 00:00 ultah), reload biar tampilan berubah jadi HARI H
-                            location.reload();
-                            return;
-                        }
+                    const clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
+                    const deltaX = clientX - startX;
 
-                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    // Limit 0 to maxMove
+                    let moveX = Math.max(0, Math.min(deltaX, maxMove));
+                    thumb.style.transform = `translateX(${moveX}px)`;
 
-                        // Update DOM
-                        if (document.getElementById('cd-days')) document.getElementById('cd-days').innerText = days;
-                        if (document.getElementById('cd-hours')) document.getElementById('cd-hours').innerText = hours
-                            .toString().padStart(2, '0');
-                        if (document.getElementById('cd-minutes')) document.getElementById('cd-minutes').innerText =
-                            minutes.toString().padStart(2, '0');
-                        if (document.getElementById('cd-seconds')) document.getElementById('cd-seconds').innerText =
-                            seconds.toString().padStart(2, '0');
+                    // Fade text based on percentage
+                    const percentage = moveX / maxMove;
+                    const text = track.querySelector('span');
+                    if (text) text.style.opacity = 1 - percentage;
+                };
+
+                // End
+                const endDrag = () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    thumb.style.transition = 'transform 0.2s ease-out';
+
+                    const style = window.getComputedStyle(thumb);
+                    const matrix = new DOMMatrix(style.transform);
+                    const currentTranslateX = matrix.m41;
+
+                    if (currentTranslateX > (maxMove * 0.8)) {
+                        // SUCCESS
+                        thumb.style.transform = `translateX(${maxMove}px)`;
+                        finishSlide();
+                    } else {
+                        // RESET
+                        thumb.style.transform = `translateX(0px)`;
+                        const text = track.querySelector('span');
+                        if (text) text.style.opacity = 0.75;
                     }
+                };
 
-                    setInterval(updateCountdown, 1000);
-                    updateCountdown();
-                @endif
+                // Add Listeners
+                thumb.addEventListener('mousedown', startDrag);
+                thumb.addEventListener('touchstart', startDrag);
 
-                    // --- SCRIPT QR CODE ---
-                    @if (Auth::user()->qr_code_value)
-                        const qrValue = "{{ Auth::user()->qr_code_value }}";
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', drag);
 
-                        new QRCode(document.getElementById("dashboard-qrcode"), {
-                            text: qrValue,
-                            width: 64,
-                            height: 64,
-                            colorDark: "#000000",
-                            colorLight: "#ffffff",
-                            correctLevel: QRCode.CorrectLevel.H
+                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('touchend', endDrag);
+
+                function finishSlide() {
+                    // 1. UI Changes (Visual Feedback)
+                    thumb.innerHTML = '<i class="mdi mdi-loading mdi-spin text-success fs-4"></i>'; // Loading icon
+                    track.style.backgroundColor = '#d1fae5';
+
+                    // 2. AJAX Request to Confirm Overtime
+                    const attendanceId = "{{ $myAttendanceToday->id ?? 0 }}";
+
+                    fetch(`/attendance/${attendanceId}/confirm-overtime`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            // Success
+                            thumb.innerHTML = '<i class="mdi mdi-check text-success fs-4"></i>';
+
+                            setTimeout(() => {
+                                // Sembunyikan wrapper slider & tombol skip
+                                const confirmationWrapper = document.getElementById(
+                                    'confirmation-wrapper');
+                                if (confirmationWrapper) confirmationWrapper.classList.add('d-none');
+
+                                // Munculkan kamera
+                                if (cameraView) cameraView.classList.remove('d-none');
+                            }, 500);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Gagal mengupdate status lembur. Silahkan refresh halaman.');
                         });
-
-                        var qrModal = document.getElementById('qrModal');
-                        qrModal.addEventListener('show.bs.modal', function (event) {
-                            var qrContainer = document.getElementById('qrcode-modal-display');
-                            qrContainer.innerHTML = '';
-                            new QRCode(qrContainer, {
-                                text: qrValue,
-                                width: 256,
-                                height: 256,
-                            });
-                        });
-                    @endif
-
-                                                                                                            // --- SCRIPT CHART ---
-                                                                                                            const ctx = document.getElementById('attendancePieChart').getContext('2d');
-                Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
-
-                @if (auth()->user()->role == 'admin')
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
-                            datasets: [{
-                                data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                                                                                                                                {{ $stats['early'] }}, {{ $stats['pending'] }},
-                                    {{ $stats['absent'] }}
-                                ],
-                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
-                                    '#8c94a3'
-                                ],
-                                borderWidth: 0,
-                                hoverOffset: 10 // Efek hover keluar
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            animation: {
-                                animateScale: true,
-                                animateRotate: true
-                            },
-                            plugins: {
-                                legend: {
-                                    position: 'right',
-                                    labels: {
-                                        usePointStyle: true,
-                                        padding: 20
-                                    }
-                                }
-                            },
-                            cutout: '75%'
-                        }
-                    });
-                @elseif (auth()->user()->role == 'audit')
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Terverifikasi', 'Pending', 'Terlambat'],
-                            datasets: [{
-                                data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
-                                    {{ $stats['late'] }}
-                                ],
-                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
-                                borderWidth: 0,
-                                hoverOffset: 10
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '70%',
-                            plugins: {
-                                legend: {
-                                    position: 'bottom'
-                                }
-                            }
-                        }
-                    });
-                @elseif (auth()->user()->role == 'security')
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Scan Masuk', 'Scan Pulang'],
-                            datasets: [{
-                                data: [{{ $stats['check_in_scans'] }},
-                                    {{ $stats['check_out_scans'] }}
-                                ],
-                                backgroundColor: ['#00d25b', '#0090e7'],
-                                borderWidth: 0,
-                                hoverOffset: 10
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '60%',
-                            plugins: {
-                                legend: {
-                                    position: 'bottom'
-                                }
-                            }
-                        }
-                    });
-                @else
-                    new Chart(ctx, {
-                        type: 'pie',
-                        data: {
-                            labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
-                            datasets: [{
-                                data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                                                                                                                                {{ $stats['early'] }}, {{ $stats['pending'] }}
-                                ],
-                                backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
-                                borderWidth: 2,
-                                borderColor: '#ffffff'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom'
-                                }
-                            }
-                        }
-                    });
-                @endif
-
-                                                                                                            // --- MODAL FOTO PROFIL ---
-                                                                                                            var profilePhotoModal = document.getElementById('profilePhotoModal');
-                if (profilePhotoModal) {
-                    profilePhotoModal.addEventListener('show.bs.modal', function (event) {
-                        var button = event.relatedTarget;
-                        var src = button.getAttribute('data-src');
-                        var modalImg = document.getElementById('profileModalImageSrc');
-                        modalImg.src = src;
-                    });
                 }
+            }
+
+            // --- [FIX] LIVE CLOCK WITH BRANCH TIMEZONE ---
+            function updateClock() {
+                // Gunakan Timezone yang dikirim dari Controller
+                const timeZone = "{{ $current_timezone }}";
+
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', {
+                    timeZone: timeZone, // Kunci utama: Pakai timezone cabang
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+
+                const clockElement = document.getElementById('realtime-clock');
+                if (clockElement) clockElement.innerText = timeString;
+
+                // Greeting logic (Sesuai jam lokal cabang)
+                // Kita perlu ambil jam (0-23) dari string waktu lokal
+                const localHour = parseInt(timeString.split(':')[0]);
+                const greetingElement = document.getElementById('greeting-text');
+
+                let greeting = 'Selamat Datang,';
+                if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
+                else if (localHour >= 12 && localHour < 15) greeting = 'Selamat Siang,';
+                else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
+                else greeting = 'Selamat Malam,';
+
+                if (greetingElement) greetingElement.innerText = greeting;
+            }
+
+            setInterval(updateClock, 1000);
+            updateClock(); // Run immediately
+
+            // 2. [BARU] COUNT UP ANIMATION (Angka naik dari 0)
+            const counters = document.querySelectorAll('.count-up');
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const duration = 2000; // 2 detik
+                const increment = target / (duration / 16); // 60fps
+
+                let current = 0;
+                const updateCounter = () => {
+                    current += increment;
+                    if (current < target) {
+                        counter.innerText = Math.ceil(current);
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.innerText = target;
+                    }
+                };
+                updateCounter();
             });
 
-            // ===============================================
-            // MOTIVATIONAL QUOTE FUNCTIONALITY
-            // ===============================================
-            // ===============================================
-            // MOTIVATIONAL QUOTE FUNCTIONALITY
-            // ===============================================
+            // --- [BARU] BIRTHDAY COUNTDOWN SCRIPT ---
+            @if (isset($birthdayData) && !$birthdayData['is_today'])
+                const targetDate = new Date("{{ $birthdayData['date'] }}T00:00:00");
 
-            // Backup quotes in case API fails
-            const backupQuotes = [
-                { text: "Kesuksesan adalah hasil dari persiapan, kerja keras, dan belajar dari kegagalan.", author: "Colin Powell" },
-                { text: "Satu-satunya cara untuk melakukan pekerjaan hebat adalah dengan mencintai apa yang kamu lakukan.", author: "Steve Jobs" },
-                { text: "Jangan menunggu. Waktu tidak akan pernah tepat.", author: "Napoleon Hill" },
-                { text: "Masa depan adalah milik mereka yang percaya pada keindahan mimpi-mimpi mereka.", author: "Eleanor Roosevelt" },
-                { text: "Jangan biarkan kemarin mengambil terlalu banyak hari ini.", author: "Will Rogers" }
-            ];
+                function updateCountdown() {
+                    const now = new Date();
+                    const diff = targetDate - now;
 
-            async function fetchRandomQuote() {
-                try {
-                    // 1. Fetch random quote from dummyjson.com (more reliable)
-                    const response = await fetch('https://dummyjson.com/quotes/random');
-                    if (!response.ok) throw new Error('Quote API response was not ok');
-                    const data = await response.json();
-
-                    const originalText = data.quote;
-                    const author = data.author;
-
-                    // 2. Translate to Indonesian
-                    try {
-                        const translateUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(originalText)}&langpair=en|id`;
-                        const trResponse = await fetch(translateUrl);
-                        const trData = await trResponse.json();
-
-                        if (trData && trData.responseData && trData.responseData.translatedText) {
-                            return {
-                                text: trData.responseData.translatedText,
-                                author: author
-                            };
-                        }
-                    } catch (trError) {
-                        console.warn('Translation failed, showing English:', trError);
+                    if (diff <= 0) {
+                        // Jika waktu habis (masuk jam 00:00 ultah), reload biar tampilan berubah jadi HARI H
+                        location.reload();
+                        return;
                     }
 
-                    // Fallback: Show original English if translation fails
-                    return {
-                        text: originalText,
-                        author: author
-                    };
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-                } catch (error) {
-                    console.error('Failed to fetch quote:', error);
-                    return null;
-                }
-            }
-
-            async function getDailyQuote() {
-                // Try to fetch a fresh quote first
-                const quote = await fetchRandomQuote();
-                if (quote) return quote;
-
-                // Fallback
-                const today = new Date();
-                const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-                const index = dayOfYear % backupQuotes.length;
-                return backupQuotes[index];
-            }
-
-            async function refreshQuote() {
-                // Show loading state
-                const quoteEl = document.getElementById('motivational-quote');
-                const authorEl = document.getElementById('author-name');
-
-                if (quoteEl) quoteEl.style.opacity = '0.5';
-
-                // Always try to fetch new random quote
-                let quote = await fetchRandomQuote();
-
-                // If failed, use random backup
-                if (!quote) {
-                    const randomIndex = Math.floor(Math.random() * backupQuotes.length);
-                    quote = backupQuotes[randomIndex];
+                    // Update DOM
+                    if (document.getElementById('cd-days')) document.getElementById('cd-days').innerText = days;
+                    if (document.getElementById('cd-hours')) document.getElementById('cd-hours').innerText = hours
+                        .toString().padStart(2, '0');
+                    if (document.getElementById('cd-minutes')) document.getElementById('cd-minutes').innerText =
+                        minutes.toString().padStart(2, '0');
+                    if (document.getElementById('cd-seconds')) document.getElementById('cd-seconds').innerText =
+                        seconds.toString().padStart(2, '0');
                 }
 
-                displayQuote(quote);
+                setInterval(updateCountdown, 1000);
+                updateCountdown();
+            @endif
+
+                // --- SCRIPT QR CODE ---
+                @if (Auth::user()->qr_code_value)
+                    const qrValue = "{{ Auth::user()->qr_code_value }}";
+
+                    new QRCode(document.getElementById("dashboard-qrcode"), {
+                        text: qrValue,
+                        width: 64,
+                        height: 64,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    var qrModal = document.getElementById('qrModal');
+                    qrModal.addEventListener('show.bs.modal', function (event) {
+                        var qrContainer = document.getElementById('qrcode-modal-display');
+                        qrContainer.innerHTML = '';
+                        new QRCode(qrContainer, {
+                            text: qrValue,
+                            width: 256,
+                            height: 256,
+                        });
+                    });
+                @endif
+
+                                                                                                                // --- SCRIPT CHART ---
+                                                                                                                const ctx = document.getElementById('attendancePieChart').getContext('2d');
+            Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+
+            @if (auth()->user()->role == 'admin')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
+                        datasets: [{
+                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                                                                                                                                                                                                        {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                {{ $stats['absent'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
+                                '#8c94a3'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 10 // Efek hover keluar
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            }
+                        },
+                        cutout: '75%'
+                    }
+                });
+            @elseif (auth()->user()->role == 'audit')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Terverifikasi', 'Pending', 'Terlambat'],
+                        datasets: [{
+                            data: [{{ $stats['verified'] }}, {{ $stats['pending'] }},
+                                {{ $stats['late'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @elseif (auth()->user()->role == 'security')
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Scan Masuk', 'Scan Pulang'],
+                        datasets: [{
+                            data: [{{ $stats['check_in_scans'] }},
+                                {{ $stats['check_out_scans'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#0090e7'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @else
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
+                        datasets: [{
+                            data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
+                                                                                                                                                                                                                        {{ $stats['early'] }}, {{ $stats['pending'] }}
+                            ],
+                            backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            @endif
+
+                                                                                                                // --- MODAL FOTO PROFIL ---
+                                                                                                                var profilePhotoModal = document.getElementById('profilePhotoModal');
+            if (profilePhotoModal) {
+                profilePhotoModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    var src = button.getAttribute('data-src');
+                    var modalImg = document.getElementById('profileModalImageSrc');
+                    modalImg.src = src;
+                });
             }
+        });
 
-            function displayQuote(quote) {
-                const quoteEl = document.getElementById('motivational-quote');
-                const authorEl = document.getElementById('author-name');
+        // ===============================================
+        // MOTIVATIONAL QUOTE FUNCTIONALITY
+        // ===============================================
+        // ===============================================
+        // MOTIVATIONAL QUOTE FUNCTIONALITY
+        // ===============================================
 
-                if (!quoteEl || !authorEl) return;
+        // Backup quotes in case API fails
+        const backupQuotes = [
+            { text: "Kesuksesan adalah hasil dari persiapan, kerja keras, dan belajar dari kegagalan.", author: "Colin Powell" },
+            { text: "Satu-satunya cara untuk melakukan pekerjaan hebat adalah dengan mencintai apa yang kamu lakukan.", author: "Steve Jobs" },
+            { text: "Jangan menunggu. Waktu tidak akan pernah tepat.", author: "Napoleon Hill" },
+            { text: "Masa depan adalah milik mereka yang percaya pada keindahan mimpi-mimpi mereka.", author: "Eleanor Roosevelt" },
+            { text: "Jangan biarkan kemarin mengambil terlalu banyak hari ini.", author: "Will Rogers" }
+        ];
 
-                quoteEl.style.opacity = '0';
-                authorEl.style.opacity = '0';
+        async function fetchRandomQuote() {
+            try {
+                // 1. Fetch random quote from dummyjson.com (more reliable)
+                const response = await fetch('https://dummyjson.com/quotes/random');
+                if (!response.ok) throw new Error('Quote API response was not ok');
+                const data = await response.json();
 
-                setTimeout(() => {
-                    quoteEl.textContent = quote.text;
-                    authorEl.textContent = quote.author;
-                    quoteEl.style.opacity = '1';
-                    authorEl.style.opacity = '1';
-                }, 300);
+                const originalText = data.quote;
+                const author = data.author;
 
-                // Also refresh background image
-                refreshBackgroundImage();
-            }
+                // 2. Translate to Indonesian
+                try {
+                    const translateUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(originalText)}&langpair=en|id`;
+                    const trResponse = await fetch(translateUrl);
+                    const trData = await trResponse.json();
 
-            // Nature background images from Unsplash (reliable, high-quality)
-            const natureBackgrounds = [
-                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=400&fit=crop', // Mountains
-                'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&h=400&fit=crop', // Forest
-                'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&h=400&fit=crop', // Foggy mountains
-                'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&h=400&fit=crop', // Forest light
-                'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&h=400&fit=crop', // Mountain lake
-                'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1200&h=400&fit=crop', // Valley
-                'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1200&h=400&fit=crop', // Green hills
-                'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&h=400&fit=crop', // Lake sunset
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=400&fit=crop', // Beach
-                'https://images.unsplash.com/photo-1518173946687-a4c036bc8ce8?w=1200&h=400&fit=crop', // Sky clouds
-                'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&h=400&fit=crop', // Starry mountain
-                'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=1200&h=400&fit=crop', // Waterfall
-                'https://images.unsplash.com/photo-1465919292999-00f5a4e5861b?w=1200&h=400&fit=crop', // Misty forest
-                'https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=1200&h=400&fit=crop', // Aurora
-                'https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=1200&h=400&fit=crop'  // Night sky
-            ];
+                    if (trData && trData.responseData && trData.responseData.translatedText) {
+                        return {
+                            text: trData.responseData.translatedText,
+                            author: author
+                        };
+                    }
+                } catch (trError) {
+                    console.warn('Translation failed, showing English:', trError);
+                }
 
-            function refreshBackgroundImage() {
-                const bgEl = document.getElementById('quote-bg-image');
-                if (!bgEl) return;
-
-                bgEl.style.opacity = '0.3';
-
-                const randomIndex = Math.floor(Math.random() * natureBackgrounds.length);
-                const newImage = new Image();
-                newImage.onload = function () {
-                    bgEl.style.backgroundImage = `url('${natureBackgrounds[randomIndex]}')`;
-                    bgEl.style.opacity = '1';
+                // Fallback: Show original English if translation fails
+                return {
+                    text: originalText,
+                    author: author
                 };
-                newImage.src = natureBackgrounds[randomIndex];
+
+            } catch (error) {
+                console.error('Failed to fetch quote:', error);
+                return null;
+            }
+        }
+
+        async function getDailyQuote() {
+            // Try to fetch a fresh quote first
+            const quote = await fetchRandomQuote();
+            if (quote) return quote;
+
+            // Fallback
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const index = dayOfYear % backupQuotes.length;
+            return backupQuotes[index];
+        }
+
+        async function refreshQuote() {
+            // Show loading state
+            const quoteEl = document.getElementById('motivational-quote');
+            const authorEl = document.getElementById('author-name');
+
+            if (quoteEl) quoteEl.style.opacity = '0.5';
+
+            // Always try to fetch new random quote
+            let quote = await fetchRandomQuote();
+
+            // If failed, use random backup
+            if (!quote) {
+                const randomIndex = Math.floor(Math.random() * backupQuotes.length);
+                quote = backupQuotes[randomIndex];
             }
 
-            function getDailyBackgroundImage() {
-                const today = new Date();
-                const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-                const index = dayOfYear % natureBackgrounds.length;
-                return natureBackgrounds[index];
-            }
+            displayQuote(quote);
+        }
 
-            // Initialize
-            document.addEventListener('DOMContentLoaded', async function () {
-                // Initial load
-                const quote = await getDailyQuote();
-                displayQuote(quote);
+        function displayQuote(quote) {
+            const quoteEl = document.getElementById('motivational-quote');
+            const authorEl = document.getElementById('author-name');
 
-                // Initial background
-                refreshBackgroundImage();
-            }); // Optional: Confetti Effect Function (Placeholder)
-            function confettiEffect() {
-                alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
-            }
-        </script>
+            if (!quoteEl || !authorEl) return;
+
+            quoteEl.style.opacity = '0';
+            authorEl.style.opacity = '0';
+
+            setTimeout(() => {
+                quoteEl.textContent = quote.text;
+                authorEl.textContent = quote.author;
+                quoteEl.style.opacity = '1';
+                authorEl.style.opacity = '1';
+            }, 300);
+
+            // Also refresh background image
+            refreshBackgroundImage();
+        }
+
+        // Nature background images from Unsplash (reliable, high-quality)
+        const natureBackgrounds = [
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=400&fit=crop', // Mountains
+            'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&h=400&fit=crop', // Forest
+            'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&h=400&fit=crop', // Foggy mountains
+            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&h=400&fit=crop', // Forest light
+            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&h=400&fit=crop', // Mountain lake
+            'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1200&h=400&fit=crop', // Valley
+            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1200&h=400&fit=crop', // Green hills
+            'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&h=400&fit=crop', // Lake sunset
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=400&fit=crop', // Beach
+            'https://images.unsplash.com/photo-1518173946687-a4c036bc8ce8?w=1200&h=400&fit=crop', // Sky clouds
+            'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&h=400&fit=crop', // Starry mountain
+            'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=1200&h=400&fit=crop', // Waterfall
+            'https://images.unsplash.com/photo-1465919292999-00f5a4e5861b?w=1200&h=400&fit=crop', // Misty forest
+            'https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=1200&h=400&fit=crop', // Aurora
+            'https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=1200&h=400&fit=crop'  // Night sky
+        ];
+
+        function refreshBackgroundImage() {
+            const bgEl = document.getElementById('quote-bg-image');
+            if (!bgEl) return;
+
+            bgEl.style.opacity = '0.3';
+
+            const randomIndex = Math.floor(Math.random() * natureBackgrounds.length);
+            const newImage = new Image();
+            newImage.onload = function () {
+                bgEl.style.backgroundImage = `url('${natureBackgrounds[randomIndex]}')`;
+                bgEl.style.opacity = '1';
+            };
+            newImage.src = natureBackgrounds[randomIndex];
+        }
+
+        function getDailyBackgroundImage() {
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const index = dayOfYear % natureBackgrounds.length;
+            return natureBackgrounds[index];
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Initial load
+            const quote = await getDailyQuote();
+            displayQuote(quote);
+
+            // Initial background
+            refreshBackgroundImage();
+        }); // Optional: Confetti Effect Function (Placeholder)
+        function confettiEffect() {
+            alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
+        }
+    </script>
 @endpush
