@@ -52,20 +52,27 @@ class AttendanceHistoryController extends Controller
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        // 1. Ambil timezone spesifik cabang dari database agar sinkron (WIB/WITA/WIT)
+        // 1. Ambil timezone cabang
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
 
-        // 2. Inisialisasi rentang bulan berdasarkan timezone cabang
+        // 2. Tentukan range awal bulan
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
-        // 3. Ambil waktu "Sekarang" di cabang tersebut (penting untuk Gorontalo yang lebih cepat 1 jam)
-        $todayInBranch = Carbon::now($branchTimezone)->endOfDay();
+        // 3. Ambil "Hari Ini" di cabang tersebut (Tanpa endOfDay untuk keamanan period)
+        $todayInBranch = Carbon::now($branchTimezone)->startOfDay();
 
-        // Tentukan limit: Jika melihat bulan berjalan, limit adalah AKHIR hari ini di cabang tsb
-        $limitDate = ($endDate->gt($todayInBranch)) ? $todayInBranch : $endDate;
+        // 4. Logika Penentuan Limit yang lebih kuat:
+        // Jika bulan yang dipilih adalah bulan sekarang, limit WAJIB sampai hari ini.
+        $isCurrentMonth = ($selectedMonth == Carbon::now($branchTimezone)->month && $selectedYear == Carbon::now($branchTimezone)->year);
 
-        // 4. Query Database dengan range yang sedikit lebih lebar untuk menangkap selisih jam server
+        if ($isCurrentMonth) {
+            $limitDate = $todayInBranch;
+        } else {
+            $limitDate = ($endDate->gt(Carbon::now($branchTimezone))) ? $todayInBranch : $endDate;
+        }
+
+        // 5. Query Database dengan buffer satu hari
         $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
             ->where('user_id', $user->id)
             ->whereBetween('check_in_time', [
@@ -87,18 +94,19 @@ class AttendanceHistoryController extends Controller
             })->get();
 
         $historyCollection = collect();
-        // 5. Buat period dari tanggal 1 sampai limitDate (misal tanggal 28)
+
+        // 6. Buat period (PENTING: Gunakan startOfDay agar tidak terpotong jam)
         $period = CarbonPeriod::create($startDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
 
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
 
-            // Cocokkan attendance dengan memparse check_in ke timezone cabang
+            // Cari attendance
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
             })->first();
 
-            // Cek leave
+            // Cari leave
             $leave = $leaves->filter(function ($l) use ($date) {
                 return $date->between(
                     Carbon::parse($l->start_date)->startOfDay(),
@@ -129,10 +137,11 @@ class AttendanceHistoryController extends Controller
                 }
                 $historyCollection->push($att);
             } else {
+                // Jika tidak ada attendance (Alpha / Leave)
                 $fakeAtt = new Attendance();
                 $fakeAtt->user_id = $user->id;
                 $fakeAtt->user = $user;
-                $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0);
+                $fakeAtt->check_in_time = $date->copy()->startOfDay();
 
                 if ($leave) {
                     $presenceStatusMap = [
@@ -165,6 +174,7 @@ class AttendanceHistoryController extends Controller
             return $item->check_in_time->timestamp;
         });
 
+        // 7. Kalkulasi Summary
         $summary = [
             'total' => $history->count(),
             'present' => $history->filter(function ($item) {
