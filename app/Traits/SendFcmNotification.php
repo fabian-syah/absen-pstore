@@ -94,8 +94,11 @@ trait SendFcmNotification
                     ->post($url, $payload);
 
                 if ($response->successful()) {
+                    $responseBody = $response->json();
+                    echo " [FCM SUCCESS] " . json_encode($responseBody) . "\n";
                     Log::info('FCM Success: ' . substr($response->body(), 0, 50));
                 } else {
+                    echo " [FCM FAIL] " . $response->body() . "\n";
                     Log::error('FCM Failed: ' . $response->body());
                 }
             } catch (\Exception $e) {
