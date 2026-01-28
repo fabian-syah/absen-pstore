@@ -43,7 +43,12 @@ trait SendFcmNotification
 
             // Bypass SSL (Fix cURL error 60)
             $httpClient = new Client(['verify' => false]);
-            $accessToken = $credentials->fetchAuthToken($httpClient);
+
+            // PERBAIKAN DI SINI:
+// fetchAuthToken membutuhkan callable. Kita bungkus $httpClient dalam closure.
+            $accessToken = $credentials->fetchAuthToken(function ($request) use ($httpClient) {
+                return $httpClient->send($request);
+            });
 
             if (!isset($accessToken['access_token'])) {
                 Log::error('FCM Error: Gagal generate access token.');
