@@ -30,7 +30,7 @@
         /* ==========================================================
             MODERN DESIGN SYSTEM & UI ENHANCEMENTS
            ========================================================== */
-        
+
         /* CSS Variables - Design Tokens */
         :root {
             /* Primary Colors */
@@ -38,12 +38,12 @@
             --pstore-primary-dark: #0a58ca;
             --pstore-primary-darker: #084298;
             --pstore-primary-light: rgba(13, 110, 253, 0.1);
-            
+
             /* Gradients */
             --gradient-primary: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
             --gradient-soft: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 110, 253, 0.05) 100%);
             --gradient-bg: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
-            
+
             /* Neutrals */
             --pstore-dark: #1a1a1a;
             --pstore-gray-900: #212529;
@@ -51,7 +51,7 @@
             --pstore-gray-500: #6c757d;
             --pstore-gray-300: #dee2e6;
             --pstore-gray-100: #f8f9fa;
-            
+
             /* Spacing Scale */
             --spacing-xs: 0.25rem;
             --spacing-sm: 0.5rem;
@@ -59,25 +59,25 @@
             --spacing-lg: 1.5rem;
             --spacing-xl: 2rem;
             --spacing-2xl: 3rem;
-            
+
             /* Border Radius */
             --radius-sm: 6px;
             --radius-md: 12px;
             --radius-lg: 16px;
             --radius-xl: 20px;
             --radius-full: 9999px;
-            
+
             /* Shadows */
             --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
             --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
             --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
             --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.15);
             --shadow-primary: 0 4px 16px rgba(13, 110, 253, 0.2);
-            
+
             /* Layout */
             --sidebar-width: 245px;
             --header-height: 70px;
-            
+
             /* Transitions */
             --transition-fast: 0.15s ease;
             --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -99,7 +99,9 @@
 
         /* Layout Structure */
         @media (min-width: 992px) {
-            .container-scroller, .page-body-wrapper {
+
+            .container-scroller,
+            .page-body-wrapper {
                 overflow: visible !important;
             }
 
@@ -122,13 +124,13 @@
                 transition: margin-left var(--transition-base), width var(--transition-base);
             }
 
-            body.sidebar-icon-only .sidebar { 
-                width: 70px; 
+            body.sidebar-icon-only .sidebar {
+                width: 70px;
             }
-            
-            body.sidebar-icon-only .main-panel { 
-                margin-left: 70px; 
-                width: calc(100% - 70px); 
+
+            body.sidebar-icon-only .main-panel {
+                margin-left: 70px;
+                width: calc(100% - 70px);
             }
         }
 
@@ -145,6 +147,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -300,6 +303,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -315,8 +319,13 @@
         }
 
         @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
         }
 
         /* Mobile Responsiveness */
@@ -356,12 +365,12 @@
 
 <body class="with-welcome-text">
     <div class="container-scroller">
-        
+
         {{-- Include Header --}}
         @include('layout.header')
 
         <div class="container-fluid page-body-wrapper">
-            
+
             {{-- Include Sidebar --}}
             @include('layout.sidebar')
 
@@ -370,7 +379,7 @@
                     {{-- Konten Utama Halaman --}}
                     @yield('content')
                 </div>
-                
+
                 {{-- Include Footer --}}
                 @include('layout.footer')
             </div>
@@ -402,18 +411,25 @@
             storageBucket: "{{ config('services.firebase.storage_bucket') }}",
             messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
             appId: "{{ config('services.firebase.app_id') }}"
+            apiKey: "{{ config('services.firebase.api_key') }}",
+            authDomain: "{{ config('services.firebase.auth_domain') }}",
+            projectId: "{{ config('services.firebase.project_id') }}",
+            storageBucket: "{{ config('services.firebase.storage_bucket') }}",
+            messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
+            appId: "{{ config('services.firebase.app_id') }}"
         };
+        console.log("🔥 Firebase Config:", firebaseConfig); // DEBUG LOG
 
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
-        
+
         const messaging = firebase.messaging();
 
         @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
             function sendTokenToServer(token) {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                fetch("{{ route('update.fcm.token') }}", { 
+                fetch("{{ route('update.fcm.token') }}", {
                     method: "POST",
                     headers: {
                         'Content-Type': 'application/json',
@@ -421,28 +437,29 @@
                     },
                     body: JSON.stringify({ token: token })
                 }).then(response => response.json())
-                .then(data => console.log("FCM Token status:", data.message))
-                .catch(err => console.log("Gagal menyimpan token.", err));
+                    .then(data => console.log("FCM Token status:", data.message))
+                    .catch(err => console.log("Gagal menyimpan token.", err));
             }
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/firebase-messaging-sw.js')
-                .then(function(registration) {
-                    Notification.requestPermission().then((permission) => {
-                        if (permission === 'granted') {
-                            messaging.getToken({ 
-                                vapidKey: "{{ config('services.firebase.vapid_key') }}",
-                                serviceWorkerRegistration: registration 
-                            })
-                            .then((currentToken) => {
-                                if (currentToken) sendTokenToServer(currentToken);
-                            });
-                        }
+                    .then(function (registration) {
+                        Notification.requestPermission().then((permission) => {
+                            if (permission === 'granted') {
+                                messaging.getToken({
+                                    vapidKey: "{{ config('services.firebase.vapid_key') }}",
+                                    serviceWorkerRegistration: registration
+                                })
+                                    .then((currentToken) => {
+                                        if (currentToken) sendTokenToServer(currentToken);
+                                    });
+                            }
+                        });
                     });
-                });
             }
 
             messaging.onMessage((payload) => {
+                console.log("🔥 Foreground Message Received:", payload); // DEBUG LOG
                 const title = payload.notification ? payload.notification.title : "Notifikasi Baru";
                 const body = payload.notification ? payload.notification.body : "Cek dashboard.";
                 const url = payload.data ? payload.data.click_action : '/';
@@ -453,7 +470,7 @@
                         icon: 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png',
                         tag: 'audit-alert-' + Date.now()
                     });
-                    notif.onclick = function() {
+                    notif.onclick = function () {
                         window.focus();
                         window.location.href = url;
                         this.close();
@@ -465,4 +482,5 @@
 
     @stack('scripts')
 </body>
+
 </html>
