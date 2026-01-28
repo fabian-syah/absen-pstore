@@ -3,22 +3,19 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>PStore - Menuju Ramadan</title>
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=Amiri:wght@400;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
             --primary-gold: #D4AF37;
             --soft-gold: #F4C430;
-            --emerald-deep: #002B1D;
-            --emerald-gradient: linear-gradient(135deg, #002B1D 0%, #00150E 100%);
-            --glass: rgba(255, 255, 255, 0.03);
+            --deep-emerald: #013220;
+            --darker-emerald: #002216;
+            --glass-bg: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(212, 175, 55, 0.2);
         }
 
@@ -31,7 +28,7 @@
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--emerald-gradient);
+            background: radial-gradient(circle at center, #004d2e 0%, #001a0f 100%);
             height: 100vh;
             height: -webkit-fill-available;
             display: flex;
@@ -41,400 +38,339 @@
             color: #fff;
         }
 
-        /* --- Background Elements --- */
-        .scene {
+        /* Animated Background Elements */
+        .bg-ornaments {
             position: fixed;
             inset: 0;
             pointer-events: none;
             z-index: 1;
         }
 
-        /* Bintang Berkelap-kelip */
-        .stars {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-        }
-
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: twinkle var(--duration) infinite ease-in-out;
-        }
-
-        @keyframes twinkle {
-
-            0%,
-            100% {
-                opacity: 0.3;
-                transform: scale(1);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-        }
-
-        .moon-glow {
+        .moon {
             position: absolute;
             top: 5%;
-            right: 8%;
-            width: 70px;
-            height: 70px;
+            right: 10%;
+            width: 80px;
+            height: 80px;
             background: radial-gradient(circle at 30% 30%, #fff 0%, #f4c430 100%);
             border-radius: 50%;
-            box-shadow: 0 0 60px rgba(244, 196, 48, 0.3);
-            animation: moonPulse 4s infinite alternate;
+            box-shadow: 0 0 50px rgba(244, 196, 48, 0.4);
+            animation: glow 4s ease-in-out infinite alternate;
         }
 
-        /* Islamic Geometry Pattern */
-        .geometry-pattern {
+        /* Lantern Styling */
+        .lantern {
             position: absolute;
-            bottom: -50px;
-            left: -50px;
-            width: 300px;
-            height: 300px;
-            opacity: 0.1;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M50 0 L61.2 38.8 L100 50 L61.2 61.2 L50 100 L38.8 61.2 L0 50 L38.8 38.8 Z' fill='%23D4AF37'/%3E%3C/svg%3E");
-            background-size: 80px 80px;
-            transform: rotate(15deg);
+            top: -20px;
+            animation: swing 3s ease-in-out infinite alternate;
+            transform-origin: top center;
+        }
+        .lantern-1 { left: 15%; }
+        .lantern-2 { right: 15%; animation-delay: -1.5s; }
+        
+        .lantern i {
+            color: var(--soft-gold);
+            font-size: 2rem;
+            filter: drop-shadow(0 0 10px var(--soft-gold));
+        }
+        .lantern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 1px;
+            height: 80px;
+            background: var(--glass-border);
         }
 
-        /* --- Main UI --- */
-        .container {
+        /* Main Container */
+        .login-wrapper {
             position: relative;
             z-index: 10;
             width: 90%;
-            max-width: 420px;
-            animation: fadeInUp 1s ease-out;
+            max-width: 400px;
+            perspective: 1000px;
         }
 
-        .header {
+        .greeting-header {
             text-align: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
+            animation: fadeInDown 1s ease-out;
         }
 
-        .header .arabic {
+        .greeting-header span {
             font-family: 'Amiri', serif;
-            font-size: 1.4rem;
             color: var(--primary-gold);
-            display: block;
-            margin-bottom: 5px;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
         }
 
-        .header h1 {
+        .greeting-header h2 {
             font-weight: 800;
             font-size: 1.8rem;
-            letter-spacing: -0.5px;
-            background: linear-gradient(to bottom, #fff 40%, #ccc);
+            background: linear-gradient(to right, #fff, var(--soft-gold));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .card {
-            background: rgba(1, 40, 27, 0.6);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
+        /* Card Styling */
+        .login-card {
+            background: rgba(0, 34, 22, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 35px;
-            padding: 3rem 2rem 2rem;
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
-            position: relative;
+            border-radius: 30px;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: cardEntrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        /* Floating Logo */
-        .logo-wrap {
-            position: absolute;
-            top: -45px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90px;
-            height: 90px;
+        .brand-box {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-ring {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 1rem;
             background: var(--primary-gold);
-            border: 8px solid var(--emerald-deep);
-            border-radius: 28px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            transform: rotate(-10deg);
+            transition: 0.5s;
         }
 
-        .logo-wrap i {
-            font-size: 36px;
-            color: var(--emerald-deep);
+        .logo-ring i {
+            font-size: 30px;
+            color: var(--darker-emerald);
+            transform: rotate(10deg);
         }
 
-        /* Form Controls */
-        .input-group {
-            margin-bottom: 1.2rem;
+        /* Input Styling */
+        .form-group {
+            margin-bottom: 1.5rem;
         }
 
-        .input-group label {
+        .form-group label {
             display: block;
-            font-size: 0.7rem;
-            font-weight: 700;
+            font-size: 0.75rem;
+            font-weight: 600;
             color: var(--primary-gold);
+            margin-bottom: 0.5rem;
+            margin-left: 0.5rem;
             text-transform: uppercase;
-            margin-bottom: 0.6rem;
-            margin-left: 4px;
-            letter-spacing: 1px;
         }
 
         .input-box {
             position: relative;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: 0.3s;
         }
 
-        .input-box:focus-within {
-            border-color: var(--primary-gold);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
-        }
-
-        .input-box i.field-icon {
+        .input-box i {
             position: absolute;
             left: 1.2rem;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 1.1rem;
+            color: rgba(212, 175, 55, 0.5);
+            transition: 0.3s;
         }
 
-        .input-box input {
+        .form-control {
             width: 100%;
-            padding: 1.1rem 1rem 1.1rem 3.2rem;
-            background: transparent;
-            border: none;
+            padding: 1rem 1rem 1rem 3rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
             color: #fff;
-            font-size: 1rem;
-            font-weight: 500;
+            font-size: 0.95rem;
+            transition: 0.3s;
         }
 
-        .input-box input:focus {
+        .form-control:focus {
             outline: none;
+            border-color: var(--primary-gold);
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
         }
 
-        .btn-login {
+        .form-control:focus + i {
+            color: var(--primary-gold);
+        }
+
+        /* Button Styling */
+        .btn-submit {
             width: 100%;
-            margin-top: 1.5rem;
-            padding: 1.1rem;
-            background: linear-gradient(135deg, #D4AF37, #B8860B);
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-gold), #b8860b);
             border: none;
-            border-radius: 18px;
-            color: #002216;
+            border-radius: 15px;
+            color: var(--darker-emerald);
             font-weight: 800;
             font-size: 1rem;
-            letter-spacing: 1px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .btn-login:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(212, 175, 55, 0.3);
-        }
-
-        /* --- Info Section --- */
-        .ramadan-notice {
-            background: rgba(212, 175, 55, 0.08);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            padding: 0.8rem;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 2rem;
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.8);
+            transition: 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
+            margin-top: 2rem;
         }
 
-        /* --- Animations --- */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
+            filter: brightness(1.1);
         }
 
-        @keyframes moonPulse {
-            from {
-                transform: scale(1);
-                opacity: 0.8;
-            }
+        .btn-submit:active { transform: translateY(0); }
 
-            to {
-                transform: scale(1.1);
-                opacity: 1;
-            }
-        }
-
-        /* Mobile Adjustments */
+        /* Mobile Specifics */
         @media (max-width: 480px) {
-            .container {
-                width: 85%;
-            }
-
-            .card {
-                padding: 3rem 1.5rem 1.5rem;
-            }
-
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .moon-glow {
-                width: 50px;
-                height: 50px;
-                right: 5%;
-            }
+            .login-card { padding: 2rem 1.5rem; }
+            .greeting-header h2 { font-size: 1.5rem; }
+            .moon { width: 60px; height: 60px; }
+            .lantern-1 { left: 5%; }
+            .lantern-2 { right: 5%; }
         }
 
-        /* Loading Spinner */
+        /* Animations */
+        @keyframes swing {
+            from { transform: rotate(-5deg); }
+            to { transform: rotate(5deg); }
+        }
+
+        @keyframes glow {
+            from { opacity: 0.6; }
+            to { opacity: 1; }
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(30px) rotateX(-10deg); }
+            to { opacity: 1; transform: translateY(0) rotateX(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .spinner {
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            border-top: 3px solid #002216;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-top: 3px solid var(--darker-emerald);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 1s linear infinite;
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Info Style */
+        .pre-ramadan-badge {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px dashed var(--primary-gold);
+            padding: 0.8rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #eee;
+            margin-bottom: 1.5rem;
+            text-align: center;
         }
     </style>
 </head>
-
 <body>
 
-    <div class="scene" id="scene">
-        <div class="stars" id="stars-container"></div>
-        <div class="moon-glow"></div>
-        <div class="geometry-pattern"></div>
-
-        <div
-            style="position:absolute; top: -10px; left: 10%; opacity: 0.4; animation: swing 4s ease-in-out infinite alternate; transform-origin: top center;">
-            <i class="fas fa-fan" style="color: var(--primary-gold); font-size: 1.5rem;"></i>
-        </div>
+    <div class="bg-ornaments">
+        <div class="moon"></div>
+        <div class="lantern lantern-1"><i class="fas fa-kaaba"></i></div>
+        <div class="lantern lantern-2"><i class="fas fa-mosque"></i></div>
+        <svg width="100%" height="100%" opacity="0.05">
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
     </div>
 
-    <div class="container">
-        <header class="header">
-            <span class="arabic">أهلاً يا رمضان</span>
-            <h1>PStore Absensi</h1>
-        </header>
+    <div class="login-wrapper">
+        <div class="greeting-header">
+            <span>Marhaban Ya Ramadan</span>
+            <h2>PStore Absensi Digital</h2>
+        </div>
 
-        <div class="card">
-            <div class="logo-wrap">
-                <i class="fas fa-fingerprint"></i>
+        <div class="login-card">
+            <div class="brand-box">
+                <div class="logo-ring">
+                    <i class="fas fa-fingerprint"></i>
+                </div>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">Silahkan login untuk melanjutkan</p>
             </div>
 
-            <div class="ramadan-notice">
-                <i class="fas fa-moon" style="color: var(--primary-gold)"></i>
-                <span>Menyambut Berkah Ramadan</span>
+            <div class="pre-ramadan-badge">
+                <i class="fas fa-moon" style="margin-right: 5px; color: var(--primary-gold)"></i>
+                Menyambut Bulan Suci Ramadan
             </div>
 
             @if(session('error'))
-                <div
-                    style="background: rgba(255, 77, 77, 0.1); border-left: 4px solid #ff4d4d; padding: 12px; border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.8rem;">
-                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i> {{ session('error') }}
+                <div style="background: rgba(255,0,0,0.1); border-left: 3px solid #ff4d4d; padding: 10px; margin-bottom: 15px; font-size: 0.8rem; border-radius: 5px;">
+                    {{ session('error') }}
                 </div>
             @endif
 
             <form action="{{ route('login.submit') }}" method="POST" id="loginForm">
                 @csrf
-                <div class="input-group">
+                <div class="form-group">
                     <label>ID Login</label>
                     <div class="input-box">
-                        <i class="fas fa-user-circle field-icon"></i>
-                        <input type="text" name="login_id" placeholder="Masukkan ID Anda" required autofocus>
+                        <input type="text" name="login_id" class="form-control" placeholder="ID Pegawai" required autofocus>
+                        <i class="fas fa-user-tag"></i>
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <label>Kata Sandi</label>
+                <div class="form-group">
+                    <label>Password</label>
                     <div class="input-box">
-                        <i class="fas fa-shield-halved field-icon"></i>
-                        <input type="password" id="password" name="password" placeholder="••••••••" required>
-                        <button type="button" onclick="togglePassword()"
-                            style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #555; cursor: pointer; padding: 5px;">
-                            <i class="fas fa-eye" id="eye-icon"></i>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+                        <i class="fas fa-key"></i>
+                        <button type="button" onclick="togglePass()" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #777; cursor: pointer;">
+                            <i class="fas fa-eye" id="eye-icon" style="position: static; transform: none; font-size: 14px;"></i>
                         </button>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-login" id="submitBtn">
+                <button type="submit" class="btn-submit" id="btnSumbit">
                     <span>MASUK SISTEM</span>
-                    <i class="fas fa-sign-in-alt"></i>
+                    <i class="fas fa-arrow-right"></i>
                 </button>
             </form>
 
-            <footer
-                style="margin-top: 2rem; text-align: center; color: rgba(255,255,255,0.2); font-size: 0.65rem; letter-spacing: 0.5px;">
-                &copy; {{ date('Y') }} PSTORE DIGITAL TECHNOLOGY<br>
-                Crafted for Excellence
+            <footer style="margin-top: 2rem; text-align: center; font-size: 0.7rem; color: rgba(255,255,255,0.3); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
+                &copy; {{ date('Y') }} PStore Team • Crafted with Spirit
             </footer>
         </div>
     </div>
 
     <script>
-        // Generate Twinkling Stars
-        function createStars() {
-            const container = document.getElementById('stars-container');
-            const count = 40;
-            for (let i = 0; i < count; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                const size = Math.random() * 3 + 'px';
-                star.style.width = size;
-                star.style.height = size;
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
-                container.appendChild(star);
-            }
-        }
-
-        function togglePassword() {
-            const passInput = document.getElementById('password');
+        function togglePass() {
+            const input = document.getElementById('password');
             const icon = document.getElementById('eye-icon');
-            if (passInput.type === 'password') {
-                passInput.type = 'text';
-                icon.className = 'fas fa-eye-slash';
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
             } else {
-                passInput.type = 'password';
-                icon.className = 'fas fa-eye';
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
             }
         }
 
-        document.getElementById('loginForm').onsubmit = function () {
-            const btn = document.getElementById('submitBtn');
+        document.getElementById('loginForm').onsubmit = function() {
+            const btn = document.getElementById('btnSumbit');
             btn.innerHTML = '<div class="spinner"></div>';
-            btn.style.opacity = '0.8';
+            btn.style.opacity = '0.7';
             btn.style.pointerEvents = 'none';
         };
-
-        createStars();
     </script>
 </body>
-
 </html>
