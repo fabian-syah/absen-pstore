@@ -33,20 +33,36 @@
 
         /* CSS Variables - Design Tokens */
         :root {
-            /* Primary Colors */
-            --pstore-primary: #0d6efd;
-            --pstore-primary-dark: #0a58ca;
-            --pstore-primary-darker: #084298;
-            --pstore-primary-light: rgba(13, 110, 253, 0.1);
+            /* ==========================================================
+               RAMADAN THEME - SPECIAL EDITION
+               ========================================================== */
+
+            /* Primary Colors - Emerald Green */
+            --pstore-primary: #00693E;
+            /* Deep Emerald */
+            --pstore-primary-dark: #004d2e;
+            --pstore-primary-darker: #00331f;
+            --pstore-primary-light: rgba(0, 105, 62, 0.1);
+
+            /* Accents - Gold */
+            --pstore-accent: #D4AF37;
+            /* Metallic Gold */
+            --pstore-accent-light: #F4C430;
 
             /* Gradients */
-            --gradient-primary: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-            --gradient-soft: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 110, 253, 0.05) 100%);
-            --gradient-bg: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+            --gradient-primary: linear-gradient(135deg, #00693E 0%, #004d2e 100%);
+            /* Green Depth */
+            --gradient-gold: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
+            /* Gold Shine */
+            --gradient-soft: linear-gradient(135deg, rgba(0, 105, 62, 0.08) 0%, rgba(212, 175, 55, 0.1) 100%);
+            --gradient-bg: linear-gradient(180deg, #FAFAF5 0%, #EFF2E6 100%);
+            /* Warm Islamic Cream */
 
             /* Neutrals */
-            --pstore-dark: #1a1a1a;
-            --pstore-gray-900: #212529;
+            --pstore-dark: #1A2E22;
+            /* Dark Green-Black */
+            --pstore-gray-900: #1b2620;
+            /* Soft Black */
             --pstore-gray-700: #495057;
             --pstore-gray-500: #6c757d;
             --pstore-gray-300: #dee2e6;
@@ -72,7 +88,7 @@
             --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
             --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
             --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.15);
-            --shadow-primary: 0 4px 16px rgba(13, 110, 253, 0.2);
+            --shadow-primary: 0 4px 16px rgba(0, 105, 62, 0.25);
 
             /* Layout */
             --sidebar-width: 245px;

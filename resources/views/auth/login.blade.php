@@ -36,9 +36,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #0a0a0a;
+            background-color: #002b1d;
+            /* Ramadan Night Green */
             /* Solid fallback */
-            background: #0a0a0a;
+            background: linear-gradient(135deg, #002b1d 0%, #001f14 100%);
             overflow: hidden;
             position: fixed;
             top: 0;
@@ -62,28 +63,35 @@
         .shape-1 {
             width: 500px;
             height: 500px;
-            background: #444444;
+            background: #D4AF37;
+            /* Gold */
             top: -250px;
             left: -250px;
             animation-delay: 0s;
+            opacity: 0.15;
+            filter: blur(100px);
         }
 
         .shape-2 {
             width: 400px;
             height: 400px;
-            background: #333333;
+            background: #00693E;
+            /* Emerald Green */
             bottom: -200px;
             right: -200px;
             animation-delay: -3s;
+            opacity: 0.2;
         }
 
         .shape-3 {
             width: 300px;
             height: 300px;
-            background: #555555;
+            background: #4CAF50;
+            /* Light Green */
             top: 80%;
             left: -100px;
             animation-delay: -5s;
+            opacity: 0.1;
         }
 
         /* Hide shapes on mobile */
@@ -123,17 +131,19 @@
         }
 
         .login-card {
-            background: #1a1a1a;
+            background: #003322;
             /* Solid fallback for Safari */
-            background: rgba(30, 30, 30, 0.95);
+            background: rgba(0, 51, 34, 0.85);
+            /* Deep Green Glass */
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border-radius: 28px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            /* Gold Border */
             padding: 48px 40px;
             box-shadow:
                 0 30px 60px -15px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
             animation: slideUp 0.6s ease-out;
         }
 
@@ -165,13 +175,14 @@
         .logo-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+            background: linear-gradient(135deg, #D4AF37 0%, #F4C430 100%);
+            /* Gold Gradient */
             border-radius: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px;
-            box-shadow: 0 15px 35px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(212, 175, 55, 0.2);
             animation: pulse 2.5s ease-in-out infinite;
         }
 
@@ -197,15 +208,16 @@
         .brand-name {
             font-size: 32px;
             font-weight: 800;
-            color: white;
+            color: #ffffff;
             letter-spacing: 3px;
             margin-bottom: 8px;
-            text-shadow: 0 2px 15px rgba(255, 255, 255, 0.1);
+            text-shadow: 0 2px 15px rgba(212, 175, 55, 0.3);
+            /* Gold Glow */
         }
 
         .brand-tagline {
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.7);
             font-weight: 400;
             letter-spacing: 0.5px;
         }
@@ -246,8 +258,8 @@
             padding: 18px 18px 18px 54px;
             background-color: #2a2a2a;
             /* Solid fallback */
-            background: rgba(50, 50, 50, 0.9);
-            border: 2px solid rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 14px;
             font-size: 15px;
             color: #ffffff;
@@ -264,10 +276,11 @@
         }
 
         .form-control:focus {
-            border-color: rgba(255, 255, 255, 0.5);
-            background-color: #333333;
-            background: rgba(60, 60, 60, 0.95);
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+            border-color: #D4AF37;
+            /* Gold focus */
+            background-color: #001f14;
+            background: rgba(0, 31, 20, 0.6);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
         }
 
         .input-wrapper:focus-within>i {
@@ -303,7 +316,8 @@
         .btn-login {
             width: 100%;
             padding: 18px;
-            background: linear-gradient(135deg, #ffffff 0%, #e8e8e8 100%);
+            background: linear-gradient(135deg, #D4AF37 0%, #C5A028 100%);
+            /* Gold Gradient */
             border: none;
             border-radius: 14px;
             font-size: 15px;
@@ -877,7 +891,9 @@
         }
 
         /* iOS Safe Area (for notched phones like iPhone X+) */
-        @supports (padding: env(safe - area - inset - top)) {
+        @supports
+        (padding: env(safe - area - inset - top))
+            {
             body {
                 padding-top: env(safe-area-inset-top);
                 padding-bottom: env(safe-area-inset-bottom);
