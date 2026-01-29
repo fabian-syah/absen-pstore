@@ -357,9 +357,6 @@
                                                         <div class="late-approval-badge">
                                                             <i class="mdi mdi-clock-alert"></i> TELAT APPROVE (+{{ $approvalDelay }} Hari)
                                                         </div>
-                                                        @if ($approverName)
-                                                            <div class="approver-name-tag">By: {{ $approverName }}</div>
-                                                        @endif
                                                     </div>
                                                 @endif
                                             </div>

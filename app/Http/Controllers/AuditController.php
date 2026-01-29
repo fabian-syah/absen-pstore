@@ -264,6 +264,7 @@ class AuditController extends Controller
         $attendance->presence_status = $statusMap[$leaveRequest->type] ?? ucfirst($leaveRequest->type);
         $attendance->status = 'verified'; // Langsung verified karena sudah di-approve Audit
         $attendance->attendance_type = 'leave';
+        $attendance->verified_by_user_id = $approver->id; // Set siapa yang memverifikasi (Audit)
         $attendance->save();
 
         // Kirim notifikasi
