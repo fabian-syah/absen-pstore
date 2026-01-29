@@ -2,7 +2,8 @@
     <thead>
         <tr>
             <th colspan="8" style="font-weight: bold; font-size: 14px; text-align: center;">LAPORAN ABSENSI CABANG:
-                {{ strtoupper($branch->name) }}</th>
+                {{ strtoupper($branch->name) }}
+            </th>
         </tr>
         <tr>
             <th colspan="8" style="text-align: center;">Periode: {{ $month }}</th>
@@ -16,6 +17,7 @@
             <th style="font-weight: bold; border: 1px solid #000; background-color: #bef264;">Sakit</th>
             <th style="font-weight: bold; border: 1px solid #000; background-color: #bef264;">Izin</th>
             <th style="font-weight: bold; border: 1px solid #000; background-color: #bef264;">Alfa</th>
+            <th style="font-weight: bold; border: 1px solid #000; background-color: #bef264;">Libur</th>
             <th style="font-weight: bold; border: 1px solid #000; background-color: #bef264;">Telat</th>
             <th style="font-weight: bold; border: 1px solid #000; background-color: #bef264;">Total Jam</th>
         </tr>
@@ -30,6 +32,7 @@
                 <td style="border: 1px solid #000; text-align: center;">{{ $row['summary']['sakit'] }}</td>
                 <td style="border: 1px solid #000; text-align: center;">{{ $row['summary']['izin'] }}</td>
                 <td style="border: 1px solid #000; text-align: center;">{{ $row['summary']['alfa'] }}</td>
+                <td style="border: 1px solid #000; text-align: center;">{{ $row['summary']['libur'] }}</td>
                 <td style="border: 1px solid #000; text-align: center;">{{ $row['summary']['telat'] }}</td>
                 <td style="border: 1px solid #000; text-align: center;">{{ number_format($row['summary']['total_jam'], 1) }}
                 </td>

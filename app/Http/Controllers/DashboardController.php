@@ -238,7 +238,19 @@ class DashboardController extends Controller
                 ->whereMonth('check_in_time', $nowInBranch->month)
                 ->whereYear('check_in_time', $nowInBranch->year)
                 ->where('status', 'verified')
-                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar', 'Telat', 'Izin Telat'])
+                ->whereIn('presence_status', [
+                    'Masuk',
+                    'Hadir',
+                    'Tepat Waktu',
+                    'WFH',
+                    'Work From Home',
+                    'WFH / Dinas Luar',
+                    'Dinas Luar',
+                    'Kunjungan Rutin',
+                    'Lembur',
+                    'Telat',
+                    'Izin Telat'
+                ])
                 ->whereTime('check_in_time', '!=', '00:00:00')
                 ->whereHas('user', function ($q) use ($user, $allBranchIds) {
                     $q->where('is_active', true)
@@ -402,7 +414,19 @@ class DashboardController extends Controller
             ->where('branch_id', $user->branch_id)
             ->where('status', 'verified')
             // Filter status yang dianggap "Masuk" (Sama dengan logic Riwayat Absensi)
-            ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar', 'Telat', 'Izin Telat'])
+            ->whereIn('presence_status', [
+                'Masuk',
+                'Hadir',
+                'Tepat Waktu',
+                'WFH',
+                'Work From Home',
+                'WFH / Dinas Luar',
+                'Dinas Luar',
+                'Kunjungan Rutin',
+                'Lembur',
+                'Telat',
+                'Izin Telat'
+            ])
             ->whereHas('user', function ($q) {
                 $q->where('is_active', true)
                     ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk Hall of Fame

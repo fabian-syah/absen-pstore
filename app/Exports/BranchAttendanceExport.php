@@ -48,6 +48,7 @@ class BranchAttendanceExport implements FromView, ShouldAutoSize, WithStyles
                 'sakit' => 0,
                 'izin' => 0,
                 'alfa' => 0,
+                'libur' => 0,
                 'telat' => 0,
                 'total_jam' => 0
             ];
@@ -75,6 +76,8 @@ class BranchAttendanceExport implements FromView, ShouldAutoSize, WithStyles
                     $summary['izin']++;
                 } elseif ($status == 'alpha') {
                     $summary['alfa']++;
+                } elseif ($status == 'libur') {
+                    $summary['libur']++;
                 }
 
                 if ($atten->is_late_checkin) {

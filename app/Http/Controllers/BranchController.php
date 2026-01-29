@@ -240,7 +240,7 @@ class BranchController extends Controller
                 ->whereBetween('check_in_time', [$startDate, $endDate])
                 ->get();
 
-            $summary = ['hadir' => 0, 'sakit' => 0, 'izin' => 0, 'alfa' => 0, 'telat' => 0, 'total_jam' => 0];
+            $summary = ['hadir' => 0, 'sakit' => 0, 'izin' => 0, 'alfa' => 0, 'libur' => 0, 'telat' => 0, 'total_jam' => 0];
             foreach ($attendances as $atten) {
                 // Normalize status to lowercase
                 $status = strtolower(trim($atten->presence_status));
@@ -265,6 +265,8 @@ class BranchController extends Controller
                     $summary['izin']++;
                 } elseif ($status == 'alpha') {
                     $summary['alfa']++;
+                } elseif ($status == 'libur') {
+                    $summary['libur']++;
                 }
 
                 if ($atten->is_late_checkin) {

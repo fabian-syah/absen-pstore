@@ -95,6 +95,7 @@
                 <th width="10%">Sakit</th>
                 <th width="10%">Izin</th>
                 <th width="10%">Alfa</th>
+                <th width="10%">Libur</th>
                 <th width="10%">Telat</th>
                 <th width="10%">Total Jam</th>
             </tr>
@@ -111,12 +112,13 @@
                     <td>{{ $row['summary']['sakit'] }}</td>
                     <td>{{ $row['summary']['izin'] }}</td>
                     <td>{{ $row['summary']['alfa'] }}</td>
+                    <td>{{ $row['summary']['libur'] }}</td>
                     <td>{{ $row['summary']['telat'] }}</td>
                     <td>{{ number_format($row['summary']['total_jam'], 1) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8">Tidak ada data karyawan di cabang ini.</td>
+                    <td colspan="9">Tidak ada data karyawan di cabang ini.</td>
                 </tr>
             @endforelse
         </tbody>
