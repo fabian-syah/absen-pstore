@@ -1053,349 +1053,403 @@
                                 </div>
                             </div>
 
-                            {{-- SEDANG BEKERJA -PREMIUM REDESIGN --}}
+                            {{-- SEDANG BEKERJA (Update: Cek Status Izin/Libur Dulu) --}}
                         @else
-                            <div class="active-work-card mb-3 position-relative overflow-hidden"
-                                style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
-                                                                                                                                                                                                                                                                                border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
+                            @php
+                                $isLeaveStatus = $myAttendanceToday->attendance_type == 'leave' || in_array(strtolower($myAttendanceToday->presence_status), ['izin', 'sakit', 'cuti', 'libur', 'dinas luar']);
+                            @endphp
 
-                                {{-- Decorative Elements --}}
-                                <div
-                                    style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; 
-                                                                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                                                                                                                                                                                                                    border-radius: 50%;">
-                                </div>
-                                <div
-                                    style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; 
-                                                                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
-                                                                                                                                                                                                                                                                                    border-radius: 50%;">
-                                </div>
+                            @if($isLeaveStatus)
+                                {{-- CARD KHUSUS STATUS IZIN / LIBUR --}}
+                                <div class="active-work-card mb-3 position-relative overflow-hidden"
+                                    style="background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%); 
+                                                    border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(255, 94, 98, 0.3);">
 
-                                <div class="card-body p-4 position-relative" style="z-index: 2;">
-                                    @if (!$isCrossDay)
-                                        {{-- Header: Status & Live Indicator --}}
-                                        <div class="d-flex align-items-center justify-content-between mb-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="work-status-icon me-3"
-                                                    style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
-                                                                                                                                                                                                                                                                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
-                                                                                                                                                                                                                                                                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                                                    <i class="mdi mdi-briefcase-check text-white" style="font-size: 28px;"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
-                                                        Sedang Bekerja
-                                                        <span class="live-pulse-badge"></span>
-                                                    </h4>
-                                                    <p class="mb-0 text-white" style="opacity: 0.9; font-size: 0.875rem;">
-                                                        Anda aktif bekerja hari ini
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    {{-- Decorative --}}
+                                    <div
+                                        style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;">
+                                    </div>
 
-                                        {{-- Work Timeline & Info --}}
-                                        <div class="work-timeline-card p-3 mb-3"
-                                            style="background: rgba(255,255,255,0.95); border-radius: 16px; 
-                                                                                                                                                                                                                                                                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-
-                                            <div class="row g-3">
-                                                {{-- Check In Time --}}
-                                                <div class="col-6">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="timeline-dot me-3"
-                                                            style="width: 40px; height: 40px; background: linear-gradient(135deg, #43e97b, #38f9d7); 
-                                                                                                                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
-                                                            <i class="mdi mdi-login text-white fs-5"></i>
-                                                        </div>
-                                                        <div>
-                                                            <small class="text-muted d-block mb-1"
-                                                                style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                                                Check In
-                                                            </small>
-                                                            <h5 class="fw-bold mb-0" style="color: #2d3748;">
-                                                                {{ $myAttendanceToday->check_in_time->format('H:i') }}
-                                                            </h5>
-                                                            <small class="text-muted" style="font-size: 0.75rem;">
-                                                                via {{ $sourceLabel }}
-                                                            </small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {{-- Work Duration (Auto-calculating) --}}
-                                                <div class="col-6">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="timeline-dot me-3"
-                                                            style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
-                                                            <i class="mdi mdi-timer-outline text-white fs-5"></i>
-                                                        </div>
-                                                        <div>
-                                                            <small class="text-muted d-block mb-1"
-                                                                style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                                                Durasi Kerja
-                                                            </small>
-                                                            <h5 class="fw-bold mb-0" style="color: #2d3748;" id="work-duration-display">
-                                                                -
-                                                            </h5>
-                                                            <small class="text-muted" style="font-size: 0.75rem;">
-                                                                Live Counter
-                                                            </small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {{-- Animated Progress Bar --}}
-                                            <div class="mt-3">
-                                                <div class="progress" style="height: 6px; border-radius: 10px; background: #e9ecef;">
-                                                    <div class="progress-bar progress-bar-striped progress-bar-animated"
-                                                        style="background: linear-gradient(90deg, #43e97b, #38f9d7); width: 100%;">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                    @if ($isCrossDay)
-                                        {{-- ========================================================= --}}
-                                        {{-- HEADER STATUS LEMBUR LINTAS HARI --}}
-                                        {{-- ========================================================= --}}
-                                        <div class="d-flex align-items-center justify-content-between mb-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="work-status-icon me-3"
-                                                    style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
-                                                                                                                                                                                                                                                                                                                                                                    border-radius: 16px; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                    justify-content: center; backdrop-filter: blur(10px); 
-                                                                                                                                                                                                                                                                                                                                                                    border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                                                    <i class="mdi mdi-clock-alert-outline text-white" style="font-size: 28px;"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
-                                                        Lembur Lintas Hari
-                                                        <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">PERLU
-                                                            AKSI</span>
-                                                    </h4>
-                                                    <p class="mb-0 text-white" style="opacity: 0.9; font-size: 0.875rem;">
-                                                        Masuk: {{ $myAttendanceToday->check_in_time->translatedFormat('l, d M') }}
-                                                        {{ $myAttendanceToday->check_in_time->format('H:i') }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                    {{-- Action Button --}}
-                                    <div class="text-center">
-                                        @if (!$isCrossDay)
-                                            @if (Auth::user()->only_security_scan)
-                                                <button class="btn btn-light btn-lg w-100 shadow-sm" disabled
-                                                    style="border-radius: 14px; padding: 1rem; cursor: not-allowed; opacity: 0.7;">
-                                                    <i class="mdi mdi-lock me-2"></i>
-                                                    <span class="fw-bold">Absen Pulang Mandiri Dikunci</span>
-                                                </button>
-                                                <small class="text-white d-block mt-2" style="opacity: 0.85; font-size: 0.75rem;">
-                                                    Silahkan Scan QR Code ke Security untuk Pulang
-                                                </small>
-                                            @else
-                                                <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
-                                                    class="checkout-btn btn btn-lg w-100 shadow-lg"
-                                                    style="background: rgba(255,255,255,0.95); color: #ef4444; border: none; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          border-radius: 14px; padding: 1rem; font-weight: 700; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          transition: all 0.3s ease; backdrop-filter: blur(10px);">
-                                                    <i class="mdi mdi-logout-variant me-2"></i>
-                                                    Absen Pulang Mandiri
-                                                </a>
-                                            @endif
-                                        @else
-                                            {{-- ========================================================= --}}
-                                            {{-- KONDISI LEMBUR LINTAS HARI (CrossDay = True) --}}
-                                            {{-- ========================================================= --}}
-                                            <div class="cross-day-container"
-                                                style="background: rgba(255,255,255,0.15); border-radius: 16px; padding: 1.25rem; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.25);">
-
-                                                {{-- Header Info Lembur --}}
-                                                <div class="text-white mb-3">
-                                                    <div class="d-flex align-items-center justify-content-center mb-2">
-                                                        <i class="mdi mdi-clock-alert-outline"
-                                                            style="font-size: 2rem; margin-right: 8px;"></i>
-                                                        <span class="badge bg-warning text-dark fw-bold px-3 py-2">LEMBUR LINTAS
-                                                            HARI</span>
-                                                    </div>
-                                                    <p class="small mb-0" style="opacity: 0.9;">
-                                                        Anda masuk kemarin pukul
-                                                        <strong>{{ $myAttendanceToday->check_in_time->format('H:i') }}</strong>
-                                                        ({{ $myAttendanceToday->check_in_time->translatedFormat('l, d M') }})<br>
-                                                        @if ($myAttendanceToday->is_extended_shift)
-                                                            Status lembur sudah dikonfirmasi. Silakan absen pulang sekarang.
-                                                        @else
-                                                            dan belum absen pulang. Geser slider untuk konfirmasi:
-                                                        @endif
-                                                    </p>
-                                                </div>
-
-                                                @if ($myAttendanceToday->is_extended_shift)
-                                                    {{-- LANGSUNG TAMPILKAN TOMBOL KAMERA (Sudah Konfirmasi Lembur) --}}
-                                                    <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
-                                                        class="btn btn-light btn-lg w-100 shadow-lg"
-                                                        style="border-radius: 14px; padding: 1rem; font-weight: 700; color: #10b981;">
-                                                        <i class="mdi mdi-camera me-2"></i>
-                                                        Absen Pulang Sekarang
-                                                    </a>
-                                                    <p class="text-center mt-2 mb-0"
-                                                        style="color: rgba(255,255,255,0.85); font-size: 0.8rem;">
-                                                        <i class="mdi mdi-check-circle me-1"></i> Lembur sudah terkonfirmasi
-                                                    </p>
+                                    <div class="card-body p-4 position-relative" style="z-index: 2;">
+                                        <div class="d-flex align-items-center mb-4">
+                                            <div class="work-status-icon me-3"
+                                                style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); border-radius: 16px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
+                                                @if(strtolower($myAttendanceToday->presence_status) == 'libur')
+                                                    <i class="mdi mdi-calendar-remove text-white" style="font-size: 28px;"></i>
+                                                @elseif(strtolower($myAttendanceToday->presence_status) == 'sakit')
+                                                    <i class="mdi mdi-hospital-box text-white" style="font-size: 28px;"></i>
                                                 @else
-                                                    {{-- SLIDER KONFIRMASI LEMBUR (Belum Konfirmasi) --}}
-                                                    <div id="confirmation-wrapper">
-                                                        <div class="mb-3" id="slider-view">
-                                                            <p class="mb-2 fw-bold"
-                                                                style="color: rgba(255,255,255,0.95); font-size: 0.85rem;">
-                                                                <i class="mdi mdi-gesture-swipe-horizontal me-1"></i>
-                                                                Geser untuk Konfirmasi Lembur & Absen Pulang
-                                                            </p>
-                                                            <div class="overtime-slide-track" id="slide-track"
-                                                                style="
-                                                                                                                                                                            background: rgba(255,255,255,0.95);
-                                                                                                                                                                            height: 56px;
-                                                                                                                                                                            border-radius: 50px;
-                                                                                                                                                                            position: relative;
-                                                                                                                                                                            display: flex;
-                                                                                                                                                                            align-items: center;
-                                                                                                                                                                            overflow: hidden;
-                                                                                                                                                                            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                                                    <i class="mdi mdi-file-document-box-check-outline text-white"
+                                                        style="font-size: 28px;"></i>
+                                                @endif
+                                            </div>
+                                            <div>
+                                                <h4 class="fw-bold text-white mb-0">
+                                                    {{ strtoupper($myAttendanceToday->presence_status) }}</h4>
+                                                <p class="mb-0 text-white" style="opacity: 0.9; font-size: 0.875rem;">Status kehadiran
+                                                    Anda hari ini.</p>
+                                            </div>
+                                        </div>
 
-                                                                <span
-                                                                    style="
-                                                                                                                                                                                position: absolute;
-                                                                                                                                                                                left: 0; width: 100%;
-                                                                                                                                                                                text-align: center;
-                                                                                                                                                                                color: #10b981;
-                                                                                                                                                                                font-weight: 700;
-                                                                                                                                                                                font-size: 0.85rem;
-                                                                                                                                                                                letter-spacing: 1px;
-                                                                                                                                                                                user-select: none;
-                                                                                                                                                                                opacity: 0.75;">
-                                                                    GESER KE KANAN >>
-                                                                </span>
+                                        <div class="work-timeline-card p-3"
+                                            style="background: rgba(255,255,255,0.95); border-radius: 16px;">
+                                            <div class="d-flex align-items-center">
+                                                <div class="timeline-dot me-3"
+                                                    style="width: 40px; height: 40px; background: #FF5E62; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="mdi mdi-check text-white"></i>
+                                                </div>
+                                                <div>
+                                                    <small class="text-muted d-block uppercase" style="font-size: 0.75rem;">Sudah
+                                                        Diverifikasi</small>
+                                                    <h5 class="fw-bold mb-0 text-dark">Data Tercatat</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="active-work-card mb-3 position-relative overflow-hidden"
+                                    style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
+                                                                                                                                                                                                                                                                                                border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(67, 233, 123, 0.3);">
 
-                                                                <div id="slide-thumb"
-                                                                    style="
-                                                                                                                                                                                width: 48px; height: 48px;
-                                                                                                                                                                                background: linear-gradient(135deg, #43e97b, #38f9d7);
-                                                                                                                                                                                border-radius: 50%;
-                                                                                                                                                                                margin-left: 4px;
-                                                                                                                                                                                display: flex; align-items: center; justify-content: center;
-                                                                                                                                                                                color: white; font-size: 1.4rem;
-                                                                                                                                                                                box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
-                                                                                                                                                                                cursor: grab;
-                                                                                                                                                                                transition: transform 0.2s ease-out;
-                                                                                                                                                                                touch-action: none;">
-                                                                    <i class="mdi mdi-chevron-double-right"></i>
-                                                                </div>
+                                    {{-- Decorative Elements --}}
+                                    <div
+                                        style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; 
+                                                                                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                                                                                                                                                                                                    border-radius: 50%;">
+                                    </div>
+                                    <div
+                                        style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; 
+                                                                                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
+                                                                                                                                                                                                                                                                                                    border-radius: 50%;">
+                                    </div>
+
+                                    <div class="card-body p-4 position-relative" style="z-index: 2;">
+                                        @if (!$isCrossDay)
+                                            {{-- Header: Status & Live Indicator --}}
+                                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="work-status-icon me-3"
+                                                        style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
+                                                                                                                                                                                                                                                                                                                                                                                                    border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                                    justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                                                                                                                                                                                                                    border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                        <i class="mdi mdi-briefcase-check text-white" style="font-size: 28px;"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                                                            Sedang Bekerja
+                                                            <span class="live-pulse-badge"></span>
+                                                        </h4>
+                                                        <p class="mb-0 text-white" style="opacity: 0.9; font-size: 0.875rem;">
+                                                            Anda aktif bekerja hari ini
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Work Timeline & Info --}}
+                                            <div class="work-timeline-card p-3 mb-3"
+                                                style="background: rgba(255,255,255,0.95); border-radius: 16px; 
+                                                                                                                                                                                                                                                                                                                                                                                            box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+
+                                                <div class="row g-3">
+                                                    {{-- Check In Time --}}
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="timeline-dot me-3"
+                                                                style="width: 40px; height: 40px; background: linear-gradient(135deg, #43e97b, #38f9d7); 
+                                                                                                                                                                                                                                                                                                                                                                                                            border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                                            justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
+                                                                <i class="mdi mdi-login text-white fs-5"></i>
                                                             </div>
-                                                            <p class="mt-2 mb-0" style="color: rgba(255,255,255,0.85); font-size: 0.75rem;">
-                                                                * Setelah geser, kamera akan terbuka untuk foto pulang
-                                                            </p>
+                                                            <div>
+                                                                <small class="text-muted d-block mb-1"
+                                                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                    Check In
+                                                                </small>
+                                                                <h5 class="fw-bold mb-0" style="color: #2d3748;">
+                                                                    {{ $myAttendanceToday->check_in_time->format('H:i') }}
+                                                                </h5>
+                                                                <small class="text-muted" style="font-size: 0.75rem;">
+                                                                    via {{ $sourceLabel }}
+                                                                </small>
+                                                            </div>
                                                         </div>
                                                     </div>
 
-                                                    {{-- VIEW KAMERA (Hidden by default, muncul setelah slide) --}}
-                                                    <div id="camera-view" class="d-none">
+                                                    {{-- Work Duration (Auto-calculating) --}}
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="timeline-dot me-3"
+                                                                style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); 
+                                                                                                                                                                                                                                                                                                                                                                                                            border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                                            justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+                                                                <i class="mdi mdi-timer-outline text-white fs-5"></i>
+                                                            </div>
+                                                            <div>
+                                                                <small class="text-muted d-block mb-1"
+                                                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                    Durasi Kerja
+                                                                </small>
+                                                                <h5 class="fw-bold mb-0" style="color: #2d3748;" id="work-duration-display">
+                                                                    -
+                                                                </h5>
+                                                                <small class="text-muted" style="font-size: 0.75rem;">
+                                                                    Live Counter
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Animated Progress Bar --}}
+                                                <div class="mt-3">
+                                                    <div class="progress" style="height: 6px; border-radius: 10px; background: #e9ecef;">
+                                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                                            style="background: linear-gradient(90deg, #43e97b, #38f9d7); width: 100%;">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        @if ($isCrossDay)
+                                            {{-- ========================================================= --}}
+                                            {{-- HEADER STATUS LEMBUR LINTAS HARI --}}
+                                            {{-- ========================================================= --}}
+                                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="work-status-icon me-3"
+                                                        style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
+                                                                                                                                                                                                                                                                                                                                                                                        border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                        justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                                                                                                                                                                                                        border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                        <i class="mdi mdi-clock-alert-outline text-white" style="font-size: 28px;"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                                                            Lembur Lintas Hari
+                                                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">PERLU
+                                                                AKSI</span>
+                                                        </h4>
+                                                        <p class="mb-0 text-white" style="opacity: 0.9; font-size: 0.875rem;">
+                                                            Masuk: {{ $myAttendanceToday->check_in_time->translatedFormat('l, d M') }}
+                                                            {{ $myAttendanceToday->check_in_time->format('H:i') }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        {{-- Action Button --}}
+                                        <div class="text-center">
+                                            @if (!$isCrossDay)
+                                                @if (Auth::user()->only_security_scan)
+                                                    <button class="btn btn-light btn-lg w-100 shadow-sm" disabled
+                                                        style="border-radius: 14px; padding: 1rem; cursor: not-allowed; opacity: 0.7;">
+                                                        <i class="mdi mdi-lock me-2"></i>
+                                                        <span class="fw-bold">Absen Pulang Mandiri Dikunci</span>
+                                                    </button>
+                                                    <small class="text-white d-block mt-2" style="opacity: 0.85; font-size: 0.75rem;">
+                                                        Silahkan Scan QR Code ke Security untuk Pulang
+                                                    </small>
+                                                @else
+                                                    <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
+                                                        class="checkout-btn btn btn-lg w-100 shadow-lg"
+                                                        style="background: rgba(255,255,255,0.95); color: #ef4444; border: none; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  border-radius: 14px; padding: 1rem; font-weight: 700; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  transition: all 0.3s ease; backdrop-filter: blur(10px);">
+                                                        <i class="mdi mdi-logout-variant me-2"></i>
+                                                        Absen Pulang Mandiri
+                                                    </a>
+                                                @endif
+                                            @else
+                                                {{-- ========================================================= --}}
+                                                {{-- KONDISI LEMBUR LINTAS HARI (CrossDay = True) --}}
+                                                {{-- ========================================================= --}}
+                                                <div class="cross-day-container"
+                                                    style="background: rgba(255,255,255,0.15); border-radius: 16px; padding: 1.25rem; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.25);">
+
+                                                    {{-- Header Info Lembur --}}
+                                                    <div class="text-white mb-3">
+                                                        <div class="d-flex align-items-center justify-content-center mb-2">
+                                                            <i class="mdi mdi-clock-alert-outline"
+                                                                style="font-size: 2rem; margin-right: 8px;"></i>
+                                                            <span class="badge bg-warning text-dark fw-bold px-3 py-2">LEMBUR LINTAS
+                                                                HARI</span>
+                                                        </div>
+                                                        <p class="small mb-0" style="opacity: 0.9;">
+                                                            Anda masuk kemarin pukul
+                                                            <strong>{{ $myAttendanceToday->check_in_time->format('H:i') }}</strong>
+                                                            ({{ $myAttendanceToday->check_in_time->translatedFormat('l, d M') }})<br>
+                                                            @if ($myAttendanceToday->is_extended_shift)
+                                                                Status lembur sudah dikonfirmasi. Silakan absen pulang sekarang.
+                                                            @else
+                                                                dan belum absen pulang. Geser slider untuk konfirmasi:
+                                                            @endif
+                                                        </p>
+                                                    </div>
+
+                                                    @if ($myAttendanceToday->is_extended_shift)
+                                                        {{-- LANGSUNG TAMPILKAN TOMBOL KAMERA (Sudah Konfirmasi Lembur) --}}
                                                         <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
                                                             class="btn btn-light btn-lg w-100 shadow-lg"
                                                             style="border-radius: 14px; padding: 1rem; font-weight: 700; color: #10b981;">
                                                             <i class="mdi mdi-camera me-2"></i>
-                                                            Buka Kamera Untuk Pulang
+                                                            Absen Pulang Sekarang
                                                         </a>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        @endif
+                                                        <p class="text-center mt-2 mb-0"
+                                                            style="color: rgba(255,255,255,0.85); font-size: 0.8rem;">
+                                                            <i class="mdi mdi-check-circle me-1"></i> Lembur sudah terkonfirmasi
+                                                        </p>
+                                                    @else
+                                                        {{-- SLIDER KONFIRMASI LEMBUR (Belum Konfirmasi) --}}
+                                                        <div id="confirmation-wrapper">
+                                                            <div class="mb-3" id="slider-view">
+                                                                <p class="mb-2 fw-bold"
+                                                                    style="color: rgba(255,255,255,0.95); font-size: 0.85rem;">
+                                                                    <i class="mdi mdi-gesture-swipe-horizontal me-1"></i>
+                                                                    Geser untuk Konfirmasi Lembur & Absen Pulang
+                                                                </p>
+                                                                <div class="overtime-slide-track" id="slide-track"
+                                                                    style="
+                                                                                                                                                                                                    background: rgba(255,255,255,0.95);
+                                                                                                                                                                                                    height: 56px;
+                                                                                                                                                                                                    border-radius: 50px;
+                                                                                                                                                                                                    position: relative;
+                                                                                                                                                                                                    display: flex;
+                                                                                                                                                                                                    align-items: center;
+                                                                                                                                                                                                    overflow: hidden;
+                                                                                                                                                                                                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+
+                                                                    <span
+                                                                        style="
+                                                                                                                                                                                                        position: absolute;
+                                                                                                                                                                                                        left: 0; width: 100%;
+                                                                                                                                                                                                        text-align: center;
+                                                                                                                                                                                                        color: #10b981;
+                                                                                                                                                                                                        font-weight: 700;
+                                                                                                                                                                                                        font-size: 0.85rem;
+                                                                                                                                                                                                        letter-spacing: 1px;
+                                                                                                                                                                                                        user-select: none;
+                                                                                                                                                                                                        opacity: 0.75;">
+                                                                        GESER KE KANAN >>
+                                                                    </span>
+
+                                                                    <div id="slide-thumb"
+                                                                        style="
+                                                                                                                                                                                                        width: 48px; height: 48px;
+                                                                                                                                                                                                        background: linear-gradient(135deg, #43e97b, #38f9d7);
+                                                                                                                                                                                                        border-radius: 50%;
+                                                                                                                                                                                                        margin-left: 4px;
+                                                                                                                                                                                                        display: flex; align-items: center; justify-content: center;
+                                                                                                                                                                                                        color: white; font-size: 1.4rem;
+                                                                                                                                                                                                        box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
+                                                                                                                                                                                                        cursor: grab;
+                                                                                                                                                                                                        transition: transform 0.2s ease-out;
+                                                                                                                                                                                                        touch-action: none;">
+                                                                        <i class="mdi mdi-chevron-double-right"></i>
+                                                                    </div>
+                                                                </div>
+                                                                <p class="mt-2 mb-0" style="color: rgba(255,255,255,0.85); font-size: 0.75rem;">
+                                                                    * Setelah geser, kamera akan terbuka untuk foto pulang
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- VIEW KAMERA (Hidden by default, muncul setelah slide) --}}
+                                                        <div id="camera-view" class="d-none">
+                                                            <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
+                                                                class="btn btn-light btn-lg w-100 shadow-lg"
+                                                                style="border-radius: 14px; padding: 1rem; font-weight: 700; color: #10b981;">
+                                                                <i class="mdi mdi-camera me-2"></i>
+                                                                Buka Kamera Untuk Pulang
+                                                            </a>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <style>
-                                /* Live Pulse Badge */
-                                .live-pulse-badge {
-                                    display: inline-block;
-                                    width: 12px;
-                                    height: 12px;
-                                    background: #fff;
-                                    border-radius: 50%;
-                                    animation: pulse-live 1.5s infinite;
-                                    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-                                }
-
-                                @keyframes pulse-live {
-                                    0% {
+                                <style>
+                                    /* Live Pulse Badge */
+                                    .live-pulse-badge {
+                                        display: inline-block;
+                                        width: 12px;
+                                        height: 12px;
+                                        background: #fff;
+                                        border-radius: 50%;
+                                        animation: pulse-live 1.5s infinite;
                                         box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
                                     }
 
-                                    50% {
-                                        box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
-                                    }
-
-                                    100% {
-                                        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-                                    }
-                                }
-
-                                /* Checkout Button Hover */
-                                .checkout-btn:hover {
-                                    transform: translateY(-2px);
-                                    box-shadow: 0 12px 30px rgba(239, 68, 68, 0.3) !important;
-                                    background: white !important;
-                                }
-
-                                /* Active Work Card Entrance */
-                                .active-work-card {
-                                    animation: slideInUp 0.6s ease-out;
-                                }
-
-                                @keyframes slideInUp {
-                                    from {
-                                        opacity: 0;
-                                        transform: translateY(30px);
-                                    }
-
-                                    to {
-                                        opacity: 1;
-                                        transform: translateY(0);
-                                    }
-                                }
-                            </style>
-
-                            <script>
-                                // Auto-calcul                          ate work dura                         tion
-                                @if (!$isCrossDay)
-                                    (function () {
-                                        const checkInTime = new Date('{{ $myAttendanceToday->check_in_time->toIso8601String() }}');
-                                        const durationDisplay = document.getElementById('work-duration-display');
-
-                                        function updateWorkDuration() {
-                                            const now = new Date();
-                                            const diff = now - checkInTime;
-
-                                            const hours = Math.floor(diff / (1000 * 60 * 60));
-                                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-                                            if (durationDisplay) {
-                                                durationDisplay.textContent = `${hours}j ${minutes}m`;
-                                            }
+                                    @keyframes pulse-live {
+                                        0% {
+                                            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
                                         }
 
-                                        updateWorkDuration();
-                                        setInterval(updateWorkDuration, 60000); // Update every minute
-                                    })();
-                                @endif
-                            </script>
+                                        50% {
+                                            box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+                                        }
+
+                                        100% {
+                                            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+                                        }
+                                    }
+
+                                    /* Checkout Button Hover */
+                                    .checkout-btn:hover {
+                                        transform: translateY(-2px);
+                                        box-shadow: 0 12px 30px rgba(239, 68, 68, 0.3) !important;
+                                        background: white !important;
+                                    }
+
+                                    /* Active Work Card Entrance */
+                                    .active-work-card {
+                                        animation: slideInUp 0.6s ease-out;
+                                    }
+
+                                    @keyframes slideInUp {
+                                        from {
+                                            opacity: 0;
+                                            transform: translateY(30px);
+                                        }
+
+                                        to {
+                                            opacity: 1;
+                                            transform: translateY(0);
+                                        }
+                                    }
+                                </style>
+
+                                <script>
+                                    // Auto-calcul                          ate work dura                         tion
+                                    @if (!$isCrossDay)
+                                        (function () {
+                                            const checkInTime = new Date('{{ $myAttendanceToday->check_in_time->toIso8601String() }}');
+                                            const durationDisplay = document.getElementById('work-duration-display');
+
+                                            function updateWorkDuration() {
+                                                const now = new Date();
+                                                const diff = now - checkInTime;
+
+                                                const hours = Math.floor(diff / (1000 * 60 * 60));
+                                                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                                                if (durationDisplay) {
+                                                    durationDisplay.textContent = `${hours}j ${minutes}m`;
+                                                }
+                                            }
+
+                                            updateWorkDuration();
+                                            setInterval(updateWorkDuration, 60000); // Update every minute
+                                        })();
+                                    @endif
+                                </script>
+                            @endif
                         @endif
                     @elseif($myPendingLeave)
                         {{-- 2. JIKA ADA PENGAJUAN PENDING (KUNING) --}}
@@ -1564,8 +1618,8 @@
                 {{-- Decorative elements --}}
                 <div
                     style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
-                                                                                                                                background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                                                                border-radius: 50%; pointer-events: none;">
+                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                                    border-radius: 50%; pointer-events: none;">
                 </div>
 
                 <div class="card-body p-4">
@@ -1576,8 +1630,8 @@
                                 {{-- Icon dengan glassmorphism effect --}}
                                 <div class="d-flex align-items-center justify-content-center me-3"
                                     style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
-                                                                                                                                                border-radius: 16px; backdrop-filter: blur(10px); 
-                                                                                                                                                border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                                                                                                                                                    border-radius: 16px; backdrop-filter: blur(10px); 
+                                                                                                                                                    border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
                                     <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
                                 </div>
                                 <div>
@@ -1598,21 +1652,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                                                                                            border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                                                            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                                                            transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                                                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                                                                                opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                                                                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                                                                                                                                                        border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                                                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
                                                         <i class="mdi mdi-file-document-edit text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -1633,21 +1687,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                                                                                            border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                                                            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                                                            transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                                                                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                                                                                opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
-                                                                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                                                                    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
+                                                                                                                                                                        border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                                                        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
                                                         <i class="mdi mdi-history text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -1877,8 +1931,8 @@
 @push('styles')
     <style>
         /* =================================================================
-                                                                                   DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
-                                                                                   ================================================================= */
+                                                                                       DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
+                                                                                       ================================================================= */
 
         /* Section Headers & Separators */
         .section-header {
@@ -1976,8 +2030,8 @@
         }
 
         /* =================================================================
-                                                                                   CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
-                                                                                   ================================================================= */
+                                                                                       CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
+                                                                                       ================================================================= */
 
         /* DON'T override backgrounds - only fix text colors */
 
@@ -3877,8 +3931,8 @@
                     });
                 @endif
 
-                                                                                                                // --- SCRIPT CHART ---
-                                                                                                                const ctx = document.getElementById('attendancePieChart').getContext('2d');
+                                                                                                                    // --- SCRIPT CHART ---
+                                                                                                                    const ctx = document.getElementById('attendancePieChart').getContext('2d');
             Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
 
             @if (auth()->user()->role == 'admin')
@@ -3888,7 +3942,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                                                                                                                                        {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                                                                                                                                                                                                                {{ $stats['early'] }}, {{ $stats['pending'] }},
                                 {{ $stats['absent'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
@@ -3974,7 +4028,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                                                                                                                                        {{ $stats['early'] }}, {{ $stats['pending'] }}
+                                                                                                                                                                                                                                {{ $stats['early'] }}, {{ $stats['pending'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
                             borderWidth: 2,
@@ -3993,8 +4047,8 @@
                 });
             @endif
 
-                                                                                                                // --- MODAL FOTO PROFIL ---
-                                                                                                                var profilePhotoModal = document.getElementById('profilePhotoModal');
+                                                                                                                    // --- MODAL FOTO PROFIL ---
+                                                                                                                    var profilePhotoModal = document.getElementById('profilePhotoModal');
             if (profilePhotoModal) {
                 profilePhotoModal.addEventListener('show.bs.modal', function (event) {
                     var button = event.relatedTarget;
