@@ -219,47 +219,10 @@
         <div class="col-md-8 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-4">
-                        <div>
-                            <h4 class="card-title mb-1">Daftar Karyawan</h4>
-                            <p class="text-muted mb-0">Monitor kehadiran & export laporan.</p>
-                        </div>
+            <h4 class="card-title mb-1">Daftar Karyawan</h4>
+            <p class="text-muted mb-4">Karyawan yang terdaftar di cabang ini.</p>
 
-                        {{-- FORM EXPORT LAPORAN --}}
-                        @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
-                            <form method="GET" class="d-flex gap-2 align-items-center bg-light p-2 rounded shadow-sm border">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-white border-end-0"><i
-                                            class="mdi mdi-calendar-month"></i></span>
-                                    <select name="month" class="form-select form-select-sm border-start-0 ps-0"
-                                        style="max-width: 100px;">
-                                        @foreach(range(1, 12) as $m)
-                                            <option value="{{ $m }}" {{ date('n') == $m ? 'selected' : '' }}>
-                                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <select name="year" class="form-select form-select-sm" style="width: 80px;">
-                                    @foreach(range(date('Y'), date('Y') - 2) as $y)
-                                        <option value="{{ $y }}" {{ date('Y') == $y ? 'selected' : '' }}>{{ $y }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="btn-group btn-group-sm">
-                                    <button type="submit" formaction="{{ route('branches.export.pdf', $branch->id) }}"
-                                        class="btn btn-danger text-white">
-                                        <i class="mdi mdi-file-pdf me-1"></i>PDF
-                                    </button>
-                                    <button type="submit" formaction="{{ route('branches.export.excel', $branch->id) }}"
-                                        class="btn btn-success text-white">
-                                        <i class="mdi mdi-file-excel me-1"></i>Excel
-                                    </button>
-                                </div>
-                            </form>
-                        @endif
-                    </div>
-
-                    <div class="table-responsive">
+            <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead>
                                 <tr>

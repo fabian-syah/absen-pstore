@@ -36,7 +36,41 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body">
-                    <h4 class="card-title mb-4">Daftar Karyawan di {{ $branch->name }}</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">Daftar Karyawan di {{ $branch->name }}</h4>
+
+                        {{-- EXPORT LAPORAN BUTTONS --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
+                            <form method="GET" class="d-flex gap-2 align-items-center p-2 rounded justify-content-end"
+                                style="background: #f8f9fa; border: 1px solid #dee2e6;">
+                                <label class="small fw-bold text-dark me-1">Periode:</label> {{-- Label Explicit Black --}}
+                                <select name="month" class="form-select form-select-sm text-dark border-secondary"
+                                    style="width: 110px;">
+                                    @foreach(range(1, 12) as $m)
+                                        <option value="{{ $m }}" {{ date('n') == $m ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <select name="year" class="form-select form-select-sm text-dark border-secondary"
+                                    style="width: 80px;">
+                                    @foreach(range(date('Y'), date('Y') - 2) as $y)
+                                        <option value="{{ $y }}" {{ date('Y') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="submit" formaction="{{ route('branches.export.pdf', $branch->id) }}"
+                                        class="btn btn-danger text-white btn-sm" title="Export PDF">
+                                        <i class="mdi mdi-file-pdf"></i> PDF
+                                    </button>
+                                    <button type="submit" formaction="{{ route('branches.export.excel', $branch->id) }}"
+                                        class="btn btn-success text-white btn-sm" title="Export Excel">
+                                        <i class="mdi mdi-file-excel"></i> Excel
+                                    </button>
+                                </div>
+                            </form>
+                        @endif
+                    </div>
 
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
