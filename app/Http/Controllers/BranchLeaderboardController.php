@@ -101,9 +101,11 @@ class BranchLeaderboardController extends Controller
             ])
             ->where('presence_status', '!=', 'Alpha')
             ->whereTime('check_in_time', '!=', '00:00:00')
-            ->where('branch_id', $branchId)
-            ->whereHas('user', function ($q) {
-                $q->where('is_active', true)->whereNotIn('role', ['admin']);
+            // HAPUS: ->where('branch_id', $branchId) <-- Ini penyebabnya kalau data di record absen lama
+            ->whereHas('user', function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId) // FILTER DISINI: Berdasarkan cabang USER sekarang
+                    ->where('is_active', true)
+                    ->whereNotIn('role', ['admin']);
             })
             ->groupBy('user_id')
             ->with(['user', 'user.division'])
