@@ -222,13 +222,8 @@ class DashboardController extends Controller
         // 5. DATA UNTUK WIDGET & LEADERBOARD (FIXED LOGIC)
         // =========================================================================
 
-        // --- LEADERBOARD ABSENSI ---
+        // --- LEADERBOARD ABSENSI (SINKRON DENGAN BRANCH LEADERBOARD) ---
         if ($user->role != 'security') {
-            /** * PERBAIKAN: 
-             * 1. Hapus whereNotNull('check_out_time') agar user yang lupa absen pulang tapi dikonfirmasi audit tetap muncul.
-             * 2. Gunakan COALESCE pada total_work_seconds agar null dianggap 0 dan tidak merusak sorting.
-             * 3. Filter status harus verified atau hadir.
-             */
             $data['leaderboard'] = Attendance::select(
                 'user_id',
                 DB::raw('count(*) as total_attendance'),
@@ -238,6 +233,7 @@ class DashboardController extends Controller
                 ->whereMonth('check_in_time', $nowInBranch->month)
                 ->whereYear('check_in_time', $nowInBranch->year)
                 ->where('status', 'verified')
+                // Filter status yang hanya dianggap sebagai "Hadir"
                 ->whereIn('presence_status', [
                     'Masuk',
                     'Hadir',
@@ -251,11 +247,15 @@ class DashboardController extends Controller
                     'Telat',
                     'Izin Telat'
                 ])
-                ->whereTime('check_in_time', '!=', '00:00:00')
+                /** * PERBAIKAN: 
+                 * 1. Hapus whereTime '!=', '00:00:00' agar WFH Fabian (jam 00:00) terhitung.
+                 * 2. Filter branch_id dipindah ke dalam whereHas user agar akurat dengan posisi karyawan sekarang.
+                 */
                 ->whereHas('user', function ($q) use ($user, $allBranchIds) {
                     $q->where('is_active', true)
                         ->whereNotIn('role', ['admin', 'security']);
 
+                    // Jika bukan admin, hanya tampilkan leaderboard dari cabang yang diakses user
                     if ($user->role !== 'admin') {
                         $q->whereIn('branch_id', $allBranchIds);
                     }
