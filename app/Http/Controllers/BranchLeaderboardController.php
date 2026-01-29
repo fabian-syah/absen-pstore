@@ -76,8 +76,8 @@ class BranchLeaderboardController extends Controller
 
     private function getLeaderboardData($branchId)
     {
-        // 1. Get Attendance Stats
-        $attendanceStats = Attendance::select(
+        // 1. Ambil data HANYA dari Attendance yang statusnya Masuk atau WFH
+        return Attendance::select(
             'user_id',
             DB::raw('count(*) as total_attendance'),
             DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
@@ -86,111 +86,24 @@ class BranchLeaderboardController extends Controller
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
             ->where('status', 'verified')
+            // FILTER: Hanya Masuk dan WFH saja
             ->whereIn('presence_status', [
                 'Masuk',
                 'Hadir',
                 'Tepat Waktu',
                 'WFH',
-                'Work From Home',
-                'WFH / Dinas Luar',
-                'Dinas Luar',
-                'Kunjungan Rutin',
-                'Lembur',
-                'Telat',
-                'Izin Telat'
+                'Work From Home'
             ])
-            ->where('presence_status', '!=', 'Alpha')
             ->whereTime('check_in_time', '!=', '00:00:00')
-            // HAPUS: ->where('branch_id', $branchId) <-- Ini penyebabnya kalau data di record absen lama
             ->whereHas('user', function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId) // FILTER DISINI: Berdasarkan cabang USER sekarang
+                $q->where('branch_id', $branchId)
                     ->where('is_active', true)
                     ->whereNotIn('role', ['admin']);
             })
             ->groupBy('user_id')
             ->with(['user', 'user.division'])
             ->get()
-            ->keyBy('user_id');
-
-        // 2. Get Leave Request Stats (Full Collection)
-        $leaveRequests = \App\Models\LeaveRequest::with('user')
-            ->where('status', 'approved')
-            ->whereIn('type', ['wfh', 'dinas', 'kunjungan_rutin', 'izin', 'cuti'])
-            ->where(function ($q) {
-                $q->whereMonth('start_date', Carbon::now()->month)
-                    ->whereYear('start_date', Carbon::now()->year)
-                    ->orWhereMonth('end_date', Carbon::now()->month)
-                    ->whereYear('end_date', Carbon::now()->year);
-            })
-            ->whereHas('user', function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId)
-                    ->where('is_active', true)
-                    ->whereNotIn('role', ['admin']);
-            })
-            ->get();
-
-        // Calculate Days per User
-        $leaveCounts = [];
-        $startOfMonth = Carbon::now()->startOfMonth();
-        $endOfMonth = Carbon::now()->endOfMonth();
-
-        foreach ($leaveRequests as $leave) {
-            $uid = $leave->user_id;
-
-            $start = Carbon::parse($leave->start_date);
-            $end = Carbon::parse($leave->end_date);
-
-            // Adjust to month boundaries
-            if ($start->lt($startOfMonth))
-                $start = $startOfMonth->copy();
-            if ($end->gt($endOfMonth))
-                $end = $endOfMonth->copy();
-
-            if ($start->gt($end))
-                continue;
-
-            $days = $start->diffInDays($end) + 1;
-
-            if (!isset($leaveCounts[$uid])) {
-                $leaveCounts[$uid] = [
-                    'count' => 0,
-                    'user' => $leave->user
-                ];
-            }
-            $leaveCounts[$uid]['count'] += $days;
-        }
-
-        // 3. Merge Data
-        $merged = collect();
-        $attUserIds = $attendanceStats->keys();
-        $leaveUserIds = array_keys($leaveCounts);
-        $allUserIds = $attUserIds->merge($leaveUserIds)->unique();
-
-        foreach ($allUserIds as $uid) {
-            $att = $attendanceStats->get($uid);
-            $leaveData = $leaveCounts[$uid] ?? null;
-
-            $user = $att ? $att->user : ($leaveData ? $leaveData['user'] : User::find($uid));
-
-            // STRICT FILTER: Check if user is REALLY in this branch currently
-            if (!$user || $user->branch_id != $branchId)
-                continue;
-            if (!$user->is_active)
-                continue;
-
-            $attCount = $att ? $att->total_attendance : 0;
-            $leaveCount = $leaveData ? $leaveData['count'] : 0;
-            $totalCount = $attCount + $leaveCount;
-
-            $merged->push((object) [
-                'user_id' => $uid,
-                'user' => $user,
-                'total_attendance' => $totalCount,
-                'avg_arrival_time' => $att ? $att->avg_arrival_time : '00:00:00', // Leaves don't affect arrival
-                'total_work_seconds' => $att ? $att->total_work_seconds : 0
-            ]);
-        }
-
-        return $merged->sortByDesc('total_attendance')->values();
+            ->sortByDesc('total_attendance')
+            ->values();
     }
 }
