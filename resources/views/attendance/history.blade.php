@@ -32,6 +32,9 @@
 
 @push('styles')
     <style>
+        .bg-teal { background-color: #20c997 !important; color: white; }
+        .bg-purple { background-color: #6f42c1 !important; color: white; }
+        .bg-orange { background-color: #fd7e14 !important; color: white; }
         .verification-badge {
             font-size: 0.7rem;
             padding: 0.35rem 0.6rem;
@@ -328,10 +331,12 @@
                                                 $statusLwr = strtolower($att->presence_status ?? '');
                                                 $bClass = match (true) {
                                                     $statusLwr == 'masuk' => 'bg-success',
-                                                    str_contains($statusLwr, 'wfh') || str_contains($statusLwr, 'dinas') => 'bg-info',
-                                                    str_contains($statusLwr, 'telat') => 'bg-warning text-dark',
+                                                    str_contains($statusLwr, 'wfh') || str_contains($statusLwr, 'dinas') => 'bg-info text-dark',
+                                                    str_contains($statusLwr, 'telat') => 'bg-orange',
                                                     $statusLwr == 'sakit' => 'bg-primary',
-                                                    in_array($statusLwr, ['izin', 'cuti', 'libur']) => 'bg-secondary',
+                                                    $statusLwr == 'izin' => 'bg-warning text-dark',
+                                                    $statusLwr == 'cuti' => 'bg-purple',
+                                                    $statusLwr == 'libur' => 'bg-teal',
                                                     default => 'bg-danger',
                                                 };
                                             @endphp
