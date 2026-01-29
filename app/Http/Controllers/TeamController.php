@@ -148,18 +148,24 @@ class TeamController extends Controller
             ])
             ->orderBy('name', 'asc')->get();
 
-        // --- QUERY AUDIT MULTI BRANCH ---
+        // --- QUERY AUDIT: FILTER STRICT CABANG USER ---
         $assignedAudits = collect();
-        if (!empty($myBranchIds)) {
+        if ($user->branch_id) {
+            $myBranchId = $user->branch_id;
             $assignedAudits = User::where('role', 'audit')
                 ->where('is_active', true)
-                ->with(['branches', 'branch'])
-                ->where(function ($q) use ($myBranchIds) {
-                    $q->whereIn('branch_id', $myBranchIds)
-                        ->orWhereHas('branches', function ($sq) use ($myBranchIds) {
-                            $sq->whereIn('branches.id', $myBranchIds);
+                ->where(function ($q) use ($myBranchId) {
+                    $q->where('branch_id', $myBranchId)
+                        ->orWhereHas('branches', function ($sq) use ($myBranchId) {
+                            $sq->where('branches.id', $myBranchId);
                         });
                 })
+                ->get();
+        } elseif (!empty($myBranchIds)) {
+            // Fallback for Admin / Regional without primary branch
+            $assignedAudits = User::where('role', 'audit')
+                ->where('is_active', true)
+                ->whereIn('branch_id', $myBranchIds)
                 ->get();
         }
 

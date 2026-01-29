@@ -29,7 +29,7 @@
         
         /* Islamic Green Gradient Header */
         .team-header { 
-            background: linear-gradient(135deg, #0f5132 0%, #198754 100%); 
+            background: linear-gradient(135deg, #0f5132 0%, #198754 100%) !important; 
             padding: 2rem; 
             color: white; 
             position: relative;
@@ -55,16 +55,16 @@
         .view-photo-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
         .audit-mode-badge {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #198754;
+            color: #0d8a57; /* Dark Green Text */
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         /* Modal Ramadhan Theme */
