@@ -38,48 +38,8 @@ class BranchLeaderboardController extends Controller
                 ->count();
 
             // Preview Top 3 untuk Index (Logic disamakan)
-            $top3 = Attendance::select(
-                'user_id',
-                DB::raw('count(*) as total_attendance'),
-                DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
-                DB::raw('SUM(COALESCE(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time), 0)) as total_work_seconds')
-            )
-                ->whereMonth('check_in_time', Carbon::now()->month)
-                ->whereYear('check_in_time', Carbon::now()->year)
-
-                // FILTER KETAT (UPDATED TO MATCH DASHBOARD)
-                // ->whereNotNull('check_out_time') // Removed to allow verified but no checkout
-                ->where('status', 'verified')
-                ->whereIn('presence_status', [
-                    'Masuk',
-                    'Hadir',
-                    'Tepat Waktu',
-                    'WFH',
-                    'Work From Home',
-                    'WFH / Dinas Luar',
-                    'Dinas Luar',
-                    'Kunjungan Rutin',
-                    'Lembur',
-                    'Telat',
-                    'Izin Telat'
-                ])
-                ->where('presence_status', '!=', 'Alpha')
-                ->whereTime('check_in_time', '!=', '00:00:00')
-                ->whereTime('check_in_time', '!=', '00:00:00')
-                // ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0') // Removed to allow verified entries without duration
-
-                ->where('branch_id', $branch->id)
-                ->whereHas('user', function ($q) {
-                    $q->where('is_active', true)->whereNotIn('role', ['admin']);
-                })
-                ->groupBy('user_id')
-                ->orderBy('total_attendance', 'desc')
-                ->orderBy('avg_arrival_time', 'asc')
-                ->take(3)
-                ->with('user')
-                ->get();
-
-            $branch->top_employees = $top3;
+            $leaderboard = $this->getLeaderboardData($branch->id);
+            $branch->top_employees = $leaderboard->take(3);
         }
 
         return view('branch_leaderboard.index', compact('branches'));
@@ -103,18 +63,28 @@ class BranchLeaderboardController extends Controller
         }
 
         // --- LEADERBOARD LOGIC (FIXED & MATCHED WITH DASHBOARD) ---
-        $leaderboard = Attendance::select(
+        $leaderboard = $this->getLeaderboardData($id);
+
+        // Pisahkan Top 3
+        $top3 = $leaderboard->take(3);
+
+        // Sisanya (Rank 4 dst)
+        $others = $leaderboard->slice(3)->values();
+
+        return view('branch_leaderboard.show', compact('branch', 'top3', 'others'));
+    }
+
+    private function getLeaderboardData($branchId)
+    {
+        // 1. Get Attendance Stats
+        $attendanceStats = Attendance::select(
             'user_id',
             DB::raw('count(*) as total_attendance'),
             DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
-            // Menghitung Total Jam Kerja
             DB::raw('SUM(COALESCE(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time), 0)) as total_work_seconds')
         )
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
-
-            // FILTER KETAT (UPDATED TO MATCH DASHBOARD)
-            // ->whereNotNull('check_out_time') // Removed
             ->where('status', 'verified')
             ->whereIn('presence_status', [
                 'Masuk',
@@ -131,26 +101,62 @@ class BranchLeaderboardController extends Controller
             ])
             ->where('presence_status', '!=', 'Alpha')
             ->whereTime('check_in_time', '!=', '00:00:00')
-            ->whereTime('check_in_time', '!=', '00:00:00')
-            // ->whereRaw('TIMESTAMPDIFF(SECOND, check_in_time, check_out_time) > 0') // Removed to allow verified entries without duration
-
-            ->where('branch_id', $id)
+            ->where('branch_id', $branchId)
             ->whereHas('user', function ($q) {
-                $q->where('is_active', true)
+                $q->where('is_active', true)->whereNotIn('role', ['admin']);
+            })
+            ->groupBy('user_id')
+            ->with(['user', 'user.division'])
+            ->get()
+            ->keyBy('user_id');
+
+        // 2. Get Leave Request Stats (WFH, Dinas, etc.)
+        $leaveStats = \App\Models\LeaveRequest::select(
+            'user_id',
+            DB::raw('count(*) as total_leaves')
+        )
+            ->where('status', 'approved')
+            ->whereIn('type', ['wfh', 'dinas', 'kunjungan_rutin', 'izin', 'cuti'])
+            ->where(function ($q) {
+                $q->whereMonth('start_date', Carbon::now()->month)
+                    ->whereYear('start_date', Carbon::now()->year)
+                    ->orWhereMonth('end_date', Carbon::now()->month)
+                    ->whereYear('end_date', Carbon::now()->year);
+            })
+            ->whereHas('user', function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId)
+                    ->where('is_active', true)
                     ->whereNotIn('role', ['admin']);
             })
             ->groupBy('user_id')
-            ->orderBy('total_attendance', 'desc')     // Urutkan berdasarkan total hadir terbanyak
-            ->orderBy('avg_arrival_time', 'asc')      // Jika sama, urutkan yang datang lebih pagi
-            ->with(['user', 'user.division'])
-            ->get();
+            ->get()
+            ->keyBy('user_id');
 
-        // Pisahkan Top 3
-        $top3 = $leaderboard->take(3);
+        // 3. Merge Data
+        $merged = collect();
+        $allUserIds = $attendanceStats->keys()->merge($leaveStats->keys())->unique();
 
-        // Sisanya (Rank 4 dst)
-        $others = $leaderboard->slice(3)->values();
+        foreach ($allUserIds as $uid) {
+            $att = $attendanceStats->get($uid);
+            $leave = $leaveStats->get($uid);
 
-        return view('branch_leaderboard.show', compact('branch', 'top3', 'others'));
+            $user = $att ? $att->user : ($leave ? $leave->user : User::find($uid));
+            if (!$user)
+                continue;
+
+            $attCount = $att ? $att->total_attendance : 0;
+            $leaveCount = $leave ? $leave->total_leaves : 0;
+            $totalCount = $attCount + $leaveCount;
+
+            $merged->push((object) [
+                'user_id' => $uid,
+                'user' => $user,
+                'total_attendance' => $totalCount,
+                'avg_arrival_time' => $att ? $att->avg_arrival_time : '00:00:00',
+                'total_work_seconds' => $att ? $att->total_work_seconds : 0
+            ]);
+        }
+
+        return $merged->sortByDesc('total_attendance')->values();
     }
 }
