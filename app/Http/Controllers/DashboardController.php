@@ -251,10 +251,11 @@ class DashboardController extends Controller
                  * 1. Hapus whereTime '!=', '00:00:00' agar WFH Fabian (jam 00:00) terhitung.
                  * 2. Filter branch_id dipindah ke dalam whereHas user agar akurat dengan posisi karyawan sekarang.
                  */
+                // SESUDAH (Samakan dengan BranchLeaderboardController)
                 ->whereHas('user', function ($q) use ($user, $allBranchIds) {
                     $q->where('is_active', true)
-                        ->whereNotIn('role', ['admin', 'security']);
-
+                        ->whereNotIn('role', ['admin']); // Hanya Admin yang dilarang
+    
                     // Jika bukan admin, hanya tampilkan leaderboard dari cabang yang diakses user
                     if ($user->role !== 'admin') {
                         $q->whereIn('branch_id', $allBranchIds);
