@@ -1,279 +1,332 @@
 @extends('layout.master')
 
-@section('title', 'Profil Ramadhan - Full Emerald & Gold Edition')
+@section('title', 'Profil Saya - Ramadhan Edition')
 
 @section('content')
 
-    {{-- CSS KHUSUS TEMA FULL RAMADHAN --}}
+    {{-- CSS KHUSUS TEMA RAMADHAN --}}
     <style>
         :root {
-            --ramadhan-primary: #064e3b;
-            --ramadhan-secondary: #065f46;
-            --ramadhan-gold: #fbbf24;
-            --ramadhan-bg: #042f2e;
+            --ramadhan-primary: #064e3b; /* Hijau Emerald Gelap */
+            --ramadhan-secondary: #059669; /* Hijau Emerald Terang */
+            --ramadhan-gold: #fbbf24; /* Gold */
+            --ramadhan-light-gold: #fef3c7;
         }
 
-        /* Full Background Card */
+        /* Background Ornamen Islami */
         .ramadhan-card {
             border: 2px solid var(--ramadhan-gold);
-            border-radius: 20px;
+            border-radius: 15px;
             position: relative;
             overflow: hidden;
-            background: var(--ramadhan-primary) !important;
-            color: white !important;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-            transition: transform 0.3s ease;
+            background: #fff;
         }
 
-        /* Animasi Lampion Ikon */
-        .lantern-icon {
+        .ramadhan-card::before {
+            content: "";
             position: absolute;
-            top: 15px;
-            left: 25px;
-            color: var(--ramadhan-gold);
-            font-size: 3rem;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background-image: url('https://www.transparentpng.com/download/ramadan/ramadan-ornament-free-png-17.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        /* Efek Lampion Gantung */
+        .lantern-decor {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            width: 40px;
             z-index: 10;
-            filter: drop-shadow(0 0 10px var(--ramadhan-gold));
-            animation: lanternSwing 3.5s ease-in-out infinite;
+            filter: drop-shadow(0 0 5px var(--ramadhan-gold));
+            animation: swing 3s ease-in-out infinite;
             transform-origin: top center;
         }
 
-        @keyframes lanternSwing {
-            0% {
-                transform: rotate(-10deg);
-            }
-
-            50% {
-                transform: rotate(10deg);
-            }
-
-            100% {
-                transform: rotate(-10deg);
-            }
+        @keyframes swing {
+            0% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+            100% { transform: rotate(-5deg); }
         }
 
-        /* Efek Sparkle Stars (Interaktif) */
-        .sparkle {
-            position: absolute;
-            pointer-events: none;
-            background: var(--ramadhan-gold);
+        /* Profile Frame Gold */
+        .profile-frame {
+            padding: 8px;
+            background: linear-gradient(135deg, #fbbf24, #d97706);
             border-radius: 50%;
-            animation: sparkleFade 1s linear forwards;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
         }
 
-        @keyframes sparkleFade {
-            0% {
-                transform: scale(0);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(1.5);
-                opacity: 0;
-            }
+        /* Badge Ramadhan */
+        .badge-ramadhan {
+            background: var(--ramadhan-primary);
+            color: var(--ramadhan-gold);
+            border: 1px solid var(--ramadhan-gold);
+            font-weight: bold;
         }
 
-        /* Input Styling Emerald */
+        /* Header Form Emerald */
+        .section-header-ramadhan {
+            background: linear-gradient(to right, var(--ramadhan-primary), var(--ramadhan-secondary));
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--ramadhan-gold);
+        }
+
+        .section-header-ramadhan i {
+            color: var(--ramadhan-gold);
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* Input Styling */
         .ramadhan-input {
-            background: rgba(0, 0, 0, 0.2) !important;
-            border: 1px solid rgba(251, 191, 36, 0.4) !important;
-            color: #fff !important;
-            border-radius: 10px !important;
+            border: 1px solid #d1d5db;
+            transition: all 0.3s;
         }
 
         .ramadhan-input:focus {
-            border-color: var(--ramadhan-gold) !important;
-            box-shadow: 0 0 8px rgba(251, 191, 36, 0.3) !important;
+            border-color: var(--ramadhan-secondary);
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
         }
 
-        /* Section Header Gold */
-        .section-header-gold {
-            background: var(--ramadhan-gold);
-            color: var(--ramadhan-primary);
-            padding: 12px 15px;
+        .ramadhan-input[readonly] {
+            background-color: #f9fafb;
+        }
+
+        /* Award Styling (Ramadhan Edition) */
+        .award-card {
             border-radius: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
         }
+        .award-card:hover { transform: scale(1.02); }
+        .rank-1 { background: linear-gradient(135deg, #064e3b, #065f46); border-left: 5px solid #fbbf24; }
+        .rank-2 { background: linear-gradient(135deg, #1e293b, #334155); border-left: 5px solid #cbd5e1; }
+        .rank-3 { background: linear-gradient(135deg, #78350f, #92400e); border-left: 5px solid #f97316; }
 
-        /* Award Card */
-        .award-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
-            transition: 0.3s;
+        /* Button Emerald */
+        .btn-emerald {
+            background-color: var(--ramadhan-primary);
+            color: var(--ramadhan-gold);
+            border: 1px solid var(--ramadhan-gold);
+            transition: all 0.3s;
         }
-
-        .award-item:hover {
-            background: rgba(251, 191, 36, 0.1);
-            transform: scale(1.02);
-        }
-
-        /* KTP Area */
-        .ktp-area {
-            background: rgba(0, 0, 0, 0.15);
-            border: 2px dashed var(--ramadhan-gold);
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
+        .btn-emerald:hover {
+            background-color: var(--ramadhan-secondary);
+            color: white;
+            transform: translateY(-2px);
         }
     </style>
 
-    <div class="row">
-        {{-- KOLOM KIRI --}}
-        <div class="col-md-4 grid-margin stretch-card">
-            <div class="card ramadhan-card" id="profileCard">
-                <i class="mdi mdi-lamp lantern-icon"></i>
+    {{-- ALERT NOTIFIKASI --}}
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" style="border-left: 5px solid #28a745;">
+            <i class="mdi mdi-check-circle me-1"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
-                <div class="card-body text-center mt-4">
+    <div class="row">
+        {{-- ================================================= --}}
+        {{-- KOLOM KIRI: PROFILE & PENGHARGAAN --}}
+        {{-- ================================================= --}}
+        <div class="col-md-4 grid-margin stretch-card">
+            <div class="card ramadhan-card">
+                <img src="https://www.transparentpng.com/download/ramadan/lantern-ramadan-transparent-background-5.png" class="lantern-decor" alt="Lantern">
+
+                <div class="card-body text-center">
                     {{-- FOTO PROFIL --}}
-                    <div class="mb-4 position-relative d-inline-block">
-                        <div
-                            style="padding: 7px; background: linear-gradient(135deg, #fbbf24, #b45309); border-radius: 50%;">
-                            @if($user->profile_photo_path)
-                                <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="rounded-circle shadow"
-                                    style="width: 150px; height: 150px; object-fit: cover; border: 4px solid var(--ramadhan-primary);">
-                            @else
-                                <div
-                                    style="background: var(--ramadhan-secondary); width: 150px; height: 150px; border-radius: 50%; color: var(--ramadhan-gold); font-size: 55px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 4px solid var(--ramadhan-primary);">
-                                    {{ substr($user->name, 0, 1) }}
-                                </div>
-                            @endif
+                    <div class="mb-4 mt-3 position-relative d-inline-block">
+                        <div class="profile-frame">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#profilePhotoModal">
+                                @if($user->profile_photo_path)
+                                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
+                                         class="rounded-circle shadow-sm"
+                                         style="width: 140px; height: 140px; object-fit: cover; border: 3px solid white;">
+                                @else
+                                    <div class="mx-auto" style="background-color: var(--ramadhan-primary); width: 140px; height: 140px; border-radius: 50%; color: var(--ramadhan-gold); font-size: 45px; display: flex; align-items: center; justify-content: center; border: 3px solid white; font-weight: bold;">
+                                        {{ substr($user->name, 0, 1) }}
+                                    </div>
+                                @endif
+                            </a>
+                        </div>
+                        @if($user->is_verified)
+                            <div class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center shadow" 
+                                 style="bottom: 10px; right: 10px; width: 40px; height: 40px;">
+                                <i class="mdi mdi-check-decagram text-primary" style="font-size: 26px;"></i>
+                            </div>
+                        @endif
+                    </div>
+
+                    <h4 class="fw-bold mb-1" style="color: var(--ramadhan-primary);">{{ $user->name }}</h4>
+                    <p class="text-muted small mb-3"><i class="mdi mdi-briefcase-outline me-1"></i>{{ strtoupper(str_replace('_', ' ', $user->role)) }}</p>
+
+                    <div class="badge badge-ramadhan px-4 py-2 mb-4">
+                        <i class="mdi mdi-moon-waning-crescent me-1"></i> Ramadhan Kareem 1447 H
+                    </div>
+
+                    {{-- ACTION BUTTONS --}}
+                    <div class="mb-4 px-3">
+                        @if(!$user->profile_photo_path)
+                            <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data">
+                                @csrf @method('PUT')
+                                <label for="profile_photo" class="btn btn-emerald w-100 btn-sm"><i class="mdi mdi-camera"></i> Upload Foto Profil</label>
+                                <input type="file" name="profile_photo" id="profile_photo" class="d-none" accept="image/*" onchange="this.form.submit()">
+                            </form>
+                        @else
+                            <button type="button" class="btn btn-emerald w-100 btn-sm" data-bs-toggle="modal" data-bs-target="#changeProfilePhotoModal">
+                                <i class="mdi mdi-camera-retake"></i> Ganti Foto Profil
+                            </button>
+                        @endif
+                    </div>
+
+                    {{-- MENU QUICK LINKS --}}
+                    <div class="text-start mb-4 px-2">
+                        <h6 class="fw-bold mb-3 border-bottom pb-2" style="color: var(--ramadhan-primary); font-size: 13px;">RIWAYAT & AKTIVITAS</h6>
+                        <div class="list-group list-group-flush">
+                            <a href="{{ route('attendance.history') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-0 bg-transparent">
+                                <span><i class="mdi mdi-calendar-check text-success me-2"></i> History Absensi</span>
+                                <i class="mdi mdi-chevron-right text-muted"></i>
+                            </a>
+                            <a href="{{ route('inventory.index') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-0 bg-transparent">
+                                <span><i class="mdi mdi-cube-outline text-success me-2"></i> Inventaris Tim</span>
+                                <i class="mdi mdi-chevron-right text-muted"></i>
+                            </a>
                         </div>
                     </div>
 
-                    <h3 class="fw-bold mb-1" style="color: var(--ramadhan-gold);">{{ $user->name }}</h3>
-                    <p style="color: #cbd5e1;" class="small mb-4 text-uppercase fw-bold">
-                        {{ str_replace('_', ' ', $user->role) }}</p>
-
-                    <div class="badge px-4 py-2 mb-4 w-100"
-                        style="background: var(--ramadhan-gold); color: var(--ramadhan-primary); font-weight: 800; border-radius: 30px;">
-                        <i class="mdi mdi-star-face me-1"></i> RAMADHAN KAREEM 1447 H
-                    </div>
-
-                    {{-- BUTTONS --}}
-                    <div class="d-grid gap-2 mb-5">
-                        <button type="button" class="btn btn-sm fw-bold"
-                            style="background: white; color: var(--ramadhan-primary);" data-bs-toggle="modal"
-                            data-bs-target="#changeProfilePhotoModal">
-                            <i class="mdi mdi-camera-plus me-1"></i> GANTI FOTO PROFIL
-                        </button>
-                        <a href="{{ route('attendance.history') }}"
-                            class="btn btn-outline-warning btn-sm fw-bold text-white">
-                            <i class="mdi mdi-history me-1"></i> RIWAYAT ABSENSI
-                        </a>
-                    </div>
-
-                    {{-- PENGHARGAAN --}}
-                    <div class="text-start">
-                        <h6 class="fw-bold mb-3 border-bottom pb-2" style="color: var(--ramadhan-gold);">PIALA KEJUARAAN
-                        </h6>
-                        @if(isset($achievements) && $achievements->count() > 0)
+                    {{-- HALL OF FAME RAMADHAN --}}
+                    @if(isset($achievements) && $achievements->count() > 0)
+                        <div class="text-start px-2">
+                            <h6 class="fw-bold mb-3 border-bottom pb-2" style="color: var(--ramadhan-gold); font-size: 13px;">PENCAPAIAN TERBAIK</h6>
                             @foreach($achievements as $year => $items)
                                 @foreach($items as $award)
-                                    <div class="award-item">
+                                    <div class="award-card rank-{{ $award->rank }} p-3 mb-2 text-white">
                                         <div class="d-flex align-items-center">
-                                            <i class="mdi mdi-trophy-award text-warning me-3" style="font-size: 28px;"></i>
+                                            <div class="me-3">
+                                                <i class="mdi mdi-trophy-variant" style="font-size: 28px; color: var(--ramadhan-gold);"></i>
+                                            </div>
                                             <div>
-                                                <p class="mb-0 fw-bold" style="font-size: 13px;">Juara {{ $award->rank }}
-                                                    ({{ \Carbon\Carbon::create()->month($award->month)->translatedFormat('F') }})</p>
-                                                <small class="opacity-75">{{ $award->total_attendance }} Kehadiran</small>
+                                                <p class="mb-0 fw-bold" style="font-size: 14px;">Juara {{ $award->rank }} ({{ \Carbon\Carbon::create()->month($award->month)->translatedFormat('F') }})</p>
+                                                <p class="mb-0 small opacity-75">{{ $award->total_attendance }} Kehadiran Tepat Waktu</p>
                                             </div>
                                         </div>
                                     </div>
                                 @endforeach
                             @endforeach
-                        @endif
-                    </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
 
-        {{-- KOLOM KANAN --}}
+        {{-- ================================================= --}}
+        {{-- KOLOM KANAN: FORM DATA DIRI --}}
+        {{-- ================================================= --}}
         <div class="col-md-8 grid-margin stretch-card">
             <div class="card ramadhan-card">
                 <div class="card-body">
-                    <div class="section-header-gold mb-4">
-                        <i class="mdi mdi-moon-waning-crescent me-2"></i> PENGATURAN PROFIL BAROKAH
+                    <div class="section-header-ramadhan">
+                        <i class="mdi mdi-account-edit"></i>
+                        <h5 class="mb-0 fw-bold">PENGATURAN PROFIL RAMADHAN</h5>
                     </div>
 
-                    <form action="{{ route('profile.update') }}" method="POST">
+                    <form class="forms-sample" action="{{ route('profile.update') }}" method="POST">
                         @csrf @method('PUT')
 
                         <div class="row">
-                            {{-- IDENTITAS --}}
+                            <div class="col-12 mb-3">
+                                <p class="fw-bold text-muted small"><i class="mdi mdi-star text-warning"></i> DATA PRIBADI</p>
+                            </div>
+
                             <div class="col-md-6 mb-4">
-                                <label class="small fw-bold text-warning">NAMA SESUAI KTP</label>
+                                <label class="small fw-bold">Nama Lengkap</label>
                                 <input type="text" class="form-control ramadhan-input" value="{{ $user->name }}" readonly>
                             </div>
+
                             <div class="col-md-6 mb-4">
-                                <label class="small fw-bold text-warning">TANGGAL LAHIR</label>
-                                <input type="text" class="form-control ramadhan-input"
-                                    value="{{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('d F Y') : '14 January 2007' }}"
-                                    readonly>
-                            </div>
-                            <div class="col-12 mb-4">
-                                <label class="small fw-bold text-warning">EMAIL LOGIN</label>
-                                <input type="email" class="form-control ramadhan-input" name="email"
-                                    value="{{ old('email', $user->email) }}">
+                                <label class="small fw-bold">Tanggal Lahir</label>
+                                <input type="text" class="form-control ramadhan-input" value="{{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('d F Y') : '-' }}" readonly>
                             </div>
 
-                            {{-- DOKUMEN KTP --}}
-                            <div class="col-12 mb-4">
-                                <label class="small fw-bold text-warning mb-2">VERIFIKASI IDENTITAS (KTP)</label>
-                                <div class="ktp-area">
-                                    @if($user->ktp_photo_path)
-                                        <img src="{{ asset('storage/' . $user->ktp_photo_path) }}"
-                                            class="img-fluid rounded mb-3 shadow" style="max-height: 150px;">
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                                data-bs-target="#ktpModal">LIHAT</button>
-                                            <button type="button" class="btn btn-warning btn-sm text-dark fw-bold"
-                                                data-bs-toggle="modal" data-bs-target="#changeKtpModal">GANTI KTP</button>
-                                        </div>
-                                    @else
-                                        <i class="mdi mdi-card-account-details-outline d-block mb-2"
-                                            style="font-size: 40px; color: var(--ramadhan-gold);"></i>
-                                        <p class="small mb-3">KTP belum diunggah. Silakan upload untuk verifikasi akun.</p>
-                                        <button type="button" class="btn btn-warning btn-sm text-dark fw-bold"
-                                            data-bs-toggle="modal" data-bs-target="#changeKtpModal">UPLOAD SEKARANG</button>
-                                    @endif
+                            <div class="col-md-12 mb-4">
+                                <label class="small fw-bold">Alamat Email</label>
+                                <input type="email" class="form-control ramadhan-input" name="email" value="{{ old('email', $user->email) }}">
+                            </div>
+
+                            <div class="col-12 mb-3 mt-2">
+                                <p class="fw-bold text-muted small"><i class="mdi mdi-office-building text-warning"></i> DATA PEKERJAAN</p>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="small fw-bold">Cabang / Lokasi</label>
+                                <input type="text" class="form-control ramadhan-input" value="{{ $user->branch->name ?? 'Pusat' }}" readonly>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="small fw-bold">Divisi</label>
+                                <input type="text" class="form-control ramadhan-input" value="{{ $user->division->name ?? '-' }}" readonly>
+                            </div>
+
+                            <div class="col-12 mb-3 mt-2">
+                                <p class="fw-bold text-muted small"><i class="mdi mdi-phone text-warning"></i> MEDIA SOSIAL</p>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="small fw-bold">WhatsApp</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success text-white"><i class="mdi mdi-whatsapp"></i></span>
+                                    <input type="text" class="form-control ramadhan-input" name="whatsapp" value="{{ old('whatsapp', $user->whatsapp) }}">
                                 </div>
                             </div>
 
-                            {{-- GANTI PASSWORD --}}
-                            <div class="col-12 mb-4">
-                                <div class="p-3 rounded border border-warning" style="background: rgba(255,255,255,0.05);">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="mb-0 fw-bold text-warning"><i class="mdi mdi-lock-open-variant me-1"></i>
-                                            KEAMANAN KATA SANDI</h6>
-                                        <button type="button" class="btn btn-xs btn-outline-warning"
-                                            id="btnTogglePass">AKTIFKAN EDIT</button>
-                                    </div>
-                                    <div id="passContainer" class="d-none pt-2">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <input type="password" class="form-control ramadhan-input" name="password"
-                                                    placeholder="Password Baru">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <input type="password" class="form-control ramadhan-input"
-                                                    name="password_confirmation" placeholder="Ulangi Password">
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="small fw-bold">Instagram</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-danger text-white"><i class="mdi mdi-instagram"></i></span>
+                                    <input type="text" class="form-control ramadhan-input" name="instagram" value="{{ old('instagram', $user->instagram) }}">
                                 </div>
                             </div>
 
-                            <div class="col-12 text-end">
-                                <button type="submit" class="btn px-5 fw-bold"
-                                    style="background: var(--ramadhan-gold); color: var(--ramadhan-primary); border-radius: 30px;">SIMPAN
-                                    PERUBAHAN</button>
+                            {{-- KEAMANAN --}}
+                            <div class="col-12 mt-3">
+                                <div class="p-3 rounded border bg-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">Keamanan Akun</h6>
+                                        <small class="text-muted">Ganti password secara berkala untuk menjaga keamanan.</small>
+                                    </div>
+                                    <button type="button" class="btn btn-dark btn-sm" id="btn-toggle-password">Ganti Password</button>
+                                </div>
                             </div>
+
+                            <div class="col-12 d-none mt-3" id="password-container">
+                                <div class="row p-3 bg-white border rounded shadow-sm mx-1">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="small fw-bold">Password Baru</label>
+                                        <input type="password" class="form-control ramadhan-input" name="password">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="small fw-bold">Konfirmasi Password</label>
+                                        <input type="password" class="form-control ramadhan-input" name="password_confirmation">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 d-flex justify-content-end gap-2">
+                            <a href="{{ route('dashboard') }}" class="btn btn-light px-4">Kembali</a>
+                            <button type="submit" class="btn btn-emerald px-4 shadow-sm">Simpan Profil</button>
                         </div>
                     </form>
                 </div>
@@ -282,30 +335,33 @@
     </div>
 
     {{-- MODALS --}}
-    <div class="modal fade" id="ktpModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content bg-dark">
-                <div class="modal-body text-center"><img src="{{ asset('storage/' . $user->ktp_photo_path) }}"
-                        class="img-fluid rounded"></div>
+    <div class="modal fade" id="profilePhotoModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-body text-center">
+                    @if($user->profile_photo_path)
+                        <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="img-fluid rounded shadow-lg border border-white" style="max-height: 80vh; border-width: 5px !important;">
+                    @endif
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="changeKtpModal" tabindex="-1">
+    <div class="modal fade" id="changeProfilePhotoModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content"
-                style="background: var(--ramadhan-primary); border: 2px solid var(--ramadhan-gold); color: white;">
-                <div class="modal-header border-bottom border-warning">
-                    <h5 class="modal-title fw-bold text-warning">UPLOAD KTP</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-content" style="border-radius: 15px; border-top: 5px solid var(--ramadhan-gold);">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Ganti Foto Profil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('profile.ktp.request') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('profile.photo.request') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
-                        <input type="file" name="ktp_photo" class="form-control ramadhan-input" required>
+                        <div class="alert alert-info py-2 small">Foto baru akan ditinjau oleh tim Audit terlebih dahulu.</div>
+                        <input type="file" name="profile_photo" class="form-control" required accept="image/*">
                     </div>
-                    <div class="modal-footer border-0">
-                        <button type="submit" class="btn btn-warning w-100 text-dark fw-bold">KIRIM DOKUMEN</button>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-emerald w-100">Ajukan Perubahan</button>
                     </div>
                 </form>
             </div>
@@ -316,33 +372,17 @@
 
 @push('scripts')
     <script>
-        // 1. Logic Toggle Password
-        document.getElementById('btnTogglePass').addEventListener('click', function () {
-            const container = document.getElementById('passContainer');
-            container.classList.toggle('d-none');
-            this.textContent = container.classList.contains('d-none') ? 'AKTIFKAN EDIT' : 'BATAL';
-        });
-
-        // 2. Animasi Sparkle Interaktif (Mengikuti Kursor)
-        const profileCard = document.getElementById('profileCard');
-        profileCard.addEventListener('mousemove', function (e) {
-            const sparkle = document.createElement('div');
-            sparkle.className = 'sparkle';
-
-            // Posisi sparkle relatif terhadap card
-            const rect = profileCard.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const size = Math.random() * 8 + 2;
-            sparkle.style.width = size + 'px';
-            sparkle.style.height = size + 'px';
-            sparkle.style.left = x + 'px';
-            sparkle.style.top = y + 'px';
-
-            profileCard.appendChild(sparkle);
-
-            setTimeout(() => sparkle.remove(), 1000);
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnToggle = document.getElementById('btn-toggle-password');
+            const container = document.getElementById('password-container');
+            if(btnToggle) {
+                btnToggle.addEventListener('click', function() {
+                    container.classList.toggle('d-none');
+                    this.textContent = container.classList.contains('d-none') ? 'Ganti Password' : 'Batal';
+                    this.classList.toggle('btn-dark');
+                    this.classList.toggle('btn-outline-danger');
+                });
+            }
         });
     </script>
 @endpush
