@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\User;
-use App\Models\JobTarget; 
+use App\Models\JobTarget;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Cache; // Import Cache untuk mendukung fitur Last Seen
+use Illuminate\Support\Facades\Cache;
+use App\Exports\BranchAttendanceExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class BranchController extends Controller
 {
@@ -59,18 +63,24 @@ class BranchController extends Controller
         $user = Auth::user();
 
         if ($user->role == 'admin' && $user->branch_id != null) {
-            if ($branch->id != $user->branch_id) abort(403, 'Akses Ditolak.');
+            if ($branch->id != $user->branch_id)
+                abort(403, 'Akses Ditolak.');
         } elseif (in_array($user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $user->branches->pluck('id')->toArray();
-            if ($user->branch_id) $allowedBranchIds[] = $user->branch_id;
+            if ($user->branch_id)
+                $allowedBranchIds[] = $user->branch_id;
 
-            if (!in_array($branch->id, $allowedBranchIds)) abort(403, 'Akses Ditolak. Cabang ini bukan wilayah Anda.');
+            if (!in_array($branch->id, $allowedBranchIds))
+                abort(403, 'Akses Ditolak. Cabang ini bukan wilayah Anda.');
         }
 
         // Mengambil data karyawan (termasuk last_login_at secara otomatis dari model User)
-        $employees = User::with(['division', 'attendances' => function ($q) {
-            $q->whereDate('check_in_time', now());
-        }])
+        $employees = User::with([
+            'division',
+            'attendances' => function ($q) {
+                $q->whereDate('check_in_time', now());
+            }
+        ])
             ->where('branch_id', $branch->id)
             ->where('role', '!=', 'admin')
             ->latest()
@@ -97,12 +107,12 @@ class BranchController extends Controller
 
         // 2. Pencapaian Tim & History Target Selesai
         $branchAchievements = JobTarget::where('branch_id', $branch->id)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('type', 'team_achievement')
-                  ->orWhere(function($subQ) {
-                      $subQ->where('type', 'team_target')
-                           ->where('status', 'completed');
-                  });
+                    ->orWhere(function ($subQ) {
+                        $subQ->where('type', 'team_target')
+                            ->where('status', 'completed');
+                    });
             })
             ->orderBy('completed_at', 'desc')
             ->orderBy('created_at', 'desc')
@@ -122,7 +132,8 @@ class BranchController extends Controller
 
     public function store(Request $request)
     {
-        if (Auth::user()->role != 'admin' || Auth::user()->branch_id != null) abort(403);
+        if (Auth::user()->role != 'admin' || Auth::user()->branch_id != null)
+            abort(403);
 
         $request->validate([
             'name' => 'required|string|max:255|unique:branches',
@@ -140,10 +151,12 @@ class BranchController extends Controller
     {
         $user = Auth::user();
 
-        if (in_array($user->role, ['audit', 'leader'])) abort(403, 'Anda tidak memiliki akses edit.');
+        if (in_array($user->role, ['audit', 'leader']))
+            abort(403, 'Anda tidak memiliki akses edit.');
 
         if ($user->role == 'admin' && $user->branch_id != null) {
-            if ($branch->id != $user->branch_id) abort(403);
+            if ($branch->id != $user->branch_id)
+                abort(403);
         }
 
         return view('branch.branch_edit', compact('branch'));
@@ -153,8 +166,10 @@ class BranchController extends Controller
     {
         $user = Auth::user();
 
-        if (in_array($user->role, ['audit', 'leader'])) abort(403);
-        if ($user->role == 'admin' && $user->branch_id != null && $branch->id != $user->branch_id) abort(403);
+        if (in_array($user->role, ['audit', 'leader']))
+            abort(403);
+        if ($user->role == 'admin' && $user->branch_id != null && $branch->id != $user->branch_id)
+            abort(403);
 
         $request->validate([
             'name' => 'required|string|max:255|unique:branches,name,' . $branch->id,
@@ -171,7 +186,8 @@ class BranchController extends Controller
 
     public function destroy(Branch $branch)
     {
-        if (Auth::user()->role != 'admin' || Auth::user()->branch_id != null) abort(403);
+        if (Auth::user()->role != 'admin' || Auth::user()->branch_id != null)
+            abort(403);
 
         try {
             $branch->delete();
@@ -181,5 +197,79 @@ class BranchController extends Controller
             return redirect()->route('branches.index')
                 ->with('error', 'Gagal menghapus cabang. Pastikan tidak ada user yang terhubung.');
         }
+    }
+    public function exportBranchExcel(Request $request, Branch $branch)
+    {
+        $user = Auth::user();
+        if (!in_array($user->role, ['admin', 'audit', 'leader'])) {
+            abort(403);
+        }
+
+        $month = $request->input('month', Carbon::now()->month);
+        $year = $request->input('year', Carbon::now()->year);
+
+        $branchNameSlug = Str::slug($branch->name);
+        $fileName = "Laporan_Absensi_Cabang_{$branchNameSlug}_{$month}-{$year}.xlsx";
+
+        return Excel::download(new BranchAttendanceExport($branch->id, $month, $year), $fileName);
+    }
+
+    public function exportBranchPdf(Request $request, Branch $branch)
+    {
+        $user = Auth::user();
+        if (!in_array($user->role, ['admin', 'audit', 'leader'])) {
+            abort(403);
+        }
+
+        $month = $request->input('month', Carbon::now()->month);
+        $year = $request->input('year', Carbon::now()->year);
+
+        $dateObj = Carbon::createFromDate($year, $month, 1);
+        $monthName = $dateObj->translatedFormat('F Y');
+        $startDate = $dateObj->copy()->startOfMonth();
+        $endDate = $dateObj->copy()->endOfMonth();
+
+        $employees = User::where('branch_id', $branch->id)
+            ->where('role', '!=', 'admin')
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $data = [];
+        foreach ($employees as $employee) {
+            $attendances = \App\Models\Attendance::where('user_id', $employee->id)
+                ->whereBetween('check_in_time', [$startDate, $endDate])
+                ->get();
+
+            $summary = ['hadir' => 0, 'sakit' => 0, 'izin' => 0, 'alfa' => 0, 'telat' => 0, 'total_jam' => 0];
+            foreach ($attendances as $atten) {
+                $status = strtolower($atten->presence_status);
+                if (in_array($status, ['hadir', 'tepat waktu', 'masuk']))
+                    $summary['hadir']++;
+                elseif ($status == 'sakit')
+                    $summary['sakit']++;
+                elseif (in_array($status, ['izin', 'cuti']))
+                    $summary['izin']++;
+                elseif ($status == 'alpha')
+                    $summary['alfa']++;
+
+                if ($atten->is_late_checkin)
+                    $summary['telat']++;
+
+                if ($atten->check_in_time && $atten->check_out_time) {
+                    $summary['total_jam'] += $atten->check_in_time->diffInHours($atten->check_out_time);
+                }
+            }
+            $data[] = ['user' => $employee, 'summary' => $summary];
+        }
+
+        $pdf = Pdf::loadView('branch.export_pdf', [
+            'branch' => $branch,
+            'monthName' => $monthName,
+            'data' => $data,
+            'generatedBy' => $user
+        ]);
+
+        $sanitizedBranchName = Str::slug($branch->name);
+        return $pdf->download("Laporan_Absensi_{$sanitizedBranchName}_{$monthName}.pdf");
     }
 }

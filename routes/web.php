@@ -332,6 +332,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Route untuk input manual absensi baru oleh Audit (untuk tanggal Alpha/Kosong)
         Route::post('/audit/attendance/store', [App\Http\Controllers\AuditController::class, 'storeByAudit'])->name('audit.store.attendance');
 
+        Route::get('/branches/{branch}/export-excel', [BranchController::class, 'exportBranchExcel'])->name('branches.export.excel');
+        Route::get('/branches/{branch}/export-pdf', [BranchController::class, 'exportBranchPdf'])->name('branches.export.pdf');
+
         Route::resource('branches', BranchController::class);
         Route::post('/branches/{branch}/toggle-status', [BranchController::class, 'toggleStatus'])->name('branches.toggle-status');
 
