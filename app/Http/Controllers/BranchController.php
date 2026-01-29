@@ -242,18 +242,34 @@ class BranchController extends Controller
 
             $summary = ['hadir' => 0, 'sakit' => 0, 'izin' => 0, 'alfa' => 0, 'telat' => 0, 'total_jam' => 0];
             foreach ($attendances as $atten) {
-                $status = strtolower($atten->presence_status);
-                if (in_array($status, ['hadir', 'tepat waktu', 'masuk']))
-                    $summary['hadir']++;
-                elseif ($status == 'sakit')
-                    $summary['sakit']++;
-                elseif (in_array($status, ['izin', 'cuti']))
-                    $summary['izin']++;
-                elseif ($status == 'alpha')
-                    $summary['alfa']++;
+                // Normalize status to lowercase
+                $status = strtolower(trim($atten->presence_status));
 
-                if ($atten->is_late_checkin)
+                // Logic MATCHING UI: Hadir includes WFH, Dinas Luar, Lembur
+                $isHadir = in_array($status, [
+                    'hadir',
+                    'tepat waktu',
+                    'masuk',
+                    'wfh',
+                    'work from home',
+                    'dinas luar',
+                    'kunjungan rutin',
+                    'lembur'
+                ]);
+
+                if ($isHadir) {
+                    $summary['hadir']++;
+                } elseif ($status == 'sakit') {
+                    $summary['sakit']++;
+                } elseif (in_array($status, ['izin', 'cuti'])) {
+                    $summary['izin']++;
+                } elseif ($status == 'alpha') {
+                    $summary['alfa']++;
+                }
+
+                if ($atten->is_late_checkin) {
                     $summary['telat']++;
+                }
 
                 if ($atten->check_in_time && $atten->check_out_time) {
                     $summary['total_jam'] += $atten->check_in_time->diffInHours($atten->check_out_time);

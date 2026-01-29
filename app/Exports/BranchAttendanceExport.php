@@ -53,13 +53,25 @@ class BranchAttendanceExport implements FromView, ShouldAutoSize, WithStyles
             ];
 
             foreach ($attendances as $atten) {
-                $status = strtolower($atten->presence_status);
+                $status = strtolower(trim($atten->presence_status));
 
-                if (in_array($status, ['hadir', 'tepat waktu'])) {
+                // Logic MATCHING UI & Controller
+                $isHadir = in_array($status, [
+                    'hadir',
+                    'tepat waktu',
+                    'masuk',
+                    'wfh',
+                    'work from home',
+                    'dinas luar',
+                    'kunjungan rutin',
+                    'lembur'
+                ]);
+
+                if ($isHadir) {
                     $summary['hadir']++;
                 } elseif ($status == 'sakit') {
                     $summary['sakit']++;
-                } elseif ($status == 'izin' || $status == 'cuti') {
+                } elseif (in_array($status, ['izin', 'cuti'])) {
                     $summary['izin']++;
                 } elseif ($status == 'alpha') {
                     $summary['alfa']++;
