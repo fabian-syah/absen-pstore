@@ -120,21 +120,13 @@ class AttendanceHistoryController extends Controller
                     $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
                 }
 
+                // UPDATE: Jangan override status absensi jika sudah ada record Absensi.
+                // Biarkan data di database (yg mungkin sudah diedit Audit) yang tampil.
+                /*
                 if ($leave) {
-                    $presenceStatusMap = [
-                        'telat' => 'Masuk',
-                        'wfh' => 'WFH',
-                        'dinas' => 'Dinas Luar',
-                        'izin' => 'Izin',
-                        'sakit' => 'Sakit',
-                        'cuti' => 'Cuti',
-                        'libur' => 'Libur',
-                    ];
-                    $att->presence_status = $presenceStatusMap[$leave->type] ?? ucfirst($leave->type);
-                    if ($leave->type == 'telat') {
-                        $att->is_late_checkin = true;
-                    }
+                     $att->presence_status = ... 
                 }
+                */
                 $historyCollection->push($att);
             } else {
                 // Jika tidak ada attendance (Alpha / Leave)

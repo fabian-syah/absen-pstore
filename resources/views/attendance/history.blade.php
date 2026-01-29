@@ -349,8 +349,16 @@
 
                                         <td>
                                             <div class="verifier-box">
-                                                <span class="d-block fw-bold text-dark small">{{ $att->verifier->name ?? ($att->scanner->name ?? 'System') }}</span>
-                                                <small class="text-muted" style="font-size: 0.6rem;">Petugas Verifikasi</small>
+                                                @if($att->verifier)
+                                                    <span class="d-block fw-bold text-success small"><i class="mdi mdi-check-decagram"></i> {{ $att->verifier->name }}</span>
+                                                @endif
+                                                @if($att->scanner)
+                                                    <span class="d-block text-muted small" style="font-size: 0.65rem;">Scan: {{ $att->scanner->name }}</span>
+                                                @endif
+                                                @if(!$att->verifier && !$att->scanner)
+                                                    <span class="d-block fw-bold text-dark small">System</span>
+                                                @endif
+                                                <small class="text-muted d-none" style="font-size: 0.6rem;">Petugas Verifikasi</small>
                                                 
                                                 @if ($isLateApproval)
                                                     <div class="late-approval-container shadow-sm">
