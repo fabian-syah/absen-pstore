@@ -76,7 +76,7 @@ class BranchLeaderboardController extends Controller
 
     private function getLeaderboardData($branchId)
     {
-        // 1. Ambil data HANYA dari Attendance yang statusnya Masuk atau WFH
+        // 1. Ambil data HANYA dari Attendance (Hapus Join/Merge ke LeaveRequest)
         return Attendance::select(
             'user_id',
             DB::raw('count(*) as total_attendance'),
@@ -86,19 +86,28 @@ class BranchLeaderboardController extends Controller
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
             ->where('status', 'verified')
-            // FILTER: Hanya Masuk dan WFH saja
+            // 2. Filter Status: Pastikan 'Kunjungan Rutin' & 'Hadir' masuk agar Fabian jadi 26
             ->whereIn('presence_status', [
                 'Masuk',
                 'Hadir',
                 'Tepat Waktu',
                 'WFH',
-                'Work From Home'
+                'Work From Home',
+                'WFH / Dinas Luar',
+                'Dinas Luar',
+                'Kunjungan Rutin',
+                'Lembur',
+                'Telat',
+                'Izin Telat'
             ])
             ->whereTime('check_in_time', '!=', '00:00:00')
+            // 3. FILTER CABANG: Cek cabang USER saat ini (Bukan cabang di record absen)
             ->whereHas('user', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
-                    ->where('is_active', true)
-                    ->whereNotIn('role', ['admin']);
+                    ->where('is_active', true);
+
+                // Hapus baris di bawah ini jika ingin Role Admin muncul di leaderboard:
+                // ->whereNotIn('role', ['admin']); 
             })
             ->groupBy('user_id')
             ->with(['user', 'user.division'])
