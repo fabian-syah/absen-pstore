@@ -191,8 +191,19 @@ class AttendanceHistoryController extends Controller
         $user = Auth::user();
         $targetUser = $request->has('employeeId') ? User::find($request->employeeId) : $user;
         $data = $this->getHistoryData($targetUser, $request->month, $request->year);
-        $pdf = Pdf::loadView('attendance.export_pdf', array_merge($data, ['user' => $targetUser]));
-        return $pdf->download('Laporan.pdf');
+
+        // Fix Undefined MonthName
+        $monthName = \Carbon\Carbon::createFromDate($request->year, $request->month, 1)->translatedFormat('F Y');
+
+        // Fix Missing Summary Key 'hadir' (Controller uses 'present')
+        $data['summary']['hadir'] = $data['summary']['present'];
+
+        // Pass to View
+        $pdf = Pdf::loadView('attendance.export_pdf', array_merge($data, [
+            'user' => $targetUser,
+            'monthName' => $monthName
+        ]));
+        return $pdf->download('Laporan_' . $targetUser->name . '_' . $monthName . '.pdf');
     }
 
     public function updateByAudit(Request $request, $id)
