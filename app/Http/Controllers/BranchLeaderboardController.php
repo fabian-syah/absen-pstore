@@ -76,8 +76,6 @@ class BranchLeaderboardController extends Controller
 
     private function getLeaderboardData($branchId)
     {
-        // 1. Ambil data MURNI dari tabel Attendance (Tanpa merge LeaveRequest)
-        // Ini otomatis memperbaiki Tiara (25 Hadir) agar tidak ditambah 4 Izin menjadi 29.
         return Attendance::select(
             'user_id',
             DB::raw('count(*) as total_attendance'),
@@ -87,21 +85,17 @@ class BranchLeaderboardController extends Controller
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
             ->where('status', 'verified')
-            // 2. Gunakan list status dari database kamu. 
-            // Sertakan 'Dinas Luar' agar Fabian terhitung 26 sesuai laporan PDF.
+            // Gunakan list status yang aktif saja
             ->whereIn('presence_status', [
                 'Masuk',
                 'WFH',
-                'Dinas Luar'
+                'Hadir',
+                'Tepat Waktu'
             ])
-            ->whereTime('check_in_time', '!=', '00:00:00')
-            // 3. Filter berdasarkan Cabang USER saat ini (Memperbaiki masalah Annisa & Fabian)
+            // HAPUS baris whereTime 00:00:00 karena WFH kamu tercatat jam 00:00
             ->whereHas('user', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
                     ->where('is_active', true);
-
-                // Opsional: Hapus filter admin jika ingin nama Fabian (jika admin) muncul
-                // ->whereNotIn('role', ['admin']); 
             })
             ->groupBy('user_id')
             ->with(['user', 'user.division'])
