@@ -243,6 +243,29 @@ class AuditController extends Controller
             'approved_by' => $approver->id
         ]);
 
+        // Cari atau buat data absensi untuk tanggal izin tersebut
+        $attendance = Attendance::firstOrNew([
+            'user_id' => $leaveRequest->user_id,
+            // Pastikan format tanggal sesuai
+            'check_in_time' => $leaveRequest->start_date->startOfDay()
+        ]);
+
+        // Mapping status dari tipe izin ke status kehadiran
+        $statusMap = [
+            'telat' => 'Masuk',
+            'wfh' => 'WFH',
+            'dinas' => 'Dinas Luar',
+            'izin' => 'Izin',
+            'sakit' => 'Sakit',
+            'cuti' => 'Cuti',
+            'libur' => 'Libur',
+        ];
+
+        $attendance->presence_status = $statusMap[$leaveRequest->type] ?? ucfirst($leaveRequest->type);
+        $attendance->status = 'verified'; // Langsung verified karena sudah di-approve Audit
+        $attendance->attendance_type = 'leave';
+        $attendance->save();
+
         // Kirim notifikasi
         $title = "Izin Disetujui";
         $body = "Pengajuan izin Anda pada " . $leaveRequest->start_date->format('d/m/Y') . " telah disetujui oleh " . $approver->name . ".";
