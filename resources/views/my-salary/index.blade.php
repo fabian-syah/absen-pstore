@@ -58,15 +58,20 @@
                                 </div>
                             @endif
 
-                            <div class="col-md-2 d-flex gap-1">
-                                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
-                                    <i class="mdi mdi-filter"></i> Filter
-                                </button>
-                                <a href="{{ route('my-salary.export', request()->all()) }}" class="btn btn-success btn-sm"
-                                    title="Export Excel">
-                                    <i class="mdi mdi-file-excel"></i>
-                                </a>
-                            </div>
+                           <div class="col-md-2 d-flex gap-1">
+    {{-- Tombol Filter bisa dilihat semua orang --}}
+    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+        <i class="mdi mdi-filter"></i> Filter
+    </button>
+
+    {{-- Tombol Export Excel dibungkus pengecekan Role --}}
+    @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+        <a href="{{ route('my-salary.export', request()->all()) }}" class="btn btn-success btn-sm"
+            title="Export Excel">
+            <i class="mdi mdi-file-excel"></i>
+        </a>
+    @endif
+</div>
                         </div>
                     </form>
 
