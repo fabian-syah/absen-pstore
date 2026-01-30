@@ -99,8 +99,7 @@
                                                 <small class="text-muted">{{ $salary->user->division->name ?? '-' }}</small>
                                             </td>
                                             <td>
-                                                <span
-                                                    class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill">
+                                                <span class="badge bg-light-info text-dark fw-bold border border-info rounded-pill px-3" style="background-color: #e0f7fa;">
                                                     {{ $salary->user->branch->name ?? '-' }}
                                                 </span>
                                             </td>
