@@ -169,8 +169,8 @@ class CashAdvanceController extends Controller
             $data = [
                 'user_id' => $targetUser->id,
                 'user_name' => $targetUser->name,
-                'division' => $targetUser->division ?? 'Umum',
-                'branch' => $targetUser->branch ?? 'Pusat',
+                'division' => $targetUser->division->name ?? 'Umum',
+                'branch' => $targetUser->branch->name ?? 'Pusat',
                 'amount' => $cleanAmount,
                 'total_paid' => 0,
                 'description' => $request->description,
