@@ -39,7 +39,7 @@
                         </table>
                     </div>
                     <div class="col-6 text-end">
-                        <div class="p-3 bg-light rounded d-inline-block text-start" style="min-width: 200px;">
+                        <div class="p-3 bg-light rounded d-inline-block text-start mb-2" style="min-width: 200px;">
                             <small class="text-muted d-block">Status Pembayaran</small>
                             @if($salary->status == 'paid')
                                 <h5 class="fw-bold text-success mb-0"><i class="mdi mdi-check-circle"></i> LUNAS (PAID)</h5>
@@ -48,8 +48,33 @@
                                 <h5 class="fw-bold text-warning mb-0"><i class="mdi mdi-clock"></i> PENDING</h5>
                             @endif
                         </div>
+                        
+                        <div class="p-3 bg-white border rounded d-inline-block text-start" style="min-width: 200px;">
+                            <small class="text-muted d-block">Metode Pembayaran</small>
+                            <div class="fw-bold text-dark">
+                                @if($salary->payment_method == 'transfer')
+                                    <i class="mdi mdi-bank text-primary"></i> Transfer Bank
+                                @else
+                                    <i class="mdi mdi-cash text-success"></i> Tunai (Cash)
+                                @endif
+                            </div>
+                            @if($salary->payment_method == 'transfer' && $salary->user->employeeSalary)
+                                <div class="mt-1 small border-top pt-1">
+                                    <div class="fw-bold">{{ $salary->user->employeeSalary->bank_name ?? '-' }}</div>
+                                    <div class="font-monospace text-muted">{{ $salary->user->employeeSalary->bank_account_number ?? '-' }}</div>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
+
+                {{-- Catatan Payroll --}}
+                @if($salary->notes)
+                <div class="alert alert-secondary mb-4 p-3 border-start border-4 border-secondary">
+                    <h6 class="fw-bold text-secondary mb-1"><i class="mdi mdi-note-text-outline"></i> Catatan Payroll</h6>
+                    <p class="mb-0 text-dark small" style="white-space: pre-line;">{{ $salary->notes }}</p>
+                </div>
+                @endif
 
                 {{-- TABEL RINCIAN --}}
                 <div class="table-responsive mb-4 border rounded">

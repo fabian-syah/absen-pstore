@@ -319,14 +319,33 @@
                                         <div class="col-md-6">
                                             <label class="fw-bold mb-2">Metode Pembayaran</label>
                                             <div class="btn-group w-100" role="group">
-                                                <input type="radio" class="btn-check" name="payment_method" id="pay_cash" value="cash">
+                                                <input type="radio" class="btn-check" name="payment_method" id="pay_cash" value="cash" onclick="toggleBankInfo(false)">
                                                 <label class="btn btn-outline-success p-3 fw-bold" for="pay_cash">
                                                     <i class="mdi mdi-cash-multiple fs-4 d-block mb-1"></i> TUNAI
                                                 </label>
-                                                <input type="radio" class="btn-check" name="payment_method" id="pay_transfer" value="transfer" checked>
+                                                <input type="radio" class="btn-check" name="payment_method" id="pay_transfer" value="transfer" checked onclick="toggleBankInfo(true)">
                                                 <label class="btn btn-outline-primary p-3 fw-bold" for="pay_transfer">
                                                     <i class="mdi mdi-bank fs-4 d-block mb-1"></i> TRANSFER
                                                 </label>
+                                            </div>
+                                            
+                                            {{-- Bank Info Section --}}
+                                            <div id="bank_info_section" class="mt-3 p-3 bg-soft-info border border-info rounded" style="display: block;">
+                                                <small class="text-muted d-block fw-bold text-uppercase mb-1">Rekening Tujuan:</small>
+                                                @if($selectedUser && $selectedUser->employeeSalary && $selectedUser->employeeSalary->bank_name)
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="mdi mdi-credit-card-outline text-primary fs-4 me-2"></i>
+                                                        <div>
+                                                            <div class="fw-bold text-dark">{{ $selectedUser->employeeSalary->bank_name }}</div>
+                                                            <div class="text-dark font-monospace">{{ $selectedUser->employeeSalary->bank_account_number ?? '-' }}</div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div class="text-muted small fst-italic"><i class="mdi mdi-alert-circle-outline"></i> Data rekening karyawan belum diatur.</div>
+                                                    @if($selectedUser)
+                                                        <a href="{{ route('employee-salaries.edit', $selectedUser->employeeSalary->id ?? 0) }}" target="_blank" class="small text-decoration-none">Atur Rekening</a>
+                                                    @endif
+                                                @endif
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -392,6 +411,11 @@
     function toggleDateInput(show) { 
         const box = document.getElementById('schedule_input_box');
         if(box) box.style.display = show ? 'block' : 'none'; 
+    }
+
+    function toggleBankInfo(show) {
+        const box = document.getElementById('bank_info_section');
+        if(box) box.style.display = show ? 'block' : 'none';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
