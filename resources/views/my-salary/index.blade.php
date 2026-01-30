@@ -129,16 +129,12 @@
                                             </h5>
                                         </td>
                                         <td>
-    @if($latestSalary)
-        @if($latestSalary->payment_method == 'transfer')
-            <span class="badge badge-opacity-primary"><i class="mdi mdi-bank"></i> Transfer</span>
-        @else
-            <span class="badge badge-opacity-success"><i class="mdi mdi-cash"></i> Tunai</span>
-        @endif
-    @else
-        -
-    @endif
-</td>
+                                            @if($salary->payment_method == 'transfer')
+                                                <span class="badge badge-opacity-primary"><i class="mdi mdi-bank"></i> Transfer</span>
+                                            @else
+                                                <span class="badge badge-opacity-success"><i class="mdi mdi-cash"></i> Tunai</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center">
                                             <a href="{{ route('my-salary.show', $salary->id) }}"
                                                 class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm">
