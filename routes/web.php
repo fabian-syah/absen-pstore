@@ -136,6 +136,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // 1. Route History (Ditaruh sebelum resource/index agar tidak tertimpa)
     Route::get('/violations/history', [App\Http\Controllers\ViolationController::class, 'history'])->name('violations.history');
 
+    // Route Salary
+    Route::get('my-salary/export', [App\Http\Controllers\MySalaryController::class, 'export'])->name('my-salary.export');
+
     // 2. Route Index (Aktif)
     Route::get('/violations', [App\Http\Controllers\ViolationController::class, 'index'])->name('violations.index');
 
