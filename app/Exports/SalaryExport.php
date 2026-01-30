@@ -21,10 +21,12 @@ use Illuminate\Support\Facades\Auth;
 class SalaryExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithEvents, WithColumnFormatting
 {
     protected $filters;
+    protected $restrictedUserId;
 
-    public function __construct($filters)
+    public function __construct($filters, $restrictedUserId = null)
     {
         $this->filters = $filters;
+        $this->restrictedUserId = $restrictedUserId;
     }
 
     public function query()
@@ -57,10 +59,9 @@ class SalaryExport implements FromQuery, WithHeadings, WithMapping, WithStyles, 
             });
         }
 
-        // Jika BUKAN admin/admin_gaji, paksa filter user_id sendiri (security layer di export)
-        $user = Auth::user();
-        if (!in_array($user->role, ['admin', 'admin_gaji'])) {
-            $query->where('user_id', $user->id);
+        // Jika ada restrictedUserId, paksa filter user_id
+        if ($this->restrictedUserId) {
+            $query->where('user_id', $this->restrictedUserId);
         }
 
         return $query->orderBy('year', 'desc')

@@ -69,9 +69,17 @@ class MySalaryController extends Controller
 
     public function export(Request $request)
     {
+        $user = Auth::user();
         $filters = $request->all();
         $date = date('d-m-Y');
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\SalaryExport($filters), "laporan_gaji_{$date}.xlsx");
+
+        // Logic Security: Tentukan apakah harus difilter per user ID
+        $restrictedUserId = null;
+        if (!in_array($user->role, ['admin', 'admin_gaji'])) {
+            $restrictedUserId = $user->id;
+        }
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\SalaryExport($filters, $restrictedUserId), "laporan_gaji_{$date}.xlsx");
     }
 
     /**
