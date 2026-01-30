@@ -42,19 +42,21 @@
                                 @endphp
                                 <tr>
                                     <td>
-                                        <div class="d-flex align-items-center">
-                                            @if($user->profile_photo_path)
-                                                <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="img-sm rounded-circle me-2">
-                                            @else
-                                                <div class="img-sm rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2 text-white">
-                                                    {{ substr($user->name, 0, 1) }}
+                                        <a href="{{ route('users.show', $user->id) }}" class="text-decoration-none text-dark">
+                                            <div class="d-flex align-items-center">
+                                                @if($user->profile_photo_path)
+                                                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="img-sm rounded-circle me-2">
+                                                @else
+                                                    <div class="img-sm rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2 text-white">
+                                                        {{ substr($user->name, 0, 1) }}
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    <p class="fw-bold mb-0">{{ $user->name }}</p>
+                                                    <small class="text-muted">{{ $user->login_id }}</small>
                                                 </div>
-                                            @endif
-                                            <div>
-                                                <p class="fw-bold mb-0">{{ $user->name }}</p>
-                                                <small class="text-muted">{{ $user->login_id }}</small>
                                             </div>
-                                        </div>
+                                        </a>
                                     </td>
                                     <td><span class="badge badge-opacity-info">{{ $user->division->name ?? '-' }}</span></td>
                                     
@@ -98,11 +100,14 @@
                                             <a href="{{ route('salaries.create', ['user_id' => $user->id]) }}" class="btn btn-sm btn-success text-white">
                                                 <i class="mdi mdi-cash-register"></i> Payroll
                                             </a>
-                                        @else
-                                            <a href="{{ route('salaries.edit', $salaryThisMonth->id) }}" class="btn btn-sm btn-warning">
-                                                <i class="mdi mdi-pencil"></i> Edit
+                                        @endif
+
+                                        @if($latestSalary)
+                                            <a href="{{ route('salaries.show', $latestSalary->id) }}" class="btn btn-sm btn-primary text-white">
+                                                <i class="mdi mdi-file-document-outline border-0"></i> Struk
                                             </a>
                                         @endif
+
                                         <a href="{{ route('attendance.summary.user', $user->id) }}" class="btn btn-sm btn-info text-white icon-btn">
                                             <i class="mdi mdi-eye"></i>
                                         </a>
