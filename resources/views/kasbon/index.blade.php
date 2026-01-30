@@ -96,7 +96,8 @@
                             <i class="mdi mdi-chart-line fs-3 text-info"></i>
                         </div>
                         <h3 class="mb-0 fw-bold text-dark">Rp
-                            {{ number_format($stats['total_active_amount'], 0, ',', '.') }}</h3>
+                            {{ number_format($stats['total_active_amount'], 0, ',', '.') }}
+                        </h3>
                         <small
                             class="text-muted">{{ $isAdmin ? 'Uang perusahaan di luar' : 'Total yang belum dibayar' }}</small>
                     </div>
@@ -335,7 +336,7 @@
                     @if($kasbons->hasPages())
                         <div class="card-footer bg-white border-0 py-3">
                             <div class="d-flex justify-content-end">
-                                {{ $kasbons->links() }}
+                                {{ $kasbons->links('pagination::bootstrap-5') }}
                             </div>
                         </div>
                     @endif
@@ -387,38 +388,41 @@
             color: white;
         }
 
-        .nav-pills .nav-link.bg-secondary { background-color: #6c757d !important; color: white; }
-</style>
-
-@if($isAdmin)
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const selectAll = document.getElementById('selectAll');
-        const bulkChecks = document.querySelectorAll('.bulk-check');
-        const bulkActionContainer = document.getElementById('bulkActionContainer');
-
-        function toggleBulkButton() {
-            const anyChecked = Array.from(bulkChecks).some(cb => cb.checked);
-            if (anyChecked) {
-                bulkActionContainer.classList.remove('d-none');
-            } else {
-                bulkActionContainer.classList.add('d-none');
-            }
+        .nav-pills .nav-link.bg-secondary {
+            background-color: #6c757d !important;
+            color: white;
         }
+    </style>
 
-        if (selectAll) {
-            selectAll.addEventListener('change', function() {
+    @if($isAdmin)
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const selectAll = document.getElementById('selectAll');
+                const bulkChecks = document.querySelectorAll('.bulk-check');
+                const bulkActionContainer = document.getElementById('bulkActionContainer');
+
+                function toggleBulkButton() {
+                    const anyChecked = Array.from(bulkChecks).some(cb => cb.checked);
+                    if (anyChecked) {
+                        bulkActionContainer.classList.remove('d-none');
+                    } else {
+                        bulkActionContainer.classList.add('d-none');
+                    }
+                }
+
+                if (selectAll) {
+                    selectAll.addEventListener('change', function () {
+                        bulkChecks.forEach(cb => {
+                            cb.checked = this.checked;
+                        });
+                        toggleBulkButton();
+                    });
+                }
+
                 bulkChecks.forEach(cb => {
-                    cb.checked = this.checked;
+                    cb.addEventListener('change', toggleBulkButton);
                 });
-                toggleBulkButton();
             });
-        }
-
-        bulkChecks.forEach(cb => {
-            cb.addEventListener('change', toggleBulkButton);
-        });
-    });
-</script>
-@endif
+        </script>
+    @endif
 @endsection

@@ -36,6 +36,7 @@ use App\Http\Controllers\BranchInventoryController;
 use App\Http\Controllers\AdminMonitoringController;
 use App\Http\Controllers\BranchLeaderboardController;
 use App\Http\Controllers\AttendanceSummaryController;
+use App\Http\Controllers\CashAdvanceController; // <--- ADD THIS
 
 /*
 |--------------------------------------------------------------------------
