@@ -68,6 +68,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     Route::post('/update-fcm-token', [UserController::class, 'updateFcmToken'])->name('update.fcm.token');
     Route::get('/kasbon/export', [App\Http\Controllers\CashAdvanceController::class, 'export'])->name('kasbon.export');
+    Route::post('/kasbon/bulk-approve', [CashAdvanceController::class, 'bulkApprove'])->name('kasbon.bulk-approve'); // <--- NEW ROUTE
 
     // --- Rute Search Global ---
     Route::get('/search', [GlobalSearchController::class, 'search'])->name('search');

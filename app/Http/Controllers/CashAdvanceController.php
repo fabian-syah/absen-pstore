@@ -94,18 +94,21 @@ class CashAdvanceController extends Controller
                 $q->where('user_name', 'like', "%{$search}%")->orWhere('description', 'like', "%{$search}%");
             });
         }
-        if ($request->filled('status')) $query->where('status', $request->status);
-        if ($request->filled('start_date')) $query->whereDate('created_at', '>=', $request->start_date);
-        if ($request->filled('end_date')) $query->whereDate('created_at', '<=', $request->end_date);
+        if ($request->filled('status'))
+            $query->where('status', $request->status);
+        if ($request->filled('start_date'))
+            $query->whereDate('created_at', '>=', $request->start_date);
+        if ($request->filled('end_date'))
+            $query->whereDate('created_at', '<=', $request->end_date);
 
         $kasbons = $query->get();
 
         $headers = [
-            "Content-type"        => "text/csv",
+            "Content-type" => "text/csv",
             "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
         ];
 
         $columns = ['Tanggal', 'Nama Karyawan', 'Divisi', 'Cabang', 'Nominal Pinjam', 'Sudah Bayar', 'Sisa Hutang', 'Status', 'Keterangan'];
@@ -179,8 +182,10 @@ class CashAdvanceController extends Controller
                 $data['account_details'] = $request->bank_name . ' - ' . $request->account_number . ' a.n ' . $request->account_name;
             }
 
-            if ($request->hasFile('photo_1')) $data['photo_1'] = $request->file('photo_1')->store('kasbon', 'public');
-            if ($request->hasFile('photo_2')) $data['photo_2'] = $request->file('photo_2')->store('kasbon', 'public');
+            if ($request->hasFile('photo_1'))
+                $data['photo_1'] = $request->file('photo_1')->store('kasbon', 'public');
+            if ($request->hasFile('photo_2'))
+                $data['photo_2'] = $request->file('photo_2')->store('kasbon', 'public');
 
             CashAdvance::create($data);
         });
@@ -198,7 +203,8 @@ class CashAdvanceController extends Controller
     // --- 5. UPDATE STATUS (APPROVE/REJECT) ---
     public function updateStatus(Request $request, $id)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) abort(403);
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+            abort(403);
 
         $kasbon = CashAdvance::findOrFail($id);
         $kasbon->update([
@@ -207,6 +213,27 @@ class CashAdvanceController extends Controller
         ]);
 
         return back()->with('success', 'Status kasbon diperbarui.');
+    }
+
+    // --- BULK APPROVE (NEW) ---
+    public function bulkApprove(Request $request)
+    {
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+            abort(403);
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:cash_advances,id'
+        ]);
+
+        $count = CashAdvance::whereIn('id', $request->ids)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'approved',
+                'approved_date' => now()
+            ]);
+
+        return back()->with('success', "$count Pengajuan kasbon berhasil disetujui sekaligus.");
     }
 
     // --- 6. BAYAR CICILAN ---
@@ -244,11 +271,13 @@ class CashAdvanceController extends Controller
     // --- 7. APPROVE CICILAN ---
     public function approveInstallment($installmentId)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) abort(403);
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+            abort(403);
 
         DB::transaction(function () use ($installmentId) {
             $ins = CashAdvanceInstallment::with('cashAdvance')->findOrFail($installmentId);
-            if ($ins->status == 'approved') return;
+            if ($ins->status == 'approved')
+                return;
 
             $ins->update(['status' => 'approved']);
 
@@ -268,7 +297,8 @@ class CashAdvanceController extends Controller
     // --- 8. REJECT CICILAN ---
     public function rejectInstallment(Request $request, $installmentId)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) abort(403);
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+            abort(403);
 
         $ins = CashAdvanceInstallment::findOrFail($installmentId);
         $ins->update([
@@ -283,7 +313,8 @@ class CashAdvanceController extends Controller
     public function incomingInstallments()
     {
         // Hanya Admin & Admin Gaji
-        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) abort(403);
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+            abort(403);
 
         // Ambil semua cicilan yang statusnya PENDING
         $pendingInstallments = CashAdvanceInstallment::with(['user', 'cashAdvance'])
