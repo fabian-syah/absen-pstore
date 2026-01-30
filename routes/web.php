@@ -74,6 +74,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     Route::get('/salary-summary', [SalarySummaryController::class, 'index'])->name('salary-summary.index');
 
+    // [FIXED] Order is important! Export must be before {id}
+    Route::get('/my-salary/export', [MySalaryController::class, 'export'])->name('my-salary.export');
     Route::get('/my-salary', [MySalaryController::class, 'index'])->name('my-salary.index');
     Route::get('/my-salary/{id}', [MySalaryController::class, 'show'])->name('my-salary.show');
 
@@ -135,9 +137,6 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // === RUTE RIWAYAT PELANGGARAN ===
     // 1. Route History (Ditaruh sebelum resource/index agar tidak tertimpa)
     Route::get('/violations/history', [App\Http\Controllers\ViolationController::class, 'history'])->name('violations.history');
-
-    // Route Salary
-    Route::get('my-salary/export', [App\Http\Controllers\MySalaryController::class, 'export'])->name('my-salary.export');
 
     // 2. Route Index (Aktif)
     Route::get('/violations', [App\Http\Controllers\ViolationController::class, 'index'])->name('violations.index');
