@@ -87,6 +87,7 @@
                                     <th class="py-3">Tanggal Terbit</th>
                                     <th class="py-3">Status</th>
                                     <th class="py-3">Total Diterima (THP)</th>
+                                    <th>Metode Bayar</th>
                                     <th class="py-3 text-center rounded-end">Aksi</th>
                                 </tr>
                             </thead>
@@ -127,6 +128,17 @@
                                                 Rp {{ number_format($salary->total_amount, 0, ',', '.') }}
                                             </h5>
                                         </td>
+                                        <td>
+    @if($latestSalary)
+        @if($latestSalary->payment_method == 'transfer')
+            <span class="badge badge-opacity-primary"><i class="mdi mdi-bank"></i> Transfer</span>
+        @else
+            <span class="badge badge-opacity-success"><i class="mdi mdi-cash"></i> Tunai</span>
+        @endif
+    @else
+        -
+    @endif
+</td>
                                         <td class="text-center">
                                             <a href="{{ route('my-salary.show', $salary->id) }}"
                                                 class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm">
