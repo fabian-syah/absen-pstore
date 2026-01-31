@@ -14,19 +14,19 @@ class SalarySummaryController extends Controller
     {
         // 1. Tentukan Tahun (Default Tahun Ini)
         $year = $request->input('year', date('Y'));
-        
+
         // 2. Tentukan User ID yang mau dilihat
         // Jika Admin/Admin Gaji: Bisa pilih user via request 'user_id'
         // Jika User Biasa: Paksa lihat punya sendiri
-        if (in_array(Auth::user()->role, ['admin', 'admin_gaji'])) {
-            $userId = $request->input('user_id', Auth::id());
+        if (in_array(Auth::user()->role, ['admin', 'admin_gaji', 'owner'])) {
+            $userId = $request->input('user_id'); // Bisa NULL (untuk lihat semua)
             $users = User::where('is_active', true)->orderBy('name', 'asc')->get(); // Untuk dropdown
         } else {
-            $userId = Auth::id();
+            $userId = Auth::id(); // User biasa hanya bisa lihat sendiri
             $users = [];
         }
 
-        $targetUser = User::find($userId);
+        $targetUser = $userId ? User::find($userId) : null;
 
         // 3. Loop 12 Bulan untuk menyusun Data
         $summary = [];
@@ -38,25 +38,37 @@ class SalarySummaryController extends Controller
 
             // LOGIKA PERIODE CUTOFF (26 Bulan Lalu - 25 Bulan Ini)
             // Contoh Bulan 12 (Desember): 26 Nov - 25 Des
-            $startDate = Carbon::create($year, $m, 26)->subMonth(); 
+            $startDate = Carbon::create($year, $m, 26)->subMonth();
             $endDate = Carbon::create($year, $m, 25);
 
             // Ambil Data Gaji dari Database
-            $salary = Salary::where('user_id', $userId)
-                ->where('month', $monthStr)
-                ->where('year', $year)
-                ->first();
+            if ($userId) {
+                // Spesifik User
+                $salary = Salary::where('user_id', $userId)
+                    ->where('month', $monthStr)
+                    ->where('year', $year)
+                    ->first();
+                $amount = $salary ? $salary->total_amount : 0;
+                $status = $salary ? 'Dibayarkan' : 'Belum Ada Data';
+                $salaryData = $salary;
+            } else {
+                // Semua User: Sum Total Amount
+                $amount = Salary::where('month', $monthStr)
+                    ->where('year', $year)
+                    ->sum('total_amount');
+                $status = ($amount > 0) ? 'Total Semua Karyawan' : 'Belum Ada Data';
+                $salaryData = null; // Tidak ada single object salary
+            }
 
-            $amount = $salary ? $salary->total_amount : 0;
             $totalAnnual += $amount;
 
             $summary[] = [
                 'month_num' => $m,
                 'month_name' => Carbon::create()->month($m)->locale('id')->isoFormat('MMMM'),
                 'period_string' => $startDate->isoFormat('D MMMM') . ' - ' . $endDate->isoFormat('D MMMM Y'),
-                'data' => $salary, // Objek Salary (bisa null)
+                'data' => $salaryData,
                 'amount' => $amount,
-                'status' => $salary ? 'Dibayarkan' : 'Belum Ada Data'
+                'status' => $status
             ];
         }
 
