@@ -8,14 +8,8 @@
             <div class="d-flex justify-content-between mb-3 no-print">
                 <a href="{{ route('my-salary.index') }}" class="btn btn-light shadow-sm"><i class="mdi mdi-arrow-left"></i>
                     Kembali</a>
-                <div>
-                    @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'admin_gaji', 'owner']))
-                        <a href="{{ route('salaries.edit', $salary->id) }}" class="btn btn-warning shadow-sm me-2"><i
-                                class="mdi mdi-pencil"></i> Edit</a>
-                    @endif
-                    <button onclick="window.print()" class="btn btn-primary shadow-sm"><i class="mdi mdi-printer"></i> Cetak
-                        / PDF</button>
-                </div>
+                <button onclick="window.print()" class="btn btn-primary shadow-sm"><i class="mdi mdi-printer"></i> Cetak
+                    / PDF</button>
             </div>
 
             <div class="card shadow-lg border-0" id="payslip">
