@@ -116,7 +116,17 @@
                                             {{ $salary->published_at ? \Carbon\Carbon::parse($salary->published_at)->format('d M Y') : '-' }}
                                         </td>
                                         <td>
-                                            @if($salary->status == 'paid')
+                                            @php
+                                                $isPaid = $salary->status == 'paid';
+                                                if (!$isPaid && $salary->status == 'pending' && $salary->published_at) {
+                                                    // Jika pending tapi tanggal terbit sudah lewat/hari ini, anggap Lunas
+                                                    if (\Carbon\Carbon::parse($salary->published_at)->startOfDay()->lte(now())) {
+                                                        $isPaid = true;
+                                                    }
+                                                }
+                                            @endphp
+
+                                            @if($isPaid)
                                                 <span class="badge bg-success rounded-pill px-3"><i
                                                         class="mdi mdi-check-circle me-1"></i> Lunas</span>
                                             @else
