@@ -212,6 +212,7 @@ class TeamController extends Controller
                 $izin_cuti = 0;
                 $alpha = 0;
                 $lembur = 0;
+                $libur = 0;
 
                 foreach ($users as $u) {
                     $validAttendance = $u->attendances->first(function ($att) use ($tz, $todayInBranch, $nowInBranch) {
@@ -247,13 +248,15 @@ class TeamController extends Controller
                             $sakit++;
                         elseif ($leave->type == 'wfh')
                             $present++;
+                        elseif ($leave->type == 'libur')
+                            $libur++;
                         else
                             $izin_cuti++;
                     } else
                         $alpha++;
                 }
 
-                $branch->stats_today = ['present' => $present, 'sakit' => $sakit, 'izin' => $izin_cuti, 'alpha' => $alpha, 'lembur' => $lembur];
+                $branch->stats_today = ['present' => $present, 'sakit' => $sakit, 'izin' => $izin_cuti, 'alpha' => $alpha, 'lembur' => $lembur, 'libur' => $libur];
                 return $branch;
             });
 

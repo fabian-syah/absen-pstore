@@ -4,93 +4,109 @@
 @section('heading', 'Monitoring Wilayah')
 
 @push('styles')
-<style>
-    .branch-section-title {
-        position: relative;
-        padding-left: 1.5rem;
-        margin-bottom: 1.5rem;
-        color: #1e293b;
-        font-weight: 700;
-    }
+    <style>
+        .branch-section-title {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #1e293b;
+            font-weight: 700;
+        }
 
-    .branch-section-title::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 6px;
-        height: 24px;
-        background: linear-gradient(to bottom, #667eea, #764ba2);
-        border-radius: 4px;
-    }
+        .branch-section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 24px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+            border-radius: 4px;
+        }
 
-    .branch-card-item {
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-        border: 1px solid #f1f5f9;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
+        .branch-card-item {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
 
-    .branch-card-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
-        border-color: #c7d2fe;
-    }
+        .branch-card-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
+            border-color: #c7d2fe;
+        }
 
-    .branch-icon-box {
-        width: 45px;
-        height: 45px;
-        background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #667eea;
-        font-size: 20px;
-    }
+        .branch-icon-box {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-size: 20px;
+        }
 
-    /* Styling untuk Statistik dalam Card */
-    .stat-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 0.5rem;
-        font-size: 0.85rem;
-    }
-    
-    .stat-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
+        /* Styling untuk Statistik dalam Card */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
 
-    .stat-badge {
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-weight: 600;
-        font-size: 0.75rem;
-        min-width: 30px;
-        text-align: center;
-    }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
-    .bg-soft-success { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .bg-soft-warning { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-    .bg-soft-danger { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
-    .bg-soft-info { background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .stat-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            min-width: 30px;
+            text-align: center;
+        }
 
-    .branch-footer {
-        margin-top: auto; /* Push footer to bottom */
-        padding-top: 1rem;
-        border-top: 1px solid #f1f5f9;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-</style>
+        .bg-soft-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .bg-soft-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .bg-soft-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .bg-soft-info {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .branch-footer {
+            margin-top: auto;
+            /* Push footer to bottom */
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -128,11 +144,16 @@
                             <span class="fw-bold text-dark">{{ $branch->stats_today['present'] }}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small"><i class="mdi mdi-calendar-check text-primary me-1"></i>Libur</span>
+                            <span class="fw-bold text-dark">{{ $branch->stats_today['libur'] }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted small"><i class="mdi mdi-hospital-box text-info me-1"></i>Sakit</span>
                             <span class="fw-bold text-dark">{{ $branch->stats_today['sakit'] }}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small"><i class="mdi mdi-file-document text-warning me-1"></i>Izin/Cuti</span>
+                            <span class="text-muted small"><i
+                                    class="mdi mdi-file-document text-warning me-1"></i>Izin/Cuti</span>
                             <span class="fw-bold text-dark">{{ $branch->stats_today['izin'] }}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
@@ -146,7 +167,8 @@
                         <div class="small text-muted">
                             Total: <strong>{{ $branch->users_count }}</strong> User
                         </div>
-                        <a href="{{ route('team.branch.detail', $branch->id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        <a href="{{ route('team.branch.detail', $branch->id) }}"
+                            class="btn btn-sm btn-outline-primary rounded-pill px-3">
                             Detail <i class="mdi mdi-arrow-right ms-1"></i>
                         </a>
                     </div>
