@@ -139,7 +139,7 @@
                                                             'sakit' => 'bg-info',
                                                             'izin' => 'bg-warning text-dark',
                                                             'cuti' => 'bg-secondary',
-                                                            'libur' => 'bg-danger',
+                                                            'libur' => 'bg-purple',
                                                             'dinas luar' => 'bg-purple text-white',
                                                             'wfh' => 'bg-success',
                                                             default => 'bg-warning text-dark'
@@ -161,6 +161,7 @@
                                                         'cuti' => 'bg-secondary',
                                                         'wfh' => 'bg-success',
                                                         'telat' => 'bg-warning text-dark',
+                                                        'libur' => 'bg-purple',
                                                         default => 'bg-secondary'
                                                     };
 
@@ -221,6 +222,11 @@
             color: #0d6efd !important;
             /* Warna biru Bootstrap */
             transition: color 0.2s ease-in-out;
+        }
+
+        .bg-purple {
+            background-color: #6f42c1 !important;
+            color: white !important;
         }
     </style>
 @endsection
