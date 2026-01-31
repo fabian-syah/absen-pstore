@@ -28,7 +28,11 @@
                                 Periode:
                                 {{ \Carbon\Carbon::createFromDate($salary->year, $salary->month, 1)->isoFormat('MMMM Y') }}
                             </p>
-                            <small class="text-muted">ID Transaksi:
+                            <div class="alert alert-info py-1 px-2 mt-2 mb-0 d-inline-block" style="font-size: 0.75rem; border-left: 3px solid #0dcaf0;">
+                                <i class="mdi mdi-information-outline me-1"></i>
+                                Cutoff: 26 {{ \Carbon\Carbon::createFromDate($salary->year, $salary->month, 1)->subMonth()->isoFormat('MMM') }} - 25 {{ \Carbon\Carbon::createFromDate($salary->year, $salary->month, 1)->isoFormat('MMM') }}
+                            </div>
+                            <small class="text-muted d-block mt-1">ID Transaksi:
                                 #PAY-{{ $salary->id }}-{{ $salary->year }}{{ $salary->month }}</small>
                         </div>
                     </div>
@@ -48,6 +52,10 @@
                                 <tr>
                                     <td class="text-muted ps-0">Jabatan</td>
                                     <td class="fw-bold text-dark">: {{ $salary->user->division->name ?? 'Staff' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted ps-0">Cabang</td>
+                                    <td class="fw-bold text-dark">: {{ $salary->user->branch->name ?? '-' }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -113,121 +121,110 @@
                                 @if($salary->employee_position_allowance > 0)
                                     <tr>
                                         <td class="ps-4">Tunjangan Jabatan</td>
-                                        <td class="text-end pe-4 fw-bold">Rp
+                                        <td class="text-end pe-4">Rp
                                             {{ number_format($salary->employee_position_allowance, 0, ',', '.') }}</td>
                                     </tr>
                                 @endif
 
-                                @if($salary->meal_allowance > 0)
+                                @if($salary->employee_owner_privilege > 0)
                                     <tr>
-                                        <td class="ps-4">Uang Makan</td>
-                                        <td class="text-end pe-4 fw-bold">Rp
-                                            {{ number_format($salary->meal_allowance, 0, ',', '.') }}</td>
+                                        <td class="ps-4">Privilege Owner</td>
+                                        <td class="text-end pe-4">Rp
+                                            {{ number_format($salary->employee_owner_privilege, 0, ',', '.') }}</td>
                                     </tr>
                                 @endif
 
-                                @if($salary->transport_allowance > 0)
+                                @if($salary->promotor_bonus > 0)
                                     <tr>
-                                        <td class="ps-4">Uang Transport</td>
-                                        <td class="text-end pe-4 fw-bold">Rp
-                                            {{ number_format($salary->transport_allowance, 0, ',', '.') }}</td>
+                                        <td class="ps-4">Bonus / Insentif Tambahan</td>
+                                        <td class="text-end pe-4 text-success">Rp
+                                            {{ number_format($salary->promotor_bonus, 0, ',', '.') }}</td>
                                     </tr>
                                 @endif
 
-                                @if($salary->overtime > 0)
+                                @if($salary->dispensation_amount > 0)
                                     <tr>
-                                        <td class="ps-4">Lembur (Overtime)</td>
-                                        <td class="text-end pe-4 fw-bold">Rp
-                                            {{ number_format($salary->overtime, 0, ',', '.') }}</td>
-                                    </tr>
-                                @endif
-
-                                @if($salary->bonus > 0)
-                                    <tr>
-                                        <td class="ps-4">Bonus / Insentif</td>
-                                        <td class="text-end pe-4 fw-bold">Rp
-                                            {{ number_format($salary->bonus, 0, ',', '.') }}</td>
-                                    </tr>
-                                @endif
-
-                                @if($salary->other_income > 0)
-                                    <tr>
-                                        <td class="ps-4">Lain-lain (Pendapatan)</td>
-                                        <td class="text-end pe-4 fw-bold">Rp
-                                            {{ number_format($salary->other_income, 0, ',', '.') }}</td>
+                                        <td class="ps-4">Dispensasi / Lainnya <br><small
+                                                class="text-muted fst-italic">({{ $salary->dispensation_note }})</small></td>
+                                        <td class="text-end pe-4">Rp
+                                            {{ number_format($salary->dispensation_amount, 0, ',', '.') }}</td>
                                     </tr>
                                 @endif
                             </tbody>
 
+                            {{-- POTONGAN --}}
                             <thead class="bg-light border-top border-bottom">
                                 <tr>
-                                    <th class="py-3 ps-4 text-uppercase text-secondary">POTONGAN (DEDUCTION)</th>
-                                    <th class="py-3 text-end pe-4 text-uppercase text-secondary">JUMLAH (IDR)</th>
+                                    <th class="py-3 ps-4 text-uppercase text-danger">POTONGAN (DEDUCTION)</th>
+                                    <th class="py-3 text-end pe-4 text-uppercase text-danger">JUMLAH (IDR)</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @if($salary->bpjs_deduction > 0)
+                                @if($salary->alpha_deduction > 0)
                                     <tr>
-                                        <td class="ps-4">Potongan BPJS</td>
-                                        <td class="text-end pe-4 fw-bold text-danger">- Rp
-                                            {{ number_format($salary->bpjs_deduction, 0, ',', '.') }}</td>
+                                        <td class="ps-4">Potongan Alpha ({{ $salary->alpha_days }} Hari)</td>
+                                        <td class="text-end pe-4 text-danger">(Rp
+                                            {{ number_format($salary->alpha_deduction, 0, ',', '.') }})</td>
                                     </tr>
                                 @endif
 
                                 @if($salary->late_deduction > 0)
                                     <tr>
-                                        <td class="ps-4">Potongan Keterlambatan</td>
-                                        <td class="text-end pe-4 fw-bold text-danger">- Rp
-                                            {{ number_format($salary->late_deduction, 0, ',', '.') }}</td>
+                                        <td class="ps-4">Potongan Telat ({{ $salary->late_days }} Kali)</td>
+                                        <td class="text-end pe-4 text-danger">(Rp
+                                            {{ number_format($salary->late_deduction, 0, ',', '.') }})</td>
                                     </tr>
                                 @endif
 
-                                @if($salary->loan_deduction > 0)
+                                @if($salary->kasbon_deduction > 0)
                                     <tr>
-                                        <td class="ps-4">Potongan Pinjaman / Kasbon</td>
-                                        <td class="text-end pe-4 fw-bold text-danger">- Rp
-                                            {{ number_format($salary->loan_deduction, 0, ',', '.') }}</td>
+                                        <td class="ps-4">Potongan Kasbon / Hutang</td>
+                                        <td class="text-end pe-4 text-danger fw-bold">(Rp
+                                            {{ number_format($salary->kasbon_deduction, 0, ',', '.') }})</td>
                                     </tr>
                                 @endif
 
                                 @if($salary->other_deduction > 0)
                                     <tr>
-                                        <td class="ps-4">Lain-lain (Potongan)</td>
-                                        <td class="text-end pe-4 fw-bold text-danger">- Rp
-                                            {{ number_format($salary->other_deduction, 0, ',', '.') }}</td>
+                                        <td class="ps-4">Potongan Lain <br><small
+                                                class="text-muted fst-italic">({{ $salary->other_deduction_note }})</small></td>
+                                        <td class="text-end pe-4 text-danger">(Rp
+                                            {{ number_format($salary->other_deduction, 0, ',', '.') }})</td>
                                     </tr>
                                 @endif
                             </tbody>
-
-                            <tfoot class="bg-primary text-white">
-                                <tr>
-                                    <th class="py-3 ps-4 text-uppercase">TOTAL GAJI BERSIH (TAKE HOME PAY)</th>
-                                    <th class="py-3 text-end pe-4 h4 mb-0">Rp
-                                        {{ number_format($salary->total_salary, 0, ',', '.') }}</th>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
 
-                    {{-- FOOTER TANDA TANGAN --}}
-                    <div class="row mt-5 pt-4">
-                        <div class="col-4 text-center">
-                            <p class="mb-5">Penerima,</p>
-                            <div class="mt-5 border-top pt-2 mx-auto" style="width: 150px;">
-                                <p class="fw-bold mb-0">{{ $salary->user->name }}</p>
-                            </div>
-                        </div>
-                        <div class="col-4"></div>
-                        <div class="col-4 text-center">
-                            <p class="mb-5">Jakarta, {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}<br>Finance & HRD,</p>
-                            <div class="mt-5 border-top pt-2 mx-auto" style="width: 150px;">
-                                <p class="fw-bold mb-0">Admin Payroll</p>
+                    {{-- TOTAL AKHIR --}}
+                    <div class="row justify-content-end mb-5">
+                        <div class="col-md-6">
+                            <div class="bg-primary text-white p-4 rounded shadow-sm text-center">
+                                <h6 class="text-white-50 text-uppercase mb-2">TAKE HOME PAY (DITERIMA BERSIH)</h6>
+                                <h2 class="fw-bold mb-0 display-5">Rp
+                                    {{ number_format($salary->total_amount, 0, ',', '.') }}</h2>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mt-5 text-center text-muted small border-top pt-3">
-                        <p>Ini adalah slip gaji elektronik yang dihasilkan secara otomatis oleh sistem.<br>Segala bentuk kesalahan data dapat dikonfirmasikan ke bagian HRD.</p>
+                    {{-- FOOTER / TTD --}}
+                    <div class="row mt-5 pt-4">
+                        <div class="col-6 text-center">
+                            <p class="mb-5 text-muted">Penerima,</p>
+                            <br>
+                            <p class="fw-bold text-dark text-decoration-underline">{{ $salary->user->name }}</p>
+                        </div>
+                        <div class="col-6 text-center">
+                            <p class="mb-5 text-muted">Finance / HRD,</p>
+                            <br>
+                            <p class="fw-bold text-dark text-decoration-underline">
+                                {{ $salary->created_by_user->name ?? 'Admin PStore' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-5 pt-4 border-top">
+                        <small class="text-muted fst-italic">Dokumen ini sah dan dicetak secara otomatis oleh sistem Absensi
+                            PStore.</small>
                     </div>
 
                 </div>
@@ -237,30 +234,28 @@
 
     <style>
         @media print {
-            .no-print {
+
+            .no-print,
+            .sidebar,
+            .navbar,
+            footer {
                 display: none !important;
             }
-            body {
-                background-color: white !important;
-                -webkit-print-color-adjust: exact;
+
+            .content-wrapper {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
             }
+
             .card {
                 box-shadow: none !important;
                 border: none !important;
             }
-            .container {
-                width: 100% !important;
-                max-width: 100% !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .row {
-                margin: 0 !important;
-            }
-            .col-md-8 {
-                width: 100% !important;
-                flex: 0 0 100% !important;
-                max-width: 100% !important;
+
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact;
             }
         }
     </style>

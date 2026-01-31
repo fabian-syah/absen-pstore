@@ -90,13 +90,18 @@ class SalaryController extends Controller
 
             // ALPHA COUNT - LOGIC YANG SAMA DENGAN AttendanceHistoryController
             // Hitung dari total hari dalam bulan dikurangi attendance yang ada
-            $monthStartDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
-            $monthEndDate = $monthStartDate->copy()->endOfMonth();
+            // LOGIC CUTOFF: 26 Bulan Kemarin - 25 Bulan Ini
+            $monthStartDate = Carbon::createFromDate($year, $month, 1)->subMonth()->day(26)->startOfDay();
+            $monthEndDate = Carbon::createFromDate($year, $month, 1)->day(25)->endOfDay();
             $today = Carbon::now()->endOfDay();
             $limitDate = ($monthEndDate->gt($today)) ? $today : $monthEndDate;
 
-            // Total hari yang sudah lewat di bulan ini
-            $totalDays = $limitDate->day;
+            // Total hari yang sudah lewat di Range Cutoff ini
+            $totalDays = 0;
+            // Hitung manual days, karena diffInDays bisa tricky dengan jam
+            for ($d = $monthStartDate->copy(); $d->lte($limitDate); $d->addDay()) {
+                $totalDays++;
+            }
 
             // Ambil semua attendance di bulan ini
             $attendances = Attendance::where('user_id', $selectedUserId)
