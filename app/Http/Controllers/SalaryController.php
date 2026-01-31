@@ -74,27 +74,28 @@ class SalaryController extends Controller
 
             // --- HITUNG ABSENSI ---
 
+            // LOGIC CUTOFF: 26 Bulan Kemarin - 25 Bulan Ini
+            // Definisikan Variable Tanggal disini agar bisa dipakai di semua query (Telat, Alpha, Leave)
+            $monthStartDate = Carbon::createFromDate($year, $month, 1)->subMonth()->day(26)->startOfDay();
+            $monthEndDate = Carbon::createFromDate($year, $month, 1)->day(25)->endOfDay();
+            $today = Carbon::now()->endOfDay();
+            $limitDate = ($monthEndDate->gt($today)) ? $today : $monthEndDate;
+
             // Absensi Regular (Bulanan) untuk Employee/Promotor
-            // Tetap pakai logika bulan penuh
             $telatFisik = Attendance::where('user_id', $selectedUserId)
-                ->whereMonth('check_in_time', $month)->whereYear('check_in_time', $year)
+                ->whereBetween('check_in_time', [$monthStartDate, $monthEndDate])
                 ->where(function ($q) {
                     $q->where('is_late_checkin', true)->orWhere('status', 'late')->orWhere('presence_status', 'like', '%Telat%');
                 })->count();
 
             $izinTelat = LeaveRequest::where('user_id', $selectedUserId)
                 ->where('type', 'telat')->where('status', 'approved')
-                ->whereMonth('start_date', $month)->whereYear('start_date', $year)->count();
+                ->whereBetween('start_date', [$monthStartDate, $monthEndDate])->count();
 
             $lateCount = $telatFisik + $izinTelat;
 
             // ALPHA COUNT - LOGIC YANG SAMA DENGAN AttendanceHistoryController
             // Hitung dari total hari dalam bulan dikurangi attendance yang ada
-            // LOGIC CUTOFF: 26 Bulan Kemarin - 25 Bulan Ini
-            $monthStartDate = Carbon::createFromDate($year, $month, 1)->subMonth()->day(26)->startOfDay();
-            $monthEndDate = Carbon::createFromDate($year, $month, 1)->day(25)->endOfDay();
-            $today = Carbon::now()->endOfDay();
-            $limitDate = ($monthEndDate->gt($today)) ? $today : $monthEndDate;
 
             // Total hari yang sudah lewat di Range Cutoff ini
             $totalDays = 0;
@@ -158,10 +159,10 @@ class SalaryController extends Controller
                         ->orWhereIn('status', ['present', 'late', 'wfh']);
                 })->count();
 
-            // Info Cuti (Bulanan)
+            // Info Cuti (Bulanan) - Ikut Cutoff
             $approvedLeaves = LeaveRequest::where('user_id', $selectedUserId)
                 ->where('status', 'approved')
-                ->whereMonth('start_date', $month)->whereYear('start_date', $year)->get();
+                ->whereBetween('start_date', [$monthStartDate, $monthEndDate])->get();
 
             $cutiCount = $approvedLeaves->where('type', 'cuti')->count();
             $sakitCount = $approvedLeaves->where('type', 'sakit')->count();
