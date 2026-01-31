@@ -51,7 +51,7 @@
                                 </tr>
                                 <tr>
                                     <td class="text-muted ps-0">Cabang</td>
-                                    <td class="fw-bold text-dark">: {{ $salary->branch->name }}</td>
+                                    <td class="fw-bold text-primary">: {{ $salary->branch->name }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -87,6 +87,16 @@
                         </div>
                     </div>
 
+                    {{-- INFO PERIODE PERHITUNGAN --}}
+                    <div class="alert alert-info border-0 shadow-sm mb-4 py-2">
+                        <div class="d-flex align-items-center">
+                            <i class="mdi mdi-information-outline mdi-24px me-3 text-info"></i>
+                            <div>
+                                <small class="text-dark">Perhitungan gaji ini mencakup periode kerja dari tanggal <strong>26 {{ \Carbon\Carbon::createFromDate($salary->year, $salary->month, 1)->subMonth()->isoFormat('MMMM') }}</strong> s/d <strong>25 {{ \Carbon\Carbon::createFromDate($salary->year, $salary->month, 1)->isoFormat('MMMM Y') }}</strong>.</small>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Catatan Payroll --}}
                     @if($salary->notes)
                         <div class="alert alert-secondary mb-4 p-3 border-start border-4 border-secondary">
@@ -116,143 +126,4 @@
 
                                 @if($salary->employee_position_allowance > 0)
                                     <tr>
-                                        <td class="ps-4">Tunjangan Jabatan</td>
-                                        <td class="text-end pe-4">Rp
-                                            {{ number_format($salary->employee_position_allowance, 0, ',', '.') }}</td>
-                                    </tr>
-                                @endif
-
-                                @if($salary->employee_owner_privilege > 0)
-                                    <tr>
-                                        <td class="ps-4">Privilege Owner</td>
-                                        <td class="text-end pe-4">Rp
-                                            {{ number_format($salary->employee_owner_privilege, 0, ',', '.') }}</td>
-                                    </tr>
-                                @endif
-
-                                @if($salary->promotor_bonus > 0)
-                                    <tr>
-                                        <td class="ps-4">Bonus / Insentif Tambahan</td>
-                                        <td class="text-end pe-4 text-success">Rp
-                                            {{ number_format($salary->promotor_bonus, 0, ',', '.') }}</td>
-                                    </tr>
-                                @endif
-
-                                @if($salary->dispensation_amount > 0)
-                                    <tr>
-                                        <td class="ps-4">Dispensasi / Lainnya <br><small
-                                                class="text-muted fst-italic">({{ $salary->dispensation_note }})</small></td>
-                                        <td class="text-end pe-4">Rp
-                                            {{ number_format($salary->dispensation_amount, 0, ',', '.') }}</td>
-                                    </tr>
-                                @endif
-                            </tbody>
-
-                            {{-- POTONGAN --}}
-                            <thead class="bg-light border-top border-bottom">
-                                <tr>
-                                    <th class="py-3 ps-4 text-uppercase text-danger">POTONGAN (DEDUCTION)</th>
-                                    <th class="py-3 text-end pe-4 text-uppercase text-danger">JUMLAH (IDR)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if($salary->alpha_deduction > 0)
-                                    <tr>
-                                        <td class="ps-4">Potongan Alpha ({{ $salary->alpha_days }} Hari)</td>
-                                        <td class="text-end pe-4 text-danger">(Rp
-                                            {{ number_format($salary->alpha_deduction, 0, ',', '.') }})</td>
-                                    </tr>
-                                @endif
-
-                                @if($salary->late_deduction > 0)
-                                    <tr>
-                                        <td class="ps-4">Potongan Telat ({{ $salary->late_days }} Kali)</td>
-                                        <td class="text-end pe-4 text-danger">(Rp
-                                            {{ number_format($salary->late_deduction, 0, ',', '.') }})</td>
-                                    </tr>
-                                @endif
-
-                                @if($salary->kasbon_deduction > 0)
-                                    <tr>
-                                        <td class="ps-4">Potongan Kasbon / Hutang</td>
-                                        <td class="text-end pe-4 text-danger fw-bold">(Rp
-                                            {{ number_format($salary->kasbon_deduction, 0, ',', '.') }})</td>
-                                    </tr>
-                                @endif
-
-                                @if($salary->other_deduction > 0)
-                                    <tr>
-                                        <td class="ps-4">Potongan Lain <br><small
-                                                class="text-muted fst-italic">({{ $salary->other_deduction_note }})</small></td>
-                                        <td class="text-end pe-4 text-danger">(Rp
-                                            {{ number_format($salary->other_deduction, 0, ',', '.') }})</td>
-                                    </tr>
-                                @endif
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {{-- TOTAL AKHIR --}}
-                    <div class="row justify-content-end mb-5">
-                        <div class="col-md-6">
-                            <div class="bg-primary text-white p-4 rounded shadow-sm text-center">
-                                <h6 class="text-white-50 text-uppercase mb-2">TAKE HOME PAY (DITERIMA BERSIH)</h6>
-                                <h2 class="fw-bold mb-0 display-5">Rp
-                                    {{ number_format($salary->total_amount, 0, ',', '.') }}</h2>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- FOOTER / TTD --}}
-                    <div class="row mt-5 pt-4">
-                        <div class="col-6 text-center">
-                            <p class="mb-5 text-muted">Penerima,</p>
-                            <br>
-                            <p class="fw-bold text-dark text-decoration-underline">{{ $salary->user->name }}</p>
-                        </div>
-                        <div class="col-6 text-center">
-                            <p class="mb-5 text-muted">Finance / HRD,</p>
-                            <br>
-                            <p class="fw-bold text-dark text-decoration-underline">
-                                {{ $salary->created_by_user->name ?? 'Admin PStore' }}</p>
-                        </div>
-                    </div>
-
-                    <div class="text-center mt-5 pt-4 border-top">
-                        <small class="text-muted fst-italic">Dokumen ini sah dan dicetak secara otomatis oleh sistem Absensi
-                            PStore.</small>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <style>
-        @media print {
-
-            .no-print,
-            .sidebar,
-            .navbar,
-            footer {
-                display: none !important;
-            }
-
-            .content-wrapper {
-                margin: 0 !important;
-                padding: 0 !important;
-                background: white !important;
-            }
-
-            .card {
-                box-shadow: none !important;
-                border: none !important;
-            }
-
-            body {
-                background: white !important;
-                -webkit-print-color-adjust: exact;
-            }
-        }
-    </style>
-@endsection
+                                        <
