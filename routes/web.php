@@ -297,9 +297,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     //  MANAJEMEN GAJI (SALARY) - URUTAN PENTING!
     // ==========================================================
 
-    // 1. GRUP EKSEKUTOR (KHUSUS ADMIN_GAJI) - WAJIB DI ATAS!
+    // 1. GRUP EKSEKUTOR (KHUSUS ADMIN, ADMIN_GAJI, OWNER) - WAJIB DI ATAS!
     // Agar /salaries/create terbaca duluan sebelum /salaries/{salary}
-    Route::middleware(['auth', 'role:admin_gaji'])->group(function () {
+    Route::middleware(['auth', 'role:admin,admin_gaji,owner'])->group(function () {
 
         Route::get('/master-gaji', [EmployeeSalaryController::class, 'index'])->name('employee-salaries.index');
         Route::get('/employee-salaries/export', [App\Http\Controllers\EmployeeSalaryController::class, 'export'])->name('employee-salaries.export');

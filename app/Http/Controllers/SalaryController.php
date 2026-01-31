@@ -329,8 +329,69 @@ class SalaryController extends Controller
     }
     public function update(Request $request, Salary $salary)
     {
-        $salary->update($request->only(['notes']));
-        return redirect()->route('salaries.index')->with('success', 'Data updated.');
+        // 1. Clean Rupiah
+        $inputsToClean = [
+            'employee_basic_salary',
+            'employee_position_allowance',
+            'employee_owner_privilege',
+            'promotor_bonus',
+            'dispensation_amount',
+            'alpha_deduction',
+            'late_deduction',
+            'kasbon_deduction',
+            'other_deduction',
+            'freelance_daily_salary',
+            'freelance_total_income'
+        ];
+
+        foreach ($inputsToClean as $field) {
+            if ($request->has($field)) {
+                $cleanValue = str_replace('.', '', $request->input($field));
+                $cleanValue = str_replace(',', '', $cleanValue); // Handle comma if any
+                $request->merge([$field => $cleanValue]);
+            }
+        }
+
+        // 2. Validate
+        $request->validate([
+            'alpha_days' => 'numeric',
+            'late_days' => 'numeric',
+        ]);
+
+        DB::transaction(function () use ($request, $salary) {
+
+            // Perbarui Data dari Input
+            $data = $request->except(['_token', '_method', 'user_id', 'month', 'year', 'category', 'freelance_total_income']);
+
+            // Hitung Income
+            $income = 0;
+            if ($salary->category == 'employee') {
+                $income = ($request->employee_basic_salary ?? 0) +
+                    ($request->employee_position_allowance ?? 0) +
+                    ($request->employee_owner_privilege ?? 0);
+            } elseif ($salary->category == 'promotor') {
+                // Promotor, basic salary is input
+                $income = ($request->employee_basic_salary ?? 0);
+            } elseif ($salary->category == 'freelance') {
+                $income = $request->freelance_total_income ?? $salary->total_amount; // Use total given or existing
+            }
+
+            $income += ($request->promotor_bonus ?? 0);
+            $income += ($request->dispensation_amount ?? 0);
+
+            // Total Deduction
+            // Kita ambil kasbon_deduction dari input juga (jika diedit manual di view)
+            $deduction = ($request->alpha_deduction ?? 0) +
+                ($request->late_deduction ?? 0) +
+                ($request->kasbon_deduction ?? 0) +
+                ($request->other_deduction ?? 0);
+
+            $data['total_amount'] = $income - $deduction;
+
+            $salary->update($data);
+        });
+
+        return redirect()->route('salaries.show', $salary->id)->with('success', 'Payroll updated successfully.');
     }
     public function destroy(Salary $salary)
     {
