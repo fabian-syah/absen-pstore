@@ -21,7 +21,7 @@ class AttendanceSummaryController extends Controller
 
         // --- 1. SEARCH & SCOPE KARYAWAN ---
         $employees = collect([]);
-        $targetUser = $currentUser; 
+        $targetUser = $currentUser;
         $allowedRoles = ['admin', 'audit', 'leader', 'admin_gaji'];
 
         $isAccessGranted = in_array($currentUser->role, $allowedRoles);
@@ -29,7 +29,9 @@ class AttendanceSummaryController extends Controller
         if ($isAccessGranted) {
             if ($currentUser->role === 'audit' || $currentUser->role === 'leader') {
                 $handledBranchIds = $currentUser->branches ? $currentUser->branches->pluck('id')->toArray() : [];
-                if($currentUser->branch_id) { $handledBranchIds[] = $currentUser->branch_id; }
+                if ($currentUser->branch_id) {
+                    $handledBranchIds[] = $currentUser->branch_id;
+                }
                 $employees = User::whereIn('branch_id', array_unique($handledBranchIds))->orderBy('name', 'asc')->get();
             } else {
                 $employees = User::orderBy('name', 'asc')->get();
@@ -41,10 +43,11 @@ class AttendanceSummaryController extends Controller
                     $targetUser = $foundUser;
                 } elseif (in_array($currentUser->role, ['admin', 'admin_gaji'])) {
                     $directFind = User::find($targetUserId);
-                    if($directFind) $targetUser = $directFind;
+                    if ($directFind)
+                        $targetUser = $directFind;
                 }
             }
-        } 
+        }
 
         // --- 2. AMBIL DATA ---
         $attendances = Attendance::where('user_id', $targetUser->id)
@@ -53,24 +56,33 @@ class AttendanceSummaryController extends Controller
 
         $leaves = LeaveRequest::where('user_id', $targetUser->id)
             ->where('status', 'approved')
-            ->where(function($q) use ($selectedYear) {
+            ->where(function ($q) use ($selectedYear) {
                 $q->whereYear('start_date', $selectedYear)
-                  ->orWhereYear('end_date', $selectedYear);
+                    ->orWhereYear('end_date', $selectedYear);
             })
             ->get();
 
         // --- 3. HITUNG PER BULAN ---
         $monthsData = [];
         $grandTotal = [
-            'total_hari' => 0, 'masuk' => 0, 'wfh' => 0, 'sakit' => 0,
-            'izin' => 0, 'cuti' => 0, 'alpha' => 0, 'telat' => 0, 
-            'pulang_cepat' => 0, 'pending' => 0
+            'total_hari' => 0,
+            'masuk' => 0,
+            'wfh' => 0,
+            'sakit' => 0,
+            'izin' => 0,
+            'cuti' => 0,
+            'libur' => 0,
+            'alpha' => 0,
+            'telat' => 0,
+            'pulang_cepat' => 0,
+            'pending' => 0
         ];
 
         // --- 4. LOOPING 12 BULAN ---
         for ($m = 1; $m <= 12; $m++) {
             // Data dari Attendance
-            $monthAtt = $attendances->filter(fn($q) => 
+            $monthAtt = $attendances->filter(
+                fn($q) =>
                 $q->check_in_time->month == $m && $q->check_in_time->year == $selectedYear
             );
 
@@ -78,7 +90,7 @@ class AttendanceSummaryController extends Controller
             $monthLeaves = $leaves->filter(function ($leave) use ($m, $selectedYear) {
                 $start = Carbon::parse($leave->start_date);
                 $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
-                
+
                 $period = CarbonPeriod::create($start, $end);
                 foreach ($period as $date) {
                     if ($date->month == $m && $date->year == $selectedYear) {
@@ -94,21 +106,22 @@ class AttendanceSummaryController extends Controller
             $sakitCount = 0;
             $izinCount = 0;
             $cutiCount = 0;
+            $liburCount = 0;
             $alphaCount = 0;
             $telatCount = 0;
             $pulangCepatCount = 0;
             $pendingCount = 0;
-            
+
             // Proses setiap attendance
             foreach ($monthAtt as $att) {
                 $date = $att->check_in_time->format('Y-m-d');
-                
+
                 // Cek apakah ada leave untuk tanggal ini
                 $leaveForDate = $monthLeaves->filter(function ($leave) use ($date) {
                     $start = Carbon::parse($leave->start_date);
                     $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
                     $period = CarbonPeriod::create($start, $end);
-                    
+
                     foreach ($period as $d) {
                         if ($d->format('Y-m-d') == $date) {
                             return true;
@@ -116,11 +129,11 @@ class AttendanceSummaryController extends Controller
                     }
                     return false;
                 })->first();
-                
+
                 if ($leaveForDate) {
                     // Ada leave, gunakan tipe leave
                     $leaveType = strtolower($leaveForDate->type);
-                    
+
                     if ($leaveType == 'telat') {
                         // Telat special case: attendance tetap masuk tapi status telat
                         $masukCount++;
@@ -131,6 +144,8 @@ class AttendanceSummaryController extends Controller
                         $izinCount++;
                     } elseif ($leaveType == 'cuti') {
                         $cutiCount++;
+                    } elseif ($leaveType == 'libur') {
+                        $liburCount++;
                     } elseif ($leaveType == 'wfh') {
                         $masukCount++;
                         $wfhCount++;
@@ -138,7 +153,7 @@ class AttendanceSummaryController extends Controller
                 } else {
                     // Tidak ada leave, gunakan attendance
                     $status = strtolower($att->presence_status ?? '');
-                    
+
                     if ($status == 'masuk' || $status == 'telat' || $status == 'izin telat') {
                         $masukCount++;
                         if ($att->is_late_checkin) {
@@ -153,37 +168,40 @@ class AttendanceSummaryController extends Controller
                         $izinCount++;
                     } elseif ($status == 'cuti') {
                         $cutiCount++;
+                    } elseif ($status == 'libur') {
+                        $liburCount++;
                     } elseif ($status == 'alpha') {
                         $alphaCount++;
                     }
-                    
+
                     if ($att->is_early_checkout) {
                         $pulangCepatCount++;
                     }
-                    
+
                     if ($att->status == 'pending_verification') {
                         $pendingCount++;
                     }
                 }
             }
-            
+
             // Hitung leaves yang tidak memiliki attendance
             $processedDates = $monthAtt->map(fn($att) => $att->check_in_time->format('Y-m-d'))->toArray();
-            
+
             foreach ($monthLeaves as $leave) {
                 $start = Carbon::parse($leave->start_date);
                 $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
                 $period = CarbonPeriod::create($start, $end);
-                
+
                 foreach ($period as $date) {
                     if ($date->month == $m && $date->year == $selectedYear) {
                         $dateStr = $date->format('Y-m-d');
-                        
+
                         // Skip jika sudah diproses di attendance
-                        if (in_array($dateStr, $processedDates)) continue;
-                        
+                        if (in_array($dateStr, $processedDates))
+                            continue;
+
                         $leaveType = strtolower($leave->type);
-                        
+
                         if ($leaveType == 'telat') {
                             $masukCount++;
                             $telatCount++;
@@ -193,6 +211,8 @@ class AttendanceSummaryController extends Controller
                             $izinCount++;
                         } elseif ($leaveType == 'cuti') {
                             $cutiCount++;
+                        } elseif ($leaveType == 'libur') {
+                            $liburCount++;
                         } elseif ($leaveType == 'wfh') {
                             $masukCount++;
                             $wfhCount++;
@@ -200,9 +220,9 @@ class AttendanceSummaryController extends Controller
                     }
                 }
             }
-            
+
             // Total hari
-            $totalHari = $masukCount + $sakitCount + $izinCount + $cutiCount + $alphaCount;
+            $totalHari = $masukCount + $sakitCount + $izinCount + $cutiCount + $liburCount + $alphaCount;
 
             $monthsData[$m] = [
                 'name' => Carbon::create()->month($m)->translatedFormat('F'),
@@ -212,15 +232,16 @@ class AttendanceSummaryController extends Controller
                 'sakit' => $sakitCount,
                 'izin' => $izinCount,
                 'cuti' => $cutiCount,
+                'libur' => $liburCount,
                 'alpha' => $alphaCount,
                 'telat' => $telatCount,
                 'pulang_cepat' => $pulangCepatCount,
                 'pending' => $pendingCount
             ];
-            
+
             // Update grand total
-            foreach($grandTotal as $key => $val) { 
-                $grandTotal[$key] += $monthsData[$m][$key] ?? 0; 
+            foreach ($grandTotal as $key => $val) {
+                $grandTotal[$key] += $monthsData[$m][$key] ?? 0;
             }
         }
 
@@ -228,10 +249,10 @@ class AttendanceSummaryController extends Controller
         $rawSummary = $monthsData[$selectedMonth];
         $summary = [
             'present' => $rawSummary['masuk'],
-            'sakit'   => $rawSummary['sakit'],
-            'izin'    => $rawSummary['izin'],
-            'alpha'   => $rawSummary['alpha'],
-            'total'   => $rawSummary['total_hari'],
+            'sakit' => $rawSummary['sakit'],
+            'izin' => $rawSummary['izin'],
+            'alpha' => $rawSummary['alpha'],
+            'total' => $rawSummary['total_hari'],
         ];
 
         return view('attendance.summary', [
@@ -241,7 +262,7 @@ class AttendanceSummaryController extends Controller
             'selectedMonth' => $selectedMonth,
             'monthsData' => $monthsData,
             'grandTotal' => $grandTotal,
-            'summary' => $summary, 
+            'summary' => $summary,
             'employees' => $employees,
         ]);
     }

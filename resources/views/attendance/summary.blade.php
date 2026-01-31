@@ -142,6 +142,7 @@
                                     <th class="text-center text-uppercase text-primary">Sakit</th>
                                     <th class="text-center text-uppercase text-secondary">Izin</th>
                                     <th class="text-center text-uppercase text-dark">Cuti</th>
+                                    <th class="text-center text-uppercase text-purple">Libur</th>
                                     <th class="text-center text-uppercase text-danger">Alpha</th>
                                     <th class="text-center text-uppercase text-warning pe-4">Telat</th>
                                 </tr>
@@ -160,6 +161,7 @@
                                             <td class="text-center text-primary">{{ $data['sakit'] > 0 ? $data['sakit'] : '-' }}</td>
                                             <td class="text-center text-secondary">{{ $data['izin'] > 0 ? $data['izin'] : '-' }}</td>
                                             <td class="text-center text-dark">{{ $data['cuti'] > 0 ? $data['cuti'] : '-' }}</td>
+                                            <td class="text-center text-purple">{{ $data['libur'] > 0 ? $data['libur'] : '-' }}</td>
                                             <td class="text-center text-danger fw-bold">{{ $data['alpha'] > 0 ? $data['alpha'] : '-' }}</td>
                                             <td class="text-center text-warning fw-bold pe-4">{{ $data['telat'] > 0 ? $data['telat'].'x' : '-' }}</td>
                                         @endif
@@ -175,6 +177,7 @@
                                     <td class="text-center text-primary">{{ $grandTotal['sakit'] }}</td>
                                     <td class="text-center text-secondary">{{ $grandTotal['izin'] }}</td>
                                     <td class="text-center text-dark">{{ $grandTotal['cuti'] }}</td>
+                                    <td class="text-center text-purple">{{ $grandTotal['libur'] }}</td>
                                     <td class="text-center text-danger">{{ $grandTotal['alpha'] }}</td>
                                     <td class="text-center text-warning pe-4">{{ $grandTotal['telat'] }}x</td>
                                 </tr>
