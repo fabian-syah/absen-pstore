@@ -49,6 +49,10 @@
                                     <td class="text-muted ps-0">Jabatan</td>
                                     <td class="fw-bold text-dark">: {{ $salary->user->division->name ?? 'Staff' }}</td>
                                 </tr>
+                                <tr>
+                                    <td class="text-muted ps-0">Cabang</td>
+                                    <td class="fw-bold text-dark">: {{ $salary->branch->name }}</td>
+                                </tr>
                             </table>
                         </div>
                         <div class="col-6 text-end">
