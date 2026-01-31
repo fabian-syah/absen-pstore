@@ -241,19 +241,20 @@ class TeamController extends Controller
                         }
                     }
 
-                    if ($att || $isOvertime)
+                    if ($leave && $leave->type == 'libur') {
+                        $libur++;
+                    } elseif ($att || $isOvertime) {
                         $present++;
-                    elseif ($leave) {
+                    } elseif ($leave) {
                         if ($leave->type == 'sakit')
                             $sakit++;
                         elseif ($leave->type == 'wfh')
                             $present++;
-                        elseif ($leave->type == 'libur')
-                            $libur++;
                         else
                             $izin_cuti++;
-                    } else
+                    } else {
                         $alpha++;
+                    }
                 }
 
                 $branch->stats_today = ['present' => $present, 'sakit' => $sakit, 'izin' => $izin_cuti, 'alpha' => $alpha, 'lembur' => $lembur, 'libur' => $libur];
