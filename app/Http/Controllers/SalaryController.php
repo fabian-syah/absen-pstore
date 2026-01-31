@@ -337,4 +337,12 @@ class SalaryController extends Controller
         $salary->delete();
         return back()->with('success', 'Deleted.');
     }
+
+    public function togglePaymentMethod(Salary $salary)
+    {
+        $newMethod = ($salary->payment_method == 'transfer') ? 'cash' : 'transfer';
+        $salary->update(['payment_method' => $newMethod]);
+
+        return back()->with('success', 'Metode pembayaran diperbarui menjadi: ' . ucfirst($newMethod));
+    }
 }

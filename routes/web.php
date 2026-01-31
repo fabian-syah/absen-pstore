@@ -322,6 +322,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::middleware(['auth', 'role:admin,admin_gaji'])->group(function () {
         Route::get('/salaries', [SalaryController::class, 'index'])->name('salaries.index');
 
+        Route::patch('/salaries/{salary}/toggle-payment-method', [SalaryController::class, 'togglePaymentMethod'])->name('salaries.toggle-payment-method');
+
         // Route SHOW menangkap semua ID, jadi harus ditaruh paling bawah di section salary
         Route::get('/salaries/{salary}', [SalaryController::class, 'show'])->name('salaries.show');
     });

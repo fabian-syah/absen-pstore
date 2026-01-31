@@ -129,10 +129,24 @@
                                             </h5>
                                         </td>
                                         <td>
-                                            @if($salary->payment_method == 'transfer')
-                                                <span class="badge badge-opacity-primary"><i class="mdi mdi-bank"></i> Transfer</span>
+                                            @if(in_array(auth()->user()->role, ['admin', 'admin_gaji', 'owner']))
+                                                <form action="{{ route('salaries.toggle-payment-method', $salary->id) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="btn btn-sm {{ $salary->payment_method == 'transfer' ? 'btn-outline-primary' : 'btn-outline-success' }} rounded-pill border-0" style="cursor: pointer;" title="Klik untuk ubah metode bayar">
+                                                        @if($salary->payment_method == 'transfer')
+                                                            <i class="mdi mdi-bank"></i> Transfer
+                                                        @else
+                                                            <i class="mdi mdi-cash"></i> Tunai
+                                                        @endif
+                                                    </button>
+                                                </form>
                                             @else
-                                                <span class="badge badge-opacity-success"><i class="mdi mdi-cash"></i> Tunai</span>
+                                                @if($salary->payment_method == 'transfer')
+                                                    <span class="badge badge-opacity-primary"><i class="mdi mdi-bank"></i> Transfer</span>
+                                                @else
+                                                    <span class="badge badge-opacity-success"><i class="mdi mdi-cash"></i> Tunai</span>
+                                                @endif
                                             @endif
                                         </td>
                                         <td class="text-center">
