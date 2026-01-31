@@ -21,7 +21,8 @@
                                 <select name="month" class="form-select form-select-sm">
                                     <option value="">Semua Bulan</option>
                                     @foreach(range(1, 12) as $m)
-                                        <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
+                                        @php $paddedMonth = sprintf('%02d', $m); @endphp
+                                        <option value="{{ $paddedMonth }}" {{ request('month') == $paddedMonth ? 'selected' : '' }}>
                                             {{ \Carbon\Carbon::create()->month($m)->isoFormat('MMMM') }}
                                         </option>
                                     @endforeach
