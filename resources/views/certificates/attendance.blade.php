@@ -214,6 +214,8 @@
                 margin: 0 !important;
                 padding: 0 !important;
                 background: white !important;
+                height: auto !important;
+                overflow: visible !important;
             }
 
             .container-scroller,
@@ -227,6 +229,8 @@
                 padding: 0 !important;
                 width: 100% !important;
                 max-width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
             }
 
             .main-panel {
@@ -234,25 +238,116 @@
                 width: 100% !important;
             }
 
-            /* Certificate styling for print */
+            /* Certificate styling for print - FIT IN ONE PAGE */
             .certificate-container {
                 box-shadow: none !important;
                 margin: 0 !important;
-                padding: 30px !important;
+                padding: 15px !important;
                 width: 100% !important;
                 max-width: 100% !important;
-                min-height: 100vh !important;
+                height: 100vh !important;
+                max-height: 100vh !important;
                 border-radius: 0 !important;
+                overflow: hidden !important;
+                page-break-inside: avoid !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
             }
 
             .certificate-border {
-                min-height: calc(100vh - 60px) !important;
+                padding: 15px !important;
+                height: calc(100vh - 30px) !important;
                 display: flex !important;
                 flex-direction: column !important;
-                justify-content: center !important;
+                justify-content: space-evenly !important;
+                page-break-inside: avoid !important;
+            }
+
+            /* Reduce sizes to fit one page */
+            .certificate-header {
+                margin-bottom: 10px !important;
+            }
+
+            .certificate-badge {
+                padding: 5px 15px !important;
+                font-size: 0.7rem !important;
+                margin-bottom: 5px !important;
+            }
+
+            .certificate-title {
+                font-size: 1.8rem !important;
+                margin-bottom: 3px !important;
+            }
+
+            .certificate-subtitle {
+                font-size: 0.8rem !important;
+            }
+
+            .rank-badge {
+                width: 80px !important;
+                height: 80px !important;
+                margin: 0 auto 10px !important;
+            }
+
+            .rank-number {
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 0.9rem !important;
+                top: -5px !important;
+                right: -5px !important;
+            }
+
+            .recipient-name {
+                font-size: 1.4rem !important;
+                margin-bottom: 3px !important;
+            }
+
+            .recipient-role {
+                font-size: 0.75rem !important;
+                margin-bottom: 10px !important;
+            }
+
+            .certificate-body {
+                margin-bottom: 10px !important;
+                line-height: 1.4 !important;
+            }
+
+            .certificate-body p {
+                font-size: 0.8rem !important;
+                margin-bottom: 5px !important;
+            }
+
+            .certificate-body h3 {
+                font-size: 1.1rem !important;
+                margin: 5px 0 !important;
+            }
+
+            .stats-row {
+                margin: 10px 0 !important;
+                gap: 2rem !important;
+            }
+
+            .stat-value {
+                font-size: 1.5rem !important;
+            }
+
+            .stat-label {
+                font-size: 0.7rem !important;
+            }
+
+            .certificate-footer {
+                margin-top: 10px !important;
+                padding-top: 10px !important;
+            }
+
+            .company-name {
+                font-size: 1rem !important;
+                margin-bottom: 3px !important;
+            }
+
+            .certificate-date {
+                font-size: 0.75rem !important;
             }
 
             /* Ensure colors print correctly */
@@ -267,15 +362,6 @@
             @page {
                 size: A4 portrait;
                 margin: 0;
-            }
-
-            /* Hide URL at bottom */
-            @page :footer {
-                display: none;
-            }
-
-            @page :header {
-                display: none;
             }
         }
     </style>
