@@ -189,12 +189,73 @@
         }
 
         @media print {
-            .no-print {
+            /* Hide everything except certificate */
+            .no-print,
+            .sidebar,
+            .navbar,
+            .nav-sidebar,
+            .main-panel > .navbar,
+            .footer,
+            .breadcrumb,
+            header,
+            nav,
+            aside,
+            .sidebar-offcanvas,
+            .page-body-wrapper > .sidebar,
+            .btn,
+            button {
                 display: none !important;
             }
 
+            /* Reset body and container */
+            body,
+            html {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+
+            .container-scroller,
+            .container-fluid,
+            .main-panel,
+            .content-wrapper,
+            .page-body-wrapper,
+            .row,
+            .col-lg-8 {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .main-panel {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+
+            /* Certificate styling for print */
             .certificate-container {
-                box-shadow: none;
+                box-shadow: none !important;
+                margin: 0 auto !important;
+                padding: 20px !important;
+                width: 100% !important;
+                max-width: 700px !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            /* Ensure colors print correctly */
+            .certificate-container,
+            .certificate-container * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
             }
         }
     </style>
