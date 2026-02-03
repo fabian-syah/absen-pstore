@@ -375,13 +375,10 @@
     <div class="row justify-content-center">
         <div class="col-lg-8">
 
-            {{-- Print Button --}}
+            {{-- Back Button Only --}}
             <div class="mb-3 text-end no-print">
-                <button onclick="window.print()" class="btn btn-primary">
-                    <i class="mdi mdi-printer me-1"></i> Cetak Sertifikat
-                </button>
-                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary ms-2">
-                    <i class="mdi mdi-arrow-left me-1"></i> Kembali
+                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="mdi mdi-arrow-left me-1"></i> Kembali ke Dashboard
                 </a>
             </div>
 
