@@ -600,4 +600,66 @@ class UserController extends Controller
             return response()->json(['success' => false], 500);
         }
     }
+
+    /**
+     * Monitor Upload Dokumen (KTP & Foto Profil)
+     * Menampilkan daftar user yang sudah upload foto profil atau KTP
+     */
+    public function documentUploads(Request $request)
+    {
+        $user = Auth::user();
+        $search = $request->search;
+        $filter = $request->filter ?? 'all'; // all, complete, incomplete
+
+        $query = User::with(['branch', 'divisions'])
+            ->where('is_active', true)
+            ->where('role', '!=', 'admin'); // Exclude admin dari monitoring
+
+        // Filter berdasarkan branch jika admin cabang
+        if ($user->role == 'admin' && $user->branch_id != null) {
+            $query->where('branch_id', $user->branch_id);
+        }
+
+        // Filter berdasarkan status upload
+        if ($filter == 'complete') {
+            $query->whereNotNull('profile_photo_path')
+                ->whereNotNull('ktp_photo_path');
+        } elseif ($filter == 'incomplete') {
+            $query->where(function ($q) {
+                $q->whereNull('profile_photo_path')
+                    ->orWhereNull('ktp_photo_path');
+            });
+        }
+
+        // Pencarian
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('login_id', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Urutkan berdasarkan updated_at (yang baru upload di atas)
+        $users = $query->latest('updated_at')->paginate(15)->appends([
+            'search' => $search,
+            'filter' => $filter
+        ]);
+
+        // Hitung statistik
+        $statsQuery = User::where('is_active', true)->where('role', '!=', 'admin');
+        if ($user->role == 'admin' && $user->branch_id != null) {
+            $statsQuery->where('branch_id', $user->branch_id);
+        }
+
+        $stats = [
+            'total' => (clone $statsQuery)->count(),
+            'complete' => (clone $statsQuery)->whereNotNull('profile_photo_path')->whereNotNull('ktp_photo_path')->count(),
+            'incomplete' => (clone $statsQuery)->where(function ($q) {
+                $q->whereNull('profile_photo_path')->orWhereNull('ktp_photo_path');
+            })->count(),
+        ];
+
+        return view('users.document_uploads', compact('users', 'stats', 'filter'));
+    }
 }

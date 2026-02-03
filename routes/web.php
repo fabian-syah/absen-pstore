@@ -356,6 +356,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::patch('/users/{user}/approve-ktp', [UserController::class, 'approveKtpRequest'])->name('users.approve-ktp');
         Route::patch('/users/{user}/reject-ktp', [UserController::class, 'rejectKtpRequest'])->name('users.reject-ktp');
 
+        // MONITOR UPLOAD DOKUMEN (ADMIN ONLY)
+        Route::get('/users/document-uploads', [UserController::class, 'documentUploads'])->name('users.document-uploads');
+
         // USER MANAGEMENT (Resource tanpa show)
         // INI AKAN MEMBUAT ROUTE: GET /users/create
         Route::resource('users', UserController::class)->except(['show']);

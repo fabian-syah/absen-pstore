@@ -48,6 +48,7 @@
             opacity: 0;
             transform: translateX(-15px);
         }
+
         to {
             opacity: 1;
             transform: translateX(0);
@@ -55,12 +56,29 @@
     }
 
     /* Stagger animation for menu items */
-    .sidebar .nav-item:nth-child(1) { animation-delay: 0.05s; }
-    .sidebar .nav-item:nth-child(2) { animation-delay: 0.1s; }
-    .sidebar .nav-item:nth-child(3) { animation-delay: 0.15s; }
-    .sidebar .nav-item:nth-child(4) { animation-delay: 0.2s; }
-    .sidebar .nav-item:nth-child(5) { animation-delay: 0.25s; }
-    .sidebar .nav-item:nth-child(6) { animation-delay: 0.3s; }
+    .sidebar .nav-item:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .sidebar .nav-item:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+
+    .sidebar .nav-item:nth-child(3) {
+        animation-delay: 0.15s;
+    }
+
+    .sidebar .nav-item:nth-child(4) {
+        animation-delay: 0.2s;
+    }
+
+    .sidebar .nav-item:nth-child(5) {
+        animation-delay: 0.25s;
+    }
+
+    .sidebar .nav-item:nth-child(6) {
+        animation-delay: 0.3s;
+    }
 
     .sidebar .nav-item .nav-link {
         display: flex;
@@ -147,8 +165,15 @@
     }
 
     @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
     }
 
     .sidebar .badge-danger {
@@ -237,7 +262,7 @@
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <ul class="nav">
         {{-- =================================== --}}
-        {{--       DASHBOARD (SEMUA ROLE)        --}}
+        {{-- DASHBOARD (SEMUA ROLE) --}}
         {{-- =================================== --}}
         <li class="nav-item">
             <a class="nav-link" href="/">
@@ -247,7 +272,7 @@
         </li>
 
         {{-- =================================== --}}
-        {{--   RIWAYAT ABSENSI (EXCEPT GAJI)     --}}
+        {{-- RIWAYAT ABSENSI (EXCEPT GAJI) --}}
         {{-- =================================== --}}
         @if (auth()->user()->role != 'admin_gaji')
             <li class="nav-item">
@@ -271,7 +296,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    MENU UMUM (EXCEPT ADMIN GAJI)    --}}
+        {{-- MENU UMUM (EXCEPT ADMIN GAJI) --}}
         {{-- =================================== --}}
         @if (auth()->user()->role != 'admin_gaji')
             <li class="nav-item nav-category">Menu Umum</li>
@@ -302,7 +327,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--        GAJI KU (SEMUA ROLE)         --}}
+        {{-- GAJI KU (SEMUA ROLE) --}}
         {{-- =================================== --}}
         @if (auth()->user()->role != 'admin')
             <li class="nav-item nav-category">Keuangan</li>
@@ -325,25 +350,25 @@
         @endif
 
         {{-- =================================== --}}
-        {{--           MENU KASBON               --}}
+        {{-- MENU KASBON --}}
         {{-- =================================== --}}
-        
+
         {{-- 1. Menu Utama Kasbon (Semua Role bisa akses untuk pengajuan/lihat data) --}}
         @if (auth()->user()->role != 'admin')
             <li class="nav-item">
-            <a class="nav-link" href="{{ route('kasbon.index') }}">
-                <i class="menu-icon mdi mdi-cash-multiple"></i>
-                <span class="menu-title">
-                {{ in_array(auth()->user()->role, ['admin_gaji']) ? 'Data Kasbon' : 'Kasbon Saya' }}
-                </span>
-            </a>
+                <a class="nav-link" href="{{ route('kasbon.index') }}">
+                    <i class="menu-icon mdi mdi-cash-multiple"></i>
+                    <span class="menu-title">
+                        {{ in_array(auth()->user()->role, ['admin_gaji']) ? 'Data Kasbon' : 'Kasbon Saya' }}
+                    </span>
+                </a>
             </li>
         @elseif (auth()->user()->role == 'admin_gaji')
             <li class="nav-item">
-            <a class="nav-link" href="{{ route('kasbon.index') }}">
-                <i class="menu-icon mdi mdi-cash-multiple"></i>
-                <span class="menu-title">Data Kasbon</span>
-            </a>
+                <a class="nav-link" href="{{ route('kasbon.index') }}">
+                    <i class="menu-icon mdi mdi-cash-multiple"></i>
+                    <span class="menu-title">Data Kasbon</span>
+                </a>
             </li>
         @endif
 
@@ -354,20 +379,20 @@
                 $pendingCount = \App\Models\CashAdvanceInstallment::where('status', 'pending')->count();
             @endphp
             <li class="nav-item">
-            <a class="nav-link" href="{{ route('kasbon.verification') }}">
-                <i class="menu-icon mdi mdi-cash-check"></i>
-                <span class="menu-title">Verifikasi Bayar</span>
+                <a class="nav-link" href="{{ route('kasbon.verification') }}">
+                    <i class="menu-icon mdi mdi-cash-check"></i>
+                    <span class="menu-title">Verifikasi Bayar</span>
 
-                {{-- Badge Merah jika ada yang pending --}}
-                @if($pendingCount > 0)
-                    <span class="badge badge-danger rounded-pill ms-auto">{{ $pendingCount }}</span>
-                @endif
-            </a>
+                    {{-- Badge Merah jika ada yang pending --}}
+                    @if($pendingCount > 0)
+                        <span class="badge badge-danger rounded-pill ms-auto">{{ $pendingCount }}</span>
+                    @endif
+                </a>
             </li>
         @endif
 
         {{-- =================================== --}}
-        {{--   MANAJEMEN GAJI (ADMIN & GAJI)     --}}
+        {{-- MANAJEMEN GAJI (ADMIN & GAJI) --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin_gaji')
             <li class="nav-item nav-category">Admin Gaji</li>
@@ -386,7 +411,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--     MENU KHUSUS SUPER ADMIN         --}}
+        {{-- MENU KHUSUS SUPER ADMIN --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Menu Cabang</li>
@@ -409,7 +434,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--     MANAJEMEN TIM (ADMIN ONLY)      --}}
+        {{-- MANAJEMEN TIM (ADMIN ONLY) --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Manajemen Tim</li>
@@ -427,10 +452,28 @@
                     <span class="menu-title">Data User</span>
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('users.document-uploads') }}">
+                    <i class="menu-icon mdi mdi-file-document-check-outline"></i>
+                    <span class="menu-title">Monitor Upload Dokumen</span>
+                    @php
+                        $incompleteCount = \App\Models\User::where('is_active', true)
+                            ->where('role', '!=', 'admin')
+                            ->where(function ($q) {
+                                $q->whereNull('profile_photo_path')
+                                    ->orWhereNull('ktp_photo_path');
+                            })->count();
+                    @endphp
+                    @if ($incompleteCount > 0)
+                        <span class="badge badge-danger ms-2">{{ $incompleteCount }}</span>
+                    @endif
+                </a>
+            </li>
         @endif
 
         {{-- =================================== --}}
-        {{--    MANAJEMEN TIM (AUDIT ONLY)       --}}
+        {{-- MANAJEMEN TIM (AUDIT ONLY) --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'audit')
             <li class="nav-item nav-category">Manajemen Tim</li>
@@ -443,7 +486,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--    VERIFIKASI (ADMIN & AUDIT)       --}}
+        {{-- VERIFIKASI (ADMIN & AUDIT) --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Verifikasi</li>
@@ -491,7 +534,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--        MENU SECURITY                --}}
+        {{-- MENU SECURITY --}}
         {{-- =================================== --}}
         @if (auth()->user()->role == 'security' || auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Menu Security</li>
@@ -514,7 +557,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--   MENU PENGGUNA (TEAM/BRANCH)       --}}
+        {{-- MENU PENGGUNA (TEAM/BRANCH) --}}
         {{-- =================================== --}}
         @if (in_array(auth()->user()->role, ['user_biasa', 'leader', 'audit', 'security', 'admin']))
 
@@ -538,7 +581,7 @@
         @endif
 
         {{-- =================================== --}}
-        {{--   MONITORING (ADMIN, AUDIT, LEADER) --}}
+        {{-- MONITORING (ADMIN, AUDIT, LEADER) --}}
         {{-- =================================== --}}
         @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
             <li class="nav-item nav-category">Monitoring Wilayah</li>
