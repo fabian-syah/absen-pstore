@@ -259,10 +259,12 @@
 
             .certificate-border {
                 padding: 8mm !important;
-                height: calc(297mm - 20mm - 16mm) !important; /* A4 height - container padding - border padding */
+                height: calc(297mm - 20mm - 16mm) !important;
                 display: flex !important;
                 flex-direction: column !important;
-                justify-content: space-between !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 8px !important;
                 page-break-inside: avoid !important;
             }
 
