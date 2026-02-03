@@ -67,6 +67,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // Route Test Notifikasi
     Route::get('/test-notification', [DashboardController::class, 'testNotification'])->name('test.notification');
 
+    // Route Sertifikat Penghargaan
+    Route::get('/attendance-certificate', [App\Http\Controllers\CertificateController::class, 'show'])->name('certificate.attendance');
+
     Route::post('/update-fcm-token', [UserController::class, 'updateFcmToken'])->name('update.fcm.token');
     Route::get('/kasbon/export', [App\Http\Controllers\CashAdvanceController::class, 'export'])->name('kasbon.export');
     Route::post('/kasbon/bulk-approve', [CashAdvanceController::class, 'bulkApprove'])->name('kasbon.bulk-approve'); // <--- NEW ROUTE
