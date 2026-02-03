@@ -62,7 +62,12 @@ class UserController extends Controller
             $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
             if ($user->branch_id)
                 $allowedBranchIds[] = $user->branch_id;
-            $activeQuery->whereIn('branch_id', array_unique($allowedBranchIds));
+
+            // Fix: Pastikan user selalu bisa melihat dirinya sendiri meskipun branch_id null atau tidak ada di list
+            $activeQuery->where(function ($q) use ($allowedBranchIds, $user) {
+                $q->whereIn('branch_id', array_unique($allowedBranchIds))
+                    ->orWhere('id', $user->id);
+            });
         }
 
         // --- PENCARIAN (Berlaku untuk keduanya) ---
