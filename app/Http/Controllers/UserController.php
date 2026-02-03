@@ -80,8 +80,8 @@ class UserController extends Controller
             });
         }
 
-        $users = $activeQuery->latest()->paginate(10, ['*'], 'active_page')->appends(['search' => $search]);
-        $inactiveUsers = $inactiveQuery->latest()->paginate(10, ['*'], 'inactive_page')->appends(['search' => $search]);
+        $users = $activeQuery->latest()->paginate(10, ['*'], 'active_page')->appends(['search' => $search, 'tab' => 'active']);
+        $inactiveUsers = $inactiveQuery->latest('updated_at')->paginate(10, ['*'], 'inactive_page')->appends(['search' => $search, 'tab' => 'inactive']);
 
         return view('users.user_index', compact('users', 'inactiveUsers'));
     }

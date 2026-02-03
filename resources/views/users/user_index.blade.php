@@ -44,15 +44,18 @@
                         <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
                     @endif
 
+                    @php
+                        $activeTab = request('tab') == 'inactive' ? 'inactive' : 'active';
+                    @endphp
                     {{-- NAV TABS UNTUK MEMISAHKAN AKTIF & NON-AKTIF --}}
                     <ul class="nav nav-tabs tab-basic mb-3" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="active-tab" data-bs-toggle="tab" href="#active-users" role="tab" aria-controls="active-users" aria-selected="true">
+                            <a class="nav-link {{ $activeTab == 'active' ? 'active' : '' }}" id="active-tab" data-bs-toggle="tab" href="#active-users" role="tab" aria-controls="active-users" aria-selected="{{ $activeTab == 'active' ? 'true' : 'false' }}">
                                 User Aktif <span class="badge bg-success ms-1 text-white">{{ $users->total() }}</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="inactive-tab" data-bs-toggle="tab" href="#inactive-users" role="tab" aria-controls="inactive-users" aria-selected="false">
+                            <a class="nav-link {{ $activeTab == 'inactive' ? 'active' : '' }}" id="inactive-tab" data-bs-toggle="tab" href="#inactive-users" role="tab" aria-controls="inactive-users" aria-selected="{{ $activeTab == 'inactive' ? 'true' : 'false' }}">
                                 EX Karyawan <span class="badge bg-danger ms-1 text-white">{{ $inactiveUsers->total() }}</span>
                             </a>
                         </li>
@@ -60,7 +63,7 @@
 
                     <div class="tab-content tab-content-basic">
                         {{-- TAB 1: USER AKTIF --}}
-                        <div class="tab-pane fade show active" id="active-users" role="tabpanel" aria-labelledby="active-tab">
+                        <div class="tab-pane fade {{ $activeTab == 'active' ? 'show active' : '' }}" id="active-users" role="tabpanel" aria-labelledby="active-tab">
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
@@ -195,7 +198,7 @@
                         </div>
 
                         {{-- TAB 2: EX KARYAWAN (NON-AKTIF) --}}
-                        <div class="tab-pane fade" id="inactive-users" role="tabpanel" aria-labelledby="inactive-tab">
+                        <div class="tab-pane fade {{ $activeTab == 'inactive' ? 'show active' : '' }}" id="inactive-users" role="tabpanel" aria-labelledby="inactive-tab">
                             <div class="table-responsive">
                                 <table class="table table-hover border-danger">
                                     <thead>
@@ -213,15 +216,21 @@
                                             <tr class="opacity-75">
                                                 <td> {{ $inactiveUsers->firstItem() + $key }} </td>
                                                 <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="me-3">
-                                                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=f8d7da&color=721c24" alt="profile" class="img-sm rounded-circle">
+                                                    <a href="{{ route('users.show', $user->id) }}" class="text-decoration-none" style="color: inherit;">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="me-3 position-relative">
+                                                                @if ($user->profile_photo_path)
+                                                                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="profile" class="img-sm rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                                                @else
+                                                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=f8d7da&color=721c24" alt="profile" class="img-sm rounded-circle">
+                                                                @endif
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-bold text-danger">{{ $user->name }}</div>
+                                                                <small class="text-muted">ID: {{ $user->login_id ?? '-' }}</small>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <div class="fw-bold text-danger">{{ $user->name }}</div>
-                                                            <small class="text-muted">ID: {{ $user->login_id ?? '-' }}</small>
-                                                        </div>
-                                                    </div>
+                                                    </a>
                                                 </td>
                                                 <td>{{ $user->email }}</td>
                                                 <td>
