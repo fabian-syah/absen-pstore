@@ -238,29 +238,31 @@
                 width: 100% !important;
             }
 
-            /* Certificate styling for print - FIT IN ONE PAGE */
+            /* Certificate styling for print - FIT IN ONE PAGE A4 (210mm x 297mm) */
             .certificate-container {
                 box-shadow: none !important;
                 margin: 0 !important;
-                padding: 15px !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                height: 100vh !important;
-                max-height: 100vh !important;
+                padding: 10mm !important;
+                width: 210mm !important;
+                max-width: 210mm !important;
+                height: 297mm !important;
+                max-height: 297mm !important;
                 border-radius: 0 !important;
                 overflow: hidden !important;
                 page-break-inside: avoid !important;
+                page-break-after: avoid !important;
+                page-break-before: avoid !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
             }
 
             .certificate-border {
-                padding: 15px !important;
-                height: calc(100vh - 30px) !important;
+                padding: 8mm !important;
+                height: calc(297mm - 20mm - 16mm) !important; /* A4 height - container padding - border padding */
                 display: flex !important;
                 flex-direction: column !important;
-                justify-content: space-evenly !important;
+                justify-content: space-between !important;
                 page-break-inside: avoid !important;
             }
 
