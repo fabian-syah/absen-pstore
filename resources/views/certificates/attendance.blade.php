@@ -189,19 +189,20 @@
         }
 
         @media print {
+
             /* Hide everything except certificate */
             .no-print,
             .sidebar,
             .navbar,
             .nav-sidebar,
-            .main-panel > .navbar,
+            .main-panel>.navbar,
             .footer,
             .breadcrumb,
             header,
             nav,
             aside,
             .sidebar-offcanvas,
-            .page-body-wrapper > .sidebar,
+            .page-body-wrapper>.sidebar,
             .btn,
             button {
                 display: none !important;
@@ -236,13 +237,22 @@
             /* Certificate styling for print */
             .certificate-container {
                 box-shadow: none !important;
-                margin: 0 auto !important;
-                padding: 20px !important;
+                margin: 0 !important;
+                padding: 30px !important;
                 width: 100% !important;
-                max-width: 700px !important;
+                max-width: 100% !important;
+                min-height: 100vh !important;
+                border-radius: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
+            }
+
+            .certificate-border {
+                min-height: calc(100vh - 60px) !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
             }
 
             /* Ensure colors print correctly */
@@ -253,9 +263,19 @@
                 color-adjust: exact !important;
             }
 
+            /* Remove browser headers/footers and make full page */
             @page {
                 size: A4 portrait;
-                margin: 10mm;
+                margin: 0;
+            }
+
+            /* Hide URL at bottom */
+            @page :footer {
+                display: none;
+            }
+
+            @page :header {
+                display: none;
             }
         }
     </style>
