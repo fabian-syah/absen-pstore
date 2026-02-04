@@ -568,6 +568,17 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         }
     });
 
+    Route::get('/fix-balance', function () {
+        $u = \App\Models\User::where('name', 'Super Admin PStore')->first();
+        if ($u) {
+            $u->leave_balance = 10;
+            $u->leave_taken = 0;
+            $u->save();
+            return "Saldo Super Admin PStore berhasil direset ke 10.";
+        }
+        return "User tidak ditemukan.";
+    });
+
     Route::fallback(function () {
         return response()->view('errors.404', [], 404);
     });
