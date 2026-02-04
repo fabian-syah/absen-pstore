@@ -171,13 +171,26 @@ class SalaryController extends Controller
         }
 
         // [BARU] Hitung Cuti Lebih (kelebihan dari jatah tahunan)
-        // Ini dihitung berdasarkan leave_balance yang sudah negatif
+        // Dihitung DINAMIS dari approved cuti di TAHUN INI
         $cutiLebih = 0;
         if ($selectedUser) {
             $yearlyLimit = $selectedUser->yearly_leave_limit ?? 12;
-            $leaveTaken = $selectedUser->leave_taken ?? 0;
-            if ($leaveTaken > $yearlyLimit) {
-                $cutiLebih = $leaveTaken - $yearlyLimit;
+            $currentYear = now()->year;
+
+            // Hitung total hari cuti yang sudah disetujui TAHUN INI
+            $totalApprovedCutiDays = LeaveRequest::where('user_id', $selectedUserId)
+                ->where('type', 'cuti')
+                ->where('status', 'approved')
+                ->whereYear('start_date', $currentYear)
+                ->get()
+                ->sum(function ($req) {
+                    $start = Carbon::parse($req->start_date);
+                    $end = $req->end_date ? Carbon::parse($req->end_date) : $start;
+                    return $start->diffInDays($end) + 1;
+                });
+
+            if ($totalApprovedCutiDays > $yearlyLimit) {
+                $cutiLebih = $totalApprovedCutiDays - $yearlyLimit;
             }
         }
 
