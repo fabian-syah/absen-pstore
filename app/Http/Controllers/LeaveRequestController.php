@@ -81,6 +81,15 @@ class LeaveRequestController extends Controller
     }
 
     /**
+     * MENAMPILKAN FORM KHUSUS CUTI
+     */
+    public function createCuti()
+    {
+        $user = Auth::user();
+        return view('leave_requests.create_cuti', compact('user'));
+    }
+
+    /**
      * MENYIMPAN DATA PENGAJUAN
      */
     public function store(Request $request)

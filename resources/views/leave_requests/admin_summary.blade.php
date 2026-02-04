@@ -44,8 +44,8 @@
                                             <div class="d-flex align-items-center">
                                                 {{-- Avatar Placeholder --}}
                                                 <div class="avatar-sm me-3">
-                                                    @if($usr->photo_path)
-                                                        <img src="{{ asset('storage/' . $usr->photo_path) }}" alt="..."
+                                                    @if($usr->profile_photo_path)
+                                                        <img src="{{ asset('storage/' . $usr->profile_photo_path) }}" alt="..."
                                                             class="avatar-img rounded-circle"
                                                             style="width: 40px; height: 40px; object-fit: cover;">
                                                     @else

@@ -31,12 +31,13 @@
                             <select name="type" id="type" class="form-control form-select" required
                                 onchange="toggleInputs()">
                                 <option value="" disabled selected>-- Pilih Jenis --</option>
-                                <option value="telat" {{ old('type') == 'telat' ? 'selected' : '' }}>Izin Telat</option>
-                                <option value="wfh" {{ old('type') == 'wfh' ? 'selected' : '' }}>WFH / Dinas Luar</option>
-                                <option value="libur" {{ old('type') == 'libur' ? 'selected' : '' }}>Libur (Off Day)</option>
-                                <option value="izin" {{ old('type') == 'izin' ? 'selected' : '' }}>Izin</option>
+                                <option value="izin" {{ old('type') == 'izin' ? 'selected' : '' }}>Izin / Keperluan Pribadi
+                                </option>
                                 <option value="sakit" {{ old('type') == 'sakit' ? 'selected' : '' }}>Sakit</option>
-                                <option value="cuti" {{ old('type') == 'cuti' ? 'selected' : '' }}>Cuti</option>
+                                <option value="wfh" {{ old('type') == 'wfh' ? 'selected' : '' }}>WFH (Work From Home)</option>
+                                <option value="dinas" {{ old('type') == 'dinas' ? 'selected' : '' }}>Dinas Luar</option>
+                                <option value="telat" {{ old('type') == 'telat' ? 'selected' : '' }}>Izin Terlambat</option>
+                                <option value="libur" {{ old('type') == 'libur' ? 'selected' : '' }}>Izin Libur</option>
                             </select>
                         </div>
 

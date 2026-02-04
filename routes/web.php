@@ -446,6 +446,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             // [NEW] Riwayat Cuti
             Route::get('/riwayat-cuti', [LeaveRequestController::class, 'cutiHistory'])->name('cuti-history');
 
+            // [NEW] Form Cuti Terpisah
+            Route::get('/create-cuti', [LeaveRequestController::class, 'createCuti'])->name('create-cuti');
+
             Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');
             Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
             Route::post('/store', [LeaveRequestController::class, 'store'])->name('store');
