@@ -369,4 +369,49 @@ class LeaveRequestController extends Controller
 
         return view('leave_requests.cuti_history', compact('requests', 'user'));
     }
+    /**
+     * MONITORING CUTI (ADMIN & ADMIN GAJI)
+     * Menampilkan daftar user beserta sisa cuti mereka.
+     */
+    public function adminSummary(Request $request)
+    {
+        $user = Auth::user();
+
+        // Security Check (Middleware should handle this, but extra safety)
+        if (!in_array($user->role, ['admin', 'admin_gaji', 'audit'])) {
+            abort(403, 'Unauthorized');
+        }
+
+        $query = \App\Models\User::query()
+            ->with(['branch', 'division'])
+            ->where('is_active', 1) // Hanya user aktif
+            ->where('role', '!=', 'super_admin'); // Exclude super admin if needed
+
+        // Filter Pencarian Nama
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter Cabang (Jika Audit)
+        if ($user->role == 'audit') {
+            $pivotBranchIds = $user->branches->pluck('id')->toArray();
+            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!empty($myBranchIds)) {
+                $query->whereIn('branch_id', $myBranchIds);
+            } else {
+                // Audit tanpa cabang msg-msg tidak lihat apa2
+                $query->where('id', 0);
+            }
+        }
+
+        $users = $query->orderBy('name')->paginate(15);
+
+        return view('leave_requests.admin_summary', compact('users'));
+    }
 }

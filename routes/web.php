@@ -435,6 +435,12 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE LEAVE REQUESTS ===
     Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
+
+        // [NEW] Monitoring Cuti (Admin, Audit, Admin Gaji)
+        Route::get('/monitoring', [LeaveRequestController::class, 'adminSummary'])
+            ->name('admin-summary')
+            ->middleware('role:admin,admin_gaji,audit');
+
         // Pastikan middleware mencakup: user_biasa, leader, audit, security, admin
         Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
             // [NEW] Riwayat Cuti

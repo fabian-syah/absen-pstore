@@ -497,6 +497,13 @@
                     <span class="menu-title">Verifikasi Absensi</span>
                 </a>
             </li>
+            {{-- [NEW] Monitoring Cuti --}}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('leave-requests.admin-summary') }}">
+                    <i class="menu-icon mdi mdi-account-search"></i>
+                    <span class="menu-title">Monitoring Cuti</span>
+                </a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('leave-requests.index') }}">
                     <i class="menu-icon mdi mdi-clock-alert-outline"></i>
