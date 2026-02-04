@@ -144,7 +144,7 @@
                                             <div class="d-flex flex-column align-items-center">
                                                 <i class="mdi mdi-calendar-remove text-muted" style="font-size: 3rem;"></i>
                                                 <p class="text-muted mt-2">Belum ada riwayat cuti.</p>
-                                                <a href="{{ route('leave-requests.create') }}"
+                                                <a href="{{ route('leave-requests.create-cuti') }}"
                                                     class="btn btn-primary btn-sm rounded-pill mt-2">Ajukan Cuti Sekarang</a>
                                             </div>
                                         </td>
