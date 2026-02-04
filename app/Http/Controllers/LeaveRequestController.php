@@ -337,15 +337,36 @@ class LeaveRequestController extends Controller
     /**
      * HISTORY PRIBADI (Halaman khusus riwayat user)
      */
+    /**
+     * HISTORY PRIBADI (Halaman khusus riwayat user)
+     */
     public function personalHistory()
     {
+        // Tampilkan semua KECUALI cuti (karena ada menu sendiri)
         $requests = LeaveRequest::with(['approver'])
             ->where('user_id', Auth::id())
-            // Ambil yang statusnya sudah final (Approved/Rejected/Cancelled)
+            ->where('type', '!=', 'cuti') // <--- EXCLUDE CUTI
             ->whereIn('status', ['approved', 'rejected', 'cancelled'])
             ->latest()
             ->paginate(10);
 
         return view('leave_requests.personal_history', compact('requests'));
+    }
+
+    /**
+     * RIWAYAT CUTI (Menu Terpisah)
+     */
+    public function cutiHistory()
+    {
+        $user = Auth::user();
+
+        // Ambil data cuti saja
+        $requests = LeaveRequest::with(['approver'])
+            ->where('user_id', $user->id)
+            ->where('type', 'cuti')
+            ->latest()
+            ->paginate(10);
+
+        return view('leave_requests.cuti_history', compact('requests', 'user'));
     }
 }

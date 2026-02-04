@@ -437,6 +437,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::prefix('leave-requests')->name('leave-requests.')->group(function () {
         // Pastikan middleware mencakup: user_biasa, leader, audit, security, admin
         Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
+            // [NEW] Riwayat Cuti
+            Route::get('/riwayat-cuti', [LeaveRequestController::class, 'cutiHistory'])->name('cuti-history');
+
             Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');
             Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
             Route::post('/store', [LeaveRequestController::class, 'store'])->name('store');

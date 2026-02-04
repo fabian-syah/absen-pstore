@@ -554,6 +554,22 @@
                     <span class="menu-title">Riwayat Scan</span>
                 </a>
             </li>
+
+            {{-- 7. Riwayat Izin (Excluding Cuti) --}}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('leave-requests.personal-history') }}">
+                    <i class="menu-icon mdi mdi-history"></i>
+                    <span class="menu-title">Riwayat Izin/Sakit</span>
+                </a>
+            </li>
+
+            {{-- 8. Riwayat Cuti (NEW) --}}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('leave-requests.cuti-history') }}">
+                    <i class="menu-icon mdi mdi-calendar-clock"></i>
+                    <span class="menu-title">Riwayat Cuti</span>
+                </a>
+            </li>
         @endif
 
         {{-- =================================== --}}
