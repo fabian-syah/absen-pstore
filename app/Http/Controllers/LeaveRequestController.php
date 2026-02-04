@@ -52,6 +52,14 @@ class LeaveRequestController extends Controller
             $query->where('user_id', $user->id);
         }
 
+        // [FIX] Exclude 'cuti' type for Approvers (karena sudah ada menu khusus)
+        // Kecuali user biasa yang melihat punya sendiri, mungkin tetap ingin lihat pending di list umum?
+        // User request: "bikin menu ... jadi yang butuh acc ... tipe nya khusus izin cuti aja fixing"
+        // Artinya di menu lama jangan muncul cuti lagi bagi Approver.
+        if (in_array($user->role, ['admin', 'admin_gaji', 'audit', 'leader'])) {
+            $query->where('type', '!=', 'cuti');
+        }
+
         $requests = $query->paginate(10);
 
         return view('leave_requests.index', compact('requests'));

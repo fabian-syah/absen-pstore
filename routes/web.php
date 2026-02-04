@@ -442,12 +442,20 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             ->middleware('role:admin,admin_gaji,audit');
 
         // Pastikan middleware mencakup: user_biasa, leader, audit, security, admin
-        Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
+        Route::middleware(['role:user_biasa,leader,audit,security,admin,admin_gaji'])->group(function () {
             // [NEW] Riwayat Cuti
             Route::get('/riwayat-cuti', [LeaveRequestController::class, 'cutiHistory'])->name('cuti-history');
 
             // [NEW] Form Cuti Terpisah
             Route::get('/create-cuti', [LeaveRequestController::class, 'createCuti'])->name('create-cuti');
+
+            // [NEW] Approval Cuti Only (Khusus Approver)
+            Route::get('/approvals-cuti', [LeaveRequestController::class, 'approvalCuti'])
+                ->name('approvals') // Alias simple
+                ->middleware('role:admin,admin_gaji,audit,leader');
+
+            // Note: Sidebar uses 'leave-requests.approvals' so name needs to align if using prefix
+            // Prefix active is 'leave-requests.' so 'approvals' becomes 'leave-requests.approvals'
 
             Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');
             Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
