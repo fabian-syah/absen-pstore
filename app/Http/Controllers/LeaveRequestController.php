@@ -135,19 +135,10 @@ class LeaveRequestController extends Controller
             $data['start_time'] = null;
         }
 
-        // === LOGIC CUTI: Validasi Saldo (TIDAK POTONG, HANYA CEK) ===
-        // Pemotongan dilakukan saat APPROVE, bukan saat submit
-        if ($request->type === 'cuti') {
-            $startDate = Carbon::parse($request->start_date);
-            $endDate = $request->end_date ? Carbon::parse($request->end_date) : $startDate;
-            $daysRequested = $startDate->diffInDays($endDate) + 1; // Inclusive
-
-            $user = Auth::user();
-            if ($user->leave_balance < $daysRequested) {
-                return redirect()->back()->withErrors(['type' => "Saldo cuti tidak mencukupi (Sisa: {$user->leave_balance}, Diminta: {$daysRequested})."])->withInput();
-            }
-            // NOTE: Saldo TIDAK dipotong disini, akan dipotong saat APPROVE
-        }
+        // === LOGIC CUTI: Tidak ada validasi saldo ===
+        // User boleh ambil cuti melebihi jatah.
+        // Kelebihan akan dipotong dari gaji di payroll (fitur "Cuti Lebih")
+        // NOTE: Saldo TIDAK dipotong disini, akan dipotong saat APPROVE
         // ==========================================
 
         // Upload File
