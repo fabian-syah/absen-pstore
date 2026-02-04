@@ -375,15 +375,33 @@ class LeaveRequestController extends Controller
     public function cutiHistory()
     {
         $user = Auth::user();
+        $currentYear = now()->year;
 
-        // Ambil data cuti saja
+        // Hitung leave_taken DINAMIS (hanya tahun ini)
+        $approvedCutiDays = LeaveRequest::where('user_id', $user->id)
+            ->where('type', 'cuti')
+            ->where('status', 'approved')
+            ->whereYear('start_date', $currentYear)
+            ->get()
+            ->sum(function ($req) {
+                $start = Carbon::parse($req->start_date);
+                $end = $req->end_date ? Carbon::parse($req->end_date) : $start;
+                return $start->diffInDays($end) + 1;
+            });
+
+        // Override nilai untuk tampilan (agar selalu akurat per tahun)
+        $user->leave_taken = $approvedCutiDays;
+        $user->leave_balance = ($user->yearly_leave_limit ?? 10) - $approvedCutiDays;
+
+        // Ambil data cuti tahun ini saja
         $requests = LeaveRequest::with(['approver'])
             ->where('user_id', $user->id)
             ->where('type', 'cuti')
+            ->whereYear('start_date', $currentYear)
             ->latest()
             ->paginate(10);
 
-        return view('leave_requests.cuti_history', compact('requests', 'user'));
+        return view('leave_requests.cuti_history', compact('requests', 'user', 'currentYear'));
     }
     /**
      * MONITORING CUTI (ADMIN & ADMIN GAJI)
@@ -392,6 +410,7 @@ class LeaveRequestController extends Controller
     public function adminSummary(Request $request)
     {
         $user = Auth::user();
+        $currentYear = now()->year;
 
         // Security Check (Middleware should handle this, but extra safety)
         if (!in_array($user->role, ['admin', 'admin_gaji', 'audit'])) {
@@ -413,6 +432,7 @@ class LeaveRequestController extends Controller
         }
 
         // Filter Cabang (Jika Audit)
+        $myBranchIds = [];
         if ($user->role == 'audit') {
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
             $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
@@ -426,15 +446,37 @@ class LeaveRequestController extends Controller
             }
         }
 
-        // Clone query for statistics before pagination
-        $statsQuery = clone $query;
-        $totalUsers = $statsQuery->count();
-        $totalTaken = $statsQuery->sum('leave_taken');
-        $totalBalance = $statsQuery->sum('leave_balance');
+        // Get users first, then calculate stats dynamically
+        $users = $query->orderBy('name')->paginate(15);
+
+        // Calculate leave stats DYNAMICALLY per user (current year only)
+        $totalTaken = 0;
+        $totalBalance = 0;
+        foreach ($users as $usr) {
+            // Hitung approved cuti untuk user ini di tahun ini
+            $approvedDays = LeaveRequest::where('user_id', $usr->id)
+                ->where('type', 'cuti')
+                ->where('status', 'approved')
+                ->whereYear('start_date', $currentYear)
+                ->get()
+                ->sum(function ($req) {
+                    $start = Carbon::parse($req->start_date);
+                    $end = $req->end_date ? Carbon::parse($req->end_date) : $start;
+                    return $start->diffInDays($end) + 1;
+                });
+
+            // Override nilai untuk tampilan
+            $usr->leave_taken = $approvedDays;
+            $usr->leave_balance = ($usr->yearly_leave_limit ?? 10) - $approvedDays;
+
+            $totalTaken += $approvedDays;
+            $totalBalance += $usr->leave_balance;
+        }
 
         // Pending Requests Count (All or Scoped)
         $pendingQuery = \App\Models\LeaveRequest::where('status', 'pending')
-            ->where('type', 'cuti'); // [FIX] Hanya hitung type cuti
+            ->where('type', 'cuti')
+            ->whereYear('start_date', $currentYear);
         if ($user->role == 'audit' && !empty($myBranchIds)) {
             $pendingQuery->whereHas('user', function ($q) use ($myBranchIds) {
                 $q->whereIn('branch_id', $myBranchIds);
@@ -443,15 +485,14 @@ class LeaveRequestController extends Controller
         $pendingCount = $pendingQuery->count();
 
         $stats = [
-            'total_users' => $totalUsers,
+            'total_users' => $users->total(),
             'total_taken' => $totalTaken,
             'total_balance' => $totalBalance,
-            'pending_requests' => $pendingCount
+            'pending_requests' => $pendingCount,
+            'current_year' => $currentYear
         ];
 
-        $users = $query->orderBy('name')->paginate(15);
-
-        return view('leave_requests.admin_summary', compact('users', 'stats'));
+        return view('leave_requests.admin_summary', compact('users', 'stats', 'currentYear'));
     }
     /**
      * HALAMAN APPROVAL CUTI (KHUSUS FORMAT BARU)

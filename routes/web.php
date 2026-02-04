@@ -569,15 +569,17 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     Route::get('/fix-balance', function () {
-        // Recalculate leave balance for ALL users based on approved cuti requests
+        // Recalculate leave balance for ALL users based on approved cuti requests (CURRENT YEAR ONLY)
         $users = \App\Models\User::all();
         $fixed = 0;
+        $currentYear = now()->year; // e.g., 2026
 
         foreach ($users as $u) {
-            // Hitung total hari cuti yang DISETUJUI
+            // Hitung total hari cuti yang DISETUJUI di TAHUN INI saja
             $approvedCutiDays = \App\Models\LeaveRequest::where('user_id', $u->id)
                 ->where('type', 'cuti')
                 ->where('status', 'approved')
+                ->whereYear('start_date', $currentYear) // Hanya tahun ini
                 ->get()
                 ->sum(function ($req) {
                     $start = \Carbon\Carbon::parse($req->start_date);
@@ -595,7 +597,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             }
         }
 
-        return "Berhasil memperbaiki saldo cuti untuk {$fixed} user. Silakan refresh halaman Monitoring Cuti.";
+        return "Berhasil memperbaiki saldo cuti tahun {$currentYear} untuk {$fixed} user. Silakan refresh halaman Monitoring Cuti.";
     });
 
     Route::fallback(function () {
