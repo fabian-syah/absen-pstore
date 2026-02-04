@@ -154,15 +154,79 @@
         </div>
     </div>
 
-    {{-- REUSE MODALS --}}
-    @include('components.reject-modal')
-    @include('components.image-modal')
+    {{-- MODAL REJECT DINAMIS --}}
+    <div class="modal fade" id="rejectModalDynamic" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tolak Pengajuan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formRejectDynamic" action="" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Alasan Penolakan <span class="text-danger">*</span></label>
+                            <textarea name="rejection_reason" class="form-control text-dark" rows="3" required placeholder="Tulis alasan penolakan..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Tolak Sekarang</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL PREVIEW GAMBAR --}}
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true" style="z-index: 10000;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Bukti Lampiran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center bg-light">
+                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 70vh; width: auto;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 @endsection
 
 @push('scripts')
     <script>
-        // Include script for modals if not already in master or separate component
-        // If components are not available, inline the modal HTML here like in index.blade.php
+        // FUNGSI UNTUK MODAL REJECT
+        window.openRejectModal = function (reqId, actionUrl) {
+            var modalElement = document.getElementById('rejectModalDynamic');
+            var formElement = document.getElementById('formRejectDynamic');
+            formElement.action = actionUrl;
+            
+            // Initializing modal
+            try {
+                var myModal = new bootstrap.Modal(modalElement);
+                myModal.show();
+            } catch(e) {
+                $(modalElement).modal('show');
+            }
+        };
+
+        // FUNGSI UNTUK PREVIEW GAMBAR
+        window.showImageModal = function (imageUrl) {
+            var imgElement = document.getElementById('modalImagePreview');
+            imgElement.src = imageUrl;
+            
+            try {
+                var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+                myModal.show();
+            } catch(e) {
+                $('#imageModal').modal('show');
+            }
+        };
     </script>
 @endpush
