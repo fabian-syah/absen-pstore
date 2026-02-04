@@ -48,7 +48,7 @@
                     <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0 fw-bold text-primary"><i class="mdi mdi-history me-2"></i> Detail
                             Pengajuan Cuti</h5>
-                        <a href="{{ route('leave-requests.create') }}"
+                        <a href="{{ route('leave-requests.create-cuti') }}"
                             class="btn btn-sm btn-primary rounded-pill shadow-sm">
                             <i class="mdi mdi-plus me-1"></i> Ajukan Cuti
                         </a>
