@@ -293,6 +293,26 @@
                     <span class="menu-title">Riwayat Izin</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('leave-requests.cuti-history') }}">
+                    <i class="mdi mdi-calendar-clock menu-icon"></i>
+                    <span class="menu-title">Riwayat Cuti</span>
+                </a>
+            </li>
+            
+            {{-- FORMS --}}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('leave-requests.create') }}">
+                    <i class="menu-icon mdi mdi-file-document-edit-outline"></i>
+                    <span class="menu-title">Form Izin / Telat</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('leave-requests.create-cuti') }}">
+                    <i class="menu-icon mdi mdi-wallet-travel"></i>
+                    <span class="menu-title">Form Pengajuan Cuti</span>
+                </a>
+            </li>
         @endif
 
         {{-- =================================== --}}
@@ -537,21 +557,7 @@
                         <span class="menu-title">History Pengembalian</span>
                     </a>
                 </li>
-                {{-- 6. Form Pengajuan Izin / Telat --}}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('leave-requests.create') }}">
-                        <i class="menu-icon mdi mdi-file-document-edit-outline"></i>
-                        <span class="menu-title">Form Izin / Telat</span>
-                    </a>
-                </li>
 
-                {{-- [NEW] Form Pengajuan Cuti --}}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('leave-requests.create-cuti') }}">
-                        <i class="menu-icon mdi mdi-wallet-travel"></i>
-                        <span class="menu-title">Form Pengajuan Cuti</span>
-                    </a>
-                </li>
             @endif
         @endif
 
@@ -585,13 +591,7 @@
                 </a>
             </li>
 
-            {{-- 8. Riwayat Cuti (NEW) --}}
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.cuti-history') }}">
-                    <i class="menu-icon mdi mdi-calendar-clock"></i>
-                    <span class="menu-title">Riwayat Cuti</span>
-                </a>
-            </li>
+
         @endif
 
         {{-- =================================== --}}
