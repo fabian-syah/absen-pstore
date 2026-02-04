@@ -575,6 +575,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         $currentYear = now()->year; // e.g., 2026
 
         foreach ($users as $u) {
+            // [BARU] Update yearly_leave_limit ke 12 untuk semua user
+            $u->yearly_leave_limit = 12;
+
             // Hitung total hari cuti yang DISETUJUI di TAHUN INI saja
             $approvedCutiDays = \App\Models\LeaveRequest::where('user_id', $u->id)
                 ->where('type', 'cuti')
@@ -589,15 +592,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
             $oldTaken = $u->leave_taken;
             $u->leave_taken = $approvedCutiDays;
-            $u->leave_balance = ($u->yearly_leave_limit ?? 12) - $approvedCutiDays;
+            $u->leave_balance = 12 - $approvedCutiDays; // Pakai 12 langsung
             $u->save();
 
-            if ($oldTaken != $approvedCutiDays) {
+            if ($oldTaken != $approvedCutiDays || $u->wasChanged('yearly_leave_limit')) {
                 $fixed++;
             }
         }
 
-        return "Berhasil memperbaiki saldo cuti tahun {$currentYear} untuk {$fixed} user. Silakan refresh halaman Monitoring Cuti.";
+        return "Berhasil update jatah cuti ke 12 hari dan memperbaiki saldo tahun {$currentYear} untuk semua user. Silakan refresh halaman Monitoring Cuti.";
     });
 
     Route::fallback(function () {
