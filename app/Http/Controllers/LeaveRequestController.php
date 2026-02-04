@@ -426,7 +426,8 @@ class LeaveRequestController extends Controller
         $totalBalance = $statsQuery->sum('leave_balance');
 
         // Pending Requests Count (All or Scoped)
-        $pendingQuery = \App\Models\LeaveRequest::where('status', 'pending');
+        $pendingQuery = \App\Models\LeaveRequest::where('status', 'pending')
+            ->where('type', 'cuti'); // [FIX] Hanya hitung type cuti
         if ($user->role == 'audit' && !empty($myBranchIds)) {
             $pendingQuery->whereHas('user', function ($q) use ($myBranchIds) {
                 $q->whereIn('branch_id', $myBranchIds);
