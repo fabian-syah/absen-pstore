@@ -147,14 +147,14 @@
                                         </div>
                                     </td>
                                     <td class="text-center">
-                                        <h6 class="mb-0 fw-bold">{{ $usr->yearly_leave_limit ?? 10 }}</h6>
+                                        <h6 class="mb-0 fw-bold">{{ $usr->yearly_leave_limit ?? 12 }}</h6>
                                     </td>
                                     <td class="text-center">
                                         <h6 class="mb-0 fw-bold text-danger">{{ $usr->leave_taken ?? 0 }}</h6>
                                     </td>
                                     <td class="text-center">
                                         @php
-                                            $balance = $usr->leave_balance ?? 10;
+                                            $balance = $usr->leave_balance ?? 12;
                                             $balColor = $balance > 5 ? 'success' : ($balance > 0 ? 'warning' : 'danger');
                                         @endphp
                                         <h6 class="mb-0 fw-bold text-{{ $balColor }}">{{ $balance }}</h6>

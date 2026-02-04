@@ -391,7 +391,7 @@ class LeaveRequestController extends Controller
 
         // Override nilai untuk tampilan (agar selalu akurat per tahun)
         $user->leave_taken = $approvedCutiDays;
-        $user->leave_balance = ($user->yearly_leave_limit ?? 10) - $approvedCutiDays;
+        $user->leave_balance = ($user->yearly_leave_limit ?? 12) - $approvedCutiDays;
 
         // Ambil data cuti tahun ini saja
         $requests = LeaveRequest::with(['approver'])
@@ -467,7 +467,7 @@ class LeaveRequestController extends Controller
 
             // Override nilai untuk tampilan
             $usr->leave_taken = $approvedDays;
-            $usr->leave_balance = ($usr->yearly_leave_limit ?? 10) - $approvedDays;
+            $usr->leave_balance = ($usr->yearly_leave_limit ?? 12) - $approvedDays;
 
             $totalTaken += $approvedDays;
             $totalBalance += $usr->leave_balance;

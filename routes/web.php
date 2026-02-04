@@ -589,7 +589,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
             $oldTaken = $u->leave_taken;
             $u->leave_taken = $approvedCutiDays;
-            $u->leave_balance = ($u->yearly_leave_limit ?? 10) - $approvedCutiDays;
+            $u->leave_balance = ($u->yearly_leave_limit ?? 12) - $approvedCutiDays;
             $u->save();
 
             if ($oldTaken != $approvedCutiDays) {

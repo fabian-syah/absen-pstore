@@ -234,7 +234,7 @@
                             </div>
 
                             {{-- TELAT --}}
-                            <div class="row mb-3 align-items-center bg-light p-2 rounded mx-0 border">
+                            <div class="row mb-2 align-items-center bg-light p-2 rounded mx-0 border">
                                 <div class="col-4">
                                     <label class="small fw-bold mb-0">Telat (Kali)</label>
                                     <input type="number" name="late_days" id="late_days" class="form-control form-control-sm mt-1 fw-bold text-danger" value="{{ $lateCount ?? 0 }}" readonly>
@@ -247,6 +247,24 @@
                                     </div>
                                 </div>
                             </div>
+
+                            {{-- CUTI LEBIH (Excess Leave - Melebihi Jatah Tahunan) --}}
+                            @if(($cutiLebih ?? 0) > 0)
+                            <div class="row mb-3 align-items-center bg-danger bg-opacity-10 p-2 rounded mx-0 border border-danger">
+                                <div class="col-4">
+                                    <label class="small fw-bold mb-0 text-danger">Cuti Lebih (Hari)</label>
+                                    <input type="number" name="cuti_lebih_days" id="cuti_lebih_days" class="form-control form-control-sm mt-1 fw-bold text-danger" value="{{ $cutiLebih ?? 0 }}" readonly>
+                                    <small class="text-muted" style="font-size: 9px;">Melebihi jatah 12 hari/tahun</small>
+                                </div>
+                                <div class="col-8">
+                                    <label class="small text-muted fst-italic mb-0">Rumus: (Fixed / 31) x Cuti Lebih</label>
+                                    <div class="input-group input-group-sm mt-1">
+                                        <span class="input-group-text text-danger bg-white">Rp</span>
+                                        <input type="text" name="cuti_lebih_deduction" id="cuti_lebih_deduction" class="form-control deduction-input fw-bold text-danger" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
 
                             {{-- LIST HUTANG --}}
                             <div class="mb-3 p-3 border border-warning rounded" style="background-color: #fffbf0;">
@@ -545,10 +563,16 @@
             if (cat === 'freelance') {
                 if(alphaDed) alphaDed.value = "0";
                 if(lateDed) lateDed.value = "0";
+                // [BARU] Reset cuti lebih jika freelance
+                const cutiLebihDed = document.getElementById('cuti_lebih_deduction');
+                if(cutiLebihDed) cutiLebihDed.value = "0";
             } else {
                 if (overrideCheck && overrideCheck.checked) {
                     if(alphaDed) alphaDed.value = "0";
                     if(lateDed) lateDed.value = "0";
+                    // [BARU] Reset cuti lebih jika privilege
+                    const cutiLebihDed = document.getElementById('cuti_lebih_deduction');
+                    if(cutiLebihDed) cutiLebihDed.value = "0";
                 } else {
                     let aDays = parseFloat(document.getElementById('alpha_days').value) || 0;
                     let lDays = parseFloat(document.getElementById('late_days').value) || 0;
@@ -560,6 +584,16 @@
                     let lateVal = 0;
                     if(totalFixed > 0 && lDays > 0) lateVal = (totalFixed / 93) * lDays;
                     if(lateDed) lateDed.value = formatRupiah(Math.floor(lateVal)); 
+
+                    // [BARU] Hitung Cuti Lebih Deduction (Rumus sama seperti Alpha: Fixed/31 x Hari)
+                    const cutiLebihDaysEl = document.getElementById('cuti_lebih_days');
+                    const cutiLebihDed = document.getElementById('cuti_lebih_deduction');
+                    if (cutiLebihDaysEl && cutiLebihDed) {
+                        let clDays = parseFloat(cutiLebihDaysEl.value) || 0;
+                        let clVal = 0;
+                        if(totalFixed > 0 && clDays > 0) clVal = (totalFixed / 31) * clDays;
+                        cutiLebihDed.value = formatRupiah(Math.floor(clVal));
+                    }
                 }
             }
 

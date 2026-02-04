@@ -25,7 +25,7 @@
                             <div class="card bg-primary text-white mb-3 mb-md-0">
                                 <div class="card-body p-3">
                                     <h6 class="card-title text-white mb-1">Jatah Cuti Tahunan</h6>
-                                    <h2 class="mb-0">{{ auth()->user()->yearly_leave_limit ?? 10 }} <small
+                                    <h2 class="mb-0">{{ auth()->user()->yearly_leave_limit ?? 12 }} <small
                                             class="fs-6">Hari</small></h2>
                                 </div>
                             </div>
@@ -43,7 +43,7 @@
                             <div class="card bg-success text-white">
                                 <div class="card-body p-3">
                                     <h6 class="card-title text-white mb-1">Sisa Cuti</h6>
-                                    <h2 class="mb-0">{{ auth()->user()->leave_balance ?? 10 }} <small
+                                    <h2 class="mb-0">{{ auth()->user()->leave_balance ?? 12 }} <small
                                             class="fs-6">Hari</small></h2>
                                 </div>
                             </div>

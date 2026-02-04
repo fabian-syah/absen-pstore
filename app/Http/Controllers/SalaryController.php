@@ -170,6 +170,17 @@ class SalaryController extends Controller
             $wfhCount = $approvedLeaves->where('type', 'wfh')->count();
         }
 
+        // [BARU] Hitung Cuti Lebih (kelebihan dari jatah tahunan)
+        // Ini dihitung berdasarkan leave_balance yang sudah negatif
+        $cutiLebih = 0;
+        if ($selectedUser) {
+            $yearlyLimit = $selectedUser->yearly_leave_limit ?? 12;
+            $leaveTaken = $selectedUser->leave_taken ?? 0;
+            if ($leaveTaken > $yearlyLimit) {
+                $cutiLebih = $leaveTaken - $yearlyLimit;
+            }
+        }
+
         return view('salaries.create', compact(
             'users',
             'selectedUser',
@@ -186,7 +197,8 @@ class SalaryController extends Controller
             'cutiCount',
             'sakitCount',
             'izinCount',
-            'wfhCount'
+            'wfhCount',
+            'cutiLebih'
         ));
     }
 
@@ -201,6 +213,7 @@ class SalaryController extends Controller
             'dispensation_amount',
             'alpha_deduction',
             'late_deduction',
+            'cuti_lebih_deduction', // [BARU] Potongan cuti lebih
             'other_deduction',
             'freelance_daily_salary',
             'freelance_total_income' // [NEW] Total income freelance
@@ -307,9 +320,10 @@ class SalaryController extends Controller
             $income += ($request->promotor_bonus ?? 0);
             $income += ($request->dispensation_amount ?? 0);
 
-            // Total Deduction
+            // Total Deduction (termasuk cuti lebih)
             $deduction = ($request->alpha_deduction ?? 0) +
                 ($request->late_deduction ?? 0) +
+                ($request->cuti_lebih_deduction ?? 0) + // [BARU] Potongan Cuti Lebih
                 ($totalKasbonDeduction) +
                 ($request->other_deduction ?? 0);
 

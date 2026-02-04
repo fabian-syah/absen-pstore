@@ -63,7 +63,7 @@
                                         <div class="col-4 px-1">
                                             <div class="bg-white rounded p-2 border">
                                                 <small class="d-block text-muted" style="font-size: 10px;">JATAH</small>
-                                                <strong class="text-primary">{{ $req->user->yearly_leave_limit ?? 10 }}</strong>
+                                                <strong class="text-primary">{{ $req->user->yearly_leave_limit ?? 12 }}</strong>
                                             </div>
                                         </div>
                                         <div class="col-4 px-1">
@@ -75,7 +75,7 @@
                                         <div class="col-4 px-1">
                                             <div class="bg-white rounded p-2 border">
                                                 <small class="d-block text-muted" style="font-size: 10px;">SISA</small>
-                                                <strong class="text-success">{{ $req->user->leave_balance ?? 10 }}</strong>
+                                                <strong class="text-success">{{ $req->user->leave_balance ?? 12 }}</strong>
                                             </div>
                                         </div>
                                     </div>
@@ -166,8 +166,10 @@
                     @csrf
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold">Alasan Penolakan <span class="text-danger">*</span></label>
-                            <textarea name="rejection_reason" class="form-control text-dark" rows="3" required placeholder="Tulis alasan penolakan..."></textarea>
+                            <label class="form-label font-weight-bold">Alasan Penolakan <span
+                                    class="text-danger">*</span></label>
+                            <textarea name="rejection_reason" class="form-control text-dark" rows="3" required
+                                placeholder="Tulis alasan penolakan..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -188,7 +190,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center bg-light">
-                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 70vh; width: auto;">
+                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm"
+                        style="max-height: 70vh; width: auto;">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
@@ -206,12 +209,12 @@
             var modalElement = document.getElementById('rejectModalDynamic');
             var formElement = document.getElementById('formRejectDynamic');
             formElement.action = actionUrl;
-            
+
             // Initializing modal
             try {
                 var myModal = new bootstrap.Modal(modalElement);
                 myModal.show();
-            } catch(e) {
+            } catch (e) {
                 $(modalElement).modal('show');
             }
         };
@@ -220,11 +223,11 @@
         window.showImageModal = function (imageUrl) {
             var imgElement = document.getElementById('modalImagePreview');
             imgElement.src = imageUrl;
-            
+
             try {
                 var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
                 myModal.show();
-            } catch(e) {
+            } catch (e) {
                 $('#imageModal').modal('show');
             }
         };

@@ -17,7 +17,7 @@
                 <div class="card-body p-4 d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-white-50 mb-1 text-uppercase fw-bold">Sisa Saldo Cuti Anda</h6>
-                        <h2 class="fw-bold mb-0 display-6">{{ $user->leave_balance ?? 10 }} <small class="fs-6">Hari</small>
+                        <h2 class="fw-bold mb-0 display-6">{{ $user->leave_balance ?? 12 }} <small class="fs-6">Hari</small>
                         </h2>
                     </div>
                     <div>

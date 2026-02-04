@@ -49,7 +49,7 @@
                                     <strong>Info Saldo Cuti</strong><br>
                                     <span>
                                         Sisa Cuti: <strong>{{ auth()->user()->leave_balance ?? 0 }}</strong> Hari
-                                        (Total: {{ auth()->user()->yearly_leave_limit ?? 10 }} Hari/Tahun)
+                                        (Total: {{ auth()->user()->yearly_leave_limit ?? 12 }} Hari/Tahun)
                                     </span>
                                 </div>
                             </div>

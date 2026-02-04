@@ -17,7 +17,7 @@
                     <div class="card bg-primary text-white border-0 shadow-sm rounded-4 h-100">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
                             <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Jatah Cuti Tahunan</h6>
-                            <h2 class="fw-bold text-white mb-0 display-6">{{ $user->yearly_leave_limit ?? 10 }} <small
+                            <h2 class="fw-bold text-white mb-0 display-6">{{ $user->yearly_leave_limit ?? 12 }} <small
                                     class="fs-6">Hari</small></h2>
                         </div>
                     </div>
@@ -35,7 +35,7 @@
                     <div class="card bg-success text-white border-0 shadow-sm rounded-4 h-100">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
                             <h6 class="text-white-50 mb-1 small text-uppercase fw-bold">Sisa Cuti</h6>
-                            <h2 class="fw-bold text-white mb-0 display-6">{{ $user->leave_balance ?? 10 }} <small
+                            <h2 class="fw-bold text-white mb-0 display-6">{{ $user->leave_balance ?? 12 }} <small
                                     class="fs-6">Hari</small></h2>
                         </div>
                     </div>
