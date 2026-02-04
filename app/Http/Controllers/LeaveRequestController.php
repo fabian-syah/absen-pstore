@@ -447,12 +447,12 @@ class LeaveRequestController extends Controller
         }
 
         // Get users first, then calculate stats dynamically
-        $users = $query->orderBy('name')->paginate(15);
+        $allUsers = $query->orderBy('name')->get();
 
         // Calculate leave stats DYNAMICALLY per user (current year only)
         $totalTaken = 0;
         $totalBalance = 0;
-        foreach ($users as $usr) {
+        foreach ($allUsers as $usr) {
             // Hitung approved cuti untuk user ini di tahun ini
             $approvedDays = LeaveRequest::where('user_id', $usr->id)
                 ->where('type', 'cuti')
@@ -473,6 +473,21 @@ class LeaveRequestController extends Controller
             $totalBalance += $usr->leave_balance;
         }
 
+        // Sort by leave_taken descending (yang sudah ambil cuti di atas)
+        $sortedUsers = $allUsers->sortByDesc('leave_taken')->values();
+
+        // Manual pagination
+        $perPage = 15;
+        $page = $request->get('page', 1);
+        $offset = ($page - 1) * $perPage;
+        $paginatedUsers = new \Illuminate\Pagination\LengthAwarePaginator(
+            $sortedUsers->slice($offset, $perPage)->values(),
+            $sortedUsers->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         // Pending Requests Count (All or Scoped)
         $pendingQuery = \App\Models\LeaveRequest::where('status', 'pending')
             ->where('type', 'cuti')
@@ -485,14 +500,18 @@ class LeaveRequestController extends Controller
         $pendingCount = $pendingQuery->count();
 
         $stats = [
-            'total_users' => $users->total(),
+            'total_users' => $allUsers->count(),
             'total_taken' => $totalTaken,
             'total_balance' => $totalBalance,
             'pending_requests' => $pendingCount,
             'current_year' => $currentYear
         ];
 
-        return view('leave_requests.admin_summary', compact('users', 'stats', 'currentYear'));
+        return view('leave_requests.admin_summary', [
+            'users' => $paginatedUsers,
+            'stats' => $stats,
+            'currentYear' => $currentYear
+        ]);
     }
     /**
      * HALAMAN APPROVAL CUTI (KHUSUS FORMAT BARU)
