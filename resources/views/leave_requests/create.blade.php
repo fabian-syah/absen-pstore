@@ -40,6 +40,20 @@
                             </select>
                         </div>
 
+                        {{-- INFO SALDO CUTI (Hanya Tampil Jika Pilih Cuti) --}}
+                        <div id="leave_balance_info" class="alert alert-info d-none mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="mdi mdi-information-outline fs-4 me-2"></i>
+                                <div>
+                                    <strong>Info Saldo Cuti</strong><br>
+                                    <span>
+                                        Sisa Cuti: <strong>{{ auth()->user()->leave_balance ?? 0 }}</strong> Hari
+                                        (Total: {{ auth()->user()->yearly_leave_limit ?? 10 }} Hari/Tahun)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- 2. Area Input Waktu (Dinamis) --}}
                         <div class="row">
                             <div class="col-md-6 mb-4">
@@ -105,6 +119,14 @@
                 endDateBox.classList.remove('d-none');
                 timeBox.classList.add('d-none');
                 labelDate.innerText = "Tanggal Mulai";
+            }
+
+            // Tampilkan Info Saldo Cuti hanya jika pilih "cuti"
+            let leaveInfo = document.getElementById('leave_balance_info');
+            if (type === 'cuti') {
+                leaveInfo.classList.remove('d-none');
+            } else {
+                leaveInfo.classList.add('d-none');
             }
         }
 

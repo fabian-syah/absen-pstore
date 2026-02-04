@@ -15,10 +15,39 @@
                             <p class="text-muted small">Daftar pengajuan izin, sakit, cuti, dan keterlambatan.</p>
                         </div>
 
-                        {{-- Tombol kembali --}}
-                        <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm shadow-sm">
-                            <i class="mdi mdi-arrow-left"></i> Kembali ke Dashboard
+                        <i class="mdi mdi-arrow-left"></i> Kembali ke Dashboard
                         </a>
+                    </div>
+
+                    {{-- STATISTIK CUTI --}}
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white mb-3 mb-md-0">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title text-white mb-1">Jatah Cuti Tahunan</h6>
+                                    <h2 class="mb-0">{{ auth()->user()->yearly_leave_limit ?? 10 }} <small
+                                            class="fs-6">Hari</small></h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-warning text-dark mb-3 mb-md-0">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title text-dark mb-1">Cuti Terpakai</h6>
+                                    <h2 class="mb-0">{{ auth()->user()->leave_taken ?? 0 }} <small class="fs-6">Hari</small>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title text-white mb-1">Sisa Cuti</h6>
+                                    <h2 class="mb-0">{{ auth()->user()->leave_balance ?? 10 }} <small
+                                            class="fs-6">Hari</small></h2>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="table-responsive">

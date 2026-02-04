@@ -57,6 +57,9 @@ class User extends Authenticatable
         'linkedin',
         'is_verified',
         'photo_request_status',
+        'leave_balance',   // <--- Added
+        'leave_taken',     // <--- Added
+        'yearly_leave_limit', // <--- Added
         // --- TAMBAHKAN 4 BARIS INI AGAR JAM MANUAL BISA DISIMPAN ---
         'check_in_start',
         'check_out_start',

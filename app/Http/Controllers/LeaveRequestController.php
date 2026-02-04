@@ -29,8 +29,8 @@ class LeaveRequestController extends Controller
             ->where('status', 'pending')
             ->latest();
 
-        if ($user->role == 'admin') {
-            // ADMIN: Melihat Semua Data PENDING
+        if ($user->role == 'admin' || $user->role == 'admin_gaji') {
+            // ADMIN & ADMIN GAJI: Melihat Semua Data PENDING
         } elseif ($user->role == 'audit') {
             // AUDIT: Melihat data cabang yang dipegang + Punya sendiri
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
@@ -114,6 +114,23 @@ class LeaveRequestController extends Controller
             $data['end_date'] = $request->end_date;
             $data['start_time'] = null;
         }
+
+        // === LOGIC CUTI: Validasi & Potong Saldo ===
+        if ($request->type === 'cuti') {
+            $startDate = Carbon::parse($request->start_date);
+            $endDate = $request->end_date ? Carbon::parse($request->end_date) : $startDate;
+            $daysRequested = $startDate->diffInDays($endDate) + 1; // Inclusive
+
+            $user = Auth::user();
+            if ($user->leave_balance < $daysRequested) {
+                return redirect()->back()->withErrors(['type' => "Saldo cuti tidak mencukupi (Sisa: {$user->leave_balance}, Diminta: {$daysRequested})."])->withInput();
+            }
+
+            // Potong saldo langsung
+            $user->decrement('leave_balance', $daysRequested);
+            $user->increment('leave_taken', $daysRequested);
+        }
+        // ==========================================
 
         // Upload File
         if ($request->hasFile('file_proof')) {
@@ -242,7 +259,18 @@ class LeaveRequestController extends Controller
             'rejection_reason' => $request->rejection_reason,
         ]);
 
-        return redirect()->back()->with('success', 'Pengajuan ditolak.');
+        // === REFUND CUTI JIKA DITOLAK ===
+        if ($leaveRequest->type === 'cuti') {
+            $startDate = Carbon::parse($leaveRequest->start_date);
+            $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
+            $daysCount = $startDate->diffInDays($endDate) + 1;
+
+            $leaveRequest->user->increment('leave_balance', $daysCount);
+            $leaveRequest->user->decrement('leave_taken', $daysCount);
+        }
+        // ================================
+
+        return redirect()->back()->with('success', 'Pengajuan ditolak (Saldo ' . ($leaveRequest->type === 'cuti' ? 'dikembalikan' : 'aman') . ').');
     }
 
     /**
@@ -261,6 +289,18 @@ class LeaveRequestController extends Controller
         ]);
 
         $msg = $leaveRequest->type == 'telat' ? 'Izin telat dibatalkan.' : 'Pengajuan izin dibatalkan.';
+
+        // === REFUND CUTI JIKA DIBATALKAN USER ===
+        if ($leaveRequest->type === 'cuti') {
+            $startDate = Carbon::parse($leaveRequest->start_date);
+            $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
+            $daysCount = $startDate->diffInDays($endDate) + 1;
+
+            $leaveRequest->user->increment('leave_balance', $daysCount);
+            $leaveRequest->user->decrement('leave_taken', $daysCount);
+            $msg .= ' Saldo cuti dikembalikan.';
+        }
+        // ========================================
 
         // Redirect back agar fleksibel (bisa dari dashboard atau list)
         return redirect()->back()->with('success', $msg);

@@ -488,7 +488,7 @@
         {{-- =================================== --}}
         {{-- VERIFIKASI (ADMIN & AUDIT) --}}
         {{-- =================================== --}}
-        @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')
+        @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
             <li class="nav-item nav-category">Verifikasi</li>
 
             <li class="nav-item">
