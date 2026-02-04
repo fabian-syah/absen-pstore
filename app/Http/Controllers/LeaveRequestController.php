@@ -135,7 +135,8 @@ class LeaveRequestController extends Controller
             $data['start_time'] = null;
         }
 
-        // === LOGIC CUTI: Validasi & Potong Saldo ===
+        // === LOGIC CUTI: Validasi Saldo (TIDAK POTONG, HANYA CEK) ===
+        // Pemotongan dilakukan saat APPROVE, bukan saat submit
         if ($request->type === 'cuti') {
             $startDate = Carbon::parse($request->start_date);
             $endDate = $request->end_date ? Carbon::parse($request->end_date) : $startDate;
@@ -145,10 +146,7 @@ class LeaveRequestController extends Controller
             if ($user->leave_balance < $daysRequested) {
                 return redirect()->back()->withErrors(['type' => "Saldo cuti tidak mencukupi (Sisa: {$user->leave_balance}, Diminta: {$daysRequested})."])->withInput();
             }
-
-            // Potong saldo langsung
-            $user->decrement('leave_balance', $daysRequested);
-            $user->increment('leave_taken', $daysRequested);
+            // NOTE: Saldo TIDAK dipotong disini, akan dipotong saat APPROVE
         }
         // ==========================================
 
@@ -176,6 +174,19 @@ class LeaveRequestController extends Controller
                 'approved_by' => Auth::id(),
                 'rejection_reason' => null,
             ]);
+
+            // === POTONG SALDO CUTI SAAT APPROVE ===
+            if ($leaveRequest->type === 'cuti') {
+                $startDate = Carbon::parse($leaveRequest->start_date);
+                $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
+                $daysCount = $startDate->diffInDays($endDate) + 1;
+
+                $leaveRequest->user->decrement('leave_balance', $daysCount);
+                $leaveRequest->user->increment('leave_taken', $daysCount);
+
+                Log::info("Cuti APPROVED: User {$leaveRequest->user_id} dipotong {$daysCount} hari");
+            }
+            // ======================================
 
             // AUTO-CREATE/UPDATE ATTENDANCE FOR ALL LEAVE TYPES
             // Untuk setiap tanggal dalam range izin
@@ -268,12 +279,6 @@ class LeaveRequestController extends Controller
      */
     public function reject(Request $request, LeaveRequest $leaveRequest)
     {
-        Log::info('Rejecting Leave Request', [
-            'id' => $leaveRequest->id,
-            'type' => $leaveRequest->type,
-            'user_id' => $leaveRequest->user_id
-        ]);
-
         $request->validate([
             'rejection_reason' => 'required|string|max:255',
         ]);
@@ -285,22 +290,14 @@ class LeaveRequestController extends Controller
             'rejection_reason' => $request->rejection_reason,
         ]);
 
-        // === REFUND CUTI JIKA DITOLAK ===
-        if ($leaveRequest->type === 'cuti') {
-            $startDate = Carbon::parse($leaveRequest->start_date);
-            $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
-            $daysCount = $startDate->diffInDays($endDate) + 1;
+        // NOTE: Tidak perlu refund karena saldo hanya dipotong saat APPROVE
+        Log::info('Leave Request REJECTED', [
+            'id' => $leaveRequest->id,
+            'type' => $leaveRequest->type,
+            'user_id' => $leaveRequest->user_id
+        ]);
 
-            Log::info("Refunding Cuti for User ID {$leaveRequest->user_id}: {$daysCount} days");
-
-            $leaveRequest->user->increment('leave_balance', $daysCount);
-            $leaveRequest->user->decrement('leave_taken', $daysCount);
-        } else {
-            Log::info("Not refunding because type is {$leaveRequest->type}");
-        }
-        // ================================
-
-        return redirect()->back()->with('success', 'Pengajuan ditolak (Saldo ' . ($leaveRequest->type === 'cuti' ? 'dikembalikan' : 'aman') . ').');
+        return redirect()->back()->with('success', 'Pengajuan ditolak.');
     }
 
     /**
@@ -318,19 +315,8 @@ class LeaveRequestController extends Controller
             'is_active' => false
         ]);
 
+        // NOTE: Tidak perlu refund karena saldo hanya dipotong saat APPROVE
         $msg = $leaveRequest->type == 'telat' ? 'Izin telat dibatalkan.' : 'Pengajuan izin dibatalkan.';
-
-        // === REFUND CUTI JIKA DIBATALKAN USER ===
-        if ($leaveRequest->type === 'cuti') {
-            $startDate = Carbon::parse($leaveRequest->start_date);
-            $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
-            $daysCount = $startDate->diffInDays($endDate) + 1;
-
-            $leaveRequest->user->increment('leave_balance', $daysCount);
-            $leaveRequest->user->decrement('leave_taken', $daysCount);
-            $msg .= ' Saldo cuti dikembalikan.';
-        }
-        // ========================================
 
         // Redirect back agar fleksibel (bisa dari dashboard atau list)
         return redirect()->back()->with('success', $msg);

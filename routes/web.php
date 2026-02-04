@@ -569,14 +569,33 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     Route::get('/fix-balance', function () {
-        $u = \App\Models\User::where('name', 'Super Admin PStore')->first();
-        if ($u) {
-            $u->leave_balance = 10;
-            $u->leave_taken = 0;
+        // Recalculate leave balance for ALL users based on approved cuti requests
+        $users = \App\Models\User::all();
+        $fixed = 0;
+
+        foreach ($users as $u) {
+            // Hitung total hari cuti yang DISETUJUI
+            $approvedCutiDays = \App\Models\LeaveRequest::where('user_id', $u->id)
+                ->where('type', 'cuti')
+                ->where('status', 'approved')
+                ->get()
+                ->sum(function ($req) {
+                    $start = \Carbon\Carbon::parse($req->start_date);
+                    $end = $req->end_date ? \Carbon\Carbon::parse($req->end_date) : $start;
+                    return $start->diffInDays($end) + 1;
+                });
+
+            $oldTaken = $u->leave_taken;
+            $u->leave_taken = $approvedCutiDays;
+            $u->leave_balance = ($u->yearly_leave_limit ?? 10) - $approvedCutiDays;
             $u->save();
-            return "Saldo Super Admin PStore berhasil direset ke 10.";
+
+            if ($oldTaken != $approvedCutiDays) {
+                $fixed++;
+            }
         }
-        return "User tidak ditemukan.";
+
+        return "Berhasil memperbaiki saldo cuti untuk {$fixed} user. Silakan refresh halaman Monitoring Cuti.";
     });
 
     Route::fallback(function () {
