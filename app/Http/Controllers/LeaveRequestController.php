@@ -62,6 +62,9 @@ class LeaveRequestController extends Controller
 
         $requests = $query->paginate(10);
 
+        // DEBUG: Cek kenapa cuti masih muncul
+        // dd($requests->items());
+
         return view('leave_requests.index', compact('requests'));
     }
 
