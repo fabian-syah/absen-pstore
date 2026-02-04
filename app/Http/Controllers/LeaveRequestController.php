@@ -268,6 +268,12 @@ class LeaveRequestController extends Controller
      */
     public function reject(Request $request, LeaveRequest $leaveRequest)
     {
+        Log::info('Rejecting Leave Request', [
+            'id' => $leaveRequest->id,
+            'type' => $leaveRequest->type,
+            'user_id' => $leaveRequest->user_id
+        ]);
+
         $request->validate([
             'rejection_reason' => 'required|string|max:255',
         ]);
@@ -285,8 +291,12 @@ class LeaveRequestController extends Controller
             $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
             $daysCount = $startDate->diffInDays($endDate) + 1;
 
+            Log::info("Refunding Cuti for User ID {$leaveRequest->user_id}: {$daysCount} days");
+
             $leaveRequest->user->increment('leave_balance', $daysCount);
             $leaveRequest->user->decrement('leave_taken', $daysCount);
+        } else {
+            Log::info("Not refunding because type is {$leaveRequest->type}");
         }
         // ================================
 
