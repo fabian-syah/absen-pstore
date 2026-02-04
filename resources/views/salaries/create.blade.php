@@ -252,10 +252,10 @@
                             @php $cutiLebihVal = $cutiLebih ?? 0; @endphp
                             <div class="row mb-3 align-items-center p-2 rounded mx-0 border {{ $cutiLebihVal > 0 ? 'bg-danger bg-opacity-10 border-danger' : 'bg-light' }}">
                                 <div class="col-4">
-                                    <label class="small fw-bold mb-0 {{ $cutiLebihVal > 0 ? 'text-danger' : '' }}">Cuti Lebih (Hari)</label>
-                                    <input type="number" name="cuti_lebih_days" id="cuti_lebih_days" class="form-control form-control-sm mt-1 fw-bold {{ $cutiLebihVal > 0 ? 'text-danger' : '' }}" value="{{ $cutiLebihVal }}" readonly>
+                                    <label class="small fw-bold mb-0" style="{{ $cutiLebihVal > 0 ? 'color: #dc3545 !important;' : '' }}">Cuti Lebih (Hari)</label>
+                                    <input type="number" name="cuti_lebih_days" id="cuti_lebih_days" class="form-control form-control-sm mt-1 fw-bold" style="{{ $cutiLebihVal > 0 ? 'color: #dc3545 !important;' : '' }}" value="{{ $cutiLebihVal }}" readonly>
                                     @if($cutiLebihVal > 0)
-                                        <small class="text-danger" style="font-size: 9px;">Melebihi jatah 12 hari/tahun</small>
+                                        <small style="font-size: 9px; color: #dc3545;">Melebihi jatah 12 hari/tahun</small>
                                     @else
                                         <small class="text-muted" style="font-size: 9px;">Jatah tahunan: 12 hari</small>
                                     @endif
@@ -263,8 +263,8 @@
                                 <div class="col-8">
                                     <label class="small text-muted fst-italic mb-0">Rumus: (Fixed / 31) x Cuti Lebih</label>
                                     <div class="input-group input-group-sm mt-1">
-                                        <span class="input-group-text {{ $cutiLebihVal > 0 ? 'text-danger' : '' }} bg-white">Rp</span>
-                                        <input type="text" name="cuti_lebih_deduction" id="cuti_lebih_deduction" class="form-control deduction-input fw-bold {{ $cutiLebihVal > 0 ? 'text-danger' : '' }}" readonly>
+                                        <span class="input-group-text bg-white" style="{{ $cutiLebihVal > 0 ? 'color: #dc3545 !important;' : '' }}">Rp</span>
+                                        <input type="text" name="cuti_lebih_deduction" id="cuti_lebih_deduction" class="form-control deduction-input fw-bold" style="{{ $cutiLebihVal > 0 ? 'color: #dc3545 !important;' : '' }}" readonly>
                                     </div>
                                 </div>
                             </div>
