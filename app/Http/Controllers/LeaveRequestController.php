@@ -419,8 +419,30 @@ class LeaveRequestController extends Controller
             }
         }
 
+        // Clone query for statistics before pagination
+        $statsQuery = clone $query;
+        $totalUsers = $statsQuery->count();
+        $totalTaken = $statsQuery->sum('leave_taken');
+        $totalBalance = $statsQuery->sum('leave_balance');
+
+        // Pending Requests Count (All or Scoped)
+        $pendingQuery = \App\Models\LeaveRequest::where('status', 'pending');
+        if ($user->role == 'audit' && !empty($myBranchIds)) {
+            $pendingQuery->whereHas('user', function ($q) use ($myBranchIds) {
+                $q->whereIn('branch_id', $myBranchIds);
+            });
+        }
+        $pendingCount = $pendingQuery->count();
+
+        $stats = [
+            'total_users' => $totalUsers,
+            'total_taken' => $totalTaken,
+            'total_balance' => $totalBalance,
+            'pending_requests' => $pendingCount
+        ];
+
         $users = $query->orderBy('name')->paginate(15);
 
-        return view('leave_requests.admin_summary', compact('users'));
+        return view('leave_requests.admin_summary', compact('users', 'stats'));
     }
 }
