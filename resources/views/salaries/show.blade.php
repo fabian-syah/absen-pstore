@@ -199,6 +199,16 @@
                                     </tr>
                                 @endif
 
+                                @if($salary->cuti_lebih_deduction > 0)
+                                    <tr>
+                                        <td class="ps-4">Potongan Cuti Lebih ({{ $salary->cuti_lebih_days ?? 0 }} Hari)
+                                            <br><small class="text-muted fst-italic">(Melebihi jatah 12 hari/tahun)</small></td>
+                                        <td class="text-end pe-4 text-danger fw-bold">(Rp
+                                            {{ number_format($salary->cuti_lebih_deduction, 0, ',', '.') }})
+                                        </td>
+                                    </tr>
+                                @endif
+
                                 @if($salary->kasbon_deduction > 0)
                                     <tr>
                                         <td class="ps-4">Potongan Kasbon / Hutang</td>
