@@ -446,4 +446,41 @@ class LeaveRequestController extends Controller
 
         return view('leave_requests.admin_summary', compact('users', 'stats'));
     }
+    /**
+     * HALAMAN APPROVAL CUTI (KHUSUS FORMAT BARU)
+     */
+    public function approvalCuti(Request $request)
+    {
+        $user = Auth::user();
+
+        // 1. Cek Role (Hanya Admin / Audit / Leader / HR)
+        if (!in_array($user->role, ['admin', 'admin_gaji', 'audit', 'leader'])) {
+            abort(403, 'Unauthorized');
+        }
+
+        // 2. Query Data Pending & Type = Cuti
+        $query = LeaveRequest::with(['user.branch', 'user.division'])
+            ->where('status', 'pending')
+            ->where('type', 'cuti');
+
+        // 3. Filter Audit (Branch Scope)
+        if ($user->role == 'audit') {
+            $pivotBranchIds = $user->branches->pluck('id')->toArray();
+            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!empty($myBranchIds)) {
+                $query->whereHas('user', function ($q) use ($myBranchIds) {
+                    $q->whereIn('branch_id', $myBranchIds);
+                });
+            } else {
+                $query->where('id', 0); // No access
+            }
+        }
+
+        // 4. Default Sort: Oldest First (Prioritas Lama)
+        $requests = $query->orderBy('start_date', 'asc')->paginate(10);
+
+        return view('leave_requests.approval_cuti', compact('requests'));
+    }
 }
