@@ -237,7 +237,7 @@ class AuditController extends Controller
             ]);
 
             if (!$isSuperUser && !$isWhitelisted) {
-                return redirect()->back()->with('error', 'AKSES DITOLAK: Khusus Team Audit (ID 64), approval hanya bisa dilakukan oleh Admin, Herlina, Eva, atau Agung.');
+                return redirect()->back()->with('swal_error', 'AKSES DITOLAK: Anda tidak memiliki akses untuk memverifikasi anggota tim ini.');
             }
         }
 
@@ -323,7 +323,7 @@ class AuditController extends Controller
             $isWhitelisted = in_array(strtolower($approver->login_id), $allowedLogins);
 
             if (!$isSuperUser && !$isWhitelisted) {
-                return redirect()->back()->with('error', 'AKSES DITOLAK: Khusus Team Audit (ID 64), reject hanya bisa dilakukan oleh Admin, Herlina, Eva, atau Agung.');
+                return redirect()->back()->with('swal_error', 'AKSES DITOLAK: Anda tidak memiliki akses untuk memverifikasi anggota tim ini.');
             }
         }
 

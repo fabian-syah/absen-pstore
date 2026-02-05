@@ -251,8 +251,19 @@
 
     {{-- SCRIPTS --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        @if(session('swal_error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Akses Ditolak',
+                text: '{{ session('swal_error') }}',
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Mengerti'
+            });
+        @endif
+
         // FUNGSI UNTUK MODAL REJECT (SOLUSI IPHONE)
         window.openRejectModal = function (reqId, actionUrl) {
             var modalElement = document.getElementById('rejectModalDynamic');
