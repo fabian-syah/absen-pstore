@@ -203,8 +203,8 @@
         const sensor = document.getElementById('scan-btn');
         const form = document.getElementById('fingerprintForm');
 
-        sensor.addEventListener('click', async function () {
-            // Prevent double click
+        async function startScan() {
+            // Prevent double click/run
             if (sensor.classList.contains('scanning')) return;
 
             // 1. Check if Browser Supports WebAuthn
@@ -219,13 +219,11 @@
                 statusText.innerText = "Mengakses Sensor Biometrik...";
                 statusText.classList.add('text-success');
 
-                // 2. Create Dummy Challenge (in real app, this comes from server)
+                // 2. Create Dummy Challenge
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
 
                 // 3. Trigger Native OS Biometric Prompt
-                // We use 'create' here purely to force the "Verify it's you" dialog.
-                // This prevents "mouse click" login because the OS intercepts it.
                 const credential = await navigator.credentials.create({
                     publicKey: {
                         challenge: challenge,
@@ -237,31 +235,42 @@
                         },
                         pubKeyCredParams: [{ alg: -7, type: "public-key" }],
                         authenticatorSelection: {
-                            authenticatorAttachment: "platform", // Forces built-in sensor (TouchID/Hello)
-                            userVerification: "required" // Forces PIN/Biometric, can't just click OK
+                            authenticatorAttachment: "platform", // Forces built-in sensor
+                            userVerification: "required"
                         },
                         timeout: 60000
                     }
                 });
 
-                // 4. Success! (The user passed the OS Biometric check)
+                // 4. Success!
                 console.log("Biometric Success:", credential);
                 statusText.innerText = "Verifikasi Berhasil! Sedang masuk...";
 
-                // Submit form to log in
                 setTimeout(() => {
                     form.submit();
                 }, 500);
 
             } catch (error) {
-                // User cancelled or failed biometric
                 console.error(error);
                 sensor.classList.remove('scanning');
-                statusText.innerText = "Gagal / Dibatalkan. Coba lagi.";
+                statusText.innerText = "Gagal. Klik icon untuk coba lagi.";
                 statusText.classList.remove('text-success');
                 statusText.classList.add('text-danger');
-                alert("Verifikasi Biometrik Gagal atau Dibatalkan oleh user.");
+
+                // Only alert if it's not a timeout or user cancellation to avoid spamming on load
+                if (error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
+                    // alert("Biometric failed: " + error.message);
+                }
             }
+        }
+
+        // Trigger on click
+        sensor.addEventListener('click', startScan);
+
+        // Trigger automatically on load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Slight delay to ensure page is ready and animations are smooth
+            setTimeout(startScan, 500);
         });
     </script>
 </body>
