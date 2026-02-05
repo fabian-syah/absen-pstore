@@ -32,9 +32,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            /* Allow scrolling on small screens */
+            overflow-y: auto; 
             color: var(--text-main);
             margin: 0;
+            padding: 20px; /* Add padding to body for mobile edges */
+            box-sizing: border-box; /* Ensure padding doesn't affect calculations */
         }
 
         .bg-ornaments {
@@ -47,9 +50,10 @@
         .login-wrapper {
             position: relative;
             z-index: 10;
-            width: 90%;
+            width: 100%;
             max-width: 400px;
             text-align: center;
+            margin: auto; /* Center in flex container */
         }
 
         .login-card {
@@ -63,6 +67,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%; /* Take full width of wrapper */
+            box-sizing: border-box; /* Important for padding */
         }
 
         .fingerprint-sensor {
@@ -78,8 +84,10 @@
             overflow: hidden;
             transition: all 0.3s ease;
             margin-bottom: 2rem;
+            flex-shrink: 0; /* Prevent shrinking */
         }
 
+        /* ... existing styles ... */
         .fingerprint-sensor i {
             font-size: 80px;
             color: rgba(255, 255, 255, 0.5);
@@ -121,29 +129,23 @@
         }
 
         @keyframes scanMove {
-            0% {
-                top: 0;
-            }
-
-            50% {
-                top: 100%;
-            }
-
-            100% {
-                top: 0;
-            }
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
         }
 
         h3 {
             font-weight: 800;
             margin-bottom: 0.5rem;
             color: var(--primary-gold);
+            font-size: 1.5rem;
         }
 
         p {
             color: var(--text-muted);
             font-size: 0.9rem;
             margin-bottom: 2rem;
+            line-height: 1.5;
         }
 
         .text-success {
@@ -158,9 +160,36 @@
             font-size: 0.85rem;
             font-weight: 600;
         }
-
+        
         .back-link:hover {
             text-decoration: underline;
+        }
+
+        /* Responsive Improvements */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 2rem 1.5rem;
+                border-radius: 25px;
+            }
+            
+            .fingerprint-sensor {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 1.5rem;
+            }
+            
+            .fingerprint-sensor i {
+                font-size: 60px;
+            }
+
+            h3 {
+                font-size: 1.3rem;
+            }
+
+            p {
+                font-size: 0.85rem;
+                margin-bottom: 1.5rem;
+            }
         }
     </style>
 </head>
