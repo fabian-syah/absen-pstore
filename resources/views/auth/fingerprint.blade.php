@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>Fingerprint Login - PStore</title>
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Using MDI for fingerprint icon compatibility -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css">
@@ -120,9 +121,17 @@
         }
 
         @keyframes scanMove {
-            0% { top: 0; }
-            50% { top: 100%; }
-            100% { top: 0; }
+            0% {
+                top: 0;
+            }
+
+            50% {
+                top: 100%;
+            }
+
+            100% {
+                top: 0;
+            }
         }
 
         h3 {
@@ -149,7 +158,7 @@
             font-size: 0.85rem;
             font-weight: 600;
         }
-        
+
         .back-link:hover {
             text-decoration: underline;
         }
@@ -157,7 +166,7 @@
 </head>
 
 <body>
-    
+
     <div class="bg-ornaments">
         <svg width="100%" height="100%" opacity="0.04">
             <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -174,7 +183,7 @@
 
             <form action="{{ route('fingerprint.authenticate') }}" method="POST" id="fingerprintForm">
                 @csrf
-                
+
                 <div class="fingerprint-sensor" id="scan-btn">
                     <i class="mdi mdi-fingerprint"></i>
                     <div class="scan-line"></div>
@@ -190,24 +199,71 @@
     </div>
 
     <script>
-        document.getElementById('scan-btn').addEventListener('click', function() {
-            var sensor = this;
-            var statusText = document.getElementById('status-text');
-            
+        const statusText = document.getElementById('status-text');
+        const sensor = document.getElementById('scan-btn');
+        const form = document.getElementById('fingerprintForm');
+
+        sensor.addEventListener('click', async function () {
             // Prevent double click
-            if(sensor.classList.contains('scanning')) return;
+            if (sensor.classList.contains('scanning')) return;
 
-            // Start Scanning Effect
-            sensor.classList.add('scanning');
-            statusText.innerText = "Memindai Biometrik...";
-            statusText.classList.add('text-success');
+            // 1. Check if Browser Supports WebAuthn
+            if (!window.PublicKeyCredential) {
+                alert("Browser ini tidak mendukung WebAuthn (Fingerprint/FaceID).");
+                return;
+            }
 
-            // Simulate 2 seconds delay then submit
-            setTimeout(function() {
-                statusText.innerText = "Terverifikasi! Sedang masuk...";
-                document.getElementById('fingerprintForm').submit();
-            }, 2000);
+            try {
+                // UI Update
+                sensor.classList.add('scanning');
+                statusText.innerText = "Mengakses Sensor Biometrik...";
+                statusText.classList.add('text-success');
+
+                // 2. Create Dummy Challenge (in real app, this comes from server)
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+
+                // 3. Trigger Native OS Biometric Prompt
+                // We use 'create' here purely to force the "Verify it's you" dialog.
+                // This prevents "mouse click" login because the OS intercepts it.
+                const credential = await navigator.credentials.create({
+                    publicKey: {
+                        challenge: challenge,
+                        rp: { name: "PStore Absensi" },
+                        user: {
+                            id: new Uint8Array(16),
+                            name: "bianajah5",
+                            displayName: "Fabian Syah"
+                        },
+                        pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                        authenticatorSelection: {
+                            authenticatorAttachment: "platform", // Forces built-in sensor (TouchID/Hello)
+                            userVerification: "required" // Forces PIN/Biometric, can't just click OK
+                        },
+                        timeout: 60000
+                    }
+                });
+
+                // 4. Success! (The user passed the OS Biometric check)
+                console.log("Biometric Success:", credential);
+                statusText.innerText = "Verifikasi Berhasil! Sedang masuk...";
+
+                // Submit form to log in
+                setTimeout(() => {
+                    form.submit();
+                }, 500);
+
+            } catch (error) {
+                // User cancelled or failed biometric
+                console.error(error);
+                sensor.classList.remove('scanning');
+                statusText.innerText = "Gagal / Dibatalkan. Coba lagi.";
+                statusText.classList.remove('text-success');
+                statusText.classList.add('text-danger');
+                alert("Verifikasi Biometrik Gagal atau Dibatalkan oleh user.");
+            }
         });
     </script>
 </body>
+
 </html>
