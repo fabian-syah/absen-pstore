@@ -120,13 +120,11 @@ class AttendanceHistoryController extends Controller
                     $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
                 }
 
-                // UPDATE: Jangan override status absensi jika sudah ada record Absensi.
-                // Biarkan data di database (yg mungkin sudah diedit Audit) yang tampil.
-                /*
+                // FIX: Attach relation leaveRequest manual agar foto bukti muncul di view
                 if ($leave) {
-                     $att->presence_status = ... 
+                    $att->setRelation('leaveRequest', $leave);
                 }
-                */
+
                 $historyCollection->push($att);
             } else {
                 // Jika tidak ada attendance (Alpha / Leave)
