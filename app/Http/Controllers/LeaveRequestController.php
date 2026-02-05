@@ -168,6 +168,14 @@ class LeaveRequestController extends Controller
             $isSuperUser = in_array($actor->role, ['admin', 'super_admin']);
             $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
 
+            Log::info("DEBUG AUDIT APPROVAL:", [
+                'actor' => $actor->name,
+                'login_id' => $actor->login_id,
+                'role' => $actor->role,
+                'is_super' => $isSuperUser,
+                'is_white' => $isWhitelisted
+            ]);
+
             if (!$isSuperUser && !$isWhitelisted) {
                 return redirect()->back()->with('error', 'AKSES DITOLAK: Khusus Team Audit (ID 64), approval hanya bisa dilakukan oleh Admin, Herlina, Eva, atau Agung.');
             }

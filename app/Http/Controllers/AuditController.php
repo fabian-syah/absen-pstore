@@ -221,6 +221,26 @@ class AuditController extends Controller
             'approver_name' => $approver->name
         ]);
 
+        // === VALIDASI KHUSUS CABANG AUDIT (ID 64) ===
+        // User request: "dia gabisa acc orang lain maupun diri sendiri untuk id 64... kecuali idlogin yang aku sebutin"
+        if ($leaveRequest->user && $leaveRequest->user->branch_id == 64) {
+            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+
+            $isSuperUser = in_array($approver->role, ['admin', 'super_admin']);
+            $isWhitelisted = in_array(strtolower($approver->login_id), $allowedLogins);
+
+            // Debug Log
+            Log::info("DEBUG AUDIT VALIDATION:", [
+                'actor_login' => $approver->login_id,
+                'is_super' => $isSuperUser,
+                'is_white' => $isWhitelisted
+            ]);
+
+            if (!$isSuperUser && !$isWhitelisted) {
+                return redirect()->back()->with('error', 'AKSES DITOLAK: Khusus Team Audit (ID 64), approval hanya bisa dilakukan oleh Admin, Herlina, Eva, atau Agung.');
+            }
+        }
+
         // Validasi status
         if ($leaveRequest->status != 'pending') {
             Log::warning('Izin sudah diproses sebelumnya', [
@@ -294,6 +314,18 @@ class AuditController extends Controller
             'approver_id' => $approver->id,
             'approver_name' => $approver->name
         ]);
+
+        // === VALIDASI KHUSUS CABANG AUDIT (ID 64) ===
+        if ($leaveRequest->user && $leaveRequest->user->branch_id == 64) {
+            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+
+            $isSuperUser = in_array($approver->role, ['admin', 'super_admin']);
+            $isWhitelisted = in_array(strtolower($approver->login_id), $allowedLogins);
+
+            if (!$isSuperUser && !$isWhitelisted) {
+                return redirect()->back()->with('error', 'AKSES DITOLAK: Khusus Team Audit (ID 64), reject hanya bisa dilakukan oleh Admin, Herlina, Eva, atau Agung.');
+            }
+        }
 
         // Validasi status
         if ($leaveRequest->status != 'pending') {
