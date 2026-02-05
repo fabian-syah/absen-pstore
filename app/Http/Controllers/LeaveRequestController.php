@@ -158,6 +158,21 @@ class LeaveRequestController extends Controller
      */
     public function approve(LeaveRequest $leaveRequest)
     {
+        // === VALIDASI KHUSUS CABANG AUDIT (ID 64) ===
+        // Hanya boleh di-ACC oleh: Admin, Herlina, Eva, Agung
+        // User request: "dia gabisa acc orang lain maupun diri sendiri untuk id 64... kecuali idlogin yang aku sebutin"
+        if ($leaveRequest->user && $leaveRequest->user->branch_id == 64) {
+            $actor = Auth::user();
+            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+
+            $isSuperUser = in_array($actor->role, ['admin', 'super_admin']);
+            $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
+
+            if (!$isSuperUser && !$isWhitelisted) {
+                return redirect()->back()->with('error', 'AKSES DITOLAK: Khusus Team Audit (ID 64), approval hanya bisa dilakukan oleh Admin, Herlina, Eva, atau Agung.');
+            }
+        }
+
         DB::beginTransaction();
         try {
             $leaveRequest->update([
@@ -270,6 +285,19 @@ class LeaveRequestController extends Controller
      */
     public function reject(Request $request, LeaveRequest $leaveRequest)
     {
+        // === VALIDASI KHUSUS CABANG AUDIT (ID 64) ===
+        if ($leaveRequest->user && $leaveRequest->user->branch_id == 64) {
+            $actor = Auth::user();
+            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+
+            $isSuperUser = in_array($actor->role, ['admin', 'super_admin']);
+            $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
+
+            if (!$isSuperUser && !$isWhitelisted) {
+                return redirect()->back()->with('error', 'AKSES DITOLAK: Khusus Team Audit (ID 64), reject hanya bisa dilakukan oleh Admin, Herlina, Eva, atau Agung.');
+            }
+        }
+
         $request->validate([
             'rejection_reason' => 'required|string|max:255',
         ]);
