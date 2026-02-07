@@ -156,7 +156,7 @@
                         </tr>
                         <tr>
                             <td class="label">Cabang / Divisi</td>
-                            <td>: {{ $user->branch_name ?? '-' }} / {{ $user->division_name ?? '-' }}</td>
+                            <td>: {{ $user->branch_name ?? '-' }} / {{ $user->division->name ?? '-' }}</td>
                         </tr>
                         <tr>
                             <td class="label">Email</td>
@@ -167,8 +167,13 @@
 
                 <div class="ktp-image-container">
                     <h3>Foto KTP</h3>
-                    <img src="{{ route('admin.ktp.thumbnail', $user->id) }}" class="ktp-image" loading="lazy"
-                        alt="KTP {{ $user->name }}">
+                    @if(isset($user->ktp_url) && $user->ktp_url)
+                        <img src="{{ $user->ktp_url }}" class="ktp-image">
+                    @else
+                        <div style="padding: 50px; border: 1px dashed #ccc; color: #888;">
+                            Foto KTP tidak tersedia / gagal dimuat.
+                        </div>
+                    @endif
                 </div>
 
                 <div class="footer">
