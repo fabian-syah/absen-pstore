@@ -95,34 +95,10 @@
 
         <div class="ktp-image-container">
             <h3>Foto KTP</h3>
-            @if($user->ktp_photo_path)
-                {{--
-                DomPDF butuh absolute path untuk gambar lokal.
-                storage_path('app/public/') digunakan jika file ada di storage public.
-                Tapi karena user upload via storage link, path di DB mungkin 'ktp_photos/filename.jpg'.
-                Kita perlu cek path-nya.
-                --}}
-                @php
-                    $path = $user->ktp_photo_path;
-                    // Fix path if it starts with 'public/' or just filename
-                    // Asumsi: file disimpan di storage/app/public/...
-                    // Jika path di DB 'ktp_photos/xyz.jpg', full path adalah storage_path('app/public/ktp_photos/xyz.jpg')
-
-                    // Cek apakah file ada
-                    $fullPath = storage_path('app/public/' . $path);
-                    if (!file_exists($fullPath)) {
-                        // Coba cek tanpa 'public/' di path DB jika sudah termasuk
-                        $fullPath = storage_path('app/' . $path);
-                    }
-                @endphp
-
-                @if(file_exists($fullPath))
-                    <img src="{{ $fullPath }}" class="ktp-image">
-                @else
-                    <p style="color: red;">File Foto Tidak Ditemukan di Server (Path: {{ $path }})</p>
-                @endif
+            @if(isset($user->ktp_base64) && $user->ktp_base64)
+                <img src="{{ $user->ktp_base64 }}" class="ktp-image">
             @else
-                <p>Belum upload KTP</p>
+                <p>Foto KTP tidak tersedia atau gagal dimuat.</p>
             @endif
         </div>
 
