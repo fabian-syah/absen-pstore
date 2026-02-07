@@ -4,16 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 
 class AdminKtpController extends Controller
 {
     /**
-     * Download PDF containing User Biodata and KTP Photo.
-     * Use Native GD and Temp Files to avoid memory leaks and timeouts.
+     * Show Print View containing User Biodata and KTP Photo.
+     * Use Native GD and Temp Files to avoid memory leaks.
+     * Returns a VIEW that can be printed as PDF (Ctrl+P -> Save as PDF).
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Support\Renderable
      */
     public function downloadPdf()
     {
@@ -37,8 +37,8 @@ class AdminKtpController extends Controller
         }
 
         // 2. Constants
-        $targetWidth = 350; // Optimized for PDF
-        $quality = 50;
+        $targetWidth = 400; // Optimized for Print View
+        $quality = 60;
 
         // 3. Get Users
         $users = User::whereNotNull('ktp_photo_path')
@@ -63,6 +63,7 @@ class AdminKtpController extends Controller
             }
 
             $tempPathStr = null;
+            $webPath = null;
 
             if (file_exists($fullPath)) {
                 try {
@@ -74,6 +75,8 @@ class AdminKtpController extends Controller
                     $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
                     $tempFilename = 'thumb_' . $user->id . '_' . time() . '.jpg';
                     $targetPath = $tempDir . '/' . $tempFilename;
+
+                    // Check if already resized recently? (Optional optimization)
 
                     // NATIVE GD RESIZE
                     $size = @getimagesize($fullPath);
@@ -95,7 +98,6 @@ class AdminKtpController extends Controller
                             if ($src) {
                                 $dst = imagecreatetruecolor((int) $newWidth, (int) $newHeight);
 
-                                // Clean buffer
                                 if ($ext == 'png') {
                                     imagealphablending($dst, false);
                                     imagesavealpha($dst, true);
@@ -103,7 +105,6 @@ class AdminKtpController extends Controller
 
                                 imagecopyresampled($dst, $src, 0, 0, 0, 0, (int) $newWidth, (int) $newHeight, $width, $height);
 
-                                // Save as JPG
                                 if ($ext == 'png') {
                                     $bg = imagecreatetruecolor((int) $newWidth, (int) $newHeight);
                                     $white = imagecolorallocate($bg, 255, 255, 255);
@@ -120,6 +121,11 @@ class AdminKtpController extends Controller
 
                                 if (file_exists($targetPath)) {
                                     $tempPathStr = $targetPath;
+                                    // Generate URL accessible by browser
+                                    // Storage link points public/storage -> storage/app/public
+                                    // So file in storage/app/public/temp_ktp_export/x.jpg
+                                    // is accessible via asset('storage/temp_ktp_export/x.jpg')
+                                    $webPath = asset('storage/temp_ktp_export/' . $tempFilename);
                                 }
                             }
                         }
@@ -130,7 +136,7 @@ class AdminKtpController extends Controller
                 }
             }
 
-            // Generic Object to avoid Model serialization issues
+            // Generic Object
             $u = new \stdClass();
             $u->name = $user->name;
             $u->employee_id = $user->employee_id;
@@ -138,24 +144,15 @@ class AdminKtpController extends Controller
             $u->branch_name = $user->branch->name ?? '-';
             $u->division_name = $user->division->name ?? '-';
             $u->email = $user->email;
-            $u->ktp_path = $tempPathStr; // Pass Path, not Base64
+            $u->ktp_url = $webPath; // Pass Web URL for Browser View
 
             $optimizedUsers[] = $u;
         }
 
-        // 4. Load View
-        $pdf = Pdf::loadView('admin.ktp.pdf', [
-            'users' => $optimizedUsers
+        // Return View directly
+        return view('admin.ktp.pdf', [
+            'users' => $optimizedUsers,
+            'isPrintMode' => true
         ]);
-
-        $pdf->setPaper('A4', 'portrait');
-        $pdf->setOptions([
-            'isHtml5ParserEnabled' => true,
-            'isRemoteEnabled' => true,
-            'compress' => 1,
-            'dpi' => 96
-        ]);
-
-        return $pdf->download('Data_KTP_Optimized_' . date('d-m-Y_H-i') . '.pdf');
     }
 }
