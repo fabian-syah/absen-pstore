@@ -5,23 +5,42 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Intervention\Image\Facades\Image; // Import Intervention Image
 use Illuminate\Support\Facades\Log;
 
 class AdminKtpController extends Controller
 {
     /**
      * Download PDF containing User Biodata and KTP Photo.
+     * Use Native GD and Temp Files to avoid memory leaks and timeouts.
      *
      * @return \Illuminate\Http\Response
      */
     public function downloadPdf()
     {
-        // 1. Optimization: Increase Time & Memory Limit
         set_time_limit(600); // 10 Minutes
         ini_set('memory_limit', '1024M'); // 1GB
 
-        // 2. Query Users
+        // 1. Setup Temp Directory
+        $tempDir = storage_path('app/public/temp_ktp_export');
+        if (!file_exists($tempDir)) {
+            @mkdir($tempDir, 0755, true);
+        }
+
+        // Clean up old files (older than 1 hour)
+        $files = glob($tempDir . '/*');
+        if ($files) {
+            foreach ($files as $file) {
+                if (is_file($file) && filemtime($file) < (time() - 3600)) {
+                    @unlink($file);
+                }
+            }
+        }
+
+        // 2. Constants
+        $targetWidth = 350; // Optimized for PDF
+        $quality = 50;
+
+        // 3. Get Users
         $users = User::whereNotNull('ktp_photo_path')
             ->where('ktp_photo_path', '!=', '')
             ->where('is_active', true)
@@ -29,64 +48,114 @@ class AdminKtpController extends Controller
             ->get();
 
         if ($users->isEmpty()) {
-            return back()->with('error', 'Tidak ada data user dengan foto KTP yang ditemukan.');
+            return back()->with('error', 'Tidak ada data user dengan foto KTP.');
         }
 
-        // 3. Process Images (Resize & Compress)
-        // We create a new collection of objects to pass to the view
         $optimizedUsers = [];
 
         foreach ($users as $user) {
-            $base64Image = null;
-
-            // Resolve Path (Check public storage first, then root storage)
             $path = $user->ktp_photo_path;
-            $fullPath = storage_path('app/public/' . $path);
 
+            // Resolve Path
+            $fullPath = storage_path('app/public/' . $path);
             if (!file_exists($fullPath)) {
                 $fullPath = storage_path('app/' . $path);
             }
 
+            $tempPathStr = null;
+
             if (file_exists($fullPath)) {
                 try {
-                    // Resize to max 500px width, Quality 50%
-                    // This drastically reduces PDF size and memory usage during rendering
-                    $img = Image::make($fullPath)
-                        ->resize(500, null, function ($constraint) {
-                            $constraint->aspectRatio();
-                            $constraint->upsize();
-                        })
-                        ->encode('jpg', 50);
+                    // Unique temp filename
+                    $bname = basename($fullPath);
+                    // Sanitize filename
+                    $bname = preg_replace('/[^a-zA-Z0-9\._-]/', '', $bname);
 
-                    $base64Image = 'data:image/jpeg;base64,' . base64_encode($img);
-                } catch (\Exception $e) {
-                    Log::error("Gagal resize KTP User ID {$user->id}: " . $e->getMessage());
-                    // Fallback: Don't show image or show placeholder if needed
+                    $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+                    $tempFilename = 'thumb_' . $user->id . '_' . time() . '.jpg';
+                    $targetPath = $tempDir . '/' . $tempFilename;
+
+                    // NATIVE GD RESIZE
+                    $size = @getimagesize($fullPath);
+                    if ($size) {
+                        list($width, $height) = $size;
+
+                        if ($width > 0 && $height > 0) {
+                            $ratio = $width / $height;
+                            $newWidth = $targetWidth;
+                            $newHeight = $targetWidth / $ratio;
+
+                            $src = null;
+                            if ($ext == 'jpg' || $ext == 'jpeg') {
+                                $src = @imagecreatefromjpeg($fullPath);
+                            } elseif ($ext == 'png') {
+                                $src = @imagecreatefrompng($fullPath);
+                            }
+
+                            if ($src) {
+                                $dst = imagecreatetruecolor((int) $newWidth, (int) $newHeight);
+
+                                // Clean buffer
+                                if ($ext == 'png') {
+                                    imagealphablending($dst, false);
+                                    imagesavealpha($dst, true);
+                                }
+
+                                imagecopyresampled($dst, $src, 0, 0, 0, 0, (int) $newWidth, (int) $newHeight, $width, $height);
+
+                                // Save as JPG
+                                if ($ext == 'png') {
+                                    $bg = imagecreatetruecolor((int) $newWidth, (int) $newHeight);
+                                    $white = imagecolorallocate($bg, 255, 255, 255);
+                                    imagefill($bg, 0, 0, $white);
+                                    imagecopy($bg, $dst, 0, 0, 0, 0, (int) $newWidth, (int) $newHeight);
+                                    imagejpeg($bg, $targetPath, $quality);
+                                    imagedestroy($bg);
+                                } else {
+                                    imagejpeg($dst, $targetPath, $quality);
+                                }
+
+                                imagedestroy($src);
+                                imagedestroy($dst);
+
+                                if (file_exists($targetPath)) {
+                                    $tempPathStr = $targetPath;
+                                }
+                            }
+                        }
+                    }
+
+                } catch (\Throwable $e) {
+                    Log::error("GD Resize fail User {$user->id}: " . $e->getMessage());
                 }
             }
 
-            // Create generic object
-            $userData = new \stdClass();
-            $userData->name = $user->name;
-            $userData->employee_id = $user->employee_id;
-            $userData->position = $user->position;
-            $userData->branch_name = $user->branch->name ?? '-';
-            $userData->division_name = $user->division->name ?? '-';
-            $userData->email = $user->email;
-            $userData->ktp_base64 = $base64Image; // Pass Base64 string
+            // Generic Object to avoid Model serialization issues
+            $u = new \stdClass();
+            $u->name = $user->name;
+            $u->employee_id = $user->employee_id;
+            $u->position = $user->position;
+            $u->branch_name = $user->branch->name ?? '-';
+            $u->division_name = $user->division->name ?? '-';
+            $u->email = $user->email;
+            $u->ktp_path = $tempPathStr; // Pass Path, not Base64
 
-            $optimizedUsers[] = $userData;
+            $optimizedUsers[] = $u;
         }
 
-        // 4. Load View PDF
+        // 4. Load View
         $pdf = Pdf::loadView('admin.ktp.pdf', [
             'users' => $optimizedUsers
         ]);
 
-        // 5. PDF Settings (Compress = 1 is crucial)
         $pdf->setPaper('A4', 'portrait');
-        $pdf->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'compress' => 1, 'dpi' => 72]);
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'compress' => 1,
+            'dpi' => 96
+        ]);
 
-        return $pdf->download('Data_KTP_User_Compressed_' . date('d-m-Y') . '.pdf');
+        return $pdf->download('Data_KTP_Optimized_' . date('d-m-Y_H-i') . '.pdf');
     }
 }

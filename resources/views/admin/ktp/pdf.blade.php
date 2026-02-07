@@ -95,10 +95,14 @@
 
         <div class="ktp-image-container">
             <h3>Foto KTP</h3>
-            @if(isset($user->ktp_base64) && $user->ktp_base64)
-                <img src="{{ $user->ktp_base64 }}" class="ktp-image">
+            @if(isset($user->ktp_path) && $user->ktp_path)
+                @if(file_exists($user->ktp_path))
+                    <img src="{{ $user->ktp_path }}" class="ktp-image">
+                @else
+                    <p style="color: red;">File temp terhapus.</p>
+                @endif
             @else
-                <p>Foto KTP tidak tersedia atau gagal dimuat.</p>
+                <p>Foto KTP tidak tersedia / gagal diproses.</p>
             @endif
         </div>
 
