@@ -483,6 +483,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // === RUTE ADMIN DOWNLOAD DATA KTP (PDF) ===
     Route::middleware(['role:admin'])->prefix('admin/ktp')->name('admin.ktp.')->group(function () {
         Route::get('/download-pdf', [App\Http\Controllers\AdminKtpController::class, 'downloadPdf'])->name('download-pdf');
+        Route::get('/thumbnail/{id}', [App\Http\Controllers\AdminKtpController::class, 'getThumbnail'])->name('thumbnail');
     });
 
     // ==========================================================

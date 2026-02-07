@@ -9,38 +9,12 @@ use Illuminate\Support\Facades\Log;
 class AdminKtpController extends Controller
 {
     /**
-     * Show Print View containing User Biodata and KTP Photo.
-     * Use Native GD and Temp Files to avoid memory leaks.
-     * Returns a VIEW that can be printed as PDF (Ctrl+P -> Save as PDF).
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * Show Print View containing User Biodata.
+     * Images are loaded lazily via getThumbnail() to prevent timeout.
      */
     public function downloadPdf()
     {
-        set_time_limit(600); // 10 Minutes
-        ini_set('memory_limit', '1024M'); // 1GB
-
-        // 1. Setup Temp Directory
-        $tempDir = storage_path('app/public/temp_ktp_export');
-        if (!file_exists($tempDir)) {
-            @mkdir($tempDir, 0755, true);
-        }
-
-        // Clean up old files (older than 1 hour)
-        $files = glob($tempDir . '/*');
-        if ($files) {
-            foreach ($files as $file) {
-                if (is_file($file) && filemtime($file) < (time() - 3600)) {
-                    @unlink($file);
-                }
-            }
-        }
-
-        // 2. Constants
-        $targetWidth = 400; // Optimized for Print View
-        $quality = 60;
-
-        // 3. Get Users
+        // 1. Get Active Users with KTP
         $users = User::whereNotNull('ktp_photo_path')
             ->where('ktp_photo_path', '!=', '')
             ->where('is_active', true)
@@ -51,108 +25,115 @@ class AdminKtpController extends Controller
             return back()->with('error', 'Tidak ada data user dengan foto KTP.');
         }
 
-        $optimizedUsers = [];
-
-        foreach ($users as $user) {
-            $path = $user->ktp_photo_path;
-
-            // Resolve Path
-            $fullPath = storage_path('app/public/' . $path);
-            if (!file_exists($fullPath)) {
-                $fullPath = storage_path('app/' . $path);
-            }
-
-            $tempPathStr = null;
-            $webPath = null;
-
-            if (file_exists($fullPath)) {
-                try {
-                    // Unique temp filename
-                    $bname = basename($fullPath);
-                    // Sanitize filename
-                    $bname = preg_replace('/[^a-zA-Z0-9\._-]/', '', $bname);
-
-                    $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-                    $tempFilename = 'thumb_' . $user->id . '_' . time() . '.jpg';
-                    $targetPath = $tempDir . '/' . $tempFilename;
-
-                    // Check if already resized recently? (Optional optimization)
-
-                    // NATIVE GD RESIZE
-                    $size = @getimagesize($fullPath);
-                    if ($size) {
-                        list($width, $height) = $size;
-
-                        if ($width > 0 && $height > 0) {
-                            $ratio = $width / $height;
-                            $newWidth = $targetWidth;
-                            $newHeight = $targetWidth / $ratio;
-
-                            $src = null;
-                            if ($ext == 'jpg' || $ext == 'jpeg') {
-                                $src = @imagecreatefromjpeg($fullPath);
-                            } elseif ($ext == 'png') {
-                                $src = @imagecreatefrompng($fullPath);
-                            }
-
-                            if ($src) {
-                                $dst = imagecreatetruecolor((int) $newWidth, (int) $newHeight);
-
-                                if ($ext == 'png') {
-                                    imagealphablending($dst, false);
-                                    imagesavealpha($dst, true);
-                                }
-
-                                imagecopyresampled($dst, $src, 0, 0, 0, 0, (int) $newWidth, (int) $newHeight, $width, $height);
-
-                                if ($ext == 'png') {
-                                    $bg = imagecreatetruecolor((int) $newWidth, (int) $newHeight);
-                                    $white = imagecolorallocate($bg, 255, 255, 255);
-                                    imagefill($bg, 0, 0, $white);
-                                    imagecopy($bg, $dst, 0, 0, 0, 0, (int) $newWidth, (int) $newHeight);
-                                    imagejpeg($bg, $targetPath, $quality);
-                                    imagedestroy($bg);
-                                } else {
-                                    imagejpeg($dst, $targetPath, $quality);
-                                }
-
-                                imagedestroy($src);
-                                imagedestroy($dst);
-
-                                if (file_exists($targetPath)) {
-                                    $tempPathStr = $targetPath;
-                                    // Generate URL accessible by browser
-                                    // Storage link points public/storage -> storage/app/public
-                                    // So file in storage/app/public/temp_ktp_export/x.jpg
-                                    // is accessible via asset('storage/temp_ktp_export/x.jpg')
-                                    $webPath = asset('storage/temp_ktp_export/' . $tempFilename);
-                                }
-                            }
-                        }
-                    }
-
-                } catch (\Throwable $e) {
-                    Log::error("GD Resize fail User {$user->id}: " . $e->getMessage());
-                }
-            }
-
-            // Generic Object
-            $u = new \stdClass();
-            $u->name = $user->name;
-            $u->employee_id = $user->employee_id;
-            $u->position = $user->position;
-            $u->branch_name = $user->branch->name ?? '-';
-            $u->division_name = $user->division->name ?? '-';
-            $u->email = $user->email;
-            $u->ktp_url = $webPath; // Pass Web URL for Browser View
-
-            $optimizedUsers[] = $u;
-        }
-
         // Return View directly
+        // Note: we don't process images here anymore.
         return view('admin.ktp.pdf', [
-            'users' => $optimizedUsers,
+            'users' => $users,
             'isPrintMode' => true
         ]);
+    }
+
+    /**
+     * Get Resized KTP Thumbnail on-demand.
+     */
+    public function getThumbnail($id)
+    {
+        // Disable time limit for this specific request if needed, though individual resize is fast.
+        set_time_limit(60);
+
+        $user = User::findOrFail($id);
+
+        if (!$user->ktp_photo_path) {
+            abort(404);
+        }
+
+        $path = $user->ktp_photo_path;
+
+        // Resolve Path
+        $fullPath = storage_path('app/public/' . $path);
+        if (!file_exists($fullPath)) {
+            $fullPath = storage_path('app/' . $path);
+        }
+
+        if (!file_exists($fullPath)) {
+            // Return a placeholder or 404
+            abort(404);
+        }
+
+        // Cache Logic (Temp File)
+        $tempDir = storage_path('app/public/temp_ktp_export');
+        if (!file_exists($tempDir)) {
+            @mkdir($tempDir, 0755, true);
+        }
+
+        // Use file modification time for cache busting/validity
+        $mtime = filemtime($fullPath);
+        $tempFilename = 'thumb_' . $user->id . '_' . $mtime . '.jpg';
+        $targetPath = $tempDir . '/' . $tempFilename;
+
+        // If cached file exists, serve it
+        if (file_exists($targetPath)) {
+            return response()->file($targetPath);
+        }
+
+        // If not, Resize and Save
+        try {
+            $targetWidth = 350;
+            $quality = 60;
+
+            // NATIVE GD RESIZE
+            $size = @getimagesize($fullPath);
+            if ($size) {
+                list($width, $height) = $size;
+                if ($width > 0 && $height > 0) {
+                    $ratio = $width / $height;
+                    $newWidth = $targetWidth;
+                    $newHeight = $targetWidth / $ratio;
+
+                    $src = null;
+                    $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+
+                    if ($ext == 'jpg' || $ext == 'jpeg') {
+                        $src = @imagecreatefromjpeg($fullPath);
+                    } elseif ($ext == 'png') {
+                        $src = @imagecreatefrompng($fullPath);
+                    }
+
+                    if ($src) {
+                        $dst = imagecreatetruecolor((int) $newWidth, (int) $newHeight);
+
+                        // Handle PNG
+                        if ($ext == 'png') {
+                            imagealphablending($dst, false);
+                            imagesavealpha($dst, true);
+                        }
+
+                        imagecopyresampled($dst, $src, 0, 0, 0, 0, (int) $newWidth, (int) $newHeight, $width, $height);
+
+                        // Save as JPG
+                        if ($ext == 'png') {
+                            $bg = imagecreatetruecolor((int) $newWidth, (int) $newHeight);
+                            $white = imagecolorallocate($bg, 255, 255, 255);
+                            imagefill($bg, 0, 0, $white);
+                            imagecopy($bg, $dst, 0, 0, 0, 0, (int) $newWidth, (int) $newHeight);
+                            imagejpeg($bg, $targetPath, $quality);
+                            imagedestroy($bg);
+                        } else {
+                            imagejpeg($dst, $targetPath, $quality);
+                        }
+
+                        imagedestroy($src);
+                        imagedestroy($dst);
+
+                        return response()->file($targetPath);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error("Thumbnail error User {$id}: " . $e->getMessage());
+        }
+
+        // Fallback: Return original if resize fails
+        return response()->file($fullPath);
     }
 }
