@@ -3,76 +3,39 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Models\User; // Just in case
-use Illuminate\Support\Str;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminKtpController extends Controller
 {
     /**
-     * Show the form for creating a new resource.
+     * Download PDF containing User Biodata and KTP Photo.
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function downloadPdf()
     {
-        return view('admin.ktp.create');
-    }
+        // 1. Ambil user yang punya foto KTP
+        // Filter: Active users only? Or all users? Defaulting to active for now.
+        $users = User::whereNotNull('ktp_photo_path')
+            ->where('ktp_photo_path', '!=', '')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'nama_lengkap' => 'required|string|max:255',
-            'nik' => 'required|string|max:20', // NIK from OCR (hidden input)
-            'ktp_image' => 'required|image|mimes:jpeg,png,jpg|max:5120', // 5MB max
+        if ($users->isEmpty()) {
+            return back()->with('error', 'Tidak ada data user dengan foto KTP yang ditemukan.');
+        }
+
+        // 2. Load View PDF
+        $pdf = Pdf::loadView('admin.ktp.pdf', [
+            'users' => $users
         ]);
 
-        try {
-            // 1. Handle File Upload
-            if ($request->hasFile('ktp_image')) {
-                $file = $request->file('ktp_image');
-                $filename = 'KTP_' . Str::slug($request->nama_lengkap) . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('public/ktp_uploads', $filename);
-                $fullPath = storage_path('app/' . $path);
-            } else {
-                return back()->with('error', 'Gagal mengupload gambar KTP.');
-            }
+        // 3. Set Paper Size & Orientation (A4 Portrait)
+        $pdf->setPaper('A4', 'portrait');
 
-            // 2. Prepare Data for Excel
-            $data = [
-                'Nama Lengkap' => $request->nama_lengkap,
-                'NIK' => $request->nik,
-                'File Path' => $path,
-                'Waktu Upload' => now()->copy()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
-            ];
-
-            // 3. Save to CSV/Excel (Simple Append)
-            $csvPath = storage_path('app/public/data_admin_ktp.csv');
-
-            // Add header if file doesn't exist
-            if (!file_exists($csvPath)) {
-                $header = implode(',', array_keys($data)) . "\n";
-                file_put_contents($csvPath, $header);
-            }
-
-            // Append data
-            $csvData = implode(',', array_map(function ($item) {
-                return '"' . str_replace('"', '""', $item) . '"'; // Escape quotes
-            }, array_values($data))) . "\n";
-
-            file_put_contents($csvPath, $csvData, FILE_APPEND);
-
-            return redirect()->route('admin.ktp.create')->with('success', 'Data berhasil disimpan dan diexport ke CSV! NIK: ' . $request->nik);
-
-        } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
+        // 4. Download
+        return $pdf->download('Data_KTP_User_' . date('d-m-Y') . '.pdf');
     }
 }
