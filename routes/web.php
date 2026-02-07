@@ -480,6 +480,12 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/export/attendance', [AuditController::class, 'exportAttendance'])->name('export.attendance');
     });
 
+    // === RUTE ADMIN KTP (OCR) ===
+    Route::middleware(['role:admin'])->prefix('admin/ktp')->name('admin.ktp.')->group(function () {
+        Route::get('/create', [App\Http\Controllers\AdminKtpController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\AdminKtpController::class, 'store'])->name('store');
+    });
+
     // ==========================================================
     //  RUTE MONITORING WILAYAH (INVENTARIS CABANG & LEADERBOARD)
     // ==========================================================

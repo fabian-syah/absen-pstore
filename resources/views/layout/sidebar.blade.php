@@ -302,17 +302,17 @@
 
             {{-- FORMS --}}
             <!-- <li class="nav-item">
-                            <a class="nav-link" href="{{ route('leave-requests.create') }}">
-                                <i class="menu-icon mdi mdi-file-document-edit-outline"></i>
-                                <span class="menu-title">Form Izin / Telat</span>
+                                <a class="nav-link" href="{{ route('leave-requests.create') }}">
+                                    <i class="menu-icon mdi mdi-file-document-edit-outline"></i>
+                                    <span class="menu-title">Form Izin / Telat</span>
+                                </a>
+                            </li> -->
+            <!-- <li class="nav-item">
+                            <a class="nav-link" href="{{ route('leave-requests.create-cuti') }}">
+                                <i class="menu-icon mdi mdi-wallet-travel"></i>
+                                <span class="menu-title">Form Pengajuan Cuti</span>
                             </a>
                         </li> -->
-            <!-- <li class="nav-item">
-                        <a class="nav-link" href="{{ route('leave-requests.create-cuti') }}">
-                            <i class="menu-icon mdi mdi-wallet-travel"></i>
-                            <span class="menu-title">Form Pengajuan Cuti</span>
-                        </a>
-                    </li> -->
         @endif
 
         {{-- =================================== --}}
@@ -488,6 +488,13 @@
                     @if ($incompleteCount > 0)
                         <span class="badge badge-danger ms-2">{{ $incompleteCount }}</span>
                     @endif
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin.ktp.create') }}">
+                    <i class="menu-icon mdi mdi-account-multiple-plus-outline"></i>
+                    <span class="menu-title">Admin Baru (OCR)</span>
                 </a>
             </li>
         @endif
