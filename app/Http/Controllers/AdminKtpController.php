@@ -13,7 +13,7 @@ class AdminKtpController extends Controller
      * Use Native GD to resize images and avoid memory leaks.
      * Returns a VIEW that can be printed as PDF.
      */
-    public function downloadPdf()
+    public function downloadPdf(Request $request)
     {
         set_time_limit(1200); // 20 Minutes
         ini_set('memory_limit', '2048M'); // 2GB
@@ -35,15 +35,20 @@ class AdminKtpController extends Controller
         }
 
         // 2. Constants
-        $targetWidth = 350; // Optimized for Print View
-        $quality = 60;
+        $targetWidth = 250; // Further Optimized for Stability
+        $quality = 50;
 
         // 3. Get Users
-        $users = User::whereNotNull('ktp_photo_path')
+        $query = User::whereNotNull('ktp_photo_path')
             ->where('ktp_photo_path', '!=', '')
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+            ->where('is_active', true);
+
+        // Optional Filter: Branch
+        if ($request->has('branch_id') && $request->branch_id) {
+            $query->where('branch_id', $request->branch_id);
+        }
+
+        $users = $query->orderBy('name')->get();
 
         if ($users->isEmpty()) {
             return back()->with('error', 'Tidak ada data user dengan foto KTP.');

@@ -114,10 +114,10 @@
             }
 
             .footer {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
+                position: static;
+                text-align: center;
+                margin-top: 20px;
+                color: #888;
             }
         }
     </style>
