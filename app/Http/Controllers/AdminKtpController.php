@@ -10,8 +10,7 @@ class AdminKtpController extends Controller
 {
     /**
      * Show Print View containing User Biodata and KTP Photo.
-     * Use Native GD to resize images and avoid memory leaks.
-     * Returns a VIEW that can be printed as PDF.
+     * High Definition (HD) Version: 750px Width + Sharpening.
      */
     public function downloadPdf(Request $request)
     {
@@ -34,9 +33,18 @@ class AdminKtpController extends Controller
             }
         }
 
-        // 2. Constants
-        $targetWidth = 250; // Further Optimized for Stability
-        $quality = 50;
+        // 2. Constants - HD SETTINGS
+        $targetWidth = 750; // Increased to HD (was 250)
+        $quality = 85;      // High Quality (was 50)
+
+        // Sharpen Matrix (Simulate Upscale Clarity)
+        $sharpenMatrix = array(
+            array(-1, -1, -1),
+            array(-1, 16, -1),
+            array(-1, -1, -1),
+        );
+        $divisor = 8;
+        $offset = 0;
 
         // 3. Get Users
         $query = User::whereNotNull('ktp_photo_path')
@@ -71,22 +79,28 @@ class AdminKtpController extends Controller
                 try {
                     // Unique temp filename
                     $bname = basename($fullPath);
-                    // Sanitize filename
                     $bname = preg_replace('/[^a-zA-Z0-9\._-]/', '', $bname);
 
                     $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-                    $tempFilename = 'thumb_' . $user->id . '_' . time() . '.jpg';
+                    $tempFilename = 'hd_' . $user->id . '_' . time() . '.jpg';
                     $targetPath = $tempDir . '/' . $tempFilename;
+
+                    // Check cache (size/mtime) or just overwrite for now to ensure quality update
 
                     // NATIVE GD RESIZE
                     $size = @getimagesize($fullPath);
                     if ($size) {
                         list($width, $height) = $size;
 
+                        // Don't upscale if original is smaller than target
+                        $newWidth = $targetWidth;
+                        if ($width < $targetWidth) {
+                            $newWidth = $width;
+                        }
+
                         if ($width > 0 && $height > 0) {
                             $ratio = $width / $height;
-                            $newWidth = $targetWidth;
-                            $newHeight = $targetWidth / $ratio;
+                            $newHeight = $newWidth / $ratio;
 
                             $src = null;
                             if ($ext == 'jpg' || $ext == 'jpeg') {
@@ -104,6 +118,9 @@ class AdminKtpController extends Controller
                                 }
 
                                 imagecopyresampled($dst, $src, 0, 0, 0, 0, (int) $newWidth, (int) $newHeight, $width, $height);
+
+                                // Apply Sharpening
+                                imageconvolution($dst, $sharpenMatrix, $divisor, $offset);
 
                                 if ($ext == 'png') {
                                     $bg = imagecreatetruecolor((int) $newWidth, (int) $newHeight);
