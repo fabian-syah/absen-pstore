@@ -162,6 +162,7 @@ class DashboardController extends Controller
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(24))
+            ->where('check_in_time', '<=', $nowInBranch) // FIX: Jangan ambil data masa depan (misal Libur besok)
             ->latest('check_in_time')
             ->first();
 

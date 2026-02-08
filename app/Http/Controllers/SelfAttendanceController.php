@@ -52,6 +52,7 @@ class SelfAttendanceController extends Controller
             ->whereNull('check_out_time')
             // UBAH dari subHours(24) menjadi 32
             ->where('check_in_time', '>=', now()->subHours(24))
+            ->where('check_in_time', '<=', now()) // FIX: Ignore future records
             ->where('status', '!=', 'alpha')
             ->latest('check_in_time')
             ->first();
