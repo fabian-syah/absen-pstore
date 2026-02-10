@@ -114,7 +114,7 @@
                                         </td>
                                         <td>
                                             <div class="notes-text">
-                                                {{ Str::limit($att->notes ?? '-', 50) }}
+                                                {{ $att->notes ?? '-' }}
                                             </div>
                                         </td>
                                         <td>
@@ -485,10 +485,7 @@
         .notes-text {
             font-size: 0.85rem;
             color: #64748b;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            word-wrap: break-word;
         }
 
         /* Action Buttons */
