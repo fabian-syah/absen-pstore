@@ -258,9 +258,10 @@ class SelfAttendanceController extends Controller
         else {
             $checkAgain = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                // Pastikan pengecekan masuk baru juga konsisten 32 jam
                 ->where('check_in_time', '>=', now()->subHours(24))
+                ->where('check_in_time', '<=', now()) // Abaikan record masa depan (cuti dll)
                 ->where('status', '!=', 'alpha') // Jangan block oleh record Alpha otomatis
+                ->where('attendance_type', '!=', 'leave') // Jangan block oleh record izin/cuti
                 ->first();
 
             if ($checkAgain) {

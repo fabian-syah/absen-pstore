@@ -150,6 +150,9 @@ class ScanController extends Controller
                 Attendance::where('user_id', $user->id)
                     ->whereNull('check_out_time')
                     ->where('check_in_time', '>=', $currentTime->copy()->subHours(24))
+                    ->where('check_in_time', '<=', $currentTime) // Abaikan record masa depan
+                    ->where('status', '!=', 'alpha')
+                    ->where('attendance_type', '!=', 'leave')
                     ->exists()
             ) {
                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini masih memiliki sesi aktif (Belum Pulang)!'], 409);
