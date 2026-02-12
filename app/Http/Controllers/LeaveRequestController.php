@@ -209,7 +209,7 @@ class LeaveRequestController extends Controller
 
             // Map leave type to presence status
             $presenceStatusMap = [
-                'telat' => 'Masuk',  // Telat tetap dianggap masuk
+                'telat' => 'Izin Telat',  // Izin Telat harus tercatat sebagai Izin Telat
                 'wfh' => 'WFH',
                 'izin' => 'Izin',
                 'sakit' => 'Sakit',

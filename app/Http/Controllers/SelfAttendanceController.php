@@ -305,6 +305,9 @@ class SelfAttendanceController extends Controller
                 $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $reasonNote;
             }
 
+            // Tentukan presence_status berdasarkan izin telat
+            $presenceStatus = $latePermission ? 'Izin Telat' : 'Masuk';
+
             $snapIn = $user->check_in_start;
             if (!$snapIn && $workSchedule)
                 $snapIn = $workSchedule->check_in_start;
@@ -317,13 +320,13 @@ class SelfAttendanceController extends Controller
                 'branch_id' => $user->branch_id,
                 'check_in_time' => $currentTime,
                 'status' => 'pending_verification',
-                'presence_status' => 'Masuk',
+                'presence_status' => $presenceStatus,
                 'attendance_type' => 'self',
                 'photo_path' => $path,
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
                 'work_schedule_id' => $workSchedule?->id,
-                'is_late_checkin' => $isLate,
+                'is_late_checkin' => $isLate || (bool) $latePermission,
                 'notes' => $finalNotes,
                 'verified_by_user_id' => null,
                 'scheduled_check_in' => $snapIn,

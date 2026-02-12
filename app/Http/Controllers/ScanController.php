@@ -39,11 +39,11 @@ class ScanController extends Controller
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
         $todayLocal = Carbon::now($branchTimezone)->startOfDay();
 
-       $attendanceSession = Attendance::where('user_id', $user->id)
-    ->whereNull('check_out_time')
-    ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 32 jam
-    ->latest('check_in_time')
-    ->first();
+        $attendanceSession = Attendance::where('user_id', $user->id)
+            ->whereNull('check_out_time')
+            ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 32 jam
+            ->latest('check_in_time')
+            ->first();
 
         if (!$attendanceSession) {
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
@@ -146,18 +146,20 @@ class ScanController extends Controller
                 ->where('check_in_time', '<', $currentTime->copy()->subHours(24))
                 ->update(['check_out_time' => DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed by Security Scan (Expired)']);
 
-            if (Attendance::where('user_id', $user->id)
-                ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', $currentTime->copy()->subHours(24))
-                ->exists()
+            if (
+                Attendance::where('user_id', $user->id)
+                    ->whereNull('check_out_time')
+                    ->where('check_in_time', '>=', $currentTime->copy()->subHours(24))
+                    ->exists()
             ) {
                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini masih memiliki sesi aktif (Belum Pulang)!'], 409);
             }
 
             // Cek sudah absen hari ini (Lokal)
-            if (Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayLocal->format('Y-m-d')])
-                ->whereNotNull('check_out_time')->exists()
+            if (
+                Attendance::where('user_id', $user->id)
+                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayLocal->format('Y-m-d')])
+                    ->whereNotNull('check_out_time')->exists()
             ) {
                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini sudah selesai absen hari ini.'], 409);
             }
@@ -174,22 +176,33 @@ class ScanController extends Controller
             }
 
             $snapIn = $user->check_in_start;
-            if (!$snapIn && $workSchedule) $snapIn = $workSchedule->check_in_start;
+            if (!$snapIn && $workSchedule)
+                $snapIn = $workSchedule->check_in_start;
 
             $snapOut = $user->check_out_start;
-            if (!$snapOut && $workSchedule) $snapOut = $workSchedule->check_out_start;
+            if (!$snapOut && $workSchedule)
+                $snapOut = $workSchedule->check_out_start;
+
+            // Cek izin telat yang sudah di-approve hari ini
+            $latePermission = LeaveRequest::where('user_id', $user->id)
+                ->where('type', 'telat')
+                ->where('status', 'approved')
+                ->whereDate('start_date', $todayLocal->format('Y-m-d'))
+                ->first();
+
+            $presenceStatus = $latePermission ? 'Izin Telat' : 'Masuk';
 
             $attendance = Attendance::create([
                 'user_id' => $user->id,
                 'branch_id' => $user->branch_id,
                 'check_in_time' => $currentTime,
                 'status' => 'verified',
-                'presence_status' => 'Masuk',
+                'presence_status' => $presenceStatus,
                 'photo_path' => $imageName,
                 'scanned_by_user_id' => $securityUser->id,
                 'verified_by_user_id' => $securityUser->id,
                 'work_schedule_id' => $workSchedule?->id,
-                'is_late_checkin' => $isLate,
+                'is_late_checkin' => $isLate || (bool) $latePermission,
                 'attendance_type' => 'scan',
                 'notes' => $manualNotes,
                 'scheduled_check_in' => $snapIn,
@@ -199,11 +212,11 @@ class ScanController extends Controller
             $msg = $isLate ? "Absen MASUK (TERLAMBAT)" : "Absen MASUK Berhasil";
         } elseif ($request->type == 'pulang') {
 
-           $attendance = Attendance::where('user_id', $user->id)
-    ->whereNull('check_out_time')
-    ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 32 jam
-    ->latest('check_in_time')
-    ->first();
+            $attendance = Attendance::where('user_id', $user->id)
+                ->whereNull('check_out_time')
+                ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 32 jam
+                ->latest('check_in_time')
+                ->first();
 
             if (!$attendance) {
                 return response()->json(['status' => 'error', 'message' => 'Sesi tidak ditemukan atau expired.'], 404);
