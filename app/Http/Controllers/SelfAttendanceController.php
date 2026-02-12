@@ -260,6 +260,7 @@ class SelfAttendanceController extends Controller
                 ->whereNull('check_out_time')
                 // Pastikan pengecekan masuk baru juga konsisten 32 jam
                 ->where('check_in_time', '>=', now()->subHours(24))
+                ->where('status', '!=', 'alpha') // Jangan block oleh record Alpha otomatis
                 ->first();
 
             if ($checkAgain) {
