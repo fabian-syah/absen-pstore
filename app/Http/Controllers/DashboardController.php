@@ -678,4 +678,152 @@ class DashboardController extends Controller
             'branchName' => $user->branch->name ?? 'PStore',
         ]);
     }
+    /**
+     * API: Cek status VPS dan tampilkan tech stack + versi (Enhanced).
+     */
+    public function getVpsStatus()
+    {
+        $vpsUrl = 'https://api.stokps.com/';
+        $status = 'offline';
+        $responseTime = null;
+        $httpCode = null;
+
+        // Ping VPS
+        try {
+            $client = new \GuzzleHttp\Client(['verify' => false, 'timeout' => 5, 'connect_timeout' => 3]);
+            $startTime = microtime(true);
+            $response = $client->request('GET', $vpsUrl);
+            $responseTime = round((microtime(true) - $startTime) * 1000); // ms
+            $httpCode = $response->getStatusCode();
+            $status = ($httpCode >= 200 && $httpCode < 400) ? 'online' : 'error';
+        } catch (\Exception $e) {
+            $status = 'offline';
+        }
+
+        // Versions
+        $phpVersion = PHP_VERSION;
+        $laravelVersion = app()->version();
+        $dbVersion = 'N/A';
+        try {
+            $res = DB::select("SELECT VERSION() as v");
+            $dbVersion = $res[0]->v ?? 'N/A';
+        } catch (\Exception $e) {
+        }
+
+        // Server Info
+        $serverSoftware = $_SERVER['SERVER_SOFTWARE'] ?? 'N/A'; // Nginx/Apache
+        $osInfo = php_uname('s') . ' ' . php_uname('r');
+        $uptime = 'N/A';
+        if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+            $uptimeRaw = @file_get_contents('/proc/uptime');
+            if ($uptimeRaw) {
+                $uptimeSecs = floatval(explode(' ', $uptimeRaw)[0]);
+                $days = floor($uptimeSecs / 86400);
+                $hours = floor(($uptimeSecs % 86400) / 3600);
+                $mins = floor(($uptimeSecs % 3600) / 60);
+                $uptime = "{$days}d {$hours}h {$mins}m";
+            }
+        } else {
+            $uptime = 'Windows Server (Uptime N/A)';
+        }
+
+        // Resources
+        $diskFree = @disk_free_space('/');
+        $diskTotal = @disk_total_space('/');
+        $diskUsedPercent = ($diskTotal && $diskTotal > 0) ? round((1 - $diskFree / $diskTotal) * 100, 1) : 0;
+        $diskText = $diskTotal ? (round($diskFree / 1073741824, 1) . ' GB / ' . round($diskTotal / 1073741824, 1) . ' GB') : 'N/A';
+
+        // Memory Limit
+        $memoryLimit = ini_get('memory_limit');
+
+        // Tech Stack List with Real Logos (CDN)
+        $stack = [
+            [
+                'name' => 'PHP',
+                'version' => $phpVersion,
+                'logo' => 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg',
+                'desc' => 'Core Language'
+            ],
+            [
+                'name' => 'Laravel',
+                'version' => $laravelVersion,
+                'logo' => 'https://upload.wikimedia.org/wikipedia/commons/9/9a/Laravel.svg',
+                'desc' => 'Framework'
+            ],
+            [
+                'name' => 'MySQL / MariaDB',
+                'version' => $dbVersion,
+                'logo' => 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg',
+                'desc' => 'Database'
+            ],
+            [
+                'name' => 'Web Server',
+                'version' => explode(' ', $serverSoftware)[0],
+                'logo' => 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nginx/nginx-original.svg', // Default assume Nginx or generic
+                'desc' => 'HTTP Server'
+            ],
+            [
+                'name' => 'Guzzle',
+                'version' => \GuzzleHttp\Client::MAJOR_VERSION . '.x',
+                'logo' => 'https://icon.icepanel.io/Technology/svg/Guzzle.svg', // Generic or PHP logo if fetch fail
+                'desc' => 'HTTP Client'
+            ],
+            [
+                'name' => 'Composer',
+                'version' => '2.x',
+                'logo' => 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/composer/composer-original.svg',
+                'desc' => 'Package Manager'
+            ],
+            [
+                'name' => 'Bootstrap',
+                'version' => '5.x',
+                'logo' => 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bootstrap/bootstrap-plain.svg',
+                'desc' => 'Frontend UI'
+            ],
+            [
+                'name' => 'jQuery',
+                'version' => '3.x',
+                'logo' => 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jquery/jquery-original.svg',
+                'desc' => 'JS Library'
+            ]
+        ];
+
+        // PHP Extensions Status
+        $extensions = get_loaded_extensions();
+        $importantExts = ['curl', 'gd', 'mbstring', 'openssl', 'pdo_mysql', 'bcmath', 'json', 'xml', 'zip'];
+        $extStatus = [];
+        foreach ($importantExts as $ext) {
+            $extStatus[] = [
+                'name' => $ext,
+                'active' => in_array($ext, $extensions)
+            ];
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'vps' => [
+                    'url' => $vpsUrl,
+                    'is_online' => ($status === 'online'),
+                    'response_time' => $responseTime ? $responseTime . 'ms' : 'TIMEOUT',
+                    'uptime' => $uptime,
+                    'os' => $osInfo,
+                    'hostname' => gethostname()
+                ],
+                'resources' => [
+                    'disk_percent' => $diskUsedPercent,
+                    'disk_text' => $diskText,
+                    'memory_limit' => $memoryLimit
+                ],
+                'tech_stack' => $stack,
+                'php_config' => [
+                    'max_execution_time' => ini_get('max_execution_time') . 's',
+                    'upload_max_filesize' => ini_get('upload_max_filesize'),
+                    'post_max_size' => ini_get('post_max_size'),
+                ],
+                'extensions' => $extStatus,
+                'environment' => app()->environment()
+            ]
+        ]);
+    }
 }

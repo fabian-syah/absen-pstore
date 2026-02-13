@@ -234,7 +234,7 @@
                 </a>
             @endif
             <!-- <h5 class="fw-bold mb-0 text-primary" id="header-clock">--:--:--</h5>
-                                            <small class="text-muted">{{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}</small> -->
+                                                    <small class="text-muted">{{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}</small> -->
         </div>
     </div>
 @endsection
@@ -659,6 +659,101 @@
                                 class="btn btn-warning btn-sm fw-bold shadow-sm px-4 py-2" style="border-radius: 50px;">
                                 <i class="mdi mdi-download me-1"></i> Download PDF
                             </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ======================================================================= --}}
+    {{-- VPS STATUS MONITOR WIDGET (ADMIN & AUDIT ONLY) --}}
+    {{-- ======================================================================= --}}
+    @if(in_array(auth()->user()->role, ['admin', 'audit']))
+        <div class="row mb-4 animate-enter" style="animation-delay: 0.1s">
+            <div class="col-12">
+                <div class="card border-0 shadow-lg overflow-hidden" style="background: #1a1f2c; border-radius: 16px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h4 class="text-white fw-bold mb-1">
+                                    <i class="mdi mdi-server-network me-2 text-primary"></i>VPS Status Monitor
+                                </h4>
+                                <p class="text-muted small mb-0">
+                                    <span class="badge bg-dark border border-secondary text-light me-2">api.stokps.com</span>
+                                    <span class="text-secondary" id="vps-last-check">Checking...</span>
+                                </p>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span
+                                    class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2"
+                                    id="vps-status-badge">
+                                    <i class="mdi mdi-loading mdi-spin me-1"></i> CONNECTING
+                                </span>
+                                <span class="badge bg-dark border border-secondary text-info px-3 py-2" id="vps-latency">
+                                    <i class="mdi mdi-wifi me-1"></i> 0ms
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Server Stats Grid -->
+                        <div class="row g-3 mb-4">
+                            <!-- Hostname -->
+                            <div class="col-md-3">
+                                <div class="p-3 rounded-3 h-100" style="background: #232938; border: 1px solid #2d3446;">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="mdi mdi-dns text-primary fs-4 me-2"></i>
+                                        <span class="text-muted small text-uppercase">Hostname</span>
+                                    </div>
+                                    <h5 class="text-white fw-bold mb-1" id="vps-hostname">Loading...</h5>
+                                    <small class="text-secondary" id="vps-os">Loading...</small>
+                                </div>
+                            </div>
+                            <!-- Uptime -->
+                            <div class="col-md-3">
+                                <div class="p-3 rounded-3 h-100" style="background: #232938; border: 1px solid #2d3446;">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="mdi mdi-clock-check text-success fs-4 me-2"></i>
+                                        <span class="text-muted small text-uppercase">Uptime</span>
+                                    </div>
+                                    <h5 class="text-white fw-bold mb-1" id="vps-uptime">Loading...</h5>
+                                    <small class="text-secondary" id="vps-time">Loading...</small>
+                                </div>
+                            </div>
+                            <!-- Disk -->
+                            <div class="col-md-3">
+                                <div class="p-3 rounded-3 h-100" style="background: #232938; border: 1px solid #2d3446;">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="mdi mdi-harddisk text-warning fs-4 me-2"></i>
+                                        <span class="text-muted small text-uppercase">Disk Storage</span>
+                                    </div>
+                                    <h5 class="text-white fw-bold mb-1" id="vps-disk-percent">0%</h5>
+                                    <div class="progress bg-dark mt-2" style="height: 6px;">
+                                        <div class="progress-bar bg-warning" id="vps-disk-bar" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-secondary mt-1 d-block" id="vps-disk-text">Loading...</small>
+                                </div>
+                            </div>
+                            <!-- Memory (PHP Limit) -->
+                            <div class="col-md-3">
+                                <div class="p-3 rounded-3 h-100" style="background: #232938; border: 1px solid #2d3446;">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="mdi mdi-memory text-danger fs-4 me-2"></i>
+                                        <span class="text-muted small text-uppercase">Memory Limit</span>
+                                    </div>
+                                    <h5 class="text-white fw-bold mb-1" id="vps-memory">Loading...</h5>
+                                    <small class="text-secondary">PHP Limit Config</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tech Stack Grid -->
+                        <h6 class="text-muted text-uppercase small fw-bold mb-3">Tech Stack & Dependencies</h6>
+                        <div class="row g-3" id="vps-tech-stack">
+                            <!-- Populated via JS -->
+                            <div class="col-12 text-center py-3">
+                                <i class="mdi mdi-loading mdi-spin text-muted fs-2"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1424,7 +1519,7 @@
                                 {{-- CARD KHUSUS STATUS IZIN / LIBUR --}}
                                 <div class="active-work-card mb-3 position-relative overflow-hidden"
                                     style="background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%); 
-                                                                                                                                                                                                                                    border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(255, 94, 98, 0.3);">
+                                                                                                                                                                                                                                                                    border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(255, 94, 98, 0.3);">
 
                                     {{-- Decorative --}}
                                     <div
@@ -1472,18 +1567,18 @@
                             @else
                                 <div class="active-work-card mb-3 position-relative overflow-hidden"
                                     style="background: linear-gradient(135deg, #064e3b 0%, #10b981 100%); 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3);">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3);">
 
                                     {{-- Decorative Elements --}}
                                     <div
                                         style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    border-radius: 50%;">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    border-radius: 50%;">
                                     </div>
                                     <div
                                         style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    border-radius: 50%;">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    border-radius: 50%;">
                                     </div>
 
                                     <div class="card-body p-4 position-relative" style="z-index: 2;">
@@ -1493,9 +1588,9 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="work-status-icon me-3"
                                                         style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                border-radius: 16px; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                justify-content: center; backdrop-filter: blur(10px); 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                                         <i class="mdi mdi-briefcase-check text-white" style="font-size: 28px;"></i>
                                                     </div>
                                                     <div>
@@ -1513,7 +1608,7 @@
                                             {{-- Work Timeline & Info --}}
                                             <div class="work-timeline-card p-3 mb-3"
                                                 style="background: rgba(255,255,255,0.95); border-radius: 16px; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
 
                                                 <div class="row g-3">
                                                     {{-- Check In Time --}}
@@ -1521,8 +1616,8 @@
                                                         <div class="d-flex align-items-center">
                                                             <div class="timeline-dot me-3"
                                                                 style="width: 40px; height: 40px; background: linear-gradient(135deg, #43e97b, #38f9d7); 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                justify-content: center; box-shadow: 0 4px 12px rgba(67,233,123,0.4);">
                                                                 <i class="mdi mdi-login text-white fs-5"></i>
                                                             </div>
                                                             <div>
@@ -1545,8 +1640,8 @@
                                                         <div class="d-flex align-items-center">
                                                             <div class="timeline-dot me-3"
                                                                 style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        border-radius: 50%; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                border-radius: 50%; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
                                                                 <i class="mdi mdi-timer-outline text-white fs-5"></i>
                                                             </div>
                                                             <div>
@@ -1584,9 +1679,9 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="work-status-icon me-3"
                                                         style="width: 56px; height: 56px; background: rgba(255,255,255,0.25); 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    border-radius: 16px; display: flex; align-items: center; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    justify-content: center; backdrop-filter: blur(10px); 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            border-radius: 16px; display: flex; align-items: center; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            justify-content: center; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                                         <i class="mdi mdi-clock-alert-outline text-white" style="font-size: 28px;"></i>
                                                     </div>
                                                     <div>
@@ -1620,8 +1715,8 @@
                                                     <a href="{{ route('self.attend.create', ['attendance_id' => $myAttendanceToday->id, 'mode' => 'pulang']) }}"
                                                         class="checkout-btn btn btn-lg w-100 shadow-lg"
                                                         style="background: rgba(255,255,255,0.95); color: #ef4444; border: none; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          border-radius: 14px; padding: 1rem; font-weight: 700; 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          transition: all 0.3s ease; backdrop-filter: blur(10px);">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          border-radius: 14px; padding: 1rem; font-weight: 700; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          transition: all 0.3s ease; backdrop-filter: blur(10px);">
                                                         <i class="mdi mdi-logout-variant me-2"></i>
                                                         Absen Pulang Mandiri
                                                     </a>
@@ -1676,41 +1771,41 @@
                                                                 </p>
                                                                 <div class="overtime-slide-track" id="slide-track"
                                                                     style="
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            background: rgba(255,255,255,0.95);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            height: 56px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            border-radius: 50px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            position: relative;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            display: flex;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            align-items: center;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            overflow: hidden;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            background: rgba(255,255,255,0.95);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            height: 56px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            border-radius: 50px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            position: relative;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            display: flex;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            align-items: center;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            overflow: hidden;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
 
                                                                     <span
                                                                         style="
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                position: absolute;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                left: 0; width: 100%;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                text-align: center;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                color: #10b981;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                font-weight: 700;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                font-size: 0.85rem;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                letter-spacing: 1px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                user-select: none;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                opacity: 0.75;">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                position: absolute;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                left: 0; width: 100%;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                text-align: center;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                color: #10b981;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                font-weight: 700;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                font-size: 0.85rem;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                letter-spacing: 1px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                user-select: none;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                opacity: 0.75;">
                                                                         GESER KE KANAN >>
                                                                     </span>
 
                                                                     <div id="slide-thumb"
                                                                         style="
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                width: 48px; height: 48px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                background: linear-gradient(135deg, #43e97b, #38f9d7);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                border-radius: 50%;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                margin-left: 4px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                display: flex; align-items: center; justify-content: center;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                color: white; font-size: 1.4rem;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                cursor: grab;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                transition: transform 0.2s ease-out;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                touch-action: none;">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                width: 48px; height: 48px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                background: linear-gradient(135deg, #43e97b, #38f9d7);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                border-radius: 50%;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                margin-left: 4px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                display: flex; align-items: center; justify-content: center;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                color: white; font-size: 1.4rem;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                cursor: grab;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                transition: transform 0.2s ease-out;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                touch-action: none;">
                                                                         <i class="mdi mdi-chevron-double-right"></i>
                                                                     </div>
                                                                 </div>
@@ -1980,8 +2075,8 @@
                 {{-- Decorative elements --}}
                 <div
                     style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
-                                                                                                                                                                                background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
-                                                                                                                                                                                border-radius: 50%; pointer-events: none;">
+                                                                                                                                                                                        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                                                                                        border-radius: 50%; pointer-events: none;">
                 </div>
 
                 <div class="card-body p-4">
@@ -1992,8 +2087,8 @@
                                 {{-- Icon dengan glassmorphism effect --}}
                                 <div class="d-flex align-items-center justify-content-center me-3"
                                     style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
-                                                                                                                                                                                                border-radius: 16px; backdrop-filter: blur(10px); 
-                                                                                                                                                                                                border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                                                                                                                                                                                                        border-radius: 16px; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
                                     <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
                                 </div>
                                 <div>
@@ -2014,21 +2109,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                                                                                                                                                border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                                                                                                                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                                                                                                                transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                                                                                                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                                                                                                                                    opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                                                                                                                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                                                                                                                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                                                                                                                                                                                                            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                                                                                                            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
                                                         <i class="mdi mdi-file-document-edit text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -2049,21 +2144,21 @@
                                         class="quick-action-card d-block text-decoration-none">
                                         <div class="p-4 h-100 d-flex flex-column"
                                             style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
-                                                                                                                                                                                                        border: 1px solid rgba(255, 255, 255, 0.5); 
-                                                                                                                                                                                                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
-                                                                                                                                                                                                        transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                                                                                                                                                                                                border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                                                                                                                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                                                                                                                transition: all 0.3s ease; position: relative; overflow: hidden;">
 
                                             {{-- Hover gradient effect --}}
                                             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                                                                                                                                                                                                            opacity: 0; transition: opacity 0.3s ease;"
+                                                                                                                                                                                                                    opacity: 0; transition: opacity 0.3s ease;"
                                                 class="hover-gradient"></div>
 
                                             <div style="position: relative; z-index: 1;">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="icon-wrapper me-3"
                                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
-                                                                                                                                                                                                                    border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                                                                                                                                                                                                                    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
+                                                                                                                                                                                                                            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                                                                                                            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
                                                         <i class="mdi mdi-history text-white fs-4"></i>
                                                     </div>
                                                     <div>
@@ -2293,8 +2388,8 @@
 @push('styles')
     <style>
         /* =================================================================
-                                                                                                                                   DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
-                                                                                                                                   ================================================================= */
+                                                                                                                                           DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
+                                                                                                                                           ================================================================= */
 
         /* Section Headers & Separators */
         .section-header {
@@ -2392,8 +2487,8 @@
         }
 
         /* =================================================================
-                                                                                                                                   CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
-                                                                                                                                   ================================================================= */
+                                                                                                                                           CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
+                                                                                                                                           ================================================================= */
 
         /* DON'T override backgrounds - only fix text colors */
 
@@ -4293,8 +4388,8 @@
                     });
                 @endif
 
-                                                                                                                                                                // --- SCRIPT CHART ---
-                                                                                                                                                                const ctx = document.getElementById('attendancePieChart').getContext('2d');
+                                                                                                                                                                        // --- SCRIPT CHART ---
+                                                                                                                                                                        const ctx = document.getElementById('attendancePieChart').getContext('2d');
             Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
 
             @if (auth()->user()->role == 'admin')
@@ -4304,7 +4399,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending', 'Tidak Hadir'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                                                                                                                                                                                                                                        {{ $stats['early'] }}, {{ $stats['pending'] }},
+                                                                                                                                                                                                                                                                                                                                        {{ $stats['early'] }}, {{ $stats['pending'] }},
                                 {{ $stats['absent'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#0090e7',
@@ -4390,7 +4485,7 @@
                         labels: ['Tepat Waktu', 'Terlambat', 'Pulang Cepat', 'Pending'],
                         datasets: [{
                             data: [{{ $stats['on_time'] }}, {{ $stats['late'] }},
-                                                                                                                                                                                                                                                                                                                        {{ $stats['early'] }}, {{ $stats['pending'] }}
+                                                                                                                                                                                                                                                                                                                                        {{ $stats['early'] }}, {{ $stats['pending'] }}
                             ],
                             backgroundColor: ['#00d25b', '#ffab00', '#fc424a', '#8c94a3'],
                             borderWidth: 2,
@@ -4409,8 +4504,8 @@
                 });
             @endif
 
-                                                                                                                                                                // --- MODAL FOTO PROFIL ---
-                                                                                                                                                                var profilePhotoModal = document.getElementById('profilePhotoModal');
+                                                                                                                                                                        // --- MODAL FOTO PROFIL ---
+                                                                                                                                                                        var profilePhotoModal = document.getElementById('profilePhotoModal');
             if (profilePhotoModal) {
                 profilePhotoModal.addEventListener('show.bs.modal', function (event) {
                     var button = event.relatedTarget;
@@ -4591,16 +4686,87 @@
         // Add fade out animation
         const styleEl = document.createElement('style');
         styleEl.textContent = `
-                                @keyframes fadeOutOverlay {
-                                    from { opacity: 1; }
-                                    to { opacity: 0; }
-                                }
-                            `;
+                                        @keyframes fadeOutOverlay {
+                                            from { opacity: 1; }
+                                            to { opacity: 0; }
+                                        }
+                                    `;
         document.head.appendChild(styleEl);
 
         // Optional: Confetti Effect Function (Placeholder)
         function confettiEffect() {
             alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
+        }
+
+        // ============================================
+        // VPS MONITORING SCRIPT
+        // ============================================
+        function fetchVpsStatus() {
+            const container = document.getElementById('vps-status-badge');
+            if (!container) return; // Not on admin/audit page
+
+            fetch("{{ route('api.vps-status') }}")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        updateVpsUI(data.data);
+                    }
+                })
+                .catch(err => console.error("VPS Check Failed", err));
+        }
+
+        function updateVpsUI(data) {
+            // Header
+            const statusBadge = document.getElementById('vps-status-badge');
+            const latencyBadge = document.getElementById('vps-latency');
+            const lastCheck = document.getElementById('vps-last-check');
+
+            if (data.vps.is_online) {
+                statusBadge.className = 'badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2';
+                statusBadge.innerHTML = '<i class="mdi mdi-check-circle me-1"></i> ONLINE';
+            } else {
+                statusBadge.className = 'badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2';
+                statusBadge.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i> OFFLINE';
+            }
+
+            latencyBadge.innerHTML = `<i class="mdi mdi-wifi me-1"></i> ${data.vps.response_time}`;
+            lastCheck.innerText = 'Last check: ' + new Date().toLocaleTimeString();
+
+            // Stats
+            document.getElementById('vps-hostname').innerText = data.vps.hostname || 'N/A';
+            document.getElementById('vps-os').innerText = data.vps.os || 'N/A';
+            document.getElementById('vps-uptime').innerText = data.vps.uptime || 'N/A';
+            document.getElementById('vps-time').innerText = new Date().toLocaleString('id-ID'); // Just update current time
+
+            document.getElementById('vps-disk-percent').innerText = data.resources.disk_percent + '%';
+            document.getElementById('vps-disk-bar').style.width = data.resources.disk_percent + '%';
+            document.getElementById('vps-disk-text').innerText = data.resources.disk_text;
+
+            document.getElementById('vps-memory').innerText = data.resources.memory_limit;
+
+            // Tech Stack Grid
+            const stackContainer = document.getElementById('vps-tech-stack');
+            let stackHtml = '';
+            data.tech_stack.forEach(item => {
+                stackHtml += `
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 d-flex align-items-center gap-3 h-100" style="background: #232938; border: 1px solid #2d3446;">
+                            <img src="${item.logo}" alt="${item.name}" style="width: 32px; height: 32px;" onerror="this.src='https://via.placeholder.com/32?text=${item.name[0]}'">
+                            <div>
+                                <h6 class="text-white fw-bold mb-0" style="font-size: 0.9rem;">${item.name}</h6>
+                                <small class="text-muted" style="font-size: 0.75rem;">${item.version}</small>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+            });
+            stackContainer.innerHTML = stackHtml;
+        }
+
+        // Initialize VPS Monitor
+        if (document.getElementById('vps-status-badge')) {
+            fetchVpsStatus();
+            setInterval(fetchVpsStatus, 5000); // 5 seconds auto-refresh
         }
     </script>
 @endpush
