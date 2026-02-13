@@ -653,4 +653,29 @@ class DashboardController extends Controller
         $attendance->update(['is_extended_shift' => true]);
         return response()->json(['status' => 'success', 'message' => 'Status lembur dikonfirmasi.']);
     }
+
+    /**
+     * Generate QR Code HD dan tampilkan halaman print-ready (Save as PDF).
+     */
+    public function downloadQrPdf()
+    {
+        $user = Auth::user();
+
+        if (!$user->qr_code_value) {
+            return back()->with('error', 'QR Code belum tersedia untuk akun Anda.');
+        }
+
+        // Generate QR Code sebagai SVG HD dengan error correction tinggi
+        $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(500)
+            ->errorCorrection('H')
+            ->margin(1)
+            ->generate($user->qr_code_value);
+
+        return view('qrcode_pdf', [
+            'qrSvg' => $qrSvg,
+            'userName' => $user->name,
+            'branchName' => $user->branch->name ?? 'PStore',
+        ]);
+    }
 }

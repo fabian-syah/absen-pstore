@@ -96,6 +96,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     Route::post('/attendance/{id}/confirm-overtime', [DashboardController::class, 'confirmOvertime'])->name('attendance.confirm-overtime');
 
+    // === DOWNLOAD QR CODE SEBAGAI PDF ===
+    Route::get('/my-qrcode-pdf', [DashboardController::class, 'downloadQrPdf'])->name('qrcode.download');
+
     Route::get('/my-wrapped-2025', [App\Http\Controllers\AttendanceRecapController::class, 'index'])->name('attendance.recap');
 
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
