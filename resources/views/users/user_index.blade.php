@@ -162,9 +162,12 @@
                                                 <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}</td>
                                                 <td>
                                                     @if ($user->qr_code_value)
-                                                        <button type="button" class="btn btn-inverse-dark btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#qrModal" data-name="{{ $user->name }}" data-qr="{{ $user->qr_code_value }}">
-                                                            <i class="mdi mdi-qrcode"></i>
+                                                        <button type="button" class="btn btn-inverse-dark btn-icon btn-sm me-1" data-bs-toggle="modal" data-bs-target="#qrModal" data-name="{{ $user->name }}" data-qr="{{ $user->qr_code_value }}" title="Lihat QR">
+                                                            <i class="mdi mdi-eye"></i>
                                                         </button>
+                                                        <a href="{{ route('users.download-qr-pdf', $user->id) }}" class="btn btn-inverse-primary btn-icon btn-sm" title="Download PDF" target="_blank">
+                                                            <i class="mdi mdi-file-pdf-box"></i>
+                                                        </a>
                                                     @else
                                                         <span class="text-muted text-small">N/A</span>
                                                     @endif

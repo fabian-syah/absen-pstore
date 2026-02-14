@@ -98,6 +98,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === DOWNLOAD QR CODE SEBAGAI PDF ===
     Route::get('/my-qrcode-pdf', [DashboardController::class, 'downloadQrPdf'])->name('qrcode.download');
+    // Admin Download User QR
+    Route::get('/users/{user}/qrcode-pdf', [UserController::class, 'downloadQrPdf'])->name('users.download-qr-pdf');
 
     Route::get('/my-wrapped-2025', [App\Http\Controllers\AttendanceRecapController::class, 'index'])->name('attendance.recap');
 

@@ -667,4 +667,23 @@ class UserController extends Controller
 
         return view('users.document_uploads', compact('users', 'stats', 'filter'));
     }
+
+    /**
+     * Admin download User QR Code as PDF
+     */
+    public function downloadQrPdf(User $user)
+    {
+        // Generate QR Code HD
+        $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(500)
+            ->errorCorrection('H')
+            ->margin(1)
+            ->generate($user->qr_code_value);
+
+        return view('qrcode_pdf', [
+            'qrSvg' => $qrSvg,
+            'userName' => $user->name,
+            'branchName' => $user->branch->name ?? 'PStore',
+        ]);
+    }
 }
