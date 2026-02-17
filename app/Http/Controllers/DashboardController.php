@@ -163,6 +163,7 @@ class DashboardController extends Controller
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(24))
             ->where('check_in_time', '<=', $nowInBranch) // FIX: Jangan ambil data masa depan (misal Libur besok)
+            ->where('attendance_type', '!=', 'leave') // <--- FIX: Jangan ambil record izin sebagai sesi aktif
             ->latest('check_in_time')
             ->first();
 

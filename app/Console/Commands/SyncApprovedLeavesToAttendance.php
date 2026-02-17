@@ -64,7 +64,7 @@ class SyncApprovedLeavesToAttendance extends Command
 
         // Map leave type to presence status
         $presenceStatusMap = [
-            'telat' => 'Masuk',
+            'telat' => 'Izin Telat',
             'wfh' => 'WFH',
             'dinas' => 'Dinas Luar',
             'izin' => 'Izin',
