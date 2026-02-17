@@ -297,13 +297,25 @@
 
                                         <td>
                                             @php
-                                                $inPhoto = $att->photo_path ? asset('storage/' . $att->photo_path) : ($att->leaveRequest && $att->leaveRequest->file_proof ? asset('storage/' . $att->leaveRequest->file_proof) : null);
+                                                $inPhoto = $att->photo_path ? asset('storage/' . $att->photo_path) : null;
+                                                $leavePhoto = ($att->leaveRequest && $att->leaveRequest->file_proof) ? asset('storage/' . $att->leaveRequest->file_proof) : null;
                                             @endphp
-                                            @if ($inPhoto)
-                                                <img src="{{ $inPhoto }}" class="rounded-3 shadow-sm img-clickable border" style="width: 40px; height: 40px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-img-src="{{ $inPhoto }}" data-img-title="Foto Masuk">
-                                            @else
-                                                <div class="rounded-3 bg-light d-flex align-items-center justify-content-center border" style="width: 40px; height: 40px;"><i class="mdi mdi-image-off text-muted"></i></div>
-                                            @endif
+                                            <div class="d-flex align-items-center gap-1">
+                                                @if ($leavePhoto)
+                                                    <div class="text-center">
+                                                        <img src="{{ $leavePhoto }}" class="rounded-3 shadow-sm img-clickable border border-warning" style="width: 35px; height: 35px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-img-src="{{ $leavePhoto }}" data-img-title="Bukti Izin (Late)">
+                                                        <small class="d-block text-warning fw-bold" style="font-size: 0.5rem;">BUKTI</small>
+                                                    </div>
+                                                @endif
+                                                @if ($inPhoto)
+                                                    <div class="text-center">
+                                                        <img src="{{ $inPhoto }}" class="rounded-3 shadow-sm img-clickable border border-success" style="width: 35px; height: 35px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-img-src="{{ $inPhoto }}" data-img-title="Foto Absen Masuk">
+                                                        <small class="d-block text-success fw-bold" style="font-size: 0.5rem;">ABSEN</small>
+                                                    </div>
+                                                @elseif (!$leavePhoto)
+                                                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center border" style="width: 35px; height: 35px;"><i class="mdi mdi-image-off text-muted"></i></div>
+                                                @endif
+                                            </div>
                                         </td>
 
                                         <td class="border-start bg-light bg-opacity-25">

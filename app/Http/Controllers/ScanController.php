@@ -155,7 +155,32 @@ class ScanController extends Controller
                     ->where('attendance_type', '!=', 'leave')
                     ->exists()
             ) {
-                return response()->json(['status' => 'error', 'message' => 'Karyawan ini masih memiliki sesi aktif (Belum Pulang)!'], 409);
+                // Check existing session to prevent duplicates
+                $todayDateLocal = Carbon::now($branchTimezone)->format('Y-m-d');
+                $appOffset = $this->getOffset(config('app.timezone'));
+                $branchOffset = $this->getOffset($branchTimezone);
+
+                $existingSessionToday = Attendance::where('user_id', $user->id)
+                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayDateLocal])
+                    ->where('status', '!=', 'alpha')
+                    ->first();
+
+                if ($existingSessionToday && $request->type == 'masuk') {
+                    // FIX: Cek jika record ini adalah Izin Telat yang baru diapprove (masih tipe 'leave')
+                    // Jika ya, kita update saja record tersebut, jangan error "sudah absen"
+                    if ($existingSessionToday->presence_status == 'Izin Telat' && $existingSessionToday->attendance_type == 'leave') {
+                        $existingSessionToday->update([
+                            'check_in_time' => $currentTime,
+                            'photo_path' => $imageName,
+                            'attendance_type' => 'scan', // Ubah jadi scan
+                            'status' => 'verified',
+                            'scanned_by_user_id' => $securityUser->id,
+                        ]);
+                        return response()->json(['status' => 'success', 'message' => 'Konfirmasi Izin Telat Berhasil. Absen Masuk tercatat.']);
+                    }
+
+                    return response()->json(['status' => 'error', 'message' => 'User sudah melakukan absensi hari ini.'], 409);
+                }
             }
 
             // Cek sudah absen hari ini (Lokal)

@@ -317,23 +317,43 @@ class SelfAttendanceController extends Controller
             if (!$snapOut && $workSchedule)
                 $snapOut = $workSchedule->check_out_start;
 
-            Attendance::create([
-                'user_id' => $user->id,
-                'branch_id' => $user->branch_id,
-                'check_in_time' => $currentTime,
-                'status' => 'pending_verification',
-                'presence_status' => $presenceStatus,
-                'attendance_type' => 'self',
-                'photo_path' => $path,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-                'work_schedule_id' => $workSchedule?->id,
-                'is_late_checkin' => $isLate || (bool) $latePermission,
-                'notes' => $finalNotes,
-                'verified_by_user_id' => null,
-                'scheduled_check_in' => $snapIn,
-                'scheduled_check_out' => $snapOut,
-            ]);
+            // FIX: Cek apakah hari ini sudah ada record attendance Izin Telat (dari approval izin)
+            // Jika ada, UPDATE record tersebut, jangan create baru (biar tidak double 00:00)
+            $existingIzinTelatToday = Attendance::where('user_id', $user->id)
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayDateLocal])
+                ->where('presence_status', 'Izin Telat')
+                ->where('attendance_type', 'leave')
+                ->first();
+
+            if ($existingIzinTelatToday) {
+                $existingIzinTelatToday->update([
+                    'check_in_time' => $currentTime, // Ambil jam asli selfie
+                    'photo_path' => $path,           // Simpan foto selfie
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                    'attendance_type' => 'self',      // Ubah tipe jadi self
+                    'status' => 'pending_verification',
+                    'notes' => ($existingIzinTelatToday->notes ? $existingIzinTelatToday->notes . " | " : "") . "[Selfie: " . ($request->notes ?? 'Tanpa catatan') . "]",
+                ]);
+            } else {
+                Attendance::create([
+                    'user_id' => $user->id,
+                    'branch_id' => $user->branch_id,
+                    'check_in_time' => $currentTime,
+                    'status' => 'pending_verification',
+                    'presence_status' => $presenceStatus,
+                    'attendance_type' => 'self',
+                    'photo_path' => $path,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                    'work_schedule_id' => $workSchedule?->id,
+                    'is_late_checkin' => $isLate || (bool) $latePermission,
+                    'notes' => $finalNotes,
+                    'verified_by_user_id' => null,
+                    'scheduled_check_in' => $snapIn,
+                    'scheduled_check_out' => $snapOut,
+                ]);
+            }
 
             $message = 'Berhasil absen masuk. Menunggu verifikasi.';
             $shouldSendNotif = true;

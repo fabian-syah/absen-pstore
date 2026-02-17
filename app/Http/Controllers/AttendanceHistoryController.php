@@ -146,6 +146,10 @@ class AttendanceHistoryController extends Controller
                     $fakeAtt->presence_status = $presenceStatusMap[$leave->type] ?? ucfirst($leave->type);
                     if ($leave->type == 'telat') {
                         $fakeAtt->is_late_checkin = true;
+                        // FIX: Gunakan jam dari leave (start_time) agar tidak 00:00
+                        if ($leave->start_time) {
+                            $fakeAtt->check_in_time = Carbon::parse($currentDateStr . ' ' . $leave->start_time);
+                        }
                     }
                     $fakeAtt->attendance_type = 'leave';
                     $fakeAtt->notes = $leave->reason;
