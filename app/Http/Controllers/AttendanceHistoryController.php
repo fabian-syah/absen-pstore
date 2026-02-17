@@ -101,10 +101,10 @@ class AttendanceHistoryController extends Controller
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
 
-            // Cari attendance
+            // Cari attendance (Prioritaskan yang punya jam masuk asli / bukan 00:00 jika ada lebih dari satu)
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
-            })->first();
+            })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
 
             // Cari leave
             $leave = $leaves->filter(function ($l) use ($date) {
@@ -135,7 +135,7 @@ class AttendanceHistoryController extends Controller
 
                 if ($leave) {
                     $presenceStatusMap = [
-                        'telat' => 'Masuk',
+                        'telat' => 'Izin Telat',
                         'wfh' => 'WFH',
                         'dinas' => 'Dinas Luar',
                         'izin' => 'Izin',
@@ -169,14 +169,16 @@ class AttendanceHistoryController extends Controller
             'total' => $history->count(),
             'present' => $history->filter(function ($item) {
                 $s = strtolower($item->presence_status ?? '');
-                return in_array($s, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat']);
+                return in_array($s, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat', 'telat hadir']) || str_contains($s, 'telat');
             })->count(),
             'sakit' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'sakit')->count(),
             'izin' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'izin')->count(),
             'cuti' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'cuti')->count(),
             'libur' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'libur')->count(),
             'alpha' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'alpha')->count(),
-            'telat' => $history->where('is_late_checkin', true)->count(),
+            'telat' => $history->filter(function ($item) {
+                return $item->is_late_checkin == true || str_contains(strtolower($item->presence_status ?? ''), 'telat');
+            })->count(),
             'pulang_cepat' => $history->where('is_early_checkout', true)->count(),
             'pending' => $history->where('status', 'pending_verification')->count(),
         ];

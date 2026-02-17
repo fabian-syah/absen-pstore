@@ -230,10 +230,11 @@ class LeaveRequestController extends Controller
                     ->first();
 
                 if ($existingAttendance) {
-                    // SUDAH ADA ATTENDANCE: Update presence_status jika masih Alpha atau null
+                    // SUDAH ADA ATTENDANCE: Update presence_status jika masih Alpha atau jika ini Izin Telat (untuk sinkronisasi status)
                     if (
                         !$existingAttendance->presence_status ||
-                        strtolower($existingAttendance->presence_status) === 'alpha'
+                        strtolower($existingAttendance->presence_status) === 'alpha' ||
+                        $leaveRequest->type === 'telat'
                     ) {
 
                         $updateData = [

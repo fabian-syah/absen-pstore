@@ -340,7 +340,13 @@
                                                     default => 'bg-danger',
                                                 };
                                             @endphp
-                                            <span class="badge {{ $bClass }} verification-badge shadow-sm">{{ ucwords($att->presence_status ?? 'Pending') }}</span>
+                                            @php
+                                                $displayText = ucwords($att->presence_status ?? 'Pending');
+                                                if ($displayText === 'Izin Telat') {
+                                                    $displayText = 'Telat Hadir';
+                                                }
+                                            @endphp
+                                            <span class="badge {{ $bClass }} verification-badge shadow-sm">{{ $displayText }}</span>
                                         </td>
 
                                         <td class="text-center">

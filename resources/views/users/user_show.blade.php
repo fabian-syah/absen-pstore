@@ -331,10 +331,10 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if ($log->presence_status == 'Izin' || $log->presence_status == 'Sakit' || $log->presence_status == 'Cuti')
-                                                        <span class="badge bg-info">{{ $log->presence_status }}</span>
-                                                    @elseif($log->is_late_checkin)
+                                                    @if (str_contains(strtolower($log->presence_status ?? ''), 'telat') || $log->is_late_checkin)
                                                         <span class="badge bg-warning text-dark">Telat Hadir</span>
+                                                    @elseif($log->presence_status == 'Izin' || $log->presence_status == 'Sakit' || $log->presence_status == 'Cuti')
+                                                        <span class="badge bg-info">{{ $log->presence_status }}</span>
                                                     @else
                                                         <span class="badge bg-success">Hadir</span>
                                                     @endif
