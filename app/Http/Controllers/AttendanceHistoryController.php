@@ -85,11 +85,13 @@ class AttendanceHistoryController extends Controller
             ->where('user_id', $user->id)
             ->where('status', 'approved')
             ->where(function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('start_date', [$startDate, $endDate])
-                    ->orWhereBetween('end_date', [$startDate, $endDate])
-                    ->orWhere(function ($q) use ($startDate, $endDate) {
-                        $q->where('start_date', '<=', $startDate)
-                            ->where('end_date', '>=', $endDate);
+                $s = $startDate->format('Y-m-d');
+                $e = $endDate->format('Y-m-d');
+                $query->whereBetween('start_date', [$s, $e])
+                    ->orWhereBetween('end_date', [$s, $e])
+                    ->orWhere(function ($q) use ($s, $e) {
+                        $q->where('start_date', '<=', $s)
+                            ->where('end_date', '>=', $e);
                     });
             })->get();
 

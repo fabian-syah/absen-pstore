@@ -263,7 +263,7 @@
                                     <th class="border-start">Jam Pulang</th>
                                     <th>Foto</th>
                                     <th class="text-center">Status</th>
-                                    <th class="text-center">Bukti Audit</th>
+                                    <th class="text-center">Bukti Izin / Audit</th>
                                     <th>Verifikasi & Petugas</th>
                                     <th class="text-center">Metode</th>
                                     @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
@@ -298,24 +298,14 @@
                                         <td>
                                             @php
                                                 $inPhoto = $att->photo_path ? asset('storage/' . $att->photo_path) : null;
-                                                $leavePhoto = ($att->leaveRequest && $att->leaveRequest->file_proof) ? asset('storage/' . $att->leaveRequest->file_proof) : null;
                                             @endphp
-                                            <div class="d-flex align-items-center gap-1">
-                                                @if ($leavePhoto)
-                                                    <div class="text-center">
-                                                        <img src="{{ $leavePhoto }}" class="rounded-3 shadow-sm img-clickable border border-warning" style="width: 35px; height: 35px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-img-src="{{ $leavePhoto }}" data-img-title="Bukti Izin (Late)">
-                                                        <small class="d-block text-warning fw-bold" style="font-size: 0.5rem;">BUKTI</small>
-                                                    </div>
-                                                @endif
-                                                @if ($inPhoto)
-                                                    <div class="text-center">
-                                                        <img src="{{ $inPhoto }}" class="rounded-3 shadow-sm img-clickable border border-success" style="width: 35px; height: 35px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-img-src="{{ $inPhoto }}" data-img-title="Foto Absen Masuk">
-                                                        <small class="d-block text-success fw-bold" style="font-size: 0.5rem;">ABSEN</small>
-                                                    </div>
-                                                @elseif (!$leavePhoto)
-                                                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center border" style="width: 35px; height: 35px;"><i class="mdi mdi-image-off text-muted"></i></div>
-                                                @endif
-                                            </div>
+                                            @if ($inPhoto)
+                                                <div class="text-center">
+                                                    <img src="{{ $inPhoto }}" class="rounded-3 shadow-sm img-clickable border border-success" style="width: 40px; height: 40px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-img-src="{{ $inPhoto }}" data-img-title="Foto Absen Masuk">
+                                                </div>
+                                            @else
+                                                <div class="rounded-3 bg-light d-flex align-items-center justify-content-center border mx-auto" style="width: 40px; height: 40px;"><i class="mdi mdi-image-off text-muted"></i></div>
+                                            @endif
                                         </td>
 
                                         <td class="border-start bg-light bg-opacity-25">
@@ -362,12 +352,28 @@
                                         </td>
 
                                         <td class="text-center">
-                                            @if ($att->audit_photo_path)
-                                                <img src="{{ asset('storage/' . $att->audit_photo_path) }}" class="rounded-3 shadow-sm img-clickable border border-info" style="width: 40px; height: 40px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-img-src="{{ asset('storage/' . $att->audit_photo_path) }}" data-img-title="Bukti Audit">
-                                                <small class="d-block text-info fw-bold mt-1" style="font-size: 0.55rem;">BUKTI AUDIT</small>
-                                            @else
-                                                <span class="text-muted small">-</span>
-                                            @endif
+                                            @php
+                                                $leavePhoto = ($att->leaveRequest && $att->leaveRequest->file_proof) ? asset('storage/' . $att->leaveRequest->file_proof) : null;
+                                            @endphp
+                                            <div class="d-flex flex-column align-items-center gap-1">
+                                                @if ($leavePhoto)
+                                                    <div class="text-center">
+                                                        <img src="{{ $leavePhoto }}" class="rounded-3 shadow-sm img-clickable border border-warning" style="width: 40px; height: 40px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-img-src="{{ $leavePhoto }}" data-img-title="Bukti Izin">
+                                                        <small class="d-block text-warning fw-bold mt-1" style="font-size: 0.55rem;">BUKTI IZIN</small>
+                                                    </div>
+                                                @endif
+
+                                                @if ($att->audit_photo_path)
+                                                    <div class="text-center">
+                                                        <img src="{{ asset('storage/' . $att->audit_photo_path) }}" class="rounded-3 shadow-sm img-clickable border border-info" style="width: 40px; height: 40px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-img-src="{{ asset('storage/' . $att->audit_photo_path) }}" data-img-title="Bukti Audit">
+                                                        <small class="d-block text-info fw-bold mt-1" style="font-size: 0.55rem;">BUKTI AUDIT</small>
+                                                    </div>
+                                                @endif
+
+                                                @if (!$leavePhoto && !$att->audit_photo_path)
+                                                    <span class="text-muted small">-</span>
+                                                @endif
+                                            </div>
                                         </td>
 
                                         <td>
