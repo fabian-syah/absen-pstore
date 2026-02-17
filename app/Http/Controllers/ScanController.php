@@ -42,6 +42,7 @@ class ScanController extends Controller
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 32 jam
+            ->where('attendance_type', '!=', 'leave') // <--- FIX: Jangan ambil record izin sebagai sesi aktif
             ->latest('check_in_time')
             ->first();
 
@@ -243,6 +244,7 @@ class ScanController extends Controller
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 32 jam
+                ->where('attendance_type', '!=', 'leave') // <--- FIX: Jangan ambil record izin sebagai sesi aktif
                 ->latest('check_in_time')
                 ->first();
 
