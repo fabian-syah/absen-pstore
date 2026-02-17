@@ -173,21 +173,16 @@
                             <h6 class="text-muted text-small fw-bold mb-3">KELOLA FOTO (ADMIN)</h6>
                             <form action="{{ route('users.admin-photo', $user->id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
-                                <div class="mb-3">
-                                    <label class="small fw-bold text-muted d-block mb-1">Ganti Foto Profil</label>
-                                    <div class="input-group">
-                                        <input type="file" name="profile_photo" class="form-control form-control-sm" accept="image/*">
-                                        <button class="btn btn-outline-primary btn-sm" type="submit">Upload</button>
-                                    </div>
-                                </div>
                                 <div class="mb-2">
                                     <label class="small fw-bold text-muted d-block mb-1">Ganti Foto KTP</label>
                                     <div class="input-group">
-                                        <input type="file" name="ktp_photo" class="form-control form-control-sm" accept="image/*">
+                                        <input type="file" name="ktp_photo" class="form-control form-control-sm" accept="image/*" required>
                                         <button class="btn btn-outline-info btn-sm" type="submit">Upload</button>
                                     </div>
+                                    <small class="text-muted d-block mt-1" style="font-size: 10px;">
+                                        * Maksimal 10MB. Mengunggah akan langsung menimpa foto lama.
+                                    </small>
                                 </div>
-                                <small class="text-muted" style="font-size: 10px;">* Mengunggah langsung akan menimpa foto lama tanpa perlu request.</small>
                             </form>
                         </div>
                     @endif

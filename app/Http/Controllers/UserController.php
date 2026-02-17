@@ -693,33 +693,18 @@ class UserController extends Controller
     public function adminUpdatePhotos(Request $request, User $user)
     {
         $request->validate([
-            'profile_photo' => 'nullable|image|max:2048',
-            'ktp_photo' => 'nullable|image|max:2048',
+            'ktp_photo' => 'required|image|max:10240', // Maksimal 10MB
         ]);
-
-        $updated = false;
-
-        if ($request->hasFile('profile_photo')) {
-            if ($user->profile_photo_path) {
-                Storage::disk('public')->delete($user->profile_photo_path);
-            }
-            $user->profile_photo_path = $request->file('profile_photo')->store('profile-photos', 'public');
-            $user->photo_request_status = 'approved';
-            $updated = true;
-        }
 
         if ($request->hasFile('ktp_photo')) {
             if ($user->ktp_photo_path) {
                 Storage::disk('public')->delete($user->ktp_photo_path);
             }
             $user->ktp_photo_path = $request->file('ktp_photo')->store('ktp-photos', 'public');
-            $user->ktp_request_status = 'none';
-            $updated = true;
-        }
-
-        if ($updated) {
+            $user->ktp_request_status = 'approved';
             $user->save();
-            return back()->with('success', 'Foto berhasil diperbarui oleh Admin.');
+
+            return back()->with('success', 'Foto KTP berhasil diperbarui oleh Admin.');
         }
 
         return back()->with('error', 'Tidak ada file yang dipilih.');
