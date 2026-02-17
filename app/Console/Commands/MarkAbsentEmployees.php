@@ -18,15 +18,15 @@ class MarkAbsentEmployees extends Command
     {
         // 1. Tentukan Range Tanggal (Dari Awal Bulan s/d Kemarin)
         // Contoh: Sekarang tgl 21, loop dari tgl 1 s/d tgl 20.
-        $startDate = Carbon::now()->startOfMonth(); 
-        $endDate   = Carbon::yesterday();
+        $startDate = Carbon::now()->startOfMonth();
+        $endDate = Carbon::yesterday();
 
         // Validasi: Jika script jalan tanggal 1, kemarin adalah bulan lalu.
         // Opsional: Jika mau handle bulan lalu juga, logic start-nya bisa disesuaikan.
         // Untuk sekarang kita asumsikan cek bulan berjalan.
         if ($endDate->lt($startDate)) {
-             $this->info("Belum ada tanggal yang perlu dicek bulan ini.");
-             return;
+            $this->info("Belum ada tanggal yang perlu dicek bulan ini.");
+            return;
         }
 
         // Buat periode tanggal untuk diloop
@@ -46,22 +46,26 @@ class MarkAbsentEmployees extends Command
 
                 // --- CEK 1: Apakah SUDAH ADA data absensi di tanggal ini? ---
                 // Baik itu Hadir, Telat, atau BAHKAN SUDAH ALPHA (dari run sebelumnya)
+                $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+                $branchOffset = Carbon::now($branchTimezone)->format('P');
+                $appOffset = Carbon::now(config('app.timezone'))->format('P');
+
                 $existingAttendance = Attendance::where('user_id', $user->id)
-                    ->whereDate('check_in_time', $currentDate)
+                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $currentDate->format('Y-m-d')])
                     ->exists();
 
                 if ($existingAttendance) {
                     // Skip, karena data hari itu sudah terisi (entah dia masuk, atau script ini sudah pernah jalan sebelumnya)
-                    continue; 
+                    continue;
                 }
 
                 // --- CEK 2: Apakah user SEDANG CUTI / IZIN di tanggal ini? ---
                 $isOnLeave = LeaveRequest::where('user_id', $user->id)
                     ->where('status', 'approved')
                     ->where('type', '!=', 'telat')
-                    ->where(function($query) use ($currentDate) {
+                    ->where(function ($query) use ($currentDate) {
                         $query->whereDate('start_date', '<=', $currentDate)
-                              ->whereDate('end_date', '>=', $currentDate);
+                            ->whereDate('end_date', '>=', $currentDate);
                     })
                     ->exists();
 
@@ -81,17 +85,17 @@ class MarkAbsentEmployees extends Command
                 // Data kosong & tidak izin = ALPHA
                 try {
                     Attendance::create([
-                        'user_id'           => $user->id,
-                        'branch_id'         => $user->branch_id ?? 1, // Default 1 jika null
-                        'check_in_time'     => $currentDate->setTime(0, 0, 0),
-                        'check_out_time'    => $currentDate->setTime(0, 0, 0),
-                        'status'            => 'verified',
-                        'presence_status'   => 'Alpha',
-                        'attendance_type'   => 'system',
-                        'audit_note'        => 'System Auto-Generate: Backfill Alpha check.',
+                        'user_id' => $user->id,
+                        'branch_id' => $user->branch_id ?? 1, // Default 1 jika null
+                        'check_in_time' => $currentDate->setTime(0, 0, 0),
+                        'check_out_time' => $currentDate->setTime(0, 0, 0),
+                        'status' => 'verified',
+                        'presence_status' => 'Alpha',
+                        'attendance_type' => 'system',
+                        'audit_note' => 'System Auto-Generate: Backfill Alpha check.',
                         // Field lain set default/null
-                        'photo_path'        => null,
-                        'is_late_checkin'   => false,
+                        'photo_path' => null,
+                        'is_late_checkin' => false,
                         'is_early_checkout' => false,
                     ]);
 

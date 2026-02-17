@@ -43,21 +43,25 @@ class CloseMonthlyLeaderboard extends Command
             $this->line("Mengolah Cabang: {$branch->name}...");
 
             // 3. HITUNG JUARA PER CABANG
+            $branchTimezone = $branch->timezone ?? 'Asia/Jakarta';
+            $branchOffset = Carbon::now($branchTimezone)->format('P');
+            $appOffset = Carbon::now(config('app.timezone'))->format('P');
+
             $winners = Attendance::select('user_id', DB::raw('count(*) as total_attendance'))
                 ->where('branch_id', $branch->id) // FILTER PER CABANG
-                ->whereMonth('check_in_time', $month)
-                ->whereYear('check_in_time', $year)
+                ->whereRaw("MONTH(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $month])
+                ->whereRaw("YEAR(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $year])
                 ->whereNotNull('check_out_time')
                 ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])
                 ->where('status', 'verified')
-                ->whereHas('user', function($q) {
+                ->whereHas('user', function ($q) {
                     $q->where('is_active', true)
-                      ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak ikut
+                        ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak ikut
                 })
                 ->groupBy('user_id')
                 ->orderByDesc('total_attendance')
-                // Tie breaker: yang paling rajin/pagi (opsional)
-                ->orderBy(DB::raw('MIN(TIME(check_in_time))'), 'asc') 
+                // Tie breaker: yang paling rajin/pagi (Sesuai timezone cabang)
+                ->orderBy(DB::raw("MIN(TIME(CONVERT_TZ(check_in_time, '$appOffset', '$branchOffset')))"), 'asc')
                 ->take(3)
                 ->get();
 
@@ -69,17 +73,17 @@ class CloseMonthlyLeaderboard extends Command
             // 4. SIMPAN KE HISTORY
             foreach ($winners as $index => $winner) {
                 $rank = $index + 1;
-                
+
                 // Update atau Create data history
                 LeaderboardHistory::updateOrCreate(
                     [
                         'user_id' => $winner->user_id,
-                        'month'   => $month,
-                        'year'    => $year,
+                        'month' => $month,
+                        'year' => $year,
                         'branch_id' => $branch->id, // Pastikan tabel LeaderboardHistory punya kolom branch_id
                     ],
                     [
-                        'rank'             => $rank,
+                        'rank' => $rank,
                         'total_attendance' => $winner->total_attendance
                     ]
                 );

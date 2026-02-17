@@ -37,12 +37,13 @@ class ScanController extends Controller
 
         // [TIMEZONE]
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
-        $todayLocal = Carbon::now($branchTimezone)->startOfDay();
+        $localNow = Carbon::now($branchTimezone);
+        $todayLocal = $localNow->copy()->startOfDay();
 
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 32 jam
-            ->where('attendance_type', '!=', 'leave') // <--- FIX: Jangan ambil record izin sebagai sesi aktif
+            ->where('check_in_time', '>=', $localNow->copy()->subHours(32)) // Konsisten 32 jam
+            ->where('attendance_type', '!=', 'leave')
             ->latest('check_in_time')
             ->first();
 
@@ -63,8 +64,11 @@ class ScanController extends Controller
             }
 
             // Cek Sesi Hari Ini (Lokal)
+            $appOffset = $this->getOffset(config('app.timezone'));
+            $branchOffset = $this->getOffset($branchTimezone);
+
             $attendanceSession = Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayLocal->format('Y-m-d')])
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayLocal->format('Y-m-d')])
                 ->latest('check_in_time')
                 ->first();
         }
@@ -144,7 +148,7 @@ class ScanController extends Controller
 
             Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '<', $currentTime->copy()->subHours(24))
+                ->where('check_in_time', '<', $localTime->copy()->subHours(32))
                 ->update(['check_out_time' => DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed by Security Scan (Expired)']);
 
             // Check existing session today (Timezone Aware)
@@ -173,7 +177,7 @@ class ScanController extends Controller
             // Cek sudah absen hari ini (Lokal)
             if (
                 Attendance::where('user_id', $user->id)
-                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, '+07:00', ?)) = ?", [$this->getOffset($branchTimezone), $todayLocal->format('Y-m-d')])
+                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayLocal->format('Y-m-d')])
                     ->whereNotNull('check_out_time')->exists()
             ) {
                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini sudah selesai absen hari ini.'], 409);
@@ -229,8 +233,8 @@ class ScanController extends Controller
 
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 32 jam
-                ->where('attendance_type', '!=', 'leave') // <--- FIX: Jangan ambil record izin sebagai sesi aktif
+                ->where('check_in_time', '>=', $localTime->copy()->subHours(32)) // Konsisten 32 jam
+                ->where('attendance_type', '!=', 'leave')
                 ->latest('check_in_time')
                 ->first();
 

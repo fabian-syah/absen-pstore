@@ -50,11 +50,10 @@ class SelfAttendanceController extends Controller
         // Cari sesi yang belum checkout dan check_in dalam batas wajar (32 jam terakhir)
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            // UBAH dari subHours(24) menjadi 32
-            ->where('check_in_time', '>=', now()->subHours(24))
-            ->where('check_in_time', '<=', now()) // FIX: Ignore future records
+            ->where('check_in_time', '>=', $localTime->copy()->subHours(32)) // Gunakan localTime (Peningkatan range ke 32jam)
+            ->where('check_in_time', '<=', $localTime) // Gunakan localTime
             ->where('status', '!=', 'alpha')
-            ->where('attendance_type', '!=', 'leave') // <--- FIX: Jangan ambil record izin sebagai sesi aktif
+            ->where('attendance_type', '!=', 'leave')
             ->latest('check_in_time')
             ->first();
 
@@ -149,8 +148,8 @@ class SelfAttendanceController extends Controller
         if (!$attendanceToUpdate && $request->has('mode') && $request->mode == 'pulang') {
             $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', now()->subHours(24))
-                ->where('attendance_type', '!=', 'leave') // <--- FIX: Jangan ambil record izin sebagai sesi aktif
+                ->where('check_in_time', '>=', $localTime->copy()->subHours(32))
+                ->where('attendance_type', '!=', 'leave')
                 ->latest('check_in_time')
                 ->first();
         }
@@ -437,9 +436,12 @@ class SelfAttendanceController extends Controller
     public function manualCheckOut(Request $request)
     {
         $user = Auth::user();
+        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $localNow = Carbon::now($branchTimezone);
+
         $attendance = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', now()->subHours(48)) // Range luas untuk lembur
+            ->where('check_in_time', '>=', $localNow->copy()->subHours(48)) // Tetap range luas
             ->latest('check_in_time')
             ->first();
 
@@ -447,8 +449,9 @@ class SelfAttendanceController extends Controller
             return redirect()->route('dashboard')->with('error', 'Tidak ada sesi aktif yang ditemukan.');
         }
 
-        $currentTime = now();
-        $notes = ($attendance->notes ? $attendance->notes . " | " : "") . "[Manual: Lupa Absen Pulang]";
+        // Gunakan waktu lokal saat memproses (mencegah mismatch antar timezone server vs user)
+        $currentTime = Carbon::now($branchTimezone);
+        $notes = ($attendance->notes ? $attendance->notes . " | " : "") . "[Manual: Lupa Absen Pulang (" . $branchTimezone . ")]";
 
         $attendance->update([
             'check_out_time' => $currentTime,

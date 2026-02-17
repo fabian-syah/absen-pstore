@@ -61,10 +61,14 @@ class SendAttendanceCertificates extends Command
             $this->line("📍 Cabang: {$branch->name}");
 
             // 3. HITUNG TOP 3 PER CABANG
+            $branchTimezone = $branch->timezone ?? 'Asia/Jakarta';
+            $branchOffset = Carbon::now($branchTimezone)->format('P');
+            $appOffset = Carbon::now(config('app.timezone'))->format('P');
+
             $winners = Attendance::select('user_id', DB::raw('count(*) as total_attendance'))
                 ->where('branch_id', $branch->id)
-                ->whereMonth('check_in_time', $month)
-                ->whereYear('check_in_time', $year)
+                ->whereRaw("MONTH(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $month])
+                ->whereRaw("YEAR(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $year])
                 ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar', 'Hadir', 'Tepat Waktu'])
                 ->where('status', 'verified')
                 ->whereHas('user', function ($q) {
@@ -73,7 +77,7 @@ class SendAttendanceCertificates extends Command
                 })
                 ->groupBy('user_id')
                 ->orderByDesc('total_attendance')
-                ->orderBy(DB::raw('MIN(TIME(check_in_time))'), 'asc')
+                ->orderBy(DB::raw("MIN(TIME(CONVERT_TZ(check_in_time, '$appOffset', '$branchOffset')))"), 'asc')
                 ->take(3)
                 ->with('user')
                 ->get();
