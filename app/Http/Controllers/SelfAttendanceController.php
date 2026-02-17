@@ -273,19 +273,6 @@ class SelfAttendanceController extends Controller
             $appOffset = $this->getOffset(config('app.timezone'));
             $branchOffset = $this->getOffset($branchTimezone);
 
-            $existingSessionToday = Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayDateLocal])
-                ->where('status', '!=', 'alpha')
-                ->first();
-
-            if ($existingSessionToday) {
-                if ($existingSessionToday->check_out_time == null) {
-                    return redirect()->route('dashboard')->with('warning', 'Sesi aktif terdeteksi. Silakan refresh halaman.');
-                } else {
-                    return redirect()->route('dashboard')->with('error', 'Anda sudah menyelesaikan absensi hari ini.');
-                }
-            }
-
             $isLate = false;
             if ($workSchedule && $workSchedule->check_in_end) {
                 $scheduleEndStr = Carbon::parse($workSchedule->check_in_end)->format('H:i:s');
@@ -326,6 +313,11 @@ class SelfAttendanceController extends Controller
                 ->first();
 
             if ($existingAttendanceToday) {
+                // Jika sudah ada jam pulang, blok aksi masuk
+                if ($existingAttendanceToday->check_out_time != null) {
+                    return redirect()->route('dashboard')->with('error', 'Anda sudah menyelesaikan absensi hari ini.');
+                }
+
                 $existingAttendanceToday->update([
                     'check_in_time' => $currentTime, // Ambil jam asli selfie
                     'photo_path' => $path,           // Simpan foto selfie
