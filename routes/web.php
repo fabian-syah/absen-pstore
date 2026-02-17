@@ -404,6 +404,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::middleware(['role:admin,audit,admin_gaji,leader'])->group(function () {
         // Leader sekarang diizinkan mengakses halaman detail user (show)
         Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::post('/users/{user}/admin-photo', [UserController::class, 'adminUpdatePhotos'])->name('users.admin-photo');
     });
 
     // === RUTE SECURITY ===
@@ -440,6 +441,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/history', [SelfAttendanceController::class, 'history'])->name('history');
         Route::post('/hapus-telat', [SelfAttendanceController::class, 'deleteLateStatus'])->name('late.status.delete');
         Route::post('/skip-checkout/{id}', [SelfAttendanceController::class, 'skipCheckOut'])->name('skip');
+        Route::post('/manual-checkout', [SelfAttendanceController::class, 'manualCheckOut'])->name('manual-checkout');
     });
 
     // === RUTE LEAVE REQUESTS ===

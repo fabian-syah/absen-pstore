@@ -167,6 +167,31 @@
                         </div>
                     @endif
 
+                    {{-- Admin Photo Upload Section (Visible to Admin/Audit roles) --}}
+                    @if (in_array(auth()->user()->role, ['admin', 'audit']))
+                        <div class="mt-4 pt-3 border-top text-start">
+                            <h6 class="text-muted text-small fw-bold mb-3">KELOLA FOTO (ADMIN)</h6>
+                            <form action="{{ route('users.admin-photo', $user->id) }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                                <div class="mb-3">
+                                    <label class="small fw-bold text-muted d-block mb-1">Ganti Foto Profil</label>
+                                    <div class="input-group">
+                                        <input type="file" name="profile_photo" class="form-control form-control-sm" accept="image/*">
+                                        <button class="btn btn-outline-primary btn-sm" type="submit">Upload</button>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="small fw-bold text-muted d-block mb-1">Ganti Foto KTP</label>
+                                    <div class="input-group">
+                                        <input type="file" name="ktp_photo" class="form-control form-control-sm" accept="image/*">
+                                        <button class="btn btn-outline-info btn-sm" type="submit">Upload</button>
+                                    </div>
+                                </div>
+                                <small class="text-muted" style="font-size: 10px;">* Mengunggah langsung akan menimpa foto lama tanpa perlu request.</small>
+                            </form>
+                        </div>
+                    @endif
+
                 </div>
             </div>
         </div>

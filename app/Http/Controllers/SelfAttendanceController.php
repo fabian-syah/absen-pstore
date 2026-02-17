@@ -430,4 +430,32 @@ class SelfAttendanceController extends Controller
         }
         return redirect()->route('dashboard')->with('error', 'Laporan telat tidak ditemukan.');
     }
+
+    /**
+     * Lupa Absen Pulang (Tanpa Foto - Hanya untuk Lintas Hari / Lembur)
+     */
+    public function manualCheckOut(Request $request)
+    {
+        $user = Auth::user();
+        $attendance = Attendance::where('user_id', $user->id)
+            ->whereNull('check_out_time')
+            ->where('check_in_time', '>=', now()->subHours(48)) // Range luas untuk lembur
+            ->latest('check_in_time')
+            ->first();
+
+        if (!$attendance) {
+            return redirect()->route('dashboard')->with('error', 'Tidak ada sesi aktif yang ditemukan.');
+        }
+
+        $currentTime = now();
+        $notes = ($attendance->notes ? $attendance->notes . " | " : "") . "[Manual: Lupa Absen Pulang]";
+
+        $attendance->update([
+            'check_out_time' => $currentTime,
+            'notes' => $notes,
+            'status' => 'pending_verification', // Perlu verifikasi admin karena tanpa foto
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Absen pulang manual berhasil diproses (Lupa Absen Pulang).');
+    }
 }
