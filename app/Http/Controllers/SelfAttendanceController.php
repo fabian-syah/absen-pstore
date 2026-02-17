@@ -319,23 +319,23 @@ class SelfAttendanceController extends Controller
             if (!$snapOut && $workSchedule)
                 $snapOut = $workSchedule->check_out_start;
 
-            // FIX: Cek apakah hari ini sudah ada record attendance Izin Telat (dari approval izin)
-            // Jika ada, UPDATE record tersebut, jangan create baru (biar tidak double 00:00)
-            $existingIzinTelatToday = Attendance::where('user_id', $user->id)
+            // FIX: Cek apakah hari ini sudah ada record attendance (apapun jenisnya)
+            // Jika ada, UPDATE record tersebut, jangan create baru (biar tidak double)
+            $existingAttendanceToday = Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayDateLocal])
-                ->where('presence_status', 'Izin Telat')
-                ->where('attendance_type', 'leave')
                 ->first();
 
-            if ($existingIzinTelatToday) {
-                $existingIzinTelatToday->update([
+            if ($existingAttendanceToday) {
+                $existingAttendanceToday->update([
                     'check_in_time' => $currentTime, // Ambil jam asli selfie
                     'photo_path' => $path,           // Simpan foto selfie
                     'latitude' => $request->latitude,
                     'longitude' => $request->longitude,
                     'attendance_type' => 'self',      // Ubah tipe jadi self
                     'status' => 'pending_verification',
-                    'notes' => ($existingIzinTelatToday->notes ? $existingIzinTelatToday->notes . " | " : "") . "[Selfie: " . ($request->notes ?? 'Tanpa catatan') . "]",
+                    // Preserve presence_status if it was already set (e.g. Izin Telat)
+                    'presence_status' => $existingAttendanceToday->presence_status ?: 'Masuk',
+                    'notes' => ($existingAttendanceToday->notes ? $existingAttendanceToday->notes . " | " : "") . "[Selfie: " . ($request->notes ?? 'Tanpa catatan') . "]",
                 ]);
             } else {
                 Attendance::create([

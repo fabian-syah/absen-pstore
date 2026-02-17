@@ -224,9 +224,14 @@ class LeaveRequestController extends Controller
             for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
                 $currentDate = $date->format('Y-m-d');
 
-                // Cek apakah sudah ada attendance di tanggal tersebut
+                // Branch-specific timezone for correct date matching
+                $branchTimezone = $leaveRequest->user->branch->timezone ?? 'Asia/Jakarta';
+                $branchOffset = Carbon::now($branchTimezone)->format('P');
+                $appOffset = Carbon::now(config('app.timezone'))->format('P');
+
+                // Cek apakah sudah ada attendance di tanggal tersebut (Timezone Aware)
                 $existingAttendance = Attendance::where('user_id', $leaveRequest->user_id)
-                    ->whereDate('check_in_time', $currentDate)
+                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $currentDate])
                     ->first();
 
                 if ($existingAttendance) {

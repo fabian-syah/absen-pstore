@@ -147,41 +147,27 @@ class ScanController extends Controller
                 ->where('check_in_time', '<', $currentTime->copy()->subHours(24))
                 ->update(['check_out_time' => DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed by Security Scan (Expired)']);
 
-            if (
-                Attendance::where('user_id', $user->id)
-                    ->whereNull('check_out_time')
-                    ->where('check_in_time', '>=', $currentTime->copy()->subHours(24))
-                    ->where('check_in_time', '<=', $currentTime) // Abaikan record masa depan
-                    ->where('status', '!=', 'alpha')
-                    ->where('attendance_type', '!=', 'leave')
-                    ->exists()
-            ) {
-                // Check existing session to prevent duplicates
-                $todayDateLocal = Carbon::now($branchTimezone)->format('Y-m-d');
-                $appOffset = $this->getOffset(config('app.timezone'));
-                $branchOffset = $this->getOffset($branchTimezone);
+            // Check existing session today (Timezone Aware)
+            $todayDateLocal = Carbon::now($branchTimezone)->format('Y-m-d');
+            $appOffset = $this->getOffset(config('app.timezone'));
+            $branchOffset = $this->getOffset($branchTimezone);
 
-                $existingSessionToday = Attendance::where('user_id', $user->id)
-                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayDateLocal])
-                    ->where('status', '!=', 'alpha')
-                    ->first();
+            $existingAttendanceToday = Attendance::where('user_id', $user->id)
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayDateLocal])
+                ->first();
 
-                if ($existingSessionToday && $request->type == 'masuk') {
-                    // FIX: Cek jika record ini adalah Izin Telat yang baru diapprove (masih tipe 'leave')
-                    // Jika ya, kita update saja record tersebut, jangan error "sudah absen"
-                    if ($existingSessionToday->presence_status == 'Izin Telat' && $existingSessionToday->attendance_type == 'leave') {
-                        $existingSessionToday->update([
-                            'check_in_time' => $currentTime,
-                            'photo_path' => $imageName,
-                            'attendance_type' => 'scan', // Ubah jadi scan
-                            'status' => 'verified',
-                            'scanned_by_user_id' => $securityUser->id,
-                        ]);
-                        return response()->json(['status' => 'success', 'message' => 'Konfirmasi Izin Telat Berhasil. Absen Masuk tercatat.']);
-                    }
-
-                    return response()->json(['status' => 'error', 'message' => 'User sudah melakukan absensi hari ini.'], 409);
-                }
+            if ($existingAttendanceToday) {
+                // Update existing record
+                $existingAttendanceToday->update([
+                    'check_in_time' => $currentTime,
+                    'photo_path' => $imageName,
+                    'attendance_type' => 'scan',
+                    'status' => 'verified',
+                    'scanned_by_user_id' => $securityUser->id,
+                    // Preserve presence_status if it was already set (e.g. Izin Telat)
+                    'presence_status' => $existingAttendanceToday->presence_status ?: 'Masuk',
+                ]);
+                return response()->json(['status' => 'success', 'message' => 'Absen Masuk tercatat (Update Record).']);
             }
 
             // Cek sudah absen hari ini (Lokal)

@@ -39,7 +39,7 @@ class SyncApprovedLeavesToAttendance extends Command
         $this->newLine();
 
         // Query approved leaves
-        $query = LeaveRequest::with('user')
+        $query = LeaveRequest::with(['user', 'user.branch'])
             ->where('status', 'approved');
 
         if ($userId) {
@@ -82,36 +82,64 @@ class SyncApprovedLeavesToAttendance extends Command
                 for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
                     $currentDate = $date->format('Y-m-d');
 
-                    // Find existing attendance
-                    $attendance = Attendance::where('user_id', $leave->user_id)
-                        ->whereDate('check_in_time', $currentDate)
-                        ->first();
+                    // Branch-specific timezone for correct date matching
+                    $branchTimezone = $leave->user->branch->timezone ?? 'Asia/Jakarta';
+                    $branchOffset = Carbon::now($branchTimezone)->format('P');
+                    $appOffset = Carbon::now(config('app.timezone'))->format('P');
 
-                    if ($attendance) {
-                        // Update if still Alpha or null
-                        if (
-                            !$attendance->presence_status ||
-                            strtolower($attendance->presence_status) === 'alpha'
-                        ) {
+                    // Find ALL attendance records for this user on this local date
+                    $attendances = Attendance::where('user_id', $leave->user_id)
+                        ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $currentDate])
+                        ->orderBy('attendance_type', 'desc') // Prioritize 'self' or 'scan' over 'leave'
+                        ->get();
 
+                    if ($attendances->count() > 0) {
+                        // DEDUPLICATION: If multiple records exist, we merge them
+                        $mainAttendance = $attendances->first();
+
+                        // If we have duplicates, delete the extras
+                        if ($attendances->count() > 1 && !$dryRun) {
+                            $this->warn("Merging {$attendances->count()} duplicates for User {$leave->user_id} on {$currentDate}");
+                            foreach ($attendances->slice(1) as $duplicate) {
+                                // Keep photos if they exist and main doesn't
+                                if ($duplicate->photo_path && !$mainAttendance->photo_path) {
+                                    $mainAttendance->photo_path = $duplicate->photo_path;
+                                }
+                                if ($duplicate->photo_out_path && !$mainAttendance->photo_out_path) {
+                                    $mainAttendance->photo_out_path = $duplicate->photo_out_path;
+                                }
+                                $duplicate->delete();
+                            }
+                        }
+
+                        // UPDATE logic: Ensure status is 'Izin Telat' if it was 'Masuk' or 'Alpha'
+                        $shouldUpdate = (
+                            !$mainAttendance->presence_status ||
+                            in_array(strtolower($mainAttendance->presence_status), ['alpha', 'masuk', 'hadir']) ||
+                            ($leave->type === 'telat' && $mainAttendance->presence_status !== 'Izin Telat')
+                        );
+
+                        if ($shouldUpdate) {
                             if (!$dryRun) {
                                 $updateData = [
                                     'presence_status' => $presenceStatus,
                                     'status' => 'verified',
-                                    'attendance_type' => 'leave',
+                                    'attendance_type' => $mainAttendance->attendance_type === 'leave' ? 'leave' : $mainAttendance->attendance_type,
                                 ];
 
                                 if ($leave->type === 'telat' && $leave->start_time) {
-                                    $updateData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leave->start_time);
+                                    // Don't overwrite actual check_in_time if it's already set by a selfie/scan
+                                    if ($mainAttendance->attendance_type === 'leave') {
+                                        $updateData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leave->start_time);
+                                    }
                                     $updateData['is_late_checkin'] = true;
-                                    $updateData['notes'] = 'Izin Telat: ' . $leave->reason;
+                                    $updateData['notes'] = ($mainAttendance->notes ? $mainAttendance->notes . " | " : "") . 'Izin Telat: ' . $leave->reason;
                                 } else {
-                                    $updateData['notes'] = ucfirst($leave->type) . ': ' . $leave->reason;
+                                    $updateData['notes'] = ($mainAttendance->notes ? $mainAttendance->notes . " | " : "") . ucfirst($leave->type) . ': ' . $leave->reason;
                                 }
 
-                                $attendance->update($updateData);
+                                $mainAttendance->update($updateData);
                             }
-
                             $stats['updated']++;
                         } else {
                             $stats['skipped']++;
