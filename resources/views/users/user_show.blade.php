@@ -174,9 +174,9 @@
                             <form action="{{ route('users.admin-photo', $user->id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <div class="mb-2">
-                                    <label class="small fw-bold text-muted d-block mb-1">Ganti Foto KTP</label>
+                                    <label class="small fw-bold text-muted d-block mb-1">Ganti Foto Profil</label>
                                     <div class="input-group">
-                                        <input type="file" name="ktp_photo" class="form-control form-control-sm" accept="image/*" required>
+                                        <input type="file" name="profile_photo" class="form-control form-control-sm" accept="image/*" required>
                                         <button class="btn btn-outline-info btn-sm" type="submit">Upload</button>
                                     </div>
                                     <small class="text-muted d-block mt-1" style="font-size: 10px;">
