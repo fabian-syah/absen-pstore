@@ -644,6 +644,9 @@
                         style="margin-left: 4px; opacity: 0.7;"></span>
                 </div>
                 <div class="duration-info" id="durationInfo" style="display:none;"></div>
+                <button class="btn-reset-location" id="btnResetLocation" onclick="resetLocation()" style="display:none; background:none; border:none; color:#D4AF37; font-size:11px; padding:0; margin-top:8px; cursor:pointer; text-decoration:underline; opacity:0.7;">
+                    <i class="mdi mdi-refresh"></i> Reset Lokasi
+                </button>
             </div>
 
             {{-- === LOCATION PROMPT === --}}
@@ -797,10 +800,12 @@
 
                 navigator.geolocation.getCurrentPosition(
                     function (position) {
-                        fetchPrayerTimes(position.coords.latitude, position.coords.longitude);
+                        fetchPrayerTimes(position.coords.latitude, position.coords.longitude, true);
                     },
                     function (error) {
-                        alert('Gagal mendapatkan lokasi: ' + error.message);
+                        let msg = 'Gagal mendapatkan lokasi: ' + error.message;
+                        if (error.code === 1) msg = "Izin lokasi ditolak. Silakan aktifkan izin lokasi di browser Anda.";
+                        alert(msg);
                         btn.innerHTML = '<i class="mdi mdi-crosshairs-gps"></i> Lacak Lokasi Saya';
                         btn.classList.remove('loading');
                     },
@@ -808,7 +813,31 @@
                 );
             };
 
-            function fetchPrayerTimes(lat, lng) {
+            window.resetLocation = function() {
+                if(confirm("Hapus data lokasi dan ambil ulang?")) {
+                    localStorage.removeItem('ramadhan_cached_date');
+                    localStorage.removeItem('ramadhan_cached_data');
+                    localStorage.removeItem('ramadhan_lat');
+                    localStorage.removeItem('ramadhan_lng');
+                    location.reload();
+                }
+            };
+
+            function fetchPrayerTimes(lat, lng, isNew = false) {
+                // Cek Cache (Hanya jika bukan pencarian baru)
+                if (!isNew) {
+                    const cached = localStorage.getItem('pstore_ramadhan_prayer_times');
+                    if (cached) {
+                        const data = JSON.parse(cached);
+                        const today = new Date().toDateString();
+                        // Reset jika cache hari berbeda ATAU jika format lokasi masih lama (hanya "Indonesia")
+                        if (data.cacheDate === today && data.location && data.location !== 'Indonesia') {
+                            renderPrayerData(data);
+                            return;
+                        }
+                    }
+                }
+
                 fetch(`{{ route('ramadhan.prayer-times') }}?latitude=${lat}&longitude=${lng}`, {
                     headers: {
                         'Accept': 'application/json',
@@ -960,18 +989,29 @@
                 document.getElementById('doaCard').classList.toggle('expanded');
             };
 
-            // Auto-load cached location
+            // AUTO-INIT LOGIC
             const cachedDate = localStorage.getItem('ramadhan_cached_date');
             const cachedData = localStorage.getItem('ramadhan_cached_data');
 
-            if (cachedDate === new Date().toDateString() && cachedData) {
+            // Force update jika data lama hanya berisi "Indonesia"
+            let isStaleFormat = false;
+            if (cachedData) {
+                try {
+                    const parsed = JSON.parse(cachedData);
+                    if (parsed.location === 'Indonesia') isStaleFormat = true;
+                } catch(e) {}
+            }
+
+            if (cachedDate === new Date().toDateString() && cachedData && !isStaleFormat) {
+                // We could call a render function here, but let's keep the current inline logic
+                // and just update the stale check.
                 try {
                     const data = JSON.parse(cachedData);
                     if (data.success) {
                         document.getElementById('locationPrompt').style.display = 'none';
-
                         document.getElementById('locationBadge').style.display = 'inline-flex';
                         document.getElementById('locationName').textContent = data.location || 'Indonesia';
+                        document.getElementById('btnResetLocation').style.display = 'inline-block';
 
                         const imsak = (data.timings.Imsak || '--:--').replace(/\s*\(.*\)/, '');
                         const maghrib = (data.timings.Maghrib || '--:--').replace(/\s*\(.*\)/, '');
@@ -982,20 +1022,16 @@
                         document.getElementById('countdownCard').classList.add('visible');
                         document.getElementById('prayerCards').classList.add('visible');
 
-                        if (imsak !== '--:--' && maghrib !== '--:--') {
-                            const [ih, im] = imsak.split(':').map(Number);
-                            const [mh, mm] = maghrib.split(':').map(Number);
-                            const dTotalMin = (mh * 60 + mm) - (ih * 60 + im);
-                            const dH = Math.floor(dTotalMin / 60);
-                            const dM = dTotalMin % 60;
-                            const info = document.getElementById('durationInfo');
-                            info.textContent = `Total durasi puasa hari ini: ${dH} jam ${dM} menit`;
-                            info.style.display = 'block';
-                        }
-
                         if (data.hijri && data.hijri.day && data.hijri.month) {
                             document.getElementById('hijriDate').textContent =
                                 data.hijri.day + ' ' + data.hijri.month.en + ' ' + data.hijri.year + ' H';
+                        }
+                        
+                        const tzLabel = document.getElementById('timezoneLabel');
+                        if (data.timezone) {
+                            if (data.timezone.includes('Jakarta')) tzLabel.textContent = '(WIB)';
+                            else if (data.timezone.includes('Makassar')) tzLabel.textContent = '(WITA)';
+                            else if (data.timezone.includes('Jayapura')) tzLabel.textContent = '(WIT)';
                         }
 
                         startCountdown();
