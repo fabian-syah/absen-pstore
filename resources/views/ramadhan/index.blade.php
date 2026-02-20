@@ -35,6 +35,31 @@
             padding-bottom: 0 !important;
         }
 
+        /* Fix Bottom Nav contrast on Dark Page */
+        @media (max-width: 991px) {
+            .mobile-bottom-nav {
+                background: rgba(26, 46, 34, 0.8) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                backdrop-filter: blur(20px) saturate(180%) !important;
+            }
+
+            .mobile-bottom-nav .nav-item {
+                color: rgba(255, 255, 255, 0.5) !important;
+            }
+
+            .mobile-bottom-nav .nav-item.active {
+                color: #00ca72 !important;
+            }
+
+            .mobile-bottom-nav .nav-item.nav-ramadhan.active {
+                color: #D4AF37 !important;
+            }
+
+            .mobile-bottom-nav .nav-item .absen-bubble {
+                border-color: #1a2e22 !important;
+            }
+        }
+
         .ramadhan-page * {
             font-family: 'Inter', 'Segoe UI', sans-serif;
             box-sizing: border-box;

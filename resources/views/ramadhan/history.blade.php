@@ -11,7 +11,7 @@
             padding-top: calc(var(--header-height, 70px) + 10px);
             position: relative;
             overflow-x: hidden;
-            padding-bottom: 120px;
+            padding-bottom: 140px;
             display: flex;
             flex-direction: column;
         }
@@ -32,6 +32,29 @@
             padding-bottom: 0 !important;
         }
 
+        /* Fix Bottom Nav contrast on Dark Page */
+        .mobile-bottom-nav {
+            background: rgba(26, 46, 34, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(20px) saturate(180%) !important;
+        }
+
+        .mobile-bottom-nav .nav-item {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        .mobile-bottom-nav .nav-item.active {
+            color: #00ca72 !important;
+        }
+
+        .mobile-bottom-nav .nav-item.nav-ramadhan.active {
+            color: #D4AF37 !important;
+        }
+
+        .mobile-bottom-nav .nav-item .absen-bubble {
+            border-color: #1a2e22 !important;
+        }
+
         .history-content {
             position: relative;
             z-index: 1;
@@ -49,7 +72,7 @@
             margin-bottom: 16px;
         }
 
-        .history-header h2 {
+        .history-header h1 {
             color: white;
             font-size: 16px;
             font-weight: 600;
@@ -195,11 +218,13 @@
             align-items: center;
             gap: 4px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.2s ease;
         }
 
-        .btn-action:active {
-            transform: scale(0.9);
+        .btn-action.disabled {
+            opacity: 0.2;
+            pointer-events: none;
+            filter: grayscale(1);
         }
 
         .btn-action .icon-circle {
@@ -246,6 +271,10 @@
             color: #00ca72;
         }
 
+        .notes-area {
+            position: relative;
+        }
+
         .notes-box {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -273,8 +302,19 @@
             outline: none;
         }
 
-        .notes-box textarea::placeholder {
-            color: rgba(255, 255, 255, 0.3);
+        .btn-save-note {
+            background: #00ca72;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: none;
         }
 
         /* Ramadan Ini Stats */
@@ -391,7 +431,7 @@
                     <i class="mdi mdi-chevron-left"></i>
                 </a>
                 <div style="text-align: center;">
-                    <h2>Ramadan 1447 H</h2>
+                    <h1>Ramadan 1447 H</h1>
                     <span class="subtitle">{{ now()->translatedFormat('d M Y') }}</span>
                 </div>
                 <div style="width: 36px;"></div> {{-- Spacer --}}
@@ -423,13 +463,15 @@
                             $isFasted = $log && $log->is_fasting;
                             $isMissed = $log && !$log->is_fasting;
                             $isToday = ($d == $currentRamadanDay);
+                            $isFuture = ($d > $currentRamadanDay);
                             $dateObj = $ramadanStart->copy()->addDays($d - 1);
                         @endphp
-                        <div class="cal-day {{ $isToday ? 'today' : '' }} {{ $isFasted ? 'fasted' : '' }} {{ $isMissed ? 'missed' : '' }} {{ $d <= $currentRamadanDay ? 'active' : '' }}"
+                        <div class="cal-day {{ $isToday ? 'today' : '' }} {{ $isFasted ? 'fasted' : '' }} {{ $isMissed ? 'missed' : '' }} {{ $d <= $currentRamadanDay ? 'active' : '' }} {{ $isFuture ? 'future' : '' }}"
                             data-day="{{ $d }}" data-date="{{ $dateObj->toDateString() }}"
                             data-formatted-date="{{ $dateObj->translatedFormat('D, M d') }} ({{ $d }} Ramadan)"
                             data-notes="{{ $log ? $log->notes : '' }}"
-                            data-status="{{ $log ? ($log->is_fasting ? '1' : '0') : '' }}" onclick="selectDay(this)">
+                            data-status="{{ $log ? ($log->is_fasting ? '1' : '0') : '' }}"
+                            data-future="{{ $isFuture ? '1' : '0' }}" onclick="selectDay(this)">
                             {{ $d }}
                         </div>
                     @endfor
@@ -460,9 +502,13 @@
                     </div>
                 </div>
 
-                <div class="notes-box">
-                    <i class="mdi mdi-menu"></i>
-                    <textarea id="fastingNotes" placeholder="Catatan..."></textarea>
+                <div class="notes-area">
+                    <div class="notes-box">
+                        <i class="mdi mdi-menu"></i>
+                        <textarea id="fastingNotes" placeholder="Tambahkan catatan khusus hari ini..."
+                            oninput="checkNoteChange()"></textarea>
+                    </div>
+                    <button id="btnSaveNote" class="btn-save-note" onclick="submitFasting(null)">Simpan</button>
                 </div>
             </div>
 
@@ -502,6 +548,7 @@
     <script>
         let selectedDay = {{ $currentRamadanDay }};
         let selectedDate = "{{ now()->toDateString() }}";
+        let initialNote = "";
 
         function selectDay(el) {
             // Unselect all
@@ -512,19 +559,38 @@
 
             selectedDay = el.dataset.day;
             selectedDate = el.dataset.date;
+            initialNote = el.dataset.notes || '';
 
             // Update Card
             const title = document.getElementById('confirmTitle');
             const dateInfo = document.getElementById('confirmDateInfo');
             const notesField = document.getElementById('fastingNotes');
             const confirmCard = document.getElementById('confirmCard');
+            const btnYes = document.getElementById('btnYes');
+            const btnNo = document.getElementById('btnNo');
 
             confirmCard.style.display = 'block';
 
             const isToday = (selectedDay == {{ $currentRamadanDay }});
+            const isFuture = (el.dataset.future === '1');
+
             title.textContent = isToday ? 'Apakah Anda puasa hari ini?' : 'Apakah Anda puasa?';
             dateInfo.textContent = el.dataset.formattedDate;
-            notesField.value = el.dataset.notes || '';
+            notesField.value = initialNote;
+            document.getElementById('btnSaveNote').style.display = 'none';
+
+            // Disable buttons for future dates
+            if (isFuture) {
+                btnYes.classList.add('disabled');
+                btnNo.classList.add('disabled');
+                notesField.disabled = true;
+                notesField.placeholder = "Belum waktunya mengisi catatan...";
+            } else {
+                btnYes.classList.remove('disabled');
+                btnNo.classList.remove('disabled');
+                notesField.disabled = false;
+                notesField.placeholder = "Tambahkan catatan khusus hari ini...";
+            }
 
             // Update active state of buttons
             const status = el.dataset.status;
@@ -538,9 +604,27 @@
             }
         }
 
+        function checkNoteChange() {
+            const currentNote = document.getElementById('fastingNotes').value;
+            const btnSave = document.getElementById('btnSaveNote');
+            btnSave.style.display = (currentNote !== initialNote) ? 'block' : 'none';
+        }
+
         function submitFasting(isFasting) {
             const notes = document.getElementById('fastingNotes').value;
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            // If isFasting is null, it means we only update notes based on existing status
+            const el = document.querySelector(`.cal-day[data-day="${selectedDay}"]`);
+            const status = el.dataset.status;
+
+            if (isFasting === null) {
+                if (status === '') {
+                    alert('Pilih status puasa terlebih dahulu atau klik Ya/Tidak.');
+                    return;
+                }
+                isFasting = parseInt(status);
+            }
 
             document.getElementById('loadingOverlay').style.display = 'flex';
 
@@ -562,6 +646,9 @@
                 .then(data => {
                     document.getElementById('loadingOverlay').style.display = 'none';
                     if (data.success) {
+                        initialNote = notes;
+                        document.getElementById('btnSaveNote').style.display = 'none';
+
                         // Update stats
                         document.getElementById('statFasting').textContent = data.total_fasting;
                         document.getElementById('statMissed').textContent = data.total_missed;
@@ -569,7 +656,6 @@
                         document.getElementById('progressBar').style.width = (data.total_fasting / 30 * 100) + '%';
 
                         // Update current element in grid
-                        const el = document.querySelector(`.cal-day[data-day="${selectedDay}"]`);
                         if (el) {
                             el.classList.remove('fasted', 'missed');
                             el.classList.add(isFasting ? 'fasted' : 'missed');
