@@ -28,7 +28,7 @@ class RamadhanController extends Controller
 
         // Cek apakah user sudah jawab hari ini
         $todayLog = FastingLog::where('user_id', $user->id)
-            ->whereDate('date', $today)
+            ->where('date', $today->toDateString())
             ->first();
 
         // Hitung statistik
@@ -74,27 +74,37 @@ class RamadhanController extends Controller
     {
         $request->validate([
             'is_fasting' => 'required|boolean',
+            'date' => 'nullable|date',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $user = Auth::user();
-        $today = Carbon::today();
+        $date = $request->date ? Carbon::parse($request->date) : Carbon::today();
 
         // Hitung hari Ramadhan
         $ramadanStart = Carbon::parse('2026-02-20');
-        $ramadanDay = $ramadanStart->diffInDays($today) + 1;
+        $ramadanDay = $ramadanStart->diffInDays($date) + 1;
+
+        // Batasi hanya bisa isi untuk hari ke 1-30, dan tidak bisa isi masa depan (jika perlu)
         if ($ramadanDay < 1 || $ramadanDay > 30) {
-            return response()->json(['success' => false, 'message' => 'Bukan bulan Ramadhan'], 400);
+            return response()->json(['success' => false, 'message' => 'Hanya bisa mengisi untuk hari Ramadhan'], 400);
+        }
+
+        // Opsional: Batasi agar tidak bisa isi masa depan
+        if ($date->isAfter(Carbon::today())) {
+            return response()->json(['success' => false, 'message' => 'Belum waktunya mengisi untuk hari esok'], 400);
         }
 
         $log = FastingLog::updateOrCreate(
             [
                 'user_id' => $user->id,
-                'date' => $today->toDateString(),
+                'date' => $date->toDateString(),
             ],
             [
                 'is_fasting' => $request->is_fasting,
                 'ramadan_day' => $ramadanDay,
                 'hijri_year' => 1447,
+                'notes' => $request->notes,
             ]
         );
 
@@ -103,11 +113,19 @@ class RamadhanController extends Controller
             ->where('is_fasting', true)
             ->count();
 
+        $totalMissed = FastingLog::where('user_id', $user->id)
+            ->where('hijri_year', 1447)
+            ->where('is_fasting', false)
+            ->count();
+
         return response()->json([
             'success' => true,
             'is_fasting' => $log->is_fasting,
             'total_fasting' => $totalFasting,
+            'total_missed' => $totalMissed,
             'ramadan_day' => $ramadanDay,
+            'date' => $date->toDateString(),
+            'notes' => $log->notes,
             'message' => $log->is_fasting ? 'Mabrouk! Semoga puasa Anda diterima 🤲' : 'Semoga bisa berpuasa esok hari 🤲',
         ]);
     }
@@ -204,17 +222,40 @@ class RamadhanController extends Controller
     {
         $user = Auth::user();
         $hijriYear = 1447;
+        $ramadanStart = Carbon::parse('2026-02-20');
+        $today = Carbon::today();
 
         // Ambil SEMUA log puasa user untuk Ramadhan ini
-        $logs = \App\Models\FastingLog::where('user_id', $user->id)
+        $logs = FastingLog::where('user_id', $user->id)
             ->where('hijri_year', $hijriYear)
             ->orderBy('ramadan_day', 'asc')
-            ->get();
+            ->get()
+            ->keyBy('ramadan_day');
 
         // Hitung statistik
         $totalFasting = $logs->where('is_fasting', true)->count();
         $totalMissed = $logs->where('is_fasting', false)->count();
 
-        return view('ramadhan.history', compact('logs', 'totalFasting', 'totalMissed', 'hijriYear'));
+        // Prediksi sisa hari (Ramadan 30 hari)
+        $totalDays = 30;
+        $remaining = $totalDays - ($totalFasting + $totalMissed);
+
+        // Cari hari ramadhan saat ini
+        $currentRamadanDay = $ramadanStart->diffInDays($today) + 1;
+        if ($currentRamadanDay < 1)
+            $currentRamadanDay = 1;
+        if ($currentRamadanDay > 30)
+            $currentRamadanDay = 30;
+
+        return view('ramadhan.history', compact(
+            'logs',
+            'totalFasting',
+            'totalMissed',
+            'hijriYear',
+            'ramadanStart',
+            'currentRamadanDay',
+            'remaining',
+            'totalDays'
+        ));
     }
 }

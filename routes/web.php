@@ -569,7 +569,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
                 \App\Models\Attendance::updateOrCreate(
                     [
                         'user_id' => $i->user_id,
-                        'check_in_time' => $i->start_date->format('Y-m-d') . ' ' . ($i->start_time ?? '08:00:00')
+                        'check_in_time' => \Carbon\Carbon::parse($i->start_date)->format('Y-m-d') . ' ' . ($i->start_time ?? '08:00:00')
                     ],
                     [
                         'branch_id' => $user->branch_id,
