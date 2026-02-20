@@ -213,10 +213,10 @@
                                         <i class="mdi mdi-check me-1"></i>Terima
                                     </button>
                                 </form>
-                                <button type="button" class="btn btn-warning btn-sm flex-grow-1 fw-bold rounded-pill py-2" 
+                                <!-- <button type="button" class="btn btn-warning btn-sm flex-grow-1 fw-bold rounded-pill py-2" 
                                         onclick="openEditModal({{ $att->id }}, '{{ $checkInLocal->format('H:i') }}', '{{ $att->audit_note }}', '{{ $tzLabel }}')">
                                     <i class="mdi mdi-pencil me-1"></i>Edit
-                                </button>
+                                </button> -->
                             </div>
                         </div>
                     </div>
@@ -291,15 +291,15 @@
 
 @push('scripts')
     <script>
-        const editModal = new bootstrap.Modal(document.getElementById('editGlobalModal'));
+        // const editModal = new bootstrap.Modal(document.getElementById('editGlobalModal'));
         
-        function openEditModal(id, checkInTime, auditNote, tzLabel) {
-            document.getElementById('editForm').action = '/audit/attendance/' + id + '/update';
-            document.getElementById('editCheckInTime').value = checkInTime;
-            document.getElementById('editAuditNote').value = auditNote || '';
-            document.getElementById('tzLabelEdit').textContent = '(' + tzLabel + ')';
-            editModal.show();
-        }
+        // function openEditModal(id, checkInTime, auditNote, tzLabel) {
+        //     document.getElementById('editForm').action = '/audit/attendance/' + id + '/update';
+        //     document.getElementById('editCheckInTime').value = checkInTime;
+        //     document.getElementById('editAuditNote').value = auditNote || '';
+        //     document.getElementById('tzLabelEdit').textContent = '(' + tzLabel + ')';
+        //     editModal.show();
+        // }
 
         document.addEventListener('DOMContentLoaded', function () {
             // Image Handler
