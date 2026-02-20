@@ -42,8 +42,8 @@ class RamadhanController extends Controller
             ->where('is_fasting', false)
             ->count();
 
-        // Hitung hari ke-berapa Ramadhan (1 Ramadhan 1447 H ≈ 20 Feb 2026)
-        $ramadanStart = Carbon::parse('2026-02-20');
+        // Hitung hari ke-berapa Ramadhan (1 Ramadhan 1447 H ≈ 19 Feb 2026)
+        $ramadanStart = Carbon::parse('2026-02-19');
         $ramadanDay = $ramadanStart->diffInDays($today) + 1;
         if ($ramadanDay < 1)
             $ramadanDay = 1;
@@ -82,7 +82,7 @@ class RamadhanController extends Controller
         $date = $request->date ? Carbon::parse($request->date) : Carbon::today();
 
         // Hitung hari Ramadhan
-        $ramadanStart = Carbon::parse('2026-02-20');
+        $ramadanStart = Carbon::parse('2026-02-19');
         $ramadanDay = $ramadanStart->diffInDays($date) + 1;
 
         // Batasi hanya bisa isi untuk hari ke 1-30, dan tidak bisa isi masa depan (jika perlu)
@@ -222,7 +222,7 @@ class RamadhanController extends Controller
     {
         $user = Auth::user();
         $hijriYear = 1447;
-        $ramadanStart = Carbon::parse('2026-02-20');
+        $ramadanStart = Carbon::parse('2026-02-19');
         $today = Carbon::today();
 
         // Ambil SEMUA log puasa user untuk Ramadhan ini

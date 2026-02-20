@@ -644,7 +644,8 @@
                         style="margin-left: 4px; opacity: 0.7;"></span>
                 </div>
                 <div class="duration-info" id="durationInfo" style="display:none;"></div>
-                <button class="btn-reset-location" id="btnResetLocation" onclick="resetLocation()" style="display:none; background:none; border:none; color:#D4AF37; font-size:11px; padding:0; margin-top:8px; cursor:pointer; text-decoration:underline; opacity:0.7;">
+                <button class="btn-reset-location" id="btnResetLocation" onclick="resetLocation()"
+                    style="display:none; background:none; border:none; color:#D4AF37; font-size:11px; padding:0; margin-top:8px; cursor:pointer; text-decoration:underline; opacity:0.7;">
                     <i class="mdi mdi-refresh"></i> Reset Lokasi
                 </button>
             </div>
@@ -691,7 +692,7 @@
             <div class="fasting-tracker">
                 <div class="week-calendar" id="weekCalendar">
                     @php
-                        $ramadanStartDate = \Carbon\Carbon::parse('2026-02-20');
+                        $ramadanStartDate = \Carbon\Carbon::parse('2026-02-19');
                     @endphp
                     @for ($d = $weekStart; $d <= $weekEnd; $d++)
                         @php
@@ -813,8 +814,8 @@
                 );
             };
 
-            window.resetLocation = function() {
-                if(confirm("Hapus data lokasi dan ambil ulang?")) {
+            window.resetLocation = function () {
+                if (confirm("Hapus data lokasi dan ambil ulang?")) {
                     localStorage.removeItem('ramadhan_cached_date');
                     localStorage.removeItem('ramadhan_cached_data');
                     localStorage.removeItem('ramadhan_lat');
@@ -999,7 +1000,7 @@
                 try {
                     const parsed = JSON.parse(cachedData);
                     if (parsed.location === 'Indonesia') isStaleFormat = true;
-                } catch(e) {}
+                } catch (e) { }
             }
 
             if (cachedDate === new Date().toDateString() && cachedData && !isStaleFormat) {
@@ -1026,7 +1027,7 @@
                             document.getElementById('hijriDate').textContent =
                                 data.hijri.day + ' ' + data.hijri.month.en + ' ' + data.hijri.year + ' H';
                         }
-                        
+
                         const tzLabel = document.getElementById('timezoneLabel');
                         if (data.timezone) {
                             if (data.timezone.includes('Jakarta')) tzLabel.textContent = '(WIB)';
