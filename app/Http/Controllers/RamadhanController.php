@@ -183,4 +183,25 @@ class RamadhanController extends Controller
             return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Halaman Riwayat/Pelacak Puasa
+     */
+    public function history()
+    {
+        $user = Auth::user();
+        $hijriYear = 1447;
+
+        // Ambil SEMUA log puasa user untuk Ramadhan ini
+        $logs = \App\Models\FastingLog::where('user_id', $user->id)
+            ->where('hijri_year', $hijriYear)
+            ->orderBy('ramadan_day', 'asc')
+            ->get();
+
+        // Hitung statistik
+        $totalFasting = $logs->where('is_fasting', true)->count();
+        $totalMissed = $logs->where('is_fasting', false)->count();
+
+        return view('ramadhan.history', compact('logs', 'totalFasting', 'totalMissed', 'hijriYear'));
+    }
 }

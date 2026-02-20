@@ -74,6 +74,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/', [RamadhanController::class, 'index'])->name('index');
         Route::post('/fasting', [RamadhanController::class, 'storeFasting'])->name('fasting.store');
         Route::get('/prayer-times', [RamadhanController::class, 'getPrayerTimes'])->name('prayer-times');
+        Route::get('/history', [RamadhanController::class, 'history'])->name('history');
     });
 
     // Route Test Notifikasi

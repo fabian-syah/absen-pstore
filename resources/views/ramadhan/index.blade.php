@@ -11,7 +11,7 @@
             min-height: 100vh;
             background: linear-gradient(165deg, #0a1f14 0%, #112b1c 30%, #1A2E22 60%, #0d2318 100%);
             margin: -20px -25px;
-            padding: 0;
+            padding-top: calc(var(--header-height, 70px) + 10px);
             position: relative;
             overflow-x: hidden;
             padding-bottom: 100px;
@@ -622,7 +622,8 @@
             <div class="ramadhan-header">
                 <div class="hijri-date" id="hijriDate">{{ $ramadanDay }} Ramadan 1447 H</div>
                 <div class="location-badge" id="locationBadge" style="display:none;">
-                    🇮🇩 <span id="locationName">Mendeteksi...</span>
+                    🇮🇩 <span id="locationName">Mendeteksi...</span> <span id="timezoneLabel"
+                        style="margin-left: 4px; opacity: 0.7;"></span>
                 </div>
                 <div class="duration-info" id="durationInfo" style="display:none;"></div>
             </div>
@@ -705,12 +706,16 @@
                 {{-- Fasting Result --}}
                 <div class="fasting-result {{ $todayLog ? 'visible' : '' }}" id="fastingResult">
                     @if($todayLog && $todayLog->is_fasting)
-                        <div class="result-text" id="resultText">Mabrouk! 🤲</div>
+                        <div class="result-text" id="resultText">Mabrouk! Semoga puasa Anda diterima 🤲</div>
                     @elseif($todayLog)
                         <div class="result-text" id="resultText">Semoga bisa berpuasa esok hari 🤲</div>
                     @else
                         <div class="result-text" id="resultText"></div>
                     @endif
+                    <a href="{{ route('ramadhan.history') }}" class="tracker-link"
+                        style="display: inline-block; margin-top: 10px; color: #D4AF37; text-decoration: none; font-size: 14px; font-weight: 500;">
+                        Pergi ke pelacak puasa <i class="mdi mdi-arrow-right"></i>
+                    </a>
                 </div>
             </div>
 
@@ -800,6 +805,19 @@
                             const badge = document.getElementById('locationBadge');
                             badge.style.display = 'inline-flex';
                             document.getElementById('locationName').textContent = data.location || 'Indonesia';
+
+                            // Timezone detection
+                            const tzLabel = document.getElementById('timezoneLabel');
+                            if (data.timezone) {
+                                if (data.timezone.includes('Jakarta')) tzLabel.textContent = '(WIB)';
+                                else if (data.timezone.includes('Makassar')) tzLabel.textContent = '(WITA)';
+                                else if (data.timezone.includes('Jayapura')) tzLabel.textContent = '(WIT)';
+                            } else {
+                                // Fallback by longitude
+                                if (lng < 120) tzLabel.textContent = '(WIB)';
+                                else if (lng < 135) tzLabel.textContent = '(WITA)';
+                                else tzLabel.textContent = '(WIT)';
+                            }
 
                             const imsak = (data.timings.Imsak || '--:--').replace(/\s*\(.*\)/, '');
                             const maghrib = (data.timings.Maghrib || '--:--').replace(/\s*\(.*\)/, '');
