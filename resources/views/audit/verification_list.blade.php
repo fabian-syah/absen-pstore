@@ -124,11 +124,11 @@
                                                         <i class="mdi mdi-check"></i>
                                                     </button>
                                                 </form>
-                                                <button type="button" class="btn-action btn-edit" 
+                                                <!-- <button type="button" class="btn-action btn-edit" 
                                                         onclick="openEditModal({{ $att->id }}, '{{ $checkInLocal->format('H:i') }}', '{{ $att->audit_note }}', '{{ $tzLabel }}')"
                                                         title="Edit">
                                                     <i class="mdi mdi-pencil"></i>
-                                                </button>
+                                                </button> -->
                                                 <form action="{{ route('audit.reject', $att->id) }}" method="POST" class="d-inline">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="btn-action btn-reject" onclick="return confirm('Hapus data absensi ini?')" title="Tolak">
