@@ -81,21 +81,12 @@
                                     @endphp
                                     <tr class="attendance-row">
                                         <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-modern me-3">
-                                                    @if($att->user->profile_photo_path)
-                                                        <img src="{{ Storage::url($att->user->profile_photo_path) }}" alt="Avatar">
-                                                    @else
-                                                        {{ substr($att->user->name, 0, 1) }}
-                                                    @endif
-                                                </div>
-                                                <div>
-                                                    <h6 class="mb-0 fw-semibold">{{ $att->user->name }}</h6>
-                                                    <div class="text-muted small">
-                                                        {{ $att->user->division->name ?? 'Staff' }}
-                                                        <span class="mx-1">•</span>
-                                                        <span class="text-primary">{{ $att->user->branch->name ?? '-' }}</span>
-                                                    </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-semibold">{{ $att->user->name }}</h6>
+                                                <div class="text-muted small">
+                                                    {{ $att->user->division->name ?? 'Staff' }}
+                                                    <span class="mx-1">•</span>
+                                                    <span class="text-primary">{{ $att->user->branch->name ?? '-' }}</span>
                                                 </div>
                                             </div>
                                         </td>
@@ -178,13 +169,6 @@
                     <div class="card card-mobile-modern mb-3">
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center mb-3">
-                                <div class="avatar-modern avatar-sm me-3">
-                                    @if($att->user->profile_photo_path)
-                                        <img src="{{ Storage::url($att->user->profile_photo_path) }}" alt="Avatar">
-                                    @else
-                                        {{ substr($att->user->name, 0, 1) }}
-                                    @endif
-                                </div>
                                 <div class="flex-grow-1">
                                     <h6 class="mb-0 fw-semibold">{{ Str::limit($att->user->name, 22) }}</h6>
                                     <div class="d-flex align-items-center">
