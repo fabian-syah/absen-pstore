@@ -4,24 +4,25 @@
 
 @section('content')
     <style>
-        /* ==================== */
-        /* RAMADHAN PAGE STYLES */
-        /* ==================== */
+        /* =============================== */
+        /* RAMADHAN PAGE — PSTORE THEME    */
+        /* =============================== */
         .ramadhan-page {
             min-height: 100vh;
-            background: linear-gradient(165deg, #0f0b2e 0%, #1a1340 30%, #2d1b69 60%, #1a1340 100%);
+            background: linear-gradient(165deg, #0a1f14 0%, #112b1c 30%, #1A2E22 60%, #0d2318 100%);
             margin: -20px -25px;
             padding: 0;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
             padding-bottom: 100px;
         }
 
         .ramadhan-page * {
             font-family: 'Inter', 'Segoe UI', sans-serif;
+            box-sizing: border-box;
         }
 
-        /* Stars background */
+        /* Stars / sparkle background */
         .ramadhan-page::before {
             content: '';
             position: absolute;
@@ -30,18 +31,18 @@
             top: 0;
             left: 0;
             background-image:
-                radial-gradient(2px 2px at 10% 15%, rgba(255, 255, 255, 0.4), transparent),
-                radial-gradient(2px 2px at 25% 35%, rgba(255, 255, 255, 0.3), transparent),
-                radial-gradient(1px 1px at 45% 10%, rgba(255, 255, 255, 0.5), transparent),
-                radial-gradient(2px 2px at 60% 25%, rgba(255, 255, 255, 0.2), transparent),
-                radial-gradient(1px 1px at 75% 45%, rgba(255, 255, 255, 0.4), transparent),
-                radial-gradient(2px 2px at 85% 15%, rgba(255, 255, 255, 0.3), transparent),
-                radial-gradient(1px 1px at 90% 55%, rgba(255, 255, 255, 0.4), transparent),
-                radial-gradient(2px 2px at 15% 65%, rgba(255, 255, 255, 0.2), transparent),
-                radial-gradient(1px 1px at 35% 80%, rgba(255, 255, 255, 0.3), transparent),
-                radial-gradient(2px 2px at 55% 70%, rgba(255, 255, 255, 0.2), transparent),
-                radial-gradient(1px 1px at 70% 85%, rgba(255, 255, 255, 0.4), transparent),
-                radial-gradient(2px 2px at 95% 75%, rgba(255, 255, 255, 0.3), transparent);
+                radial-gradient(2px 2px at 10% 15%, rgba(212, 175, 55, 0.35), transparent),
+                radial-gradient(2px 2px at 25% 35%, rgba(255, 255, 255, 0.2), transparent),
+                radial-gradient(1px 1px at 45% 10%, rgba(212, 175, 55, 0.4), transparent),
+                radial-gradient(2px 2px at 60% 25%, rgba(255, 215, 0, 0.15), transparent),
+                radial-gradient(1px 1px at 75% 45%, rgba(255, 255, 255, 0.25), transparent),
+                radial-gradient(2px 2px at 85% 15%, rgba(212, 175, 55, 0.2), transparent),
+                radial-gradient(1px 1px at 90% 55%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(2px 2px at 15% 65%, rgba(212, 175, 55, 0.15), transparent),
+                radial-gradient(1px 1px at 35% 80%, rgba(255, 255, 255, 0.2), transparent),
+                radial-gradient(2px 2px at 55% 70%, rgba(212, 175, 55, 0.12), transparent),
+                radial-gradient(1px 1px at 70% 85%, rgba(255, 215, 0, 0.25), transparent),
+                radial-gradient(2px 2px at 95% 75%, rgba(255, 255, 255, 0.15), transparent);
             pointer-events: none;
             z-index: 0;
         }
@@ -49,21 +50,22 @@
         .ramadhan-content {
             position: relative;
             z-index: 1;
+            width: 100%;
             max-width: 500px;
             margin: 0 auto;
-            padding: 24px 16px;
+            padding: 20px 16px;
         }
 
         /* === HEADER === */
         .ramadhan-header {
             text-align: left;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .ramadhan-header .hijri-date {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
-            color: #ffffff;
+            color: #D4AF37;
             margin-bottom: 4px;
         }
 
@@ -71,65 +73,66 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            padding: 6px 14px;
+            background: rgba(212, 175, 55, 0.12);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            padding: 5px 12px;
             color: rgba(255, 255, 255, 0.85);
-            font-size: 13px;
-            margin-top: 8px;
-            backdrop-filter: blur(10px);
+            font-size: 12px;
+            margin-top: 6px;
+            backdrop-filter: blur(8px);
         }
 
         .ramadhan-header .duration-info {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 12px;
             margin-top: 6px;
+            line-height: 1.4;
         }
 
         /* === LOCATION PROMPT === */
         .location-prompt {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px dashed rgba(255, 255, 255, 0.25);
+            background: rgba(0, 105, 62, 0.12);
+            border: 1px dashed rgba(212, 175, 55, 0.3);
             border-radius: 16px;
-            padding: 24px;
+            padding: 24px 16px;
             text-align: center;
-            margin-bottom: 24px;
-            transition: all 0.3s ease;
+            margin-bottom: 20px;
         }
 
         .location-prompt i {
-            font-size: 40px;
-            color: rgba(255, 255, 255, 0.5);
+            font-size: 36px;
+            color: rgba(212, 175, 55, 0.5);
             display: block;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .location-prompt p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-            margin-bottom: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            margin-bottom: 14px;
+            line-height: 1.4;
         }
 
         .btn-locate {
-            background: linear-gradient(135deg, #6c3ce0 0%, #a855f7 100%);
+            background: linear-gradient(135deg, #00693E 0%, #004d2e 100%);
             color: white;
             border: none;
-            padding: 12px 28px;
-            border-radius: 14px;
-            font-size: 14px;
+            padding: 11px 24px;
+            border-radius: 12px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 16px rgba(108, 60, 224, 0.4);
+            box-shadow: 0 4px 14px rgba(0, 105, 62, 0.35);
         }
 
         .btn-locate:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(108, 60, 224, 0.5);
+            box-shadow: 0 6px 20px rgba(0, 105, 62, 0.45);
         }
 
         .btn-locate:active {
@@ -143,13 +146,12 @@
 
         /* === COUNTDOWN === */
         .countdown-card {
-            background: linear-gradient(135deg, rgba(108, 60, 224, 0.35), rgba(168, 85, 247, 0.2));
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 20px;
-            padding: 20px 24px;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(0, 105, 62, 0.3), rgba(0, 77, 46, 0.2));
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 18px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
             position: relative;
-            overflow: hidden;
             display: none;
         }
 
@@ -161,49 +163,32 @@
         .countdown-card .label {
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: rgba(255, 255, 255, 0.75);
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        .countdown-card .label i {
-            font-size: 18px;
-        }
-
-        .countdown-card .expand-btn {
-            position: absolute;
-            top: 18px;
-            right: 18px;
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 18px;
-            cursor: pointer;
-            padding: 4px;
+            gap: 6px;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 13px;
+            margin-bottom: 6px;
         }
 
         .countdown-card .timer {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 700;
-            color: #ffffff;
+            color: #D4AF37;
             letter-spacing: 1px;
         }
 
         .countdown-card .timer span {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 400;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(212, 175, 55, 0.6);
             margin: 0 2px;
         }
 
         /* === PRAYER TIME CARDS === */
         .prayer-cards {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 24px;
             display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
         .prayer-cards.visible {
@@ -213,41 +198,41 @@
         }
 
         .prayer-card {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 16px;
-            padding: 16px 18px;
-            position: relative;
+            background: rgba(0, 105, 62, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.12);
+            border-radius: 14px;
+            padding: 14px 16px;
         }
 
         .prayer-card .prayer-label {
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin-bottom: 6px;
+            gap: 5px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
         }
 
         .prayer-card .prayer-label .tag {
-            background: rgba(255, 255, 255, 0.12);
-            padding: 3px 10px;
-            border-radius: 8px;
-            font-size: 12px;
+            background: rgba(212, 175, 55, 0.15);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
             font-weight: 500;
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(212, 175, 55, 0.8);
         }
 
         .prayer-card .prayer-label .name {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.85);
         }
 
         .prayer-card .prayer-label .emoji {
-            font-size: 16px;
+            font-size: 14px;
         }
 
         .prayer-card .time {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
             color: #ffffff;
             line-height: 1;
@@ -255,51 +240,53 @@
 
         /* === FASTING TRACKER === */
         .fasting-tracker {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 24px 18px;
-            margin-bottom: 24px;
+            background: rgba(0, 105, 62, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            border-radius: 18px;
+            padding: 20px 14px;
+            margin-bottom: 20px;
         }
 
         .week-calendar {
             display: flex;
             justify-content: space-around;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
+            gap: 2px;
         }
 
         .week-day {
             text-align: center;
             flex: 1;
+            min-width: 0;
         }
 
         .week-day .day-number {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 6px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-bottom: 5px;
         }
 
         .week-day .day-icon {
-            font-size: 24px;
-            margin-bottom: 4px;
+            font-size: 22px;
+            margin-bottom: 3px;
             transition: all 0.3s ease;
-            opacity: 0.5;
+            opacity: 0.4;
         }
 
         .week-day .day-icon.fasted {
             opacity: 1;
-            filter: drop-shadow(0 0 6px rgba(255, 200, 50, 0.5));
+            filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.5));
         }
 
         .week-day .day-icon.missed {
-            opacity: 0.35;
+            opacity: 0.25;
             filter: grayscale(100%);
         }
 
         .week-day .day-label {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.4);
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.35);
             font-weight: 500;
         }
 
@@ -308,15 +295,16 @@
         }
 
         .week-day.today .day-number {
-            background: rgba(255, 255, 255, 0.9);
-            color: #1a1340;
-            border-radius: 8px;
-            padding: 2px 8px;
+            background: #D4AF37;
+            color: #1A2E22;
+            border-radius: 6px;
+            padding: 2px 7px;
             font-weight: 700;
+            display: inline-block;
         }
 
         .week-day.today .day-label {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(212, 175, 55, 0.75);
             font-weight: 600;
         }
 
@@ -327,22 +315,22 @@
 
         .fasting-prompt .question {
             color: #ffffff;
-            font-size: 17px;
+            font-size: 15px;
             font-weight: 600;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
 
         .fasting-prompt .btn-fasting {
             display: block;
             width: 100%;
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 15px;
+            padding: 13px;
+            border-radius: 12px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             border: none;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -351,27 +339,27 @@
         }
 
         .fasting-prompt .btn-yes {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(0, 105, 62, 0.25);
             color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(0, 105, 62, 0.4);
         }
 
         .fasting-prompt .btn-yes:hover {
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(0, 105, 62, 0.35);
         }
 
         .fasting-prompt .btn-no {
             background: transparent;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.5);
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .fasting-prompt .btn-no:hover {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.7);
         }
 
-        /* === FASTING RESULT (setelah jawab) === */
+        /* === FASTING RESULT === */
         .fasting-result {
             text-align: center;
             display: none;
@@ -383,79 +371,82 @@
         }
 
         .fasting-result .result-text {
-            font-size: 20px;
+            font-size: 17px;
+            font-weight: 700;
+            color: #D4AF37;
+            margin-bottom: 8px;
+        }
+
+        /* === STATS === */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(0, 105, 62, 0.12);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 26px;
             font-weight: 700;
             color: #ffffff;
-            margin-bottom: 18px;
-            font-style: italic;
+            line-height: 1;
         }
 
-        .fasting-result .btn-share {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            padding: 14px 28px;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            justify-content: center;
-            text-decoration: none;
+        .stat-card .stat-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 4px;
         }
 
-        .fasting-result .btn-share:hover {
-            background: rgba(255, 255, 255, 0.18);
+        .stat-card.fasted .stat-value {
+            color: #D4AF37;
         }
 
-        .fasting-result .tracker-link {
-            display: block;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-            margin-top: 16px;
-            text-decoration: none;
-        }
-
-        .fasting-result .tracker-link:hover {
-            color: #ffffff;
+        .stat-card.missed .stat-value {
+            color: rgba(255, 255, 255, 0.35);
         }
 
         /* === DOA SECTION === */
         .doa-card {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
+            background: rgba(0, 105, 62, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            border-radius: 18px;
             overflow: hidden;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .doa-card .doa-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 18px 20px;
+            padding: 16px 18px;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+            gap: 10px;
         }
 
         .doa-card .doa-header h3 {
             color: #ffffff;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             margin: 0;
             line-height: 1.4;
         }
 
         .doa-card .doa-header .toggle-icon {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(212, 175, 55, 0.12);
             border: none;
-            color: rgba(255, 255, 255, 0.6);
-            width: 34px;
-            height: 34px;
+            color: rgba(212, 175, 55, 0.6);
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -470,7 +461,7 @@
         }
 
         .doa-card .doa-body {
-            padding: 0 20px 20px;
+            padding: 0 18px 18px;
             display: none;
         }
 
@@ -481,73 +472,40 @@
 
         .doa-card .arabic-text {
             font-family: 'Amiri', 'Traditional Arabic', serif;
-            font-size: 24px;
-            color: #ffffff;
+            font-size: 22px;
+            color: #D4AF37;
             text-align: right;
             direction: rtl;
             line-height: 2;
-            margin-bottom: 16px;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.04);
-            border-radius: 12px;
+            margin-bottom: 14px;
+            padding: 14px;
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 10px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .doa-card .transliteration {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
             font-style: italic;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             line-height: 1.6;
+            word-wrap: break-word;
         }
 
         .doa-card .translation {
-            color: rgba(255, 255, 255, 0.75);
-            font-size: 14px;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 13px;
             line-height: 1.6;
-        }
-
-        /* === STATS === */
-        .stats-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .stat-card .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #ffffff;
-            line-height: 1;
-        }
-
-        .stat-card .stat-label {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-top: 6px;
-        }
-
-        .stat-card.fasted .stat-value {
-            color: #f5c842;
-        }
-
-        .stat-card.missed .stat-value {
-            color: rgba(255, 255, 255, 0.4);
+            word-wrap: break-word;
         }
 
         /* === ANIMATIONS === */
         @keyframes fadeSlideUp {
             from {
                 opacity: 0;
-                transform: translateY(16px);
+                transform: translateY(14px);
             }
 
             to {
@@ -556,66 +514,93 @@
             }
         }
 
-        @keyframes pulseGlow {
-
-            0%,
-            100% {
-                opacity: 0.6;
-            }
-
-            50% {
-                opacity: 1;
+        /* === RESPONSIVE FIX === */
+        @media (max-width: 991px) {
+            .ramadhan-page {
+                margin: -16px -16px !important;
             }
         }
 
-        /* === RESPONSIVE === */
-        @media (max-width: 400px) {
+        @media (max-width: 575px) {
+            .ramadhan-page {
+                margin: -15px -15px !important;
+            }
+
             .ramadhan-content {
-                padding: 16px 12px;
-            }
-
-            .countdown-card .timer {
-                font-size: 28px;
-            }
-
-            .prayer-card .time {
-                font-size: 26px;
-            }
-
-            .week-day .day-icon {
-                font-size: 20px;
+                padding: 16px 14px;
             }
 
             .ramadhan-header .hijri-date {
                 font-size: 18px;
             }
 
+            .countdown-card .timer {
+                font-size: 26px;
+            }
+
+            .prayer-card .time {
+                font-size: 24px;
+            }
+
+            .week-day .day-icon {
+                font-size: 18px;
+            }
+
+            .week-day .day-number {
+                font-size: 11px;
+            }
+
+            .week-day .day-label {
+                font-size: 9px;
+            }
+
+            .fasting-prompt .question {
+                font-size: 14px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 22px;
+            }
+
             .doa-card .arabic-text {
-                font-size: 20px;
+                font-size: 18px;
             }
         }
 
-        @media (min-width: 768px) {
-            .ramadhan-page {
-                margin: -20px -25px;
-            }
-
+        @media (max-width: 360px) {
             .ramadhan-content {
-                padding: 32px 24px;
+                padding: 12px 10px;
             }
-        }
 
-        /* Fix content wrapper override */
-        @media (max-width: 991px) {
-            .content-wrapper {
-                padding: 0 !important;
+            .prayer-cards {
+                gap: 8px;
+            }
+
+            .prayer-card {
+                padding: 12px;
+            }
+
+            .prayer-card .time {
+                font-size: 22px;
+            }
+
+            .countdown-card .timer {
+                font-size: 22px;
+            }
+
+            .week-day .day-icon {
+                font-size: 16px;
+            }
+
+            .fasting-tracker {
+                padding: 16px 10px;
             }
         }
 
         /* Loading spinner */
         .spinner-small {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-top-color: white;
             border-radius: 50%;
@@ -655,7 +640,7 @@
             {{-- === COUNTDOWN TO IFTAR === --}}
             <div class="countdown-card" id="countdownCard">
                 <div class="label">
-                    🕌 Hitung mundur ke <strong style="margin-left:4px;">Iftar</strong>
+                    🕌 Hitung mundur ke <strong style="margin-left:4px; color:#D4AF37;">Iftar</strong>
                 </div>
                 <div class="timer" id="countdownTimer">--h --m --s</div>
             </div>
@@ -682,16 +667,14 @@
 
             {{-- === FASTING TRACKER CALENDAR === --}}
             <div class="fasting-tracker">
-                {{-- Week Calendar --}}
                 <div class="week-calendar" id="weekCalendar">
                     @php
-                        $dayNames = ['K', 'S', 'S', 'M', 'S', 'S', 'R']; // Day abbreviations starting from Ramadan start
                         $ramadanStartDate = \Carbon\Carbon::parse('2026-02-20');
                     @endphp
                     @for ($d = $weekStart; $d <= $weekEnd; $d++)
                         @php
                             $dayDate = $ramadanStartDate->copy()->addDays($d - 1);
-                            $dayOfWeek = $dayDate->dayOfWeek; // 0=Sun
+                            $dayOfWeek = $dayDate->dayOfWeek;
                             $dayAbbr = ['M', 'S', 'S', 'R', 'K', 'J', 'S'][$dayOfWeek];
                             $log = $fastingLogs->get($d);
                             $isToday = ($d == $ramadanDay);
@@ -708,7 +691,7 @@
                     @endfor
                 </div>
 
-                {{-- Fasting Prompt (belum jawab hari ini) --}}
+                {{-- Fasting Prompt --}}
                 <div class="fasting-prompt" id="fastingPrompt" style="{{ $todayLog ? 'display:none;' : '' }}">
                     <div class="question">Apakah Anda berpuasa hari ini?</div>
                     <button class="btn-fasting btn-yes" onclick="logFasting(true)">
@@ -719,7 +702,7 @@
                     </button>
                 </div>
 
-                {{-- Fasting Result (sudah jawab) --}}
+                {{-- Fasting Result --}}
                 <div class="fasting-result {{ $todayLog ? 'visible' : '' }}" id="fastingResult">
                     @if($todayLog && $todayLog->is_fasting)
                         <div class="result-text" id="resultText">Mabrouk! 🤲</div>
@@ -746,7 +729,7 @@
             {{-- === DOA RAMADHAN === --}}
             <div class="doa-card" id="doaCard">
                 <div class="doa-header" onclick="toggleDoa()">
-                    <h3>Doa untuk Kekuatan dan Ketakwaan<br>saat Berpuasa</h3>
+                    <h3>Doa untuk Kekuatan dan Ketakwaan saat Berpuasa</h3>
                     <span class="toggle-icon">
                         <i class="mdi mdi-chevron-down"></i>
                     </span>
@@ -774,15 +757,9 @@
 
     <script>
         (function () {
-            // ===========================
-            // VARIABLES
-            // ===========================
-            let maghribTimeStr = null; // HH:MM format
+            let maghribTimeStr = null;
             let countdownInterval = null;
 
-            // ===========================
-            // DETECT LOCATION
-            // ===========================
             window.detectLocation = function () {
                 const btn = document.getElementById('btnLocate');
                 btn.innerHTML = '<span class="spinner-small"></span> Mendeteksi...';
@@ -808,9 +785,6 @@
                 );
             };
 
-            // ===========================
-            // FETCH PRAYER TIMES
-            // ===========================
             function fetchPrayerTimes(lat, lng) {
                 fetch(`{{ route('ramadhan.prayer-times') }}?latitude=${lat}&longitude=${lng}`, {
                     headers: {
@@ -821,75 +795,68 @@
                     .then(r => r.json())
                     .then(data => {
                         if (data.success) {
-                            // Hide location prompt
                             document.getElementById('locationPrompt').style.display = 'none';
 
-                            // Show location badge
                             const badge = document.getElementById('locationBadge');
                             badge.style.display = 'inline-flex';
                             document.getElementById('locationName').textContent = data.location || 'Indonesia';
 
-                            // Fill times
-                            const imsak = data.timings.Imsak || '--:--';
-                            const maghrib = data.timings.Maghrib || '--:--';
-                            document.getElementById('imsakTime').textContent = imsak.replace(/\s*\(.*\)/, '');
-                            document.getElementById('iftarTime').textContent = maghrib.replace(/\s*\(.*\)/, '');
-                            maghribTimeStr = maghrib.replace(/\s*\(.*\)/, '');
+                            const imsak = (data.timings.Imsak || '--:--').replace(/\s*\(.*\)/, '');
+                            const maghrib = (data.timings.Maghrib || '--:--').replace(/\s*\(.*\)/, '');
+                            document.getElementById('imsakTime').textContent = imsak;
+                            document.getElementById('iftarTime').textContent = maghrib;
+                            maghribTimeStr = maghrib;
 
-                            // Show countdown & cards
                             document.getElementById('countdownCard').classList.add('visible');
                             document.getElementById('prayerCards').classList.add('visible');
 
-                            // Duration info
                             if (imsak !== '--:--' && maghrib !== '--:--') {
-                                const imsakClean = imsak.replace(/\s*\(.*\)/, '');
-                                const maghribClean = maghrib.replace(/\s*\(.*\)/, '');
-                                const [ih, im] = imsakClean.split(':').map(Number);
-                                const [mh, mm] = maghribClean.split(':').map(Number);
+                                const [ih, im] = imsak.split(':').map(Number);
+                                const [mh, mm] = maghrib.split(':').map(Number);
                                 const dTotalMin = (mh * 60 + mm) - (ih * 60 + im);
                                 const dH = Math.floor(dTotalMin / 60);
                                 const dM = dTotalMin % 60;
                                 const info = document.getElementById('durationInfo');
-                                info.textContent = `Total durasi puasa hari ini adalah ${dH} jam dan ${dM} menit.`;
+                                info.textContent = `Total durasi puasa hari ini: ${dH} jam ${dM} menit`;
                                 info.style.display = 'block';
                             }
 
-                            // Update Hijri date from API
                             if (data.hijri && data.hijri.day && data.hijri.month) {
                                 document.getElementById('hijriDate').textContent =
                                     data.hijri.day + ' ' + data.hijri.month.en + ' ' + data.hijri.year + ' H';
                             }
 
-                            // Save to localStorage
                             localStorage.setItem('ramadhan_lat', lat);
                             localStorage.setItem('ramadhan_lng', lng);
                             localStorage.setItem('ramadhan_cached_date', new Date().toDateString());
                             localStorage.setItem('ramadhan_cached_data', JSON.stringify(data));
 
-                            // Start countdown
                             startCountdown();
                         } else {
                             alert(data.message || 'Gagal mengambil jadwal sholat');
-                            document.getElementById('btnLocate').innerHTML = '<i class="mdi mdi-crosshairs-gps"></i> Coba Lagi';
-                            document.getElementById('btnLocate').classList.remove('loading');
+                            resetButton();
                         }
                     })
                     .catch(err => {
                         console.error(err);
-                        alert('Terjadi kesalahan saat mengambil jadwal sholat');
-                        document.getElementById('btnLocate').innerHTML = '<i class="mdi mdi-crosshairs-gps"></i> Coba Lagi';
-                        document.getElementById('btnLocate').classList.remove('loading');
+                        alert('Terjadi kesalahan saat mengambil jadwal');
+                        resetButton();
                     });
             }
 
-            // ===========================
-            // COUNTDOWN TIMER
-            // ===========================
+            function resetButton() {
+                const btn = document.getElementById('btnLocate');
+                if (btn) {
+                    btn.innerHTML = '<i class="mdi mdi-crosshairs-gps"></i> Coba Lagi';
+                    btn.classList.remove('loading');
+                }
+            }
+
             function startCountdown() {
                 if (!maghribTimeStr) return;
                 if (countdownInterval) clearInterval(countdownInterval);
 
-                function updateCountdown() {
+                function tick() {
                     const now = new Date();
                     const [mH, mM] = maghribTimeStr.split(':').map(Number);
                     const target = new Date();
@@ -910,13 +877,10 @@
                         `${h}<span>h</span> ${String(m).padStart(2, '0')}<span>m</span> ${String(s).padStart(2, '0')}<span>s</span>`;
                 }
 
-                updateCountdown();
-                countdownInterval = setInterval(updateCountdown, 1000);
+                tick();
+                countdownInterval = setInterval(tick, 1000);
             }
 
-            // ===========================
-            // FASTING LOG
-            // ===========================
             window.logFasting = function (isFasting) {
                 const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
@@ -933,20 +897,16 @@
                     .then(r => r.json())
                     .then(data => {
                         if (data.success) {
-                            // Hide prompt
                             document.getElementById('fastingPrompt').style.display = 'none';
 
-                            // Show result
                             const result = document.getElementById('fastingResult');
                             document.getElementById('resultText').textContent = data.message;
                             result.classList.add('visible');
 
-                            // Update stats
                             if (document.getElementById('statFasted')) {
                                 document.getElementById('statFasted').textContent = data.total_fasting;
                             }
 
-                            // Update today's calendar icon
                             const todayDayEl = document.querySelector('.week-day.today .day-icon');
                             if (todayDayEl) {
                                 todayDayEl.classList.remove('fasted', 'missed');
@@ -960,28 +920,21 @@
                     });
             };
 
-            // ===========================
-            // DOA TOGGLE
-            // ===========================
             window.toggleDoa = function () {
                 document.getElementById('doaCard').classList.toggle('expanded');
             };
 
-            // ===========================
-            // AUTO-LOAD CACHED LOCATION
-            // ===========================
+            // Auto-load cached location
             const cachedDate = localStorage.getItem('ramadhan_cached_date');
             const cachedData = localStorage.getItem('ramadhan_cached_data');
 
             if (cachedDate === new Date().toDateString() && cachedData) {
-                // Use cached data for today
                 try {
                     const data = JSON.parse(cachedData);
                     if (data.success) {
                         document.getElementById('locationPrompt').style.display = 'none';
 
-                        const badge = document.getElementById('locationBadge');
-                        badge.style.display = 'inline-flex';
+                        document.getElementById('locationBadge').style.display = 'inline-flex';
                         document.getElementById('locationName').textContent = data.location || 'Indonesia';
 
                         const imsak = (data.timings.Imsak || '--:--').replace(/\s*\(.*\)/, '');
@@ -1000,7 +953,7 @@
                             const dH = Math.floor(dTotalMin / 60);
                             const dM = dTotalMin % 60;
                             const info = document.getElementById('durationInfo');
-                            info.textContent = `Total durasi puasa hari ini adalah ${dH} jam dan ${dM} menit.`;
+                            info.textContent = `Total durasi puasa hari ini: ${dH} jam ${dM} menit`;
                             info.style.display = 'block';
                         }
 
@@ -1013,7 +966,6 @@
                     }
                 } catch (e) { }
             } else {
-                // Check if we have saved coordinates to auto-fetch
                 const savedLat = localStorage.getItem('ramadhan_lat');
                 const savedLng = localStorage.getItem('ramadhan_lng');
                 if (savedLat && savedLng) {
