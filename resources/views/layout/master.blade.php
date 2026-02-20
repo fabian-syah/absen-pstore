@@ -348,10 +348,148 @@
         @media (max-width: 991px) {
             .content-wrapper {
                 padding: var(--spacing-md) !important;
+                padding-bottom: 90px !important;
             }
 
             .card-body {
                 padding: var(--spacing-lg) !important;
+            }
+        }
+
+        /* ============================================ */
+        /* MOBILE BOTTOM NAVIGATION BAR                  */
+        /* ============================================ */
+        .mobile-bottom-nav {
+            display: none;
+        }
+
+        @media (max-width: 991px) {
+            .mobile-bottom-nav {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 1050;
+                background: #ffffff;
+                border-top: 1px solid rgba(0, 105, 62, 0.15);
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+                padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
+
+            .mobile-bottom-nav .nav-item {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 4px 2px;
+                text-decoration: none;
+                color: #8a9bad;
+                font-size: 10px;
+                font-weight: 500;
+                line-height: 1.2;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                gap: 3px;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            .mobile-bottom-nav .nav-item i {
+                font-size: 22px;
+                transition: all 0.2s ease;
+                display: block;
+            }
+
+            .mobile-bottom-nav .nav-item span {
+                transition: all 0.2s ease;
+            }
+
+            .mobile-bottom-nav .nav-item:hover {
+                color: var(--pstore-primary);
+            }
+
+            .mobile-bottom-nav .nav-item:hover i {
+                transform: translateY(-2px);
+            }
+
+            .mobile-bottom-nav .nav-item.active {
+                color: var(--pstore-primary);
+            }
+
+            .mobile-bottom-nav .nav-item.active i {
+                transform: translateY(-2px);
+                filter: drop-shadow(0 2px 4px rgba(0, 105, 62, 0.3));
+            }
+
+            .mobile-bottom-nav .nav-item.active span {
+                font-weight: 700;
+            }
+
+            /* Active indicator dot */
+            .mobile-bottom-nav .nav-item.active::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 32px;
+                height: 3px;
+                background: linear-gradient(90deg, var(--pstore-primary), var(--pstore-accent));
+                border-radius: 0 0 4px 4px;
+            }
+
+            /* Absen button - special center button */
+            .mobile-bottom-nav .nav-item.nav-absen {
+                position: relative;
+            }
+
+            .mobile-bottom-nav .nav-item.nav-absen .absen-bubble {
+                width: 50px;
+                height: 50px;
+                background: linear-gradient(135deg, var(--pstore-primary) 0%, var(--pstore-primary-dark) 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 14px rgba(0, 105, 62, 0.45);
+                margin-bottom: 2px;
+                transition: all 0.2s ease;
+                margin-top: -12px;
+                border: 3px solid #fff;
+            }
+
+            .mobile-bottom-nav .nav-item.nav-absen .absen-bubble i {
+                font-size: 22px;
+                color: #fff;
+                transform: none !important;
+            }
+
+            .mobile-bottom-nav .nav-item.nav-absen:hover .absen-bubble,
+            .mobile-bottom-nav .nav-item.nav-absen.active .absen-bubble {
+                transform: scale(1.08);
+                box-shadow: 0 6px 18px rgba(0, 105, 62, 0.55);
+            }
+
+            .mobile-bottom-nav .nav-item.nav-absen span {
+                color: #8a9bad;
+                font-size: 10px;
+            }
+
+            .mobile-bottom-nav .nav-item.nav-absen.active span {
+                color: var(--pstore-primary);
+                font-weight: 700;
+            }
+
+            /* Ramadhan gold color */
+            .mobile-bottom-nav .nav-item.nav-ramadhan.active {
+                color: var(--pstore-accent);
+            }
+
+            .mobile-bottom-nav .nav-item.nav-ramadhan.active::before {
+                background: linear-gradient(90deg, var(--pstore-accent), #D4AF37);
             }
         }
 
@@ -401,6 +539,51 @@
             </div>
         </div>
     </div>
+
+    {{-- ============================================ --}}
+    {{-- MOBILE BOTTOM NAVIGATION BAR --}}
+    {{-- ============================================ --}}
+    @php
+        $currentUrl = request()->url();
+        $isHome = request()->is('/') || request()->routeIs('dashboard');
+        $isAbsen = request()->routeIs('attendance.*');
+        $isIzin = request()->routeIs('leave-requests.*');
+        $isRamadhan = false; // Tidak ada halaman khusus, bisa disesuaikan
+        $isProfile = request()->routeIs('profile.*');
+    @endphp
+    <nav class="mobile-bottom-nav">
+        {{-- Home --}}
+        <a href="{{ url('/') }}" class="nav-item {{ $isHome ? 'active' : '' }}">
+            <i class="mdi mdi-home{{ $isHome ? '' : '-outline' }}"></i>
+            <span>Home</span>
+        </a>
+
+        {{-- Absen (Center Floating Button) --}}
+        <a href="{{ route('attendance.history') }}" class="nav-item nav-absen {{ $isAbsen ? 'active' : '' }}">
+            <div class="absen-bubble">
+                <i class="mdi mdi-fingerprint"></i>
+            </div>
+            <span>Absen</span>
+        </a>
+
+        {{-- Izin --}}
+        <a href="{{ route('leave-requests.personal-history') }}" class="nav-item {{ $isIzin ? 'active' : '' }}">
+            <i class="mdi mdi-calendar-{{ $isIzin ? 'check' : 'clock-outline' }}"></i>
+            <span>Izin</span>
+        </a>
+
+        {{-- Ramadhan --}}
+        <a href="{{ url('/') }}#ramadhan" class="nav-item nav-ramadhan {{ $isRamadhan ? 'active' : '' }}">
+            <i class="mdi mdi-star-crescent"></i>
+            <span>Ramadhan</span>
+        </a>
+
+        {{-- Profile --}}
+        <a href="{{ route('profile.edit') }}" class="nav-item {{ $isProfile ? 'active' : '' }}">
+            <i class="mdi mdi-account{{ $isProfile ? '' : '-outline' }}"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
 
     {{-- JS Assets --}}
     <script src="{{ asset('assets/vendors/js/vendor.bundle.base.js') }}"></script>
