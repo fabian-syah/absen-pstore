@@ -433,16 +433,21 @@
             .mobile-bottom-nav {
                 display: flex;
                 position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
+                bottom: 12px;
+                left: 12px;
+                right: 12px;
                 z-index: 1050;
-                background: rgba(255, 255, 255, 0.95);
-                border-top: 1px solid rgba(0, 105, 62, 0.12);
-                box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
-                padding: 6px 0 max(6px, env(safe-area-inset-bottom));
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
+                background: rgba(255, 255, 255, 0.55);
+                border: 1px solid rgba(255, 255, 255, 0.6);
+                box-shadow:
+                    0 8px 32px rgba(0, 0, 0, 0.12),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+                padding: 8px 4px;
+                padding-bottom: max(8px, env(safe-area-inset-bottom));
+                backdrop-filter: blur(24px) saturate(180%);
+                -webkit-backdrop-filter: blur(24px) saturate(180%);
+                border-radius: 22px;
                 animation: bottomNavSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             }
 
