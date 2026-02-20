@@ -14,7 +14,25 @@
             padding-top: calc(var(--header-height, 70px) + 10px);
             position: relative;
             overflow-x: hidden;
-            padding-bottom: 100px;
+            padding-bottom: 120px;
+            /* Space for floating nav */
+        }
+
+        /* Hide footer and fix white gap at bottom */
+        footer,
+        .footer {
+            display: none !important;
+        }
+
+        .main-panel {
+            background: #0d2318 !important;
+            /* Bottom-most color of our gradient */
+            min-height: 100vh !important;
+        }
+
+        .content-wrapper {
+            background: transparent !important;
+            padding-bottom: 0 !important;
         }
 
         .ramadhan-page * {

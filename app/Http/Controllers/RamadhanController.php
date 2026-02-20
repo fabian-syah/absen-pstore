@@ -140,27 +140,39 @@ class RamadhanController extends Controller
                 $hijri = $data['data']['date']['hijri'] ?? [];
                 $readable = $data['data']['date']['readable'] ?? '';
 
-                // Reverse geocode untuk nama kota (simple)
+                // Reverse geocode untuk nama kota (lebih detail: Kota/Kab, Provinsi, Negara)
                 $locationName = null;
                 try {
-                    $geoResponse = Http::timeout(5)->get('https://nominatim.openstreetmap.org/reverse', [
-                        'format' => 'json',
-                        'lat' => $lat,
-                        'lon' => $lng,
-                        'zoom' => 10,
-                        'accept-language' => 'id',
-                    ]);
+                    $geoResponse = Http::timeout(5)->withHeaders([
+                        'User-Agent' => 'PStore-Absensi-App/1.0'
+                    ])->get('https://nominatim.openstreetmap.org/reverse', [
+                                'format' => 'json',
+                                'lat' => $lat,
+                                'lon' => $lng,
+                                'zoom' => 10,
+                                'accept-language' => 'id',
+                            ]);
                     if ($geoResponse->successful()) {
                         $geoData = $geoResponse->json();
-                        $locationName = $geoData['address']['city']
-                            ?? $geoData['address']['town']
-                            ?? $geoData['address']['county']
-                            ?? $geoData['address']['state']
-                            ?? $geoData['display_name'] ?? null;
+                        $addr = $geoData['address'] ?? [];
+
+                        // Coba ambil City/District, State/Province, and Country
+                        $city = $addr['city_district'] ?? $addr['city'] ?? $addr['town'] ?? $addr['suburb'] ?? $addr['county'] ?? null;
+                        $province = $addr['state'] ?? $addr['province'] ?? null;
+                        $country = $addr['country'] ?? 'Indonesia';
+
+                        $parts = array_filter([$city, $province, $country]);
+                        $locationName = implode(', ', $parts);
+
+                        if (empty($locationName)) {
+                            $locationName = $geoData['display_name'] ?? 'Indonesia';
+                        }
                     }
                 } catch (\Exception $e) {
                     // Fallback — lokasi tidak bisa di-resolve
                 }
+
+                $timezone = $data['data']['meta']['timezone'] ?? null;
 
                 return response()->json([
                     'success' => true,
@@ -175,6 +187,7 @@ class RamadhanController extends Controller
                     'hijri' => $hijri,
                     'readable' => $readable,
                     'location' => $locationName,
+                    'timezone' => $timezone,
                 ]);
             }
 

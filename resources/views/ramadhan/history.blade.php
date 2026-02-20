@@ -11,7 +11,23 @@
             padding-top: calc(var(--header-height, 70px) + 10px);
             position: relative;
             overflow-x: hidden;
-            padding-bottom: 100px;
+            padding-bottom: 120px;
+        }
+
+        /* Hide footer and fix white gap at bottom */
+        footer,
+        .footer {
+            display: none !important;
+        }
+
+        .main-panel {
+            background: #0d2318 !important;
+            min-height: 100vh !important;
+        }
+
+        .content-wrapper {
+            background: transparent !important;
+            padding-bottom: 0 !important;
         }
 
         .history-page::before {
