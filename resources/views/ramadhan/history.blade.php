@@ -423,6 +423,12 @@
         }
     </style>
 
+    {{-- Toast Notification --}}
+    <div id="historyToast"
+        style="position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);z-index:9999;background:rgba(220,53,69,0.95);color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;max-width:90vw;text-align:center;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,0.3);transition:transform 0.4s cubic-bezier(.34,1.56,.64,1),opacity 0.3s;opacity:0;pointer-events:none;">
+        <span id="historyToastMsg"></span>
+    </div>
+
     <div class="history-page">
         <div class="history-content">
             {{-- Header --}}
@@ -550,6 +556,23 @@
         let selectedDate = "{{ now()->toDateString() }}";
         let initialNote = "";
 
+        // Non-blocking toast
+        function showToast(msg, duration = 4000) {
+            const toast = document.getElementById('historyToast');
+            const msgEl = document.getElementById('historyToastMsg');
+            if (!toast || !msgEl) { console.warn(msg); return; }
+            msgEl.textContent = msg;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            toast.style.pointerEvents = 'auto';
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(-100px)';
+                toast.style.pointerEvents = 'none';
+            }, duration);
+        }
+
         function selectDay(el) {
             // Unselect all
             document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
@@ -620,7 +643,7 @@
 
             if (isFasting === null) {
                 if (status === '') {
-                    alert('Pilih status puasa terlebih dahulu atau klik Ya/Tidak.');
+                    showToast('Pilih status puasa terlebih dahulu atau klik Ya/Tidak.');
                     return;
                 }
                 isFasting = parseInt(status);
@@ -671,7 +694,7 @@
                 .catch(err => {
                     document.getElementById('loadingOverlay').style.display = 'none';
                     console.error(err);
-                    alert('Gagal menyimpan data');
+                    showToast('Gagal menyimpan data');
                 });
         }
 

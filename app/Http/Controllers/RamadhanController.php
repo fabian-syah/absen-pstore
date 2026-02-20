@@ -145,8 +145,8 @@ class RamadhanController extends Controller
         $today = Carbon::today();
 
         try {
-            // API Aladhan — method 20 = Kemenag RI
-            $response = Http::timeout(10)->get('https://api.aladhan.com/v1/timings/' . $today->timestamp, [
+            // API Aladhan — method 20 = Kemenag RI (retry 2x, timeout 20s)
+            $response = Http::retry(2, 500)->timeout(20)->get('https://api.aladhan.com/v1/timings/' . $today->timestamp, [
                 'latitude' => $lat,
                 'longitude' => $lng,
                 'method' => 20, // Kemenag RI

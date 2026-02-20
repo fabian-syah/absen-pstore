@@ -807,10 +807,33 @@
         </div>
     </div>
 
+    {{-- Toast Notification --}}
+    <div id="ramadhanToast"
+        style="position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);z-index:9999;background:rgba(220,53,69,0.95);color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;max-width:90vw;text-align:center;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,0.3);transition:transform 0.4s cubic-bezier(.34,1.56,.64,1),opacity 0.3s;opacity:0;pointer-events:none;">
+        <span id="toastMessage"></span>
+    </div>
+
     <script>
         (function () {
             let maghribTimeStr = null;
             let countdownInterval = null;
+
+            // Non-blocking toast instead of alert()
+            function showToast(msg, duration = 4000) {
+                const toast = document.getElementById('ramadhanToast');
+                const msgEl = document.getElementById('toastMessage');
+                if (!toast || !msgEl) { console.warn(msg); return; }
+                msgEl.textContent = msg;
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+                toast.style.pointerEvents = 'auto';
+                clearTimeout(toast._hideTimer);
+                toast._hideTimer = setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(-50%) translateY(-100px)';
+                    toast.style.pointerEvents = 'none';
+                }, duration);
+            }
 
             window.detectLocation = function () {
                 const btn = document.getElementById('btnLocate');
@@ -818,7 +841,7 @@
                 btn.classList.add('loading');
 
                 if (!navigator.geolocation) {
-                    alert('Browser Anda tidak mendukung Geolocation');
+                    showToast('Browser Anda tidak mendukung Geolocation');
                     btn.innerHTML = '<i class="mdi mdi-crosshairs-gps"></i> Lacak Lokasi Saya';
                     btn.classList.remove('loading');
                     return;
@@ -830,8 +853,8 @@
                     },
                     function (error) {
                         let msg = 'Gagal mendapatkan lokasi: ' + error.message;
-                        if (error.code === 1) msg = "Izin lokasi ditolak. Silakan aktifkan izin lokasi di browser Anda.";
-                        alert(msg);
+                        if (error.code === 1) msg = "Izin lokasi ditolak. Aktifkan izin lokasi di browser.";
+                        showToast(msg, 5000);
                         btn.innerHTML = '<i class="mdi mdi-crosshairs-gps"></i> Lacak Lokasi Saya';
                         btn.classList.remove('loading');
                     },
@@ -924,13 +947,13 @@
 
                             startCountdown();
                         } else {
-                            alert(data.message || 'Gagal mengambil jadwal sholat');
+                            showToast(data.message || 'Gagal mengambil jadwal sholat. Coba lagi nanti.', 5000);
                             resetButton();
                         }
                     })
                     .catch(err => {
                         console.error(err);
-                        alert('Terjadi kesalahan saat mengambil jadwal');
+                        showToast('Server sedang sibuk. Coba tekan "Lacak Lokasi" lagi.', 5000);
                         resetButton();
                     });
             }
@@ -1007,7 +1030,7 @@
                     })
                     .catch(err => {
                         console.error(err);
-                        alert('Gagal menyimpan data puasa');
+                        showToast('Gagal menyimpan data puasa');
                     });
             };
 
