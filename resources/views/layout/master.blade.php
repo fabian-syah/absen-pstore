@@ -656,7 +656,7 @@
         $isHome = request()->is('/') || request()->routeIs('dashboard') || request()->routeIs('dashboard.index');
         $isAbsen = request()->routeIs('self.attend.*');
         $isIzin = request()->routeIs('leave-requests.create');
-        $isRamadhan = false;
+        $isRamadhan = request()->routeIs('ramadhan.*');
         $isProfile = request()->routeIs('profile.*');
     @endphp
     <nav class="mobile-bottom-nav">
@@ -681,7 +681,7 @@
         </a>
 
         {{-- Ramadhan --}}
-        <a href="{{ url('/') }}#ramadhan" class="nav-item nav-ramadhan {{ $isRamadhan ? 'active' : '' }}">
+        <a href="{{ route('ramadhan.index') }}" class="nav-item nav-ramadhan {{ $isRamadhan ? 'active' : '' }}">
             <i class="mdi mdi-star-crescent"></i>
             <span>Ramadhan</span>
         </a>

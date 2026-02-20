@@ -37,6 +37,7 @@ use App\Http\Controllers\AdminMonitoringController;
 use App\Http\Controllers\BranchLeaderboardController;
 use App\Http\Controllers\AttendanceSummaryController;
 use App\Http\Controllers\CashAdvanceController; // <--- ADD THIS
+use App\Http\Controllers\RamadhanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,6 +68,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // --- Rute Utama ---
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+    // === RUTE RAMADHAN ===
+    Route::prefix('ramadhan')->name('ramadhan.')->group(function () {
+        Route::get('/', [RamadhanController::class, 'index'])->name('index');
+        Route::post('/fasting', [RamadhanController::class, 'storeFasting'])->name('fasting.store');
+        Route::get('/prayer-times', [RamadhanController::class, 'getPrayerTimes'])->name('prayer-times');
+    });
 
     // Route Test Notifikasi
     Route::get('/test-notification', [DashboardController::class, 'testNotification'])->name('test.notification');
