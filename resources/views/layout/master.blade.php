@@ -364,6 +364,72 @@
         }
 
         @media (max-width: 991px) {
+
+            /* === ENTRANCE ANIMATION === */
+            @keyframes bottomNavSlideUp {
+                from {
+                    transform: translateY(100%);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes bottomNavItemPop {
+                0% {
+                    transform: scale(0.5);
+                    opacity: 0;
+                }
+
+                60% {
+                    transform: scale(1.08);
+                }
+
+                100% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes activeIndicatorGrow {
+                from {
+                    width: 0;
+                    opacity: 0;
+                }
+
+                to {
+                    width: 32px;
+                    opacity: 1;
+                }
+            }
+
+            @keyframes iconBounce {
+
+                0%,
+                100% {
+                    transform: translateY(-2px);
+                }
+
+                50% {
+                    transform: translateY(-5px);
+                }
+            }
+
+            @keyframes absenPulse {
+
+                0%,
+                100% {
+                    box-shadow: 0 4px 14px rgba(0, 105, 62, 0.45);
+                }
+
+                50% {
+                    box-shadow: 0 4px 22px rgba(0, 105, 62, 0.65), 0 0 0 8px rgba(0, 105, 62, 0.08);
+                }
+            }
+
             .mobile-bottom-nav {
                 display: flex;
                 position: fixed;
@@ -371,12 +437,13 @@
                 left: 0;
                 right: 0;
                 z-index: 1050;
-                background: #ffffff;
-                border-top: 1px solid rgba(0, 105, 62, 0.15);
-                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+                background: rgba(255, 255, 255, 0.95);
+                border-top: 1px solid rgba(0, 105, 62, 0.12);
+                box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
                 padding: 6px 0 max(6px, env(safe-area-inset-bottom));
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                animation: bottomNavSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             }
 
             .mobile-bottom-nav .nav-item {
@@ -391,20 +458,48 @@
                 font-size: 10px;
                 font-weight: 500;
                 line-height: 1.2;
-                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: color 0.25s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
                 position: relative;
                 gap: 3px;
                 -webkit-tap-highlight-color: transparent;
+                animation: bottomNavItemPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+            }
+
+            /* Stagger entrance for each nav item */
+            .mobile-bottom-nav .nav-item:nth-child(1) {
+                animation-delay: 0.15s;
+            }
+
+            .mobile-bottom-nav .nav-item:nth-child(2) {
+                animation-delay: 0.22s;
+            }
+
+            .mobile-bottom-nav .nav-item:nth-child(3) {
+                animation-delay: 0.29s;
+            }
+
+            .mobile-bottom-nav .nav-item:nth-child(4) {
+                animation-delay: 0.36s;
+            }
+
+            .mobile-bottom-nav .nav-item:nth-child(5) {
+                animation-delay: 0.43s;
             }
 
             .mobile-bottom-nav .nav-item i {
                 font-size: 22px;
-                transition: all 0.2s ease;
+                transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease;
                 display: block;
             }
 
             .mobile-bottom-nav .nav-item span {
-                transition: all 0.2s ease;
+                transition: all 0.25s ease;
+            }
+
+            /* Press-down tap effect */
+            .mobile-bottom-nav .nav-item:active {
+                transform: scale(0.88);
+                transition: transform 0.1s ease;
             }
 
             .mobile-bottom-nav .nav-item:hover {
@@ -420,6 +515,7 @@
             }
 
             .mobile-bottom-nav .nav-item.active i {
+                animation: iconBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s 1;
                 transform: translateY(-2px);
                 filter: drop-shadow(0 2px 4px rgba(0, 105, 62, 0.3));
             }
@@ -428,20 +524,21 @@
                 font-weight: 700;
             }
 
-            /* Active indicator dot */
+            /* Active indicator line with grow animation */
             .mobile-bottom-nav .nav-item.active::before {
                 content: '';
                 position: absolute;
                 top: 0;
                 left: 50%;
                 transform: translateX(-50%);
-                width: 32px;
                 height: 3px;
                 background: linear-gradient(90deg, var(--pstore-primary), var(--pstore-accent));
                 border-radius: 0 0 4px 4px;
+                animation: activeIndicatorGrow 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+                width: 0;
             }
 
-            /* Absen button - special center button */
+            /* Absen button - special center floating button */
             .mobile-bottom-nav .nav-item.nav-absen {
                 position: relative;
             }
@@ -456,9 +553,10 @@
                 justify-content: center;
                 box-shadow: 0 4px 14px rgba(0, 105, 62, 0.45);
                 margin-bottom: 2px;
-                transition: all 0.2s ease;
+                transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
                 margin-top: -12px;
                 border: 3px solid #fff;
+                animation: absenPulse 2.5s ease-in-out infinite;
             }
 
             .mobile-bottom-nav .nav-item.nav-absen .absen-bubble i {
@@ -467,10 +565,16 @@
                 transform: none !important;
             }
 
+            .mobile-bottom-nav .nav-item.nav-absen:active .absen-bubble {
+                transform: scale(0.9) !important;
+                transition: transform 0.1s ease;
+            }
+
             .mobile-bottom-nav .nav-item.nav-absen:hover .absen-bubble,
             .mobile-bottom-nav .nav-item.nav-absen.active .absen-bubble {
                 transform: scale(1.08);
                 box-shadow: 0 6px 18px rgba(0, 105, 62, 0.55);
+                animation: none;
             }
 
             .mobile-bottom-nav .nav-item.nav-absen span {
@@ -544,11 +648,10 @@
     {{-- MOBILE BOTTOM NAVIGATION BAR --}}
     {{-- ============================================ --}}
     @php
-        $currentUrl = request()->url();
-        $isHome = request()->is('/') || request()->routeIs('dashboard');
-        $isAbsen = request()->routeIs('attendance.*');
-        $isIzin = request()->routeIs('leave-requests.*');
-        $isRamadhan = false; // Tidak ada halaman khusus, bisa disesuaikan
+        $isHome = request()->is('/') || request()->routeIs('dashboard') || request()->routeIs('dashboard.index');
+        $isAbsen = request()->routeIs('self.attend.*');
+        $isIzin = request()->routeIs('leave-requests.create');
+        $isRamadhan = false;
         $isProfile = request()->routeIs('profile.*');
     @endphp
     <nav class="mobile-bottom-nav">
@@ -558,17 +661,17 @@
             <span>Home</span>
         </a>
 
-        {{-- Absen (Center Floating Button) --}}
-        <a href="{{ route('attendance.history') }}" class="nav-item nav-absen {{ $isAbsen ? 'active' : '' }}">
+        {{-- Absen → menuju halaman absen mandiri (clock-in) --}}
+        <a href="{{ route('self.attend.create') }}" class="nav-item nav-absen {{ $isAbsen ? 'active' : '' }}">
             <div class="absen-bubble">
                 <i class="mdi mdi-fingerprint"></i>
             </div>
             <span>Absen</span>
         </a>
 
-        {{-- Izin --}}
-        <a href="{{ route('leave-requests.personal-history') }}" class="nav-item {{ $isIzin ? 'active' : '' }}">
-            <i class="mdi mdi-calendar-{{ $isIzin ? 'check' : 'clock-outline' }}"></i>
+        {{-- Izin → menuju form pengajuan izin --}}
+        <a href="{{ route('leave-requests.create') }}" class="nav-item {{ $isIzin ? 'active' : '' }}">
+            <i class="mdi mdi-file-document-edit{{ $isIzin ? '' : '-outline' }}"></i>
             <span>Izin</span>
         </a>
 
