@@ -15,6 +15,7 @@ class FastingLog extends Model
         'is_fasting',
         'ramadan_day',
         'hijri_year',
+        'notes',
     ];
 
     protected $casts = [

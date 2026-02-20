@@ -497,14 +497,15 @@
 
 
     var proBanner = document.querySelector('#proBanner');
+    var navbar = document.querySelector('.navbar');
     if (proBanner) {
       if ($.cookie('staradmin2-pro-banner') != "true") {
         proBanner.classList.add('d-flex');
-        document.querySelector('.navbar').classList.remove('fixed-top');
+        if (navbar) navbar.classList.remove('fixed-top');
       }
       else {
         proBanner.classList.add('d-none');
-        document.querySelector('.navbar').classList.add('fixed-top');
+        if (navbar) navbar.classList.add('fixed-top');
       }
 
       var bannerClose = document.querySelector('#bannerClose');

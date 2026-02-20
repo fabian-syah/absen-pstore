@@ -753,10 +753,10 @@
                                 })
                                     .then((currentToken) => {
                                         if (currentToken) sendTokenToServer(currentToken);
-                                    });
+                                    }).catch(err => console.log("FCM Token error suppressed."));
                             }
                         });
-                    });
+                    }).catch(err => console.log("Service Worker registration suppressed."));
             }
 
             messaging.onMessage((payload) => {
