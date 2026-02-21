@@ -9,6 +9,7 @@ use App\Models\Attendance;
 use App\Models\Violation;
 use App\Models\JobTarget;
 use App\Models\CashAdvance;
+use App\Models\EmploymentHistory;
 use App\Traits\SendFcmNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -336,7 +337,26 @@ class UserController extends Controller
             $data['division_id'] = null;
         }
 
+        // --- AUTO-LOG: Pindah Cabang Utama ---
+        $oldBranchId = $user->branch_id;
+
         $user->update($data);
+
+        // Jika cabang utama berubah, catat otomatis ke Riwayat Karir
+        if ($oldBranchId != $user->branch_id && $user->branch_id !== null) {
+            $oldBranchName = $oldBranchId ? (Branch::find($oldBranchId)->name ?? 'N/A') : 'Pusat';
+            $newBranchName = Branch::find($user->branch_id)->name ?? 'N/A';
+
+            EmploymentHistory::create([
+                'user_id' => $user->id,
+                'type' => 'transfer_branch',
+                'event_date' => now(),
+                'branch_id' => $user->branch_id,
+                'previous_branch_id' => $oldBranchId,
+                'description' => "Pindah cabang otomatis dari {$oldBranchName} ke {$newBranchName}",
+                'created_by' => Auth::id(),
+            ]);
+        }
 
         $currentUserRole = Auth::user()->role;
         if (in_array($currentUserRole, ['admin', 'admin_gaji'])) {
