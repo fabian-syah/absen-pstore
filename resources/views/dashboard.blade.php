@@ -675,13 +675,13 @@
     @endif
 
     {{-- ======================================================================= --}}
-    {{-- POPUP PEMBERITAHUAN: TIPE LIBUR BARU --}}
+    {{-- POPUP PEMBERITAHUAN: MENU CUTI BARU --}}
     {{-- ======================================================================= --}}
     @if (!session('libur_notice_dismissed'))
         <div class="row mb-4 animate-enter" style="animation-delay: 0.18s" id="libur-notice-popup">
             <div class="col-12">
                 <div class="alert shadow-lg border-0 d-flex align-items-start position-relative"
-                    style="background: linear-gradient(135deg, #0f5132 0%, #198754 100%); border-radius: 16px; padding: 20px 25px;">
+                    style="background: linear-gradient(135deg, #0d47a1 0%, #1976d2 50%, #42a5f5 100%); border-radius: 16px; padding: 20px 25px;">
 
                     {{-- Close Button --}}
                     <button type="button" class="btn-close btn-close-white position-absolute"
@@ -692,23 +692,31 @@
                     <div class="me-3 d-none d-sm-block">
                         <div class="bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center"
                             style="width: 50px; height: 50px;">
-                            <i class="mdi mdi-information-outline text-white" style="font-size: 28px;"></i>
+                            <i class="mdi mdi-calendar-star text-white" style="font-size: 28px;"></i>
                         </div>
                     </div>
 
                     {{-- Content --}}
                     <div class="flex-grow-1 pe-4">
                         <h5 class="text-white fw-bold mb-2">
-                            <i class="mdi mdi-new-box text-warning me-1"></i> TIPE IZIN BARU: "LIBUR"
+                            <i class="mdi mdi-new-box text-warning me-1"></i> MENU BARU: PENGAJUAN CUTI
                         </h5>
                         <p class="text-white mb-2" style="opacity: 0.9; font-size: 14px;">
-                            Sekarang untuk pengajuan <strong>Off Day / Hari Libur</strong>, silakan pilih tipe
-                            <span class="badge bg-light text-dark shadow-sm">Libur (Off Day)</span> pada form pengajuan.
+                            Sekarang pengajuan <strong>Cuti</strong> sudah tersedia! Kamu bisa mengajukan cuti melalui menu
+                            <span class="badge bg-light text-dark shadow-sm"><i class="mdi mdi-calendar-clock me-1"></i>Riwayat Cuti</span>
+                            di sidebar.
                         </p>
-                        <p class="text-white-50 small mb-0" style="font-size: 12px;">
-                            <i class="mdi mdi-alert-circle-outline me-1"></i>
-                            Jangan gunakan tipe "Izin" lagi untuk off day ya!
-                        </p>
+                        <div class="d-flex align-items-center gap-2 mt-3">
+                            <a href="{{ route('leave-requests.cuti-history') }}" 
+                               class="btn btn-light btn-sm fw-bold rounded-pill px-4 py-2 shadow-sm"
+                               style="color: #0d47a1;">
+                                <i class="mdi mdi-arrow-right-circle me-1"></i> Buka Riwayat Cuti
+                            </a>
+                            <span class="text-white-50 small" style="font-size: 12px;">
+                                <i class="mdi mdi-information-outline me-1"></i>
+                                Ajukan cuti langsung dari menu tersebut
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
