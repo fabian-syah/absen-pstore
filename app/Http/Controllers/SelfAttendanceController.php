@@ -456,7 +456,9 @@ class SelfAttendanceController extends Controller
         $attendance->update([
             'check_out_time' => $currentTime,
             'notes' => $notes,
-            'status' => 'pending_verification', // Perlu verifikasi admin karena tanpa foto
+            'status' => 'verified', // Langsung verified sesuai request user
+            'verified_at' => now(),
+            'verified_by_user_id' => Auth::id(), // Dianggap diverifikasi oleh dirinya sendiri/sistem
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Absen pulang manual berhasil diproses (Lupa Absen Pulang).');

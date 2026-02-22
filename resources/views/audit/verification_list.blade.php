@@ -101,6 +101,14 @@
                                                     </div>
                                                 @endif
                                                 <small class="text-muted d-block mt-1">{{ $checkInLocal->format('d M Y') }} ({{ $tzLabel }})</small>
+                                                
+                                                @if($att->latitude && $att->longitude)
+                                                    <div class="mt-2">
+                                                        <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="text-info small fw-bold text-decoration-none">
+                                                            <i class="mdi mdi-map-marker-radius me-1"></i> Peta Lokasi
+                                                        </a>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </td>
                                         <td>

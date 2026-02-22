@@ -293,6 +293,13 @@
                                                 <span class="fw-bold {{ $att->is_calculated_late ? 'text-danger' : 'text-dark' }}">{{ $att->check_in_time->format('H:i') }}</span>
                                             </div>
                                             <small class="text-muted" style="font-size: 0.65rem;">Jadwal: {{ $fixedScheduleIn ? \Carbon\Carbon::parse($fixedScheduleIn)->format('H:i') : '-' }}</small>
+                                            @if($att->latitude && $att->longitude)
+                                                <div class="mt-1">
+                                                    <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="text-info small fw-bold text-decoration-none" style="font-size: 0.65rem;">
+                                                        <i class="mdi mdi-map-marker-radius"></i> Lokasi
+                                                    </a>
+                                                </div>
+                                            @endif
                                         </td>
 
                                         <td>
@@ -315,6 +322,13 @@
                                                     <span class="fw-bold text-dark">{{ $att->check_out_time->format('H:i') }}</span>
                                                 </div>
                                                 <small class="text-muted" style="font-size: 0.65rem;">Jadwal: {{ $fixedScheduleOut ? \Carbon\Carbon::parse($fixedScheduleOut)->format('H:i') : '-' }}</small>
+                                                @if($att->latitude_out && $att->longitude_out)
+                                                    <div class="mt-1">
+                                                        <a href="https://maps.google.com/?q={{ $att->latitude_out }},{{ $att->longitude_out }}" target="_blank" class="text-primary small fw-bold text-decoration-none" style="font-size: 0.65rem;">
+                                                            <i class="mdi mdi-map-marker-radius"></i> Lokasi
+                                                        </a>
+                                                    </div>
+                                                @endif
                                             @else
                                                 <span class="badge bg-soft-secondary text-secondary border small">Belum Out</span>
                                             @endif
