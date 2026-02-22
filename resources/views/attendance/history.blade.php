@@ -298,7 +298,11 @@
                                         </td>
                                         
                                         <td>
-                                            @if($att->latitude && $att->longitude)
+                                            @if($att->attendance_type == 'scan' || $att->scanner_user_id)
+                                                <span class="badge bg-light text-dark border rounded-pill px-2 fw-bold" style="font-size: 0.65rem;">
+                                                    <i class="mdi mdi-office-building text-primary"></i> Di Kantor
+                                                </span>
+                                            @elseif($att->latitude && $att->longitude)
                                                 <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="btn btn-xs btn-info text-white rounded-pill px-2 fw-bold" style="font-size: 0.65rem;">
                                                     <i class="mdi mdi-map-marker-radius"></i> Maps
                                                 </a>
@@ -333,7 +337,11 @@
                                         </td>
 
                                         <td class="bg-light bg-opacity-25">
-                                            @if ($att->check_out_time && $att->latitude_out && $att->longitude_out)
+                                            @if($att->attendance_type == 'scan' || $att->scanner_user_id)
+                                                <span class="badge bg-light text-dark border rounded-pill px-2 fw-bold" style="font-size: 0.65rem;">
+                                                    <i class="mdi mdi-office-building text-primary"></i> Di Kantor
+                                                </span>
+                                            @elseif($att->check_out_time && $att->latitude_out && $att->longitude_out)
                                                 <a href="https://maps.google.com/?q={{ $att->latitude_out }},{{ $att->longitude_out }}" target="_blank" class="btn btn-xs btn-primary text-white rounded-pill px-2 fw-bold" style="font-size: 0.65rem;">
                                                     <i class="mdi mdi-map-marker-radius"></i> Maps
                                                 </a>
