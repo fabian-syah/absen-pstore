@@ -65,7 +65,8 @@
                             <thead>
                                 <tr>
                                     <th class="ps-4">Karyawan</th>
-                                    <th style="min-width: 160px;">Waktu & Lokasi</th>
+                                    <th style="min-width: 160px;">Waktu</th>
+                                    <th>Lokasi</th>
                                     <th style="width: 200px;">Catatan</th>
                                     <th>Bukti Foto</th>
                                     <th class="text-end pe-4">Aksi</th>
@@ -101,15 +102,16 @@
                                                     </div>
                                                 @endif
                                                 <small class="text-muted d-block mt-1">{{ $checkInLocal->format('d M Y') }} ({{ $tzLabel }})</small>
-                                                
-                                                @if($att->latitude && $att->longitude)
-                                                    <div class="mt-2">
-                                                        <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="text-info small fw-bold text-decoration-none">
-                                                            <i class="mdi mdi-map-marker-radius me-1"></i> Peta Lokasi
-                                                        </a>
-                                                    </div>
-                                                @endif
                                             </div>
+                                        </td>
+                                        <td>
+                                            @if($att->latitude && $att->longitude)
+                                                <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="btn btn-sm btn-info text-white rounded-pill px-3 fw-bold shadow-sm">
+                                                    <i class="mdi mdi-map-marker-radius"></i> Maps
+                                                </a>
+                                            @else
+                                                <span class="text-muted small">-</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="notes-text">

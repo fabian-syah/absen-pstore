@@ -258,13 +258,15 @@
                             <thead class="table-light">
                                 <tr>
                                     <th class="ps-4">Tanggal</th>
-                                    <th>Jam Masuk</th>
+                                    <th>Masuk</th>
+                                    <th>Lokasi</th>
                                     <th>Foto</th>
-                                    <th class="border-start">Jam Pulang</th>
+                                    <th class="border-start">Pulang</th>
+                                    <th>Lokasi</th>
                                     <th>Foto</th>
                                     <th class="text-center">Status</th>
                                     <th class="text-center">Bukti Izin / Audit</th>
-                                    <th>Verifikasi & Petugas</th>
+                                    <th class="text-center">Verifikasi & Petugas</th>
                                     <th class="text-center">Metode</th>
                                     @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
                                         <th class="text-end pe-4">Aksi Audit</th>
@@ -293,12 +295,15 @@
                                                 <span class="fw-bold {{ $att->is_calculated_late ? 'text-danger' : 'text-dark' }}">{{ $att->check_in_time->format('H:i') }}</span>
                                             </div>
                                             <small class="text-muted" style="font-size: 0.65rem;">Jadwal: {{ $fixedScheduleIn ? \Carbon\Carbon::parse($fixedScheduleIn)->format('H:i') : '-' }}</small>
+                                        </td>
+                                        
+                                        <td>
                                             @if($att->latitude && $att->longitude)
-                                                <div class="mt-1">
-                                                    <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="text-info small fw-bold text-decoration-none" style="font-size: 0.65rem;">
-                                                        <i class="mdi mdi-map-marker-radius"></i> Lokasi
-                                                    </a>
-                                                </div>
+                                                <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="btn btn-xs btn-info text-white rounded-pill px-2 fw-bold" style="font-size: 0.65rem;">
+                                                    <i class="mdi mdi-map-marker-radius"></i> Maps
+                                                </a>
+                                            @else
+                                                <span class="text-muted small">-</span>
                                             @endif
                                         </td>
 
@@ -322,15 +327,18 @@
                                                     <span class="fw-bold text-dark">{{ $att->check_out_time->format('H:i') }}</span>
                                                 </div>
                                                 <small class="text-muted" style="font-size: 0.65rem;">Jadwal: {{ $fixedScheduleOut ? \Carbon\Carbon::parse($fixedScheduleOut)->format('H:i') : '-' }}</small>
-                                                @if($att->latitude_out && $att->longitude_out)
-                                                    <div class="mt-1">
-                                                        <a href="https://maps.google.com/?q={{ $att->latitude_out }},{{ $att->longitude_out }}" target="_blank" class="text-primary small fw-bold text-decoration-none" style="font-size: 0.65rem;">
-                                                            <i class="mdi mdi-map-marker-radius"></i> Lokasi
-                                                        </a>
-                                                    </div>
-                                                @endif
                                             @else
                                                 <span class="badge bg-soft-secondary text-secondary border small">Belum Out</span>
+                                            @endif
+                                        </td>
+
+                                        <td class="bg-light bg-opacity-25">
+                                            @if ($att->check_out_time && $att->latitude_out && $att->longitude_out)
+                                                <a href="https://maps.google.com/?q={{ $att->latitude_out }},{{ $att->longitude_out }}" target="_blank" class="btn btn-xs btn-primary text-white rounded-pill px-2 fw-bold" style="font-size: 0.65rem;">
+                                                    <i class="mdi mdi-map-marker-radius"></i> Maps
+                                                </a>
+                                            @else
+                                                <span class="text-muted small">-</span>
                                             @endif
                                         </td>
 
@@ -504,6 +512,13 @@
                                 @csrf @method('PUT')
                                 <div class="modal-body p-4">
                                     <div class="mb-3"><label class="form-label small fw-bold">Ubah Status</label>
+                                        @if($att->latitude && $att->longitude)
+                                            <div class="mb-2">
+                                                <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="btn btn-xs btn-info text-white rounded-pill px-2 fw-bold">
+                                                    <i class="mdi mdi-map-marker-radius"></i> Lihat Lokasi di Maps
+                                                </a>
+                                            </div>
+                                        @endif
                                         <select name="presence_status" class="form-select" required>
                                             <option value="Masuk" {{ $att->presence_status == 'Masuk' ? 'selected' : '' }}>✅ Masuk</option>
                                             <option value="WFH" {{ $att->presence_status == 'WFH' ? 'selected' : '' }}>🏠 WFH</option>
@@ -531,6 +546,13 @@
                             <form action="{{ route('audit.update.attendance', $att->id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf @method('PUT')
                                 <div class="modal-body p-4">
+                                    @if($att->latitude && $att->longitude)
+                                        <div class="mb-3">
+                                            <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="btn btn-xs btn-info text-white rounded-pill px-2 fw-bold">
+                                                <i class="mdi mdi-map-marker-radius"></i> Cek Lokasi Maps
+                                            </a>
+                                        </div>
+                                    @endif
                                     <div class="row g-3 mb-3">
                                         <div class="col-6"><label class="form-label small fw-bold">Jam Masuk</label><input type="time" name="check_in_time" class="form-control" value="{{ $att->check_in_time->format('H:i') }}" required></div>
                                         <div class="col-6"><label class="form-label small fw-bold">Jam Pulang</label><input type="time" name="check_out_time" class="form-control" value="{{ $att->check_out_time ? $att->check_out_time->format('H:i') : '' }}"></div>
