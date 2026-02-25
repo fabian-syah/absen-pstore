@@ -350,6 +350,28 @@ class DashboardController extends Controller
             $data['totalBranches'] = $branch_id ? 1 : Branch::count();
             $data['attendancesToday'] = (clone $attendanceQuery)->whereDate('check_in_time', $todayInBranch)->count();
             $data['pendingVerifications'] = (clone $attendanceQuery)->where('status', 'pending_verification')->count();
+
+            $leaveQuery = LeaveRequest::where('is_active', true)
+                ->whereIn('status', ['pending', 'approved'])
+                ->where(function ($query) use ($todayInBranch) {
+                    $query->where(function ($q) use ($todayInBranch) {
+                        $q->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh', 'libur'])
+                            ->whereDate('start_date', '<=', $todayInBranch)
+                            ->whereDate('end_date', '>=', $todayInBranch);
+                    })->orWhere(function ($q) use ($todayInBranch) {
+                        $q->where('type', 'telat')
+                            ->whereDate('start_date', $todayInBranch);
+                    });
+                });
+
+            if ($branch_id != null) {
+                $leaveQuery->whereHas('user', function ($q) use ($branch_id) {
+                    $q->where('branch_id', $branch_id);
+                });
+            }
+
+            $data['leavesToday'] = $leaveQuery->count();
+
             $data['stats'] = $this->getAdminAttendanceStats($branch_id, $todayInBranch);
         } elseif ($user->role == 'audit') {
             $data['pendingVerifications'] = Attendance::whereIn('branch_id', $allBranchIds)->where('status', 'pending_verification')->count();
