@@ -355,7 +355,7 @@ class DashboardController extends Controller
                 ->whereIn('status', ['pending', 'approved'])
                 ->where(function ($query) use ($todayInBranch) {
                     $query->where(function ($q) use ($todayInBranch) {
-                        $q->whereIn('type', ['sakit', 'izin', 'cuti', 'wfh', 'libur'])
+                        $q->whereIn('type', ['libur'])
                             ->whereDate('start_date', '<=', $todayInBranch)
                             ->whereDate('end_date', '>=', $todayInBranch);
                     })->orWhere(function ($q) use ($todayInBranch) {
