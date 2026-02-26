@@ -63,6 +63,7 @@
                                     @php
                                         $salaryThisMonth = $user->salaries->where('month', $month)->where('year', $year)->first();
                                         $latestSalary = $user->salaries->first(); // Sudah diurutkan desc di controller
+                                        $bonusThisMonth = $user->bonuses->first(); // Sudah di-filter month & year
                                     @endphp
                                     <tr>
                                         <td>
@@ -89,14 +90,25 @@
                                         </td>
 
                                         {{-- Status Bulan Ini --}}
-                                        <td>
+                                        <td class="align-middle">
                                             @if($salaryThisMonth)
-                                                <span class="badge badge-success">Sudah Digaji</span>
-                                                <small class="d-block text-muted mt-1">
+                                                <span class="badge badge-success mb-1">Sudah Digaji</span>
+                                                <small class="d-block text-muted">
                                                     Rp {{ number_format($salaryThisMonth->total_amount, 0, ',', '.') }}
                                                 </small>
                                             @else
-                                                <span class="badge badge-warning">Belum Digaji</span>
+                                                <span class="badge badge-warning mb-1">Belum Digaji</span>
+                                            @endif
+
+                                            @if($bonusThisMonth)
+                                                <div class="mt-2 d-flex gap-1 flex-wrap">
+                                                    @if($bonusThisMonth->bonus_amount > 0)
+                                                        <span class="badge bg-info bg-opacity-25 text-info border border-info px-2 py-1"><i class="mdi mdi-gift me-1"></i> Bonus</span>
+                                                    @endif
+                                                    @if($bonusThisMonth->thr_amount > 0)
+                                                        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary px-2 py-1"><i class="mdi mdi-wallet-giftcard me-1"></i> THR</span>
+                                                    @endif
+                                                </div>
                                             @endif
                                         </td>
 
@@ -140,25 +152,27 @@
                                             @endif
                                         </td>
 
-                                        <td class="text-center">
-                                            @if(!$salaryThisMonth)
-                                                <a href="{{ route('salaries.create', ['user_id' => $user->id, 'month' => $month, 'year' => $year]) }}"
-                                                    class="btn btn-sm btn-success text-white">
-                                                    <i class="mdi mdi-cash-register"></i> Payroll
-                                                </a>
-                                            @endif
+                                        <td class="text-center align-middle">
+                                            <div class="d-flex justify-content-center gap-1 flex-wrap">
+                                                @if(!$salaryThisMonth)
+                                                    <a href="{{ route('salaries.create', ['user_id' => $user->id, 'month' => $month, 'year' => $year]) }}"
+                                                        class="btn btn-sm btn-success text-white px-3">
+                                                        <i class="mdi mdi-cash-register"></i> Payroll
+                                                    </a>
+                                                @endif
 
-                                            @if($latestSalary)
-                                                <a href="{{ route('salaries.show', $latestSalary->id) }}"
-                                                    class="btn btn-sm btn-primary text-white">
-                                                    <i class="mdi mdi-file-document-outline border-0"></i> Struk
-                                                </a>
-                                            @endif
+                                                @if($latestSalary)
+                                                    <a href="{{ route('salaries.show', $latestSalary->id) }}"
+                                                        class="btn btn-sm btn-primary text-white px-3">
+                                                        <i class="mdi mdi-file-document-outline border-0"></i> Struk
+                                                    </a>
+                                                @endif
 
-                                            <a href="{{ route('bonuses.create', ['user_id' => $user->id, 'month' => $month, 'year' => $year]) }}"
-                                            class="btn btn-warning btn-sm btn-icon-text me-1" data-bs-toggle="tooltip" title="Input Bonus & THR">
-                                            <i class="mdi mdi-star"></i> Bonus & THR
-                                        </a>
+                                                <a href="{{ route('bonuses.create', ['user_id' => $user->id, 'month' => $month, 'year' => $year]) }}"
+                                                class="btn {{ $bonusThisMonth ? 'btn-outline-warning' : 'btn-warning text-dark' }} btn-sm px-3" data-bs-toggle="tooltip" title="{{ $bonusThisMonth ? 'Edit Bonus/THR' : 'Input Bonus & THR' }}">
+                                                    <i class="mdi mdi-star{{ $bonusThisMonth ? '-outline' : '' }}"></i> {{ $bonusThisMonth ? 'Edit Bonus' : 'Bonus & THR' }}
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty

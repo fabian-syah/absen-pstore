@@ -67,6 +67,9 @@ class BranchSalaryController extends Controller
                 'division',
                 'salaries' => function ($q) {
                     $q->orderBy('year', 'desc')->orderBy('month', 'desc');
+                },
+                'bonuses' => function ($q) use ($month, $year) {
+                    $q->where('month', $month)->where('year', $year);
                 }
             ])
             ->orderBy('name', 'asc')->get();
