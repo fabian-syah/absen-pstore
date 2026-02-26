@@ -51,6 +51,15 @@ class SalarySummaryController extends Controller
                 $amount = $salary ? $salary->total_amount : 0;
                 $status = $salary ? 'Dibayarkan' : 'Belum Ada Data';
                 $salaryData = $salary;
+
+                $bonusRecord = \App\Models\Bonus::where('user_id', $userId)
+                    ->where('month', $monthStr)
+                    ->where('year', $year)
+                    ->first();
+
+                $bonusAmount = $bonusRecord ? $bonusRecord->bonus_amount : 0;
+                $thrAmount = $bonusRecord ? $bonusRecord->thr_amount : 0;
+
             } else {
                 // Semua User: Sum Total Amount
                 $amount = Salary::where('month', $monthStr)
@@ -58,9 +67,17 @@ class SalarySummaryController extends Controller
                     ->sum('total_amount');
                 $status = ($amount > 0) ? 'Total Semua Karyawan' : 'Belum Ada Data';
                 $salaryData = null; // Tidak ada single object salary
+
+                $bonusAmount = \App\Models\Bonus::where('month', $monthStr)
+                    ->where('year', $year)
+                    ->sum('bonus_amount');
+
+                $thrAmount = \App\Models\Bonus::where('month', $monthStr)
+                    ->where('year', $year)
+                    ->sum('thr_amount');
             }
 
-            $totalAnnual += $amount;
+            $totalAnnual += ($amount + $bonusAmount + $thrAmount); // Include bonus in total annual optionally or keep separated? Usually accumulated.
 
             $summary[] = [
                 'month_num' => $m,
@@ -68,6 +85,8 @@ class SalarySummaryController extends Controller
                 'period_string' => $startDate->isoFormat('D MMMM') . ' - ' . $endDate->isoFormat('D MMMM Y'),
                 'data' => $salaryData,
                 'amount' => $amount,
+                'bonus_amount' => $bonusAmount,
+                'thr_amount' => $thrAmount,
                 'status' => $status
             ];
         }

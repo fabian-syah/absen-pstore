@@ -57,11 +57,11 @@
                                 <tr>
                                     <th class="text-center text-white" style="width: 5%">No</th>
                                     <th class="text-white" style="width: 15%">Bulan Gaji</th>
-                                    <th class="text-white" style="width: 25%">Periode Absensi (Cutoff)</th>
+                                    <th class="text-white" style="width: 20%">Periode Absensi (Cutoff)</th>
                                     <th class="text-center text-white" style="width: 15%">Kategori</th>
-                                    <th class="text-end text-white" style="width: 20%">Total Diterima</th>
-                                    <th class="text-center text-white" style="width: 10%">Status</th>
-                                    <th class="text-center text-white" style="width: 10%">Aksi</th>
+                                    <th class="text-end text-white" style="width: 15%">Gaji Pokok</th>
+                                    <th class="text-end text-white" style="width: 15%">Bonus & THR</th>
+                                    <th class="text-end text-white" style="width: 15%">Total Diterima</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -88,7 +88,7 @@
                                                 @else
                                                     <span class="badge bg-success bg-opacity-25 text-dark border border-success rounded-pill px-3 py-2 fw-bold">Karyawan</span>
                                                 @endif
-                                            @elseif($item['amount'] > 0)
+                                            @elseif($item['amount'] > 0 || $item['bonus_amount'] > 0 || $item['thr_amount'] > 0)
                                                 <span class="badge bg-primary bg-opacity-25 text-dark border border-primary rounded-pill px-3 py-2 fw-bold">Total Gabungan</span>
                                             @else
                                                 <span class="text-muted fw-bold">-</span>
@@ -101,31 +101,23 @@
                                                 -
                                             @endif
                                         </td>
-                                        <td class="text-center">
-                                            @if($item['data'])
-                                                <span class="badge bg-success rounded-circle p-2" data-bs-toggle="tooltip" title="Sudah Dibayarkan">
-                                                    <i class="mdi mdi-check text-white fs-6"></i>
-                                                </span>
-                                            @elseif($item['amount'] > 0)
-                                                <span class="badge bg-primary rounded-circle p-2" data-bs-toggle="tooltip" title="Total Gaji Gabungan">
-                                                    <i class="mdi mdi-cash-multiple text-white fs-6"></i>
-                                                </span>
+                                        <td class="text-end fs-6">
+                                            @if($item['bonus_amount'] > 0 || $item['thr_amount'] > 0)
+                                                @if($item['bonus_amount'] > 0)
+                                                    <div class="text-info fw-bold mb-1" title="Bonus"><i class="mdi mdi-star-circle-outline"></i> Rp {{ number_format($item['bonus_amount'], 0, ',', '.') }}</div>
+                                                @endif
+                                                @if($item['thr_amount'] > 0)
+                                                    <div class="text-warning fw-bold" title="THR"><i class="mdi mdi-wallet-giftcard"></i> Rp {{ number_format($item['thr_amount'], 0, ',', '.') }}</div>
+                                                @endif
                                             @else
-                                                <span class="badge bg-secondary bg-opacity-50 rounded-circle p-2" data-bs-toggle="tooltip" title="Belum Ada Data">
-                                                    <i class="mdi mdi-minus text-white fs-6"></i>
-                                                </span>
+                                                <span class="text-muted">-</span>
                                             @endif
                                         </td>
-                                        <td class="text-center">
-                                            @if($item['data'])
-                                                <a href="{{ route('salaries.show', $item['data']->id) }}"
-                                                    class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="tooltip" title="Lihat Slip Gaji">
-                                                    <i class="mdi mdi-file-document-outline"></i> Detail
-                                                </a>
+                                        <td class="text-end fw-bold {{ ($item['amount'] + $item['bonus_amount'] + $item['thr_amount']) > 0 ? 'text-primary' : 'text-muted' }} fs-5">
+                                            @if(($item['amount'] + $item['bonus_amount'] + $item['thr_amount']) > 0)
+                                                Rp {{ number_format($item['amount'] + $item['bonus_amount'] + $item['thr_amount'], 0, ',', '.') }}
                                             @else
-                                                <button class="btn btn-sm btn-light rounded-pill px-3 text-muted" disabled>
-                                                    <i class="mdi mdi-lock-outline"></i> N/A
-                                                </button>
+                                                -
                                             @endif
                                         </td>
                                     </tr>
@@ -133,11 +125,8 @@
                             </tbody>
                             <tfoot class="table-light">
                                 <tr class="fw-bold fs-5">
-                                    <td colspan="4" class="text-end py-3 text-dark">GRAND TOTAL TAHUN {{ $year }}</td>
-                                    <td class="text-end py-3 text-success">Rp {{ number_format($totalAnnual, 0, ',', '.') }}</td>
-                                    <td colspan="2" class="text-center py-3">
-                                        <i class="mdi mdi-star-circle text-warning fs-3"></i>
-                                    </td>
+                                    <td colspan="6" class="text-end py-3 text-dark">GRAND TOTAL DIBAYARKAN TAHUN {{ $year }}</td>
+                                    <td class="text-end py-3 text-primary fs-4">Rp {{ number_format($totalAnnual, 0, ',', '.') }}</td>
                                 </tr>
                             </tfoot>
                         </table>
