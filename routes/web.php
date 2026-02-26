@@ -39,6 +39,8 @@ use App\Http\Controllers\AttendanceSummaryController;
 use App\Http\Controllers\CashAdvanceController; // <--- ADD THIS
 use App\Http\Controllers\RamadhanController;
 
+use App\Http\Controllers\BonusController; // <--- ADD THIS
+
 /*
 |--------------------------------------------------------------------------
 | Rute Publik
@@ -331,6 +333,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/salaries/{salary}/edit', [SalaryController::class, 'edit'])->name('salaries.edit');
         Route::put('/salaries/{salary}', [SalaryController::class, 'update'])->name('salaries.update');
         Route::delete('/salaries/{salary}', [SalaryController::class, 'destroy'])->name('salaries.destroy');
+        Route::get('/salaries/{id}/cetak', [SalaryController::class, 'cetak'])->name('salaries.cetak');
+        Route::get('/salaries/{id}/cetak-thermal', [SalaryController::class, 'cetakThermal'])->name('salaries.cetakThermal');
+
+        // Bonus & THR
+        Route::get('/bonuses/create', [BonusController::class, 'create'])->name('bonuses.create');
+        Route::post('/bonuses', [BonusController::class, 'store'])->name('bonuses.store');
+
         // RUTE GAJI PER CABANG
         Route::get('/gaji-cabang', [BranchSalaryController::class, 'index'])->name('branch-salary.index');
         Route::get('/gaji-cabang/{id}', [BranchSalaryController::class, 'show'])->name('branch-salary.show');

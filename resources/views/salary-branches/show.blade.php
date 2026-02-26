@@ -155,10 +155,10 @@
                                                 </a>
                                             @endif
 
-                                            <a href="{{ route('attendance.summary.user', $user->id) }}"
-                                                class="btn btn-sm btn-info text-white icon-btn">
-                                                <i class="mdi mdi-eye"></i>
-                                            </a>
+                                            <a href="{{ route('bonuses.create', ['user_id' => $user->id, 'month' => $month, 'year' => $year]) }}"
+                                            class="btn btn-warning btn-sm btn-icon-text me-1" data-bs-toggle="tooltip" title="Input Bonus & THR">
+                                            <i class="mdi mdi-star"></i> Bonus & THR
+                                        </a>
                                         </td>
                                     </tr>
                                 @empty
