@@ -15,7 +15,7 @@ class BonusController extends Controller
         $month = $request->query('month', date('m'));
         $year = $request->query('year', date('Y'));
 
-        $user = User::with(['branch', 'division'])->findOrFail($userId);
+        $user = User::with(['branch', 'division', 'employeeSalary'])->findOrFail($userId);
 
         // Check if there's already a bonus for this user in this period
         $existingBonus = Bonus::where('user_id', $userId)
@@ -32,12 +32,23 @@ class BonusController extends Controller
             'user_id' => 'required|exists:users,id',
             'month' => 'required',
             'year' => 'required',
+            'category' => 'required|in:bonus,thr',
             'payment_method' => 'required|in:cash,transfer',
         ]);
 
         // Clean Rupiah formatting
-        $bonusAmount = (float) str_replace('.', '', $request->input('bonus_amount', 0));
-        $thrAmount = (float) str_replace('.', '', $request->input('thr_amount', 0));
+        $amount = (float) str_replace('.', '', $request->input('amount', 0));
+
+        $data = [
+            'payment_method' => $request->payment_method,
+            'created_by' => Auth::id(),
+        ];
+
+        if ($request->category === 'bonus') {
+            $data['bonus_amount'] = $amount;
+        } else {
+            $data['thr_amount'] = $amount;
+        }
 
         Bonus::updateOrCreate(
             [
@@ -45,17 +56,12 @@ class BonusController extends Controller
                 'month' => $request->month,
                 'year' => $request->year,
             ],
-            [
-                'bonus_amount' => $bonusAmount,
-                'thr_amount' => $thrAmount,
-                'payment_method' => $request->payment_method,
-                'created_by' => Auth::id(),
-            ]
+            $data
         );
 
         $user = User::findOrFail($request->user_id);
 
         return redirect()->route('branch-salary.show', $user->branch_id)
-            ->with('success', 'Bonus & THR berhasil disimpan.');
+            ->with('success', 'Kompensasi berhasil disimpan.');
     }
 }
