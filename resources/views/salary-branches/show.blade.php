@@ -133,13 +133,13 @@
                                             @if($bonusThisMonth)
                                                 @if($bonusThisMonth->bonus_amount > 0)
                                                     <div class="mb-1">
-                                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1 me-1"><i class="mdi mdi-star"></i> Bonus</span>
+                                                        <span class="badge bg-info text-dark px-2 py-1 me-1"><i class="mdi mdi-star"></i> Bonus</span>
                                                         <span class="fw-bold text-dark fs-6 d-block mt-1">Rp {{ number_format($bonusThisMonth->bonus_amount, 0, ',', '.') }}</span>
                                                     </div>
                                                 @endif
                                                 @if($bonusThisMonth->thr_amount > 0)
                                                     <div class="{{ $bonusThisMonth->bonus_amount > 0 ? 'mt-2' : '' }}">
-                                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 me-1"><i class="mdi mdi-wallet-giftcard"></i> THR</span>
+                                                        <span class="badge bg-primary text-white px-2 py-1 me-1"><i class="mdi mdi-wallet-giftcard"></i> THR</span>
                                                         <span class="fw-bold text-dark d-block mt-1">Rp {{ number_format($bonusThisMonth->thr_amount, 0, ',', '.') }}</span>
                                                     </div>
                                                 @endif
