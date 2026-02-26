@@ -51,29 +51,17 @@
                         </form>
                     </div>
 
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="bg-info bg-opacity-10 p-2 rounded me-3">
-                            <i class="mdi mdi-account-circle text-info fs-3"></i>
-                        </div>
-                        <div>
-                            <p class="text-muted mb-0 small text-uppercase fw-bold tracking-wider">Menampilkan Ringkasan Milik</p>
-                            <h5 class="mb-0 fw-bold text-dark">
-                                {{ $targetUser ? $targetUser->name . ' (' . ($targetUser->branch->name ?? 'Pusat') . ')' : 'Semua Karyawan (Total Keseluruhan)' }}
-                            </h5>
-                        </div>
-                    </div>
-
                     <div class="table-responsive">
                         <table class="table table-hover align-middle border">
-                            <thead class="table-light">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th class="text-center" style="width: 5%">No</th>
-                                    <th style="width: 15%">Bulan Gaji</th>
-                                    <th style="width: 25%">Periode Absensi (Cutoff)</th>
-                                    <th class="text-center" style="width: 15%">Kategori</th>
-                                    <th class="text-end" style="width: 20%">Total Diterima</th>
-                                    <th class="text-center" style="width: 10%">Status</th>
-                                    <th class="text-center" style="width: 10%">Aksi</th>
+                                    <th class="text-center text-white" style="width: 5%">No</th>
+                                    <th class="text-white" style="width: 15%">Bulan Gaji</th>
+                                    <th class="text-white" style="width: 25%">Periode Absensi (Cutoff)</th>
+                                    <th class="text-center text-white" style="width: 15%">Kategori</th>
+                                    <th class="text-end text-white" style="width: 20%">Total Diterima</th>
+                                    <th class="text-center text-white" style="width: 10%">Status</th>
+                                    <th class="text-center text-white" style="width: 10%">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -94,16 +82,16 @@
                                         <td class="text-center">
                                             @if($item['data'])
                                                 @if($item['data']->category == 'promotor')
-                                                    <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-2">Promotor</span>
+                                                    <span class="badge bg-info bg-opacity-25 text-dark border border-info rounded-pill px-3 py-2 fw-bold">Promotor</span>
                                                 @elseif($item['data']->category == 'freelance')
-                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-3 py-2">Freelance</span>
+                                                    <span class="badge bg-warning bg-opacity-25 text-dark border border-warning rounded-pill px-3 py-2 fw-bold">Freelance</span>
                                                 @else
-                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-2">Karyawan</span>
+                                                    <span class="badge bg-success bg-opacity-25 text-dark border border-success rounded-pill px-3 py-2 fw-bold">Karyawan</span>
                                                 @endif
                                             @elseif($item['amount'] > 0)
-                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill px-3 py-2">Total Gabungan</span>
+                                                <span class="badge bg-primary bg-opacity-25 text-dark border border-primary rounded-pill px-3 py-2 fw-bold">Total Gabungan</span>
                                             @else
-                                                <span class="text-muted">-</span>
+                                                <span class="text-muted fw-bold">-</span>
                                             @endif
                                         </td>
                                         <td class="text-end fw-bold {{ $item['amount'] > 0 ? 'text-success' : 'text-muted' }} fs-6">
