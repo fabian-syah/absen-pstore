@@ -7,10 +7,7 @@
                 {{-- Header --}}
                 <div class="bg-white p-4 p-md-5 border-bottom position-relative">
                     <div class="d-flex align-items-center">
-                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-4">
-                            <i class="mdi mdi-gift text-primary fs-2 mb-0"></i>
-                        </div>
-                        <div>
+                        <div class="ms-1">
                             <h3 class="fw-bold text-dark mb-1">Input Bonus & THR</h3>
                             <p class="mb-0 text-muted fs-6">Formulir pemberian kompensasi tambahan karyawan</p>
                         </div>
@@ -41,7 +38,7 @@
                                         <i class="mdi mdi-storefront text-primary"></i>
                                         {{ $user->branch->name ?? 'Pusat' }}
                                         <span
-                                            class="badge bg-soft-info text-info rounded-pill px-2 border border-info">{{ $user->division->name ?? 'N/A' }}</span>
+                                            class="badge bg-soft-info text-info rounded px-2 border border-info">{{ $user->division->name ?? 'N/A' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -70,7 +67,7 @@
                                             class="form-label fw-bold text-dark d-flex justify-content-between align-items-center mb-2">
                                             <span>Nominal</span>
                                             <span id="saved-badge"
-                                                class="badge bg-success text-white px-2 py-1 rounded-pill d-none shadow-sm"><i
+                                                class="badge bg-success text-white px-2 py-1 rounded d-none shadow-sm"><i
                                                     class="mdi mdi-check-circle me-1"></i> Tersimpan</span>
                                         </label>
                                         <div
@@ -119,18 +116,18 @@
                                         </label>
                                     </div>
 
-                                    <div class="mt-3 transition-all {{ ($existingBonus && $existingBonus->payment_method == 'transfer') ? 'd-block' : 'd-none' }}"
+                                    <div class="mt-3 {{ ($existingBonus && $existingBonus->payment_method == 'transfer') ? '' : 'd-none' }}"
                                         id="transfer-info">
                                         <div
-                                            class="p-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-3 d-flex align-items-start gap-3">
-                                            <i class="mdi mdi-information-outline text-primary fs-3 mt-1"></i>
+                                            class="p-4 bg-primary rounded-3 text-white shadow-sm d-flex align-items-center gap-3">
+                                            <i class="mdi mdi-bank text-white opacity-75 fs-1"></i>
                                             <div>
                                                 <span
-                                                    class="text-primary fw-bold small text-uppercase d-block mb-1">Rekening
+                                                    class="text-white-50 small fw-bold text-uppercase d-block mb-1">Rekening
                                                     Tujuan Transfer:</span>
-                                                <div class="fw-bold text-dark fs-6">
+                                                <div class="fw-bold text-white fs-5 mb-1">
                                                     {{ $user->employeeSalary->bank_name ?? 'N/A' }}</div>
-                                                <div class="text-dark">
+                                                <div class="text-white">
                                                     {{ $user->employeeSalary->bank_account_number ?? 'Belum ada rekening diatur' }}
                                                     a.n {{ $user->name }}</div>
                                             </div>
@@ -266,7 +263,7 @@
                     $('#transfer-info').slideUp(200);
                 } else {
                     $('#btn-transfer').addClass('active shadow-sm bg-white text-primary').removeClass('text-muted');
-                    $('#transfer-info').slideDown(200);
+                    $('#transfer-info').removeClass('d-none').slideDown(200);
                 }
             });
 
