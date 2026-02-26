@@ -197,7 +197,17 @@ class CashAdvanceController extends Controller
     public function show($id)
     {
         $kasbon = CashAdvance::with('installments')->findOrFail($id);
-        return view('kasbon.show', compact('kasbon'));
+
+        // Cari kasbon aktif lain milik user ini (yang statusnya approved dan belum lunas)
+        $outstandingKasbons = CashAdvance::where('user_id', $kasbon->user_id)
+            ->where('id', '!=', $kasbon->id)
+            ->where('status', 'approved')
+            ->whereRaw('amount > total_paid')
+            ->get();
+
+        $totalOutstanding = $outstandingKasbons->sum('remaining_amount');
+
+        return view('kasbon.show', compact('kasbon', 'totalOutstanding'));
     }
 
     // --- 5. UPDATE STATUS (APPROVE/REJECT) ---

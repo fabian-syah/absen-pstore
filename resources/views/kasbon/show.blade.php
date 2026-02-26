@@ -308,6 +308,15 @@
                 @if (in_array(auth()->user()->role, ['admin', 'admin_gaji']) && $kasbon->status == 'pending')
                     <div class="card mt-4 border-2 border-warning border-start-0 border-end-0 border-bottom-0">
                         <div class="card-body">
+                            @if(isset($totalOutstanding) && $totalOutstanding > 0)
+                                <div class="bg-warning bg-opacity-10 border border-warning border-opacity-50 p-3 rounded-3 mb-3 d-flex align-items-center">
+                                    <i class="mdi mdi-alert-circle text-warning fs-2 me-3"></i>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Perhatian!</h6>
+                                        <small class="text-dark d-block" style="line-height: 1.4">Karyawan ini masih memiliki tanggungan kasbon aktif sebesar <strong class="text-danger fs-6">Rp {{ number_format($totalOutstanding, 0, ',', '.') }}</strong> yang belum dilunasi.</small>
+                                    </div>
+                                </div>
+                            @endif
                             <h6 class="fw-bold text-dark mb-3">Konfirmasi Pengajuan</h6>
                             <form action="{{ route('kasbon.status', $kasbon->id) }}" method="POST">
                                 @csrf
