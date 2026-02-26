@@ -15,18 +15,23 @@ class BranchSalaryController extends Controller
         $currentMonth = date('m');
         $currentYear = date('Y');
 
-        $branches = Branch::with(['users' => function($q) use ($currentMonth, $currentYear) {
+        $branches = Branch::with([
+            'users' => function ($q) use ($currentMonth, $currentYear) {
                 $q->where('is_active', true)
-                  ->with(['salaries' => function($s) use ($currentMonth, $currentYear) {
-                      $s->where('month', $currentMonth)->where('year', $currentYear);
-                  }]);
-            }])
+                    ->with([
+                        'salaries' => function ($s) use ($currentMonth, $currentYear) {
+                            $s->where('month', $currentMonth)->where('year', $currentYear);
+                        }
+                    ]);
+            }
+        ])
             ->when($search, function ($query) use ($search) {
                 return $query->where('name', 'like', "%{$search}%")->orWhere('address', 'like', "%{$search}%");
             })
             ->orderBy('name', 'asc')->get();
 
-        $globalTotalEmployees = 0; $globalTotalSalary = 0;
+        $globalTotalEmployees = 0;
+        $globalTotalSalary = 0;
 
         foreach ($branches as $branch) {
             $cnt = $branch->users->count();
@@ -34,7 +39,8 @@ class BranchSalaryController extends Controller
             foreach ($branch->users as $user) {
                 $sal = $user->salaries->first();
                 // Hanya hitung total jika status paid (opsional, atau hitung semua)
-                if ($sal) $tot += $sal->total_amount;
+                if ($sal)
+                    $tot += $sal->total_amount;
             }
             $branch->setAttribute('employee_count', $cnt);
             $branch->setAttribute('total_salary_expense', $tot);
@@ -49,17 +55,22 @@ class BranchSalaryController extends Controller
     {
         $branch = Branch::findOrFail($id);
         $search = $request->input('search');
+        $month = str_pad($request->input('month', date('m')), 2, '0', STR_PAD_LEFT);
+        $year = $request->input('year', date('Y'));
 
         $users = User::where('branch_id', $id)
             ->where('is_active', true)
             ->when($search, function ($query) use ($search) {
                 return $query->where('name', 'like', "%{$search}%")->orWhere('login_id', 'like', "%{$search}%");
             })
-            ->with(['division', 'salaries' => function($q) {
-                $q->orderBy('year', 'desc')->orderBy('month', 'desc');
-            }])
+            ->with([
+                'division',
+                'salaries' => function ($q) {
+                    $q->orderBy('year', 'desc')->orderBy('month', 'desc');
+                }
+            ])
             ->orderBy('name', 'asc')->get();
 
-        return view('salary-branches.show', compact('branch', 'users', 'search'));
+        return view('salary-branches.show', compact('branch', 'users', 'search', 'month', 'year'));
     }
 }

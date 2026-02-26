@@ -16,10 +16,32 @@
                     </div>
 
                     <form action="{{ route('branch-salary.show', $branch->id) }}" method="GET" class="mb-4">
-                        <div class="input-group">
-                            <input type="text" name="search" class="form-control" placeholder="Cari karyawan..."
-                                value="{{ $search }}">
-                            <button class="btn btn-info text-white" type="submit">Cari</button>
+                        <div class="row gx-2">
+                            <div class="col-md-3">
+                                <select name="month" class="form-select">
+                                    @for($m = 1; $m <= 12; $m++)
+                                        @php $mPad = str_pad($m, 2, '0', STR_PAD_LEFT); @endphp
+                                        <option value="{{ $mPad }}" {{ (isset($month) ? $month : date('m')) == $mPad ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create()->month($m)->locale('id')->isoFormat('MMMM') }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="year" class="form-select">
+                                    @for($y = date('Y') - 1; $y <= date('Y') + 1; $y++)
+                                        <option value="{{ $y }}" {{ (isset($year) ? $year : date('Y')) == $y ? 'selected' : '' }}>
+                                            {{ $y }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control" placeholder="Cari karyawan..."
+                                        value="{{ $search }}">
+                                    <button class="btn btn-info text-white" type="submit">Filter & Cari</button>
+                                </div>
+                            </div>
                         </div>
                     </form>
 
@@ -29,7 +51,7 @@
                                 <tr>
                                     <th>Nama Karyawan</th>
                                     <th>Divisi</th>
-                                    <th>Status Gaji ({{ date('F Y') }})</th>
+                                    <th>Status Gaji ({{ \Carbon\Carbon::createFromFormat('m', $month)->locale('id')->isoFormat('MMMM') }} {{ $year }})</th>
                                     <th>Metode Bayar</th>
                                     <th>Gaji Terakhir</th>
                                     <th>Status Payroll</th>
@@ -39,7 +61,7 @@
                             <tbody>
                                 @forelse($users as $user)
                                     @php
-                                        $salaryThisMonth = $user->salaries->where('month', date('m'))->where('year', date('Y'))->first();
+                                        $salaryThisMonth = $user->salaries->where('month', $month)->where('year', $year)->first();
                                         $latestSalary = $user->salaries->first(); // Sudah diurutkan desc di controller
                                     @endphp
                                     <tr>
@@ -95,7 +117,8 @@
                                         <td>
                                             @if($latestSalary)
                                                 <div class="fw-bold text-dark">Rp
-                                                    {{ number_format($latestSalary->total_amount, 0, ',', '.') }}</div>
+                                                    {{ number_format($latestSalary->total_amount, 0, ',', '.') }}
+                                                </div>
                                                 <small
                                                     class="text-muted">{{ $latestSalary->month }}/{{ $latestSalary->year }}</small>
                                             @else
@@ -119,7 +142,7 @@
 
                                         <td class="text-center">
                                             @if(!$salaryThisMonth)
-                                                <a href="{{ route('salaries.create', ['user_id' => $user->id]) }}"
+                                                <a href="{{ route('salaries.create', ['user_id' => $user->id, 'month' => $month, 'year' => $year]) }}"
                                                     class="btn btn-sm btn-success text-white">
                                                     <i class="mdi mdi-cash-register"></i> Payroll
                                                 </a>
