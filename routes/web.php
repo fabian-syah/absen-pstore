@@ -637,6 +637,14 @@ Route::get('/health', function () {
     return response()->json(['status' => 'OK', 'timestamp' => now()]);
 });
 
+Route::get('/hapus-gaji-jcs', function () {
+    $deleted = \App\Models\Salary::whereHas('user', function ($q) {
+        $q->where('login_id', 'jcs');
+    })->where('month', '12')->where('year', '2025')->delete();
+
+    return "Berhasil dihapus! Jumlah data yang terhapus: " . $deleted;
+});
+
 if (app()->environment('local')) {
     Route::get('/debug-session', function () {
         return response()->json(['session' => session()->all(), 'user' => auth()->user()]);
