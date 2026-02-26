@@ -54,6 +54,7 @@
                                     <th>Status Gaji ({{ \Carbon\Carbon::createFromFormat('m', $month)->locale('id')->isoFormat('MMMM') }} {{ $year }})</th>
                                     <th>Metode Bayar</th>
                                     <th>Gaji Terakhir</th>
+                                    <th>Bonus & THR</th>
                                     <th>Status Payroll</th>
                                     <th class="text-center">Aksi</th>
                                 </tr>
@@ -99,17 +100,6 @@
                                             @else
                                                 <span class="badge badge-warning mb-1">Belum Digaji</span>
                                             @endif
-
-                                            @if($bonusThisMonth)
-                                                <div class="mt-2 d-flex gap-1 flex-wrap">
-                                                    @if($bonusThisMonth->bonus_amount > 0)
-                                                        <span class="badge bg-info bg-opacity-25 text-info border border-info px-2 py-1"><i class="mdi mdi-gift me-1"></i> Bonus</span>
-                                                    @endif
-                                                    @if($bonusThisMonth->thr_amount > 0)
-                                                        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary px-2 py-1"><i class="mdi mdi-wallet-giftcard me-1"></i> THR</span>
-                                                    @endif
-                                                </div>
-                                            @endif
                                         </td>
 
                                         <td>
@@ -133,6 +123,26 @@
                                                 </div>
                                                 <small
                                                     class="text-muted">{{ $latestSalary->month }}/{{ $latestSalary->year }}</small>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+
+                                        {{-- Bonus & THR (Bulan Aktif) --}}
+                                        <td class="align-middle">
+                                            @if($bonusThisMonth)
+                                                @if($bonusThisMonth->bonus_amount > 0)
+                                                    <div class="mb-1">
+                                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1 me-1"><i class="mdi mdi-star"></i> Bonus</span>
+                                                        <span class="fw-bold text-dark fs-6 d-block mt-1">Rp {{ number_format($bonusThisMonth->bonus_amount, 0, ',', '.') }}</span>
+                                                    </div>
+                                                @endif
+                                                @if($bonusThisMonth->thr_amount > 0)
+                                                    <div class="{{ $bonusThisMonth->bonus_amount > 0 ? 'mt-2' : '' }}">
+                                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 me-1"><i class="mdi mdi-wallet-giftcard"></i> THR</span>
+                                                        <span class="fw-bold text-dark d-block mt-1">Rp {{ number_format($bonusThisMonth->thr_amount, 0, ',', '.') }}</span>
+                                                    </div>
+                                                @endif
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
