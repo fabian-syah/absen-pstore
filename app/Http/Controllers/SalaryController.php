@@ -144,8 +144,10 @@ class SalaryController extends Controller
                 });
 
                 if (!$att && $leave->isEmpty()) {
-                    // Jika tidak ada attendance dan tidak ada leave, maka dihitung Alpha
-                    $alphaCount++;
+                    // WEEKEND = Libur, bukan Alpha (Sesuai TeamController line 508)
+                    if (!$date->isWeekend()) {
+                        $alphaCount++;
+                    }
                 } else if ($att) {
                     // Jika ADA attendance, cek apakah statusnya secara eksplisit 'Alpha' (system generated)
                     $status = strtolower($att->presence_status ?? '');
