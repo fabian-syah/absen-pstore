@@ -124,7 +124,11 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             });
         }
 
-        return $query->orderBy('name');
+        return $query
+            ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
+            ->orderBy('branches.name', 'asc')
+            ->orderBy('users.name', 'asc')
+            ->select('users.*'); // Ensure we return User models, not mixed attributes from join
     }
 
     public function headings(): array
