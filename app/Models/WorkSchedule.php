@@ -84,13 +84,15 @@ class WorkSchedule extends Model
      */
     public function getCheckInRangeAttribute()
     {
-        if ($this->check_in_start == null) return 'Fleksibel'; // Tampilan jika kosong
+        if ($this->check_in_start == null)
+            return 'Fleksibel'; // Tampilan jika kosong
         return $this->check_in_start->format('H:i') . ' - ' . $this->check_in_end->format('H:i');
     }
 
     public function getCheckOutRangeAttribute()
     {
-        if ($this->check_out_start == null) return 'Fleksibel'; // Tampilan jika kosong
+        if ($this->check_out_start == null)
+            return 'Fleksibel'; // Tampilan jika kosong
         return $this->check_out_start->format('H:i') . ' - ' . $this->check_out_end->format('H:i');
     }
     public static function getScheduleForUser($userId)
