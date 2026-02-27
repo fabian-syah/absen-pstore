@@ -81,12 +81,23 @@ class SalaryController extends Controller
             $today = Carbon::now()->endOfDay();
             $limitDate = ($monthEndDate->gt($today)) ? $today : $monthEndDate;
 
+            $branchTimezone = $selectedUser->branch->timezone ?? 'Asia/Jakarta';
+
+            // Ambil semua attendance dengan buffer hari agar timezone tidak terpotong
+            $attendances = Attendance::where('user_id', $selectedUserId)
+                ->whereBetween('check_in_time', [
+                    $monthStartDate->copy()->subDays(2)->startOfDay(),
+                    $monthEndDate->copy()->addDays(2)->endOfDay()
+                ])
+                ->get();
+
             // Absensi Regular (Bulanan) untuk Employee/Promotor
-            $telatFisik = Attendance::where('user_id', $selectedUserId)
-                ->whereBetween('check_in_time', [$monthStartDate, $monthEndDate])
-                ->where(function ($q) {
-                    $q->where('is_late_checkin', true)->orWhere('status', 'late')->orWhere('presence_status', 'like', '%Telat%');
-                })->count();
+            $telatFisik = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone) {
+                $attDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone)->startOfDay();
+                $isInRange = $attDate->between($monthStartDate, $limitDate);
+                $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
+                return $isInRange && $isTelat;
+            })->count();
 
             $izinTelat = LeaveRequest::where('user_id', $selectedUserId)
                 ->where('type', 'telat')->where('status', 'approved')
@@ -103,11 +114,6 @@ class SalaryController extends Controller
             for ($d = $monthStartDate->copy(); $d->lte($limitDate); $d->addDay()) {
                 $totalDays++;
             }
-
-            // Ambil semua attendance di bulan ini
-            $attendances = Attendance::where('user_id', $selectedUserId)
-                ->whereBetween('check_in_time', [$monthStartDate, $monthEndDate])
-                ->get();
 
             // Ambil semua approved leaves di bulan ini
             $leaves = LeaveRequest::where('user_id', $selectedUserId)
@@ -127,8 +133,8 @@ class SalaryController extends Controller
                 $currentDateStr = $date->format('Y-m-d');
 
                 // Cek apakah ada attendance YANG BUKAN ALPHA
-                $hasAttendance = $attendances->filter(function ($a) use ($currentDateStr) {
-                    $dateMatch = Carbon::parse($a->check_in_time)->format('Y-m-d') == $currentDateStr;
+                $hasAttendance = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
+                    $dateMatch = Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
                     $notAlpha = strtolower($a->presence_status ?? '') !== 'alpha';
                     return $dateMatch && $notAlpha;
                 })->isNotEmpty();
