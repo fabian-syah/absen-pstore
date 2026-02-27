@@ -42,8 +42,8 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
                 $q->latest();
             }
         ])
-            ->where('is_active', true)
-            ->whereNotIn('role', ['admin', 'admin_gaji']);
+            ->where('users.is_active', true)
+            ->whereNotIn('users.role', ['admin', 'admin_gaji']);
 
         // --- PUSAT / CABANG GROUPING FILTER ---
         $pusatList = [
@@ -89,20 +89,20 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
         if (isset($this->filters['search']) && $this->filters['search'] != null) {
             $search = $this->filters['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('login_id', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                $q->where('users.name', 'like', "%{$search}%")
+                    ->orWhere('users.login_id', 'like', "%{$search}%")
+                    ->orWhere('users.email', 'like', "%{$search}%");
             });
         }
 
         // 2. Filter Cabang
         if (isset($this->filters['branch_id']) && $this->filters['branch_id'] != null) {
-            $query->where('branch_id', $this->filters['branch_id']);
+            $query->where('users.branch_id', $this->filters['branch_id']);
         }
 
         // 3. Filter Divisi
         if (isset($this->filters['division_id']) && $this->filters['division_id'] != null) {
-            $query->where('division_id', $this->filters['division_id']);
+            $query->where('users.division_id', $this->filters['division_id']);
         }
 
         // 4. Logika Kategori
