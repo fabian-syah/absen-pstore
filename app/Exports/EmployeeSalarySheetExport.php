@@ -9,11 +9,11 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithEvents; 
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting; // IMPORT BARU
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Table; 
+use PhpOffice\PhpSpreadsheet\Worksheet\Table;
 use PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat; // IMPORT BARU
 
@@ -39,10 +39,10 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
         // 1. Filter Pencarian Global (Search)
         if (isset($this->filters['search']) && $this->filters['search'] != null) {
             $search = $this->filters['search'];
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('login_id', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('login_id', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -58,11 +58,11 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
 
         // 4. Logika Kategori
         if ($this->category === 'all') {
-             if (isset($this->filters['category']) && $this->filters['category'] != null) {
+            if (isset($this->filters['category']) && $this->filters['category'] != null) {
                 if ($this->filters['category'] == 'unset') {
                     $query->doesntHave('employeeSalary');
                 } else {
-                    $query->whereHas('employeeSalary', function($q) {
+                    $query->whereHas('employeeSalary', function ($q) {
                         $q->where('category', $this->filters['category']);
                     });
                 }
@@ -70,7 +70,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
         } elseif ($this->category === 'unset') {
             $query->doesntHave('employeeSalary');
         } else {
-            $query->whereHas('employeeSalary', function($q) {
+            $query->whereHas('employeeSalary', function ($q) {
                 $q->where('category', $this->category);
             });
         }
@@ -93,6 +93,10 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'Gaji Harian (Freelance)',
             'Insentif (Promotor)',
             'Total Master Gaji (Estimasi)',
+            'Potongan Alpha',
+            'Potongan Telat',
+            'Potongan Cuti Lebih',
+            'Gaji Harus Diterima',
             'Nama Bank',
             'No. Rekening',
             'Catatan',
@@ -102,7 +106,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
     public function map($user): array
     {
         $salary = $user->employeeSalary;
-        
+
         $categoryLabel = 'Belum Diatur';
         $basicSalary = 0;
         $positionAllowance = 0;
@@ -110,6 +114,10 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
         $dailySalary = 0;
         $promotorBonus = 0;
         $totalMaster = 0;
+        $potonganAlpha = 0;
+        $potonganTelat = 0;
+        $potonganCutiLebih = 0;
+        $gajiHarusDiterima = 0;
         $bankName = '-';
         $accountNumber = '-';
         $notes = '-';
@@ -136,6 +144,8 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             }
         }
 
+        $gajiHarusDiterima = $totalMaster - ($potonganAlpha + $potonganTelat + $potonganCutiLebih);
+
         return [
             $user->name,
             $user->login_id ?? '-',
@@ -149,8 +159,12 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             $dailySalary,
             $promotorBonus,
             $totalMaster,
+            $potonganAlpha,
+            $potonganTelat,
+            $potonganCutiLebih,
+            $gajiHarusDiterima,
             $bankName,
-            $accountNumber . ' ', 
+            $accountNumber . ' ',
             $notes,
         ];
     }
@@ -165,6 +179,10 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'J' => '"Rp " #,##0', // Gaji Harian
             'K' => '"Rp " #,##0', // Insentif
             'L' => '"Rp " #,##0', // Total
+            'M' => '"Rp " #,##0', // Potongan Alpha
+            'N' => '"Rp " #,##0', // Potongan Telat
+            'O' => '"Rp " #,##0', // Potongan Cuti Lebih
+            'P' => '"Rp " #,##0', // Gaji Harus Diterima
         ];
     }
 
@@ -177,20 +195,20 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
-                
+            AfterSheet::class => function (AfterSheet $event) {
+
                 // 1. Ambil Dimensi Data
                 $dimension = $event->sheet->getDelegate()->calculateWorksheetDimension();
-                
+
                 // 2. Buat Nama Tabel Unik
-                $tableName = str_replace(' ', '', $this->sheetTitle) . '_' . uniqid(); 
+                $tableName = str_replace(' ', '', $this->sheetTitle) . '_' . uniqid();
 
                 // 3. Buat Object Tabel
                 $table = new Table();
                 $table->setName($tableName);
                 $table->setRange($dimension);
                 $table->setShowTotalsRow(false);
-                
+
                 // 4. Pilih Gaya Tabel (Biru)
                 $tableStyle = new TableStyle();
                 $tableStyle->setTheme(TableStyle::TABLE_STYLE_MEDIUM2);
@@ -201,9 +219,9 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
 
                 // 6. Freeze Header
                 $event->sheet->getDelegate()->freezePane('A2');
-                
+
                 // 7. Auto Size Kolom
-                foreach(range('A', 'O') as $columnID) {
+                foreach (range('A', 'S') as $columnID) {
                     $event->sheet->getDelegate()->getColumnDimension($columnID)->setAutoSize(true);
                 }
             },
