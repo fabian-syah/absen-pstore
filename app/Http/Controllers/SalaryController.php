@@ -74,14 +74,16 @@ class SalaryController extends Controller
 
             // --- HITUNG ABSENSI ---
 
-            // LOGIC CUTOFF: 26 Bulan Kemarin - 25 Bulan Ini
-            // Definisikan Variable Tanggal disini agar bisa dipakai di semua query (Telat, Alpha, Leave)
-            $monthStartDate = Carbon::createFromDate($year, $month, 1)->subMonth()->day(26)->startOfDay();
-            $monthEndDate = Carbon::createFromDate($year, $month, 1)->day(25)->endOfDay();
-            $today = Carbon::now()->endOfDay();
-            $limitDate = ($monthEndDate->gt($today)) ? $today : $monthEndDate;
-
             $branchTimezone = $selectedUser->branch->timezone ?? 'Asia/Jakarta';
+
+            // LOGIC CUTOFF: 26 Bulan Kemarin - 25 Bulan Ini
+            // Definisikan Variable Tanggal menggunakan timezone cabang
+            $monthStartDate = Carbon::createFromDate($year, $month, 1, $branchTimezone)->subMonth()->day(26)->startOfDay();
+            $monthEndDate = Carbon::createFromDate($year, $month, 1, $branchTimezone)->day(25)->endOfDay();
+            $today = Carbon::now($branchTimezone)->startOfDay(); // Gunakan startOfDay seperti di AttendanceHistory
+
+            // Limit Date pastikan tidak melewati hari ini
+            $limitDate = ($monthEndDate->gt(Carbon::now($branchTimezone))) ? $today : $monthEndDate;
 
             // Ambil semua attendance dengan buffer hari agar timezone tidak terpotong
             $attendances = Attendance::where('user_id', $selectedUserId)
