@@ -35,8 +35,10 @@ class EmployeeSalaryExport implements WithMultipleSheets
             return $sheets;
         }
 
-        // DEFAULT: Tampilkan 1 Sheet "Semua Data"
-        $sheets[] = new EmployeeSalarySheetExport('all', $this->filters, 'Semua Data');
+        // DEFAULT: Tampilkan 3 Sheet "Semua Data", "Pusat", dan "Cabang"
+        $sheets[] = new EmployeeSalarySheetExport('all', $this->filters, 'Semua Data', 'all');
+        $sheets[] = new EmployeeSalarySheetExport('all', $this->filters, 'Pusat', 'pusat');
+        $sheets[] = new EmployeeSalarySheetExport('all', $this->filters, 'Cabang', 'cabang');
 
         return $sheets;
     }

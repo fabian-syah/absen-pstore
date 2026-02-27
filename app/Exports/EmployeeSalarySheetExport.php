@@ -22,12 +22,14 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
     protected $category;
     protected $filters;
     protected $sheetTitle;
+    protected $group;
 
-    public function __construct($category, $filters, $sheetTitle)
+    public function __construct($category, $filters, $sheetTitle, $group = 'all')
     {
         $this->category = $category;
         $this->filters = $filters;
         $this->sheetTitle = $sheetTitle;
+        $this->group = $group;
     }
 
     public function query()
@@ -42,6 +44,46 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
         ])
             ->where('is_active', true)
             ->whereNotIn('role', ['admin', 'admin_gaji']);
+
+        // --- PUSAT / CABANG GROUPING FILTER ---
+        $pusatList = [
+            'AppleLux',
+            'Arcis & Debs',
+            'Cleaning service',
+            'Dokter Pstore',
+            'Driver pstore',
+            'Finance',
+            'Inventory',
+            'keluarga Pstore',
+            'Managament',
+            'Marketing Creative',
+            'Masjid abdurrohman bin auf',
+            'Mega pstore',
+            'Ps arwana',
+            'PS bakery',
+            'PS big jakarta',
+            'PS catering',
+            'PS new jakarta',
+            'Pskontraktor',
+            'Pstore Lenteng Agung',
+            'Pstore Peduli',
+            'Pstore Qcell jakarta',
+            'Shopee',
+            'Security Jakarta',
+            'Team Audit',
+            'Team Creative',
+            'Tiktok'
+        ];
+
+        if ($this->group === 'pusat') {
+            $query->whereHas('branch', function ($q) use ($pusatList) {
+                $q->whereIn('name', $pusatList);
+            });
+        } elseif ($this->group === 'cabang') {
+            $query->whereHas('branch', function ($q) use ($pusatList) {
+                $q->whereNotIn('name', $pusatList);
+            });
+        }
 
         // 1. Filter Pencarian Global (Search)
         if (isset($this->filters['search']) && $this->filters['search'] != null) {
@@ -92,6 +134,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'Login ID',
             'Email',
             'Divisi',
+            'Pusat',
             'Cabang',
             'Kategori Gaji',
             'Gaji Pokok (Bulanan)',
@@ -161,12 +204,56 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
 
         $gajiHarusDiterima = $totalMaster - ($potonganAlpha + $potonganTelat + $potonganCutiLebih);
 
+        // --- PUSAT / CABANG GROUPING ---
+        $branchName = $user->branch->name ?? '-';
+        $pusatList = [
+            'AppleLux',
+            'Arcis & Debs',
+            'Cleaning service',
+            'Dokter Pstore',
+            'Driver pstore',
+            'Finance',
+            'Inventory',
+            'keluarga Pstore',
+            'Managament',
+            'Marketing Creative',
+            'Masjid abdurrohman bin auf',
+            'Mega pstore',
+            'Ps arwana',
+            'PS bakery',
+            'PS big jakarta',
+            'PS catering',
+            'PS new jakarta',
+            'Pskontraktor',
+            'Pstore Lenteng Agung',
+            'Pstore Peduli',
+            'Pstore Qcell jakarta',
+            'Shopee',
+            'Security Jakarta',
+            'Team Audit',
+            'Team Creative',
+            'Tiktok'
+        ];
+
+        $isPusat = false;
+        // Check case-insensitively
+        foreach ($pusatList as $pusatBranch) {
+            if (strtolower(trim($branchName)) === strtolower(trim($pusatBranch))) {
+                $isPusat = true;
+                break;
+            }
+        }
+
+        $pusatCol = $isPusat ? $branchName : '-';
+        $cabangCol = !$isPusat ? $branchName : '-';
+
         return [
             $user->name,
             $user->login_id ?? '-',
             $user->email,
             $user->division->name ?? '-',
-            $user->branch->name ?? '-',
+            $pusatCol,
+            $cabangCol,
             $categoryLabel,
             $basicSalary,
             $positionAllowance,
@@ -188,16 +275,17 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
     public function columnFormats(): array
     {
         return [
-            'G' => '"Rp " #,##0', // Gaji Pokok
-            'H' => '"Rp " #,##0', // Tunjangan
-            'I' => '"Rp " #,##0', // Privilege
-            'J' => '"Rp " #,##0', // Gaji Harian
-            'K' => '"Rp " #,##0', // Insentif
-            'L' => '"Rp " #,##0', // Total
-            'M' => '"Rp " #,##0', // Potongan Alpha
-            'N' => '"Rp " #,##0', // Potongan Telat
-            'O' => '"Rp " #,##0', // Potongan Cuti Lebih
-            'P' => '"Rp " #,##0', // Gaji Harus Diterima
+            // Karena kita menambah 1 kolom (Pusat & Cabang menggantikan Cabang), index bergeser +1
+            'H' => '"Rp " #,##0', // Gaji Pokok
+            'I' => '"Rp " #,##0', // Tunjangan
+            'J' => '"Rp " #,##0', // Privilege
+            'K' => '"Rp " #,##0', // Gaji Harian
+            'L' => '"Rp " #,##0', // Insentif
+            'M' => '"Rp " #,##0', // Total
+            'N' => '"Rp " #,##0', // Potongan Alpha
+            'O' => '"Rp " #,##0', // Potongan Telat
+            'P' => '"Rp " #,##0', // Potongan Cuti Lebih
+            'Q' => '"Rp " #,##0', // Gaji Harus Diterima
         ];
     }
 
@@ -235,8 +323,8 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
                 // 6. Freeze Header
                 $event->sheet->getDelegate()->freezePane('A2');
 
-                // 7. Auto Size Kolom
-                foreach (range('A', 'S') as $columnID) {
+                // 7. Auto Size Kolom (A sampai T karena nambah 1 kolom)
+                foreach (range('A', 'T') as $columnID) {
                     $event->sheet->getDelegate()->getColumnDimension($columnID)->setAutoSize(true);
                 }
             },
