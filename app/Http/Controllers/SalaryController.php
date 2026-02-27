@@ -107,55 +107,53 @@ class SalaryController extends Controller
 
             $lateCount = $telatFisik + $izinTelat;
 
-            // ALPHA COUNT - LOGIC YANG SAMA DENGAN AttendanceHistoryController
-            // Hitung dari total hari dalam bulan dikurangi attendance yang ada
+            // ALPHA COUNT - LOGIC TRANSLASI LANGSUNG DARI AttendanceHistoryController
+            $alphaCount = 0;
 
-            // Total hari yang sudah lewat di Range Cutoff ini
-            $totalDays = 0;
-            // Hitung manual days, karena diffInDays bisa tricky dengan jam
-            for ($d = $monthStartDate->copy(); $d->lte($limitDate); $d->addDay()) {
-                $totalDays++;
-            }
-
-            // Ambil semua approved leaves di bulan ini
+            // Sesuaikan query LeaveRequest menggunakan format 'Y-m-d' sesuai AttendanceHistoryController
             $leaves = LeaveRequest::where('user_id', $selectedUserId)
                 ->where('status', 'approved')
                 ->where(function ($query) use ($monthStartDate, $monthEndDate) {
-                    $query->whereBetween('start_date', [$monthStartDate, $monthEndDate])
-                        ->orWhereBetween('end_date', [$monthStartDate, $monthEndDate])
-                        ->orWhere(function ($q) use ($monthStartDate, $monthEndDate) {
-                            $q->where('start_date', '<=', $monthStartDate)
-                                ->where('end_date', '>=', $monthEndDate);
+                    $s = $monthStartDate->format('Y-m-d');
+                    $e = $monthEndDate->format('Y-m-d');
+                    $query->whereBetween('start_date', [$s, $e])
+                        ->orWhereBetween('end_date', [$s, $e])
+                        ->orWhere(function ($q) use ($s, $e) {
+                            $q->where('start_date', '<=', $s)
+                                ->where('end_date', '>=', $e);
                         });
                 })->get();
 
-            // Hitung berapa hari yang ada attendance atau leave
-            $coveredDays = 0;
-            for ($date = $monthStartDate->copy(); $date->lte($limitDate); $date->addDay()) {
+            // Buat period (PENTING: Gunakan startOfDay agar tidak terpotong jam)
+            $period = \Carbon\CarbonPeriod::create($monthStartDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
+
+            foreach ($period as $date) {
                 $currentDateStr = $date->format('Y-m-d');
 
-                // Cek apakah ada attendance YANG BUKAN ALPHA
-                $hasAttendance = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
-                    $dateMatch = Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
-                    $notAlpha = strtolower($a->presence_status ?? '') !== 'alpha';
-                    return $dateMatch && $notAlpha;
-                })->isNotEmpty();
+                // Cari attendance (Prioritaskan yang punya jam masuk asli / bukan 00:00 jika ada lebih dari satu)
+                $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
+                    return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
+                })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
 
-                // Cek apakah ada leave
-                $hasLeave = $leaves->filter(function ($l) use ($date) {
+                // Cari leave
+                $leave = $leaves->filter(function ($l) use ($date) {
                     return $date->between(
                         Carbon::parse($l->start_date)->startOfDay(),
                         Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
                     );
-                })->isNotEmpty();
+                });
 
-                if ($hasAttendance || $hasLeave) {
-                    $coveredDays++;
+                if (!$att && $leave->isEmpty()) {
+                    // Jika tidak ada attendance dan tidak ada leave, maka dihitung Alpha
+                    $alphaCount++;
+                } else if ($att) {
+                    // Jika ADA attendance, cek apakah statusnya secara eksplisit 'Alpha' (system generated)
+                    $status = strtolower($att->presence_status ?? '');
+                    if ($status === 'alpha') {
+                        $alphaCount++;
+                    }
                 }
             }
-
-            // Alpha = Total hari - Hari yang ada attendance/leave
-            $alphaCount = $totalDays - $coveredDays;
 
             // [BARU] FREELANCE ATTENDANCE BERDASARKAN RANGE TANGGAL
             // Hanya menghitung kehadiran dalam rentang Start Date - End Date
