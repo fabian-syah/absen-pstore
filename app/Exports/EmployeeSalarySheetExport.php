@@ -32,7 +32,14 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
 
     public function query()
     {
-        $query = User::with(['branch', 'division', 'employeeSalary'])
+        $query = User::with([
+            'branch',
+            'division',
+            'employeeSalary',
+            'salaries' => function ($q) {
+                $q->latest();
+            }
+        ])
             ->where('is_active', true)
             ->whereNotIn('role', ['admin', 'admin_gaji']);
 
@@ -142,6 +149,14 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
                 $promotorBonus = $salary->promotor_bonus;
                 $totalMaster = $promotorBonus;
             }
+        }
+
+        // Ambil data potongan dari gaji terakhir karyawan
+        if ($user->salaries->isNotEmpty()) {
+            $latestSalary = $user->salaries->first();
+            $potonganAlpha = $latestSalary->alpha_deduction ?? 0;
+            $potonganTelat = $latestSalary->late_deduction ?? 0;
+            $potonganCutiLebih = $latestSalary->cuti_lebih_deduction ?? 0;
         }
 
         $gajiHarusDiterima = $totalMaster - ($potonganAlpha + $potonganTelat + $potonganCutiLebih);
