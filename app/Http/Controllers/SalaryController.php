@@ -80,7 +80,7 @@ class SalaryController extends Controller
             // Definisikan Variable Tanggal menggunakan timezone cabang
             $monthStartDate = Carbon::createFromDate($year, $month, 1, $branchTimezone)->subMonth()->day(26)->startOfDay();
             $monthEndDate = Carbon::createFromDate($year, $month, 1, $branchTimezone)->day(25)->endOfDay();
-            $today = Carbon::now($branchTimezone)->startOfDay(); // Gunakan startOfDay seperti di AttendanceHistory
+            $today = Carbon::now($branchTimezone)->startOfDay();
 
             // Limit Date pastikan tidak melewati hari ini
             $limitDate = ($monthEndDate->gt(Carbon::now($branchTimezone))) ? $today : $monthEndDate;
