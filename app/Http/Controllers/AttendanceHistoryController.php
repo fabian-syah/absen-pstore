@@ -55,22 +55,15 @@ class AttendanceHistoryController extends Controller
         // 1. Ambil timezone cabang
         $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
 
-        // 2. Tentukan range awal bulan
-        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
+        // 2. Tentukan range cutoff: 26 bulan kemarin - 25 bulan ini (KONSISTEN dengan Payroll)
+        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->subMonth()->day(26)->startOfDay();
+        $endDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->day(25)->endOfDay();
 
-        // 3. Ambil "Hari Ini" di cabang tersebut (Tanpa endOfDay untuk keamanan period)
+        // 3. Ambil "Hari Ini" di cabang tersebut
         $todayInBranch = Carbon::now($branchTimezone)->startOfDay();
 
-        // 4. Logika Penentuan Limit yang lebih kuat:
-        // Jika bulan yang dipilih adalah bulan sekarang, limit WAJIB sampai hari ini.
-        $isCurrentMonth = ($selectedMonth == Carbon::now($branchTimezone)->month && $selectedYear == Carbon::now($branchTimezone)->year);
-
-        if ($isCurrentMonth) {
-            $limitDate = $todayInBranch;
-        } else {
-            $limitDate = ($endDate->gt(Carbon::now($branchTimezone))) ? $todayInBranch : $endDate;
-        }
+        // 4. Limit Date: pastikan tidak melewati hari ini
+        $limitDate = ($endDate->gt(Carbon::now($branchTimezone))) ? $todayInBranch : $endDate;
 
         // 5. Query Database dengan buffer satu hari
         $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
