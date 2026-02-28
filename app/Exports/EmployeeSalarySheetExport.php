@@ -3,6 +3,10 @@
 namespace App\Exports;
 
 use App\Models\User;
+use App\Models\Attendance;
+use App\Models\LeaveRequest;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -198,11 +202,96 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             }
         }
 
-        // Ambil data potongan dari gaji terakhir karyawan
+        // --- HITUNG ALPHA & TELAT REAL-TIME DARI DATA ABSENSI ---
+        $alphaCount = 0;
+        $lateCount = 0;
+
+        if ($totalMaster > 0) {
+            $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+            $now = Carbon::now($branchTimezone);
+            $currentMonth = $now->month;
+            $currentYear = $now->year;
+
+            // CUTOFF: 26 bulan kemarin - 25 bulan ini
+            $monthStartDate = Carbon::createFromDate($currentYear, $currentMonth, 1, $branchTimezone)->subMonth()->day(26)->startOfDay();
+            $monthEndDate = Carbon::createFromDate($currentYear, $currentMonth, 1, $branchTimezone)->day(25)->endOfDay();
+            $today = Carbon::now($branchTimezone)->startOfDay();
+            $limitDate = ($monthEndDate->gt($now)) ? $today : $monthEndDate;
+
+            // Query Attendance
+            $attendances = Attendance::where('user_id', $user->id)
+                ->whereBetween('check_in_time', [
+                    $monthStartDate->copy()->subDays(2)->startOfDay(),
+                    $monthEndDate->copy()->addDays(2)->endOfDay()
+                ])->get();
+
+            // Query Leaves
+            $leaves = LeaveRequest::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->where(function ($query) use ($monthStartDate, $monthEndDate) {
+                    $s = $monthStartDate->format('Y-m-d');
+                    $e = $monthEndDate->format('Y-m-d');
+                    $query->whereBetween('start_date', [$s, $e])
+                        ->orWhereBetween('end_date', [$s, $e])
+                        ->orWhere(function ($q) use ($s, $e) {
+                            $q->where('start_date', '<=', $s)
+                                ->where('end_date', '>=', $e);
+                        });
+                })->get();
+
+            // HITUNG TELAT
+            $telatFisik = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone) {
+                $attDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone)->startOfDay();
+                $isInRange = $attDate->between($monthStartDate, $limitDate);
+                $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
+                return $isInRange && $isTelat;
+            })->count();
+
+            $izinTelat = LeaveRequest::where('user_id', $user->id)
+                ->where('type', 'telat')->where('status', 'approved')
+                ->whereBetween('start_date', [$monthStartDate, $monthEndDate])->count();
+
+            $lateCount = $telatFisik + $izinTelat;
+
+            // HITUNG ALPHA (loop setiap hari kerja)
+            $period = CarbonPeriod::create($monthStartDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
+
+            foreach ($period as $date) {
+                $currentDateStr = $date->format('Y-m-d');
+
+                $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
+                    return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
+                })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
+
+                $leave = $leaves->filter(function ($l) use ($date) {
+                    return $date->between(
+                        Carbon::parse($l->start_date)->startOfDay(),
+                        Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
+                    );
+                });
+
+                if (!$att && $leave->isEmpty()) {
+                    $alphaCount++;
+                } else if ($att) {
+                    $status = strtolower($att->presence_status ?? '');
+                    if ($status === 'alpha') {
+                        $alphaCount++;
+                    }
+                }
+            }
+
+            // Hitung Potongan (Rumus: Fixed/31 x Alpha, Fixed/93 x Telat)
+            if ($alphaCount > 0) {
+                $potonganAlpha = (int) floor(($totalMaster / 31) * $alphaCount);
+            }
+            if ($lateCount > 0) {
+                $potonganTelat = (int) floor(($totalMaster / 93) * $lateCount);
+            }
+        }
+
+        // Cuti lebih tetap ambil dari payroll terakhir (karena kalkulasi tahunan)
         if ($user->salaries->isNotEmpty()) {
             $latestSalary = $user->salaries->first();
-            $potonganAlpha = $latestSalary->alpha_deduction ?? 0;
-            $potonganTelat = $latestSalary->late_deduction ?? 0;
             $potonganCutiLebih = $latestSalary->cuti_lebih_deduction ?? 0;
         }
 
