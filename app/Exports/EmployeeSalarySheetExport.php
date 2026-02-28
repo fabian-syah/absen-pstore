@@ -47,7 +47,10 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             }
         ])
             ->where('users.is_active', true)
-            ->whereNotIn('users.role', ['admin', 'admin_gaji']);
+            ->whereNotIn('users.role', ['admin', 'admin_gaji'])
+            ->whereDoesntHave('branch', function ($q) {
+                $q->where('name', 'EX Karyawan');
+            });
 
         // --- PUSAT / CABANG GROUPING FILTER ---
         $pusatList = [
