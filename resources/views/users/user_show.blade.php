@@ -218,6 +218,20 @@
                             <label class="fw-bold text-muted small">WhatsApp</label>
                             <p class="h6 text-dark">{{ $user->whatsapp ?? '-' }}</p>
                         </div>
+
+                        {{-- Tanggal Join PStore (Visible: admin, audit, admin_gaji) --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'audit', 'admin_gaji']))
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold text-muted small">Tanggal Join PStore</label>
+                                <p class="h6 text-dark">
+                                    <i class="mdi mdi-calendar-star text-info me-1"></i>
+                                    {{ $user->created_at ? $user->created_at->translatedFormat('d F Y') : '-' }}
+                                    @if($user->created_at)
+                                        <span class="badge bg-light text-muted border ms-1" style="font-size: 10px;">{{ $user->created_at->diffForHumans() }}</span>
+                                    @endif
+                                </p>
+                            </div>
+                        @endif
                         
                         @if(auth()->user()->role == 'admin_gaji')
                              <div class="col-md-6 mb-3">
