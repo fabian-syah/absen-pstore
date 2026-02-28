@@ -154,6 +154,12 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'Potongan Alpha',
             'Potongan Telat',
             'Potongan Cuti Lebih',
+            'Potongan Kasbon',
+            'Potongan Lainnya',
+            'Catatan Potongan Lainnya',
+            'Bonus / Insentif Tambahan',
+            'Dispensasi',
+            'Catatan Dispensasi',
             'Gaji Harus Diterima',
             'Nama Bank',
             'No. Rekening',
@@ -289,13 +295,28 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             }
         }
 
-        // Cuti lebih tetap ambil dari payroll terakhir (karena kalkulasi tahunan)
+        // Cuti lebih, Kasbon, Potongan Lain, Bonus, Dispensasi -> ambil dari payroll terakhir
+        $potonganKasbon = 0;
+        $potonganLainnya = 0;
+        $catatanPotonganLainnya = '-';
+        $bonusInsentif = 0;
+        $dispensasi = 0;
+        $catatanDispensasi = '-';
+
         if ($user->salaries->isNotEmpty()) {
             $latestSalary = $user->salaries->first();
             $potonganCutiLebih = $latestSalary->cuti_lebih_deduction ?? 0;
+            $potonganKasbon = $latestSalary->kasbon_deduction ?? 0;
+            $potonganLainnya = $latestSalary->other_deduction ?? 0;
+            $catatanPotonganLainnya = $latestSalary->other_deduction_note ?? '-';
+            $bonusInsentif = $latestSalary->promotor_bonus ?? 0;
+            $dispensasi = $latestSalary->dispensation_amount ?? 0;
+            $catatanDispensasi = $latestSalary->dispensation_note ?? '-';
         }
 
-        $gajiHarusDiterima = $totalMaster - ($potonganAlpha + $potonganTelat + $potonganCutiLebih);
+        $totalPotongan = $potonganAlpha + $potonganTelat + $potonganCutiLebih + $potonganKasbon + $potonganLainnya;
+        $totalTambahan = $bonusInsentif + $dispensasi;
+        $gajiHarusDiterima = $totalMaster + $totalTambahan - $totalPotongan;
 
         // --- PUSAT / CABANG GROUPING ---
         $branchName = $user->branch->name ?? '-';
@@ -357,6 +378,12 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             $potonganAlpha,
             $potonganTelat,
             $potonganCutiLebih,
+            $potonganKasbon,
+            $potonganLainnya,
+            $catatanPotonganLainnya,
+            $bonusInsentif,
+            $dispensasi,
+            $catatanDispensasi,
             $gajiHarusDiterima,
             $bankName,
             $accountNumber . ' ',
@@ -368,7 +395,6 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
     public function columnFormats(): array
     {
         return [
-            // Karena kita menambah 1 kolom (Pusat & Cabang menggantikan Cabang), index bergeser +1
             'H' => '"Rp " #,##0', // Gaji Pokok
             'I' => '"Rp " #,##0', // Tunjangan
             'J' => '"Rp " #,##0', // Privilege
@@ -378,7 +404,13 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'N' => '"Rp " #,##0', // Potongan Alpha
             'O' => '"Rp " #,##0', // Potongan Telat
             'P' => '"Rp " #,##0', // Potongan Cuti Lebih
-            'Q' => '"Rp " #,##0', // Gaji Harus Diterima
+            'Q' => '"Rp " #,##0', // Potongan Kasbon
+            'R' => '"Rp " #,##0', // Potongan Lainnya
+            // S = Catatan Potongan Lainnya (text)
+            'T' => '"Rp " #,##0', // Bonus / Insentif Tambahan
+            'U' => '"Rp " #,##0', // Dispensasi
+            // V = Catatan Dispensasi (text)
+            'W' => '"Rp " #,##0', // Gaji Harus Diterima
         ];
     }
 
@@ -416,8 +448,8 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
                 // 6. Freeze Header
                 $event->sheet->getDelegate()->freezePane('A2');
 
-                // 7. Auto Size Kolom (A sampai T karena nambah 1 kolom)
-                foreach (range('A', 'T') as $columnID) {
+                // 7. Auto Size Kolom (A sampai Z karena nambah kolom baru)
+                foreach (range('A', 'Z') as $columnID) {
                     $event->sheet->getDelegate()->getColumnDimension($columnID)->setAutoSize(true);
                 }
             },
