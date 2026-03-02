@@ -248,19 +248,13 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
                         });
                 })->get();
 
-            // HITUNG TELAT
-            $telatFisik = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone) {
+            // HITUNG TELAT (hanya dari attendance, izin telat sudah ter-record di attendance)
+            $lateCount = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone) {
                 $attDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone)->startOfDay();
                 $isInRange = $attDate->between($monthStartDate, $limitDate);
                 $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
                 return $isInRange && $isTelat;
             })->count();
-
-            $izinTelat = LeaveRequest::where('user_id', $user->id)
-                ->where('type', 'telat')->where('status', 'approved')
-                ->whereBetween('start_date', [$monthStartDate, $monthEndDate])->count();
-
-            $lateCount = $telatFisik + $izinTelat;
 
             // HITUNG ALPHA (loop setiap hari kerja)
             $period = CarbonPeriod::create($monthStartDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());

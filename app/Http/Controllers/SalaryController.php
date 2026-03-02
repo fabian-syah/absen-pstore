@@ -94,18 +94,12 @@ class SalaryController extends Controller
                 ->get();
 
             // Absensi Regular (Bulanan) untuk Employee/Promotor
-            $telatFisik = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone) {
+            $lateCount = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone) {
                 $attDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone)->startOfDay();
                 $isInRange = $attDate->between($monthStartDate, $limitDate);
                 $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
                 return $isInRange && $isTelat;
             })->count();
-
-            $izinTelat = LeaveRequest::where('user_id', $selectedUserId)
-                ->where('type', 'telat')->where('status', 'approved')
-                ->whereBetween('start_date', [$monthStartDate, $monthEndDate])->count();
-
-            $lateCount = $telatFisik + $izinTelat;
 
             // ALPHA COUNT - LOGIC TRANSLASI LANGSUNG DARI AttendanceHistoryController
             $alphaCount = 0;
