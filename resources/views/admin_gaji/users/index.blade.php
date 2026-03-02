@@ -1,9 +1,9 @@
-@extends('layouts.app')
+@extends('layout.master')
 
 @section('content')
     <div class="row min-vh-100 flex-column flex-md-row">
         <!-- Include Sidebar -->
-        @include('layouts.sidebar')
+        @include('layout.sidebar')
 
         <!-- Main Content -->
         <div class="col px-0 ms-md-auto d-flex flex-column vh-100" style="background-color: #f6f0ff;">
@@ -147,7 +147,8 @@
                                             </td>
                                             <td class="py-3 px-4 font-14 text-dark">{{ $user->location ?? '-' }}</td>
                                             <td class="py-3 px-4 font-14 text-secondary">
-                                                {{ $user->created_at->format('d M Y') }}</td>
+                                                {{ $user->created_at->format('d M Y') }}
+                                            </td>
                                             <td class="py-3 px-4 text-center">
                                                 <div class="d-flex justify-content-center gap-2">
                                                     <button type="button"
