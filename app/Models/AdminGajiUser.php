@@ -12,5 +12,14 @@ class AdminGajiUser extends Model
     protected $fillable = [
         'name',
         'location',
+        'user_id',
     ];
+
+    /**
+     * Relasi ke User (real user untuk payroll)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
