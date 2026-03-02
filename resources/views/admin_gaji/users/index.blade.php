@@ -2,9 +2,6 @@
 
 @section('content')
     <div class="row min-vh-100 flex-column flex-md-row">
-        <!-- Include Sidebar -->
-        @include('layout.sidebar')
-
         <!-- Main Content -->
         <div class="col px-0 ms-md-auto d-flex flex-column vh-100" style="background-color: #f6f0ff;">
             {{-- Navbar Mobile --}}
