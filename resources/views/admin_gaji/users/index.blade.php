@@ -45,10 +45,6 @@
                                     <td class="py-3 px-4 font-14 fw-semibold text-dark">{{ $index + 1 }}</td>
                                     <td class="py-3 px-4">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold"
-                                                style="width: 40px; height: 40px;">
-                                                {{ substr($user->name, 0, 1) }}
-                                            </div>
                                             <div>
                                                 <h6 class="mb-0 fw-bold text-dark">{{ $user->name }}</h6>
                                             </div>
@@ -77,43 +73,7 @@
                                     </td>
                                 </tr>
 
-                                <!-- Modal Edit User -->
-                                <div class="modal fade" id="editUserModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content border-0 rounded-4 shadow-lg custom-modal-bg">
-                                            <div class="modal-header border-bottom-0 pb-0">
-                                                <h5 class="modal-title fw-bold">Edit Data User</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <form action="{{ route('admin-gaji.users.update', $user->id) }}" method="POST">
-                                                @csrf @method('PUT')
-                                                <div class="modal-body p-4 pt-3">
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold text-dark font-14">Nama
-                                                            Lengkap</label>
-                                                        <input type="text" name="name"
-                                                            class="form-control rounded-3 py-2 px-3 shadow-sm border-0"
-                                                            value="{{ $user->name }}" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold text-dark font-14">Lokasi</label>
-                                                        <input type="text" name="location"
-                                                            class="form-control rounded-3 py-2 px-3 shadow-sm border-0"
-                                                            value="{{ $user->location }}">
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
-                                                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold"
-                                                        data-bs-dismiss="modal">Batal</button>
-                                                    <button type="submit"
-                                                        class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Simpan
-                                                        Perubahan</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
+
                             @empty
                                 <tr>
                                     <td colspan="5" class="py-5 text-center text-muted">
@@ -160,8 +120,41 @@
                     </div>
                 </form>
             </div>
+    <!-- Modal Edit User -->
+    @foreach ($users as $user)
+        <div class="modal fade" id="editUserModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow-lg custom-modal-bg">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold">Edit Data User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('admin-gaji.users.update', $user->id) }}" method="POST">
+                        @csrf @method('PUT')
+                        <div class="modal-body p-4 pt-3">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-dark font-14">Nama Lengkap</label>
+                                <input type="text" name="name" class="form-control rounded-3 py-2 px-3 shadow-sm border-0"
+                                    value="{{ $user->name }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-dark font-14">Lokasi</label>
+                                <input type="text" name="location"
+                                    class="form-control rounded-3 py-2 px-3 shadow-sm border-0"
+                                    value="{{ $user->location }}">
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                            <button type="button" class="btn btn-light rounded-pill px-4 fw-bold"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Simpan
+                                Perubahan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    </div>
+    @endforeach
 
     <style>
         .custom-modal-bg {
