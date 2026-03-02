@@ -344,6 +344,12 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/gaji-cabang', [BranchSalaryController::class, 'index'])->name('branch-salary.index');
         Route::get('/gaji-cabang/{id}', [BranchSalaryController::class, 'show'])->name('branch-salary.show');
 
+        // ADMIN GAJI USER DATA
+        Route::get('/admin-gaji/users', [\App\Http\Controllers\AdminGajiUserController::class, 'index'])->name('admin-gaji.users.index');
+        Route::post('/admin-gaji/users', [\App\Http\Controllers\AdminGajiUserController::class, 'store'])->name('admin-gaji.users.store');
+        Route::put('/admin-gaji/users/{id}', [\App\Http\Controllers\AdminGajiUserController::class, 'update'])->name('admin-gaji.users.update');
+        Route::delete('/admin-gaji/users/{id}', [\App\Http\Controllers\AdminGajiUserController::class, 'destroy'])->name('admin-gaji.users.destroy');
+
         // API Helper
         Route::get('/api/check-attendance', [SalaryController::class, 'checkAttendance'])->name('api.check-attendance');
     });

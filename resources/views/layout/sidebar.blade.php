@@ -302,17 +302,17 @@
 
             {{-- FORMS --}}
             <!-- <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('leave-requests.create') }}">
-                                        <i class="menu-icon mdi mdi-file-document-edit-outline"></i>
-                                        <span class="menu-title">Form Izin / Telat</span>
+                                        <a class="nav-link" href="{{ route('leave-requests.create') }}">
+                                            <i class="menu-icon mdi mdi-file-document-edit-outline"></i>
+                                            <span class="menu-title">Form Izin / Telat</span>
+                                        </a>
+                                    </li> -->
+            <!-- <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('leave-requests.create-cuti') }}">
+                                        <i class="menu-icon mdi mdi-wallet-travel"></i>
+                                        <span class="menu-title">Form Pengajuan Cuti</span>
                                     </a>
                                 </li> -->
-            <!-- <li class="nav-item">
-                                <a class="nav-link" href="{{ route('leave-requests.create-cuti') }}">
-                                    <i class="menu-icon mdi mdi-wallet-travel"></i>
-                                    <span class="menu-title">Form Pengajuan Cuti</span>
-                                </a>
-                            </li> -->
         @endif
 
         {{-- =================================== --}}
@@ -426,6 +426,13 @@
                 <a class="nav-link" href="{{ route('branch-salary.index') }}">
                     <i class="menu-icon mdi mdi-cash-register"></i>
                     <span class="menu-title">Penggajian Cabang</span>
+                </a>
+            </li>
+            {{-- DATA USER KHUSUS ADMIN GAJI --}}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin-gaji.users.index') }}">
+                    <i class="menu-icon mdi mdi-account-group-outline"></i>
+                    <span class="menu-title">Data User</span>
                 </a>
             </li>
         @endif
