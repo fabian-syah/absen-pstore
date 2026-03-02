@@ -132,8 +132,11 @@
                     </div>
                 </form>
             </div>
-            <!-- Modal Edit User -->
-            @foreach ($users as $user)
+        </div>
+    </div>
+
+    <!-- Modal Edit User -->
+    @foreach ($users as $user)
                 <div class="modal fade" id="editUserModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content border-0 rounded-4 shadow-lg custom-modal-bg">
