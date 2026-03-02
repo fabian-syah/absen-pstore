@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\AdminGajiUser;
 use App\Models\User;
 use App\Models\Branch;
+use App\Models\EmployeeSalary;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
@@ -67,6 +68,18 @@ class AdminGajiUserController extends Controller
             'user_id' => $realUser->id,
         ]);
 
+        // 5. Otomatis buat Master Gaji User dengan kategori promotor
+        EmployeeSalary::firstOrCreate(
+            ['user_id' => $realUser->id],
+            [
+                'category' => 'promotor',
+                'basic_salary' => 0,
+                'position_allowance' => 0,
+                'daily_salary' => 0,
+                'promotor_bonus' => 0,
+            ]
+        );
+
         return redirect()->back()->with('success', 'Data User berhasil ditambahkan!');
     }
 
@@ -97,8 +110,9 @@ class AdminGajiUserController extends Controller
     {
         $adminGajiUser = AdminGajiUser::findOrFail($id);
 
-        // Hapus juga User record jika ada link
+        // Hapus juga EmployeeSalary dan User record jika ada link
         if ($adminGajiUser->user_id) {
+            EmployeeSalary::where('user_id', $adminGajiUser->user_id)->delete();
             User::where('id', $adminGajiUser->user_id)->delete();
         }
 
