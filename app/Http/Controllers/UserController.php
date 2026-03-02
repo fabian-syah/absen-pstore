@@ -56,6 +56,12 @@ class UserController extends Controller
         // 2. Base query untuk user Non-Aktif (Hapus filter branch agar semua EX muncul)
         $inactiveQuery = User::with(['division', 'branch', 'branches', 'divisions'])->where('is_active', false);
 
+        // 3. Sembunyikan user dari cabang khusus "Data User (Admin Gaji)"
+        $adminGajiBranch = Branch::where('name', 'Data User (Admin Gaji)')->first();
+        if ($adminGajiBranch) {
+            $activeQuery->where('branch_id', '!=', $adminGajiBranch->id);
+            $inactiveQuery->where('branch_id', '!=', $adminGajiBranch->id);
+        }
         // --- FILTER UNTUK USER AKTIF SAJA ---
         if ($user->role == 'admin' && $user->branch_id != null) {
             $activeQuery->where('branch_id', $user->branch_id);
