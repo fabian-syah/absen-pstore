@@ -29,10 +29,9 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
-                                <th class="py-3 px-4 font-14 fw-bold text-secondary text-uppercase" width="5%">No
-                                </th>
-                                <th class="py-3 px-4 font-14 fw-bold text-secondary text-uppercase">Nama Lengkap
-                                </th>
+                                <th class="py-3 px-4 font-14 fw-bold text-secondary text-uppercase" width="5%">No</th>
+                                <th class="py-3 px-4 font-14 fw-bold text-secondary text-uppercase" width="8%">Foto</th>
+                                <th class="py-3 px-4 font-14 fw-bold text-secondary text-uppercase">Nama Lengkap</th>
                                 <th class="py-3 px-4 font-14 fw-bold text-secondary text-uppercase">Lokasi</th>
                                 <th class="py-3 px-4 font-14 fw-bold text-secondary text-uppercase">Tgl Dibuat</th>
                                 <th class="py-3 px-4 font-14 fw-bold text-secondary text-uppercase text-center" width="15%">
@@ -44,11 +43,18 @@
                                 <tr>
                                     <td class="py-3 px-4 font-14 fw-semibold text-dark">{{ $index + 1 }}</td>
                                     <td class="py-3 px-4">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div>
-                                                <h6 class="mb-0 fw-bold text-dark">{{ $user->name }}</h6>
+                                        @if($user->user && $user->user->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $user->user->profile_photo_path) }}"
+                                                class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                        @else
+                                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                                style="width: 40px; height: 40px; font-size: 14px;">
+                                                {{ substr($user->name, 0, 1) }}
                                             </div>
-                                        </div>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <h6 class="mb-0 fw-bold text-dark">{{ $user->name }}</h6>
                                     </td>
                                     <td class="py-3 px-4 font-14 text-dark">{{ $user->location ?? '-' }}</td>
                                     <td class="py-3 px-4 font-14 text-secondary">
@@ -76,7 +82,7 @@
 
                             @empty
                                 <tr>
-                                    <td colspan="5" class="py-5 text-center text-muted">
+                                    <td colspan="6" class="py-5 text-center text-muted">
                                         <i class="mdi mdi-inbox-off-outline" style="font-size: 48px;"></i>
                                         <p class="mt-2 mb-0 fw-medium">Belum ada data user tersimpan.</p>
                                     </td>
@@ -98,7 +104,7 @@
                     <h5 class="modal-title fw-bold">Tambah Data User Baru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('admin-gaji.users.store') }}" method="POST">
+                <form action="{{ route('admin-gaji.users.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body p-4 pt-3">
                         <div class="mb-3">
@@ -110,6 +116,12 @@
                             <label class="form-label fw-bold text-dark font-14">Lokasi</label>
                             <input type="text" name="location" class="form-control rounded-3 py-2 px-3 shadow-sm border-0"
                                 placeholder="Masukkan lokasi penempatan...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark font-14">Foto Profil <small class="text-muted">(Maks
+                                    10MB)</small></label>
+                            <input type="file" name="profile_photo" accept="image/*"
+                                class="form-control rounded-3 py-2 px-3 shadow-sm border-0">
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
@@ -129,9 +141,17 @@
                                 <h5 class="modal-title fw-bold">Edit Data User</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <form action="{{ route('admin-gaji.users.update', $user->id) }}" method="POST">
+                            <form action="{{ route('admin-gaji.users.update', $user->id) }}" method="POST"
+                                enctype="multipart/form-data">
                                 @csrf @method('PUT')
                                 <div class="modal-body p-4 pt-3">
+                                    @if($user->user && $user->user->profile_photo_path)
+                                        <div class="text-center mb-3">
+                                            <img src="{{ asset('storage/' . $user->user->profile_photo_path) }}"
+                                                class="rounded-circle"
+                                                style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #e0e0e0;">
+                                        </div>
+                                    @endif
                                     <div class="mb-3">
                                         <label class="form-label fw-bold text-dark font-14">Nama Lengkap</label>
                                         <input type="text" name="name"
@@ -143,6 +163,12 @@
                                         <input type="text" name="location"
                                             class="form-control rounded-3 py-2 px-3 shadow-sm border-0"
                                             value="{{ $user->location }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-dark font-14">Ganti Foto Profil <small
+                                                class="text-muted">(Maks 10MB)</small></label>
+                                        <input type="file" name="profile_photo" accept="image/*"
+                                            class="form-control rounded-3 py-2 px-3 shadow-sm border-0">
                                     </div>
                                 </div>
                                 <div class="modal-footer border-top-0 pt-0 pb-4 px-4">

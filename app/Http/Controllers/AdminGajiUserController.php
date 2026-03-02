@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\EmployeeSalary;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AdminGajiUserController extends Controller
 {
@@ -28,7 +29,7 @@ class AdminGajiUserController extends Controller
 
     public function index()
     {
-        $users = AdminGajiUser::latest()->get();
+        $users = AdminGajiUser::with('user')->latest()->get();
         return view('admin_gaji.users.index', compact('users'));
     }
 
@@ -37,6 +38,7 @@ class AdminGajiUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'nullable|string|max:255',
+            'profile_photo' => 'nullable|image|max:10240',
         ]);
 
         // 1. Buat cabang khusus jika belum ada
@@ -60,6 +62,12 @@ class AdminGajiUserController extends Controller
             'branch_id' => $branch->id,
             'is_active' => true,
         ]);
+
+        // Upload foto profil jika ada
+        if ($request->hasFile('profile_photo')) {
+            $path = $request->file('profile_photo')->store('profile-photos', 'public');
+            $realUser->update(['profile_photo_path' => $path]);
+        }
 
         // 4. Buat AdminGajiUser record dan link ke User
         AdminGajiUser::create([
@@ -88,6 +96,7 @@ class AdminGajiUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'nullable|string|max:255',
+            'profile_photo' => 'nullable|image|max:10240',
         ]);
 
         $adminGajiUser = AdminGajiUser::findOrFail($id);
@@ -96,11 +105,19 @@ class AdminGajiUserController extends Controller
             'location' => $request->location,
         ]);
 
-        // Update juga nama di tabel users jika ada link
+        // Update juga nama dan foto di tabel users jika ada link
         if ($adminGajiUser->user_id) {
-            User::where('id', $adminGajiUser->user_id)->update([
-                'name' => $request->name,
-            ]);
+            $updateData = ['name' => $request->name];
+
+            if ($request->hasFile('profile_photo')) {
+                $realUser = User::find($adminGajiUser->user_id);
+                if ($realUser && $realUser->profile_photo_path) {
+                    Storage::disk('public')->delete($realUser->profile_photo_path);
+                }
+                $updateData['profile_photo_path'] = $request->file('profile_photo')->store('profile-photos', 'public');
+            }
+
+            User::where('id', $adminGajiUser->user_id)->update($updateData);
         }
 
         return redirect()->back()->with('success', 'Data User berhasil diupdate!');
