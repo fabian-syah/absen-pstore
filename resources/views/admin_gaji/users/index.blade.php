@@ -128,13 +128,6 @@
             </div>
         </div>
 
-        <footer class="mt-auto py-3 text-center border-top">
-            <span class="text-secondary small fw-medium">Dibuat dengan ❤️ oleh <b>Bian</b></span>
-            <br>
-            <span class="text-secondary" style="font-size: 11px;">© 2026 Hak Cipta Dilindungi Undang-Undang</span>
-        </footer>
-        </main>
-    </div>
     </div>
 
     <!-- Modal Tambah User -->
