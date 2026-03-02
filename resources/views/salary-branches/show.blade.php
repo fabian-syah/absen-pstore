@@ -71,15 +71,6 @@
                                             <a href="{{ route('users.show', $user->id) }}"
                                                 class="text-decoration-none text-dark">
                                                 <div class="d-flex align-items-center">
-                                                    @if($user->profile_photo_path)
-                                                        <img src="{{ asset('storage/' . $user->profile_photo_path) }}"
-                                                            class="img-sm rounded-circle me-2">
-                                                    @else
-                                                        <div
-                                                            class="img-sm rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2 text-white">
-                                                            {{ substr($user->name, 0, 1) }}
-                                                        </div>
-                                                    @endif
                                                     <div>
                                                         <p class="fw-bold mb-0">{{ $user->name }}</p>
                                                         <small class="text-muted">{{ $user->login_id }}</small>
