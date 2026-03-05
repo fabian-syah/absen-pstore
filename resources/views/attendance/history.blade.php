@@ -225,7 +225,8 @@
                                         style="width: 110px;" onchange="this.form.submit()">
                                         @foreach (range(1, 12) as $m)
                                             <option value="{{ $m }}" {{ $selectedMonth == $m ? 'selected' : '' }}>
-                                                {{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                                                {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -606,7 +607,7 @@
         @foreach ($history as $index => $att)
             @if (!$att->id)
                 {{-- Modal Input Manual --}}
-                <div class="modal fade" id="createAuditModal{{ $index }}" tabindex="-1">
+                <div class="modal fade" id="createAuditModal{{ $loop->index }}" tabindex="-1">
                     <div class="modal-dialog">
                         <div class="modal-content rounded-4 border-0">
                             <div class="modal-header bg-info text-white">
