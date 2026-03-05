@@ -167,6 +167,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'Nama Bank',
             'No. Rekening',
             'Catatan',
+            'Gaji Terakhir',
         ];
     }
 
@@ -188,6 +189,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
         $bankName = '-';
         $accountNumber = '-';
         $notes = '-';
+        $gajiTerakhir = 0;
 
         if ($salary) {
             $bankName = $salary->bank_name;
@@ -309,6 +311,15 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             $bonusInsentif = $latestSalary->promotor_bonus ?? 0;
             $dispensasi = $latestSalary->dispensation_amount ?? 0;
             $catatanDispensasi = $latestSalary->dispensation_note ?? '-';
+            // Calculate Gaji Terakhir if net_salary isn't a direct column, or use net_salary if it exists
+            $gajiTerakhir = $latestSalary->net_salary ?? ($latestSalary->total_income - $latestSalary->total_deduction) ?? 0;
+
+            // Fallback calculation just in case
+            if (!$gajiTerakhir) {
+                $lastIncome = ($latestSalary->employee_basic_salary ?? 0) + ($latestSalary->employee_position_allowance ?? 0) + ($latestSalary->employee_owner_privilege ?? 0) + ($latestSalary->freelance_total_income ?? 0) + ($latestSalary->promotor_bonus ?? 0) + ($latestSalary->dispensation_amount ?? 0);
+                $lastDeduction = ($latestSalary->alpha_deduction ?? 0) + ($latestSalary->late_deduction ?? 0) + ($latestSalary->cuti_lebih_deduction ?? 0) + ($latestSalary->kasbon_deduction ?? 0) + ($latestSalary->other_deduction ?? 0);
+                $gajiTerakhir = $lastIncome - $lastDeduction;
+            }
         }
 
         $totalPotongan = $potonganAlpha + $potonganTelat + $potonganCutiLebih + $potonganKasbon + $potonganLainnya;
@@ -385,6 +396,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             $bankName,
             $accountNumber . ' ',
             $notes,
+            $gajiTerakhir,
         ];
     }
 
@@ -408,6 +420,10 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'U' => '"Rp " #,##0', // Dispensasi
             // V = Catatan Dispensasi (text)
             'W' => '"Rp " #,##0', // Gaji Harus Diterima
+            // X = Bank
+            // Y = Rekening
+            // Z = Catatan
+            'AA' => '"Rp " #,##0', // Gaji Terakhir
         ];
     }
 
