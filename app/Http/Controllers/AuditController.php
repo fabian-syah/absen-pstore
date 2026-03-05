@@ -606,7 +606,7 @@ class AuditController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'date' => 'required|date',      // Tanggal yang sedang diisi (Y-m-d)
-            'check_in_time' => 'required',           // Jam masuk (H:i)
+            'check_in_time' => 'nullable',           // Jam masuk (H:i)
             'presence_status' => 'required|string',
             'audit_note' => 'nullable|string',
             'audit_photo' => 'nullable|image|max:8192'
@@ -618,7 +618,8 @@ class AuditController extends Controller
 
         // 3. Proses Waktu Check-In
         // Gabungkan Tanggal (dari hidden input) + Jam (dari input time) sesuai timezone cabang
-        $checkInDateTime = Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_in_time, $branchTimezone);
+        $timeIn = $request->check_in_time ?: '08:00';
+        $checkInDateTime = Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $timeIn, $branchTimezone);
 
         // Convert ke UTC/App Timezone untuk disimpan ke DB
         $checkInDB = $checkInDateTime->copy()->setTimezone(config('app.timezone'));

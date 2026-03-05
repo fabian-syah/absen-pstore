@@ -620,7 +620,7 @@
                                     <input type="hidden" name="date" value="{{ $att->check_in_time->format('Y-m-d') }}">
                                     <div class="row g-3 mb-3">
                                         <div class="col-6"><label class="form-label small fw-bold">Jam Masuk</label><input type="time"
-                                                name="check_in_time" class="form-control" required></div>
+                                                name="check_in_time" class="form-control"></div>
                                         <div class="col-6"><label class="form-label small fw-bold">Jam Pulang</label><input type="time"
                                                 name="check_out_time" class="form-control"></div>
                                     </div>
