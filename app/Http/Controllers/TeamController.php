@@ -445,11 +445,10 @@ class TeamController extends Controller
             ->where('status', 'approved')
             ->where('is_active', true)
             ->where(function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('start_date', [$startDate, $endDate])
-                    ->orWhereBetween('end_date', [$startDate, $endDate])
-                    ->orWhere(function ($q) use ($startDate, $endDate) {
-                        $q->where('start_date', '<=', $startDate)
-                            ->where('end_date', '>=', $endDate);
+                $query->where('start_date', '<=', $endDate->format('Y-m-d'))
+                    ->where(function ($q) use ($startDate) {
+                        $q->whereNull('end_date')
+                            ->orWhere('end_date', '>=', $startDate->format('Y-m-d'));
                     });
             })
             ->get();
@@ -466,19 +465,26 @@ class TeamController extends Controller
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
             })->first();
 
+            // JIKA ABSEN KOSONG, Cek Izin di tabel leaves
+            $leave = $leaves->filter(function ($l) use ($date) {
+                $lStart = Carbon::parse($l->start_date)->startOfDay();
+                $lEnd = Carbon::parse($l->end_date ?? $l->start_date)->endOfDay();
+                return $date->between($lStart, $lEnd);
+            })->first();
+
             if ($att) {
                 $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
                 if ($att->check_out_time) {
                     $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
                 }
+
+                // Attach leave request to real attendance so proof image shows
+                if ($leave) {
+                    $att->setRelation('leaveRequest', $leave);
+                }
+
                 $historyCollection->push($att);
             } else {
-                // JIKA ABSEN KOSONG, Cek Izin di tabel leaves
-                $leave = $leaves->filter(function ($l) use ($date) {
-                    $lStart = Carbon::parse($l->start_date)->startOfDay();
-                    $lEnd = Carbon::parse($l->end_date ?? $l->start_date)->endOfDay();
-                    return $date->between($lStart, $lEnd);
-                })->first();
 
                 $fakeAtt = new Attendance();
                 $fakeAtt->user_id = $user->id;

@@ -486,7 +486,12 @@
 
                                         <td class="text-center">
                                             @php
-                                                $leavePhoto = ($att->leaveRequest && $att->leaveRequest->file_proof) ? asset('storage/' . $att->leaveRequest->file_proof) : null;
+                                                $leavePhoto = null;
+                                                if ($att->relationLoaded('leaveRequest') && $att->leaveRequest && $att->leaveRequest->file_proof) {
+                                                    $leavePhoto = asset('storage/' . $att->leaveRequest->file_proof);
+                                                } elseif ($att->leaveRequest && $att->leaveRequest->file_proof) {
+                                                    $leavePhoto = asset('storage/' . $att->leaveRequest->file_proof);
+                                                }
                                             @endphp
                                             <div class="d-flex flex-column align-items-center gap-1">
                                                 @if ($leavePhoto)

@@ -1,27 +1,34 @@
 <?php
 
 require __DIR__ . '/vendor/autoload.php';
+
 $app = require_once __DIR__ . '/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-$userId = 166; // From URL: absnps.com/team/branch/52/employee/166/history?month=1&year=2026
-$dateStr = '2026-01-31';
+$user_id = 47;
 
-$attendances = \App\Models\Attendance::where('user_id', $userId)
-    ->whereDate('check_in_time', $dateStr)
+$attendances = \App\Models\Attendance::where('user_id', $user_id)
+    ->whereYear('check_in_time', 2026)
+    ->whereMonth('check_in_time', 2)
     ->get();
 
-echo "Attendances for User $userId on $dateStr:\n";
 foreach ($attendances as $att) {
-    echo "ID: {$att->id}\n";
-    echo "Check In: {$att->check_in_time}\n";
-    echo "Status: {$att->presence_status}\n";
-    echo "Attendance Type: {$att->attendance_type}\n";
-    echo "Verified By: {$att->verified_by_user_id}\n";
-    echo "--------------------------\n";
-}
+    if ($att->audit_photo_path || $att->presence_status == 'Sakit') {
+        echo "ID: {$att->id} | Date: {$att->check_in_time} | Status: {$att->presence_status} | Audit Photo: " . ($att->audit_photo_path ?? 'NULL') . " | Attendance Type: {$att->attendance_type} \n";
 
-if ($attendances->isEmpty()) {
-    echo "No attendance record found for this date.\n";
+        $leave = \App\Models\LeaveRequest::where('user_id', $user_id)
+            ->where('start_date', '<=', $att->check_in_time->format('Y-m-d'))
+            ->where(function ($q) use ($att) {
+                $q->whereNull('end_date')
+                    ->orWhere('end_date', '>=', $att->check_in_time->format('Y-m-d'));
+            })
+            ->first();
+
+        if ($leave) {
+            echo "   -> Leave Req: ID {$leave->id} | Proof: " . ($leave->file_proof ?? 'NULL') . "\n";
+        } else {
+            echo "   -> No matching leave request found\n";
+        }
+    }
 }
