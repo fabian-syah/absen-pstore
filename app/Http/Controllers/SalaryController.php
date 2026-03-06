@@ -110,12 +110,12 @@ class SalaryController extends Controller
                 ->where(function ($query) use ($monthStartDate, $monthEndDate) {
                     $s = $monthStartDate->format('Y-m-d');
                     $e = $monthEndDate->format('Y-m-d');
-                    $query->whereBetween('start_date', [$s, $e])
-                        ->orWhereBetween('end_date', [$s, $e])
-                        ->orWhere(function ($q) use ($s, $e) {
-                            $q->where('start_date', '<=', $s)
-                                ->where('end_date', '>=', $e);
-                        });
+                    // Overlap condition: leave starts on or before the end of the month AND ends on or after the start of the month
+                    $query->where('start_date', '<=', $e)
+                        ->where(function ($q) use ($s) {
+                        $q->whereNull('end_date')
+                            ->orWhere('end_date', '>=', $s);
+                    });
                 })->get();
 
             // Buat period (PENTING: Gunakan startOfDay agar tidak terpotong jam)
