@@ -84,6 +84,15 @@
                                     <span><i class="mdi mdi-cog text-secondary me-2"></i> Setting Master Gaji</span><i class="mdi mdi-chevron-right text-muted"></i>
                                 </a>
 
+                                <a href="#violationSection" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                                    <span><i class="mdi mdi-alert-circle text-danger me-2"></i> Pelanggaran</span>
+                                    @if($activeViolations->count() > 0)
+                                        <span class="badge bg-danger rounded-pill">{{ $activeViolations->count() }} Aktif</span>
+                                    @else
+                                        <span class="badge bg-secondary rounded-pill" style="opacity: 0.5">0</span>
+                                    @endif
+                                </a>
+
                                 {{-- SISA KASBON (LINK AKTIF UNTUK ADMIN GAJI) --}}
                                 <a href="{{ route('kasbon.index') }}?search={{ $user->name }}&status=approved" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
                                     <div class="d-flex align-items-center">
@@ -388,7 +397,7 @@
                         <div class="mt-5" id="violationSection">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="card-title mb-0 text-danger"><i class="mdi mdi-gavel me-2"></i>Catatan Pelanggaran</h5>
-                                @if(in_array(auth()->user()->role, ['admin', 'audit']))
+                                @if(in_array(auth()->user()->role, ['admin', 'audit', 'admin_gaji']))
                                     <a href="{{ route('violations.create') }}" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-plus"></i> Input Pelanggaran</a>
                                 @endif
                             </div>
@@ -434,11 +443,58 @@
                             </div>
                         </div>
                     @else
-                        {{-- JIKA ADMIN GAJI: TAMPILKAN GRAFIK GAJI SEDERHANA ATAU KOSONGKAN --}}
+                        {{-- JIKA ADMIN GAJI: TAMPILKAN PELANGGARAN + INFO TERBATAS --}}
                         <div class="mt-4 text-center py-5 border rounded bg-light">
                             <i class="mdi mdi-lock-outline display-4 text-muted"></i>
-                            <h5 class="text-muted mt-3">Informasi Lain Disembunyikan</h5>
-                            <p class="small text-muted">Anda login sebagai Admin Gaji. Detail absensi dan pelanggaran hanya dapat diakses oleh Admin & Audit.</p>
+                            <h5 class="text-muted mt-3">Informasi Absensi Disembunyikan</h5>
+                            <p class="small text-muted">Anda login sebagai Admin Gaji. Detail absensi hanya dapat diakses oleh Admin & Audit.</p>
+                        </div>
+
+                        {{-- PELANGGARAN SECTION (UNTUK ADMIN GAJI) --}}
+                        <div class="mt-5" id="violationSection">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0 text-danger"><i class="mdi mdi-gavel me-2"></i>Catatan Pelanggaran</h5>
+                            </div>
+                            <ul class="nav nav-tabs" id="violationTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active fw-bold text-danger" id="active-tab" data-bs-toggle="tab" data-bs-target="#active-violations" type="button" role="tab">
+                                        <i class="mdi mdi-alert-circle-outline"></i> Masih Berlaku @if($activeViolations->count() > 0) <span class="badge bg-danger ms-1">{{ $activeViolations->count() }}</span> @endif
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link fw-bold text-secondary" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-violations" type="button" role="tab">
+                                        <i class="mdi mdi-history"></i> Riwayat / Selesai <span class="badge bg-light text-dark ms-1 border">{{ $historyViolations->count() }}</span>
+                                    </button>
+                                </li>
+                            </ul>
+                            <div class="tab-content border border-top-0 p-3 rounded-bottom" id="violationTabsContent">
+                                <div class="tab-pane fade show active" id="active-violations" role="tabpanel">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead class="table-light"><tr><th>Level</th><th>Masalah</th><th>Berakhir Pada</th><th>Bukti</th></tr></thead>
+                                            <tbody>
+                                                @forelse($activeViolations as $v)
+                                                    <tr>
+                                                        <td>
+                                                            @if($v->category == 'berat') <span class="badge bg-danger">BERAT</span>
+                                                            @elseif($v->category == 'sedang') <span class="badge bg-warning text-dark">SEDANG</span>
+                                                            @else <span class="badge bg-info">RINGAN</span> @endif
+                                                        </td>
+                                                        <td><div class="fw-bold text-dark">{{ $v->title }}</div><small class="text-muted">Tgl Input: {{ $v->created_at->format('d M Y') }}</small></td>
+                                                        <td><span class="fw-bold text-danger">{{ $v->expires_at->format('d M Y') }}</span><br><small class="text-muted">({{ now()->diffInDays($v->expires_at) }} hari lagi)</small></td>
+                                                        <td>@if($v->photo_path) <button class="btn btn-sm btn-light border" onclick="showImageModal('{{ asset('storage/' . $v->photo_path) }}', '{{ $v->title }}')"><i class="mdi mdi-image text-primary"></i></button> @else - @endif</td>
+                                                    </tr>
+                                                @empty
+                                                    <tr><td colspan="4" class="text-center py-4"><p class="mb-0 mt-2 text-success fw-bold">Tidak ada pelanggaran aktif.</p></td></tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="history-violations" role="tabpanel">
+                                    {{-- Content History Violation Sama --}}
+                                </div>
+                            </div>
                         </div>
                     @endif
 
@@ -488,8 +544,7 @@
         </div>
     </div>
 
-    {{-- MODAL BUKTI PELANGGARAN (Hanya Render Jika Bukan Admin Gaji) --}}
-    @if(auth()->user()->role != 'admin_gaji')
+    {{-- MODAL BUKTI PELANGGARAN --}}
     <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
@@ -503,7 +558,6 @@
             </div>
         </div>
     </div>
-    @endif
 
 @endsection
 

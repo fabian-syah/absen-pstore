@@ -32,7 +32,7 @@ class ViolationController extends Controller
 
     private function applyAccessFilter($query, $user)
     {
-        if ($user->role === 'admin') {
+        if (in_array($user->role, ['admin', 'admin_gaji'])) {
             // No filter
         } elseif ($user->role === 'audit') {
             $branchIds = $user->branches->pluck('id');
@@ -48,13 +48,13 @@ class ViolationController extends Controller
     }
     public function create()
     {
-        if (!in_array(auth()->user()->role, ['admin', 'audit'])) {
+        if (!in_array(auth()->user()->role, ['admin', 'audit', 'admin_gaji'])) {
             abort(403);
         }
 
         $currentUser = auth()->user();
 
-        if ($currentUser->role === 'admin') {
+        if (in_array($currentUser->role, ['admin', 'admin_gaji'])) {
             $users = User::where('role', '!=', 'admin')->orderBy('name')->get();
         } elseif ($currentUser->role === 'audit') {
             $branchIds = $currentUser->branches->pluck('id');
@@ -70,7 +70,7 @@ class ViolationController extends Controller
 
     public function store(Request $request)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'audit'])) {
+        if (!in_array(auth()->user()->role, ['admin', 'audit', 'admin_gaji'])) {
             abort(403);
         }
 
@@ -107,7 +107,7 @@ class ViolationController extends Controller
 
     public function edit(Violation $violation)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) {
             abort(403, 'Hanya Admin yang boleh mengedit data pelanggaran.');
         }
 
@@ -116,7 +116,7 @@ class ViolationController extends Controller
 
     public function update(Request $request, Violation $violation)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) {
             abort(403);
         }
 
@@ -144,7 +144,7 @@ class ViolationController extends Controller
 
     public function destroy(Violation $violation)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji'])) {
             abort(403, 'Hanya Admin yang boleh menghapus data pelanggaran.');
         }
 
@@ -163,7 +163,7 @@ class ViolationController extends Controller
      */
     public function resolve(Request $request, Violation $violation)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'audit'])) {
+        if (!in_array(auth()->user()->role, ['admin', 'audit', 'admin_gaji'])) {
             abort(403, 'Anda tidak berhak menyelesaikan pelanggaran ini.');
         }
 
@@ -180,7 +180,7 @@ class ViolationController extends Controller
 
         return redirect()->route('violations.index')->with('success', 'Pelanggaran diselesaikan & dipindah ke history.');
     }
-    
+
     // // Fitur Hapus Permanen (Opsional, buat Admin Master saja jika perlu)
     // public function destroy(Violation $violation)
     // {

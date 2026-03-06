@@ -167,7 +167,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/violations', [App\Http\Controllers\ViolationController::class, 'index'])->name('violations.index');
 
     // 3. Route CRUD (Admin & Audit)
-    Route::middleware(['role:admin,audit'])->group(function () {
+    Route::middleware(['role:admin,audit,admin_gaji'])->group(function () {
         Route::get('/violations/create', [App\Http\Controllers\ViolationController::class, 'create'])->name('violations.create');
         Route::post('/violations', [App\Http\Controllers\ViolationController::class, 'store'])->name('violations.store');
         Route::get('/violations/{violation}/edit', [App\Http\Controllers\ViolationController::class, 'edit'])->name('violations.edit');

@@ -302,17 +302,17 @@
 
             {{-- FORMS --}}
             <!-- <li class="nav-item">
-                                        <a class="nav-link" href="{{ route('leave-requests.create') }}">
-                                            <i class="menu-icon mdi mdi-file-document-edit-outline"></i>
-                                            <span class="menu-title">Form Izin / Telat</span>
+                                            <a class="nav-link" href="{{ route('leave-requests.create') }}">
+                                                <i class="menu-icon mdi mdi-file-document-edit-outline"></i>
+                                                <span class="menu-title">Form Izin / Telat</span>
+                                            </a>
+                                        </li> -->
+            <!-- <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('leave-requests.create-cuti') }}">
+                                            <i class="menu-icon mdi mdi-wallet-travel"></i>
+                                            <span class="menu-title">Form Pengajuan Cuti</span>
                                         </a>
                                     </li> -->
-            <!-- <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('leave-requests.create-cuti') }}">
-                                        <i class="menu-icon mdi mdi-wallet-travel"></i>
-                                        <span class="menu-title">Form Pengajuan Cuti</span>
-                                    </a>
-                                </li> -->
         @endif
 
         {{-- =================================== --}}
@@ -338,6 +338,16 @@
                     <span class="menu-title">Riwayat Divisi / Cabang</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('violations.index') }}">
+                    <i class="menu-icon mdi mdi-alert-circle-outline"></i>
+                    <span class="menu-title">Riwayat Pelanggaran</span>
+                </a>
+            </li>
+        @endif
+
+        {{-- RIWAYAT PELANGGARAN (KHUSUS ADMIN GAJI) --}}
+        @if (auth()->user()->role == 'admin_gaji')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('violations.index') }}">
                     <i class="menu-icon mdi mdi-alert-circle-outline"></i>
