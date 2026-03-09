@@ -9,13 +9,16 @@
         <div class="col-lg-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="card-title">Verifikasi Izin & Keterlambatan</h4>
-                        <div>
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+                        <h4 class="card-title mb-3 mb-md-0">Verifikasi Izin & Keterlambatan</h4>
+                        <div class="d-flex flex-wrap gap-2">
                             {{-- Tombol History --}}
                             @if (in_array(auth()->user()->role, ['admin', 'audit']))
-                                <a href="{{ route('audit.late.history') }}" class="btn btn-inverse-info btn-sm me-2">
-                                    <i class="mdi mdi-history"></i> Lihat Riwayat
+                                <a href="{{ route('audit.late.history') }}" class="btn btn-inverse-info btn-sm">
+                                    <i class="mdi mdi-history"></i> Riwayat Selesai
+                                </a>
+                                <a href="{{ route('audit.late.rejected.history') }}" class="btn btn-inverse-danger btn-sm">
+                                    <i class="mdi mdi-close-circle-multiple-outline"></i> Riwayat Ditolak
                                 </a>
                             @endif
 
