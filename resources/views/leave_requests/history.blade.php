@@ -71,8 +71,14 @@
                                             @endif
                                         </td>
 
-                                        <td class="text-muted" style="max-width: 200px; white-space: normal; line-height: 1.2;">
-                                            {{ Str::limit($req->reason, 40) }}
+                                        <td style="max-width: 200px; white-space: normal; line-height: 1.4;">
+                                            <p class="mb-0 text-muted">{{ Str::limit($req->reason, 40) }}</p>
+                                            @if($req->rejection_reason)
+                                                <div class="mt-2 p-2 bg-light rounded border border-danger text-danger"
+                                                    style="font-size: 11px;">
+                                                    <strong>Catatan:</strong> {{ $req->rejection_reason }}
+                                                </div>
+                                            @endif
                                         </td>
 
                                         {{-- KOLOM BUKTI (DIPERBARUI) --}}

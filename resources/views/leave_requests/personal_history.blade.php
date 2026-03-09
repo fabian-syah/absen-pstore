@@ -124,7 +124,7 @@
                                             </p>
                                             @if($req->rejection_reason)
                                                 <div class="mt-2 p-2 bg-light rounded border border-danger text-danger small">
-                                                    <strong>Note:</strong> {{ $req->rejection_reason }}
+                                                    <strong>Catatan:</strong> {{ $req->rejection_reason }}
                                                 </div>
                                             @endif
                                         </td>
