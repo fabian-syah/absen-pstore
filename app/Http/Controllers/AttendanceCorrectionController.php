@@ -74,6 +74,37 @@ class AttendanceCorrectionController extends Controller
             }
         }
 
+        // ====== CANCEL TERKAIT LEAVE REQUEST ======
+        // Jika data absen yang dihapus adalah WFH atau Dinas
+        if (str_contains(strtolower($attendance->presence_status ?? ''), 'wfh') || str_contains(strtolower($attendance->presence_status ?? ''), 'dinas')) {
+            $checkInDate = $attendance->check_in_time->format('Y-m-d');
+
+            // Cari pengajuan izin yang "approved" milik user pada tanggal absen tersebut
+            $matchingLeaveRequests = \App\Models\LeaveRequest::where('user_id', $attendance->user_id)
+                ->where('status', 'approved')
+                ->where(function ($q) use ($checkInDate) {
+                    $q->where(function ($subQ) use ($checkInDate) {
+                        // Jika ada end_date, cek dalam range
+                        $subQ->whereNotNull('end_date')
+                            ->whereDate('start_date', '<=', $checkInDate)
+                            ->whereDate('end_date', '>=', $checkInDate);
+                    })->orWhere(function ($subQ) use ($checkInDate) {
+                        // Jika end_date null (seperti telat/izin harian tanpa range), cocokkan dengan start_date
+                        $subQ->whereNull('end_date')
+                            ->whereDate('start_date', $checkInDate);
+                    });
+                })->get();
+
+            foreach ($matchingLeaveRequests as $lr) {
+                // Batalkan (cancel) agar tidak lagi muncul di history aktif
+                $lr->update([
+                    'status' => 'cancelled',
+                    'is_active' => false,
+                    'rejection_reason' => 'Dibatalkan otomatis karena data absen dihapus oleh Admin.'
+                ]);
+            }
+        }
+
         $attendance->delete();
 
         return redirect()->back()->with('success', 'Data absensi berhasil dihapus permanen.');
