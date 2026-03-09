@@ -19,7 +19,16 @@ class AttendanceCorrectionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.correction.index', compact('attendances', 'date'));
+        // Pisahkan data Masuk (Kantor/Scan) dan WFH
+        $attendancesWfh = $attendances->filter(function ($item) {
+            return str_contains(strtolower($item->presence_status ?? ''), 'wfh') || str_contains(strtolower($item->presence_status ?? ''), 'dinas');
+        });
+
+        $attendancesOffice = $attendances->filter(function ($item) {
+            return !str_contains(strtolower($item->presence_status ?? ''), 'wfh') && !str_contains(strtolower($item->presence_status ?? ''), 'dinas');
+        });
+
+        return view('admin.correction.index', compact('attendancesOffice', 'attendancesWfh', 'date'));
     }
 
     // Fungsi: Reset Checkout (User bisa absen pulang ulang)
@@ -36,10 +45,10 @@ class AttendanceCorrectionController extends Controller
 
         // Reset kolom database ke NULL
         $attendance->update([
-            'check_out_time'    => null,
-            'photo_out_path'    => null,
-            'latitude_out'      => null,
-            'longitude_out'     => null,
+            'check_out_time' => null,
+            'photo_out_path' => null,
+            'latitude_out' => null,
+            'longitude_out' => null,
             'is_early_checkout' => false,
         ]);
 
