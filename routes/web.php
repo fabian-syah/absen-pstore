@@ -414,6 +414,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // IZIN TELAT
         Route::get('/leave-requests', [AuditController::class, 'showLatePermissions'])->name('leave-requests.index');
         Route::get('/izin-telat/riwayat', [AuditController::class, 'showLatePermissionsHistory'])->name('audit.late.history');
+        Route::get('/izin-telat/riwayat-ditolak', [AuditController::class, 'showRejectedLatePermissionsHistory'])->name('audit.late.rejected.history');
         Route::post('/izin-telat/{id}/approve', [AuditController::class, 'approveLatePermission'])->name('late.approve');
         Route::post('/izin-telat/{id}/reject', [AuditController::class, 'rejectLatePermission'])->name('late.reject');
 

@@ -10,8 +10,8 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="card-title">Riwayat Pengajuan (Selesai)</h4>
-                        
+                        <h4 class="card-title">{{ $page_title ?? 'Riwayat Pengajuan (Selesai)' }}</h4>
+
                         {{-- TOMBOL KEMBALI KE DAFTAR PENDING --}}
                         <a href="{{ route('leave-requests.index') }}" class="btn btn-secondary btn-sm">
                             <i class="mdi mdi-arrow-left"></i> Kembali ke Daftar Aktif
@@ -44,20 +44,21 @@
                                                     <span class="fw-bold d-block text-dark">{{ $req->user->name }}</span>
                                                     <small class="text-muted" style="font-size:11px;">
                                                         {{ $req->user->division->name ?? '-' }}
-                                                        &bull; 
-                                                        <span class="text-primary">{{ $req->user->branch->name ?? 'Pusat' }}</span>
+                                                        &bull;
+                                                        <span
+                                                            class="text-primary">{{ $req->user->branch->name ?? 'Pusat' }}</span>
                                                     </small>
                                                 </div>
                                             </div>
                                         </td>
-                                        
+
                                         <td>
                                             <span class="badge bg-light text-dark border">{{ ucfirst($req->type) }}</span>
                                         </td>
 
                                         <td>
                                             @if ($req->type == 'telat')
-                                                {{ $req->start_date->format('d/m/Y') }} 
+                                                {{ $req->start_date->format('d/m/Y') }}
                                                 <br>
                                                 <span class="text-muted" style="font-size: 11px;">
                                                     Jam: {{ \Carbon\Carbon::parse($req->start_time)->format('H:i') }}
@@ -73,22 +74,19 @@
                                         <td class="text-muted" style="max-width: 200px; white-space: normal; line-height: 1.2;">
                                             {{ Str::limit($req->reason, 40) }}
                                         </td>
-                                        
+
                                         {{-- KOLOM BUKTI (DIPERBARUI) --}}
                                         <td>
                                             @if($req->file_proof)
                                                 {{-- Ubah link menjadi trigger modal --}}
-                                                <a href="javascript:void(0)" 
-                                                   class="text-primary" 
-                                                   style="text-decoration: none; cursor: pointer;"
-                                                   data-bs-toggle="modal" 
-                                                   data-bs-target="#imageModal"
-                                                   data-src="{{ asset('storage/' . $req->file_proof) }}"
-                                                   title="Lihat Bukti">
+                                                <a href="javascript:void(0)" class="text-primary"
+                                                    style="text-decoration: none; cursor: pointer;" data-bs-toggle="modal"
+                                                    data-bs-target="#imageModal"
+                                                    data-src="{{ asset('storage/' . $req->file_proof) }}" title="Lihat Bukti">
                                                     <i class="mdi mdi-eye"></i> Lihat
                                                 </a>
-                                            @else 
-                                                - 
+                                            @else
+                                                -
                                             @endif
                                         </td>
 
@@ -122,7 +120,9 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="6" class="text-center py-4">Belum ada riwayat data.</td></tr>
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">Belum ada riwayat data.</td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -145,7 +145,8 @@
                 </div>
                 <div class="modal-body text-center bg-light">
                     {{-- Gambar akan di-load di sini --}}
-                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm"
+                        style="max-height: 400px;">
                 </div>
             </div>
         </div>
@@ -164,7 +165,7 @@
                 var modalImage = document.getElementById('modalImagePreview');
                 modalImage.src = imageUrl;
             });
-            
+
             // Opsional: Reset gambar saat modal ditutup (agar tidak ada flash gambar lama)
             imageModal.addEventListener('hidden.bs.modal', function () {
                 document.getElementById('modalImagePreview').src = '';

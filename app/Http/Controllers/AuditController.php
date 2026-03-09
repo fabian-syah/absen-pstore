@@ -174,9 +174,6 @@ class AuditController extends Controller
         return view('audit.verification_list', compact('pendingAttendances'));
     }
 
-    /**
-     * HALAMAN RIWAYAT (Approved, Rejected, Cancelled)
-     */
     public function showLatePermissionsHistory()
     {
         $user = Auth::user();
@@ -202,8 +199,42 @@ class AuditController extends Controller
         }
 
         $requests = $query->latest()->paginate(10);
+        $page_title = 'Riwayat Pengajuan (Selesai)';
 
-        return view('leave_requests.history', compact('requests'));
+        return view('leave_requests.history', compact('requests', 'page_title'));
+    }
+
+    /**
+     * HALAMAN RIWAYAT (HANYA DITOLAK)
+     */
+    public function showRejectedLatePermissionsHistory()
+    {
+        $user = Auth::user();
+
+        // Ambil khusus rejected
+        $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
+            ->where('status', 'rejected');
+
+        $isUniversalAccess = in_array($user->role, ['admin']);
+
+        if (!$isUniversalAccess) {
+            $pivotBranchIds = $user->branches->pluck('id')->toArray();
+            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!empty($myBranchIds)) {
+                $query->whereHas('user', function ($q) use ($myBranchIds) {
+                    $q->whereIn('branch_id', $myBranchIds);
+                });
+            } else {
+                $query->where('id', 0);
+            }
+        }
+
+        $requests = $query->latest()->paginate(10);
+        $page_title = 'Riwayat Ditolak';
+
+        return view('leave_requests.history', compact('requests', 'page_title'));
     }
 
     /**
@@ -292,7 +323,7 @@ class AuditController extends Controller
         $body = "Pengajuan izin Anda pada " . $leaveRequest->start_date->format('d/m/Y') . " telah disetujui oleh " . $approver->name . ".";
         $this->sendNotificationToUser($leaveRequest->user, $title, $body);
 
-        return redirect()->route('leave-requests.index')
+        return redirect()->back()
             ->with('success', 'Izin telah disetujui dan dipindahkan ke riwayat.');
     }
 
@@ -355,7 +386,7 @@ class AuditController extends Controller
         $body = "Pengajuan izin Anda pada " . $leaveRequest->start_date->format('d/m/Y') . " telah ditolak oleh " . $approver->name . ". Alasan: " . $request->rejection_reason;
         $this->sendNotificationToUser($leaveRequest->user, $title, $body);
 
-        return redirect()->route('leave-requests.index')
+        return redirect()->back()
             ->with('success', 'Izin telah ditolak dan dipindahkan ke riwayat.');
     }
 

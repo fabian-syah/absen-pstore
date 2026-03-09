@@ -302,17 +302,17 @@
 
             {{-- FORMS --}}
             <!-- <li class="nav-item">
-                                            <a class="nav-link" href="{{ route('leave-requests.create') }}">
-                                                <i class="menu-icon mdi mdi-file-document-edit-outline"></i>
-                                                <span class="menu-title">Form Izin / Telat</span>
+                                                <a class="nav-link" href="{{ route('leave-requests.create') }}">
+                                                    <i class="menu-icon mdi mdi-file-document-edit-outline"></i>
+                                                    <span class="menu-title">Form Izin / Telat</span>
+                                                </a>
+                                            </li> -->
+            <!-- <li class="nav-item">
+                                            <a class="nav-link" href="{{ route('leave-requests.create-cuti') }}">
+                                                <i class="menu-icon mdi mdi-wallet-travel"></i>
+                                                <span class="menu-title">Form Pengajuan Cuti</span>
                                             </a>
                                         </li> -->
-            <!-- <li class="nav-item">
-                                        <a class="nav-link" href="{{ route('leave-requests.create-cuti') }}">
-                                            <i class="menu-icon mdi mdi-wallet-travel"></i>
-                                            <span class="menu-title">Form Pengajuan Cuti</span>
-                                        </a>
-                                    </li> -->
         @endif
 
         {{-- =================================== --}}
@@ -552,6 +552,13 @@
                 <a class="nav-link" href="{{ route('leave-requests.index') }}">
                     <i class="menu-icon mdi mdi-clock-alert-outline"></i>
                     <span class="menu-title">Daftar Izin / Telat</span>
+                </a>
+            </li>
+            {{-- [NEW] Riwayat Ditolak --}}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('audit.late.rejected.history') }}">
+                    <i class="menu-icon mdi mdi-history"></i>
+                    <span class="menu-title">Riwayat Ditolak</span>
                 </a>
             </li>
             {{-- [NEW] Persetujuan Cuti --}}
