@@ -108,7 +108,7 @@ class LeaveRequestController extends Controller
         $request->validate([
             'type' => 'required|in:telat,wfh,izin,sakit,cuti,libur',
             'reason' => 'required|string|max:255',
-            'file_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'file_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
             'start_date' => 'required|date',
             'end_date' => 'required_unless:type,telat|nullable|date|after_or_equal:start_date',
             'start_time' => 'required_if:type,telat|nullable|date_format:H:i',
