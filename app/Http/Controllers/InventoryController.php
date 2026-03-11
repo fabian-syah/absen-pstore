@@ -230,8 +230,8 @@ class InventoryController extends Controller
             'received_date' => 'required|date',
             'condition' => 'required|string',
             'description' => 'nullable|string|max:1000',
-            'item_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
-            'user_item_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'item_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'user_item_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'document' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ];
 
