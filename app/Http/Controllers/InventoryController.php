@@ -371,9 +371,9 @@ class InventoryController extends Controller
             'user_id' => 'nullable',
             'category' => 'required',
             'condition' => 'required',
-            'item_photo' => 'nullable|image|max:10240',
-            'user_item_photo' => 'nullable|image|max:10240',
-            'document' => 'nullable|file|max:10240',
+            'item_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'user_item_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'document' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
 
         $data = $request->except(['item_photo', 'user_item_photo', 'document']);
