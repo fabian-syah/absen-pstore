@@ -230,8 +230,8 @@ class InventoryController extends Controller
             'received_date' => 'required|date',
             'condition' => 'required|string',
             'description' => 'nullable|string|max:1000',
-            'item_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'user_item_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'item_photo' => 'required|file|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'user_item_photo' => 'required|file|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'document' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ];
 
@@ -371,8 +371,8 @@ class InventoryController extends Controller
             'user_id' => 'nullable',
             'category' => 'required',
             'condition' => 'required',
-            'item_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'user_item_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'item_photo' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'user_item_photo' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'document' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
 

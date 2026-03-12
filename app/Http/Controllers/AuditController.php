@@ -476,7 +476,7 @@ class AuditController extends Controller
         // 1. Validasi Input
         $request->validate([
             'presence_status' => 'required|string',
-            'audit_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:8192', // Max 2MB
+            'audit_photo' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:8192', // Max 8MB
             'audit_note' => 'nullable|string',
         ]);
 

@@ -79,7 +79,7 @@ class ViolationController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category' => 'required|in:ringan,sedang,berat',
-            'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'photo' => 'required|file|mimes:jpeg,png,jpg,webp|max:2048',
             'notes' => 'nullable|string',
         ]);
 
@@ -124,7 +124,7 @@ class ViolationController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category' => 'required|in:ringan,sedang,berat',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'photo' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:2048',
             'notes' => 'nullable|string',
         ]);
 

@@ -18,7 +18,7 @@ class BranchMessageController extends Controller
     public function getBranchList()
     {
         $user = Auth::user();
-        
+
         $branches = collect();
 
         // --- LOGIKA PERUBAHAN DISINI ---
@@ -28,8 +28,9 @@ class BranchMessageController extends Controller
         } else {
             // JIKA BUKAN ADMIN: Ambil Cabang Sesuai Akses (Pivot & Single)
             $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
-            if ($user->branch_id) $myBranchIds[] = $user->branch_id;
-            
+            if ($user->branch_id)
+                $myBranchIds[] = $user->branch_id;
+
             $myBranchIds = array_filter(array_unique($myBranchIds));
 
             if (empty($myBranchIds)) {
@@ -51,19 +52,19 @@ class BranchMessageController extends Controller
 
             // Hitung pesan yang dibuat SETELAH terakhir baca
             $unreadQuery = BranchMessage::where('branch_id', $branch->id);
-            
+
             if ($lastRead) {
                 $unreadQuery->where('created_at', '>', $lastRead);
             }
-            
+
             // Jangan hitung pesan saya sendiri sebagai unread
             $unreadCount = $unreadQuery->where('user_id', '!=', $user->id)->count();
 
             // Ambil pesan terakhir untuk preview
             $lastMsg = BranchMessage::where('branch_id', $branch->id)->latest()->first();
             $preview = 'Belum ada pesan';
-            
-            if($lastMsg) {
+
+            if ($lastMsg) {
                 $sender = $lastMsg->user_id == $user->id ? 'Anda' : explode(' ', $lastMsg->user->name)[0];
                 // Jika pesan teks kosong (cuma gambar), tulis "Foto"
                 $msgContent = $lastMsg->message ? \Illuminate\Support\Str::limit($lastMsg->message, 20) : '📷 Foto';
@@ -94,21 +95,23 @@ class BranchMessageController extends Controller
     public function index(Request $request)
     {
         $request->validate(['branch_id' => 'required|exists:branches,id']);
-        
+
         $user = Auth::user();
         $branchId = $request->branch_id;
 
         // Validasi Akses: Jika bukan admin, pastikan dia punya akses ke cabang ini
         if ($user->role !== 'admin') {
             $hasAccess = false;
-            if ($user->branch_id == $branchId) $hasAccess = true;
-            if (!$hasAccess && $user->branches()->where('branches.id', $branchId)->exists()) $hasAccess = true;
+            if ($user->branch_id == $branchId)
+                $hasAccess = true;
+            if (!$hasAccess && $user->branches()->where('branches.id', $branchId)->exists())
+                $hasAccess = true;
 
             if (!$hasAccess) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
         }
-        
+
         $branch = Branch::find($branchId);
         $timezone = $branch->timezone ?? 'Asia/Jakarta';
 
@@ -127,7 +130,7 @@ class BranchMessageController extends Controller
                 return [
                     'id' => $msg->id,
                     'user_name' => $msg->user->name,
-                    'user_avatar' => $msg->user->profile_photo_path, 
+                    'user_avatar' => $msg->user->profile_photo_path,
                     'message' => $msg->message,
                     'image_url' => $msg->image_path ? Storage::url($msg->image_path) : null,
                     'is_me' => $msg->user_id === $user->id,
@@ -147,7 +150,7 @@ class BranchMessageController extends Controller
         $request->validate([
             'branch_id' => 'required|exists:branches,id',
             'message' => 'nullable|string|max:1000',
-            'image'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $user = Auth::user();
@@ -155,8 +158,10 @@ class BranchMessageController extends Controller
         // Validasi Akses Kirim (Sama seperti index)
         if ($user->role !== 'admin') {
             $hasAccess = false;
-            if ($user->branch_id == $request->branch_id) $hasAccess = true;
-            if (!$hasAccess && $user->branches()->where('branches.id', $request->branch_id)->exists()) $hasAccess = true;
+            if ($user->branch_id == $request->branch_id)
+                $hasAccess = true;
+            if (!$hasAccess && $user->branches()->where('branches.id', $request->branch_id)->exists())
+                $hasAccess = true;
 
             if (!$hasAccess) {
                 return response()->json(['error' => 'Anda tidak memiliki akses ke cabang ini.'], 403);
@@ -174,7 +179,7 @@ class BranchMessageController extends Controller
         }
 
         BranchMessage::create([
-            'branch_id' => $request->branch_id, 
+            'branch_id' => $request->branch_id,
             'user_id' => $user->id,
             'message' => $request->message,
             'image_path' => $imagePath,

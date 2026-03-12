@@ -88,7 +88,7 @@ class ProfileController extends Controller
     public function updatePhoto(Request $request)
     {
         $request->validate([
-            'profile_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120', // Max 5MB
+            'profile_photo' => 'required|file|mimes:jpeg,png,jpg,webp|max:5120', // Max 5MB
         ]);
 
         /** @var \App\Models\User $user */
@@ -117,7 +117,7 @@ class ProfileController extends Controller
      */
     public function requestPhotoChange(Request $request)
     {
-        $request->validate(['profile_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120']);
+        $request->validate(['profile_photo' => 'required|file|mimes:jpeg,png,jpg,webp|max:5120']);
         $user = Auth::user();
 
         if ($user->photo_request_status === 'pending') {
@@ -159,7 +159,7 @@ class ProfileController extends Controller
 
     public function requestKtpChange(Request $request)
     {
-        $request->validate(['ktp_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120']);
+        $request->validate(['ktp_photo' => 'required|file|mimes:jpeg,png,jpg,webp|max:5120']);
         $user = Auth::user();
 
         if ($user->ktp_photo_temp_path) {
@@ -178,7 +178,7 @@ class ProfileController extends Controller
 
     public function updateKtp(Request $request)
     {
-        $request->validate(['ktp_photo' => 'required|image|max:5120']);
+        $request->validate(['ktp_photo' => 'required|file|mimes:jpeg,png,jpg,webp|max:5120']);
         $user = Auth::user();
 
         if ($user->ktp_photo_path) {
@@ -201,7 +201,7 @@ class ProfileController extends Controller
             'category' => 'required|string',
             'received_date' => 'required|date',
             'condition' => 'required|string',
-            'item_photo' => 'nullable|image|max:5120',
+            'item_photo' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
         try {
@@ -224,7 +224,8 @@ class ProfileController extends Controller
 
     public function destroyInventory(Inventory $inventory)
     {
-        if ($inventory->user_id !== Auth::id()) abort(403);
+        if ($inventory->user_id !== Auth::id())
+            abort(403);
         $inventory->delete();
         return back()->with('success', 'Inventaris dihapus.');
     }

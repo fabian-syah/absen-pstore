@@ -34,7 +34,7 @@ class InventoryReturnController extends Controller
     public function store(Request $request, $id)
     {
         $request->validate([
-            'return_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'return_photo' => 'required|file|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'receiver_name' => 'required|string|max:255',
             'note' => 'nullable|string',
         ]);
@@ -49,10 +49,16 @@ class InventoryReturnController extends Controller
         try {
             // 1. Proses Gambar
             $file = $request->file('return_photo');
-            $filename = 'return_' . Str::random(10) . '_' . time() . '.jpg';
+            $extension = $file->getClientOriginalExtension();
+            $filename = 'return_' . Str::random(10) . '_' . time() . '.' . $extension;
             $path = 'inventory_returns/' . $filename;
 
-            $this->compressAndSaveImage($file, $path, 100);
+            // Jika file adalah webp, lewati kompresi manual karena GD mungkin tidak mendukung webp di VPS
+            if ($extension === 'webp') {
+                $path = $file->storeAs('inventory_returns', $filename, 'public');
+            } else {
+                $this->compressAndSaveImage($file, $path, 100);
+            }
 
             // 2. Buat Data (Status Pending)
             InventoryReturn::create([
