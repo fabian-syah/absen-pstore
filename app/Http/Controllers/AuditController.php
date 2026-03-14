@@ -121,18 +121,46 @@ class AuditController extends Controller
             return back()->with('error', 'Anda tidak dapat memproses absensi Anda sendiri.');
         }
 
+        // --- OPTIMASI PENYIMPANAN: Perkecil foto jika ada (untuk history) ---
+        try {
+            // Foto Masuk
+            if ($attendance->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($attendance->photo_path)) {
+                $imgIn = \Intervention\Image\Facades\Image::make(\Illuminate\Support\Facades\Storage::disk('public')->path($attendance->photo_path));
+                $imgIn->resize(300, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+                $compressedIn = (string) $imgIn->encode('jpg', 60);
+                \Illuminate\Support\Facades\Storage::disk('public')->put($attendance->photo_path, $compressedIn);
+            }
+
+            // Foto Pulang
+            if ($attendance->photo_out_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($attendance->photo_out_path)) {
+                $imgOut = \Intervention\Image\Facades\Image::make(\Illuminate\Support\Facades\Storage::disk('public')->path($attendance->photo_out_path));
+                $imgOut->resize(300, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+                $compressedOut = (string) $imgOut->encode('jpg', 60);
+                \Illuminate\Support\Facades\Storage::disk('public')->put($attendance->photo_out_path, $compressedOut);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Gagal optimasi foto reject: " . $e->getMessage());
+        }
+
         // status menjadi rejected
         $attendance->update([
             'status' => 'rejected',
             'verified_by_user_id' => $user->id,
-            'audit_note' => 'Rejected by ' . $user->name
+            'audit_note' => 'Rejected by ' . $user->name,
+            'rejected_at' => now(),
         ]);
 
         // Kirim notifikasi ke user bahwa absennya ditolak
         try {
             $title = "Absensi Ditolak";
             $userTz = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
-            $checkInLocal = Carbon::parse($attendance->check_in_time)->timezone($userTz);
+            $checkInLocal = \Carbon\Carbon::parse($attendance->check_in_time)->timezone($userTz);
 
             $body = "Absensi mandiri Anda pada " . $checkInLocal->format('d/m/Y H:i') . " telah ditolak oleh Audit.";
             $this->sendNotificationToUser($attendance->user, $title, $body);
@@ -140,7 +168,7 @@ class AuditController extends Controller
             // Abaikan error notifikasi
         }
 
-        return back()->with('success', 'Data absensi berhasil ditolak.');
+        return back()->with('success', 'Data absensi telah ditolak dan dipindahkan ke History Ditolak.');
     }
 
     /**

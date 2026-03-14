@@ -55,27 +55,43 @@ class AttendanceCorrectionController extends Controller
         return redirect()->back()->with('success', 'Jam pulang berhasil di-reset. User dapat melakukan checkout ulang.');
     }
 
-    // Fungsi: Hapus Data Absen Permanen
+    // Fungsi: Tolak Data Absen (Dulu Hapus Permanen)
     public function destroy($id)
     {
         $attendance = Attendance::findOrFail($id);
+        $user = \Illuminate\Support\Facades\Auth::user();
 
-        // Hapus Foto Masuk
-        if ($attendance->photo_path) {
-            if (Storage::disk('public')->exists($attendance->photo_path)) {
-                Storage::disk('public')->delete($attendance->photo_path);
+        // --- OPTIMASI PENYIMPANAN: Perkecil foto jika ada (untuk history) ---
+        try {
+            // Foto Masuk
+            if ($attendance->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($attendance->photo_path)) {
+                $pathIn = \Illuminate\Support\Facades\Storage::disk('public')->path($attendance->photo_path);
+                $imgIn = \Intervention\Image\Facades\Image::make($pathIn);
+                $imgIn->resize(300, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+                $compressedIn = (string) $imgIn->encode('jpg', 60);
+                \Illuminate\Support\Facades\Storage::disk('public')->put($attendance->photo_path, $compressedIn);
             }
-        }
 
-        // Hapus Foto Pulang
-        if ($attendance->photo_out_path) {
-            if (Storage::disk('public')->exists($attendance->photo_out_path)) {
-                Storage::disk('public')->delete($attendance->photo_out_path);
+            // Foto Pulang
+            if ($attendance->photo_out_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($attendance->photo_out_path)) {
+                $pathOut = \Illuminate\Support\Facades\Storage::disk('public')->path($attendance->photo_out_path);
+                $imgOut = \Intervention\Image\Facades\Image::make($pathOut);
+                $imgOut->resize(300, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+                $compressedOut = (string) $imgOut->encode('jpg', 60);
+                \Illuminate\Support\Facades\Storage::disk('public')->put($attendance->photo_out_path, $compressedOut);
             }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Gagal optimasi foto reject (Admin): " . $e->getMessage());
         }
 
         // ====== CANCEL TERKAIT LEAVE REQUEST ======
-        // Jika data absen yang dihapus adalah WFH atau Dinas
+        // Jika data absen yang ditolak adalah WFH atau Dinas
         if (str_contains(strtolower($attendance->presence_status ?? ''), 'wfh') || str_contains(strtolower($attendance->presence_status ?? ''), 'dinas')) {
             $checkInDate = $attendance->check_in_time->format('Y-m-d');
 
@@ -100,13 +116,19 @@ class AttendanceCorrectionController extends Controller
                 $lr->update([
                     'status' => 'cancelled',
                     'is_active' => false,
-                    'rejection_reason' => 'Dibatalkan otomatis karena data absen dihapus oleh Admin.'
+                    'rejection_reason' => 'Ditolak otomatis karena data absen dikoreksi oleh Admin.'
                 ]);
             }
         }
 
-        $attendance->delete();
+        // Update status menjadi rejected (Logical Delete for History)
+        $attendance->update([
+            'status' => 'rejected',
+            'verified_by_user_id' => $user->id,
+            'audit_note' => 'Rejected/Deleted by Admin ' . $user->name,
+            'rejected_at' => now(),
+        ]);
 
-        return redirect()->back()->with('success', 'Data absensi berhasil dihapus permanen.');
+        return redirect()->back()->with('success', 'Data absensi telah ditolak dan dipindahkan ke History Ditolak.');
     }
 }
