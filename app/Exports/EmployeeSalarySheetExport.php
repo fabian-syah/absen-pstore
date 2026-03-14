@@ -142,9 +142,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
     {
         return [
             'Nama Karyawan',
-            'Login ID',
             'Email',
-            'Tanggal Join PStore',
             'Divisi',
             'Pusat',
             'Cabang',
@@ -377,9 +375,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
 
         return [
             $user->name,
-            $user->login_id ?? '-',
             $user->email,
-            $joinDate,
             $user->division->name ?? '-',
             $pusatCol,
             $cabangCol,
@@ -410,28 +406,28 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
     // FUNCTION BARU: FORMAT RUPIAH
     public function columnFormats(): array
     {
-        // Kolom D = Tanggal Join (text), sehingga semua kolom Rp geser +1
+        // Gaji Pokok s/d Gaji Terakhir
         return [
-            'I' => '"Rp " #,##0', // Gaji Pokok
-            'J' => '"Rp " #,##0', // Tunjangan
-            'K' => '"Rp " #,##0', // Privilege
-            'L' => '"Rp " #,##0', // Gaji Harian
-            'M' => '"Rp " #,##0', // Insentif
-            'N' => '"Rp " #,##0', // Total
-            'O' => '"Rp " #,##0', // Potongan Alpha
-            'P' => '"Rp " #,##0', // Potongan Telat
-            'Q' => '"Rp " #,##0', // Potongan Cuti Lebih
-            'R' => '"Rp " #,##0', // Potongan Kasbon
-            'S' => '"Rp " #,##0', // Potongan Lainnya
-            // T = Catatan Potongan Lainnya (text)
-            'U' => '"Rp " #,##0', // Bonus / Insentif Tambahan
-            'V' => '"Rp " #,##0', // Dispensasi
-            // W = Catatan Dispensasi (text)
-            'X' => '"Rp " #,##0', // Gaji Harus Diterima
-            // Y = Bank
-            // Z = Rekening
-            // AA = Catatan
-            'AB' => '"Rp " #,##0', // Gaji Terakhir
+            'G' => '"Rp " #,##0', // Gaji Pokok
+            'H' => '"Rp " #,##0', // Tunjangan
+            'I' => '"Rp " #,##0', // Privilege
+            'J' => '"Rp " #,##0', // Gaji Harian
+            'K' => '"Rp " #,##0', // Insentif
+            'L' => '"Rp " #,##0', // Total
+            'M' => '"Rp " #,##0', // Potongan Alpha
+            'N' => '"Rp " #,##0', // Potongan Telat
+            'O' => '"Rp " #,##0', // Potongan Cuti Lebih
+            'P' => '"Rp " #,##0', // Potongan Kasbon
+            'Q' => '"Rp " #,##0', // Potongan Lainnya
+            // R = Catatan Potongan Lainnya (text)
+            'S' => '"Rp " #,##0', // Bonus / Insentif Tambahan
+            'T' => '"Rp " #,##0', // Dispensasi
+            // U = Catatan Dispensasi (text)
+            'V' => '"Rp " #,##0', // Gaji Harus Diterima
+            // W = Bank
+            // X = Rekening
+            // Y = Catatan
+            'Z' => '"Rp " #,##0', // Gaji Terakhir
         ];
     }
 
@@ -469,8 +465,8 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
                 // 6. Freeze Header
                 $event->sheet->getDelegate()->freezePane('A2');
 
-                // 7. Auto Size Kolom (A sampai AB karena nambah kolom baru)
-                $columns = array_merge(range('A', 'Z'), ['AA', 'AB']);
+                // 7. Auto Size Kolom (A sampai Z)
+                $columns = range('A', 'Z');
                 foreach ($columns as $columnID) {
                     $event->sheet->getDelegate()->getColumnDimension($columnID)->setAutoSize(true);
                 }
