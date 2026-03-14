@@ -165,7 +165,6 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'Gaji Harus Diterima',
             'Nama Bank',
             'No. Rekening',
-            'Catatan',
             'Gaji Terakhir',
         ];
     }
@@ -398,7 +397,6 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             $gajiHarusDiterima,
             $bankName,
             $accountNumber . ' ',
-            $notes,
             $gajiTerakhir,
         ];
     }
@@ -426,8 +424,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'V' => '"Rp " #,##0', // Gaji Harus Diterima
             // W = Bank
             // X = Rekening
-            // Y = Catatan
-            'Z' => '"Rp " #,##0', // Gaji Terakhir
+            'Y' => '"Rp " #,##0', // Gaji Terakhir
         ];
     }
 
@@ -465,8 +462,8 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
                 // 6. Freeze Header
                 $event->sheet->getDelegate()->freezePane('A2');
 
-                // 7. Auto Size Kolom (A sampai Z)
-                $columns = range('A', 'Z');
+                // 7. Auto Size Kolom (A sampai Y)
+                $columns = range('A', 'Y');
                 foreach ($columns as $columnID) {
                     $event->sheet->getDelegate()->getColumnDimension($columnID)->setAutoSize(true);
                 }
