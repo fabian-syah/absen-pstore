@@ -25,6 +25,9 @@
                         <i class="mdi mdi-clock-alert-outline me-1"></i>
                         <span class="fw-bold">{{ $pendingAttendances->total() }}</span> Menunggu
                     </span>
+                    <a href="{{ route('audit.verify.rejected.list') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3 shadow-sm">
+                        <i class="mdi mdi-history me-1"></i> History Absen Ditolak
+                    </a>
                 </div>
             </div>
         </div>
@@ -140,8 +143,8 @@
                                                     <i class="mdi mdi-pencil"></i>
                                                 </button> -->
                                                 <form action="{{ route('audit.reject', $att->id) }}" method="POST" class="d-inline">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="btn-action btn-reject" onclick="return confirm('Hapus data absensi ini?')" title="Tolak">
+                                                    @csrf @method('PUT')
+                                                    <button type="submit" class="btn-action btn-reject" onclick="return confirm('Tolak data absensi ini?')" title="Tolak">
                                                         <i class="mdi mdi-close"></i>
                                                     </button>
                                                 </form>

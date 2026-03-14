@@ -121,19 +121,26 @@ class AuditController extends Controller
             return back()->with('error', 'Anda tidak dapat memproses absensi Anda sendiri.');
         }
 
-        // Hapus file foto dari storage agar tidak menuh-menuhin server
-        if ($attendance->photo_path && Storage::disk('public')->exists($attendance->photo_path)) {
-            Storage::disk('public')->delete($attendance->photo_path);
+        // status menjadi rejected
+        $attendance->update([
+            'status' => 'rejected',
+            'verified_by_user_id' => $user->id,
+            'audit_note' => 'Rejected by ' . $user->name
+        ]);
+
+        // Kirim notifikasi ke user bahwa absennya ditolak
+        try {
+            $title = "Absensi Ditolak";
+            $userTz = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
+            $checkInLocal = Carbon::parse($attendance->check_in_time)->timezone($userTz);
+
+            $body = "Absensi mandiri Anda pada " . $checkInLocal->format('d/m/Y H:i') . " telah ditolak oleh Audit.";
+            $this->sendNotificationToUser($attendance->user, $title, $body);
+        } catch (\Exception $e) {
+            // Abaikan error notifikasi
         }
 
-        if ($attendance->photo_out_path && Storage::disk('public')->exists($attendance->photo_out_path)) {
-            Storage::disk('public')->delete($attendance->photo_out_path);
-        }
-
-        // Hapus data dari database (Karena tombolnya "Tolak/Hapus")
-        $attendance->delete();
-
-        return back()->with('success', 'Data absensi berhasil ditolak dan dihapus.');
+        return back()->with('success', 'Data absensi berhasil ditolak.');
     }
 
     /**
@@ -172,6 +179,36 @@ class AuditController extends Controller
         $pendingAttendances = $query->oldest()->paginate(30);
 
         return view('audit.verification_list', compact('pendingAttendances'));
+    }
+
+    /**
+     * Menampilkan daftar absensi yang ditolak
+     */
+    public function showRejectedVerificationList()
+    {
+        $user = Auth::user();
+        $query = Attendance::with(['user.division', 'user.branch', 'verifier'])
+            ->where('status', 'rejected');
+
+        $isUniversalAccess = in_array($user->role, ['admin']);
+
+        if (!$isUniversalAccess) {
+            $pivotBranchIds = $user->branches->pluck('id')->toArray();
+            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!empty($myBranchIds)) {
+                $query->whereHas('user', function ($q) use ($myBranchIds) {
+                    $q->whereIn('branch_id', $myBranchIds);
+                });
+            } else {
+                $query->where('id', 0);
+            }
+        }
+
+        $rejectedAttendances = $query->latest()->paginate(30);
+
+        return view('audit.rejected_verification_list', compact('rejectedAttendances'));
     }
 
     public function showLatePermissionsHistory()
