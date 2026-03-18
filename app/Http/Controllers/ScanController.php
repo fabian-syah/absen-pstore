@@ -36,7 +36,7 @@ class ScanController extends Controller
         }
 
         // [TIMEZONE]
-        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
         $localNow = Carbon::now($branchTimezone);
         $todayLocal = $localNow->copy()->startOfDay();
 
@@ -104,7 +104,7 @@ class ScanController extends Controller
                 'name' => $user->name,
                 'role' => $user->role,
                 'division' => $user->division->name ?? '-',
-                'branch' => $user->branch->name ?? 'Pusat',
+                'branch' => $user->branch?->name ?? 'Pusat',
                 'photo_url' => $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
                 'attendance_status' => $attendanceSession ? [
                     'has_checked_in' => !is_null($attendanceSession->check_in_time),
@@ -140,7 +140,7 @@ class ScanController extends Controller
         $currentTime = now(); // WIB Server
 
         // [TIMEZONE]
-        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
         $localTime = Carbon::now($branchTimezone);
         $todayLocal = $localTime->copy()->startOfDay();
 
@@ -305,7 +305,7 @@ class ScanController extends Controller
                 'name' => $user->name,
                 'role' => $user->role,
                 'division' => $user->division->name ?? '-',
-                'branch' => $user->branch->name ?? '-',
+                'branch' => $user->branch?->name ?? '-',
                 'profile_photo' => $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
                 'photo' => asset('storage/' . $imageName),
                 'notes' => $manualNotes,

@@ -96,7 +96,7 @@ class DashboardController extends Controller
         $branch_id = $user->branch_id;
 
         // [TIMEZONE & LIVE CLOCK SETUP]
-        $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $userTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
         $data['current_timezone'] = $userTimezone;
 
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
@@ -628,7 +628,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $branch_id = $user->branch_id;
-        $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $userTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
 
         $allBranchIds = [];
@@ -698,7 +698,7 @@ class DashboardController extends Controller
         return view('qrcode_pdf', [
             'qrSvg' => $qrSvg,
             'userName' => $user->name,
-            'branchName' => $user->branch->name ?? 'PStore',
+            'branchName' => $user->branch?->name ?? 'PStore',
         ]);
     }
 

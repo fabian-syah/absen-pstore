@@ -225,7 +225,7 @@ class LeaveRequestController extends Controller
                 $currentDate = $date->format('Y-m-d');
 
                 // Branch-specific timezone for correct date matching
-                $branchTimezone = $leaveRequest->user->branch->timezone ?? 'Asia/Jakarta';
+                $branchTimezone = $leaveRequest->user->branch?->timezone ?? 'Asia/Jakarta';
                 $branchOffset = Carbon::now($branchTimezone)->format('P');
                 $appOffset = Carbon::now(config('app.timezone'))->format('P');
 

@@ -37,7 +37,7 @@ class SelfAttendanceController extends Controller
         $user = Auth::user();
 
         // Setup Timezone Cabang
-        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
         $localTime = Carbon::now($branchTimezone);
         $todayLocal = $localTime->copy()->startOfDay();
 
@@ -151,11 +151,11 @@ class SelfAttendanceController extends Controller
         $currentTime = now(); // Waktu Server
 
         // Setup Timezone
-        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
         $localTime = Carbon::now($branchTimezone);
         $todayDateLocal = $localTime->format('Y-m-d');
 
-        $branchName = $user->branch->name ?? '-';
+        $branchName = $user->branch?->name ?? '-';
         $attendanceToUpdate = null;
 
         // A. Cek apakah ini request PULANG (Update Sesi)
@@ -455,7 +455,7 @@ class SelfAttendanceController extends Controller
     public function manualCheckOut(Request $request)
     {
         $user = Auth::user();
-        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
         $localNow = Carbon::now($branchTimezone);
 
         $attendance = Attendance::where('user_id', $user->id)

@@ -13,18 +13,20 @@
         :root {
             --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
         }
-        
+
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
-        
-        html, body {
+
+        html,
+        body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Mencegah scroll pada body utama */
+            overflow: hidden;
+            /* Mencegah scroll pada body utama */
             touch-action: manipulation;
         }
 
@@ -62,7 +64,8 @@
             width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
-            transform: none !important; /* Normal view (tidak terbalik) */
+            transform: none !important;
+            /* Normal view (tidak terbalik) */
         }
 
         .scanner-header {
@@ -103,10 +106,13 @@
         }
 
         @keyframes scan {
-            0%, 100% {
+
+            0%,
+            100% {
                 top: 10%;
                 opacity: 0;
             }
+
             50% {
                 top: 90%;
                 opacity: 1;
@@ -139,7 +145,8 @@
             padding: 20px;
             padding-top: max(20px, env(safe-area-inset-top));
             padding-bottom: max(20px, env(safe-area-inset-bottom));
-            overflow-y: auto; /* Memastikan bisa di scroll */
+            overflow-y: auto;
+            /* Memastikan bisa di scroll */
             -webkit-overflow-scrolling: touch;
         }
 
@@ -177,7 +184,8 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: none !important; /* Pastikan kamera verifikasi juga tidak mirror */
+            transform: none !important;
+            /* Pastikan kamera verifikasi juga tidak mirror */
         }
 
         #camera-canvas {
@@ -264,21 +272,23 @@
             flex-direction: column;
             align-items: center;
             /* Jangan justify-content center jika konten panjang, biar bisa scroll dari atas */
-            justify-content: flex-start; 
+            justify-content: flex-start;
             text-align: center;
             color: white;
             padding: 20px;
             padding-top: max(20px, env(safe-area-inset-top));
             /* Tambah padding bawah extra agar konten tidak tertutup tombol fixed */
-            padding-bottom: max(150px, calc(100px + env(safe-area-inset-bottom))); 
-            overflow-y: auto !important; /* Paksa scroll aktif */
+            padding-bottom: max(150px, calc(100px + env(safe-area-inset-bottom)));
+            overflow-y: auto !important;
+            /* Paksa scroll aktif */
             -webkit-overflow-scrolling: touch;
         }
 
         .result-content {
             width: 100%;
             max-width: 500px;
-            margin: 0 auto; /* Ganti auto jadi 0 auto */
+            margin: 0 auto;
+            /* Ganti auto jadi 0 auto */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -360,7 +370,7 @@
             width: 100%;
             padding: 20px;
             padding-bottom: max(20px, env(safe-area-inset-bottom));
-            background: linear-gradient(to top, rgba(0, 0, 0, 1) 20%, rgba(0,0,0,0.8) 80%, transparent);
+            background: linear-gradient(to top, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 0.8) 80%, transparent);
             z-index: 101;
             display: flex;
             flex-direction: column;
@@ -384,50 +394,54 @@
                 padding: 15px;
                 padding-top: max(15px, env(safe-area-inset-top));
             }
-            
+
             .scanner-header h5 {
                 font-size: 1.1rem;
             }
-            
+
             .verification-overlay {
                 padding: 15px;
                 padding-top: max(15px, env(safe-area-inset-top));
                 padding-bottom: max(15px, env(safe-area-inset-bottom));
             }
-            
+
             .camera-preview-box {
                 height: 250px;
             }
-            
-            .profile-card, .result-profile-card {
+
+            .profile-card,
+            .result-profile-card {
                 padding: 15px;
             }
-            
+
             .result-profile-img {
                 width: 80px;
                 height: 80px;
             }
-            
+
             .user-info-row {
                 font-size: 0.85rem;
             }
-            
-            .user-info-label, .user-info-value {
+
+            .user-info-label,
+            .user-info-value {
                 min-width: 100px;
             }
-            
-            .btn-absen, .btn-capture, .btn-retake {
+
+            .btn-absen,
+            .btn-capture,
+            .btn-retake {
                 font-size: 0.95rem;
                 padding: 12px;
             }
-            
+
             .result-overlay {
                 padding: 15px;
                 padding-top: max(15px, env(safe-area-inset-top));
                 /* Padding bawah lebih besar untuk mengakomodasi tombol fixed */
                 padding-bottom: max(160px, calc(20px + env(safe-area-inset-bottom)));
             }
-            
+
             .result-actions {
                 padding: 15px;
                 padding-bottom: max(15px, env(safe-area-inset-bottom));
@@ -438,12 +452,12 @@
             .camera-preview-box {
                 height: 200px;
             }
-            
+
             .profile-card {
                 margin-bottom: 15px;
                 padding: 15px;
             }
-            
+
             .profile-img-db {
                 width: 60px;
                 height: 60px;
@@ -456,25 +470,25 @@
                 padding: 10px;
                 padding-top: max(10px, env(safe-area-inset-top));
             }
-            
+
             .verification-overlay {
                 flex-direction: row;
                 flex-wrap: wrap;
                 align-items: flex-start;
             }
-            
+
             .profile-card {
                 width: 40%;
                 margin-right: 10px;
                 margin-bottom: 10px;
             }
-            
+
             .camera-preview-box {
                 width: 55%;
                 height: 200px;
                 margin-bottom: 10px;
             }
-            
+
             #step-confirm-btn {
                 width: 100%;
                 margin-top: 10px;
@@ -562,12 +576,12 @@
         <div class="result-content">
             <div id="resultIcon" class="mb-3" style="font-size: 4rem;"></div>
             <h2 id="resultTitle" class="fw-bold mb-3"></h2>
-            
+
             <div class="result-profile-card" id="resultProfileCard">
                 <img id="resultUserPhoto" src="" class="result-profile-img" alt="User Photo">
                 <h3 id="resultUserName" class="fw-bold mb-1"></h3>
                 <p id="resultUserRole" class="text-white-50 mb-3"></p>
-                
+
                 <div class="user-info-row">
                     <div class="user-info-label">Divisi</div>
                     <div class="user-info-value" id="resultUserDivision"></div>
@@ -588,25 +602,25 @@
                     <div class="user-info-label">Tanggal</div>
                     <div class="user-info-value" id="resultAttendanceDate"></div>
                 </div>
-                
+
                 <div id="resultStatusBadge" class="mt-3 text-center"></div>
-                
+
                 <div id="resultNotesSection" class="notes-box" style="display: none;">
                     <div class="notes-label">Catatan:</div>
                     <div class="notes-text" id="resultNotesText"></div>
                 </div>
             </div>
-            
+
             <img id="capturedPhoto" src=""
                 style="width: 100%; max-width: 300px; height: 200px; object-fit: cover; border-radius: 15px; border: 4px solid white; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"
                 class="mx-auto mb-4">
         </div>
-        
+
         <div class="result-actions">
             <button class="btn btn-light w-100 py-3 rounded-pill fw-bold text-uppercase" onclick="resetScan()">
                 <i class="fas fa-qrcode me-2"></i> Scan Selanjutnya
             </button>
-            
+
             <a href="{{ url('/dashboard') }}"
                 class="btn btn-outline-light w-100 py-3 rounded-pill fw-bold text-uppercase">
                 <i class="fas fa-arrow-left me-2"></i> Kembali ke Dashboard
@@ -633,7 +647,7 @@
             if (isMobileDevice()) {
                 const vh = window.innerHeight * 0.01;
                 document.documentElement.style.setProperty('--vh', `${vh}px`);
-                
+
                 // Set height untuk elemen yang perlu full height
                 const fullHeightElements = document.querySelectorAll('.scanner-wrapper, .verification-overlay, .result-overlay');
                 fullHeightElements.forEach(el => {
@@ -644,12 +658,12 @@
 
         // Handle orientation change dan resize
         window.addEventListener('resize', setSafeHeight);
-        window.addEventListener('orientationchange', function() {
+        window.addEventListener('orientationchange', function () {
             setTimeout(setSafeHeight, 100);
         });
 
         // Initialize safe height
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             setSafeHeight();
             startQRScanner();
         });
@@ -657,7 +671,7 @@
         function startQRScanner() {
             document.getElementById('permissionBtn').style.display = 'none';
             if (html5QrCode) {
-                html5QrCode.clear().catch(err => {}).finally(() => {
+                html5QrCode.clear().catch(err => { }).finally(() => {
                     initScanner();
                 });
             } else {
@@ -672,7 +686,7 @@
                 },
                 verbose: false
             });
-            
+
             const qrConfig = {
                 fps: 20,
                 qrbox: {
@@ -684,12 +698,12 @@
             };
 
             html5QrCode.start({
-                    facingMode: "environment"
-                }, qrConfig, onScanSuccess, onScanFailure)
+                facingMode: "environment"
+            }, qrConfig, onScanSuccess, onScanFailure)
                 .catch(err => {
                     console.error("Gagal start scanner:", err);
                     document.getElementById('permissionBtn').style.display = 'block';
-                    
+
                     // Tampilkan pesan error yang lebih user-friendly
                     let errorMsg = "Gagal mengakses kamera. ";
                     if (err.toString().includes('Permission')) {
@@ -699,7 +713,7 @@
                     } else {
                         errorMsg += "Error: " + err.toString();
                     }
-                    
+
                     document.getElementById('permissionBtn').querySelector('h5').textContent = errorMsg;
                 });
         }
@@ -731,20 +745,21 @@
             `;
 
             fetch("{{ route('security.check-user') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": csrfToken
-                    },
-                    body: JSON.stringify({
-                        qr_code: qrCode
-                    })
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrfToken
+                },
+                body: JSON.stringify({
+                    qr_code: qrCode
                 })
-                .then(res => {
+            })
+                .then(async res => {
+                    const data = await res.json();
                     if (!res.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error(data.message || 'Gagal terhubung ke server. Periksa koneksi internet Anda.');
                     }
-                    return res.json();
+                    return data;
                 })
                 .then(data => {
                     if (data.status === 'success') {
@@ -757,7 +772,7 @@
                 })
                 .catch(err => {
                     console.error('Error:', err);
-                    alert('Gagal terhubung ke server. Periksa koneksi internet Anda.');
+                    alert(err.message || 'Gagal terhubung ke server. Periksa koneksi internet Anda.');
                     resetToScanner();
                 });
         }
@@ -792,7 +807,7 @@
 
         function startCameraStream() {
             const video = document.getElementById('camera-stream');
-            
+
             // Stop any existing stream
             if (streamRef) {
                 streamRef.getTracks().forEach(track => track.stop());
@@ -800,17 +815,17 @@
 
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: "environment",
-                            width: { ideal: 640 },
-                            height: { ideal: 480 }
-                        },
-                        audio: false
-                    })
-                    .then(function(stream) {
+                    video: {
+                        facingMode: "environment",
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    },
+                    audio: false
+                })
+                    .then(function (stream) {
                         streamRef = stream;
                         video.srcObject = stream;
-                        
+
                         // Play video dengan promise untuk handle error
                         video.play()
                             .then(() => {
@@ -821,10 +836,10 @@
                                 alert("Kamera tidak bisa dijalankan. Mohon periksa izin kamera.");
                             });
                     })
-                    .catch(function(error) {
+                    .catch(function (error) {
                         console.error("Error accessing camera:", error);
                         let errorMsg = "Tidak dapat mengakses kamera. ";
-                        
+
                         if (error.name === 'NotAllowedError') {
                             errorMsg += "Izin kamera ditolak. Mohon berikan izin di pengaturan browser.";
                         } else if (error.name === 'NotFoundError') {
@@ -834,9 +849,9 @@
                         } else {
                             errorMsg += error.toString();
                         }
-                        
+
                         alert(errorMsg);
-                        
+
                         // Fallback: kembali ke scanner
                         setTimeout(() => {
                             resetScan();
@@ -875,7 +890,7 @@
             // Ganti tombol
             document.getElementById('step-capture-btn').style.display = 'none';
             document.getElementById('step-confirm-btn').style.display = 'block';
-            
+
             // Scroll ke bawah untuk memastikan tombol terlihat
             setTimeout(() => {
                 const overlay = document.getElementById('verifSection');
@@ -917,18 +932,18 @@
 
             // Kirim data ke server
             fetch("{{ route('security.store-attendance') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": csrfToken
-                    },
-                    body: JSON.stringify({
-                        user_id: currentUserId,
-                        type: type,
-                        image: capturedImageBase64,
-                        notes: notes
-                    })
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrfToken
+                },
+                body: JSON.stringify({
+                    user_id: currentUserId,
+                    type: type,
+                    image: capturedImageBase64,
+                    notes: notes
                 })
+            })
                 .then(async res => {
                     const data = await res.json();
                     if (!res.ok) {
@@ -945,7 +960,7 @@
                 })
                 .catch(err => {
                     alert("Error: " + err.message);
-                    
+
                     // Reset tombol ke state semula
                     document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => {
                         b.disabled = false;
@@ -970,7 +985,7 @@
             const overlay = document.getElementById('resultOverlay');
             const icon = document.getElementById('resultIcon');
             const title = document.getElementById('resultTitle');
-            
+
             // Get semua elemen untuk profile
             const resultUserPhoto = document.getElementById('resultUserPhoto');
             const resultUserName = document.getElementById('resultUserName');
@@ -987,7 +1002,7 @@
 
             // Tampilkan overlay
             overlay.style.display = 'flex';
-            
+
             // Scroll ke atas
             overlay.scrollTop = 0;
 
@@ -995,7 +1010,7 @@
                 icon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
                 title.innerText = "ABSEN BERHASIL";
                 title.className = "fw-bold mb-2 text-success";
-                
+
                 // Set data profil
                 if (currentUserData) {
                     resultUserPhoto.src = currentUserData.photo_url;
@@ -1004,12 +1019,12 @@
                     resultUserDivision.innerText = currentUserData.division;
                     resultUserBranch.innerText = currentUserData.branch;
                 }
-                
+
                 // Set informasi absen
                 resultAttendanceType.innerText = attendanceType === 'masuk' ? 'MASUK' : 'PULANG';
-                resultAttendanceTime.innerText = responseData.time || new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-                resultAttendanceDate.innerText = responseData.date || new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'});
-                
+                resultAttendanceTime.innerText = responseData.time || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                resultAttendanceDate.innerText = responseData.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
                 // Set status badge
                 let statusHtml = '';
                 if (responseData.is_late) {
@@ -1022,7 +1037,7 @@
                     statusHtml = '<span class="badge bg-info px-3 py-2 fw-bold"><i class="fas fa-user-clock me-1"></i> ABSEN PULANG</span>';
                 }
                 resultStatusBadge.innerHTML = statusHtml;
-                
+
                 // Tampilkan catatan jika ada
                 if (responseData.notes && responseData.notes.trim() !== '') {
                     resultNotesSection.style.display = 'block';
@@ -1030,7 +1045,7 @@
                 } else {
                     resultNotesSection.style.display = 'none';
                 }
-                
+
                 // Tampilkan foto bukti jika ada
                 if (responseData.photo) {
                     capturedPhoto.src = responseData.photo;
@@ -1038,7 +1053,7 @@
                 } else {
                     capturedPhoto.style.display = 'none';
                 }
-                
+
                 // Tampilkan kartu profil
                 document.getElementById('resultProfileCard').style.display = 'block';
             } else {
@@ -1056,12 +1071,12 @@
                 streamRef.getTracks().forEach(track => track.stop());
                 streamRef = null;
             }
-            
+
             // Reset state
             capturedImageBase64 = null;
             currentUserData = null;
             currentUserId = null;
-            
+
             // Reset UI state
             document.querySelectorAll('.btn-absen, .btn-retake').forEach(b => {
                 b.disabled = false;
@@ -1071,21 +1086,21 @@
                     b.innerHTML = '<i class="fas fa-sign-out-alt fa-lg mb-2"></i><span>PULANG</span>';
                 }
             });
-            
+
             document.getElementById('scanNotes').value = '';
-            
+
             // Reset tampilan
             document.getElementById('verifSection').style.display = 'none';
             document.getElementById('resultOverlay').style.display = 'none';
             document.getElementById('qrSection').style.display = 'flex';
-            
+
             // Mulai scanner lagi
             startQRScanner();
         }
 
         // Handle back button
-        window.addEventListener('popstate', function(event) {
-            if (document.getElementById('verifSection').style.display === 'flex' || 
+        window.addEventListener('popstate', function (event) {
+            if (document.getElementById('verifSection').style.display === 'flex' ||
                 document.getElementById('resultOverlay').style.display === 'flex') {
                 resetScan();
                 history.pushState(null, null, window.location.href);

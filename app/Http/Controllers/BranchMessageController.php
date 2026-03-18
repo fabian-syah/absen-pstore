@@ -76,7 +76,7 @@ class BranchMessageController extends Controller
                 'name' => $branch->name,
                 'unread_count' => $unreadCount,
                 'last_message' => $preview,
-                'timezone' => $branch->timezone ?? 'Asia/Jakarta'
+                'timezone' => $branch?->timezone ?? 'Asia/Jakarta'
             ];
         });
 
@@ -113,7 +113,7 @@ class BranchMessageController extends Controller
         }
 
         $branch = Branch::find($branchId);
-        $timezone = $branch->timezone ?? 'Asia/Jakarta';
+        $timezone = $branch?->timezone ?? 'Asia/Jakarta';
 
         // UPDATE STATUS BACA (Tandai sudah dibaca sekarang)
         ChatRead::updateOrCreate(

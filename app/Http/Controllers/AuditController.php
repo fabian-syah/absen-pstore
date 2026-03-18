@@ -91,7 +91,7 @@ class AuditController extends Controller
         try {
             $title = "Absensi Disetujui";
             // Pastikan format jam notifikasi juga sesuai timezone user (opsional, disini default app timezone)
-            $userTz = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
+            $userTz = $attendance->user->branch?->timezone ?? 'Asia/Jakarta';
             $checkInLocal = Carbon::parse($attendance->check_in_time)->timezone($userTz);
 
             $body = "Absensi mandiri Anda pada " . $checkInLocal->format('d/m/Y H:i') . " telah diverifikasi.";
@@ -159,7 +159,7 @@ class AuditController extends Controller
         // Kirim notifikasi ke user bahwa absennya ditolak
         try {
             $title = "Absensi Ditolak";
-            $userTz = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
+            $userTz = $attendance->user->branch?->timezone ?? 'Asia/Jakarta';
             $checkInLocal = \Carbon\Carbon::parse($attendance->check_in_time)->timezone($userTz);
 
             $body = "Absensi mandiri Anda pada " . $checkInLocal->format('d/m/Y H:i') . " telah ditolak oleh Audit.";
@@ -500,7 +500,7 @@ class AuditController extends Controller
         $attendance = Attendance::findOrFail($id);
 
         // [TIMEZONE FIX] Ambil Timezone Cabang User
-        $branchTimezone = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
+        $branchTimezone = $attendance->user->branch?->timezone ?? 'Asia/Jakarta';
 
         // Konversi checkin time ke waktu lokal user dulu untuk referensi tanggal
         $checkInDateLocal = Carbon::parse($attendance->check_in_time)->timezone($branchTimezone);
@@ -582,7 +582,7 @@ class AuditController extends Controller
         // 6. Kirim Notifikasi ke User (Opsional)
         try {
             // Gunakan timezone user
-            $userTz = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
+            $userTz = $attendance->user->branch?->timezone ?? 'Asia/Jakarta';
             $checkInLocal = Carbon::parse($attendance->check_in_time)->timezone($userTz);
 
             $title = "Verifikasi Absensi";
@@ -621,7 +621,7 @@ class AuditController extends Controller
         $attendance = Attendance::findOrFail($id);
 
         // 1. Identifikasi Timezone Cabang User
-        $branchTimezone = $attendance->user->branch->timezone ?? 'Asia/Jakarta';
+        $branchTimezone = $attendance->user->branch?->timezone ?? 'Asia/Jakarta';
 
         // Ambil tanggal asli dalam timezone user agar tidak bergeser hari
         $originalDateLocal = Carbon::parse($attendance->check_in_time)->timezone($branchTimezone)->format('Y-m-d');
@@ -710,7 +710,7 @@ class AuditController extends Controller
 
         // 2. Ambil User & Timezone Cabangnya
         $user = User::findOrFail($request->user_id);
-        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
 
         // 3. Proses Waktu Check-In
         // Gabungkan Tanggal (dari hidden input) + Jam (dari input time) sesuai timezone cabang

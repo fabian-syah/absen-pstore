@@ -53,7 +53,7 @@ class AttendanceHistoryController extends Controller
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
         // 1. Ambil timezone cabang
-        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
 
         // 2. Tentukan range awal bulan (Calendar Month untuk tampilan riwayat)
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->startOfMonth();

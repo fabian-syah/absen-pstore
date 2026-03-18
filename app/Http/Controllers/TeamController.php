@@ -28,7 +28,7 @@ class TeamController extends Controller
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
         // Default Timezone
-        $userTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $userTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
         // Tanggal batas ambil data (H-2 dari hari ini untuk cek lembur)
         $dateLimit = Carbon::now($userTimezone)->subDays(2)->format('Y-m-d 00:00:00');
@@ -87,7 +87,7 @@ class TeamController extends Controller
         ];
 
         foreach ($myTeam as $member) {
-            $memberTz = $member->branch->timezone ?? 'Asia/Jakarta';
+            $memberTz = $member->branch?->timezone ?? 'Asia/Jakarta';
             $todayDate = Carbon::now($memberTz)->format('Y-m-d');
             $now = Carbon::now($memberTz);
 
@@ -423,7 +423,7 @@ class TeamController extends Controller
 
     private function getHistoryData($user, $selectedMonth, $selectedYear)
     {
-        $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
 
         // 1. Tentukan Range Awal dan Akhir Bulan yang sedang dilihat
         $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();

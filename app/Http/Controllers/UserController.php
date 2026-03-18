@@ -244,7 +244,7 @@ class UserController extends Controller
         $displayCheckOut = '';
 
         if ($user->branch) {
-            $branchTz = $user->branch->timezone ?? $this->adminTimezone;
+            $branchTz = $user->branch?->timezone ?? $this->adminTimezone;
 
             if ($user->check_in_start) {
                 $timeIn = Carbon::createFromFormat('H:i:s', $user->check_in_start, $branchTz);
@@ -441,7 +441,7 @@ class UserController extends Controller
             ->get();
 
         foreach ($recentAttendance as $att) {
-            if ($user->branch && $user->branch->timezone) {
+            if ($user->branch && $user->branch?->timezone) {
                 $att->check_in_local = Carbon::parse($att->check_in_time)->timezone($user->branch->timezone);
                 if ($att->check_out_time) {
                     $att->check_out_local = Carbon::parse($att->check_out_time)->timezone($user->branch->timezone);
@@ -709,7 +709,7 @@ class UserController extends Controller
         return view('qrcode_pdf', [
             'qrSvg' => $qrSvg,
             'userName' => $user->name,
-            'branchName' => $user->branch->name ?? 'PStore',
+            'branchName' => $user->branch?->name ?? 'PStore',
         ]);
     }
 

@@ -74,7 +74,7 @@ class SalaryController extends Controller
 
             // --- HITUNG ABSENSI ---
 
-            $branchTimezone = $selectedUser->branch->timezone ?? 'Asia/Jakarta';
+            $branchTimezone = $selectedUser->branch?->timezone ?? 'Asia/Jakarta';
 
             // LOGIC CUTOFF: 26 Bulan Kemarin - 25 Bulan Ini
             // Definisikan Variable Tanggal menggunakan timezone cabang
