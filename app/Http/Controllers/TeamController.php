@@ -426,11 +426,12 @@ class TeamController extends Controller
         $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
 
         // 1. Tentukan Range Awal dan Akhir Bulan yang sedang dilihat
-        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
+        // [FIX] Gunakan branchTimezone agar konsisten dengan $today (mencegah bug lintas timezone)
+        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
         // Batasi penampilan sampai hari ini saja (jika melihat bulan berjalan)
-        $today = Carbon::now()->timezone($branchTimezone)->startOfDay();
+        $today = Carbon::now($branchTimezone)->startOfDay();
         $limitDate = ($endDate->gt($today)) ? $today : $endDate;
 
         // 2. Ambil Absensi Real (Include H-1 untuk lembur lintas hari)
