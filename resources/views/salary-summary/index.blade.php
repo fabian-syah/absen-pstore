@@ -32,7 +32,7 @@
                             @if(in_array(auth()->user()->role, ['admin', 'admin_gaji', 'owner', 'audit', 'leader']))
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold text-dark"><i class="mdi mdi-store"></i> Pilih Cabang</label>
-                                    <select name="branch_id" class="form-select bg-white text-dark shadow-sm" onchange="this.form.submit()">
+                                    <select name="branch_id" class="form-select select2 bg-white text-dark shadow-sm" onchange="this.form.submit()">
                                         <option value="">-- Semua Cabang {{ !in_array(auth()->user()->role, ['admin', 'admin_gaji', 'owner']) ? '(Kelolaan)' : '' }} --</option>
                                         @foreach($branches as $b)
                                             <option value="{{ $b->id }}" {{ $branchId == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
@@ -174,11 +174,15 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('.select2').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                placeholder: "-- Pilih Karyawan --",
-                allowClear: true
+            // Inisialisasi Select2 untuk Karyawan & Cabang
+            $('.select2').each(function() {
+                var placeholder = $(this).attr('name') == 'branch_id' ? "-- Pilih Cabang --" : "-- Pilih Karyawan --";
+                $(this).select2({
+                    theme: 'bootstrap-5',
+                    width: '100%',
+                    placeholder: placeholder,
+                    allowClear: true
+                });
             });
             
             // Initialize tooltips
