@@ -64,24 +64,15 @@ class SelfAttendanceController extends Controller
         } else {
             // === MODE MASUK ===
 
-            // 2.5 CEK COOLDOWN (Mencegah Double Clock-In setelah Shift Lintas Hari)
-            // Jika user baru saja checkout < 4 jam yang lalu dari shift yang berakhir lewat tengah malam,
-            // anggap dia sudah menyelesaikan kewajiban harinya.
+            /* [REMOVED] Cooldown Lintas Hari (Requested: Urgensi Karyawan Lanjut Shift)
             $lastRecentCheckout = Attendance::where('user_id', $user->id)
                 ->whereNotNull('check_out_time')
                 ->where('check_out_time', '>=', $localTime->copy()->subHours(4))
                 ->latest('check_out_time')
                 ->first();
-
-            if ($lastRecentCheckout) {
-                $lastCheckIn = Carbon::parse($lastRecentCheckout->check_in_time)->timezone($branchTimezone);
-                $lastCheckOut = Carbon::parse($lastRecentCheckout->check_out_time)->timezone($branchTimezone);
-
-                // Jika shift terakhir adalah lintas hari
-                if (!$lastCheckIn->isSameDay($lastCheckOut)) {
-                    return redirect()->route('dashboard')->with('success', 'Anda baru saja menyelesaikan absensi (Lintas Hari). Shift hari ini sudah terhitung selesai.');
-                }
+...
             }
+            */
 
             // 3. Cek Status Cuti / Izin (Selain Telat)
             $isOnLeave = LeaveRequest::where('user_id', $user->id)
