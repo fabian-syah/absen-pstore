@@ -40,7 +40,7 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-5">
+                                <div class="col-md-4">
                                     <label class="form-label fw-bold text-dark"><i class="mdi mdi-account-search"></i> Pilih Karyawan</label>
                                     <select name="user_id" class="form-select select2 text-dark shadow-sm w-100">
                                         <option value="">-- Semua Karyawan (Kumulatif) --</option>
@@ -53,10 +53,13 @@
                                 </div>
                             @endif
 
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary flex-grow-1 fw-bold shadow-sm">
                                     <i class="mdi mdi-filter-variant me-1"></i> Tampilkan
                                 </button>
+                                <a href="{{ route('salary-summary.index') }}" class="btn btn-light border flex-grow-1 fw-bold shadow-sm">
+                                    <i class="mdi mdi-refresh me-1"></i> Reset
+                                </a>
                             </div>
                         </form>
                     </div>
