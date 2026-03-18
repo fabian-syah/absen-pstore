@@ -12,18 +12,40 @@ class SalarySummaryController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Tentukan Tahun (Default Tahun Ini)
+        // 1. Tentukan Tahun & Cabang
         $year = $request->input('year', date('Y'));
+        $branchId = $request->input('branch_id');
+        $user = Auth::user();
+
+        // [NEW] 1.5 Tentukan Cabang yang Bisa Diakses
+        $myBranchIds = [];
+        if (in_array($user->role, ['admin', 'admin_gaji', 'owner'])) {
+            $branches = \App\Models\Branch::orderBy('name')->get();
+            $myBranchIds = $branches->pluck('id')->toArray();
+        } else {
+            $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
+            if ($user->branch_id)
+                $myBranchIds[] = $user->branch_id;
+            $myBranchIds = array_filter(array_unique($myBranchIds));
+            $branches = \App\Models\Branch::whereIn('id', $myBranchIds)->orderBy('name')->get();
+        }
 
         // 2. Tentukan User ID yang mau dilihat
-        // Jika Admin/Admin Gaji: Bisa pilih user via request 'user_id'
-        // Jika User Biasa: Paksa lihat punya sendiri
-        if (in_array(Auth::user()->role, ['admin', 'admin_gaji', 'owner'])) {
+        // Jika Admin/Audit/Leader: Bisa pilih user via request 'user_id'
+        if (in_array($user->role, ['admin', 'admin_gaji', 'owner', 'audit', 'leader'])) {
             $userId = $request->input('user_id'); // Bisa NULL (untuk lihat semua)
-            $users = User::where('is_active', true)->orderBy('name', 'asc')->get(); // Untuk dropdown
+
+            $usersQuery = User::where('is_active', true);
+            if ($branchId) {
+                $usersQuery->where('branch_id', $branchId);
+            } elseif (!in_array($user->role, ['admin', 'admin_gaji', 'owner'])) {
+                $usersQuery->whereIn('branch_id', $myBranchIds);
+            }
+            $users = $usersQuery->orderBy('name', 'asc')->get();
         } else {
             $userId = Auth::id(); // User biasa hanya bisa lihat sendiri
             $users = [];
+            $branches = [];
         }
 
         $targetUser = $userId ? User::find($userId) : null;
@@ -37,7 +59,6 @@ class SalarySummaryController extends Controller
             $monthStr = sprintf('%02d', $m);
 
             // LOGIKA PERIODE CUTOFF (26 Bulan Lalu - 25 Bulan Ini)
-            // Contoh Bulan 12 (Desember): 26 Nov - 25 Des
             $startDate = Carbon::create($year, $m, 26)->subMonth();
             $endDate = Carbon::create($year, $m, 25);
 
@@ -61,23 +82,36 @@ class SalarySummaryController extends Controller
                 $thrAmount = $bonusRecord ? $bonusRecord->thr_amount : 0;
 
             } else {
-                // Semua User: Sum Total Amount
-                $amount = Salary::where('month', $monthStr)
-                    ->where('year', $year)
-                    ->sum('total_amount');
-                $status = ($amount > 0) ? 'Total Semua Karyawan' : 'Belum Ada Data';
-                $salaryData = null; // Tidak ada single object salary
+                // Semua User / Filter Cabang: Sum Total Amount
+                $salaryQuery = Salary::where('month', $monthStr)->where('year', $year);
+                $bonusQuery = \App\Models\Bonus::where('month', $monthStr)->where('year', $year);
 
-                $bonusAmount = \App\Models\Bonus::where('month', $monthStr)
-                    ->where('year', $year)
-                    ->sum('bonus_amount');
+                // Filter Cabang jika ada
+                if ($branchId) {
+                    $salaryQuery->whereHas('user', function ($q) use ($branchId) {
+                        $q->where('branch_id', $branchId);
+                    });
+                    $bonusQuery->whereHas('user', function ($q) use ($branchId) {
+                        $q->where('branch_id', $branchId);
+                    });
+                } elseif (!empty($myBranchIds) && !in_array($user->role, ['admin', 'admin_gaji', 'owner'])) {
+                    $salaryQuery->whereHas('user', function ($q) use ($myBranchIds) {
+                        $q->whereIn('branch_id', $myBranchIds);
+                    });
+                    $bonusQuery->whereHas('user', function ($q) use ($myBranchIds) {
+                        $q->whereIn('branch_id', $myBranchIds);
+                    });
+                }
 
-                $thrAmount = \App\Models\Bonus::where('month', $monthStr)
-                    ->where('year', $year)
-                    ->sum('thr_amount');
+                $amount = $salaryQuery->sum('total_amount');
+                $bonusAmount = $bonusQuery->sum('bonus_amount');
+                $thrAmount = $bonusQuery->sum('thr_amount');
+
+                $status = ($amount > 0) ? 'Total Kumulatif' : 'Belum Ada Data';
+                $salaryData = null;
             }
 
-            $totalAnnual += ($amount + $bonusAmount + $thrAmount); // Include bonus in total annual optionally or keep separated? Usually accumulated.
+            $totalAnnual += ($amount + $bonusAmount + $thrAmount);
 
             $summary[] = [
                 'month_num' => $m,
@@ -91,6 +125,6 @@ class SalarySummaryController extends Controller
             ];
         }
 
-        return view('salary-summary.index', compact('summary', 'year', 'users', 'userId', 'targetUser', 'totalAnnual'));
+        return view('salary-summary.index', compact('summary', 'year', 'users', 'userId', 'targetUser', 'totalAnnual', 'branches', 'branchId'));
     }
 }

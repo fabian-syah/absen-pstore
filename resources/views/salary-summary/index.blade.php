@@ -16,10 +16,10 @@
                         </div>
                     </div>
 
-                    {{-- FILTER TAHUN & USER (Hanya muncul u/ Admin) --}}
+                    {{-- FILTER TAHUN & USER (Hanya muncul u/ Admin/Audit/Leader) --}}
                     <div class="bg-light p-4 rounded-3 mb-5 border border-light-subtle shadow-sm">
                         <form method="GET" action="{{ route('salary-summary.index') }}" class="row g-3">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label fw-bold text-dark"><i class="mdi mdi-calendar"></i> Pilih Tahun</label>
                                 <select name="year" class="form-select bg-white text-dark shadow-sm">
                                     @for ($y = 2024; $y <= date('Y') + 1; $y++)
@@ -28,9 +28,19 @@
                                 </select>
                             </div>
 
-                            {{-- Admin bisa pilih karyawan lain --}}
-                            @if(in_array(auth()->user()->role, ['admin', 'admin_gaji', 'owner']))
-                                <div class="col-md-7">
+                            {{-- Admin/Audit/Leader bisa pilih cabang --}}
+                            @if(in_array(auth()->user()->role, ['admin', 'admin_gaji', 'owner', 'audit', 'leader']))
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold text-dark"><i class="mdi mdi-store"></i> Pilih Cabang</label>
+                                    <select name="branch_id" class="form-select bg-white text-dark shadow-sm" onchange="this.form.submit()">
+                                        <option value="">-- Semua Cabang {{ !in_array(auth()->user()->role, ['admin', 'admin_gaji', 'owner']) ? '(Kelolaan)' : '' }} --</option>
+                                        @foreach($branches as $b)
+                                            <option value="{{ $b->id }}" {{ $branchId == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-5">
                                     <label class="form-label fw-bold text-dark"><i class="mdi mdi-account-search"></i> Pilih Karyawan</label>
                                     <select name="user_id" class="form-select select2 text-dark shadow-sm w-100">
                                         <option value="">-- Semua Karyawan (Kumulatif) --</option>
