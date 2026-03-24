@@ -87,6 +87,9 @@ class AuditController extends Controller
             'audit_note' => 'Verified by ' . $user->name
         ]);
 
+        // [SYNC CUTI]
+        $this->syncWithLeaveRequest($attendance);
+
         // Kirim notifikasi ke user bahwa absennya diterima
         try {
             $title = "Absensi Disetujui";
@@ -155,6 +158,9 @@ class AuditController extends Controller
             'audit_note' => 'Rejected by ' . $user->name,
             'rejected_at' => now(),
         ]);
+
+        // [SYNC CUTI] Jika sebelumnya Cuti, maka reject/hapus leave request-nya
+        $this->syncWithLeaveRequest($attendance);
 
         // Kirim notifikasi ke user bahwa absennya ditolak
         try {
@@ -579,6 +585,9 @@ class AuditController extends Controller
         // 5. Update Database
         $attendance->update($updateData);
 
+        // [SYNC CUTI]
+        $this->syncWithLeaveRequest($attendance);
+
         // 6. Kirim Notifikasi ke User (Opsional)
         try {
             // Gunakan timezone user
@@ -666,6 +675,9 @@ class AuditController extends Controller
         // 6. Simpan Perubahan
         $attendance->update($updateData);
 
+        // [SYNC CUTI]
+        $this->syncWithLeaveRequest($attendance);
+
         return back()->with('success', 'Data absensi berhasil dikoreksi (Waktu disesuaikan dengan timezone cabang user: ' . $branchTimezone . ').');
     }
 
@@ -739,7 +751,7 @@ class AuditController extends Controller
         }
 
         // 6. Simpan Data Baru ke Database
-        Attendance::create([
+        $attendance = Attendance::create([
             'user_id' => $user->id,
             'branch_id' => $user->branch_id ?? 1,
             'check_in_time' => $checkInDB,
@@ -754,6 +766,57 @@ class AuditController extends Controller
             'is_early_checkout' => false,
         ]);
 
+        // [SYNC CUTI]
+        $this->syncWithLeaveRequest($attendance);
+
         return back()->with('success', 'Data absensi baru berhasil ditambahkan.');
+    }
+    /**
+     * Helper untuk sinkronisasi dengan tabel LeaveRequest agar saldo cuti terupdate
+     */
+    private function syncWithLeaveRequest($attendance)
+    {
+        $date = Carbon::parse($attendance->check_in_time)->format('Y-m-d');
+        $userId = $attendance->user_id;
+        $status = strtolower($attendance->presence_status ?? '');
+
+        // Jika Absensi direject, maka status dianggap bukan cuti lagi
+        if ($attendance->status === 'rejected') {
+            $status = 'rejected';
+        }
+
+        if ($status === 'cuti') {
+            // Jika status dIubah ke Cuti, pastikan ada record di LeaveRequest agar saldo terpotong
+            $exists = LeaveRequest::where('user_id', $userId)
+                ->whereDate('start_date', $date)
+                ->where('type', 'cuti')
+                ->where('status', 'approved')
+                ->exists();
+
+            if (!$exists) {
+                LeaveRequest::create([
+                    'user_id' => $userId,
+                    'type' => 'cuti',
+                    'start_date' => $date,
+                    'end_date' => $date,
+                    'status' => 'approved',
+                    'approved_by' => Auth::id(),
+                    'reason' => 'Sinkronisasi Koreksi Audit (Manual)',
+                    'is_active' => true,
+                ]);
+            }
+        } else {
+            // Jika status diubah dari Cuti ke status lain, hapus record cuti di tanggal tersebut agar saldo kembali
+            LeaveRequest::where('user_id', $userId)
+                ->where('type', 'cuti')
+                ->where(function ($q) use ($date) {
+                    $q->whereDate('start_date', $date)
+                        ->orWhere(function ($q2) use ($date) {
+                            $q2->whereDate('start_date', '<=', $date)
+                                ->whereDate('end_date', '>=', $date);
+                        });
+                })
+                ->delete();
+        }
     }
 } // <--- Ini penutup class AuditController

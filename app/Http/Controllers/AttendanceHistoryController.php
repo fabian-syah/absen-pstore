@@ -256,6 +256,47 @@ class AttendanceHistoryController extends Controller
             'attendance_type' => 'manual',
         ]);
 
+        // [SYNC CUTI]
+        $this->syncWithLeaveRequest($attendance);
+
         return back()->with('success', 'Data absensi berhasil diperbarui.');
+    }
+
+    /**
+     * Helper untuk sinkronisasi dengan tabel LeaveRequest agar saldo cuti terupdate
+     */
+    private function syncWithLeaveRequest($attendance)
+    {
+        $date = Carbon::parse($attendance->check_in_time)->format('Y-m-d');
+        $userId = $attendance->user_id;
+        $status = strtolower($attendance->presence_status ?? '');
+
+        if ($status === 'cuti') {
+            // Jika status dIubah ke Cuti, pastikan ada record di LeaveRequest agar saldo terpotong
+            if (!LeaveRequest::where('user_id', $userId)->whereDate('start_date', $date)->where('type', 'cuti')->where('status', 'approved')->exists()) {
+                LeaveRequest::create([
+                    'user_id' => $userId,
+                    'type' => 'cuti',
+                    'start_date' => $date,
+                    'end_date' => $date,
+                    'status' => 'approved',
+                    'approved_by' => Auth::id(),
+                    'reason' => 'Sinkronisasi Koreksi Audit (Manual)',
+                    'is_active' => true,
+                ]);
+            }
+        } else {
+            // Jika status diubah dari Cuti ke status lain, hapus record cuti di tanggal tersebut
+            LeaveRequest::where('user_id', $userId)
+                ->where('type', 'cuti')
+                ->where(function ($q) use ($date) {
+                    $q->whereDate('start_date', $date)
+                        ->orWhere(function ($q2) use ($date) {
+                            $q2->whereDate('start_date', '<=', $date)
+                                ->whereDate('end_date', '>=', $date);
+                        });
+                })
+                ->delete();
+        }
     }
 }
