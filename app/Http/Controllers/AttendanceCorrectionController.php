@@ -13,9 +13,10 @@ class AttendanceCorrectionController extends Controller
         // Filter tanggal, default hari ini
         $date = $request->input('date', date('Y-m-d'));
 
-        // Ambil semua data absensi pada tanggal tersebut
+        // Ambil semua data absensi pada tanggal tersebut (Kecuali yang sudah ditolak/dihapus admin)
         $attendances = Attendance::with(['user', 'branch'])
             ->whereDate('check_in_time', $date)
+            ->where('status', '!=', 'rejected')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -129,6 +130,30 @@ class AttendanceCorrectionController extends Controller
             'rejected_at' => now(),
         ]);
 
+        // [SYNC CUTI] Hapus pengajuan cuti jika data absen ini adalah cuti agar saldo kembali
+        $this->syncWithLeaveRequest($attendance);
+
         return redirect()->back()->with('success', 'Data absensi telah ditolak dan dipindahkan ke History Ditolak.');
+    }
+
+    /**
+     * Helper untuk sinkronisasi dengan tabel LeaveRequest agar saldo cuti terupdate
+     */
+    private function syncWithLeaveRequest($attendance)
+    {
+        $date = \Carbon\Carbon::parse($attendance->check_in_time)->format('Y-m-d');
+        $userId = $attendance->user_id;
+
+        // Karena ini fungsi delete/destroy, kita asumsikan tujuannya adalah membatalkan cuti jika ada
+        \App\Models\LeaveRequest::where('user_id', $userId)
+            ->where('type', 'cuti')
+            ->where(function ($q) use ($date) {
+                $q->whereDate('start_date', $date)
+                    ->orWhere(function ($q2) use ($date) {
+                        $q2->whereDate('start_date', '<=', $date)
+                            ->whereDate('end_date', '>=', $date);
+                    });
+            })
+            ->delete();
     }
 }
