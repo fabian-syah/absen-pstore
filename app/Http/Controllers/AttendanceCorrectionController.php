@@ -56,49 +56,31 @@ class AttendanceCorrectionController extends Controller
         return redirect()->back()->with('success', 'Jam pulang berhasil di-reset. User dapat melakukan checkout ulang.');
     }
 
-    // Fungsi: Tolak Data Absen (Dulu Hapus Permanen)
+    // Fungsi: Hapus Permanen Data Absensi
     public function destroy($id)
     {
         $attendance = Attendance::findOrFail($id);
-        $user = \Illuminate\Support\Facades\Auth::user();
 
-        // --- OPTIMASI PENYIMPANAN: Perkecil foto jika ada (untuk history) ---
+        // 1. HAPUS FOTO DARI STORAGE (AGAR TIDAK JADI SAMPAH)
         try {
-            // Foto Masuk
-            if ($attendance->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($attendance->photo_path)) {
-                $pathIn = \Illuminate\Support\Facades\Storage::disk('public')->path($attendance->photo_path);
-                $imgIn = \Intervention\Image\Facades\Image::make($pathIn);
-                $imgIn->resize(300, null, function ($constraint) {
-                    $constraint->aspectRatio();
-                    $constraint->upsize();
-                });
-                $compressedIn = (string) $imgIn->encode('jpg', 60);
-                \Illuminate\Support\Facades\Storage::disk('public')->put($attendance->photo_path, $compressedIn);
+            if ($attendance->photo_path && Storage::disk('public')->exists($attendance->photo_path)) {
+                Storage::disk('public')->delete($attendance->photo_path);
             }
-
-            // Foto Pulang
-            if ($attendance->photo_out_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($attendance->photo_out_path)) {
-                $pathOut = \Illuminate\Support\Facades\Storage::disk('public')->path($attendance->photo_out_path);
-                $imgOut = \Intervention\Image\Facades\Image::make($pathOut);
-                $imgOut->resize(300, null, function ($constraint) {
-                    $constraint->aspectRatio();
-                    $constraint->upsize();
-                });
-                $compressedOut = (string) $imgOut->encode('jpg', 60);
-                \Illuminate\Support\Facades\Storage::disk('public')->put($attendance->photo_out_path, $compressedOut);
+            if ($attendance->photo_out_path && Storage::disk('public')->exists($attendance->photo_out_path)) {
+                Storage::disk('public')->delete($attendance->photo_out_path);
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Gagal optimasi foto reject (Admin): " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Gagal hapus foto saat admin koreksi dev: " . $e->getMessage());
         }
 
-        // ====== CANCEL TERKAIT LEAVE REQUEST ======
-        // Jika data absen yang ditolak adalah WFH atau Dinas
+        // 2. HAPUS PENGAJUAN IZIN TERKAIT (WFH / DINAS / CUTI)
+        // [SYNC CUTI] Hapus pengajuan cuti jika ada agar saldo kembali
+        $this->syncWithLeaveRequest($attendance);
+
+        // [SYNC WFH/DINAS] Jika data absen ini adalah WFH atau Dinas, hapus pengajuannya juga agar hilang dari history
         if (str_contains(strtolower($attendance->presence_status ?? ''), 'wfh') || str_contains(strtolower($attendance->presence_status ?? ''), 'dinas')) {
             $checkInDate = $attendance->check_in_time->format('Y-m-d');
-
-            // Cari pengajuan izin yang "approved" milik user pada tanggal absen tersebut
-            $matchingLeaveRequests = \App\Models\LeaveRequest::where('user_id', $attendance->user_id)
-                ->where('status', 'approved')
+            \App\Models\LeaveRequest::where('user_id', $attendance->user_id)
                 ->where(function ($q) use ($checkInDate) {
                     $q->where(function ($subQ) use ($checkInDate) {
                         // Jika ada end_date, cek dalam range
@@ -110,30 +92,14 @@ class AttendanceCorrectionController extends Controller
                         $subQ->whereNull('end_date')
                             ->whereDate('start_date', $checkInDate);
                     });
-                })->get();
-
-            foreach ($matchingLeaveRequests as $lr) {
-                // Batalkan (cancel) agar tidak lagi muncul di history aktif
-                $lr->update([
-                    'status' => 'cancelled',
-                    'is_active' => false,
-                    'rejection_reason' => 'Ditolak otomatis karena data absen dikoreksi oleh Admin.'
-                ]);
-            }
+                })
+                ->delete();
         }
 
-        // Update status menjadi rejected (Logical Delete for History)
-        $attendance->update([
-            'status' => 'rejected',
-            'verified_by_user_id' => $user->id,
-            'audit_note' => 'Rejected/Deleted by Admin ' . $user->name,
-            'rejected_at' => now(),
-        ]);
+        // 3. HAPUS PERMANEN DATA ABSENSI
+        $attendance->delete();
 
-        // [SYNC CUTI] Hapus pengajuan cuti jika data absen ini adalah cuti agar saldo kembali
-        $this->syncWithLeaveRequest($attendance);
-
-        return redirect()->back()->with('success', 'Data absensi telah ditolak dan dipindahkan ke History Ditolak.');
+        return redirect()->back()->with('success', 'Data absensi telah dihapus secara permanen.');
     }
 
     /**
