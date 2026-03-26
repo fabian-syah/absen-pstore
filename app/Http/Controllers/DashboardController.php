@@ -517,9 +517,12 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Simpan ke metadata (asumsi kolom metadata ada atau gunakan kolom lain)
-        // Jika kolom tidak ada, kita bisa gunakan cache atau tabel khusus
-        // Di sini kita simulasikan sukses
+        // Simpan status klaim ke metadata JSON
+        $metadata = $user->metadata ?? [];
+        $metadata['prize_claimed_at'] = now()->toDateTimeString();
+        
+        // Gunakan forceFill jika kolom tidak ada di fillable, atau update biasa jika ada
+        $user->forceFill(['metadata' => $metadata])->save();
         
         return response()->json([
             'status' => 'success',
