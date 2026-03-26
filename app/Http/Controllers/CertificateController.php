@@ -59,11 +59,23 @@ class CertificateController extends Controller
                 ->where('branch_id', $branchId)
                 ->whereMonth('check_in_time', $month)
                 ->whereYear('check_in_time', $year)
-                ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar', 'Hadir', 'Tepat Waktu'])
+                ->whereIn('presence_status', [
+                    'Masuk',
+                    'Hadir',
+                    'Tepat Waktu',
+                    'WFH',
+                    'Work From Home',
+                    'WFH / Dinas Luar',
+                    'Dinas Luar',
+                    'Kunjungan Rutin',
+                    'Lembur',
+                    'Telat',
+                    'Izin Telat'
+                ])
                 ->where('status', 'verified')
                 ->whereHas('user', function ($q) {
                     $q->where('is_active', true)
-                        ->whereNotIn('role', ['admin', 'security']);
+                        ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk ranking sertifikat
                 })
                 ->groupBy('user_id')
                 ->orderByDesc('total_attendance')
@@ -93,7 +105,19 @@ class CertificateController extends Controller
                 $totalAttendance = Attendance::where('user_id', $user->id)
                     ->whereMonth('check_in_time', $month)
                     ->whereYear('check_in_time', $year)
-                    ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar', 'Hadir', 'Tepat Waktu'])
+                    ->whereIn('presence_status', [
+                        'Masuk',
+                        'Hadir',
+                        'Tepat Waktu',
+                        'WFH',
+                        'Work From Home',
+                        'WFH / Dinas Luar',
+                        'Dinas Luar',
+                        'Kunjungan Rutin',
+                        'Lembur',
+                        'Telat',
+                        'Izin Telat'
+                    ])
                     ->where('status', 'verified')
                     ->count();
             }

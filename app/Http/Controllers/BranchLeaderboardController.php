@@ -85,22 +85,35 @@ class BranchLeaderboardController extends Controller
             ->whereMonth('check_in_time', Carbon::now()->month)
             ->whereYear('check_in_time', Carbon::now()->year)
             ->where('status', 'verified')
-            // Gunakan list status yang aktif saja
+            // [SYNC] Samakan daftar status dengan DashboardController
             ->whereIn('presence_status', [
                 'Masuk',
-                'WFH',
                 'Hadir',
-                'Tepat Waktu'
+                'Tepat Waktu',
+                'WFH',
+                'Work From Home',
+                'WFH / Dinas Luar',
+                'Dinas Luar',
+                'Kunjungan Rutin',
+                'Lembur',
+                'Telat',
+                'Izin Telat'
             ])
-            // HAPUS baris whereTime 00:00:00 karena WFH kamu tercatat jam 00:00
             ->whereHas('user', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
-                    ->where('is_active', true);
+                    ->where('is_active', true)
+                    ->whereNotIn('role', ['admin', 'security']); // [FIX] Exclude Admin & Security agar sinkron dengan Dashboard
             })
             ->groupBy('user_id')
+            ->orderBy('total_attendance', 'desc')
+            ->orderBy('total_work_seconds', 'desc')
+            ->orderBy('avg_arrival_time', 'asc')
             ->with(['user', 'user.division'])
             ->get()
-            ->sortByDesc('total_attendance')
-            ->values();
+            ->map(function ($item) {
+                // Tambahkan display time agar formatnya sama dengan Dashboard
+                $item->avg_arrival_display = Carbon::parse($item->avg_arrival_time)->format('H:i');
+                return $item;
+            });
     }
 }

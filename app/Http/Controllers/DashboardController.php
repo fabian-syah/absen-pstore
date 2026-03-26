@@ -256,7 +256,7 @@ class DashboardController extends Controller
                 // SESUDAH (Samakan dengan BranchLeaderboardController)
                 ->whereHas('user', function ($q) use ($user, $allBranchIds) {
                     $q->where('is_active', true)
-                        ->whereNotIn('role', ['admin']); // Hanya Admin yang dilarang
+                        ->whereNotIn('role', ['admin', 'security']); // Admin & Security dilarang masuk ranking umum
     
                     // Jika bukan admin, hanya tampilkan leaderboard dari cabang yang diakses user
                     if ($user->role !== 'admin') {
