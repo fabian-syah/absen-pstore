@@ -194,6 +194,10 @@
                         <span class="legend-dot" style="background: #10b981;"></span>
                         <span class="small fw-bold text-muted">Sudah Dibayar</span>
                     </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="legend-dot" style="background: #6366f1;"></span>
+                        <span class="small fw-bold text-muted">Sisa Hutang (Tanpa Jadwal)</span>
+                    </div>
                 </div>
             </div>
         </div>

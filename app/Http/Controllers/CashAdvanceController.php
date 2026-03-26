@@ -406,45 +406,69 @@ class CashAdvanceController extends Controller
                     ];
                 }
             } else {
-                // Kasbon TANPA jadwal cicilan — generate virtual events
+                // Kasbon TANPA jadwal cicilan — tampilkan sisa hutang langsung
                 $remaining = $kasbon->remaining_amount;
-                $deduction = $kasbon->monthly_deduction;
 
-                // Jika tidak ada potongan per bulan, bagi sisa hutang ke 12 bulan
-                if (!$deduction || $deduction <= 0) {
-                    $deduction = ceil($remaining / 12);
+                // Cek apakah ada riwayat cicilan untuk menentukan potongan nyata
+                $avgPayment = $kasbon->installments()
+                    ->where('status', 'approved')
+                    ->avg('amount_paid');
+
+                $deduction = $kasbon->monthly_deduction;
+                if ((!$deduction || $deduction <= 0) && $avgPayment > 0) {
+                    // Gunakan rata-rata pembayaran nyata
+                    $deduction = round($avgPayment);
                 }
 
-                // Mulai dari bulan depan (awal bulan)
-                $startDate = Carbon::now()->addMonth()->startOfMonth();
-                $order = 1;
+                if ($deduction > 0) {
+                    // Ada potongan nyata — generate jadwal berdasarkan data asli
+                    $startDate = Carbon::now()->addMonth()->startOfMonth();
+                    $tempRemaining = $remaining;
+                    $order = 1;
 
-                while ($remaining > 0) {
-                    $cicilan = min($deduction, $remaining);
-                    $dueDate = $startDate->copy()->addMonths($order - 1);
+                    while ($tempRemaining > 0) {
+                        $cicilan = min($deduction, $tempRemaining);
+                        $dueDate = $startDate->copy()->addMonths($order - 1);
 
+                        $events[] = [
+                            'id' => 'virtual_' . $kasbon->id . '_' . $order,
+                            'title' => ($isAdmin ? $kasbon->user_name . ' - ' : '') . 'Rp ' . number_format($cicilan, 0, ',', '.'),
+                            'start' => $dueDate->format('Y-m-d'),
+                            'color' => '#f59e0b',
+                            'textColor' => '#000',
+                            'extendedProps' => [
+                                'kasbon_id' => $kasbon->id,
+                                'user_name' => $kasbon->user_name,
+                                'installment_order' => $order,
+                                'amount' => $cicilan,
+                                'is_paid' => false,
+                                'total_pinjaman' => $kasbon->amount,
+                                'sisa_hutang' => $kasbon->remaining_amount,
+                            ],
+                        ];
+
+                        $tempRemaining -= $cicilan;
+                        $order++;
+                        if ($order > 60) break;
+                    }
+                } else {
+                    // Tidak ada data potongan — tampilkan 1 event sisa hutang per bulan
                     $events[] = [
-                        'id' => 'virtual_' . $kasbon->id . '_' . $order,
-                        'title' => ($isAdmin ? $kasbon->user_name . ' - ' : '') . 'Rp ' . number_format($cicilan, 0, ',', '.'),
-                        'start' => $dueDate->format('Y-m-d'),
-                        'color' => '#f59e0b',
-                        'textColor' => '#000',
+                        'id' => 'sisa_' . $kasbon->id,
+                        'title' => ($isAdmin ? $kasbon->user_name . ' - ' : '') . 'Sisa Rp ' . number_format($remaining, 0, ',', '.'),
+                        'start' => Carbon::now()->startOfMonth()->format('Y-m-d'),
+                        'color' => '#6366f1',
+                        'textColor' => '#fff',
                         'extendedProps' => [
                             'kasbon_id' => $kasbon->id,
                             'user_name' => $kasbon->user_name,
-                            'installment_order' => $order,
-                            'amount' => $cicilan,
+                            'installment_order' => 0,
+                            'amount' => $remaining,
                             'is_paid' => false,
                             'total_pinjaman' => $kasbon->amount,
-                            'sisa_hutang' => $kasbon->remaining_amount,
+                            'sisa_hutang' => $remaining,
                         ],
                     ];
-
-                    $remaining -= $cicilan;
-                    $order++;
-
-                    // Safety limit: max 60 bulan
-                    if ($order > 60) break;
                 }
             }
         }
