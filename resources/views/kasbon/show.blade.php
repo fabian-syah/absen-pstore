@@ -11,8 +11,8 @@
         }
 
         .avatar-square {
-            width: 64px;
-            height: 64px;
+            width: 48px;
+            height: 48px;
             border-radius: 12px;
             background-color: #eef2ff;
             color: #4b49ac;
@@ -20,7 +20,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.6rem;
+            font-size: 1.2rem;
+        }
+        @media (min-width: 768px) {
+            .avatar-square {
+                width: 64px;
+                height: 64px;
+                font-size: 1.6rem;
+            }
         }
 
         /* Timeline Modern */
@@ -171,6 +178,27 @@
             color: #842029;
             border: 1px solid #f5c2c7;
         }
+
+        /* === RESPONSIVE OVERRIDES === */
+        @media (max-width: 767.98px) {
+            .timeline-item {
+                padding-left: 18px;
+                padding-bottom: 1.5rem;
+            }
+            .timeline-wrapper {
+                padding-left: 12px;
+            }
+            .input-nominal-field {
+                font-size: 1.1rem;
+            }
+            .thumb-box {
+                height: 80px;
+            }
+            .btn-back {
+                width: 38px;
+                height: 38px;
+            }
+        }
     </style>
 
     @php
@@ -181,7 +209,7 @@
         $percent = $kasbon->amount > 0 ? ($kasbon->total_paid / $kasbon->amount) * 100 : 0;
     @endphp
 
-    <div class="container-fluid">
+    <div class="container-fluid px-3 px-md-4">
 
         {{-- ALERTS --}}
         @if ($errors->any())
@@ -205,17 +233,18 @@
             </div>
         @endif
 
-        {{-- HEADER --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        {{-- HEADER (Responsive) --}}
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-2">
             <div class="d-flex align-items-center">
-                <a href="{{ route('kasbon.index') }}" class="btn-back me-3"><i class="mdi mdi-arrow-left fs-5"></i></a>
+                <a href="{{ route('kasbon.index') }}" class="btn-back me-2 me-md-3"><i class="mdi mdi-arrow-left fs-5"></i></a>
                 <div>
-                    <h4 class="fw-bold text-dark mb-0">Detail Transaksi #{{ str_pad($kasbon->id, 5, '0', STR_PAD_LEFT) }}
+                    <h4 class="fw-bold text-dark mb-0" style="font-size: clamp(1rem, 3vw, 1.5rem);">
+                        Detail #{{ str_pad($kasbon->id, 5, '0', STR_PAD_LEFT) }}
                     </h4>
-                    <small class="text-muted">Dibuat pada {{ $kasbon->created_at->format('d F Y, H:i') }}</small>
+                    <small class="text-muted" style="font-size: 0.75rem;">{{ $kasbon->created_at->format('d F Y, H:i') }}</small>
                 </div>
             </div>
-            <div>
+            <div class="ms-auto ms-sm-0 mt-2 mt-sm-0">
                 @if ($kasbon->status == 'pending')
                     <span class="badge badge-status badge-pending">PENDING APPROVAL</span>
                 @elseif($kasbon->status == 'approved')
@@ -228,11 +257,11 @@
             </div>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-3 g-lg-4">
             {{-- KOLOM KIRI --}}
             <div class="col-lg-4">
-                <div class="card mb-4">
-                    <div class="card-body">
+                <div class="card mb-3 mb-md-4">
+                    <div class="card-body p-3 p-md-4">
                         <div class="d-flex align-items-center mb-4">
                             <div class="avatar-square me-3">{{ substr($kasbon->user_name, 0, 1) }}</div>
                             <div>
@@ -328,8 +357,8 @@
                                     </div>
                                     <div>
                                         <small class="text-primary fw-bold text-uppercase d-block"
-                                            style="letter-spacing: 0.5px;">Rekening Tujuan</small>
-                                        <span class="fw-bold text-dark fs-6">{{ $kasbon->account_details }}</span>
+                                            style="letter-spacing: 0.5px; font-size: 0.65rem;">Rekening Tujuan</small>
+                                        <span class="fw-bold text-dark" style="font-size: clamp(0.75rem, 2vw, 1rem); word-break: break-all;">{{ $kasbon->account_details }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -374,14 +403,13 @@
                             style="position: absolute; top: -20px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;">
                         </div>
 
-                        <div class="card-body p-4 position-relative">
-                            <div class="d-flex align-items-center mb-4">
+                        <div class="card-body p-3 p-md-4 position-relative">
+                            <div class="d-flex align-items-center mb-3 mb-md-4">
                                 <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3"><i
                                         class="mdi mdi-wallet-plus fs-4 text-white"></i></div>
                                 <div>
-                                    <h5 class="fw-bold mb-0 text-white">Input Pembayaran Cicilan</h5><small
-                                        class="text-white text-opacity-75">Masukkan nominal pembayaran yang
-                                        diterima.</small>
+                                    <h5 class="fw-bold mb-0 text-white" style="font-size: clamp(0.95rem, 2.5vw, 1.25rem);">Input Pembayaran Cicilan</h5>
+                                    <small class="text-white text-opacity-75 d-none d-sm-block">Masukkan nominal pembayaran yang diterima.</small>
                                 </div>
                             </div>
 

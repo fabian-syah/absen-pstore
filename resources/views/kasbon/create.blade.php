@@ -145,17 +145,17 @@
 @endpush
 
 @section('content')
-    <div class="container py-4">
+    <div class="container px-3 px-md-4 py-3 py-md-4">
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="card ramadan-card shadow-lg">
                     {{-- Header --}}
-                    <div class="header-ramadan">
-                        <h3 class="mb-1 fw-bold">🌙 Form Pengajuan Kasbon</h3>
-                        <p class="mb-0 opacity-75">Berkah Ramadan, Permudah Urusan.</p>
+                    <div class="header-ramadan" style="padding: 20px 20px;">
+                        <h3 class="mb-1 fw-bold" style="font-size: clamp(1.1rem, 3vw, 1.75rem);">🌙 Form Pengajuan Kasbon</h3>
+                        <p class="mb-0 opacity-75 small">Berkah Ramadan, Permudah Urusan.</p>
                     </div>
 
-                    <div class="card-body p-4 p-md-5 bg-ramadan-pattern">
+                    <div class="card-body p-3 p-md-5 bg-ramadan-pattern">
 
                         @if ($errors->any())
                             <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4">

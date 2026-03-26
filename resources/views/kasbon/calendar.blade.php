@@ -72,6 +72,33 @@
             display: inline-block;
         }
 
+        /* Mobile Calendar Overrides */
+        @media (max-width: 767.98px) {
+            .fc .fc-toolbar {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .fc .fc-toolbar-title {
+                font-size: 1rem;
+            }
+            .fc .fc-button {
+                font-size: 0.7rem;
+                padding: 4px 10px;
+            }
+            .fc .fc-daygrid-day-number {
+                font-size: 0.75rem;
+                padding: 4px 6px;
+            }
+            .fc .fc-event {
+                font-size: 0.6rem;
+                padding: 2px 4px;
+            }
+            .fc .fc-col-header-cell-cushion {
+                font-size: 0.6rem;
+                padding: 8px 4px;
+            }
+        }
+
         /* Event Detail Popup */
         .event-popup-overlay {
             display: none;
@@ -85,9 +112,9 @@
         .event-popup {
             background: #fff;
             border-radius: 20px;
-            padding: 30px;
+            padding: 20px;
             max-width: 420px;
-            width: 95%;
+            width: 92%;
             box-shadow: 0 25px 50px rgba(0,0,0,0.15);
             animation: popIn 0.25s ease;
         }
@@ -97,16 +124,16 @@
         }
     </style>
 
-    <div class="container-fluid">
-        {{-- HEADER --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="container-fluid px-3 px-md-4">
+        {{-- HEADER (Responsive) --}}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2">
             <div>
-                <h2 class="fw-bold text-dark mb-1">
+                <h2 class="fw-bold text-dark mb-1" style="font-size: clamp(1.1rem, 3vw, 1.5rem);">
                     <i class="mdi mdi-calendar-month text-primary me-2"></i>Kalender Kasbon
                 </h2>
-                <p class="text-muted mb-0">Jadwal potongan cicilan per bulan</p>
+                <p class="text-muted mb-0 small">Jadwal potongan cicilan per bulan</p>
             </div>
-            <a href="{{ route('kasbon.index') }}" class="btn btn-light border fw-bold rounded-pill px-4 shadow-sm">
+            <a href="{{ route('kasbon.index') }}" class="btn btn-light border fw-bold rounded-pill px-3 px-md-4 shadow-sm">
                 <i class="mdi mdi-arrow-left me-1"></i> Kembali
             </a>
         </div>
@@ -129,7 +156,7 @@
 
         {{-- CALENDAR --}}
         <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
+            <div class="card-body p-2 p-md-4">
                 <div id="kasbon-calendar"></div>
             </div>
         </div>
