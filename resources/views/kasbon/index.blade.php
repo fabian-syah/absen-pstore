@@ -20,9 +20,14 @@
                     @endif
                 </p>
             </div>
-            <a href="{{ route('kasbon.create') }}" class="btn btn-primary btn-lg px-4 rounded-pill shadow-sm fw-bold">
-                <i class="mdi mdi-plus-circle-outline me-2"></i> Buat Pengajuan
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('kasbon.calendar') }}" class="btn btn-outline-primary btn-lg px-4 rounded-pill shadow-sm fw-bold">
+                    <i class="mdi mdi-calendar-month me-2"></i> Kalender
+                </a>
+                <a href="{{ route('kasbon.create') }}" class="btn btn-primary btn-lg px-4 rounded-pill shadow-sm fw-bold">
+                    <i class="mdi mdi-plus-circle-outline me-2"></i> Buat Pengajuan
+                </a>
+            </div>
         </div>
 
         <div class="row g-3 mb-4">
@@ -201,6 +206,7 @@
                                     <th class="py-4">Tanggal Pengajuan</th>
                                     <th class="py-4">Keterangan</th>
                                     <th class="py-4 text-end">Total Pinjam</th>
+                                    <th class="py-4 text-center">Potongan/Bln</th>
                                     <th class="py-4 text-end">Sisa Hutang</th>
                                     <th class="py-4 text-center">Status</th>
                                     <th class="py-4 text-center pe-4" style="width: 100px;">Aksi</th>
@@ -271,6 +277,22 @@
                                             </h6>
                                         </td>
 
+                                        <td class="text-center">
+                                            @if($k->monthly_deduction > 0)
+                                                <div>
+                                                    <span class="badge rounded-pill bg-light text-success border border-success fw-bold px-3 py-2">
+                                                        <i class="mdi mdi-calendar-clock me-1"></i>
+                                                        Rp {{ number_format($k->monthly_deduction, 0, ',', '.') }}
+                                                    </span>
+                                                </div>
+                                                @if($k->installment_months)
+                                                    <small class="text-muted" style="font-size: 10px;">{{ $k->installment_months }} bulan</small>
+                                                @endif
+                                            @else
+                                                <span class="text-muted small">-</span>
+                                            @endif
+                                        </td>
+
                                         <td class="text-end">
                                             <h6
                                                 class="mb-0 fw-bold {{ $k->remaining_amount > 0 ? 'text-danger' : 'text-success' }}">
@@ -319,7 +341,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="{{ $isAdmin ? 8 : 7 }}" class="text-center py-5">
+                                        <td colspan="{{ $isAdmin ? 9 : 8 }}" class="text-center py-5">
                                             <div
                                                 class="d-flex flex-column align-items-center justify-content-center opacity-50">
                                                 <i class="mdi mdi-clipboard-text-off-outline fs-1 mb-2"></i>

@@ -190,6 +190,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Route Bayar Cicilan
         Route::post('/{id}/cicil', [App\Http\Controllers\CashAdvanceController::class, 'storeInstallment'])->name('pay');
 
+        // Route Kalender Kasbon
+        Route::get('/kalender', [App\Http\Controllers\CashAdvanceController::class, 'calendar'])->name('calendar');
+        Route::get('/kalender/data', [App\Http\Controllers\CashAdvanceController::class, 'calendarData'])->name('calendar.data');
+
         // ROUTE EXPORT
         Route::get('/export', [App\Http\Controllers\CashAdvanceController::class, 'export'])->name('export');
 

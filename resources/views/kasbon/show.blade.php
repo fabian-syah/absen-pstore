@@ -269,6 +269,38 @@
                                 <div class="progress-bar bg-primary" style="width: {{ $percent }}%"></div>
                             </div>
                         </div>
+
+                        {{-- RENCANA CICILAN --}}
+                        @if($kasbon->monthly_deduction > 0)
+                            <div class="mt-4 p-3 rounded-3 border" style="background: #f0fdf4; border-color: #86efac !important;">
+                                <h6 class="fw-bold text-success mb-3 small text-uppercase" style="letter-spacing: 0.5px;">
+                                    <i class="mdi mdi-calendar-clock me-1"></i> Rencana Cicilan
+                                </h6>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="text-center p-2 bg-white rounded-3">
+                                            <small class="text-muted d-block fw-bold">Per Bulan</small>
+                                            <span class="fw-bold text-success">Rp {{ number_format($kasbon->monthly_deduction, 0, ',', '.') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center p-2 bg-white rounded-3">
+                                            <small class="text-muted d-block fw-bold">Durasi</small>
+                                            <span class="fw-bold text-primary">{{ $kasbon->installment_months ?? '-' }} Bulan</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                @if($kasbon->remaining_amount > 0 && $kasbon->estimated_payoff_date)
+                                    <div class="text-center mt-2 p-2 bg-white rounded-3">
+                                        <small class="text-muted d-block fw-bold">Estimasi Lunas</small>
+                                        <span class="fw-bold text-dark">
+                                            <i class="mdi mdi-flag-checkered me-1"></i>
+                                            {{ $kasbon->estimated_payoff_date->format('F Y') }}
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
 

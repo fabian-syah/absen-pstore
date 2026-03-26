@@ -225,6 +225,57 @@
                                 <small class="text-muted ps-1">Masukkan nominal tanpa tanda titik.</small>
                             </div>
 
+                            {{-- 2B. POTONGAN PER BULAN --}}
+                            <div class="mb-4 p-4 rounded-3" style="background-color: #f0fdf4; border: 1px dashed #00693E;">
+                                <h6 class="fw-bold mb-3 text-success">
+                                    <i class="mdi mdi-calendar-clock me-1"></i> Rencana Potongan Gaji Per Bulan
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="small text-muted fw-bold">Potongan Per Bulan (Rp)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-success text-white fw-bold border-0">Rp</span>
+                                            <input type="text" name="monthly_deduction" id="rupiahDeduction" 
+                                                class="form-control fw-bold text-success" placeholder="0" 
+                                                autocomplete="off" value="{{ old('monthly_deduction') }}">
+                                        </div>
+                                        <small class="text-muted">Kosongkan jika tidak ada potongan bulanan.</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small text-muted fw-bold">Lama Cicilan (Bulan)</label>
+                                        <div class="input-group">
+                                            <input type="number" name="installment_months" id="installmentMonths"
+                                                class="form-control fw-bold text-center" placeholder="Auto"
+                                                min="1" max="60" value="{{ old('installment_months') }}">
+                                            <span class="input-group-text bg-light border fw-bold text-muted">Bulan</span>
+                                        </div>
+                                        <small class="text-muted">Otomatis dihitung jika dikosongkan.</small>
+                                    </div>
+                                </div>
+
+                                {{-- PREVIEW CICILAN --}}
+                                <div id="installmentPreview" class="mt-3 p-3 bg-white rounded-3 border d-none">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="mdi mdi-information-outline text-info me-2 fs-5"></i>
+                                        <span class="fw-bold text-dark small">Estimasi Cicilan</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-3 small">
+                                        <div>
+                                            <span class="text-muted">Per Bulan:</span>
+                                            <strong class="text-success ms-1" id="previewPerBulan">Rp 0</strong>
+                                        </div>
+                                        <div>
+                                            <span class="text-muted">Durasi:</span>
+                                            <strong class="text-primary ms-1" id="previewDurasi">0 Bulan</strong>
+                                        </div>
+                                        <div>
+                                            <span class="text-muted">Estimasi Lunas:</span>
+                                            <strong class="text-dark ms-1" id="previewLunas">-</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             {{-- 3. METODE PENCAIRAN --}}
                             <div class="mb-4">
                                 <label class="form-label fw-bold text-dark mb-3">
@@ -402,6 +453,57 @@
             }
 
             return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+        }
+
+        // Monthly Deduction Formatter
+        const rupiahDeduction = document.getElementById('rupiahDeduction');
+        if(rupiahDeduction) {
+            rupiahDeduction.addEventListener('keyup', function(e) {
+                rupiahDeduction.value = formatRupiah(this.value);
+                updateInstallmentPreview();
+            });
+        }
+
+        // Auto calculate installment preview
+        const installmentMonthsInput = document.getElementById('installmentMonths');
+        if(installmentMonthsInput) {
+            installmentMonthsInput.addEventListener('input', updateInstallmentPreview);
+        }
+
+        // Main amount also triggers preview update
+        const rupiahMain = document.getElementById('rupiah');
+        if(rupiahMain) {
+            rupiahMain.addEventListener('keyup', function() {
+                updateInstallmentPreview();
+            });
+        }
+
+        function updateInstallmentPreview() {
+            const preview = document.getElementById('installmentPreview');
+            const amountStr = document.getElementById('rupiah')?.value || '0';
+            const deductionStr = document.getElementById('rupiahDeduction')?.value || '0';
+            
+            const amount = parseInt(amountStr.replace(/\./g, '')) || 0;
+            const deduction = parseInt(deductionStr.replace(/\./g, '')) || 0;
+
+            if (amount > 0 && deduction > 0) {
+                let months = document.getElementById('installmentMonths')?.value;
+                if (!months || months <= 0) {
+                    months = Math.ceil(amount / deduction);
+                }
+                
+                const lunas = new Date();
+                lunas.setMonth(lunas.getMonth() + parseInt(months));
+                const bulanNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                const lunasStr = bulanNames[lunas.getMonth()] + ' ' + lunas.getFullYear();
+
+                document.getElementById('previewPerBulan').textContent = 'Rp ' + formatRupiah(deduction.toString());
+                document.getElementById('previewDurasi').textContent = months + ' Bulan';
+                document.getElementById('previewLunas').textContent = lunasStr;
+                preview.classList.remove('d-none');
+            } else {
+                preview.classList.add('d-none');
+            }
         }
     </script>
 @endpush

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\CashAdvance;
 use App\Models\CashAdvanceInstallment;
+use App\Models\CashAdvancePlan;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -111,7 +113,7 @@ class CashAdvanceController extends Controller
             "Expires" => "0"
         ];
 
-        $columns = ['Tanggal', 'Nama Karyawan', 'Divisi', 'Cabang', 'Nominal Pinjam', 'Sudah Bayar', 'Sisa Hutang', 'Status', 'Keterangan'];
+        $columns = ['Tanggal', 'Nama Karyawan', 'Divisi', 'Cabang', 'Nominal Pinjam', 'Potongan/Bulan', 'Lama Cicilan', 'Sudah Bayar', 'Sisa Hutang', 'Status', 'Keterangan'];
 
         $callback = function () use ($kasbons, $columns) {
             $file = fopen('php://output', 'w');
@@ -127,6 +129,8 @@ class CashAdvanceController extends Controller
                     $div,
                     $branch,
                     $k->amount,
+                    $k->monthly_deduction ?? 0,
+                    ($k->installment_months ?? 0) . ' Bulan',
                     $k->total_paid,
                     $k->remaining_amount,
                     strtoupper($k->status),
@@ -150,10 +154,13 @@ class CashAdvanceController extends Controller
     public function store(Request $request)
     {
         $cleanAmount = str_replace('.', '', $request->amount);
-        $request->merge(['amount' => $cleanAmount]);
+        $cleanDeduction = str_replace('.', '', $request->monthly_deduction ?? '0');
+        $request->merge(['amount' => $cleanAmount, 'monthly_deduction' => $cleanDeduction]);
 
         $request->validate([
             'amount' => 'required|numeric|min:10000',
+            'monthly_deduction' => 'nullable|numeric|min:0',
+            'installment_months' => 'nullable|integer|min:1|max:60',
             'description' => 'required|string',
             'payment_method' => 'required|in:cash,transfer',
             'photo_1' => 'required|image|max:10240',
@@ -162,9 +169,15 @@ class CashAdvanceController extends Controller
             'account_number' => 'required_if:payment_method,transfer',
         ]);
 
-        DB::transaction(function () use ($request, $cleanAmount) {
+        DB::transaction(function () use ($request, $cleanAmount, $cleanDeduction) {
             $isAdmin = in_array(auth()->user()->role, ['admin', 'admin_gaji']);
             $targetUser = $isAdmin ? User::find($request->user_id) : auth()->user();
+
+            // Auto-hitung installment_months jika monthly_deduction diisi
+            $installmentMonths = $request->installment_months;
+            if ($cleanDeduction > 0 && !$installmentMonths) {
+                $installmentMonths = ceil($cleanAmount / $cleanDeduction);
+            }
 
             $data = [
                 'user_id' => $targetUser->id,
@@ -172,6 +185,8 @@ class CashAdvanceController extends Controller
                 'division' => $targetUser->division->name ?? 'Umum',
                 'branch' => $targetUser->branch->name ?? 'Pusat',
                 'amount' => $cleanAmount,
+                'monthly_deduction' => $cleanDeduction > 0 ? $cleanDeduction : null,
+                'installment_months' => $installmentMonths,
                 'total_paid' => 0,
                 'description' => $request->description,
                 'payment_method' => $request->payment_method,
@@ -187,7 +202,24 @@ class CashAdvanceController extends Controller
             if ($request->hasFile('photo_2'))
                 $data['photo_2'] = $request->file('photo_2')->store('kasbon', 'public');
 
-            CashAdvance::create($data);
+            $kasbon = CashAdvance::create($data);
+
+            // Generate jadwal cicilan otomatis jika ada potongan per bulan
+            if ($cleanDeduction > 0 && $installmentMonths > 0) {
+                $remaining = $cleanAmount;
+                for ($i = 1; $i <= $installmentMonths; $i++) {
+                    $deductionAmount = min($cleanDeduction, $remaining);
+                    CashAdvancePlan::create([
+                        'cash_advance_id' => $kasbon->id,
+                        'installment_order' => $i,
+                        'due_date' => Carbon::now()->addMonths($i)->startOfMonth()->format('Y-m-d'),
+                        'amount' => $deductionAmount,
+                        'is_paid' => false,
+                    ]);
+                    $remaining -= $deductionAmount;
+                    if ($remaining <= 0) break;
+                }
+            }
         });
 
         return redirect()->route('kasbon.index')->with('success', 'Pengajuan Berhasil! Menunggu Approval.');
@@ -333,5 +365,52 @@ class CashAdvanceController extends Controller
             ->get();
 
         return view('kasbon.verification', compact('pendingInstallments'));
+    }
+
+    // --- KALENDER JADWAL CICILAN (API JSON) ---
+    public function calendarData(Request $request)
+    {
+        $user = auth()->user();
+        $isAdmin = in_array($user->role, ['admin', 'admin_gaji']);
+
+        $query = CashAdvance::with('plans')
+            ->where('status', 'approved')
+            ->whereRaw('amount > total_paid');
+
+        if (!$isAdmin) {
+            $query->where('user_id', $user->id);
+        }
+
+        $kasbons = $query->get();
+        $events = [];
+
+        foreach ($kasbons as $kasbon) {
+            foreach ($kasbon->plans as $plan) {
+                $events[] = [
+                    'id' => $plan->id,
+                    'title' => ($isAdmin ? $kasbon->user_name . ' - ' : '') . 'Rp ' . number_format($plan->amount, 0, ',', '.'),
+                    'start' => $plan->due_date,
+                    'color' => $plan->is_paid ? '#10b981' : '#f59e0b',
+                    'textColor' => $plan->is_paid ? '#fff' : '#000',
+                    'extendedProps' => [
+                        'kasbon_id' => $kasbon->id,
+                        'user_name' => $kasbon->user_name,
+                        'installment_order' => $plan->installment_order,
+                        'amount' => $plan->amount,
+                        'is_paid' => $plan->is_paid,
+                        'total_pinjaman' => $kasbon->amount,
+                        'sisa_hutang' => $kasbon->remaining_amount,
+                    ],
+                ];
+            }
+        }
+
+        return response()->json($events);
+    }
+
+    // --- HALAMAN KALENDER KASBON ---
+    public function calendar()
+    {
+        return view('kasbon.calendar');
     }
 }
