@@ -72,6 +72,50 @@
             display: inline-block;
         }
 
+        /* More Popover - Scrollable */
+        .fc .fc-popover {
+            max-height: 400px;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+            border: none !important;
+            z-index: 1040 !important;
+        }
+        .fc .fc-popover-body {
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 8px !important;
+        }
+        .fc .fc-popover-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .fc .fc-popover-body::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        .fc .fc-popover-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .fc .fc-popover-body::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .fc .fc-popover-header {
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 10px 12px !important;
+            font-weight: 800;
+        }
+        .fc .fc-more-link {
+            color: #4b49ac;
+            font-weight: 800;
+            font-size: 0.75rem;
+        }
+        .fc .fc-more-link:hover {
+            color: #3a38a0;
+            text-decoration: underline;
+        }
+
         /* Mobile Calendar Overrides */
         @media (max-width: 767.98px) {
             .fc .fc-toolbar {
@@ -222,7 +266,8 @@
                     month: 'Bulan'
                 },
                 height: 'auto',
-                dayMaxEvents: 3,
+                dayMaxEvents: 2,
+                dayMaxEventRows: 2,
                 events: '{{ route("kasbon.calendar.data") }}',
                 eventClick: function(info) {
                     var props = info.event.extendedProps;
