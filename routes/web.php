@@ -244,6 +244,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::get('/{broadcast}/edit', [BroadcastController::class, 'edit'])->name('edit');
             Route::put('/{broadcast}', [BroadcastController::class, 'update'])->name('update');
             Route::delete('/{broadcast}', [BroadcastController::class, 'destroy'])->name('destroy');
+            Route::get('/api/notifications', [BroadcastController::class, 'getNotifications'])->name('notifications');
         });
     });
 

@@ -8,13 +8,18 @@ use App\Models\User;
 use App\Models\Attendance;
 use App\Models\WorkSchedule;
 use App\Models\LeaveRequest;
+use App\Models\Broadcast;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
+use App\Traits\SendFcmNotification;
+
 class ScanController extends Controller
 {
+    use SendFcmNotification;
+
     public function index()
     {
         return view('security.scan');
@@ -344,8 +349,19 @@ class ScanController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Admin tidak sedang online.']);
         }
 
-        // Logic kirim FCM bisa menggunakan Trait yang sudah ada
-        // Untuk simulasinya, kita anggap sukses
+        // [NEW] Buat record Broadcast agar muncul di dashboard Admin (Polling)
+        Broadcast::create([
+            'title' => '🚨 DARURAT: ' . $user->name,
+            'message' => $message . ' (Lokasi: ' . ($user->branch->name ?? 'Unknown') . ')',
+            'priority' => 'high',
+            'created_by' => $user->id,
+            'is_published' => true,
+            'published_at' => now()
+        ]);
+
+        // [NEW] Kirim real-time push notification ke semua Admin/Audit via Trait
+        $this->sendNotificationToBranchRoles(['admin', 'audit'], null, '🚨 EMERGENCY: ' . $user->name, $message);
+
         return response()->json([
             'status' => 'success', 
             'message' => 'Pesan darurat terkirim ke ' . count($adminTokens) . ' Admin.'
