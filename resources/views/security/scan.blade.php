@@ -870,13 +870,27 @@
 
         function startQRScanner() {
             document.getElementById('permissionBtn').style.display = 'none';
-            if (html5QrCode) {
-                html5QrCode.clear().catch(err => { }).finally(() => {
-                    initScanner();
-                });
-            } else {
-                initScanner();
+            // Reset scanner header jika perlu
+            const header = document.querySelector('.scanner-header');
+            if (header) {
+                header.innerHTML = `
+                    <h5 class="m-0 fw-bold"><i class="fas fa-qrcode me-2"></i>Scan Absensi</h5>
+                    <small class="text-white-50">Arahkan kamera ke QR Code</small>
+                `;
             }
+
+            if (html5QrCode) {
+                const state = html5QrCode.getState();
+                if (state !== 1) { // 1 = NOT_STARTED
+                    html5QrCode.stop().catch(() => {}).finally(() => {
+                        html5QrCode.clear().catch(() => {}).finally(() => {
+                            initScanner();
+                        });
+                    });
+                    return;
+                }
+            }
+            initScanner();
         }
 
         function initScanner() {
@@ -1312,6 +1326,15 @@
             document.getElementById('verifSection').style.display = 'none';
             document.getElementById('resultOverlay').style.display = 'none';
             document.getElementById('qrSection').style.display = 'flex';
+
+            // Reset scanner header di sini juga untuk memastikan spinner hilang
+            const header = document.querySelector('.scanner-header');
+            if (header) {
+                header.innerHTML = `
+                    <h5 class="m-0 fw-bold"><i class="fas fa-qrcode me-2"></i>Scan Absensi</h5>
+                    <small class="text-white-50">Arahkan kamera ke QR Code</small>
+                `;
+            }
 
             // Mulai scanner lagi
             startQRScanner();
