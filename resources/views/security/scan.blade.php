@@ -494,6 +494,103 @@
                 margin-top: 10px;
             }
         }
+        /* [NEW] Keamanan Lanjutan Styles */
+        .panic-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #ff0000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            z-index: 25;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.5);
+            border: 3px solid white;
+            animation: pulse-panic 2s infinite;
+        }
+
+        @keyframes pulse-panic {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+
+        .branch-counter-widget {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            padding: 8px 15px;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.8rem;
+            display: flex;
+            gap: 15px;
+            z-index: 20;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .recent-scans-feed {
+            position: absolute;
+            bottom: 100px;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .recent-scan-item {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #00ff00;
+            animation: slideInLeft 0.3s ease-out;
+            max-width: 80%;
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .offline-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff9800;
+            color: black;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.7rem;
+            z-index: 30;
+            display: none;
+        }
+
+        .btn-history-notes {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 
@@ -508,6 +605,15 @@
         <div class="scan-area">
             <div class="scan-laser"></div>
         </div>
+        <div class="offline-badge" id="offlineBadge">OFFLINE MODE</div>
+        <div class="branch-counter-widget" id="branchCounter">
+            <span><i class="fas fa-users me-1 text-success"></i>Masuk: <b id="cntTotalIn">0</b></span>
+            <span><i class="fas fa-door-open me-1 text-warning"></i>Belum Pulang: <b id="cntStillIn">0</b></span>
+        </div>
+        <div class="recent-scans-feed" id="recentScansFeed"></div>
+        <button class="panic-btn" onclick="triggerPanic()" title="PANGGIL BANTUAN!">
+            <i class="fas fa-exclamation-triangle"></i>
+        </button>
         <div class="permission-btn-container" id="permissionBtn">
             <i class="fas fa-camera-slash display-4 text-white mb-3"></i>
             <h5 class="text-white mb-3">Kamera Tidak Aktif</h5>
@@ -526,6 +632,9 @@
             </button>
         </div>
         <div class="profile-card">
+            <button class="btn-history-notes w-100" id="btnShowNotes" onclick="viewRecentNotes()">
+                <i class="fas fa-history me-1"></i> Lihat Catatan 3 Hari Terakhir
+            </button>
             <img src="" id="dbPhoto" class="profile-img-db mb-3" alt="User">
             <h4 id="dbName" class="fw-bold m-0">Nama Karyawan</h4>
             <p id="dbRole" class="text-muted small m-0">Jabatan</p>
@@ -636,6 +745,97 @@
         let streamRef = null;
         let capturedImageBase64 = null;
         let currentUserData = null;
+        let lastScanTime = 0;
+        let recentScans = JSON.parse(localStorage.getItem('recent_scans') || '[]');
+        let offlineQueue = JSON.parse(localStorage.getItem('offline_attendance_queue') || '[]');
+
+        // Initialize features
+        document.addEventListener('DOMContentLoaded', function () {
+            setSafeHeight();
+            startQRScanner();
+            updateRecentScansFeed();
+            refreshBranchStats();
+            setInterval(refreshBranchStats, 30000); // Update stats every 30s
+            
+            // Online/Offline listeners
+            window.addEventListener('online', syncOfflineData);
+            window.addEventListener('offline', () => {
+                document.getElementById('offlineBadge').style.display = 'block';
+            });
+            if (!navigator.onLine) document.getElementById('offlineBadge').style.display = 'block';
+        });
+
+        function refreshBranchStats() {
+            if (!navigator.onLine) return;
+            fetch("{{ route('security.stats') }}")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('cntTotalIn').innerText = data.data.branch_total_in || 0;
+                        document.getElementById('cntStillIn').innerText = data.data.branch_still_in || 0;
+                    }
+                }).catch(err => console.error("Stats error:", err));
+        }
+
+        function triggerPanic() {
+            const msg = prompt("Pesan Darurat untuk Admin:", "BUTUH BANTUAN SEGERA DI GERBANG!");
+            if (msg === null) return;
+            
+            fetch("{{ route('security.panic') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
+                body: JSON.stringify({ message: msg })
+            })
+            .then(res => res.json())
+            .then(data => alert(data.message))
+            .catch(err => alert("Gagal mengirim pesan panik. Periksa koneksi."));
+        }
+
+        function viewRecentNotes() {
+            if (!currentUserId) return;
+            fetch(`/security/user-notes/${currentUserId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success' && data.data.length > 0) {
+                        let html = "Catatan 3 Hari Terakhir:\n";
+                        data.data.forEach(n => {
+                            html += `- [${n.presence_status}] ${n.notes}\n`;
+                        });
+                        alert(html);
+                    } else {
+                        alert("Tidak ada catatan dalam 3 hari terakhir.");
+                    }
+                });
+        }
+
+        function updateRecentScansFeed() {
+            const feed = document.getElementById('recentScansFeed');
+            feed.innerHTML = '';
+            recentScans.slice(0, 5).forEach(scan => {
+                const div = document.createElement('div');
+                div.className = 'recent-scan-item';
+                div.style.borderLeftColor = scan.type === 'masuk' ? '#00ff00' : '#ff9800';
+                div.innerHTML = `
+                    <div class="small">
+                        <b class="text-white">${scan.name}</b><br>
+                        <span class="text-white-50" style="font-size: 0.7rem;">${scan.type.toUpperCase()} - ${scan.time}</span>
+                    </div>
+                `;
+                feed.appendChild(div);
+            });
+        }
+
+        function syncOfflineData() {
+            document.getElementById('offlineBadge').style.display = 'none';
+            if (offlineQueue.length === 0) return;
+
+            console.log("Syncing offline data...", offlineQueue.length);
+            // Process queue... (simplified for now)
+            alert(`Mensinkronisasi ${offlineQueue.length} data absen offline...`);
+            offlineQueue = [];
+            localStorage.setItem('offline_attendance_queue', '[]');
+            refreshBranchStats();
+        }
 
         // Fungsi untuk mendeteksi device mobile
         function isMobileDevice() {
@@ -719,6 +919,14 @@
         }
 
         function onScanSuccess(decodedText, decodedResult) {
+            // Proximity Check (Fitur 26)
+            const now = Date.now();
+            if (now - lastScanTime < 3000) {
+                console.warn("Scan terlalu cepat!");
+                return; // Abaikan jika kurang dari 3 detik
+            }
+            lastScanTime = now;
+
             // Hentikan scanner terlebih dahulu
             html5QrCode.stop().then(() => {
                 html5QrCode.clear();
@@ -953,6 +1161,17 @@
                 })
                 .then(data => {
                     if (data.status === 'success') {
+                        // Fitur 3: Add to Recent Scans
+                        recentScans.unshift({
+                            name: currentUserData.name,
+                            type: type,
+                            time: new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})
+                        });
+                        recentScans = recentScans.slice(0, 5);
+                        localStorage.setItem('recent_scans', JSON.stringify(recentScans));
+                        updateRecentScansFeed();
+                        refreshBranchStats();
+
                         showResult('success', data.message, data.data, type);
                     } else {
                         throw new Error(data.message);

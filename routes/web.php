@@ -446,9 +446,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/stats', [ScanController::class, 'getStats'])->name('stats');
         Route::get('/riwayat-scan', [ScanController::class, 'history'])->name('history');
 
+        Route::post('/panic', [ScanController::class, 'sendPanicMessage'])->name('panic');
+        Route::get('/user-notes/{id}', [ScanController::class, 'getUserNotes'])->name('user-notes');
+
         Route::get('/attendance-log', [ScanController::class, 'attendanceLog'])->name('attendance-log');
         Route::get('/today-attendance', [ScanController::class, 'todayAttendance'])->name('today-attendance');
     });
+
+    // === RUTE HADIAH LEADERBOARD ===
+    Route::post('/leaderboard/claim-prize', [DashboardController::class, 'claimPrize'])->name('leaderboard.claim-prize');
 
     // === RUTE TEAM MANAGEMENT ===
     Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {

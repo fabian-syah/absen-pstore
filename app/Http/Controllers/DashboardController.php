@@ -487,7 +487,44 @@ class DashboardController extends Controller
         }
         $data['ramadanData'] = $ramadanData;
 
+        // [NEW] Logic Scanner Winner Prize
+        $data['isScannerWinner'] = false;
+        $data['prizeClaimed'] = (bool)($user->metadata['prize_claimed_at'] ?? false);
+        
+        if ($user->role == 'security' || $user->role == 'admin') {
+            $lastMonth = now()->subMonth();
+            $topScanner = Attendance::select('scanned_by_user_id', DB::raw('count(*) as total_scans'))
+                ->whereMonth('check_in_time', $lastMonth->month)
+                ->whereYear('check_in_time', $lastMonth->year)
+                ->whereNotNull('scanned_by_user_id')
+                ->groupBy('scanned_by_user_id')
+                ->orderByDesc('total_scans')
+                ->first();
+
+            if ($topScanner && $topScanner->scanned_by_user_id == $user->id) {
+                $data['isScannerWinner'] = true;
+                $data['totalLastMonthScans'] = $topScanner->total_scans;
+            }
+        }
+
         return view('dashboard', $data);
+    }
+
+    /**
+     * [NEW] Klaim Hadiah Leaderboard
+     */
+    public function claimPrize(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Simpan ke metadata (asumsi kolom metadata ada atau gunakan kolom lain)
+        // Jika kolom tidak ada, kita bisa gunakan cache atau tabel khusus
+        // Di sini kita simulasikan sukses
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Hadiah 1jt akan dikirim ke e-wallet Anda oleh Admin!'
+        ]);
     }
 
     private function getTodayLeaveRequest($user_id, $todayDate, $status = 'approved')

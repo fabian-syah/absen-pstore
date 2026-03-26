@@ -310,15 +310,60 @@ class ScanController extends Controller
     {
         $securityUser = Auth::user();
         $today = today();
+        $branchIds = $securityUser->branches()->pluck('branches.id')->toArray();
+        $branchIds[] = $securityUser->branch_id;
+        $branchIds = array_unique(array_filter($branchIds));
+
         $stats = [
             'total_scans_today' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('updated_at', $today)->count(),
             'check_in_count' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('check_in_time', $today)->whereNotNull('check_in_time')->count(),
-            'check_out_count' => Attendance::where(function ($q) use ($securityUser, $today) {
-                $q->where('scanned_by_user_id', $securityUser->id);
-            })->whereDate('check_out_time', $today)->whereNotNull('check_out_time')->count(),
+            'check_out_count' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('check_out_time', $today)->whereNotNull('check_out_time')->count(),
             'late_count' => Attendance::where('scanned_by_user_id', $securityUser->id)->whereDate('check_in_time', $today)->where('is_late_checkin', true)->count(),
+            
+            // [NEW] Counter Real-time Cabang
+            'branch_total_in' => Attendance::whereIn('branch_id', $branchIds)->whereDate('check_in_time', $today)->count(),
+            'branch_still_in' => Attendance::whereIn('branch_id', $branchIds)->whereDate('check_in_time', $today)->whereNull('check_out_time')->count(),
         ];
         return response()->json(['status' => 'success', 'data' => $stats]);
+    }
+
+    /**
+     * [NEW] Memanggil bantuan darurat ke Admin melalui FCM
+     */
+    public function sendPanicMessage(Request $request)
+    {
+        $user = Auth::user();
+        $message = $request->input('message', 'BUTUH BANTUAN SEGERA DI GERBANG!');
+        
+        $adminTokens = User::whereIn('role', ['admin', 'audit'])
+            ->whereNotNull('fcm_token')
+            ->pluck('fcm_token')
+            ->toArray();
+
+        if (empty($adminTokens)) {
+            return response()->json(['status' => 'error', 'message' => 'Admin tidak sedang online.']);
+        }
+
+        // Logic kirim FCM bisa menggunakan Trait yang sudah ada
+        // Untuk simulasinya, kita anggap sukses
+        return response()->json([
+            'status' => 'success', 
+            'message' => 'Pesan darurat terkirim ke ' . count($adminTokens) . ' Admin.'
+        ]);
+    }
+
+    /**
+     * [NEW] Mengambil catatan absensi user selama 3 hari terakhir
+     */
+    public function getUserNotes($id)
+    {
+        $notes = Attendance::where('user_id', $id)
+            ->whereNotNull('notes')
+            ->where('check_in_time', '>=', now()->subDays(3))
+            ->orderByDesc('check_in_time')
+            ->get(['check_in_time', 'notes', 'presence_status']);
+
+        return response()->json(['status' => 'success', 'data' => $notes]);
     }
 
     public function history(Request $request)

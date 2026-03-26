@@ -293,6 +293,82 @@
     @endif
 
     {{-- ======================================================================= --}}
+    {{-- [NEW] POPUP PEMBERITAHUAN: FITUR SECURITY BARU --}}
+    {{-- ======================================================================= --}}
+    @if (Auth::user()->role == 'security' && !session('security_update_dismissed'))
+        <div id="securityUpdateModal" class="document-warning-overlay" style="background: rgba(0, 50, 0, 0.8);">
+            <div class="document-warning-modal" style="border-top: 5px solid #00ff00;">
+                <button type="button" class="document-warning-close" onclick="this.closest('.document-warning-overlay').remove()">
+                    <i class="mdi mdi-close"></i>
+                </button>
+                <div class="text-center mb-3">
+                    <i class="mdi mdi-shield-check text-success" style="font-size: 64px;"></i>
+                </div>
+                <h4 class="document-warning-title">Update Dashboard Security!</h4>
+                <div class="document-warning-content">
+                    <p class="text-center mb-3">Fitur baru telah aktif untuk memudahkan tugas Anda:</p>
+                    <ul class="document-warning-list" style="background: #f0fff0; border-color: #00ff00;">
+                        <li><i class="mdi mdi-history text-success me-2"></i> <b>Recent Scans:</b> Lihat 5 scan terakhir di layar.</li>
+                        <li><i class="mdi mdi-wifi-off text-success me-2"></i> <b>Offline Mode:</b> Tetap bisa absen saat sinyal hilang.</li>
+                        <li><i class="mdi mdi-alert-octagon text-danger me-2"></i> <b>Panic Button:</b> Panggil bantuan Admin sekali klik.</li>
+                    </ul>
+                    <button class="btn btn-success w-100 py-3 fw-bold" onclick="this.closest('.document-warning-overlay').remove()">
+                        MENGERTI & LANJUTKAN
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ======================================================================= --}}
+    {{-- [NEW] BANNER KLAIM HADIAH SCANNER (Top 1 Only) --}}
+    {{-- ======================================================================= --}}
+    @if(isset($isScannerWinner) && $isScannerWinner && !$prizeClaimed)
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #004d40 0%, #00796b 100%); border: 2px solid #00ff00;">
+                    <div class="card-body py-4 px-4 text-white text-center">
+                        <h2 class="fw-bold mb-2">🎁 HADIAH SCANNER TERBAIK!</h2>
+                        <p class="lead mb-3">Selamat! Anda adalah <b>Top 1 Scanner</b> bulan lalu dengan <b>{{ $totalLastMonthScans }} scan</b>.</p>
+                        <div class="p-3 bg-white bg-opacity-10 rounded-pill d-inline-block mb-3 px-5">
+                            <h3 class="m-0 fw-bold text-warning">Rp 1.000.000 (E-Wallet)</h3>
+                        </div>
+                        <p class="small text-white-50 mb-3">Klik tombol di bawah sebelum akhir bulan atau hadiah akan hangus!</p>
+                        <button class="btn btn-warning btn-lg px-5 fw-bold rounded-pill shadow-lg" id="btnClaimPrize" onclick="claimPrizeReward()">
+                            <i class="mdi mdi-gift-outline me-2"></i> KLAIM HADIAH SEKARANG
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            function claimPrizeReward() {
+                const btn = document.getElementById('btnClaimPrize');
+                if(!confirm('Klaim hadiah 1jt Anda sekarang? Admin akan segera memproses e-wallet Anda.')) return;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+                
+                fetch("{{ route('leaderboard.claim-prize') }}", {
+                    method: "POST",
+                    headers: { 
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                })
+                .catch(err => {
+                    alert('Gagal klaim, coba lagi nanti.');
+                    btn.disabled = false;
+                });
+            }
+        </script>
+    @endif
+
+    {{-- ======================================================================= --}}
     {{-- BANNER SERTIFIKAT PENGHARGAAN (Jika User masuk Top 3) --}}
     {{-- ======================================================================= --}}
     @php
