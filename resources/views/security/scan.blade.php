@@ -83,7 +83,7 @@
 
         .scan-area {
             position: absolute;
-            top: 50%;
+            top: 45%; /* Diangkat sedikit agar space bawah lebih lega */
             left: 50%;
             transform: translate(-50%, -50%);
             width: min(250px, 70vw);
@@ -539,34 +539,44 @@
 
         .recent-scans-feed {
             position: absolute;
-            top: 160px;
-            left: 15px;
-            width: auto;
-            max-width: 220px;
+            bottom: 100px;
+            left: 0;
+            width: 100%;
+            padding: 10px;
             z-index: 20;
             display: flex;
-            flex-direction: column;
-            gap: 6px;
-            pointer-events: none;
+            flex-direction: row; /* Horizontal layout */
+            gap: 10px;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            pointer-events: auto; /* Agar bisa di-scroll */
+            scrollbar-width: none; /* Sembunyikan scrollbar Firefox */
+        }
+        .recent-scans-feed::-webkit-scrollbar {
+            display: none; /* Sembunyikan scrollbar Chrome/Safari */
         }
 
         .recent-scan-item {
+            flex: 0 0 auto; /* Supaya lebarnya tidak menyusut */
             background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
-            border-radius: 10px;
-            padding: 6px 12px;
+            border-radius: 12px;
+            padding: 8px 15px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             border-left: 4px solid #00ff00;
-            animation: slideInLeft 0.3s ease-out;
+            animation: slideInBottom 0.3s ease-out;
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.1);
+            min-width: 160px;
+            max-width: 200px;
         }
-
-        @keyframes slideInLeft {
-            from { transform: translateX(-20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        
+        @keyframes slideInBottom {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .offline-badge {
@@ -812,13 +822,13 @@
         function updateRecentScansFeed() {
             const feed = document.getElementById('recentScansFeed');
             feed.innerHTML = '';
-            recentScans.slice(0, 5).forEach(scan => {
+            recentScans.slice(0, 8).forEach(scan => { // Tampilkan lebih banyak karena horizontal
                 const div = document.createElement('div');
                 div.className = 'recent-scan-item';
                 div.style.borderLeftColor = scan.type === 'masuk' ? '#00ff00' : '#ff9800';
                 div.innerHTML = `
-                    <div class="small">
-                        <b class="text-white">${scan.name}</b><br>
+                    <div class="small" style="max-width: 160px;">
+                        <b class="text-white" style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${scan.name}</b>
                         <span class="text-white-50" style="font-size: 0.7rem;">${scan.type.toUpperCase()} - ${scan.time}</span>
                     </div>
                 `;
