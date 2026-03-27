@@ -539,28 +539,29 @@
 
         .recent-scans-feed {
             position: absolute;
-            bottom: 100px;
-            left: 0;
-            width: 100%;
-            padding: 10px;
+            top: 160px;
+            left: 15px;
+            width: auto;
+            max-width: 220px;
             z-index: 20;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             pointer-events: none;
         }
 
         .recent-scan-item {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            border-radius: 8px;
-            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 10px;
+            padding: 6px 12px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             border-left: 4px solid #00ff00;
             animation: slideInLeft 0.3s ease-out;
-            max-width: 80%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         @keyframes slideInLeft {
