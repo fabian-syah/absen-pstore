@@ -284,13 +284,25 @@
                                                     <small class="d-block fw-bold text-dark">{{ $loan->description }}</small>
                                                     <small class="text-muted" style="font-size: 10px;">{{ \Carbon\Carbon::parse($loan->created_at)->format('d M Y') }}</small>
                                                 </div>
-                                                <div class="text-end" style="width: 140px;">
-                                                    <small class="d-block text-danger mb-1">Sisa: Rp {{ number_format($loan->remaining_amount, 0, ',', '.') }}</small>
+                                                <div class="text-end" style="width: 160px;">
+                                                    <div class="d-flex flex-column mb-1">
+                                                        <small class="text-danger fw-bold" style="font-size: 10px;">Sisa: Rp {{ number_format($loan->remaining_amount, 0, ',', '.') }}</small>
+                                                        @if($loan->monthly_deduction > 0)
+                                                            <small class="text-primary fw-bold" style="font-size: 10px;">Cicilan: Rp {{ number_format($loan->monthly_deduction, 0, ',', '.') }}</small>
+                                                        @endif
+                                                    </div>
                                                     <div class="input-group input-group-sm">
                                                         <span class="input-group-text">Rp</span>
+                                                        @php
+                                                            $defaultPay = 0;
+                                                            if($loan->monthly_deduction > 0) {
+                                                                $defaultPay = min($loan->monthly_deduction, $loan->remaining_amount);
+                                                            }
+                                                        @endphp
                                                         <input type="text" name="selected_loans[{{ $loan->id }}]" 
                                                                class="form-control loan-input rupiah-input text-end" 
                                                                placeholder="0" 
+                                                               value="{{ $defaultPay > 0 ? number_format($defaultPay, 0, ',', '.') : '' }}"
                                                                data-max="{{ $loan->remaining_amount }}">
                                                     </div>
                                                 </div>
