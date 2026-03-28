@@ -311,7 +311,7 @@
                                     <span class="input-group-text text-danger">Rp</span>
                                     <input type="text" name="other_deduction" id="other_deduction" class="form-control deduction-input rupiah-input" placeholder="0" value="0">
                                 </div>
-                                <input type="text" name="other_deduction_note" class="form-control form-control-sm mt-1" placeholder="Keterangan...">
+                                <textarea name="other_deduction_note" class="form-control form-control-sm mt-1" rows="3" placeholder="Keterangan (Gunakan poin jika lebih dari satu)..."></textarea>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center alert alert-danger mt-4">
@@ -630,6 +630,42 @@
 
         const overrideCheck = document.getElementById('override_attendance');
         if(overrideCheck) overrideCheck.addEventListener('change', calculate);
+
+        // [BARU] Auto-bullet helper untuk Potongan Lainnya
+        const deductionNote = document.querySelector('textarea[name="other_deduction_note"]');
+        if (deductionNote) {
+            deductionNote.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const value = this.value;
+                    const before = value.substring(0, start);
+                    const after = value.substring(end);
+                    
+                    const lines = before.split('\n');
+                    const lastLine = lines[lines.length - 1];
+                    const match = lastLine.match(/^(\s*[-•*]\s*)/);
+                    
+                    if (match && lastLine.trim() !== match[1].trim()) {
+                        e.preventDefault();
+                        const prefix = '\n' + match[1];
+                        this.value = before + prefix + after;
+                        this.selectionStart = this.selectionEnd = start + prefix.length;
+                    } else if (match && lastLine.trim() === match[1].trim()) {
+                        // Jika baris hanya berisi bullet, hapus bulletnya saat enter (end of list)
+                        e.preventDefault();
+                        this.value = before.substring(0, before.length - lastLine.length) + '\n' + after;
+                        this.selectionStart = this.selectionEnd = start - lastLine.length + 1;
+                    }
+                }
+            });
+            
+            deductionNote.addEventListener('focus', function() {
+                if (this.value === '') {
+                    this.value = '- ';
+                }
+            });
+        }
         
         setTimeout(calculate, 500);
     });

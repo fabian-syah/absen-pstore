@@ -221,7 +221,7 @@
                                 @if($salary->other_deduction > 0)
                                     <tr>
                                         <td class="ps-4">Potongan Lain <br><small
-                                                class="text-muted fst-italic">({{ $salary->other_deduction_note }})</small>
+                                                class="text-muted fst-italic" style="white-space: pre-line;">({{ $salary->other_deduction_note }})</small>
                                         </td>
                                         <td class="text-end pe-4 text-danger">(Rp
                                             {{ number_format($salary->other_deduction, 0, ',', '.') }})
