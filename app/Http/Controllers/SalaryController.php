@@ -313,32 +313,28 @@ class SalaryController extends Controller
             // Hitung Income
             $income = 0;
             if ($request->category == 'employee') {
-                $income = ($request->employee_basic_salary ?? 0) +
-                    ($request->employee_position_allowance ?? 0) +
-                    ($request->employee_owner_privilege ?? 0);
+                $income = (float)($request->employee_basic_salary ?? 0) +
+                    (float)($request->employee_position_allowance ?? 0) +
+                    (float)($request->employee_owner_privilege ?? 0);
             } elseif ($request->category == 'promotor') {
-                $income = ($request->employee_basic_salary ?? 0);
+                $income = (float)($request->employee_basic_salary ?? 0);
             } elseif ($request->category == 'freelance') {
                 // Freelance: Gunakan Total Income yang dihitung JS (Rate * Hari)
-                // Kita ambil dari input hidden 'freelance_total_income' atau hitung ulang di server
-                // Untuk aman, kita hitung ulang di server based on input rate & days (tapi days tidak dikirim form, jadi pakai total income yang dikirim)
-                // Atau lebih aman: Ambil rate dari request, hitung manual jika hari dikirim.
-                // Disini kita pakai nilai yang dikirim frontend 'freelance_total_income' karena hari attendance dinamis di view
-                $income = $request->freelance_total_income ?? 0;
+                $income = (float)($request->freelance_total_income ?? 0);
 
                 // Simpan Rate Harian di kolom basic_salary agar tercatat ratenya
-                $data['employee_basic_salary'] = $request->freelance_daily_salary;
+                $data['employee_basic_salary'] = (float)($request->freelance_daily_salary ?? 0);
             }
 
-            $income += ($request->promotor_bonus ?? 0);
-            $income += ($request->dispensation_amount ?? 0);
+            $income += (float)($request->promotor_bonus ?? 0);
+            $income += (float)($request->dispensation_amount ?? 0);
 
             // Total Deduction (termasuk cuti lebih)
-            $deduction = ($request->alpha_deduction ?? 0) +
-                ($request->late_deduction ?? 0) +
-                ($request->cuti_lebih_deduction ?? 0) + // [BARU] Potongan Cuti Lebih
-                ($totalKasbonDeduction) +
-                ($request->other_deduction ?? 0);
+            $deduction = (float)($request->alpha_deduction ?? 0) +
+                (float)($request->late_deduction ?? 0) +
+                (float)($request->cuti_lebih_deduction ?? 0) + // [BARU] Potongan Cuti Lebih
+                ((float)$totalKasbonDeduction) +
+                (float)($request->other_deduction ?? 0);
 
             $data['total_amount'] = $income - $deduction;
 
