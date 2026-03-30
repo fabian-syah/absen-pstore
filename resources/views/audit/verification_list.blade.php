@@ -78,7 +78,7 @@
                             <tbody>
                                 @foreach ($pendingAttendances as $att)
                                     @php
-                                        $userTimezone = $att->user->branch->timezone ?? 'Asia/Jakarta';
+                                        $userTimezone = $att->user?->branch?->timezone ?? 'Asia/Jakarta';
                                         $checkInLocal = Carbon::parse($att->check_in_time)->timezone($userTimezone);
                                         $checkOutLocal = $att->check_out_time ? Carbon::parse($att->check_out_time)->timezone($userTimezone) : null;
                                         $tzLabel = str_contains($userTimezone, 'Jakarta') ? 'WIB' : (str_contains($userTimezone, 'Makassar') ? 'WITA' : 'WIT');
@@ -86,11 +86,11 @@
                                     <tr class="attendance-row">
                                         <td class="ps-4">
                                             <div>
-                                                <h6 class="mb-0 fw-semibold">{{ $att->user->name }}</h6>
+                                                <h6 class="mb-0 fw-semibold">{{ $att->user?->name ?? 'User Terhapus' }}</h6>
                                                 <div class="text-muted small">
-                                                    {{ $att->user->division->name ?? 'Staff' }}
+                                                    {{ $att->user?->division?->name ?? 'Staff' }}
                                                     <span class="mx-1">•</span>
-                                                    <span class="text-primary">{{ $att->user->branch->name ?? '-' }}</span>
+                                                    <span class="text-primary">{{ $att->user?->branch?->name ?? '-' }}</span>
                                                 </div>
                                             </div>
                                         </td>
@@ -175,7 +175,7 @@
             <div class="d-md-none">
                 @foreach ($pendingAttendances as $att)
                     @php
-                        $userTimezone = $att->user->branch->timezone ?? 'Asia/Jakarta';
+                        $userTimezone = $att->user?->branch?->timezone ?? 'Asia/Jakarta';
                         $checkInLocal = Carbon::parse($att->check_in_time)->timezone($userTimezone);
                         $tzLabel = str_contains($userTimezone, 'Jakarta') ? 'WIB' : (str_contains($userTimezone, 'Makassar') ? 'WITA' : 'WIT');
                     @endphp
@@ -183,9 +183,9 @@
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="flex-grow-1">
-                                    <h6 class="mb-0 fw-semibold">{{ Str::limit($att->user->name, 22) }}</h6>
+                                    <h6 class="mb-0 fw-semibold">{{ Str::limit($att->user?->name ?? 'User Terhapus', 22) }}</h6>
                                     <div class="d-flex align-items-center">
-                                        <small class="text-primary fw-medium">{{ $att->user->branch->name ?? '-' }}</small>
+                                        <small class="text-primary fw-medium">{{ $att->user?->branch?->name ?? '-' }}</small>
                                         <small class="text-muted ms-1">({{ $tzLabel }})</small>
                                     </div>
                                 </div>

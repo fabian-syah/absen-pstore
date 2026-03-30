@@ -47,14 +47,14 @@
                             <tbody>
                                 @foreach ($rejectedAttendances as $att)
                                     @php
-                                        $userTimezone = $att->user->branch->timezone ?? 'Asia/Jakarta';
+                                        $userTimezone = $att->user?->branch?->timezone ?? 'Asia/Jakarta';
                                         $checkInLocal = Carbon::parse($att->check_in_time)->timezone($userTimezone);
                                         $tzLabel = str_contains($userTimezone, 'Jakarta') ? 'WIB' : (str_contains($userTimezone, 'Makassar') ? 'WITA' : 'WIT');
                                     @endphp
                                     <tr>
                                         <td class="ps-4">
-                                            <h6 class="mb-0 fw-semibold">{{ $att->user->name }}</h6>
-                                            <small class="text-muted">{{ $att->user->branch->name ?? '-' }}</small>
+                                            <h6 class="mb-0 fw-semibold">{{ $att->user?->name ?? 'User Terhapus' }}</h6>
+                                            <small class="text-muted">{{ $att->user?->branch?->name ?? '-' }}</small>
                                         </td>
                                         <td>
                                             <div class="fw-bold">{{ $checkInLocal->format('H:i') }} <small
@@ -77,7 +77,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="badge bg-light text-dark border">{{ $att->verifier->name ?? 'System' }}
+                                            <div class="badge bg-light text-dark border">{{ $att->verifier?->name ?? ($att->verified_by_user_id ? 'User Terhapus' : 'System') }}
                                             </div>
                                         </td>
                                         <td class="pe-4">
@@ -98,20 +98,20 @@
             <div class="d-md-none">
                 @foreach ($rejectedAttendances as $att)
                     @php
-                        $userTimezone = $att->user->branch->timezone ?? 'Asia/Jakarta';
+                        $userTimezone = $att->user?->branch?->timezone ?? 'Asia/Jakarta';
                         $checkInLocal = Carbon::parse($att->check_in_time)->timezone($userTimezone);
                     @endphp
                     <div class="card card-mobile-modern mb-3">
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between mb-2">
-                                <h6 class="fw-bold mb-0">{{ $att->user->name }}</h6>
+                                <h6 class="fw-bold mb-0">{{ $att->user?->name ?? 'User Terhapus' }}</h6>
                                 <span class="badge bg-danger rounded-pill">Ditolak</span>
                             </div>
                             <div class="mb-2 small">
                                 <i class="mdi mdi-clock-outline me-1"></i> {{ $checkInLocal->format('d/m/Y H:i') }}
                             </div>
                             <div class="mb-3 small text-muted">
-                                <i class="mdi mdi-account-cancel me-1"></i> Oleh: {{ $att->verifier->name ?? 'System' }}
+                                <i class="mdi mdi-account-cancel me-1"></i> Oleh: {{ $att->verifier?->name ?? ($att->verified_by_user_id ? 'User Terhapus' : 'System') }}
                             </div>
                             <div class="p-2 bg-light rounded small border-start border-danger border-4">
                                 {{ $att->audit_note ?? 'Tanpa keterangan' }}

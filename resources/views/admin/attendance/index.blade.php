@@ -61,16 +61,16 @@
                                     <td>{{ $item->created_at->format('d M Y') }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            @if($item->user->profile_photo_path)
+                                            @if($item->user?->profile_photo_path)
                                                 <img src="{{ asset('storage/' . $item->user->profile_photo_path) }}" alt="profile" class="img-sm rounded-circle me-2"/>
                                             @else
                                                 <div class="img-sm rounded-circle me-2 bg-secondary d-flex justify-content-center align-items-center text-white">
-                                                    {{ substr($item->user->name, 0, 1) }}
+                                                    {{ substr($item->user?->name ?? '?', 0, 1) }}
                                                 </div>
                                             @endif
                                             <div>
-                                                <h6>{{ $item->user->name }}</h6>
-                                                <small class="text-muted">{{ $item->user->login_id }}</small>
+                                                <h6>{{ $item->user?->name ?? 'User Terhapus' }}</h6>
+                                                <small class="text-muted">{{ $item->user?->login_id ?? '-' }}</small>
                                             </div>
                                         </div>
                                     </td>
