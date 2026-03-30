@@ -657,7 +657,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     Route::fallback(function () {
-        return response()->view('errors.404', [], 404);
+        abort(404);
     });
 });
 
