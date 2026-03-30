@@ -496,6 +496,7 @@
     }
 
 
+    /*
     var proBanner = document.querySelector('#proBanner');
     var navbar = document.querySelector('.navbar');
     if (proBanner) {
@@ -513,16 +514,21 @@
         bannerClose.addEventListener('click', function () {
           proBanner.classList.add('d-none');
           proBanner.classList.remove('d-flex');
-          document.querySelector('.navbar').classList.remove('pt-5');
-          document.querySelector('.navbar').classList.add('fixed-top');
-          document.querySelector('.page-body-wrapper').classList.add('proBanner-padding-top');
-          document.querySelector('.navbar').classList.remove('mt-3');
+          if (document.querySelector('.navbar')) {
+              document.querySelector('.navbar').classList.remove('pt-5');
+              document.querySelector('.navbar').classList.add('fixed-top');
+              document.querySelector('.navbar').classList.remove('mt-3');
+          }
+          if (document.querySelector('.page-body-wrapper')) {
+              document.querySelector('.page-body-wrapper').classList.add('proBanner-padding-top');
+          }
           var date = new Date();
           date.setTime(date.getTime() + 24 * 60 * 60 * 1000);
           $.cookie('staradmin2-pro-banner', "true", { expires: date });
         });
       }
     }
+    */
 
   });
   // iconify.load('icons.svg').then(function() {
