@@ -9,201 +9,175 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Using MDI for fingerprint icon compatibility -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css">
 
     <style>
         :root {
-            /* Using the same dark mode colors as login page */
-            --primary-gold: #D4AF37;
-            --soft-gold: #F4C430;
-            --deep-emerald: #013220;
-            --glass-bg: rgba(0, 34, 22, 0.7);
-            --glass-border: rgba(212, 175, 55, 0.2);
-            --body-bg: radial-gradient(circle at center, #004d2e 0%, #001a0f 100%);
-            --text-main: #ffffff;
-            --text-muted: rgba(255, 255, 255, 0.6);
+            --primary-blue: #0d6efd;
+            --primary-dark: #0a58ca;
+            --body-bg: #f4f7fe;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
         }
 
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: var(--body-bg);
+            background-image: radial-gradient(circle at 100% 0%, rgba(13, 110, 253, 0.05) 0%, transparent 50%),
+                              radial-gradient(circle at 0% 100%, rgba(13, 110, 253, 0.05) 0%, transparent 50%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Flex centering */
-            overflow-y: auto;
             color: var(--text-main);
-            margin: 0;
             padding: 20px;
         }
 
-        .bg-ornaments {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 1;
-        }
-
         .login-wrapper {
-            position: relative;
-            z-index: 10;
             width: 100%;
             max-width: 400px;
             text-align: center;
-            margin: 0 auto;
-            /* Strict block centering */
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .login-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-border);
-            border-radius: 35px;
+            background: var(--card-bg);
+            border-radius: 32px;
             padding: 3rem 2rem;
-            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.8);
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 100%;
-            /* Take full width of wrapper */
-            box-sizing: border-box;
-            /* Important for padding */
         }
 
         .fingerprint-sensor {
             width: 120px;
             height: 120px;
-            border: 2px dashed rgba(212, 175, 55, 0.3);
-            border-radius: 50%;
+            background: #f8fafc;
+            border: 2px dashed #e2e8f0;
+            border-radius: 35px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             margin-bottom: 2rem;
-            flex-shrink: 0;
-            /* Prevent shrinking */
         }
 
-        /* ... existing styles ... */
         .fingerprint-sensor i {
-            font-size: 80px;
-            color: rgba(255, 255, 255, 0.5);
+            font-size: 70px;
+            color: #cbd5e1;
             transition: all 0.3s;
         }
 
         .fingerprint-sensor:hover {
-            border-color: var(--primary-gold);
+            border-color: var(--primary-blue);
             transform: scale(1.05);
-            background: rgba(212, 175, 55, 0.05);
+            background: #eff6ff;
         }
 
         .fingerprint-sensor:hover i {
-            color: var(--primary-gold);
+            color: var(--primary-blue);
         }
 
         .scan-line {
             position: absolute;
             width: 100%;
-            height: 4px;
-            background: #00ce68;
+            height: 3px;
+            background: var(--primary-blue);
             top: -10px;
-            box-shadow: 0 0 10px #00ce68;
+            box-shadow: 0 0 15px var(--primary-blue);
             opacity: 0;
+            z-index: 5;
         }
 
         .scanning {
-            border-color: #00ce68 !important;
+            border-color: var(--primary-blue) !important;
             border-style: solid;
         }
 
         .scanning i {
-            color: #00ce68 !important;
+            color: var(--primary-blue) !important;
         }
 
         .scanning .scan-line {
             opacity: 1;
-            animation: scanMove 1.5s infinite linear;
+            animation: scanMove 2s infinite linear;
         }
 
         @keyframes scanMove {
-            0% {
-                top: 0;
-            }
-
-            50% {
-                top: 100%;
-            }
-
-            100% {
-                top: 0;
-            }
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
         }
 
         h3 {
             font-weight: 800;
-            margin-bottom: 0.5rem;
-            color: var(--primary-gold);
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
             font-size: 1.5rem;
+            letter-spacing: -0.5px;
         }
 
         p {
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             margin-bottom: 2rem;
-            line-height: 1.5;
-        }
-
-        .text-success {
-            color: #00ce68 !important;
-            font-weight: bold;
+            line-height: 1.6;
         }
 
         .back-link {
             margin-top: 2rem;
-            color: var(--primary-gold);
+            color: var(--primary-blue);
             text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 600;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
 
         .back-link:hover {
-            text-decoration: underline;
+            color: var(--primary-dark);
+            transform: translateX(-3px);
         }
 
-        /* Responsive Improvements */
+        .success-text {
+            color: #10b981 !important;
+            font-weight: 700;
+        }
+
+        .error-text {
+            color: #ef4444 !important;
+            font-weight: 700;
+        }
+
         @media (max-width: 480px) {
             .login-card {
-                padding: 2rem 1.5rem;
-                border-radius: 25px;
+                padding: 2.5rem 1.5rem;
             }
-
             .fingerprint-sensor {
                 width: 100px;
                 height: 100px;
-                margin-bottom: 1.5rem;
             }
-
             .fingerprint-sensor i {
                 font-size: 60px;
-            }
-
-            h3 {
-                font-size: 1.3rem;
-            }
-
-            p {
-                font-size: 0.85rem;
-                margin-bottom: 1.5rem;
             }
         }
     </style>
@@ -211,19 +185,10 @@
 
 <body>
 
-    <div class="bg-ornaments">
-        <svg width="100%" height="100%" opacity="0.04">
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="1" />
-            </pattern>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-    </div>
-
     <div class="login-wrapper">
         <div class="login-card">
-            <h3>Fingerprint Access</h3>
-            <p>Sentuh sensor untuk verifikasi identitas</p>
+            <h3>Akses Biometrik</h3>
+            <p>Sentuh sensor fingerprint pada perangkat Anda untuk verifikasi.</p>
 
             <form action="{{ route('fingerprint.authenticate') }}" method="POST" id="fingerprintForm">
                 @csrf
@@ -233,7 +198,7 @@
                     <div class="scan-line"></div>
                 </div>
 
-                <p id="status-text" style="height: 20px; margin-bottom: 0;">Ready to Scan</p>
+                <p id="status-text" style="height: 24px; margin-bottom: 0;">Siap memindai...</p>
             </form>
 
             <a href="{{ route('login') }}" class="back-link">
@@ -248,73 +213,53 @@
         const form = document.getElementById('fingerprintForm');
 
         async function startScan() {
-            // Prevent double click/run
             if (sensor.classList.contains('scanning')) return;
 
-            // 1. Check if Browser Supports WebAuthn
             if (!window.PublicKeyCredential) {
-                alert("Browser ini tidak mendukung WebAuthn (Fingerprint/FaceID).");
+                statusText.innerText = "Unsupported Browser";
+                statusText.classList.add('error-text');
                 return;
             }
 
             try {
-                // UI Update
                 sensor.classList.add('scanning');
-                statusText.innerText = "Mengakses Sensor Biometrik...";
-                statusText.classList.add('text-success');
+                statusText.innerText = "Menunggu verifikasi...";
+                statusText.className = "success-text";
 
-                // 2. Create Dummy Challenge
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
 
-                // 3. Trigger Native OS Biometric Prompt
                 const credential = await navigator.credentials.create({
                     publicKey: {
                         challenge: challenge,
                         rp: { name: "PStore Absensi" },
                         user: {
                             id: new Uint8Array(16),
-                            name: "bianajah5",
-                            displayName: "Fabian Syah"
+                            name: "user",
+                            displayName: "Karyawan PStore"
                         },
                         pubKeyCredParams: [{ alg: -7, type: "public-key" }],
                         authenticatorSelection: {
-                            authenticatorAttachment: "platform", // Forces built-in sensor
+                            authenticatorAttachment: "platform",
                             userVerification: "required"
                         },
                         timeout: 60000
                     }
                 });
 
-                // 4. Success!
-                console.log("Biometric Success:", credential);
-                statusText.innerText = "Verifikasi Berhasil! Sedang masuk...";
-
-                setTimeout(() => {
-                    form.submit();
-                }, 500);
+                statusText.innerText = "Verifikasi Berhasil!";
+                setTimeout(() => form.submit(), 600);
 
             } catch (error) {
-                console.error(error);
                 sensor.classList.remove('scanning');
-                statusText.innerText = "Gagal. Klik icon untuk coba lagi.";
-                statusText.classList.remove('text-success');
-                statusText.classList.add('text-danger');
-
-                // Only alert if it's not a timeout or user cancellation to avoid spamming on load
-                if (error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
-                    // alert("Biometric failed: " + error.message);
-                }
+                statusText.innerText = "Gagal. Ketuk sensor untuk mencoba lagi.";
+                statusText.className = "error-text";
             }
         }
 
-        // Trigger on click
         sensor.addEventListener('click', startScan);
-
-        // Trigger automatically on load
         document.addEventListener('DOMContentLoaded', () => {
-            // Slight delay to ensure page is ready and animations are smooth
-            setTimeout(startScan, 500);
+            setTimeout(startScan, 800);
         });
     </script>
 </body>

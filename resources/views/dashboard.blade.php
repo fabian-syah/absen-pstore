@@ -475,9 +475,7 @@
         </div>
     @endif
 
-    {{-- ======================================================================= --}}
-    {{-- [UPGRADED] RAMADHAN COUNTDOWN: THE ROYAL ISLAMIC EDITION --}}
-    {{-- ======================================================================= --}}
+
 
 
     {{-- BAGIAN BARU: ATTENDANCE WRAPPED (Desember Only) --}}
@@ -806,7 +804,7 @@
                 </div>
             </div>
             <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card card-bank gradient-ramadhan-dark">
+                <div class="card card-bank bg-dark">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-chart-bar"></i></div>
@@ -2407,19 +2405,19 @@
         }
 
         /* Regular white cards - DARK text  */
-        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) {
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) {
             background: #ffffff !important;
         }
 
-        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) .card-title,
-        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h1,
-        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h2,
-        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h3,
-        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h4,
-        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h5,
-        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) h6,
-        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) p,
-        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.royal-ramadan-card):not(.birthday-card) span {
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) .card-title,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h1,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h2,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h3,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h4,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h5,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h6,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) p,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) span {
             color: #212529 !important;
         }
 
@@ -2465,341 +2463,7 @@
             color: #333 !important;
         }
 
-        /* ROYAL RAMADHAN CARD - Ensure white/gold text on dark gradient */
-        .royal-ramadan-card,
-        .royal-ramadan-card * {
-            color: #ffffff !important;
-        }
 
-        .royal-ramadan-card .text-gradient-gold,
-        .royal-ramadan-card h1,
-        .royal-ramadan-card .badge-royal {
-            color: #FFD700 !important;
-        }
-
-        /* === ROYAL RAMADHAN THEME - LUXURIOUS VERSION === */
-        @import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@700&display=swap');
-
-        .royal-ramadan-card {
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%) !important;
-            /* Deep Mystical Blue/Green - ENFORCED */
-            position: relative;
-            border-radius: 24px !important;
-            border: 1px solid rgba(255, 215, 0, 0.3) !important;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
-        }
-
-        .font-arabic {
-            font-family: 'Scheherazade New', serif;
-            /* Font style Arab/Timur Tengah */
-        }
-
-        /* Pattern Background */
-        .royal-bg-pattern {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                radial-gradient(circle at 50% 50%, transparent 0%, transparent 100%),
-                repeating-linear-gradient(45deg, rgba(255, 215, 0, 0.03) 0px, rgba(255, 215, 0, 0.03) 1px, transparent 1px, transparent 10px);
-            opacity: 0.6;
-            z-index: 1;
-        }
-
-        /* Silhouette Masjid */
-        .mosque-silhouette {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 150px;
-            background-image: url('https://cdn.pixabay.com/photo/2017/01/31/15/34/mosque-2025088_1280.png');
-            /* Gambar Siluet Transparan */
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: bottom left;
-            opacity: 0.15;
-            z-index: 2;
-            filter: invert(1);
-            /* Putihkan siluet */
-        }
-
-        /* Cahaya Bulan */
-        .moon-glow {
-            position: absolute;
-            top: -100px;
-            right: -100px;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
-            z-index: 1;
-        }
-
-        /* Teks Emas Mewah */
-        .text-gradient-gold {
-            background: linear-gradient(to bottom, #fff 20%, #ffd700 80%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Badge 1447 H */
-        .badge-royal {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 215, 0, 0.4);
-            padding: 8px 20px;
-            border-radius: 50px;
-            color: #ffd700;
-            font-weight: 600;
-            font-size: 0.9rem;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Quote Box */
-        .quote-box-royal {
-            background: rgba(0, 0, 0, 0.2);
-            border-left: 3px solid #ffd700;
-            padding: 10px 15px;
-            border-radius: 0 8px 8px 0;
-            display: inline-block;
-        }
-
-        /* --- LANTERNS (LENTERA) --- */
-        .r-lantern {
-            position: absolute;
-            top: -20px;
-            background: #111;
-            border: 2px solid #ffd700;
-            border-radius: 4px;
-            z-index: 5;
-            transform-origin: top center;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        .r-lantern::before {
-            /* Tali */
-            content: '';
-            position: absolute;
-            top: -100px;
-            left: 50%;
-            width: 2px;
-            height: 100px;
-            background: rgba(255, 215, 0, 0.5);
-            transform: translateX(-50%);
-        }
-
-        .r-lantern-light {
-            position: absolute;
-            top: 20%;
-            left: 20%;
-            right: 20%;
-            bottom: 20%;
-            background: radial-gradient(circle, #fff 0%, #ffd700 60%, transparent 100%);
-            opacity: 0.8;
-            border-radius: 50%;
-            filter: blur(5px);
-            animation: lanternFlicker 3s infinite alternate;
-        }
-
-        .l-big {
-            right: 10%;
-            width: 40px;
-            height: 60px;
-            animation: lanternSwing 6s ease-in-out infinite alternate;
-        }
-
-        .l-med {
-            right: 20%;
-            width: 30px;
-            height: 45px;
-            top: -10px;
-            animation: lanternSwing 5s ease-in-out infinite alternate-reverse;
-            opacity: 0.9;
-        }
-
-        .l-small {
-            right: 5%;
-            width: 25px;
-            height: 35px;
-            top: -5px;
-            animation: lanternSwing 4s ease-in-out infinite alternate;
-            opacity: 0.8;
-        }
-
-        @keyframes lanternSwing {
-            from {
-                transform: rotate(3deg);
-            }
-
-            to {
-                transform: rotate(-3deg);
-            }
-        }
-
-        @keyframes lanternFlicker {
-
-            0%,
-            100% {
-                opacity: 0.6;
-                transform: scale(0.9);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.1);
-            }
-        }
-
-        /* --- TIMER BOXES --- */
-        .royal-countdown-wrapper {
-            position: relative;
-            z-index: 10;
-        }
-
-        .royal-timer-box {
-            width: 80px;
-            height: 100px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Efek Kilau di Timer */
-        .royal-timer-box::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transform: rotate(45deg);
-            animation: shine 3s infinite;
-        }
-
-        .royal-time {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #fff;
-            line-height: 1;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            font-family: 'Consolas', monospace;
-        }
-
-        .royal-label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #ffd700;
-            margin-top: 5px;
-            letter-spacing: 1px;
-        }
-
-        /* Loading Bar */
-        .loading-bar-container {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .loading-bar-fill {
-            height: 100%;
-            background: #ffd700;
-            width: 60%;
-            /* Statis dulu, nanti bisa dinamis JS */
-            box-shadow: 0 0 10px #ffd700;
-            animation: loadProgress 2s ease-out;
-        }
-
-        @keyframes shine {
-            0% {
-                transform: translateX(-100%) rotate(45deg);
-            }
-
-            100% {
-                transform: translateX(100%) rotate(45deg);
-            }
-        }
-
-        @keyframes loadProgress {
-            from {
-                width: 0%;
-            }
-
-            to {
-                width: 60%;
-            }
-        }
-
-        /* Particles Container (Stars) */
-        .particles-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        /* Manual Stars (CSS Only fallback) */
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 0 5px #fff;
-            animation: twinkle 2s infinite ease-in-out;
-        }
-
-        .s-1 {
-            width: 3px;
-            height: 3px;
-            top: 20%;
-            left: 15%;
-            animation-delay: 0s;
-        }
-
-        .s-2 {
-            width: 2px;
-            height: 2px;
-            top: 40%;
-            left: 30%;
-            animation-delay: 1s;
-        }
-
-        .s-3 {
-            width: 4px;
-            height: 4px;
-            top: 10%;
-            right: 40%;
-            animation-delay: 0.5s;
-        }
-
-        @keyframes twinkle {
-
-            0%,
-            100% {
-                opacity: 0.3;
-                transform: scale(0.8);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-        }
 
         /* === [BARU] NOSTALGIA GALLERY STYLES === */
         .gallery-scroll-container {
