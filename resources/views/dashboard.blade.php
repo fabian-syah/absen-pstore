@@ -6,59 +6,13 @@
 
 @push('styles')
     <style>
-        /* RAMADHAN THEME GRADIENTS */
-        .gradient-ramadhan-green {
-            background: linear-gradient(135deg, #0f5132 0%, #198754 100%) !important;
-            color: white;
-        }
-
-        .gradient-ramadhan-gold {
-            background: linear-gradient(135deg, #B48811 0%, #F1C40F 100%) !important;
-            color: white;
-        }
-
-        .gradient-ramadhan-teal {
-            background: linear-gradient(135deg, #0e4c44 0%, #20c997 100%) !important;
-            color: white;
-        }
-
-        .gradient-ramadhan-red {
-            background: linear-gradient(135deg, #8a1c1c 0%, #dc3545 100%) !important;
-            color: white;
-        }
-
-        .gradient-ramadhan-dark {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%) !important;
-            color: white;
-        }
-
-        .text-gold {
-            color: #F1C40F !important;
-        }
-
-        .border-gold {
-            border-color: #F1C40F !important;
-        }
-
-        /* New Soft Backgrounds for Cards */
-        .luxury-ramadhan-bg {
-            background: radial-gradient(circle at top right, #fffbf0 0%, #fff 100%) !important;
-            border: 1px solid #FFEda6 !important;
-        }
-
-        .soft-green-bg {
-            background: linear-gradient(145deg, #f0fff4 0%, #ffffff 100%) !important;
-            border: 1px solid #d1e7dd !important;
-        }
-
         /* Override Section Icons */
         .section-icon {
-            background: linear-gradient(135deg, #B48811 0%, #F1C40F 100%) !important;
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
             color: white !important;
-            box-shadow: 0 4px 10px rgba(241, 196, 15, 0.3) !important;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3) !important;
         }
 
-        /* ============================================ */
         /* DOCUMENT WARNING POPUP STYLES */
         /* ============================================ */
         .document-warning-overlay {
@@ -524,123 +478,7 @@
     {{-- ======================================================================= --}}
     {{-- [UPGRADED] RAMADHAN COUNTDOWN: THE ROYAL ISLAMIC EDITION --}}
     {{-- ======================================================================= --}}
-    @if (isset($ramadanData) && $ramadanData)
-        <div class="row mb-5 animate-enter" style="animation-delay: 0.1s">
-            <div class="col-12">
-                <div class="card border-0 shadow-lg overflow-hidden royal-ramadan-card">
 
-                    {{-- LAYER 1: Background Elements --}}
-                    <div class="royal-bg-pattern"></div>
-                    <div class="mosque-silhouette"></div> {{-- Siluet Masjid --}}
-                    <div class="moon-glow"></div> {{-- Cahaya Bulan --}}
-
-                    {{-- LAYER 2: Animated Lanterns (Gantung) --}}
-                    <div class="r-lantern l-big">
-                        <div class="r-lantern-light"></div>
-                    </div>
-                    <div class="r-lantern l-med">
-                        <div class="r-lantern-light"></div>
-                    </div>
-                    <div class="r-lantern l-small">
-                        <div class="r-lantern-light"></div>
-                    </div>
-
-                    {{-- LAYER 3: Particles (Stars) --}}
-                    <div id="particles-js" class="particles-container"></div>
-
-                    <div class="card-body position-relative z-index-10 py-5 px-4">
-                        <div class="row align-items-center">
-
-                            {{-- KIRI: TYPOGRAPHY & MESSAGE --}}
-                            <div class="col-lg-7 text-center text-lg-start mb-4 mb-lg-0">
-                                <div class="d-inline-block mb-3 animate-float">
-                                    <span class="badge-royal">
-                                        <i class="mdi mdi-star-crescent text-warning me-2"></i>
-                                        1447 H / 2026 M
-                                    </span>
-                                </div>
-
-                                {{-- Kaligrafi / Teks Arab Besar --}}
-                                <h1 class="display-4 fw-bold text-gradient-gold mb-2 font-arabic"
-                                    style="line-height: 1.2; text-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                                    @if ($ramadanData['is_today'])
-                                        Ramadhan Kareem
-                                    @else
-                                        Marhaban Ya Ramadhan
-                                    @endif
-                                </h1>
-
-                                <p class="lead text-white-50 mb-4 px-3 px-lg-0"
-                                    style="font-weight: 300; letter-spacing: 0.5px;">
-                                    @if ($ramadanData['is_today'])
-                                        "Selamat Menunaikan Ibadah Puasa. Semoga hari-hari kita penuh berkah dan ampunan."
-                                    @else
-                                        "Tamu agung akan segera tiba. Siapkan hati untuk bulan penuh ampunan."
-                                    @endif
-                                </p>
-
-                                {{-- Quote Box Kecil --}}
-                                <div class="quote-box-royal mx-auto mx-lg-0">
-                                    <i class="mdi mdi-format-quote-open text-warning me-1"></i>
-                                    <span class="fst-italic small text-light">Ahlan Wa Sahlan, Bulan Suci.</span>
-                                </div>
-                            </div>
-
-                            {{-- KANAN: LUXURY COUNTDOWN TIMER --}}
-                            <div class="col-lg-5">
-                                @if (!$ramadanData['is_today'])
-                                    <div class="royal-countdown-wrapper">
-                                        <div class="d-flex justify-content-center gap-3">
-
-                                            {{-- HARI --}}
-                                            <div class="royal-timer-box">
-                                                <div class="timer-circle-bg"></div>
-                                                <span class="royal-time" id="royal-days">{{ $ramadanData['days_left'] }}</span>
-                                                <span class="royal-label">HARI</span>
-                                            </div>
-
-                                            {{-- JAM --}}
-                                            <div class="royal-timer-box">
-                                                <div class="timer-circle-bg"></div>
-                                                <span class="royal-time" id="royal-hours">00</span>
-                                                <span class="royal-label">JAM</span>
-                                            </div>
-
-                                            {{-- MENIT --}}
-                                            <div class="royal-timer-box">
-                                                <div class="timer-circle-bg"></div>
-                                                <span class="royal-time" id="royal-minutes">00</span>
-                                                <span class="royal-label">MENIT</span>
-                                            </div>
-
-                                        </div>
-
-                                        <div class="text-center mt-4">
-                                            <div class="loading-bar-container">
-                                                <div class="loading-bar-fill"></div>
-                                            </div>
-                                            <small class="text-warning text-uppercase letter-spacing-2 mt-2 d-block">
-                                                Menuju Maghrib Pertama
-                                            </small>
-                                        </div>
-                                    </div>
-                                @else
-                                    {{-- TAMPILAN HARI H --}}
-                                    <div class="text-center animate-pulse-gold">
-                                        <img src="https://cdn-icons-png.flaticon.com/512/4358/4358661.png" width="80"
-                                            class="mb-3 drop-shadow-glow">
-                                        <h2 class="text-white fw-bold">Selamat Berpuasa</h2>
-                                        <p class="text-warning mb-0">Semoga amal ibadah kita diterima Allah SWT.</p>
-                                    </div>
-                                @endif
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
 
     {{-- BAGIAN BARU: ATTENDANCE WRAPPED (Desember Only) --}}
     @if (\Carbon\Carbon::now()->month == 12)
@@ -828,7 +666,7 @@
         {{-- WIDGET ADMIN --}}
         <div class="row mb-4">
             <div class="col-lg col-md-4 col-sm-6 col-12 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                <div class="card card-bank gradient-ramadhan-gold">
+                <div class="card card-bank bg-primary">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
@@ -842,7 +680,7 @@
                 </div>
             </div>
             <div class="col-lg col-md-4 col-sm-6 col-12 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card card-bank gradient-ramadhan-green">
+                <div class="card card-bank bg-success">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-office-building"></i></div>
@@ -856,7 +694,7 @@
                 </div>
             </div>
             <div class="col-lg col-md-4 col-sm-6 col-12 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
-                <div class="card card-bank gradient-ramadhan-teal">
+                <div class="card card-bank bg-info">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
@@ -870,7 +708,7 @@
                 </div>
             </div>
             <div class="col-lg col-md-4 col-sm-6 col-12 grid-margin stretch-card animate-enter" style="animation-delay: 0.4s">
-                <div class="card card-bank gradient-ramadhan-red">
+                <div class="card card-bank bg-danger">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
@@ -884,7 +722,7 @@
                 </div>
             </div>
             <div class="col-lg col-md-4 col-sm-6 col-12 grid-margin stretch-card animate-enter" style="animation-delay: 0.5s">
-                <div class="card card-bank gradient-ramadhan-dark">
+                <div class="card card-bank bg-dark">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-car-off"></i></div>
@@ -902,7 +740,7 @@
         {{-- WIDGET AUDIT --}}
         <div class="row mb-4">
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
-                <div class="card card-bank gradient-ramadhan-red">
+                <div class="card card-bank bg-danger">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
@@ -919,7 +757,7 @@
                 </div>
             </div>
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
-                <div class="card card-bank gradient-ramadhan-teal">
+                <div class="card card-bank bg-info">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-file-document-edit-outline"></i></div>
@@ -936,7 +774,7 @@
                 </div>
             </div>
             <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
-                <div class="card card-bank gradient-ramadhan-green">
+                <div class="card card-bank bg-success">
                     <div class="card-body">
                         <div class="card-bank-chip"></div>
                         <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
@@ -1059,7 +897,7 @@
         {{-- 1. TOP 3 ABSENSI (USER/ADMIN/AUDIT/LEADER) --}}
         @if (auth()->user()->role != 'security' && isset($leaderboard) && count($leaderboard) > 0)
             <div class="col-12">
-                <div class="card border-0 shadow-lg luxury-card luxury-ramadhan-bg overflow-hidden">
+                <div class="card border-0 shadow-sm">
                     <div class="luxury-bg-glow"></div>
                     <div class="luxury-bg-pattern"></div>
 
@@ -1201,7 +1039,7 @@
                 count($topScanners) > 0
             )
             <div class="col-12 mt-4">
-                <div class="card border-0 shadow-lg luxury-card luxury-ramadhan-bg overflow-hidden">
+                <div class="card border-0 shadow-sm">
                     <div class="luxury-bg-pattern"></div>
                     <div class="card-body p-4 position-relative z-index-1">
                         <div class="text-center mb-5">
@@ -4130,38 +3968,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-            // --- ROYAL RAMADHAN JS ---
-            @if (isset($ramadanData) && !$ramadanData['is_today'])
-                const royalRamadanDate = new Date("{{ $ramadanData['date'] }}T00:00:00");
 
-                function updateRoyalCountdown() {
-                    const now = new Date();
-                    const diff = royalRamadanDate - now;
-
-                    if (diff <= 0) {
-                        location.reload(); // Refresh halaman saat hari H
-                        return;
-                    }
-
-                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-                    // Update DOM elements
-                    const elDays = document.getElementById('royal-days');
-                    const elHours = document.getElementById('royal-hours');
-                    const elMinutes = document.getElementById('royal-minutes');
-
-                    // Efek Animasi Angka Berubah (Optional)
-                    if (elDays && elDays.innerText != days) elDays.innerText = days;
-                    if (elHours) elHours.innerText = hours.toString().padStart(2, '0');
-                    if (elMinutes) elMinutes.innerText = minutes.toString().padStart(2, '0');
-                }
-
-                // Jalankan setiap detik
-                setInterval(updateRoyalCountdown, 1000);
-                updateRoyalCountdown(); // Run immediately
-            @endif
 
         // --- DISMISS LIBUR NOTICE POPUP ---
         function dismissLiburNotice() {

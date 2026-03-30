@@ -5,379 +5,6 @@
 
 @push('styles')
     <style>
-        /* RAMADHAN THEME OVERRIDES */
-        .stat-card { border: none; border-radius: 16px; background: white; transition: all 0.3s ease; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03); border-top: 4px solid transparent; }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); }
-        
-        .stat-card.primary-theme { border-top-color: #0d8a57; }
-        .stat-card.success-theme { border-top-color: #198754; }
-        .stat-card.warning-theme { border-top-color: #ffc107; }
-        .stat-card.danger-theme { border-top-color: #dc3545; }
-
-        .stat-icon-box { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-        .bg-soft-primary { background-color: rgba(13, 138, 87, 0.1); color: #0d8a57; } /* Green Islamic */
-        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
-        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); color: #B48608; } /* Dark Gold */
-        .bg-soft-danger  { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
-        
-        /* New Badges */
-        .bg-soft-indigo  { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; border: 1px solid rgba(102, 16, 242, 0.2); }
-        .bg-soft-purple  { background-color: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.2); }
-        .bg-soft-teal    { background-color: rgba(32, 201, 151, 0.1); color: #20c997; border: 1px solid rgba(32, 201, 151, 0.2); }
-
-        .team-card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); overflow: hidden; }
-        
-        /* Islamic Green Gradient Header */
-        .team-header { 
-            background: linear-gradient(135deg, #0f5132 0%, #198754 100%) !important; 
-            padding: 2rem; 
-            color: white; 
-            position: relative;
-        }
-        .team-header::before {
-            content: '';
-            position: absolute;
-            top: 0; right: 0; bottom: 0; left: 0;
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-
-        .team-count { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
-        .member-card { transition: all 0.3s ease; border-left: 4px solid transparent; }
-        .member-card:hover { background: #f0fff4; border-left-color: #198754; transform: translateX(5px); }
-        .avatar-wrapper { position: relative; }
-        .avatar-wrapper::after { content: ''; position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background: #10b981; border: 2px solid white; border-radius: 50%; z-index: 5; }
-        .avatar-wrapper.offline::after { background: #94a3b8; }
-        .status-badge { font-weight: 600; padding: 0.5rem 1rem; border-radius: 50px; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
-        .status-badge i { font-size: 1rem; }
-        
-        .photo-preview { width: 30px; height: 30px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.5); }
-        .view-photo-btn { border: none; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
-        .view-photo-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        
-        .audit-mode-badge {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid #198754;
-            color: #0d8a57; /* Dark Green Text */
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        /* Modal Ramadhan Theme */
-        .modal-content { border: none; border-radius: 20px; overflow: hidden; }
-        .modal-image-wrapper { background: linear-gradient(135deg, #064e3b 0%, #115e59 100%); padding: 1rem; }
-    </style>
-@endpush
-
-@section('content')
-
-    {{-- STATISTIK PANEL (RAMADHAN STYLE) --}}
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="card stat-card primary-theme h-100">
-                <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><p class="text-uppercase fw-bold text-muted small mb-1">Total Tim</p><h3 class="mb-0 fw-bold text-dark">{{ $stats['total'] }}</h3></div>
-                    <div class="stat-icon-box bg-soft-primary"><i class="mdi mdi-mosque"></i></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card stat-card success-theme h-100">
-                <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><p class="text-uppercase fw-bold text-muted small mb-1">Hadir / Lembur</p><h3 class="mb-0 fw-bold text-success">{{ $stats['present'] }}</h3></div>
-                    <div class="stat-icon-box bg-soft-success"><i class="mdi mdi-check-circle"></i></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card stat-card warning-theme h-100">
-                <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><p class="text-uppercase fw-bold text-muted small mb-1">Izin / Sakit</p><h3 class="mb-0 fw-bold text-warning">{{ $stats['izin_sakit'] }}</h3></div>
-                    <div class="stat-icon-box bg-soft-warning"><i class="mdi mdi-file-document"></i></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card stat-card danger-theme h-100">
-                <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><p class="text-uppercase fw-bold text-muted small mb-1">Belum Absen</p><h3 class="mb-0 fw-bold text-danger">{{ $stats['alpha'] }}</h3></div>
-                    <div class="stat-icon-box bg-soft-danger"><i class="mdi mdi-clock-alert"></i></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card team-card">
-                
-                {{-- HEADER RAMADHAN --}}
-                <div class="team-header">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3" style="position: relative; z-index: 2;">
-                        
-                        {{-- Title --}}
-                        <div>
-                            <h4 class="mb-1 fw-bold">
-                                <i class="mdi mdi-moon-waning-crescent me-2 text-warning"></i>Monitoring Tim & Wilayah
-                            </h4>
-                            <p class="mb-0 opacity-75 small">Pantau status kehadiran rekan tim secara real-time.</p>
-                        </div>
-
-                        {{-- COMPACT AUDIT INFO --}}
-                        @if($assignedAudits->count() > 0)
-                            <div class="d-flex flex-wrap gap-2 justify-content-md-end align-items-center ms-md-auto">
-                               @foreach($assignedAudits as $audit)
-                                   <div class="audit-mode-badge" title="Audit / PIC">
-                                       {{-- Foto --}}
-                                       @if($audit->profile_photo_path)
-                                           <img src="{{ Storage::url($audit->profile_photo_path) }}" class="rounded-circle border border-2 border-white" width="24" height="24" style="object-fit: cover;">
-                                       @else
-                                           <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold border border-2 border-white" style="width: 24px; height: 24px; font-size: 10px;">
-                                               {{ substr($audit->name, 0, 1) }}
-                                           </div>
-                                       @endif
-                                       {{-- Nama --}}
-                                       <span class="fw-bold">
-                                           {{ explode(' ', $audit->name)[0] }}
-                                       </span>
-                                   </div>
-                               @endforeach
-                            </div>
-                        @endif
-
-                        {{-- Total Badge --}}
-                        <span class="team-count badge rounded-pill px-3 py-2 ms-md-2">
-                            <i class="mdi mdi-account-group me-1"></i>{{ $myTeam->count() }} Anggota
-                        </span>
-                    </div>
-                </div>
-
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="ps-4 py-3" width="5%">#</th>
-                                    <th class="py-3" width="40%">Nama & Posisi</th>
-                                    <th class="py-3" width="25%">Status Hari Ini</th>
-                                    <th class="py-3" width="30%">Bukti / Keterangan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($myTeam as $key => $member)
-                                    @php
-                                        $attendance = $member->attendances->first();
-                                        $leave = $member->leaveRequests->first();
-                                        
-                                        // LOGIC BARU: Prioritaskan Leave Status
-                                        $isAttendanceLeave = $attendance && ($attendance->attendance_type == 'leave' || in_array(strtolower($attendance->presence_status ?? ''), ['izin', 'sakit', 'cuti', 'libur', 'dinas luar']));
-                                        
-                                        $isWfh = $leave && $leave->type == 'wfh';
-                                        
-                                        $memberTz = $member->branch->timezone ?? 'Asia/Jakarta';
-                                        
-                                        $isOvertimeYesterday = false;
-                                        $isStillWorkingOvertime = false;
-                                        $overtimeDuration = null;
-
-                                        if ($attendance) {
-                                            $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('Y-m-d');
-                                            $todayDate = \Carbon\Carbon::now($memberTz)->format('Y-m-d');
-
-                                            if ($checkInDate !== $todayDate) {
-                                                if ($attendance->check_out_time) {
-                                                    $isOvertimeYesterday = true;
-                                                    $overtimeDuration = \Carbon\Carbon::parse($attendance->check_in_time)->diff(\Carbon\Carbon::parse($attendance->check_out_time));
-                                                } else {
-                                                    $isStillWorkingOvertime = true;
-                                                    $overtimeDuration = \Carbon\Carbon::parse($attendance->check_in_time)->diff(now());
-                                                }
-                                            }
-                                        }
-                                        
-                                        // Jika status leave, set offline (kecuali WFH mungkin dianggap online contextually, tapi default offline)
-                                        $isOnline = ($attendance && !$attendance->check_out_time && !$isAttendanceLeave) || $isWfh;
-                                    @endphp
-
-                                    <tr class="member-card {{ Auth::id() == $member->id ? 'bg-light' : '' }}">
-                                        <td class="ps-4 py-3">
-                                            <span class="badge bg-light text-dark rounded-circle" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600;">{{ $key + 1 }}</span>
-                                        </td>
-                                        <td class="py-3">
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-wrapper me-3 flex-shrink-0 {{ $isOnline ? '' : 'offline' }}">
-                                                    @if ($member->profile_photo_path)
-                                                        <img src="{{ Storage::url($member->profile_photo_path) }}" class="rounded-circle shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
-                                                    @else
-                                                        <div class="rounded-circle bg-white border d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 50px; height: 50px; font-size: 1.2rem;">{{ substr($member->name, 0, 1) }}</div>
-                                                    @endif
-                                                </div>
-                                                <div>
-                                                    <h6 class="mb-1 fw-bold text-dark">{{ $member->name }} @if(Auth::id() == $member->id) (Saya) @endif</h6>
-                                                    <small class="text-muted">{{ $member->division->name ?? '-' }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="py-3">
-                                            @if ($attendance)
-                                                {{-- 1. CEK LEAVE STATUS DULU (FIX BUG "Sedang Bekerja" padahal Libur) --}}
-                                                @if ($isAttendanceLeave)
-                                                    @php $status = strtolower($attendance->presence_status); @endphp
-                                                    @if($status == 'libur')
-                                                        <span class="status-badge bg-soft-teal text-dark">
-                                                            <i class="mdi mdi-calendar-remove text-success me-1"></i> <span class="text-success fw-bold">Libur (Off Day)</span>
-                                                        </span>
-                                                    @elseif($status == 'sakit')
-                                                        <span class="status-badge bg-soft-primary text-primary">
-                                                            <i class="mdi mdi-hospital-box me-1"></i> Sakit
-                                                        </span>
-                                                    @elseif($status == 'izin')
-                                                        <span class="status-badge bg-soft-warning text-dark">
-                                                            <i class="mdi mdi-file-document-outline text-warning me-1"></i> Izin
-                                                        </span>
-                                                    @else
-                                                        <span class="status-badge bg-soft-warning text-dark">
-                                                            <i class="mdi mdi-file-document me-1"></i> {{ ucfirst($status) }}
-                                                        </span>
-                                                    @endif
-                                                    
-                                                {{-- 2. KONDISI LEMBUR --}}
-                                                @elseif ($isOvertimeYesterday)
-                                                    <div>
-                                                        <span class="status-badge bg-soft-indigo text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Lembur Lintas Hari">
-                                                            <i class="mdi mdi-bed-clock me-1"></i> <span>Habis Lembur</span>
-                                                        </span>
-                                                        <div class="mt-2">
-                                                            <span class="badge bg-light text-danger border border-danger" style="font-size: 0.65rem;">
-                                                                <i class="mdi mdi-clock-alert me-1"></i>Belum Absen Shift Baru
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                @elseif ($isStillWorkingOvertime)
-                                                    <div>
-                                                        <span class="status-badge bg-soft-purple text-dark">
-                                                            <i class="mdi mdi-moon-waning-crescent me-1"></i> <span>Sedang Lembur</span>
-                                                        </span>
-                                                        <div class="mt-2 text-muted small">
-                                                            <i class="mdi mdi-timer-sand"></i> {{ $overtimeDuration->format('%h jam %i menit') }}
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    {{-- 3. KONDISI NORMAL --}}
-                                                    @if ($attendance->check_out_time)
-                                                        <div>
-                                                            <span class="status-badge bg-secondary text-white"><i class="mdi mdi-home me-1"></i> Sudah Pulang</span>
-                                                            <div class="small text-muted mt-1">
-                                                                Logs: {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('H:i') }} - {{ \Carbon\Carbon::parse($attendance->check_out_time)->setTimezone($memberTz)->format('H:i') }}
-                                                            </div>
-                                                        </div>
-                                                    @else
-                                                        <div>
-                                                            <span class="status-badge bg-success text-white">
-                                                                <i class="mdi mdi-briefcase-check me-1"></i> Sedang Bekerja
-                                                            </span>
-                                                            <div class="small text-muted mt-1">
-                                                                Masuk: {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('H:i') }}
-                                                            </div>
-                                                        </div>
-                                                    @endif
-                                                @endif
-                                            @elseif ($leave)
-                                                <span class="status-badge bg-info text-white">
-                                                    <i class="mdi mdi-file-document me-1"></i> {{ ucfirst($leave->type) }}
-                                                </span>
-                                                @if($leave->reason)
-                                                    <div class="small text-muted mt-1" style="max-width: 200px;">
-                                                        {{ Str::limit($leave->reason, 50) }}
-                                                    </div>
-                                                @endif
-                                            @else
-                                                <span class="status-badge bg-danger text-white"><i class="mdi mdi-close-circle me-1"></i> Belum Hadir</span>
-                                            @endif
-                                        </td>
-                                        <td class="py-3">
-                                            {{-- BUKTI FOTO --}}
-                                            <div class="d-flex gap-2">
-                                                @if ($attendance && !$isOvertimeYesterday && !$isAttendanceLeave)
-                                                    @if($attendance->photo_path)
-                                                        <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_path) }}">
-                                                            <i class="mdi mdi-camera text-success"></i> Masuk
-                                                        </button>
-                                                    @endif
-                                                    @if($attendance->photo_out_path)
-                                                        <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->photo_out_path) }}">
-                                                            <i class="mdi mdi-camera text-danger"></i> Pulang
-                                                        </button>
-                                                    @endif
-                                                @endif
-                                                
-                                                {{-- BUKTI CUTI/SAKIT/AUDIT --}}
-                                                @if ($attendance && $attendance->audit_photo_path)
-                                                    <button class="view-photo-btn bg-light text-dark border" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ Storage::url($attendance->audit_photo_path) }}">
-                                                        <i class="mdi mdi-shield-check text-primary"></i> Bukti Audit
-                                                    </button>
-                                                @endif
-
-                                                @if ($leave && $leave->file_proof && $leave->type == 'wfh')
-                                                    <button class="view-photo-btn bg-info text-white border-0" onclick="window.open('{{ Storage::url($leave->file_proof) }}', '_blank')">
-                                                        <i class="mdi mdi-file-document"></i> Dokumen
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center py-5 text-muted">Tidak ada data tim.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Modal Image --}}
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-body p-0 position-relative modal-image-wrapper">
-                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow" data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
-                    <img src="" id="modalImageSrc" class="w-100 rounded" alt="Bukti" style="max-height: 80vh; object-fit: contain;">
-                </div>
-            </div>
-        </div>
-    </div>
-@endsection
-
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var imageModal = document.getElementById('imageModal');
-        if(imageModal){
-            imageModal.addEventListener('show.bs.modal', function(event) {
-                var button = event.relatedTarget;
-                var src = button.getAttribute('data-src');
-                var modalImg = document.getElementById('modalImageSrc');
-                modalImg.src = src;
-            });
-        }
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    });
-</script>
-@endpush
-
-@push('styles')
-    <style>
         .stat-card { border: none; border-radius: 16px; background: white; transition: all 0.3s ease; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03); }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); }
         .stat-icon-box { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
@@ -390,25 +17,17 @@
         .bg-soft-purple  { background-color: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.2); }
         
         .team-card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); overflow: hidden; }
-        .team-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; color: white; }
+        .team-header { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); padding: 2rem; color: white; }
         .team-count { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
         .member-card { transition: all 0.3s ease; border-left: 4px solid transparent; }
-        .member-card:hover { background: #f8f9ff; border-left-color: #667eea; transform: translateX(5px); }
+        .member-card:hover { background: #f8f9ff; border-left-color: #0d6efd; transform: translateX(5px); }
         .avatar-wrapper { position: relative; }
         .avatar-wrapper::after { content: ''; position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background: #10b981; border: 2px solid white; border-radius: 50%; z-index: 5; }
         .avatar-wrapper.offline::after { background: #94a3b8; }
         .status-badge { font-weight: 600; padding: 0.5rem 1rem; border-radius: 50px; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
         .status-badge i { font-size: 1rem; }
-        .division-badge { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca; border: none; font-weight: 500; }
-        .branch-badge { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-weight: 500; }
-        .photo-preview { width: 30px; height: 30px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.5); }
         .view-photo-btn { border: none; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
         .view-photo-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .late-message { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 8px; font-style: italic; color: #92400e; max-width: 250px; }
-        .empty-state { padding: 4rem 2rem; text-align: center; }
-        .empty-state-icon { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
-        .audit-pill { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 50px; padding: 4px 12px; display: inline-flex; align-items: center; transition: all 0.3s ease; }
-        .audit-pill:hover { background: rgba(255, 255, 255, 0.25); }
         .modal-content { border: none; border-radius: 20px; overflow: hidden; }
         .modal-image-wrapper { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1rem; }
         .lembur-info { 
@@ -418,20 +37,6 @@
             border-radius: 8px; 
             margin-top: 0.5rem;
             font-size: 0.75rem;
-        }
-        .lembur-time {
-            font-size: 0.75rem;
-            color: #6d28d9;
-            font-weight: 500;
-        }
-        .lembur-badge {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            color: white;
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 12px;
-            display: inline-block;
-            margin-left: 0.5rem;
         }
     </style>
 @endpush
@@ -478,7 +83,7 @@
         <div class="col-12">
             <div class="card team-card">
                 
-                {{-- HEADER WITH COMPACT AUDIT INFO --}}
+                {{-- HEADER --}}
                 <div class="team-header">
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                         
@@ -490,12 +95,11 @@
                             <p class="mb-0 opacity-75 small">Monitoring kehadiran real-time.</p>
                         </div>
 
-                        {{-- COMPACT AUDIT INFO (Disini perubahannya) --}}
+                        {{-- COMPACT AUDIT INFO --}}
                         @if($assignedAudits->count() > 0)
                             <div class="d-flex flex-wrap gap-2 justify-content-md-end align-items-center ms-md-auto">
                                @foreach($assignedAudits as $audit)
                                    <div class="d-flex align-items-center bg-white bg-opacity-10 rounded-pill pe-3 ps-1 py-1 border border-white border-opacity-25" title="Audit / PIC">
-                                       {{-- Foto --}}
                                        @if($audit->profile_photo_path)
                                            <img src="{{ Storage::url($audit->profile_photo_path) }}" class="rounded-circle border border-2 border-white" width="28" height="28" style="object-fit: cover;">
                                        @else
@@ -503,7 +107,6 @@
                                                {{ substr($audit->name, 0, 1) }}
                                            </div>
                                        @endif
-                                       {{-- Nama --}}
                                        <span class="ms-2 small fw-bold text-white" style="font-size: 0.75rem;">
                                            {{ explode(' ', $audit->name)[0] }}
                                        </span>
@@ -595,20 +198,13 @@
                                                 @elseif ($isStillWorkingOvertime)
                                                     <div>
                                                         <span class="status-badge bg-soft-purple text-dark">
-                                                            <i class="mdi mdi-moon-waning-crescent me-1"></i> <span>Sedang Lembur</span>
+                                                            <i class="mdi mdi-clock-outline me-1"></i> <span>Sedang Bekerja</span>
                                                         </span>
                                                         <div class="lembur-info mt-2">
-                                                            <div class="lembur-time">
-                                                                <i class="mdi mdi-clock-start me-1"></i>
-                                                                <strong>Masuk sejak:</strong> {{ \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($memberTz)->format('d M, H:i') }}
+                                                            <div class="small">
+                                                                <i class="mdi mdi-timer-sand me-1"></i>
+                                                                {{ $overtimeDuration ? $overtimeDuration->format('%h jam %i menit') : '0 jam' }}
                                                             </div>
-                                                            @if($overtimeDuration)
-                                                                <div class="lembur-time">
-                                                                    <i class="mdi mdi-timer-sand me-1"></i>
-                                                                    <strong>Sudah:</strong> {{ $overtimeDuration->format('%h jam %i menit') }}
-                                                                    <span class="lembur-badge">Aktif</span>
-                                                                </div>
-                                                            @endif
                                                         </div>
                                                     </div>
                                                 @else
@@ -642,7 +238,6 @@
                                             @endif
                                         </td>
                                         <td class="py-3">
-                                            {{-- BUKTI FOTO --}}
                                             <div class="d-flex gap-2">
                                                 @if ($attendance && !$isOvertimeYesterday)
                                                     @if($attendance->photo_path)
@@ -657,7 +252,6 @@
                                                     @endif
                                                 @endif
                                                 
-                                                {{-- PERUBAHAN DISINI: Hanya tampilkan bukti jika tipe cuti adalah 'wfh' --}}
                                                 @if ($leave && $leave->file_proof && $leave->type == 'wfh')
                                                     <button class="view-photo-btn bg-info text-white border-0" onclick="window.open('{{ Storage::url($leave->file_proof) }}', '_blank')">
                                                         <i class="mdi mdi-file-document"></i> Bukti
@@ -704,10 +298,6 @@
                 modalImg.src = src;
             });
         }
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
     });
 </script>
 @endpush

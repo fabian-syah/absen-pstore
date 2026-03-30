@@ -469,23 +469,7 @@ class DashboardController extends Controller
 
         // ... Logika Birthday yang sudah ada ...
 
-        // =========================================================================
-// 8. [BARU] LOGIKA RAMADHAN COUNTDOWN (Estimasi 19 Feb 2026)
-// =========================================================================
-// Ganti tanggal ini sesuai ketetapan pemerintah nanti
-        $ramadanDate = Carbon::createFromDate(2026, 2, 19, $userTimezone)->startOfDay();
-        $diffRamadan = $nowInBranch->startOfDay()->diffInDays($ramadanDate, false);
 
-        $ramadanData = null;
-        // Tampilkan jika H-60 sampai Hari H
-        if ($diffRamadan >= 0 && $diffRamadan <= 60) {
-            $ramadanData = [
-                'days_left' => $diffRamadan,
-                'date' => $ramadanDate->format('Y-m-d'),
-                'is_today' => $diffRamadan === 0
-            ];
-        }
-        $data['ramadanData'] = $ramadanData;
 
         // [NEW] Logic Scanner Winner Prize
         $data['isScannerWinner'] = false;

@@ -34,29 +34,23 @@
         /* CSS Variables - Design Tokens */
         :root {
             /* ==========================================================
-               RAMADAN THEME - SPECIAL EDITION
+               BLUE THEME - DEFAULT PSTORE
                ========================================================== */
 
-            /* Primary Colors - Emerald Green */
-            --pstore-primary: #00693E;
-            /* Deep Emerald */
-            --pstore-primary-dark: #004d2e;
-            --pstore-primary-darker: #00331f;
-            --pstore-primary-light: rgba(0, 105, 62, 0.1);
+            /* Primary Colors - Blue */
+            --pstore-primary: #0d6efd;
+            --pstore-primary-dark: #0a58ca;
+            --pstore-primary-darker: #084298;
+            --pstore-primary-light: rgba(13, 110, 253, 0.1);
 
-            /* Accents - Gold */
-            --pstore-accent: #D4AF37;
-            /* Metallic Gold */
-            --pstore-accent-light: #F4C430;
+            /* Accents */
+            --pstore-accent: #6c757d;
+            --pstore-accent-light: #f8f9fa;
 
             /* Gradients */
-            --gradient-primary: linear-gradient(135deg, #00693E 0%, #004d2e 100%);
-            /* Green Depth */
-            --gradient-gold: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
-            /* Gold Shine */
-            --gradient-soft: linear-gradient(135deg, rgba(0, 105, 62, 0.08) 0%, rgba(212, 175, 55, 0.1) 100%);
-            --gradient-bg: linear-gradient(180deg, #FAFAF5 0%, #EFF2E6 100%);
-            /* Warm Islamic Cream */
+            --gradient-primary: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            --gradient-soft: linear-gradient(135deg, rgba(13, 110, 253, 0.05) 0%, rgba(13, 110, 253, 0.02) 100%);
+            --gradient-bg: linear-gradient(180deg, #FAFAFA 0%, #F4F7FE 100%);
 
             /* Neutrals */
             --pstore-dark: #1A2E22;
@@ -472,23 +466,19 @@
 
             /* Stagger entrance for each nav item */
             .mobile-bottom-nav .nav-item:nth-child(1) {
-                animation-delay: 0.15s;
+                animation-delay: 0.1s;
             }
 
             .mobile-bottom-nav .nav-item:nth-child(2) {
-                animation-delay: 0.22s;
+                animation-delay: 0.2s;
             }
 
             .mobile-bottom-nav .nav-item:nth-child(3) {
-                animation-delay: 0.29s;
+                animation-delay: 0.3s;
             }
 
             .mobile-bottom-nav .nav-item:nth-child(4) {
-                animation-delay: 0.36s;
-            }
-
-            .mobile-bottom-nav .nav-item:nth-child(5) {
-                animation-delay: 0.43s;
+                animation-delay: 0.4s;
             }
 
             .mobile-bottom-nav .nav-item i {
@@ -592,14 +582,7 @@
                 font-weight: 700;
             }
 
-            /* Ramadhan gold color */
-            .mobile-bottom-nav .nav-item.nav-ramadhan.active {
-                color: var(--pstore-accent);
-            }
 
-            .mobile-bottom-nav .nav-item.nav-ramadhan.active::before {
-                background: linear-gradient(90deg, var(--pstore-accent), #D4AF37);
-            }
         }
 
         /* Utility Classes */
@@ -656,7 +639,6 @@
         $isHome = request()->is('/') || request()->routeIs('dashboard') || request()->routeIs('dashboard.index');
         $isAbsen = request()->routeIs('self.attend.*');
         $isIzin = request()->routeIs('leave-requests.create');
-        $isRamadhan = request()->routeIs('ramadhan.*');
         $isProfile = request()->routeIs('profile.*');
     @endphp
     <nav class="mobile-bottom-nav">
@@ -680,11 +662,7 @@
             <span>Izin</span>
         </a>
 
-        {{-- Ramadhan --}}
-        <a href="{{ route('ramadhan.index') }}" class="nav-item nav-ramadhan {{ $isRamadhan ? 'active' : '' }}">
-            <i class="mdi mdi-star-crescent"></i>
-            <span>Ramadhan</span>
-        </a>
+
 
         {{-- Profile --}}
         <a href="{{ route('profile.edit') }}" class="nav-item {{ $isProfile ? 'active' : '' }}">
