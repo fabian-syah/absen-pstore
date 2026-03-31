@@ -246,38 +246,6 @@
         </div>
     @endif
 
-    {{-- ======================================================================= --}}
-    {{-- [NEW] POPUP PEMBERITAHUAN: FITUR SECURITY BARU --}}
-    {{-- ======================================================================= --}}
-    @if (Auth::user()->role == 'security' && !session('security_update_dismissed'))
-        <div id="securityUpdateModal" class="document-warning-overlay" style="background: rgba(0, 50, 0, 0.8);">
-            <div class="document-warning-modal" style="border-top: 5px solid #00ff00;">
-                <button type="button" class="document-warning-close"
-                    onclick="this.closest('.document-warning-overlay').remove()">
-                    <i class="mdi mdi-close"></i>
-                </button>
-                <div class="text-center mb-3">
-                    <i class="mdi mdi-shield-check text-success" style="font-size: 64px;"></i>
-                </div>
-                <h4 class="document-warning-title">Update Dashboard Security!</h4>
-                <div class="document-warning-content">
-                    <p class="text-center mb-3">Fitur baru telah aktif untuk memudahkan tugas Anda:</p>
-                    <ul class="document-warning-list" style="background: #f0fff0; border-color: #00ff00;">
-                        <li><i class="mdi mdi-history text-success me-2"></i> <b>Recent Scans:</b> Lihat 5 scan terakhir di
-                            layar.</li>
-                        <li><i class="mdi mdi-wifi-off text-success me-2"></i> <b>Offline Mode:</b> Tetap bisa absen saat sinyal
-                            hilang.</li>
-                        <li><i class="mdi mdi-alert-octagon text-danger me-2"></i> <b>Panic Button:</b> Panggil bantuan Admin
-                            sekali klik.</li>
-                    </ul>
-                    <button class="btn btn-success w-100 py-3 fw-bold"
-                        onclick="this.closest('.document-warning-overlay').remove()">
-                        MENGERTI & LANJUTKAN
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
 
     {{-- ======================================================================= --}}
     {{-- [NEW] BANNER KLAIM HADIAH SCANNER (Top 1 Only) --}}
