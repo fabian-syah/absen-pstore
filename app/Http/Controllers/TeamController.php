@@ -119,8 +119,9 @@ class TeamController extends Controller
 
             $att = $validAttendance;
             $leave = $member->leaveRequests->first();
-            $isWfh = $leave && $leave->type == 'wfh';
+            $isWfh = ($leave && $leave->type == 'wfh') || ($att && $att->attendance_type == 'leave' && strtolower($att->presence_status) == 'wfh');
             $isOvertime = false;
+            $isRealAttendance = $att && $att->attendance_type !== 'leave';
 
             if ($att) {
                 $cIn = Carbon::parse($att->check_in_time)->setTimezone($memberTz)->format('Y-m-d');
@@ -130,9 +131,9 @@ class TeamController extends Controller
                 }
             }
 
-            if ($att || $isWfh || $isOvertime)
+            if ($isRealAttendance || $isWfh || $isOvertime)
                 $stats['present']++;
-            elseif ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti', 'libur']))
+            elseif (($att && $att->attendance_type == 'leave') || ($leave && in_array($leave->type, ['sakit', 'izin', 'cuti', 'libur'])))
                 $stats['izin_sakit']++;
         }
 
@@ -342,6 +343,8 @@ class TeamController extends Controller
             $attendance = $validAttendance;
 
             $isOvertime = false;
+            $isRealAttendance = $attendance && $attendance->attendance_type !== 'leave';
+
             if ($attendance) {
                 $checkInDate = \Carbon\Carbon::parse($attendance->check_in_time)->setTimezone($branchTimezone)->format('Y-m-d');
                 if ($checkInDate !== $todayInBranch)
@@ -350,9 +353,17 @@ class TeamController extends Controller
 
             if ($isOvertime)
                 $attendanceGroups['Lembur'][] = $emp;
-            elseif ($attendance)
+            elseif ($isRealAttendance)
                 $attendanceGroups['Masuk'][] = $emp;
-            elseif ($todayLeave) {
+            elseif ($attendance && $attendance->attendance_type == 'leave') {
+                $type = strtolower($attendance->presence_status);
+                if (str_contains($type, 'sakit')) $attendanceGroups['Sakit'][] = $emp;
+                elseif (str_contains($type, 'izin')) $attendanceGroups['Izin'][] = $emp;
+                elseif (str_contains($type, 'cuti')) $attendanceGroups['Cuti'][] = $emp;
+                elseif (str_contains($type, 'libur')) $attendanceGroups['Libur'][] = $emp;
+                elseif (str_contains($type, 'wfh')) $attendanceGroups['WFH / Dinas Luar'][] = $emp;
+                else $attendanceGroups['Alpha / Belum Absen'][] = $emp;
+            } elseif ($todayLeave) {
                 if ($todayLeave->type == 'sakit')
                     $attendanceGroups['Sakit'][] = $emp;
                 elseif ($todayLeave->type == 'izin')
@@ -490,7 +501,7 @@ class TeamController extends Controller
                 $fakeAtt = new Attendance();
                 $fakeAtt->user_id = $user->id;
                 $fakeAtt->user = $user;
-                $fakeAtt->check_in_time = $date->copy()->setTime(0, 0, 0);
+                $fakeAtt->check_in_time = \Illuminate\Support\Carbon::instance($date->copy()->setTime(0, 0, 0));
 
                 if ($leave) {
                     $typeLabel = ucfirst($leave->type);

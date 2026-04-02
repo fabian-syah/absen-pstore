@@ -183,7 +183,7 @@
                                             </div>
                                         </td>
                                         <td class="py-3">
-                                            @if ($attendance)
+                                            @if ($attendance && $attendance->attendance_type !== 'leave')
                                                 @if ($isOvertimeYesterday)
                                                     <div>
                                                         <span class="status-badge bg-soft-indigo text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Lembur Lintas Hari">
@@ -223,6 +223,23 @@
                                                             </div>
                                                         </div>
                                                     @endif
+                                                @endif
+                                            @elseif ($attendance && $attendance->attendance_type === 'leave')
+                                                @php
+                                                    $label = $attendance->presence_status ?? 'Izin';
+                                                    $bg = 'bg-info';
+                                                    $icon = 'mdi mdi-file-document';
+                                                    if(Str::contains(strtolower($label), 'sakit')) { $bg = 'bg-danger'; $icon = 'mdi mdi-hospital-marker'; }
+                                                    if(Str::contains(strtolower($label), 'libur')) { $bg = 'bg-secondary'; $icon = 'mdi mdi-calendar-blank'; }
+                                                    if(Str::contains(strtolower($label), 'cuti')) { $bg = 'bg-warning text-dark'; $icon = 'mdi mdi-account-star'; }
+                                                @endphp
+                                                <span class="status-badge {{ $bg }} text-white">
+                                                    <i class="{{ $icon }} me-1"></i> {{ $label }}
+                                                </span>
+                                                @if($attendance->notes)
+                                                    <div class="small text-muted mt-1" style="max-width: 200px;">
+                                                        {{ Str::limit($attendance->notes, 50) }}
+                                                    </div>
                                                 @endif
                                             @elseif ($leave)
                                                 <span class="status-badge bg-info text-white">
