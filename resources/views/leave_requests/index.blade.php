@@ -140,19 +140,19 @@
                                             @forelse($history as $h)
                                                 <div class="mb-1" style="font-size: 11px; white-space: nowrap;">
                                                     @if ($h->type == 'sakit')
-                                                        <span class="badge badge-outline-danger p-1" style="font-size: 9px;">Skt</span>
+                                                        <span class="badge badge-outline-danger p-1" style="font-size: 10px;">Sakit</span>
                                                     @elseif($h->type == 'izin')
-                                                        <span class="badge badge-outline-info p-1" style="font-size: 9px;">Izn</span>
+                                                        <span class="badge badge-outline-info p-1" style="font-size: 10px;">Izin</span>
                                                     @elseif($h->type == 'libur')
-                                                        <span class="badge badge-outline-secondary p-1" style="font-size: 9px;">Lbr</span>
+                                                        <span class="badge badge-outline-secondary p-1" style="font-size: 10px;">Libur</span>
                                                     @elseif($h->type == 'wfh')
-                                                        <span class="badge badge-outline-primary p-1" style="font-size: 9px;">Wfh</span>
+                                                        <span class="badge badge-outline-primary p-1" style="font-size: 10px;">WFH</span>
                                                     @elseif($h->type == 'cuti')
-                                                        <span class="badge badge-outline-success p-1" style="font-size: 9px;">Cut</span>
+                                                        <span class="badge badge-outline-success p-1" style="font-size: 10px;">Cuti</span>
                                                     @else
-                                                        <span class="badge badge-outline-warning p-1" style="font-size: 9px;">Tlt</span>
+                                                        <span class="badge badge-outline-warning p-1" style="font-size: 10px;">Telat</span>
                                                     @endif
-                                                    <span class="text-dark ms-1">{{ $h->start_date->format('d/m') }}</span>
+                                                    <span class="text-dark ms-1">{{ $h->start_date->translatedFormat('D, d M') }}</span>
                                                 </div>
                                             @empty
                                                 <small class="text-muted" style="font-style: italic;">Bersih</small>
