@@ -20,7 +20,7 @@
                         <div>
                             <h2 class="fw-bold text-dark mb-1">PSTORE</h2>
                             <p class="text-muted mb-0">Divisi Finance & HRD</p>
-                            <small class="text-muted">Jl. Raya Condet No.1, Jakarta Timur</small>
+                            <small class="text-muted">{{ $salary->user->branch->address ?? 'Jl. Raya Condet No.13A, RT.10/RW.3, Batu Ampar, Kec. Kramat jati, Kota Jakarta Timur, Daerah Khusus Ibukota Jakarta 13530' }}</small>
                         </div>
                         <div class="text-end">
                             <h4 class="text-uppercase fw-bold text-primary mb-1">SLIP GAJI</h4>
