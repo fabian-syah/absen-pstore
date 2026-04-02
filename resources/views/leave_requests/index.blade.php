@@ -135,7 +135,7 @@
                                                     ->where('id', '!=', $req->id)
                                                     ->where('status', 'approved')
                                                     ->sortByDesc('start_date')
-                                                    ->take(7);
+                                                    ->take(1);
                                             @endphp
                                             @forelse($history as $h)
                                                 <div class="mb-1" style="font-size: 11px; white-space: nowrap;">
