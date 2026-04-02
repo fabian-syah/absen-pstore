@@ -30,8 +30,15 @@ class AuditController extends Controller
             'role' => $user->role
         ]);
 
-        // Hanya ambil yang status = 'pending' saja
-        $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
+        // Hanya ambil yang status = 'pending' saja (Verifikasi Audit)
+        $query = LeaveRequest::with([
+            'user.division',
+            'user.branch',
+            'approver',
+            'user.leaveRequests' => function ($q) {
+                $q->where('status', 'approved')->latest('start_date')->limit(10);
+            }
+        ])
             ->where('status', 'pending'); // <-- INI HARUS 'pending'
 
         // Logika Hak Akses

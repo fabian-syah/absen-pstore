@@ -62,6 +62,7 @@
                                     <th>Tipe</th>
                                     <th>Waktu / Tanggal</th>
                                     <th>Alasan</th>
+                                    <th>Riwayat</th>
                                     <th>Bukti</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
@@ -127,7 +128,38 @@
                                         {{-- 4. ALASAN --}}
                                         <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
 
-                                        {{-- 5. BUKTI --}}
+                                        {{-- 5. RIWAYAT --}}
+                                        <td>
+                                            @php
+                                                $history = $req->user->leaveRequests
+                                                    ->where('id', '!=', $req->id)
+                                                    ->where('status', 'approved')
+                                                    ->sortByDesc('start_date')
+                                                    ->take(7);
+                                            @endphp
+                                            @forelse($history as $h)
+                                                <div class="mb-1" style="font-size: 11px; white-space: nowrap;">
+                                                    @if ($h->type == 'sakit')
+                                                        <span class="badge badge-outline-danger p-1" style="font-size: 9px;">Skt</span>
+                                                    @elseif($h->type == 'izin')
+                                                        <span class="badge badge-outline-info p-1" style="font-size: 9px;">Izn</span>
+                                                    @elseif($h->type == 'libur')
+                                                        <span class="badge badge-outline-secondary p-1" style="font-size: 9px;">Lbr</span>
+                                                    @elseif($h->type == 'wfh')
+                                                        <span class="badge badge-outline-primary p-1" style="font-size: 9px;">Wfh</span>
+                                                    @elseif($h->type == 'cuti')
+                                                        <span class="badge badge-outline-success p-1" style="font-size: 9px;">Cut</span>
+                                                    @else
+                                                        <span class="badge badge-outline-warning p-1" style="font-size: 9px;">Tlt</span>
+                                                    @endif
+                                                    <span class="text-dark ms-1">{{ $h->start_date->format('d/m') }}</span>
+                                                </div>
+                                            @empty
+                                                <small class="text-muted" style="font-style: italic;">Bersih</small>
+                                            @endforelse
+                                        </td>
+
+                                        {{-- 6. BUKTI --}}
                                         <td>
                                             @if ($req->file_proof)
                                                 <a href="javascript:void(0)"

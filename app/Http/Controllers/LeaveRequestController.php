@@ -25,7 +25,14 @@ class LeaveRequestController extends Controller
         ]);
 
         // Hanya ambil yang status = 'pending' untuk verifikasi
-        $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
+        $query = LeaveRequest::with([
+            'user.division',
+            'user.branch',
+            'approver',
+            'user.leaveRequests' => function ($q) {
+                $q->where('status', 'approved')->latest('start_date')->limit(10);
+            }
+        ])
             ->where('status', 'pending')
             ->latest();
 
