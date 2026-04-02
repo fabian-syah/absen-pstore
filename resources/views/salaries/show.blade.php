@@ -273,6 +273,10 @@
 
     <style>
         @media print {
+            @page {
+                size: portrait;
+                margin: 0.5cm;
+            }
 
             .no-print,
             .sidebar,
@@ -291,10 +295,28 @@
                 box-shadow: none !important;
                 border: none !important;
             }
+            .card-body.p-5 {
+                padding: 1rem !important;
+            }
 
             body {
                 background: white !important;
                 -webkit-print-color-adjust: exact;
+                font-size: 11px !important;
+                margin: 0 !important;
+            }
+            
+            h2 { font-size: 1.4rem !important; }
+            h4 { font-size: 1.1rem !important; }
+            .mb-4 { margin-bottom: 0.5rem !important; }
+            .mb-5 { margin-bottom: 0.8rem !important; }
+            .mt-5 { margin-top: 1rem !important; }
+            .alert { padding: 0.5rem 0.75rem !important; margin-bottom: 0.5rem !important; }
+            .table th, .table td { padding: 0.4rem 0.75rem !important; }
+            .display-5 { font-size: 1.8rem !important; }
+            
+            #payslip {
+                page-break-inside: avoid;
             }
         }
     </style>
