@@ -376,21 +376,6 @@ class UserController extends Controller
             ]);
         }
 
-        // Jika divisi utama berubah, catat otomatis ke Riwayat Karir
-        if ($oldDivisionId != $user->division_id && $user->division_id !== null) {
-            $oldDivisionName = $oldDivisionId ? (\App\Models\Division::find($oldDivisionId)->name ?? 'N/A') : 'Umum';
-            $newDivisionName = \App\Models\Division::find($user->division_id)->name ?? 'N/A';
-
-            \App\Models\EmploymentHistory::create([
-                'user_id' => $user->id,
-                'type' => 'transfer_division',
-                'event_date' => now(),
-                'division_id' => $user->division_id,
-                'description' => "Pindah divisi otomatis dari {$oldDivisionName} ke {$newDivisionName}",
-                'created_by' => Auth::id(),
-            ]);
-        }
-
         $currentUserRole = Auth::user()->role;
         if (in_array($currentUserRole, ['admin', 'admin_gaji'])) {
             if (in_array($request->role, ['audit', 'leader'])) {
@@ -405,6 +390,21 @@ class UserController extends Controller
                 $user->division_id = $request->multi_divisions[0];
                 $user->save();
             }
+        }
+
+        // Jika divisi utama berubah, catat otomatis ke Riwayat Karir
+        if ($oldDivisionId != $user->division_id && $user->division_id !== null) {
+            $oldDivisionName = $oldDivisionId ? (\App\Models\Division::find($oldDivisionId)->name ?? 'N/A') : 'Umum';
+            $newDivisionName = \App\Models\Division::find($user->division_id)->name ?? 'N/A';
+
+            \App\Models\EmploymentHistory::create([
+                'user_id' => $user->id,
+                'type' => 'transfer_division',
+                'event_date' => now(),
+                'division_id' => $user->division_id,
+                'description' => "Pindah divisi otomatis dari {$oldDivisionName} ke {$newDivisionName}",
+                'created_by' => Auth::id(),
+            ]);
         }
 
         return redirect()->route('users.index')->with('success', 'Data user berhasil diperbarui.');
