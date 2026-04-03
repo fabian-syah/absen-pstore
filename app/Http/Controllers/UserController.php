@@ -206,6 +206,17 @@ class UserController extends Controller
             $newUser->divisions()->sync($request->multi_divisions);
         }
 
+        // --- AUTO-LOG: Awal Masuk Pstore ---
+        \App\Models\EmploymentHistory::create([
+            'user_id' => $newUser->id,
+            'type' => 'join',
+            'event_date' => now(),
+            'branch_id' => $newUser->branch_id,
+            'division_id' => $newUser->division_id,
+            'description' => "Awal masuk PStore",
+            'created_by' => Auth::id(),
+        ]);
+
         return redirect()->route('users.index')->with('success', 'User baru berhasil ditambahkan.');
     }
 
@@ -343,23 +354,39 @@ class UserController extends Controller
             $data['division_id'] = null;
         }
 
-        // --- AUTO-LOG: Pindah Cabang Utama ---
+        // --- AUTO-LOG: Pindah Cabang / Divisi Utama ---
         $oldBranchId = $user->branch_id;
+        $oldDivisionId = $user->division_id;
 
         $user->update($data);
 
         // Jika cabang utama berubah, catat otomatis ke Riwayat Karir
         if ($oldBranchId != $user->branch_id && $user->branch_id !== null) {
-            $oldBranchName = $oldBranchId ? (Branch::find($oldBranchId)->name ?? 'N/A') : 'Pusat';
-            $newBranchName = Branch::find($user->branch_id)->name ?? 'N/A';
+            $oldBranchName = $oldBranchId ? (\App\Models\Branch::find($oldBranchId)->name ?? 'N/A') : 'Pusat';
+            $newBranchName = \App\Models\Branch::find($user->branch_id)->name ?? 'N/A';
 
-            EmploymentHistory::create([
+            \App\Models\EmploymentHistory::create([
                 'user_id' => $user->id,
                 'type' => 'transfer_branch',
                 'event_date' => now(),
                 'branch_id' => $user->branch_id,
                 'previous_branch_id' => $oldBranchId,
                 'description' => "Pindah cabang otomatis dari {$oldBranchName} ke {$newBranchName}",
+                'created_by' => Auth::id(),
+            ]);
+        }
+
+        // Jika divisi utama berubah, catat otomatis ke Riwayat Karir
+        if ($oldDivisionId != $user->division_id && $user->division_id !== null) {
+            $oldDivisionName = $oldDivisionId ? (\App\Models\Division::find($oldDivisionId)->name ?? 'N/A') : 'Umum';
+            $newDivisionName = \App\Models\Division::find($user->division_id)->name ?? 'N/A';
+
+            \App\Models\EmploymentHistory::create([
+                'user_id' => $user->id,
+                'type' => 'transfer_division',
+                'event_date' => now(),
+                'division_id' => $user->division_id,
+                'description' => "Pindah divisi otomatis dari {$oldDivisionName} ke {$newDivisionName}",
                 'created_by' => Auth::id(),
             ]);
         }
@@ -595,16 +622,50 @@ class UserController extends Controller
         // Toggle status aktif/nonaktif
         $user->is_active = !$user->is_active;
 
-        // Logika Otomatis Pindah Cabang jika dinonaktifkan
+        // Logika Otomatis Pindah Cabang & Riwayat jika dinonaktifkan / diaktifkan
         if ($user->is_active == false) {
+            $oldBranchId = $user->branch_id;
             // Cek apakah cabang ID 83 (EX Karyawan) ada di database
             $exBranchExists = \App\Models\Branch::where('id', 83)->exists();
 
             if ($exBranchExists) {
                 $user->branch_id = 83;
             }
+
+            // Catat Riwayat Resign
+            \App\Models\EmploymentHistory::create([
+                'user_id' => $user->id,
+                'type' => 'resign',
+                'event_date' => now(),
+                'branch_id' => 83,
+                'previous_branch_id' => $oldBranchId,
+                'description' => "Resign / Keluar dari PStore",
+                'created_by' => Auth::id(),
+            ]);
+
             // Opsional: Jika Anda ingin menghapus relasi multi-cabang (untuk audit/leader) saat nonaktif
             $user->branches()->detach();
+        } else {
+            // Aktifkan Kembali -> Restore Cabang Sebelumnya dari Riwayat Terakhir
+            $lastResign = \App\Models\EmploymentHistory::where('user_id', $user->id)
+                ->where('type', 'resign')
+                ->where('branch_id', 83)
+                ->latest()
+                ->first();
+
+            if ($lastResign && $lastResign->previous_branch_id) {
+                $user->branch_id = $lastResign->previous_branch_id;
+            }
+
+            // Catat Riwayat Masuk Kembali
+            \App\Models\EmploymentHistory::create([
+                'user_id' => $user->id,
+                'type' => 'rejoin',
+                'event_date' => now(),
+                'branch_id' => $user->branch_id,
+                'description' => "Masuk kembali ke PStore",
+                'created_by' => Auth::id(),
+            ]);
         }
 
         $user->save();
