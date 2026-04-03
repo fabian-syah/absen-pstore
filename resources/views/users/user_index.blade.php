@@ -181,7 +181,7 @@
                                                             <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm" title="Hapus"><i class="mdi mdi-delete"></i></button>
                                                         </form>
                                                     @endif
-                                                    @if ($user->id != auth()->id())
+                                                    @if ($user->id != auth()->id() && in_array(auth()->user()->role, ['admin', 'audit']))
                                                         <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
                                                             @csrf
                                                             <button type="submit" class="btn btn-icon btn-sm btn-inverse-danger" title="Nonaktifkan">
@@ -243,8 +243,9 @@
                                                 </td>
                                                 <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}</td>
                                                 <td>
-                                                    <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
-                                                        @csrf
+                                                    @if (in_array(auth()->user()->role, ['admin', 'audit']))
+                                                        <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
+                                                            @csrf
                                                         <button type="submit" class="btn btn-icon btn-sm btn-inverse-success" title="Aktifkan Kembali">
                                                             <i class="mdi mdi-power"></i>
                                                         </button>

@@ -54,6 +54,24 @@
                         @else
                             <span class="badge rounded-pill bg-danger px-3 py-2"><i class="mdi mdi-account-off me-1"></i> NON-AKTIF</span>
                         @endif
+
+                        {{-- Tombol Toggle Status (Admin & Audit Only) --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'audit']) && $user->id != auth()->id())
+                            <div class="mt-3 d-grid">
+                                <form action="{{ route('users.toggle-status', $user->id) }}" method="POST">
+                                    @csrf
+                                    @if($user->is_active)
+                                        <button type="submit" class="btn btn-inverse-danger btn-sm w-100" onclick="return confirm('Yakin ingin menonaktifkan akun ini? User akan dipindahkan ke EX Karyawan.')">
+                                            <i class="mdi mdi-power-off me-1"></i> Nonaktifkan Akun
+                                        </button>
+                                    @else
+                                        <button type="submit" class="btn btn-inverse-success btn-sm w-100">
+                                            <i class="mdi mdi-power me-1"></i> Aktifkan Kembali
+                                        </button>
+                                    @endif
+                                </form>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- MENU NAVIGASI --}}

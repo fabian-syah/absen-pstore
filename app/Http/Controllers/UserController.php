@@ -582,6 +582,11 @@ class UserController extends Controller
 
     public function toggleStatus(User $user)
     {
+        // Hanya Admin dan Audit yang bisa toggle status (Instruksi User)
+        if (!in_array(auth()->user()->role, ['admin', 'audit'])) {
+            abort(403, 'Akses Ditolak: Hanya Admin dan Audit yang dapat menonaktifkan akun.');
+        }
+
         // Mencegah admin menonaktifkan diri sendiri
         if ($user->id == auth()->id()) {
             return back()->with('error', 'Anda tidak bisa menonaktifkan akun sendiri.');
