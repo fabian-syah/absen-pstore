@@ -250,6 +250,7 @@
                                                             <i class="mdi mdi-power"></i>
                                                         </button>
                                                     </form>
+                                                    @endif
                                                     @if (auth()->user()->role == 'admin')
                                                         <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus permanen data ini?');">
                                                             @csrf @method('DELETE')
