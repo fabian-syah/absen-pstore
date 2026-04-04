@@ -433,6 +433,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin-gaji.employee-salaries.index') }}">
+                    <i class="menu-icon mdi mdi-account-star-outline"></i>
+                    <span class="menu-title">Master Gaji Non Karyawan</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="{{ route('branch-salary.index') }}">
                     <i class="menu-icon mdi mdi-cash-register"></i>
                     <span class="menu-title">Penggajian Cabang</span>

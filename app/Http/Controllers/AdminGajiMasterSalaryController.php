@@ -8,25 +8,21 @@ use App\Models\Division;
 use App\Models\EmployeeSalary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Exports\EmployeeSalaryExport; 
-use Maatwebsite\Excel\Facades\Excel;  
 
-class EmployeeSalaryController extends Controller
+class AdminGajiMasterSalaryController extends Controller
 {
+    private function getBranch()
+    {
+        return Branch::where('name', 'Cabang User Non Karyawan')->first();
+    }
+
     public function index(Request $request)
     {
-        $branches = Branch::orderBy('name')->get();
-        $divisions = Division::orderBy('name')->get();
-
+        $specialBranch = $this->getBranch();
+        
         $query = User::with(['branch', 'division', 'employeeSalary'])
             ->where('is_active', true)
-            ->whereNotIn('role', ['admin', 'admin_gaji']);
-
-        // Sembunyikan user dari cabang khusus "Cabang User Non Karyawan"
-        $specialBranch = Branch::where('name', 'Cabang User Non Karyawan')->first();
-        if ($specialBranch) {
-            $query->where('branch_id', '!=', $specialBranch->id);
-        } 
+            ->where('branch_id', $specialBranch?->id ?? 0);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -35,14 +31,6 @@ class EmployeeSalaryController extends Controller
                   ->orWhere('login_id', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
-        }
-
-        if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
-        }
-
-        if ($request->filled('division_id')) {
-            $query->where('division_id', $request->division_id);
         }
 
         if ($request->filled('category')) {
@@ -57,35 +45,32 @@ class EmployeeSalaryController extends Controller
 
         $users = $query->orderBy('name')->paginate(10)->withQueryString();
 
-        return view('employee-salaries.index', compact('users', 'branches', 'divisions'));
-    }
-
-    public function export(Request $request)
-    {
-        $filters = $request->all();
-        // Nama file disesuaikan
-        return Excel::download(new EmployeeSalaryExport($filters), 'Data-Master-Gaji-' . date('Y-m-d-H-i') . '.xlsx');
+        return view('admin_gaji.employee-salaries.index', compact('users'));
     }
 
     public function edit(Request $request, $userId)
     {
         $user = User::with('employeeSalary')->findOrFail($userId);
         
-        if (in_array($user->role, ['admin', 'admin_gaji'])) {
-            return redirect()->route('employee-salaries.index')->with('error', 'Akses Ditolak: Data gaji Admin bersifat rahasia.');
+        // Pastikan user ini berada di cabang non-karyawan
+        $specialBranch = $this->getBranch();
+        if ($user->branch_id != $specialBranch?->id) {
+            return redirect()->route('admin-gaji.employee-salaries.index')->with('error', 'Akses Ditolak: User ini bukan anggota Non Karyawan.');
         }
 
         $currentPage = $request->input('page', 1);
 
-        return view('employee-salaries.edit', compact('user', 'currentPage'));
+        return view('admin_gaji.employee-salaries.edit', compact('user', 'currentPage'));
     }
 
     public function update(Request $request, $userId)
     {
         $user = User::findOrFail($userId);
         
-        if (in_array($user->role, ['admin', 'admin_gaji'])) {
-            abort(403, 'Anda tidak diizinkan mengubah data gaji Admin.');
+        // Pastikan user ini berada di cabang non-karyawan
+        $specialBranch = $this->getBranch();
+        if ($user->branch_id != $specialBranch?->id) {
+            abort(403, 'Akses Ditolak.');
         }
 
         $clean = function($val) {
@@ -131,10 +116,9 @@ class EmployeeSalaryController extends Controller
 
         EmployeeSalary::updateOrCreate(['user_id' => $userId], $data);
 
-        return redirect()->route('employee-salaries.index', [
+        return redirect()->route('admin-gaji.employee-salaries.index', [
             'page'      => $request->input('page', 1),            
             'search'    => $request->input('current_search'),     
-            'branch_id' => $request->input('current_branch'),     
             'category'  => $request->input('current_category')    
         ])->with('success', 'Master gaji berhasil disimpan.');
     }
