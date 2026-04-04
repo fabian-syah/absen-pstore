@@ -1,11 +1,11 @@
 @extends('layout.master')
 
 @section('title')
-    Data Cabang
+    Data User Non Karyawan
 @endsection
 
 @section('heading')
-    Manajemen Cabang
+    Manajemen Non Karyawan
 @endsection
 
 @section('content')
@@ -55,9 +55,9 @@
                         {{-- Judul --}}
                         <div>
                             <h4 class="card-title mb-1 fw-bold text-dark">
-                                <i class="mdi mdi-office-building text-primary me-2"></i>Daftar Cabang PStore
+                                <i class="mdi mdi-office-building text-primary me-2"></i>Daftar Non Karyawan PStore
                             </h4>
-                            <p class="text-muted small mb-0">Monitor status operasional dan jumlah karyawan per cabang.</p>
+                            <p class="text-muted small mb-0">Monitor status operasional dan jumlah karyawan per lokasi.</p>
                         </div>
                         
                         {{-- Aksi (Search + Add) --}}
@@ -108,7 +108,7 @@
                             <thead class="bg-light">
                                 <tr>
                                     <th width="5%" class="text-muted fw-semibold ps-4">#</th>
-                                    <th width="35%" class="text-muted fw-semibold">Informasi Cabang</th>
+                                    <th width="35%" class="text-muted fw-semibold">Informasi Non Karyawan</th>
                                     <th width="15%" class="text-muted fw-semibold">Statistik</th>
                                     <th width="30%" class="text-muted fw-semibold">Lokasi</th>
                                     <th width="15%" class="text-center text-muted fw-semibold">Aksi</th>
@@ -119,7 +119,7 @@
                                     <tr class="border-bottom {{ $branch->is_active ? '' : 'branch-closed' }}">
                                         <td class="ps-4 text-muted">{{ $key + 1 }}</td>
                                         
-                                        {{-- Kolom Informasi Cabang --}}
+                                        {{-- Kolom Informasi Non Karyawan --}}
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 {{-- Avatar --}}
@@ -190,7 +190,7 @@
 
                                                     @if(auth()->user()->role == 'admin' && auth()->user()->branch_id == null)
                                                         <form action="{{ route('branches.destroy', $branch->id) }}" method="POST" class="d-inline"
-                                                              onsubmit="return confirm('Yakin ingin menghapus cabang {{ $branch->name }}?');">
+                                                              onsubmit="return confirm('Yakin ingin menghapus data ini?');">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="btn btn-sm btn-danger shadow-sm" title="Hapus" data-bs-toggle="tooltip">
@@ -207,8 +207,8 @@
                                         <td colspan="5" class="text-center py-5">
                                             <div class="text-muted">
                                                 <i class="mdi mdi-office-building-marker-outline" style="font-size: 4rem; opacity: 0.2;"></i>
-                                                <p class="mt-3 mb-0 fw-bold">Data Cabang Tidak Ditemukan</p>
-                                                <small>Coba kata kunci lain atau tambahkan cabang baru.</small>
+                                                <p class="mt-3 mb-0 fw-bold">Data Non Karyawan Tidak Ditemukan</p>
+                                                <small>Coba kata kunci lain atau tambahkan data baru.</small>
                                             </div>
                                         </td>
                                     </tr>
@@ -274,7 +274,7 @@
                                             </a>
                                             @if(auth()->user()->role == 'admin' && auth()->user()->branch_id == null)
                                                 <form action="{{ route('branches.destroy', $branch->id) }}" method="POST" class="flex-fill"
-                                                      onsubmit="return confirm('Hapus cabang?');">
+                                                      onsubmit="return confirm('Hapus data?');">
                                                     @csrf @method('DELETE')
                                                     <button class="btn btn-sm btn-outline-danger w-100">
                                                         <i class="mdi mdi-delete"></i>

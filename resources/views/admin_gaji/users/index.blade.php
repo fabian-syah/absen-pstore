@@ -1,11 +1,11 @@
 @extends('layout.master')
 
-@section('title', 'Daftar User')
-@section('heading', 'Daftar User')
+@section('title', 'Data User Non Karyawan')
+@section('heading', 'Data User Non Karyawan')
 
 @section('content')
     <div class="p-3 p-md-4">
-        <h4 class="mb-4 fw-bold text-dark" style="letter-spacing: -0.5px;">Daftar User</h4>
+        <h4 class="mb-4 fw-bold text-dark" style="letter-spacing: -0.5px;">Data User Non Karyawan</h4>
 
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show fw-bold text-dark" role="alert">
@@ -101,7 +101,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 rounded-4 shadow-lg custom-modal-bg">
                 <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold">Tambah Data User Baru</h5>
+                    <h5 class="modal-title fw-bold">Tambah Data User Non Karyawan Baru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ route('admin-gaji.users.store') }}" method="POST" enctype="multipart/form-data">
@@ -141,7 +141,7 @@
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content border-0 rounded-4 shadow-lg custom-modal-bg">
                             <div class="modal-header border-bottom-0 pb-0">
-                                <h5 class="modal-title fw-bold">Edit Data User</h5>
+                                <h5 class="modal-title fw-bold">Edit Data User Non Karyawan</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <form action="{{ route('admin-gaji.users.update', $user->id) }}" method="POST"

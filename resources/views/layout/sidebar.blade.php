@@ -442,7 +442,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin-gaji.users.index') }}">
                     <i class="menu-icon mdi mdi-account-group-outline"></i>
-                    <span class="menu-title">Data User</span>
+                    <span class="menu-title">Data User Non Karyawan</span>
                 </a>
             </li>
         @endif
@@ -455,7 +455,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('branches.index') }}">
                     <i class="menu-icon mdi mdi-domain"></i>
-                    <span class="menu-title">Data Cabang</span>
+                    <span class="menu-title">Data User Non Karyawan</span>
                 </a>
             </li>
         @endif
