@@ -14,14 +14,14 @@ use Illuminate\Support\Facades\Storage;
 class AdminGajiUserController extends Controller
 {
     /**
-     * Mendapatkan atau membuat cabang khusus "Data User (Admin Gaji)"
+     * Mendapatkan atau membuat cabang khusus "Cabang User Non Karyawan"
      */
     private function getOrCreateBranch()
     {
         return Branch::firstOrCreate(
-            ['name' => 'Data User (Admin Gaji)'],
+            ['name' => 'Cabang User Non Karyawan'],
             [
-                'address' => 'Cabang Khusus untuk Data User Admin Gaji',
+                'address' => 'Cabang Khusus untuk User Non Karyawan',
                 'is_active' => true,
             ]
         );
