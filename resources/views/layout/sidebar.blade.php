@@ -444,6 +444,12 @@
                     <span class="menu-title">Penggajian Cabang</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin-gaji.salary-summary') }}">
+                    <i class="menu-icon mdi mdi-table-large"></i>
+                    <span class="menu-title">Ringkasan Gaji Cabang</span>
+                </a>
+            </li>
             {{-- DATA USER KHUSUS ADMIN GAJI --}}
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin-gaji.users.index') }}">

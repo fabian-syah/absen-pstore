@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttendanceCorrectionController;
 use App\Http\Controllers\AdminGajiUserController;
 use App\Http\Controllers\AdminGajiMasterSalaryController;
+use App\Http\Controllers\AdminGajiSalarySummaryController;
 use App\Http\Controllers\BranchMessageController;
 use App\Http\Controllers\BranchSalaryController;
 use App\Http\Controllers\EmployeeSalaryController;
@@ -352,6 +353,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::put('/admin-gaji/users/{id}', [\App\Http\Controllers\AdminGajiUserController::class, 'update'])->name('admin-gaji.users.update');
         Route::delete('/admin-gaji/users/{id}', [\App\Http\Controllers\AdminGajiUserController::class, 'destroy'])->name('admin-gaji.users.destroy');
 
+        Route::get('/admin-gaji/salary-summary', [AdminGajiSalarySummaryController::class, 'index'])->name('admin-gaji.salary-summary');
         // API Helper
         Route::get('/api/check-attendance', [SalaryController::class, 'checkAttendance'])->name('api.check-attendance');
     });
