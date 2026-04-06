@@ -6,6 +6,10 @@
     $checkInLocal = Carbon::parse($attendance->check_in_time)->timezone($userTimezone);
     $checkOutLocal = $attendance->check_out_time ? Carbon::parse($attendance->check_out_time)->timezone($userTimezone) : null;
     $tzLabel = str_contains($userTimezone, 'Jakarta') ? 'WIB' : (str_contains($userTimezone, 'Makassar') ? 'WITA' : 'WIT');
+
+    $lat = $attendance->latitude ?? null;
+    $lng = $attendance->longitude ?? null;
+    $hasLocation = $lat && $lng;
 @endphp
 
 @extends('layout.master')
@@ -14,398 +18,374 @@
     Verifikasi - {{ $attendance->user?->name }}
 @endsection
 
-@section('content')
-<div class="single-verify-container">
-    {{-- Header / Progress --}}
-    <div class="row align-items-center mb-3">
-        <div class="col">
-            <a href="{{ route('audit.verify.list') }}" class="btn-back">
-                <i class="mdi mdi-arrow-left"></i> Kembali ke List
-            </a>
-        </div>
-        <div class="col-auto text-end">
-            <span class="badge rounded-pill bg-light text-dark shadow-sm px-3 py-2">
-                <i class="mdi mdi-account-multiple-outline me-1"></i>
-                Remaining: <strong>{{ $totalPending }}</strong>
-            </span>
-        </div>
-    </div>
-
-    {{-- Main Swipe-style Card --}}
-    <div class="verify-card shadow-xl animate__animated animate__fadeIn">
-        {{-- Photo Section --}}
-        <div class="verify-photo-section">
-            <div class="absensi-photo-wrapper">
-                <img src="{{ Storage::url($attendance->photo_path) }}" alt="Absen Photo" class="absensi-photo" id="mainPhoto">
-                <div class="photo-overlay-info">
-                    <h2 class="name-overlay mb-1">
-                        {{ $attendance->user?->name }}
-                    </h2>
-                    <div class="division-overlay">
-                        <i class="mdi mdi-briefcase-outline me-1"></i> {{ $attendance->user?->division?->name ?? 'Staff' }}
-                    </div>
-                </div>
-                <div class="photo-actions-top">
-                    <button type="button" class="btn btn-sm btn-light rounded-pill px-3 shadow-sm" onclick="togglePhotoSize()">
-                        <i class="mdi mdi-magnify-plus-outline me-1"></i> Zoom Foto
-                    </button>
-                    <a href="{{ route('users.show', $attendance->user?->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
-                        <i class="mdi mdi-account-outline"></i> Profil
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        {{-- Details Section --}}
-        <div class="verify-details-section">
-            <div class="details-content p-4 p-md-5">
-                <div class="section-title mb-4">
-                    <h5 class="fw-bold text-dark border-start border-4 border-primary ps-3">Informasi Absensi</h5>
-                </div>
-
-                <div class="row g-4 mb-4">
-                    <div class="col-sm-6">
-                        <div class="info-card">
-                            <label class="info-label">Cabang</label>
-                            <div class="d-flex align-items-center">
-                                <div class="info-icon-sm bg-primary bg-opacity-10 text-primary">
-                                    <i class="mdi mdi-store-outline"></i>
-                                </div>
-                                <div class="ms-2">
-                                    <span class="info-text fw-bold text-dark">{{ $attendance->user?->branch?->name ?? '-' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="info-card">
-                            <label class="info-label">Waktu ({{ $tzLabel }})</label>
-                            <div class="d-flex align-items-center">
-                                <div class="info-icon-sm bg-success bg-opacity-10 text-success">
-                                    <i class="mdi mdi-clock-outline"></i>
-                                </div>
-                                <div class="ms-2">
-                                    <span class="info-text fw-bold text-dark">{{ $checkInLocal->format('H:i') }}</span>
-                                    <div class="small text-muted">{{ $checkInLocal->format('d M') }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-end mb-2">
-                        <label class="detail-label mb-0">Lokasi Penanda (Maps)</label>
-                        <button type="button" class="btn btn-xs btn-outline-primary btn-sm rounded-pill" onclick="centerMap()">
-                            <i class="mdi mdi-crosshairs-gps"></i> Fokus Lokasi
-                        </button>
-                    </div>
-                    <div id="map" class="map-container-new"></div>
-                    <div class="mt-2 text-center">
-                        <a href="https://maps.google.com/?q={{ $attendance->latitude }},{{ $attendance->longitude }}" target="_blank" class="btn btn-sm btn-light w-100 rounded-3 text-primary">
-                            <i class="mdi mdi-google-maps me-1"></i> Lihat di Google Maps Lengkap
-                        </a>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="detail-label">Catatan Karyawan</label>
-                    <div class="notes-container">
-                        @if($attendance->notes)
-                            <p class="mb-0 text-dark-emphasis italic">"{{ $attendance->notes }}"</p>
-                        @else
-                            <p class="mb-0 text-muted small"><em>Tidak ada catatan.</em></p>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="action-buttons-group mt-auto pt-4 border-top">
-                    <div class="row g-2">
-                        <div class="col-4">
-                            <form action="{{ route('audit.reject', $attendance->id) }}" method="POST">
-                                @csrf @method('PUT')
-                                <button type="submit" class="btn-swipe-v2 btn-reject-v2" onclick="return confirm('Tolak absensi ini?')">
-                                    <i class="mdi mdi-close"></i>
-                                    <span>Tolak</span>
-                                </button>
-                            </form>
-                        </div>
-                        <div class="col-4">
-                            <a href="{{ route('audit.verify.single', ['id' => $attendance->id]) }}" class="btn-swipe-v2 btn-skip-v2">
-                                <i class="mdi mdi-skip-next"></i>
-                                <span>Skip</span>
-                            </a>
-                        </div>
-                        <div class="col-4">
-                            <form action="{{ route('audit.approve', $attendance->id) }}" method="POST">
-                                @csrf @method('PUT')
-                                <button type="submit" class="btn-swipe-v2 btn-approve-v2">
-                                    <i class="mdi mdi-check"></i>
-                                    <span>Setujui</span>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Fullscreen Image Overlay (Hidden by default) --}}
-<div id="photoOverlay" class="photo-zoom-overlay" onclick="togglePhotoSize()">
-    <img src="{{ Storage::url($attendance->photo_path) }}" alt="Zoomed Photo">
-    <div class="close-overlay">Ketuk untuk menutup</div>
-</div>
-
-{{-- Leaflet CSS & JS --}}
-@push('css')
+@push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-    .single-verify-container {
-        width: 100%;
-        margin: 0 auto;
-        padding: 0;
+    /* ===== Back Link ===== */
+    .sv-back {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        color: #57606f;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: color 0.2s;
+    }
+    .sv-back:hover { color: var(--pstore-primary); }
+
+    /* ===== Main Layout ===== */
+    .sv-wrapper {
         display: flex;
         flex-direction: column;
+        gap: 16px;
     }
-
     @media (min-width: 992px) {
-        .single-verify-container {
-            padding: 20px;
-        }
-    }
-
-    .verify-card {
-        background: #fff;
-        display: flex;
-        flex-direction: column;
-        border-radius: 0;
-        overflow: hidden;
-        min-height: 100vh;
-    }
-
-    /* Side by side on Desktop */
-    @media (min-width: 992px) {
-        .verify-card {
+        .sv-wrapper {
             flex-direction: row;
-            border-radius: 28px;
-            min-height: 800px;
-            height: calc(100vh - 180px);
+            gap: 20px;
+            align-items: flex-start;
         }
     }
 
-    .verify-photo-section {
-        flex: 1;
+    /* ===== Photo Card ===== */
+    .sv-photo-card {
+        background: #000;
+        border-radius: 20px;
+        overflow: hidden;
         position: relative;
-        background: #f8f9fa;
-        min-height: 50vh;
+        width: 100%;
+        aspect-ratio: 3/4;
+        max-height: 65vh;
     }
-
     @media (min-width: 992px) {
-        .verify-photo-section {
-            min-height: 100%;
-            max-width: 60%;
+        .sv-photo-card {
+            flex: 1;
+            max-height: 80vh;
+            aspect-ratio: auto;
+            min-height: 500px;
         }
     }
-
-    .verify-details-section {
-        background: #fff;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        border-top: 1px solid #eee;
-    }
-
-    @media (min-width: 992px) {
-        .verify-details-section {
-            width: 450px;
-            border-top: none;
-            border-left: 1px solid #eee;
-            flex-shrink: 0;
-        }
-    }
-
-    .absensi-photo-wrapper {
-        height: 100%;
-        width: 100%;
-        position: relative;
-    }
-
-    .absensi-photo {
+    .sv-photo-card img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
     }
-
-    .photo-overlay-info {
+    .sv-photo-overlay {
         position: absolute;
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 60px 30px 30px;
-        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
-        color: white;
+        padding: 50px 20px 20px;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        color: #fff;
     }
-
-    .photo-actions-top {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        right: 20px;
-        display: flex;
-        justify-content: space-between;
-        z-index: 10;
-    }
-
-    .name-overlay {
+    .sv-photo-overlay h3 {
         font-weight: 800;
-        font-size: 1.8rem;
-        letter-spacing: -0.5px;
-    }
-
-    .map-container-new {
-        height: 250px;
-        border-radius: 16px;
-        background: #f1f2f6;
-        border: 1px solid #eee;
-        z-index: 5;
-    }
-
-    .notes-container {
-        padding: 15px;
-        background: #fcfcfc;
-        border-left: 4px solid #3b82f6;
-        border-radius: 8px;
-    }
-
-    .info-card {
-        padding: 10px;
-        background: #f8fafc;
-        border-radius: 12px;
-    }
-
-    .info-label {
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        color: #94a3b8;
-        font-weight: 700;
-        display: block;
+        font-size: 1.5rem;
         margin-bottom: 2px;
     }
+    .sv-photo-overlay h3 a {
+        color: #fff;
+        text-decoration: none;
+    }
+    .sv-photo-overlay h3 a:hover { color: #ffd700; }
+    .sv-photo-overlay .sv-division {
+        font-size: 0.85rem;
+        opacity: 0.85;
+    }
 
-    /* Swipe Buttons V2 */
-    .btn-swipe-v2 {
+    /* ===== Detail Panel ===== */
+    .sv-detail-panel {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         width: 100%;
-        height: 75px;
-        border: none;
-        border-radius: 18px;
+        display: flex;
+        flex-direction: column;
+    }
+    @media (min-width: 992px) {
+        .sv-detail-panel {
+            width: 420px;
+            flex-shrink: 0;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+    }
+    .sv-detail-body { padding: 20px; }
+
+    /* ===== Info Row ===== */
+    .sv-info-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .sv-info-box {
+        flex: 1;
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 12px;
+    }
+    .sv-info-box label {
+        display: block;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .sv-info-box .sv-val {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #1e293b;
+    }
+    .sv-info-box .sv-sub {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+
+    /* ===== Map Box ===== */
+    .sv-map-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+    #sv-map {
+        width: 100%;
+        height: 180px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: #f1f5f9;
+        z-index: 1;
+    }
+    .sv-map-link {
+        display: block;
+        text-align: center;
+        margin-top: 6px;
+        font-size: 0.8rem;
+        color: var(--pstore-primary, #0d6efd);
+        text-decoration: none;
+    }
+    .sv-map-link:hover { text-decoration: underline; }
+
+    /* ===== Notes ===== */
+    .sv-notes {
+        background: #f8fafc;
+        border-left: 3px solid var(--pstore-primary, #0d6efd);
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 0.85rem;
+        color: #475569;
+        margin-top: 16px;
+    }
+
+    /* ===== Action Buttons ===== */
+    .sv-actions {
+        display: flex;
+        gap: 8px;
+        padding: 16px 20px;
+        border-top: 1px solid #f1f5f9;
+    }
+    .sv-btn {
+        flex: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        border-radius: 14px;
+        padding: 14px 8px;
         color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform 0.15s, box-shadow 0.15s;
+        cursor: pointer;
     }
+    .sv-btn:hover { transform: translateY(-3px); color: #fff; }
+    .sv-btn:active { transform: scale(0.97); }
+    .sv-btn i { font-size: 1.3rem; margin-bottom: 2px; }
+    .sv-btn span { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .btn-swipe-v2 i { font-size: 1.5rem; margin-bottom: 2px; }
-    .btn-swipe-v2 span { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+    .sv-btn-reject { background: #ef4444; }
+    .sv-btn-reject:hover { box-shadow: 0 8px 16px rgba(239,68,68,0.3); }
+    .sv-btn-skip { background: #64748b; }
+    .sv-btn-skip:hover { box-shadow: 0 8px 16px rgba(100,116,139,0.3); }
+    .sv-btn-approve { background: #10b981; }
+    .sv-btn-approve:hover { box-shadow: 0 8px 16px rgba(16,185,129,0.3); }
 
-    .btn-approve-v2 { background: #10b981; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
-    .btn-approve-v2:hover { transform: translateY(-5px); background: #059669; }
+    .sv-status-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+    .sv-status-late { background: #fef2f2; color: #dc2626; }
+    .sv-status-ontime { background: #f0fdf4; color: #16a34a; }
 
-    .btn-reject-v2 { background: #ef4444; box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3); }
-    .btn-reject-v2:hover { transform: translateY(-5px); background: #dc2626; }
-
-    .btn-skip-v2 { background: #64748b; box-shadow: 0 10px 15px -3px rgba(100, 116, 139, 0.3); }
-    .btn-skip-v2:hover { transform: translateY(-5px); background: #475569; }
-
-    /* Zoom Overlay */
-    .photo-zoom-overlay {
+    /* Photo zoom overlay */
+    .sv-zoom-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.95);
+        background: rgba(0,0,0,0.92);
         z-index: 9999;
         display: none;
         align-items: center;
         justify-content: center;
         cursor: zoom-out;
     }
-    .photo-zoom-overlay.active { display: flex; }
-    .photo-zoom-overlay img { max-width: 95%; max-height: 95%; object-fit: contain; }
-    .close-overlay { position: absolute; bottom: 30px; color: #fff; background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 50px; }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translate3d(0, 40px, 0);
-        }
-        to {
-            opacity: 1;
-            transform: translate3d(0, 0, 0);
-        }
+    .sv-zoom-overlay.active { display: flex; }
+    .sv-zoom-overlay img {
+        max-width: 95vw;
+        max-height: 95vh;
+        object-fit: contain;
     }
 </style>
 @endpush
 
+@section('content')
+{{-- Header --}}
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <a href="{{ route('audit.verify.list') }}" class="sv-back">
+        <i class="mdi mdi-arrow-left me-1"></i> Kembali ke List
+    </a>
+    <span class="badge rounded-pill bg-light text-dark shadow-sm px-3 py-2">
+        <i class="mdi mdi-account-clock-outline me-1"></i>
+        Sisa: <strong>{{ $totalPending }}</strong>
+    </span>
+</div>
+
+{{-- Main Content --}}
+<div class="sv-wrapper">
+    {{-- LEFT: Photo --}}
+    <div class="sv-photo-card" onclick="toggleZoom()" style="cursor:zoom-in">
+        <img src="{{ Storage::url($attendance->photo_path) }}" alt="Foto Absen">
+        <div class="sv-photo-overlay">
+            <h3>
+                <a href="{{ route('users.show', $attendance->user?->id) }}">
+                    {{ $attendance->user?->name }} <i class="mdi mdi-chevron-right"></i>
+                </a>
+            </h3>
+            <div class="sv-division">
+                <i class="mdi mdi-briefcase-outline me-1"></i>{{ $attendance->user?->division?->name ?? 'Staff' }}
+            </div>
+        </div>
+    </div>
+
+    {{-- RIGHT: Details --}}
+    <div class="sv-detail-panel">
+        <div class="sv-detail-body">
+            {{-- Branch & Time --}}
+            <div class="sv-info-row">
+                <div class="sv-info-box">
+                    <label><i class="mdi mdi-store me-1"></i>Cabang</label>
+                    <div class="sv-val">{{ $attendance->user?->branch?->name ?? '-' }}</div>
+                </div>
+                <div class="sv-info-box">
+                    <label><i class="mdi mdi-clock-outline me-1"></i>Masuk ({{ $tzLabel }})</label>
+                    <div class="sv-val">{{ $checkInLocal->format('H:i') }}</div>
+                    <div class="sv-sub">{{ $checkInLocal->format('d M Y') }}</div>
+                </div>
+            </div>
+
+            {{-- Status --}}
+            <div class="mb-3">
+                @if($attendance->is_late_checkin)
+                    <span class="sv-status-badge sv-status-late">🔥 Terlambat</span>
+                @else
+                    <span class="sv-status-badge sv-status-ontime">✅ Tepat Waktu</span>
+                @endif
+            </div>
+
+            {{-- Map --}}
+            @if($hasLocation)
+            <div class="mb-3">
+                <div class="sv-map-label"><i class="mdi mdi-map-marker me-1"></i>Lokasi Absen</div>
+                <div id="sv-map"></div>
+                <a href="https://maps.google.com/?q={{ $lat }},{{ $lng }}" target="_blank" class="sv-map-link">
+                    <i class="mdi mdi-open-in-new me-1"></i>Buka di Google Maps
+                </a>
+            </div>
+            @else
+            <div class="mb-3">
+                <div class="sv-map-label">Lokasi Absen</div>
+                <div class="text-muted small">Lokasi tidak tersedia.</div>
+            </div>
+            @endif
+
+            {{-- Notes --}}
+            <div class="sv-notes">
+                <strong class="d-block mb-1" style="font-size:0.7rem;text-transform:uppercase;color:#94a3b8;">Catatan</strong>
+                @if($attendance->notes)
+                    "{{ $attendance->notes }}"
+                @else
+                    <em class="text-muted">Tidak ada catatan.</em>
+                @endif
+            </div>
+        </div>
+
+        {{-- Actions --}}
+        <div class="sv-actions">
+            <form action="{{ route('audit.reject', $attendance->id) }}" method="POST" class="flex-fill d-flex">
+                @csrf @method('PUT')
+                <button type="submit" class="sv-btn sv-btn-reject" onclick="return confirm('Yakin tolak absensi ini?')">
+                    <i class="mdi mdi-close"></i><span>Tolak</span>
+                </button>
+            </form>
+            <a href="{{ route('audit.verify.single', ['id' => $attendance->id]) }}" class="sv-btn sv-btn-skip">
+                <i class="mdi mdi-skip-next"></i><span>Skip</span>
+            </a>
+            <form action="{{ route('audit.approve', $attendance->id) }}" method="POST" class="flex-fill d-flex">
+                @csrf @method('PUT')
+                <button type="submit" class="sv-btn sv-btn-approve">
+                    <i class="mdi mdi-check"></i><span>Setujui</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Zoom Overlay --}}
+<div id="zoomOverlay" class="sv-zoom-overlay" onclick="toggleZoom()">
+    <img src="{{ Storage::url($attendance->photo_path) }}" alt="Zoom">
+</div>
+@endsection
+
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let mainMap;
-    const lat = {{ $attendance->latitude ?? -6.175111 }};
-    const lng = {{ $attendance->longitude ?? 106.865039 }};
+function toggleZoom() {
+    document.getElementById('zoomOverlay').classList.toggle('active');
+}
 
-    function initMap() {
-        if (mainMap) return;
+document.addEventListener('DOMContentLoaded', function() {
+    @if($hasLocation)
+    var lat = {{ $lat }};
+    var lng = {{ $lng }};
 
-        // Optimized Map Config
-        mainMap = L.map('map', {
-            center: [lat, lng],
-            zoom: 15,
-            zoomControl: true,
-            scrollWheelZoom: true,
-            fadeAnimation: true,
-            markerZoomAnimation: true,
-            inertia: true
-        });
-
-        // Using CARTO Positron (Lighter & Faster Render)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; CARTO'
-        }).addTo(mainMap);
-        
-        const marker = L.marker([lat, lng]).addTo(mainMap)
-            .bindPopup('<b>{{ $attendance->user?->name }}</b>');
-
-        // Expert approach: Use ResizeObserver to fix "Lag/Grey" bug instantly
-        const observer = new ResizeObserver(() => {
-            if (mainMap) {
-                mainMap.invalidateSize();
-                mainMap.setView([lat, lng]);
-            }
-        });
-        
-        observer.observe(document.getElementById('map'));
-    }
-
-    function centerMap() {
-        if (mainMap) mainMap.flyTo([lat, lng], 17);
-    }
-
-    function togglePhotoSize() {
-        const overlay = document.getElementById('photoOverlay');
-        overlay.classList.toggle('active');
-        if (overlay.classList.contains('active')) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'auto';
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        // Delay slightly to wait for browser layout to settle
-        setTimeout(initMap, 100);
+    var map = L.map('sv-map', {
+        center: [lat, lng],
+        zoom: 16,
+        zoomControl: true,
+        scrollWheelZoom: false,
+        dragging: true,
+        attributionControl: false
     });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    L.marker([lat, lng]).addTo(map)
+        .bindPopup('<b>{{ $attendance->user?->name }}</b>')
+        .openPopup();
+
+    // Fix grey tiles on initial render
+    setTimeout(function() { map.invalidateSize(); }, 200);
+    setTimeout(function() { map.invalidateSize(); }, 600);
+    @endif
+});
 </script>
 @endpush
-@endsection
