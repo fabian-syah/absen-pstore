@@ -107,11 +107,12 @@ class AttendanceHistoryController extends Controller
             })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
 
             // Cari leave
-            $leave = $leaves->filter(function ($l) use ($date) {
-                return $date->between(
-                    Carbon::parse($l->start_date)->startOfDay(),
-                    Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
-                );
+            $leave = $leaves->filter(function ($l) use ($date, $branchTimezone) {
+                // Konversi start_date dan end_date (yang biasanya string Y-m-d) ke timezone cabang untuk perbandingan presisi
+                $lStart = Carbon::parse($l->start_date, $branchTimezone)->startOfDay();
+                $lEnd = Carbon::parse($l->end_date ?? $l->start_date, $branchTimezone)->endOfDay();
+                
+                return $date->between($lStart, $lEnd);
             })->first();
 
             if ($att) {
@@ -226,16 +227,24 @@ class AttendanceHistoryController extends Controller
             'audit_photo' => $attendance->audit_photo_path ? 'nullable|image|max:2048' : 'required|image|max:2048'
         ]);
 
-        $originalDate = $attendance->check_in_time->format('Y-m-d');
-        $newCheckIn = Carbon::parse($originalDate . ' ' . $request->check_in_time);
-        $newCheckOut = $request->check_out_time ? Carbon::parse($originalDate . ' ' . $request->check_out_time) : null;
-        if ($newCheckOut && $newCheckOut->lt($newCheckIn)) {
-            $newCheckOut->addDay();
+        $branchTimezone = $attendance->user->branch?->timezone ?? 'Asia/Jakarta';
+        $originalDateLocal = Carbon::parse($attendance->check_in_time)->timezone($branchTimezone)->format('Y-m-d');
+        
+        $newCheckInLocal = Carbon::createFromFormat('Y-m-d H:i', $originalDateLocal . ' ' . $request->check_in_time, $branchTimezone);
+        $newCheckIn = $newCheckInLocal->copy()->setTimezone(config('app.timezone'));
+
+        $newCheckOut = null;
+        if ($request->check_out_time) {
+            $newCheckOutLocal = Carbon::createFromFormat('Y-m-d H:i', $originalDateLocal . ' ' . $request->check_out_time, $branchTimezone);
+            if ($newCheckOutLocal->lt($newCheckInLocal)) {
+                $newCheckOutLocal->addDay();
+            }
+            $newCheckOut = $newCheckOutLocal->copy()->setTimezone(config('app.timezone'));
         }
 
         $isLate = false;
         if ($request->presence_status == 'Masuk' && $attendance->scheduled_check_in) {
-            $scheduleIn = Carbon::parse($originalDate . ' ' . $attendance->scheduled_check_in);
+            $scheduleIn = Carbon::parse($originalDateLocal . ' ' . $attendance->scheduled_check_in, $branchTimezone);
             $isLate = $newCheckIn->gt($scheduleIn);
         }
 
@@ -267,7 +276,8 @@ class AttendanceHistoryController extends Controller
      */
     private function syncWithLeaveRequest($attendance)
     {
-        $date = Carbon::parse($attendance->check_in_time)->format('Y-m-d');
+        $branchTimezone = $attendance->user->branch?->timezone ?? 'Asia/Jakarta';
+        $date = Carbon::parse($attendance->check_in_time)->timezone($branchTimezone)->format('Y-m-d');
         $userId = $attendance->user_id;
         $status = strtolower($attendance->presence_status ?? '');
 

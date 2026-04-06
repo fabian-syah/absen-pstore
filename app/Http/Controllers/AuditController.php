@@ -842,7 +842,8 @@ class AuditController extends Controller
      */
     private function syncWithLeaveRequest($attendance)
     {
-        $date = Carbon::parse($attendance->check_in_time)->format('Y-m-d');
+        $branchTimezone = $attendance->user?->branch?->timezone ?? 'Asia/Jakarta';
+        $date = Carbon::parse($attendance->check_in_time)->timezone($branchTimezone)->format('Y-m-d');
         $userId = $attendance->user_id;
         $status = strtolower($attendance->presence_status ?? '');
 
