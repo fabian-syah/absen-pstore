@@ -157,8 +157,6 @@
     <img src="{{ Storage::url($attendance->photo_path) }}" alt="Zoomed Photo">
     <div class="close-overlay">Ketuk untuk menutup</div>
 </div>
-div>
-</div>
 
 {{-- Leaflet CSS & JS --}}
 @push('css')
@@ -358,44 +356,55 @@ div>
     const lng = {{ $attendance->longitude ?? 106.865039 }};
 
     function initMap() {
-        if (mainMap) mainMap.remove();
-        
+        if (mainMap) return;
+
+        // Optimized Map Config
         mainMap = L.map('map', {
             center: [lat, lng],
             zoom: 15,
             zoomControl: true,
             scrollWheelZoom: true,
-            dragging: true
+            fadeAnimation: true,
+            markerZoomAnimation: true,
+            inertia: true
         });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
+        // Using CARTO Positron (Lighter & Faster Render)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; CARTO'
         }).addTo(mainMap);
         
-        L.marker([lat, lng]).addTo(mainMap)
-            .bindPopup('<b>{{ $attendance->user?->name }}</b>')
-            .openPopup();
+        const marker = L.marker([lat, lng]).addTo(mainMap)
+            .bindPopup('<b>{{ $attendance->user?->name }}</b>');
 
-        setTimeout(() => mainMap.invalidateSize(), 500);
+        // Expert approach: Use ResizeObserver to fix "Lag/Grey" bug instantly
+        const observer = new ResizeObserver(() => {
+            if (mainMap) {
+                mainMap.invalidateSize();
+                mainMap.setView([lat, lng]);
+            }
+        });
+        
+        observer.observe(document.getElementById('map'));
     }
 
     function centerMap() {
-        if (mainMap) {
-            mainMap.flyTo([lat, lng], 17);
-        }
+        if (mainMap) mainMap.flyTo([lat, lng], 17);
     }
 
     function togglePhotoSize() {
-        document.getElementById('photoOverlay').classList.toggle('active');
+        const overlay = document.getElementById('photoOverlay');
+        overlay.classList.toggle('active');
+        if (overlay.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        initMap();
-        
-        // Ensure map is interactive even if container style changes
-        window.addEventListener('resize', () => {
-            if (mainMap) mainMap.invalidateSize();
-        });
+        // Delay slightly to wait for browser layout to settle
+        setTimeout(initMap, 100);
     });
 </script>
 @endpush
