@@ -162,10 +162,12 @@
     }
 
     .single-verify-container {
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 10px;
-        height: calc(100vh - 100px);
+        min-height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
     }
 
     .btn-back {
@@ -185,9 +187,19 @@
         background: #fff;
         border-radius: 28px;
         overflow: hidden;
-        height: calc(100% - 60px);
+        flex-grow: 1;
         display: flex;
+        flex-direction: column;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        margin-bottom: 20px;
+    }
+
+    /* Ensure flex row on desktop */
+    @media (min-width: 992px) {
+        .verify-card {
+            flex-direction: row;
+            height: clamp(600px, 80vh, 900px);
+        }
     }
 
     .absensi-photo-wrapper {
@@ -348,20 +360,36 @@
         transform: scale(1.05);
     }
 
-    /* Mobile Responsive */
+    /* Mobile Responsive Optimizations */
     @media (max-width: 991px) {
         .single-verify-container {
-            height: auto;
-            margin-bottom: 50px;
+            padding: 0;
+            min-height: auto;
         }
         .verify-card {
-            height: auto;
+            border-radius: 0;
+            box-shadow: none;
+            margin-bottom: 0;
         }
         .absensi-photo-wrapper {
-            height: 400px;
+            height: 60vh;
+            border-radius: 0 0 30px 30px;
         }
         .name-overlay {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
+        }
+        .action-footer {
+            position: sticky;
+            bottom: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px !important;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.05);
+        }
+        .btn-swipe i {
+            font-size: 1.4rem;
         }
     }
 
@@ -385,17 +413,31 @@
         const lat = {{ $attendance->latitude ?? -6.175111 }};
         const lng = {{ $attendance->longitude ?? 106.865039 }};
         
-        const map = L.map('map').setView([lat, lng], 15);
+        const map = L.map('map', {
+            center: [lat, lng],
+            zoom: 15,
+            zoomControl: false // Manual zoom control to keep it clean
+        });
         
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+            attribution: '© OpenStreetMap'
         }).addTo(map);
         
         const marker = L.marker([lat, lng]).addTo(map)
-            .bindPopup('{{ $attendance->user?->name }} berada di sini.')
+            .bindPopup('<b>{{ $attendance->user?->name }}</b><br>Lokasi Absen')
             .openPopup();
 
-        // Optional: Animation effect for buttons if needed
+        // FIX: Invalidate map size after rendering to solve the "grey/half-rendered" bug
+        setTimeout(() => {
+            map.invalidateSize(true);
+        }, 300);
+
+        // Also invalidate on window resize
+        window.addEventListener('resize', () => {
+            map.invalidateSize();
+        });
     });
 </script>
 @endpush
