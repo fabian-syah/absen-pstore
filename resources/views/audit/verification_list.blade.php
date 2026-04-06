@@ -21,6 +21,9 @@
                     <p class="text-muted small mb-0">Kelola persetujuan absensi mandiri karyawan</p>
                 </div>
                 <div class="col-auto d-flex gap-2 align-items-center">
+                    <a href="{{ route('audit.verify.single') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+                        <i class="mdi mdi-account-search-outline me-1"></i> Verifikasi 1 Per 1
+                    </a>
                     <span class="badge-pending-count">
                         <i class="mdi mdi-clock-alert-outline me-1"></i>
                         <span class="fw-bold">{{ $pendingAttendances->total() }}</span> Menunggu

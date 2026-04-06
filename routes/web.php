@@ -410,6 +410,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // VERIFIKASI ABSENSI
         Route::prefix('verifikasi')->name('audit.')->group(function () {
             Route::get('/absensi', [AuditController::class, 'showVerificationList'])->name('verify.list');
+            Route::get('/absensi/single', [AuditController::class, 'showSingleVerification'])->name('verify.single');
             Route::get('/absensi/ditolak', [AuditController::class, 'showRejectedVerificationList'])->name('verify.rejected.list');
             Route::put('/setujui/{attendance}', [AuditController::class, 'approve'])->name('approve');
             Route::put('/tolak/{attendance}', [AuditController::class, 'reject'])->name('reject');

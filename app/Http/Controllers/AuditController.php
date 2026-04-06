@@ -223,6 +223,65 @@ class AuditController extends Controller
     }
 
     /**
+     * Menampilkan verifikasi absensi satu per satu (Single Mode)
+     */
+    public function showSingleVerification(Request $request)
+    {
+        $user = Auth::user();
+        $query = Attendance::with(['user.division', 'user.branch'])
+            ->where('status', 'pending_verification')
+            ->whereNotNull('photo_path');
+
+        $isLeaderAudit = $user->role == 'audit' && stripos($user->division->name ?? '', 'leader') !== false;
+
+        if (!$isLeaderAudit) {
+            $query->where('user_id', '!=', $user->id);
+        }
+
+        $isUniversalAccess = in_array($user->role, ['admin']);
+
+        if (!$isUniversalAccess) {
+            $pivotBranchIds = $user->branches->pluck('id')->toArray();
+            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!empty($myBranchIds)) {
+                $query->whereHas('user', function ($q) use ($myBranchIds) {
+                    $q->whereIn('branch_id', $myBranchIds);
+                });
+            } else {
+                $query->where('id', 0);
+            }
+        }
+
+        // Logika Skip: Ambil ID setelah ID yang sekarang
+        $currentId = $request->id;
+        $attendance = null;
+
+        if ($currentId) {
+            // Cari data setelah ID ini
+            $attendance = (clone $query)->where('id', '>', $currentId)->oldest()->first();
+            
+            // Jika tidak ada lagi (sudah di ujung), balik ke paling awal
+            if (!$attendance) {
+                $attendance = (clone $query)->oldest()->first();
+            }
+        } else {
+            // Default ambil yang paling lama (paling butuh verif)
+            $attendance = (clone $query)->oldest()->first();
+        }
+
+        if (!$attendance) {
+            return redirect()->route('audit.verify.list')->with('success', 'Semua absensi telah terverifikasi.');
+        }
+
+        // Hitung total pending untuk info (menggunakan query asli tanpa filter ID)
+        $totalPending = $query->count();
+
+        return view('audit.verify_single', compact('attendance', 'totalPending'));
+    }
+
+    /**
      * Menampilkan daftar absensi yang ditolak
      */
     public function showRejectedVerificationList()
