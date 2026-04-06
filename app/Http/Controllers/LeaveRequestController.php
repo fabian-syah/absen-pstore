@@ -731,4 +731,80 @@ class LeaveRequestController extends Controller
             return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
+
+    /**
+     * MENGAKHIRI CUTI LEBIH AWAL (ADMIN/AUDIT)
+     * Misal cuti 4 hari, tapi hari ke-4 masuk. Jadi cuti cuma 3 hari.
+     */
+    public function finishEarlyAdmin(LeaveRequest $leaveRequest)
+    {
+        $actor = Auth::user();
+        $today = now()->startOfDay();
+        $yesterday = now()->yesterday()->startOfDay();
+
+        // 1. Security Check
+        if (!in_array($actor->role, ['admin', 'admin_gaji', 'audit'])) {
+            abort(403);
+        }
+
+        if ($leaveRequest->status !== 'approved' || $leaveRequest->type !== 'cuti') {
+            return back()->with('error', 'Hanya data cuti yang sudah disetujui yang bisa diproses.');
+        }
+
+        $startDate = Carbon::parse($leaveRequest->start_date)->startOfDay();
+        $endDate = Carbon::parse($leaveRequest->end_date)->startOfDay();
+
+        // Jika hari ini adalah hari pertama cuti, lebih baik gunakan fitur HAPUS saja
+        if ($today->lte($startDate)) {
+            return back()->with('info', 'Cuti baru dimulai hari ini atau belum dimulai. Silakan gunakan fitur Hapus Permanen jika ingin membatalkan seluruhnya.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Hitung durasi lama
+            $oldDuration = $startDate->diffInDays($endDate) + 1;
+            
+            // Urutan baru: end_date menjadi kemarin (yesterday)
+            $newEndDate = $yesterday;
+            $newDuration = $startDate->diffInDays($newEndDate) + 1;
+
+            $diff = $oldDuration - $newDuration;
+
+            if ($diff <= 0) {
+                return back()->with('error', 'Tidak ada sisa hari untuk dikembalikan.');
+            }
+
+            // 2. Update User Balance (Kembalikan selisih hari)
+            $user = $leaveRequest->user;
+            $user->increment('leave_balance', $diff);
+            $user->decrement('leave_taken', $diff);
+
+            // 3. Bersihkan Attendance yang "Akan Datang" (Hari ini ke depan)
+            $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
+            $branchOffset = Carbon::now($branchTimezone)->format('P');
+            $appOffset = Carbon::now(config('app.timezone'))->format('P');
+
+            $deletedAttendances = Attendance::where('user_id', $user->id)
+                ->where('attendance_type', 'leave')
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) >= ?", [$appOffset, $branchOffset, $today->format('Y-m-d')])
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) <= ?", [$appOffset, $branchOffset, $endDate->format('Y-m-d')])
+                ->delete();
+
+            // 4. Update Leave Request
+            $leaveRequest->update([
+                'end_date' => $newEndDate->format('Y-m-d'),
+                'reason' => $leaveRequest->reason . " (Diakhiri lebih awal oleh {$actor->name} pada {$today->format('d/m/Y')})"
+            ]);
+
+            DB::commit();
+            Log::info("Cuti FINISHED EARLY by Admin: User {$user->id} dikembalikan {$diff} hari oleh {$actor->name}");
+
+            return back()->with('success', "Cuti berhasil diakhiri. Durasi disesuaikan menjadi {$newDuration} hari. Saldo {$diff} hari telah dikembalikan ke user.");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error("Gagal Akhiri Cuti: " . $e->getMessage());
+            return back()->with('error', 'Gagal memproses data: ' . $e->getMessage());
+        }
+    }
 }

@@ -498,17 +498,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
             // [NEW] Approval Cuti Only (Khusus Approver)
             Route::get('/approvals-cuti', [LeaveRequestController::class, 'approvalCuti'])
-                ->name('approvals') // Alias simple
+                ->name('approvals')
                 ->middleware('role:admin,admin_gaji,audit,leader');
 
             // [NEW] Monitoring User Aktif Cuti (Admin, Audit, Admin Gaji)
             Route::middleware(['role:admin,admin_gaji,audit'])->group(function () {
                 Route::get('/active', [LeaveRequestController::class, 'activeLeaves'])->name('active');
                 Route::delete('/{leaveRequest}/destroy-approved', [LeaveRequestController::class, 'destroyApproved'])->name('destroy-approved');
+                Route::patch('/{leaveRequest}/finish-early-admin', [LeaveRequestController::class, 'finishEarlyAdmin'])->name('finish-early-admin');
             });
-
-            // Note: Sidebar uses 'leave-requests.approvals' so name needs to align if using prefix
-            // Prefix active is 'leave-requests.' so 'approvals' becomes 'leave-requests.approvals'
 
             Route::get('/pengajuan-saya', [LeaveRequestController::class, 'myRequests'])->name('my-requests');
             Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');

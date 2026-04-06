@@ -48,7 +48,7 @@
                                 <th class="py-4 ps-4">Karyawan</th>
                                 <th class="py-4">Cabang</th>
                                 <th class="py-4 text-center">Periode Cuti</th>
-                                <th class="py-4 text-center">Durasi</th>
+                                <th class="py-4 text-center">Status Progress</th>
                                 <th class="py-4">Disetujui Oleh</th>
                                 <th class="py-4 text-center pe-4">Aksi</th>
                             </tr>
@@ -58,7 +58,16 @@
                                 @php
                                     $start = \Carbon\Carbon::parse($leave->start_date);
                                     $end = $leave->end_date ? \Carbon\Carbon::parse($leave->end_date) : $start;
-                                    $duration = $start->diffInDays($end) + 1;
+                                    $total = $start->diffInDays($end) + 1;
+                                    
+                                    // Hitung hari yang sudah terlewati (termasuk hari ini)
+                                    $today = now()->startOfDay();
+                                    $elapsed = 0;
+                                    if ($today->gte($start)) {
+                                        $elapsed = $start->diffInDays($today->min($end)) + 1;
+                                    }
+                                    
+                                    $percentage = ($elapsed / $total) * 100;
                                 @endphp
                                 <tr>
                                     <td class="ps-4">
@@ -98,10 +107,23 @@
                                             {{ $leave->reason }}
                                         </div>
                                     </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-dark rounded-pill px-3 py-2 fw-bold">
-                                            {{ $duration }} Hari
-                                        </span>
+                                    <td class="text-center" style="min-width: 180px;">
+                                        <div class="d-flex justify-content-between align-items-center mb-1 small fw-bold">
+                                            <span class="text-primary">Hari ke-{{ $elapsed }}</span>
+                                            <span class="text-muted">{{ $elapsed }}/{{ $total }} Hari</span>
+                                        </div>
+                                        <div class="progress rounded-pill shadow-none" style="height: 6px;">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                                                 role="progressbar" 
+                                                 style="width: {{ $percentage }}%" 
+                                                 aria-valuenow="{{ $percentage }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <div class="mt-1 x-small text-muted text-start" style="font-size: 10px;">
+                                            *Sisa {{ $total - $elapsed }} hari lagi
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">
@@ -110,15 +132,30 @@
                                         </div>
                                     </td>
                                     <td class="text-center pe-4">
-                                        <button type="button" class="btn btn-soft-danger btn-icon rounded-circle shadow-sm" 
-                                                onclick="confirmDelete('{{ $leave->id }}', '{{ $leave->user->name }}')"
-                                                title="Hapus Cuti & Kembalikan Saldo">
-                                            <i class="mdi mdi-trash-can-outline"></i>
-                                        </button>
-                                        <form id="delete-form-{{ $leave->id }}" action="{{ route('leave-requests.destroy-approved', $leave->id) }}" method="POST" class="d-none">
-                                            @csrf
-                                            @method('DELETE')
-                                        </form>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            {{-- TOMBOL AKHIRI AWAL (Jika sudah jalan minimal 1 hari) --}}
+                                            @if($elapsed > 0 && $elapsed < $total)
+                                                <button type="button" class="btn btn-soft-warning btn-icon rounded-circle shadow-sm" 
+                                                        onclick="confirmFinishEarly('{{ $leave->id }}', '{{ $leave->user->name }}', '{{ $elapsed }}')"
+                                                        title="Akhiri Cuti (Masuk Hari Ini)">
+                                                    <i class="mdi mdi-calendar-check"></i>
+                                                </button>
+                                                <form id="finish-early-form-{{ $leave->id }}" action="{{ route('leave-requests.finish-early-admin', $leave->id) }}" method="POST" class="d-none">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                </form>
+                                            @endif
+
+                                            <button type="button" class="btn btn-soft-danger btn-icon rounded-circle shadow-sm" 
+                                                    onclick="confirmDelete('{{ $leave->id }}', '{{ $leave->user->name }}')"
+                                                    title="Hapus Permanen & Restore Penuh">
+                                                <i class="mdi mdi-trash-can-outline"></i>
+                                            </button>
+                                            <form id="delete-form-{{ $leave->id }}" action="{{ route('leave-requests.destroy-approved', $leave->id) }}" method="POST" class="d-none">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -154,19 +191,38 @@
     <script>
         function confirmDelete(id, name) {
             Swal.fire({
-                title: 'Hapus Data Cuti?',
-                text: `Data cuti ${name} akan dihapus, saldo cuti akan dikembalikan, dan absensi otomatis "Cuti" pada periode tersebut akan dibersihkan.`,
+                title: 'Hapus & Restore Penuh?',
+                text: `Data cuti ${name} akan DIHAPUS PERMANEN. Seluruh saldo (${name}) hari akan dikembalikan ke user.`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus & Restore!',
+                confirmButtonText: 'Ya, Hapus Semua!',
                 cancelButtonText: 'Batal',
                 reverseButtons: true,
                 borderRadius: '15px'
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('delete-form-' + id).submit();
+                }
+            });
+        }
+
+        function confirmFinishEarly(id, name, elapsed) {
+            Swal.fire({
+                title: 'Akhiri Cuti Lebih Awal?',
+                text: `${name} masuk hari ini? Masa cuti akan diubah menjadi ${parseInt(elapsed) - 1} hari (selesai kemarin). Sisa saldo hari yang belum terpakai akan dikembalikan.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Masuk Hari Ini',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                borderRadius: '15px'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('finish-early-form-' + id).submit();
                 }
             });
         }
@@ -189,6 +245,17 @@
             color: white;
             transform: scale(1.1);
         }
+        .btn-soft-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.2);
+            transition: all 0.3s;
+        }
+        .btn-soft-warning:hover {
+            background-color: #ffc107;
+            color: white;
+            transform: scale(1.1);
+        }
         .btn-icon {
             width: 40px;
             height: 40px;
@@ -197,5 +264,6 @@
             justify-content: center;
             padding: 0;
         }
+        .x-small { font-size: 10px; }
     </style>
 @endsection
