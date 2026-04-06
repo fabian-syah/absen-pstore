@@ -501,6 +501,12 @@ Route::middleware(['auth', 'active.user'])->group(function () {
                 ->name('approvals') // Alias simple
                 ->middleware('role:admin,admin_gaji,audit,leader');
 
+            // [NEW] Monitoring User Aktif Cuti (Admin, Audit, Admin Gaji)
+            Route::middleware(['role:admin,admin_gaji,audit'])->group(function () {
+                Route::get('/active', [LeaveRequestController::class, 'activeLeaves'])->name('active');
+                Route::delete('/{leaveRequest}/destroy-approved', [LeaveRequestController::class, 'destroyApproved'])->name('destroy-approved');
+            });
+
             // Note: Sidebar uses 'leave-requests.approvals' so name needs to align if using prefix
             // Prefix active is 'leave-requests.' so 'approvals' becomes 'leave-requests.approvals'
 

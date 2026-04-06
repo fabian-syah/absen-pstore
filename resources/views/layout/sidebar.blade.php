@@ -561,6 +561,13 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="{{ route('leave-requests.active') }}">
+                    <i class="menu-icon mdi mdi-account-clock-outline"></i>
+                    <span class="menu-title">User Aktif Cuti</span>
+                    <span class="badge badge-success rounded-pill ms-auto">Today</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="{{ route('leave-requests.index') }}">
                     <i class="menu-icon mdi mdi-clock-alert-outline"></i>
                     <span class="menu-title">Daftar Izin / Telat</span>

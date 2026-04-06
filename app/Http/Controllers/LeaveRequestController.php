@@ -590,4 +590,145 @@ class LeaveRequestController extends Controller
 
         return view('leave_requests.approval_cuti', compact('requests'));
     }
+
+    /**
+     * MONITORING USER AKTIF CUTI (HARI INI)
+     * Requirement: Admin/Admin Gaji (Semua), Audit (Cabang Terkait)
+     */
+    public function activeLeaves(Request $request)
+    {
+        $user = Auth::user();
+        $today = now()->toDateString();
+
+        if (!in_array($user->role, ['admin', 'admin_gaji', 'audit'])) {
+            abort(403);
+        }
+
+        $query = LeaveRequest::with(['user.branch', 'user.division', 'approver'])
+            ->where('status', 'approved')
+            ->where('type', 'cuti')
+            ->where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today);
+
+        // Filter Audit (Branch Scope)
+        if ($user->role == 'audit') {
+            $pivotBranchIds = $user->branches->pluck('id')->toArray();
+            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!empty($myBranchIds)) {
+                $query->whereHas('user', function ($q) use ($myBranchIds) {
+                    $q->whereIn('branch_id', $myBranchIds);
+                });
+            } else {
+                $query->where('id', 0);
+            }
+        }
+
+        // Search by name
+        if ($request->search) {
+            $search = $request->search;
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        $leaves = $query->latest()->paginate(15);
+
+        return view('leave_requests.active_leaves', compact('leaves'));
+    }
+
+    /**
+     * MENGHAPUS CUTI YANG SUDAH DI-ACC (RESTORE SALDO)
+     */
+    public function destroyApproved(LeaveRequest $leaveRequest)
+    {
+        $actor = Auth::user();
+
+        // 1. Security Check
+        if (!in_array($actor->role, ['admin', 'admin_gaji', 'audit'])) {
+            abort(403);
+        }
+
+        // Audit check (hanya boleh hapus di cabangnya)
+        if ($actor->role == 'audit') {
+            $pivotBranchIds = $actor->branches->pluck('id')->toArray();
+            $homebaseBranchId = $actor->branch_id ? [$actor->branch_id] : [];
+            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if (!in_array($leaveRequest->user->branch_id, $myBranchIds)) {
+                return back()->with('error', 'Anda tidak memiliki akses untuk menghapus data di cabang ini.');
+            }
+        }
+
+        if ($leaveRequest->status !== 'approved') {
+            return back()->with('error', 'Hanya data yang sudah disetujui yang bisa dihapus lewat fitur ini.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // 2. Hitung jumlah hari untuk restore saldo (jika tipe cuti)
+            if ($leaveRequest->type === 'cuti') {
+                $startDate = Carbon::parse($leaveRequest->start_date);
+                $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
+                $daysCount = $startDate->diffInDays($endDate) + 1;
+
+                // Restore User Balance
+                $user = $leaveRequest->user;
+                $user->increment('leave_balance', $daysCount);
+                $user->decrement('leave_taken', $daysCount);
+
+                Log::info("Cuti DELETED & RESTORED: User {$user->id} dikembalikan {$daysCount} hari oleh {$actor->name}");
+            }
+
+            // 3. Bersihkan Attendance yang dibuat otomatis oleh leave ini
+            // Cari attendance di range tanggal tersebut yang tipenya 'leave'
+            $startDate = Carbon::parse($leaveRequest->start_date)->format('Y-m-d');
+            $endDate = ($leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : Carbon::parse($leaveRequest->start_date))->format('Y-m-d');
+
+            // Kita cari attendance yang created_at nya mendekati approval? 
+            // Atau cukup cari presence_status = 'Cuti' / 'Sakit' dll di range tsb.
+            // Paling aman: cari yang presence_status sesuai tipe dan user_id di range tsb.
+            
+            $presenceStatusMap = [
+                'telat' => 'Izin Telat',
+                'wfh' => 'WFH',
+                'izin' => 'Izin',
+                'sakit' => 'Sakit',
+                'cuti' => 'Cuti',
+                'libur' => 'Libur',
+                'dinas' => 'Dinas Luar',
+            ];
+            $status = $presenceStatusMap[$leaveRequest->type] ?? ucfirst($leaveRequest->type);
+
+            // Karena database menyimpan check_in_time dalam UTC/App Timezone, 
+            // kita gunakan logic yang sama dengan saat create (whereRaw DATE CONVERT_TZ)
+            $branchTimezone = $leaveRequest->user->branch?->timezone ?? 'Asia/Jakarta';
+            $branchOffset = Carbon::now($branchTimezone)->format('P');
+            $appOffset = Carbon::now(config('app.timezone'))->format('P');
+
+            $attendances = Attendance::where('user_id', $leaveRequest->user_id)
+                ->where('attendance_type', 'leave')
+                ->where('presence_status', $status)
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) >= ?", [$appOffset, $branchOffset, $startDate])
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) <= ?", [$appOffset, $branchOffset, $endDate])
+                ->get();
+
+            foreach ($attendances as $att) {
+                $att->delete();
+            }
+
+            // 4. Hapus/Update Leave Request
+            // Lebih baik ditandai 'cancelled' atau hapus permanen?
+            // "fiturnya bisa menghapus cuti" -> Kita hapus saja agar bersih dari history
+            $leaveRequest->delete();
+
+            DB::commit();
+            return back()->with('success', 'Data cuti berhasil dihapus dan saldo user telah dikembalikan.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error("Gagal Hapus Cuti: " . $e->getMessage());
+            return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
 }
