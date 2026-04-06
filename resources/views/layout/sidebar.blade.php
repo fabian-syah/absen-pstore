@@ -462,12 +462,12 @@
         {{-- =================================== --}}
         {{-- MENU KHUSUS SUPER ADMIN --}}
         {{-- =================================== --}}
-        @if (auth()->user()->role == 'admin' || auth()->user()->role == 'audit')
+        @if (auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Menu Cabang</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('branches.index') }}">
                     <i class="menu-icon mdi mdi-domain"></i>
-                    <span class="menu-title">Data User Non Karyawan</span>
+                    <span class="menu-title">Data Cabang</span>
                 </a>
             </li>
         @endif
