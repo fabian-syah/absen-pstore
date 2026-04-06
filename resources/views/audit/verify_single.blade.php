@@ -32,103 +32,106 @@
     </div>
 
     {{-- Main Swipe-style Card --}}
-    <div class="verify-card shadow-xl animate__animated animate__fadeInUp">
-        <div class="row g-0 h-100">
-            {{-- Left Side: Large Photo --}}
-            <div class="col-lg-7 position-relative">
-                <div class="absensi-photo-wrapper">
-                    <img src="{{ Storage::url($attendance->photo_path) }}" alt="Absen Photo" class="absensi-photo">
-                    <div class="photo-overlay-info">
-                        <h2 class="name-overlay mb-0">
-                            <a href="{{ route('users.show', $attendance->user?->id) }}" class="text-white text-decoration-none hover-profile">
-                                {{ $attendance->user?->name }} <i class="mdi mdi-chevron-right fs-4"></i>
-                            </a>
-                        </h2>
-                        <div class="division-overlay">
-                            <i class="mdi mdi-briefcase-outline me-1"></i> {{ $attendance->user?->division?->name ?? 'Staff' }}
-                        </div>
+    <div class="verify-card shadow-xl animate__animated animate__fadeIn">
+        {{-- Photo Section --}}
+        <div class="verify-photo-section">
+            <div class="absensi-photo-wrapper">
+                <img src="{{ Storage::url($attendance->photo_path) }}" alt="Absen Photo" class="absensi-photo" id="mainPhoto">
+                <div class="photo-overlay-info">
+                    <h2 class="name-overlay mb-1">
+                        {{ $attendance->user?->name }}
+                    </h2>
+                    <div class="division-overlay">
+                        <i class="mdi mdi-briefcase-outline me-1"></i> {{ $attendance->user?->division?->name ?? 'Staff' }}
                     </div>
+                </div>
+                <div class="photo-actions-top">
+                    <button type="button" class="btn btn-sm btn-light rounded-pill px-3 shadow-sm" onclick="togglePhotoSize()">
+                        <i class="mdi mdi-magnify-plus-outline me-1"></i> Zoom Foto
+                    </button>
+                    <a href="{{ route('users.show', $attendance->user?->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                        <i class="mdi mdi-account-outline"></i> Profil
+                    </a>
                 </div>
             </div>
+        </div>
 
-            {{-- Right Side: Details & Actions --}}
-            <div class="col-lg-5 d-flex flex-column bg-white">
-                <div class="card-details p-4 flex-grow-1 overflow-auto">
-                    <div class="detail-item mb-4">
-                        <label class="detail-label">Informasi Karyawan</label>
-                        <div class="d-flex align-items-center">
-                            <div class="info-icon bg-soft-primary text-primary">
-                                <i class="mdi mdi-store-outline"></i>
-                            </div>
-                            <div class="ms-3">
-                                <div class="info-title">Cabang Pengambilan</div>
-                                <div class="info-value">{{ $attendance->user?->branch?->name ?? 'N/A' }}</div>
-                            </div>
-                        </div>
-                    </div>
+        {{-- Details Section --}}
+        <div class="verify-details-section">
+            <div class="details-content p-4 p-md-5">
+                <div class="section-title mb-4">
+                    <h5 class="fw-bold text-dark border-start border-4 border-primary ps-3">Informasi Absensi</h5>
+                </div>
 
-                    <div class="row g-3 mb-4">
-                        <div class="col-6">
-                            <div class="detail-item">
-                                <label class="detail-label">Jam Masuk ({{ $tzLabel }})</label>
-                                <div class="d-flex align-items-center">
-                                    <div class="info-icon bg-soft-success text-success">
-                                        <i class="mdi mdi-login"></i>
-                                    </div>
-                                    <div class="ms-2">
-                                        <div class="info-value fs-5">{{ $checkInLocal->format('H:i') }}</div>
-                                        <div class="info-sub">{{ $checkInLocal->format('d M Y') }}</div>
-                                    </div>
+                <div class="row g-4 mb-4">
+                    <div class="col-sm-6">
+                        <div class="info-card">
+                            <label class="info-label">Cabang</label>
+                            <div class="d-flex align-items-center">
+                                <div class="info-icon-sm bg-primary bg-opacity-10 text-primary">
+                                    <i class="mdi mdi-store-outline"></i>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="detail-item text-end">
-                                <label class="detail-label">Status Absen</label>
-                                <div class="badge-status-modern {{ $attendance->is_late_checkin ? 'text-danger' : 'text-success' }}">
-                                    {{ $attendance->is_late_checkin ? '🔥 Terlambat' : '✅ Tepat Waktu' }}
+                                <div class="ms-2">
+                                    <span class="info-text fw-bold text-dark">{{ $attendance->user?->branch?->name ?? '-' }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="detail-item mb-4">
-                        <label class="detail-label">Lokasi Saat Absen (Maps)</label>
-                        <div id="map" class="map-container rounded-4 shadow-sm border"></div>
-                        <div class="mt-2 text-center">
-                            <a href="https://maps.google.com/?q={{ $attendance->latitude }},{{ $attendance->longitude }}" target="_blank" class="btn btn-sm btn-link text-primary text-decoration-none">
-                                <i class="mdi mdi-open-in-new me-1"></i> Buka di Google Maps
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="detail-item mb-4">
-                        <label class="detail-label">Catatan Karyawan</label>
-                        <div class="notes-bubble">
-                            @if($attendance->notes)
-                                <i class="mdi mdi-format-quote-open me-1 text-muted"></i>
-                                {{ $attendance->notes }}
-                            @else
-                                <span class="text-muted italic">Tidak ada catatan karyawan.</span>
-                            @endif
+                    <div class="col-sm-6">
+                        <div class="info-card">
+                            <label class="info-label">Waktu ({{ $tzLabel }})</label>
+                            <div class="d-flex align-items-center">
+                                <div class="info-icon-sm bg-success bg-opacity-10 text-success">
+                                    <i class="mdi mdi-clock-outline"></i>
+                                </div>
+                                <div class="ms-2">
+                                    <span class="info-text fw-bold text-dark">{{ $checkInLocal->format('H:i') }}</span>
+                                    <div class="small text-muted">{{ $checkInLocal->format('d M') }}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Action Buttons --}}
-                <div class="action-footer p-4 border-top">
-                    <div class="row g-3">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <label class="detail-label mb-0">Lokasi Penanda (Maps)</label>
+                        <button type="button" class="btn btn-xs btn-outline-primary btn-sm rounded-pill" onclick="centerMap()">
+                            <i class="mdi mdi-crosshairs-gps"></i> Fokus Lokasi
+                        </button>
+                    </div>
+                    <div id="map" class="map-container-new"></div>
+                    <div class="mt-2 text-center">
+                        <a href="https://maps.google.com/?q={{ $attendance->latitude }},{{ $attendance->longitude }}" target="_blank" class="btn btn-sm btn-light w-100 rounded-3 text-primary">
+                            <i class="mdi mdi-google-maps me-1"></i> Lihat di Google Maps Lengkap
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="detail-label">Catatan Karyawan</label>
+                    <div class="notes-container">
+                        @if($attendance->notes)
+                            <p class="mb-0 text-dark-emphasis italic">"{{ $attendance->notes }}"</p>
+                        @else
+                            <p class="mb-0 text-muted small"><em>Tidak ada catatan.</em></p>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="action-buttons-group mt-auto pt-4 border-top">
+                    <div class="row g-2">
                         <div class="col-4">
                             <form action="{{ route('audit.reject', $attendance->id) }}" method="POST">
                                 @csrf @method('PUT')
-                                <button type="submit" class="btn-swipe btn-swipe-reject" title="Tolak">
+                                <button type="submit" class="btn-swipe-v2 btn-reject-v2" onclick="return confirm('Tolak absensi ini?')">
                                     <i class="mdi mdi-close"></i>
                                     <span>Tolak</span>
                                 </button>
                             </form>
                         </div>
-                        <div class="col-4 text-center">
-                            <a href="{{ route('audit.verify.single', ['id' => $attendance->id]) }}" class="btn-swipe btn-swipe-skip" title="Sengaja Lewati">
+                        <div class="col-4">
+                            <a href="{{ route('audit.verify.single', ['id' => $attendance->id]) }}" class="btn-swipe-v2 btn-skip-v2">
                                 <i class="mdi mdi-skip-next"></i>
                                 <span>Skip</span>
                             </a>
@@ -136,7 +139,7 @@
                         <div class="col-4">
                             <form action="{{ route('audit.approve', $attendance->id) }}" method="POST">
                                 @csrf @method('PUT')
-                                <button type="submit" class="btn-swipe btn-swipe-approve" title="Setujui">
+                                <button type="submit" class="btn-swipe-v2 btn-approve-v2">
                                     <i class="mdi mdi-check"></i>
                                     <span>Setujui</span>
                                 </button>
@@ -149,63 +152,85 @@
     </div>
 </div>
 
+{{-- Fullscreen Image Overlay (Hidden by default) --}}
+<div id="photoOverlay" class="photo-zoom-overlay" onclick="togglePhotoSize()">
+    <img src="{{ Storage::url($attendance->photo_path) }}" alt="Zoomed Photo">
+    <div class="close-overlay">Ketuk untuk menutup</div>
+</div>
+div>
+</div>
+
 {{-- Leaflet CSS & JS --}}
 @push('css')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-    :root {
-        --dating-primary: #ff4757;
-        --dating-success: #2ed573;
-        --dating-reject: #ff6b81;
-        --dating-skip: #747d8c;
-        --glass-bg: rgba(255, 255, 255, 0.8);
-    }
-
     .single-verify-container {
-        max-width: 1200px;
+        width: 100%;
         margin: 0 auto;
-        padding: 10px;
-        min-height: calc(100vh - 120px);
+        padding: 0;
         display: flex;
         flex-direction: column;
     }
 
-    .btn-back {
-        display: inline-flex;
-        align-items: center;
-        text-decoration: none;
-        color: #57606f;
-        font-weight: 600;
-        transition: all 0.2s;
-    }
-    .btn-back:hover {
-        color: var(--primary-color);
-        transform: translateX(-3px);
+    @media (min-width: 992px) {
+        .single-verify-container {
+            padding: 20px;
+        }
     }
 
     .verify-card {
         background: #fff;
-        border-radius: 28px;
-        overflow: hidden;
-        flex-grow: 1;
         display: flex;
         flex-direction: column;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-        margin-bottom: 20px;
+        border-radius: 0;
+        overflow: hidden;
+        min-height: 100vh;
     }
 
-    /* Ensure flex row on desktop */
+    /* Side by side on Desktop */
     @media (min-width: 992px) {
         .verify-card {
             flex-direction: row;
-            height: clamp(600px, 80vh, 900px);
+            border-radius: 28px;
+            min-height: 800px;
+            height: calc(100vh - 180px);
+        }
+    }
+
+    .verify-photo-section {
+        flex: 1;
+        position: relative;
+        background: #f8f9fa;
+        min-height: 50vh;
+    }
+
+    @media (min-width: 992px) {
+        .verify-photo-section {
+            min-height: 100%;
+            max-width: 60%;
+        }
+    }
+
+    .verify-details-section {
+        background: #fff;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        border-top: 1px solid #eee;
+    }
+
+    @media (min-width: 992px) {
+        .verify-details-section {
+            width: 450px;
+            border-top: none;
+            border-left: 1px solid #eee;
+            flex-shrink: 0;
         }
     }
 
     .absensi-photo-wrapper {
         height: 100%;
         width: 100%;
-        overflow: hidden;
         position: relative;
     }
 
@@ -213,7 +238,6 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.5s ease;
     }
 
     .photo-overlay-info {
@@ -221,177 +245,97 @@
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 40px 30px;
-        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+        padding: 60px 30px 30px;
+        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
         color: white;
+    }
+
+    .photo-actions-top {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        display: flex;
+        justify-content: space-between;
+        z-index: 10;
     }
 
     .name-overlay {
         font-weight: 800;
-        font-size: 2.2rem;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        font-size: 1.8rem;
+        letter-spacing: -0.5px;
     }
 
-    .hover-profile:hover {
-        color: #ff9f43 !important;
-    }
-
-    .division-overlay {
-        font-size: 1.1rem;
-        opacity: 0.9;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-    }
-
-    .detail-label {
-        display: block;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: #a4b0be;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-    }
-
-    .info-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-    }
-    .bg-soft-primary { background-color: rgba(59, 130, 246, 0.1); }
-    .bg-soft-success { background-color: rgba(46, 213, 115, 0.1); }
-
-    .info-title {
-        font-size: 0.8rem;
-        color: #747d8c;
-        font-weight: 500;
-    }
-    .info-value {
-        font-weight: 700;
-        color: #2f3542;
-        font-size: 1rem;
-    }
-    .info-sub {
-        font-size: 0.75rem;
-        color: #a4b0be;
-    }
-
-    .badge-status-modern {
-        font-weight: 700;
-        font-size: 0.9rem;
-    }
-
-    .map-container {
-        height: 180px;
-        width: 100%;
+    .map-container-new {
+        height: 250px;
+        border-radius: 16px;
         background: #f1f2f6;
+        border: 1px solid #eee;
+        z-index: 5;
     }
 
-    .notes-bubble {
-        background: #f8f9fa;
+    .notes-container {
         padding: 15px;
-        border-radius: 18px;
-        border-bottom-left-radius: 4px;
-        color: #57606f;
-        font-size: 0.95rem;
-        position: relative;
+        background: #fcfcfc;
+        border-left: 4px solid #3b82f6;
+        border-radius: 8px;
     }
 
-    .action-footer {
-        background: #fff;
+    .info-card {
+        padding: 10px;
+        background: #f8fafc;
+        border-radius: 12px;
     }
 
-    .btn-swipe {
+    .info-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: #94a3b8;
+        font-weight: 700;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    /* Swipe Buttons V2 */
+    .btn-swipe-v2 {
         width: 100%;
+        height: 75px;
         border: none;
-        border-radius: 20px;
-        padding: 12px;
+        border-radius: 18px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        text-decoration: none;
-    }
-
-    .btn-swipe i {
-        font-size: 1.8rem;
-        margin-bottom: 4px;
-    }
-    .btn-swipe span {
-        font-weight: 700;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-    }
-
-    .btn-swipe-reject {
-        background: #fff;
-        color: var(--dating-reject);
-        border: 2px solid var(--dating-reject);
-    }
-    .btn-swipe-reject:hover {
-        background: var(--dating-reject);
-        color: #fff;
-        transform: scale(1.05);
-        box-shadow: 0 10px 20px rgba(255, 107, 129, 0.3);
-    }
-
-    .btn-swipe-approve {
-        background: linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%);
-        color: #white;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         color: #fff;
     }
-    .btn-swipe-approve:hover {
-        transform: scale(1.1);
-        box-shadow: 0 15px 30px rgba(29, 209, 161, 0.4);
-    }
 
-    .btn-swipe-skip {
-        background: #f1f2f6;
-        color: var(--dating-skip);
-    }
-    .btn-swipe-skip:hover {
-        background: #dfe4ea;
-        transform: scale(1.05);
-    }
+    .btn-swipe-v2 i { font-size: 1.5rem; margin-bottom: 2px; }
+    .btn-swipe-v2 span { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
 
-    /* Mobile Responsive Optimizations */
-    @media (max-width: 991px) {
-        .single-verify-container {
-            padding: 0;
-            min-height: auto;
-        }
-        .verify-card {
-            border-radius: 0;
-            box-shadow: none;
-            margin-bottom: 0;
-        }
-        .absensi-photo-wrapper {
-            height: 60vh;
-            border-radius: 0 0 30px 30px;
-        }
-        .name-overlay {
-            font-size: 1.6rem;
-        }
-        .action-footer {
-            position: sticky;
-            bottom: 0;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            padding: 15px !important;
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 -10px 25px rgba(0,0,0,0.05);
-        }
-        .btn-swipe i {
-            font-size: 1.4rem;
-        }
+    .btn-approve-v2 { background: #10b981; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
+    .btn-approve-v2:hover { transform: translateY(-5px); background: #059669; }
+
+    .btn-reject-v2 { background: #ef4444; box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3); }
+    .btn-reject-v2:hover { transform: translateY(-5px); background: #dc2626; }
+
+    .btn-skip-v2 { background: #64748b; box-shadow: 0 10px 15px -3px rgba(100, 116, 139, 0.3); }
+    .btn-skip-v2:hover { transform: translateY(-5px); background: #475569; }
+
+    /* Zoom Overlay */
+    .photo-zoom-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.95);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: zoom-out;
     }
+    .photo-zoom-overlay.active { display: flex; }
+    .photo-zoom-overlay img { max-width: 95%; max-height: 95%; object-fit: contain; }
+    .close-overlay { position: absolute; bottom: 30px; color: #fff; background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 50px; }
 
     @keyframes fadeInUp {
         from {
@@ -409,34 +353,48 @@
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const lat = {{ $attendance->latitude ?? -6.175111 }};
-        const lng = {{ $attendance->longitude ?? 106.865039 }};
+    let mainMap;
+    const lat = {{ $attendance->latitude ?? -6.175111 }};
+    const lng = {{ $attendance->longitude ?? 106.865039 }};
+
+    function initMap() {
+        if (mainMap) mainMap.remove();
         
-        const map = L.map('map', {
+        mainMap = L.map('map', {
             center: [lat, lng],
             zoom: 15,
-            zoomControl: false // Manual zoom control to keep it clean
+            zoomControl: true,
+            scrollWheelZoom: true,
+            dragging: true
         });
-        
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap'
-        }).addTo(map);
+        }).addTo(mainMap);
         
-        const marker = L.marker([lat, lng]).addTo(map)
-            .bindPopup('<b>{{ $attendance->user?->name }}</b><br>Lokasi Absen')
+        L.marker([lat, lng]).addTo(mainMap)
+            .bindPopup('<b>{{ $attendance->user?->name }}</b>')
             .openPopup();
 
-        // FIX: Invalidate map size after rendering to solve the "grey/half-rendered" bug
-        setTimeout(() => {
-            map.invalidateSize(true);
-        }, 300);
+        setTimeout(() => mainMap.invalidateSize(), 500);
+    }
 
-        // Also invalidate on window resize
+    function centerMap() {
+        if (mainMap) {
+            mainMap.flyTo([lat, lng], 17);
+        }
+    }
+
+    function togglePhotoSize() {
+        document.getElementById('photoOverlay').classList.toggle('active');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initMap();
+        
+        // Ensure map is interactive even if container style changes
         window.addEventListener('resize', () => {
-            map.invalidateSize();
+            if (mainMap) mainMap.invalidateSize();
         });
     });
 </script>
