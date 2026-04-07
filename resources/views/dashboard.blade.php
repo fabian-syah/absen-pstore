@@ -1010,7 +1010,9 @@
                                                 $statusTitle = 'Belum Absen / Alpha';
                                                 
                                                 $isFuture = $teamCalendar['startDate']->copy()->day($d)->isFuture();
-                                                $isToday = $teamCalendar['startDate']->copy()->day($d)->isNow($teamMember->branch?->timezone ?? 'Asia/Jakarta');
+                                                $currentDateStr = $teamCalendar['startDate']->copy()->day($d)->format('Y-m-d');
+                                                $todayInBranch = \Carbon\Carbon::now($teamMember->branch?->timezone ?? 'Asia/Jakarta')->format('Y-m-d');
+                                                $isToday = $currentDateStr === $todayInBranch;
 
                                                 if($att) {
                                                     if($att->check_out_time) {
