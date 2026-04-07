@@ -96,7 +96,12 @@ class DashboardController extends Controller
         $branch_id = $user->branch_id;
 
         // [TIMEZONE & LIVE CLOCK SETUP]
-        $userTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
+        // Jika Admin / Audit, maka pakai WIB (Asia/Jakarta)
+        if (in_array($user->role, ['admin', 'audit'])) {
+            $userTimezone = 'Asia/Jakarta';
+        } else {
+            $userTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
+        }
         $data['current_timezone'] = $userTimezone;
 
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
@@ -497,7 +502,7 @@ class DashboardController extends Controller
         if (in_array($user->role, ['admin', 'audit', 'leader'])) {
             $month = request('month', $nowInBranch->month);
             $year = request('year', $nowInBranch->year);
-            $startDate = Carbon::create($year, $month, 1, $userTimezone)->startOfMonth();
+            $startDate = Carbon::create($year, $month, 1, 0, 0, 0, $userTimezone)->startOfMonth();
             $endDate = $startDate->copy()->endOfMonth();
     
             $teamQuery = User::where('is_active', true);
@@ -506,11 +511,16 @@ class DashboardController extends Controller
             }
             $teamMembers = $teamQuery->with('branch', 'division')->orderBy('name')->get();
             
+            $tzMap = $teamMembers->pluck('branch.timezone', 'id')->map(function($tz) {
+                return $tz ?: 'Asia/Jakarta';
+            });
+            
             $calendarAttendances = Attendance::whereIn('user_id', $teamMembers->pluck('id'))
                 ->whereBetween('check_in_time', [$startDate, $endDate])
                 ->get()
-                ->groupBy(['user_id', function($item) use ($userTimezone) {
-                    return Carbon::parse($item->check_in_time)->timezone($userTimezone)->format('Y-m-d');
+                ->groupBy(['user_id', function($item) use ($tzMap) {
+                    $tz = $tzMap[$item->user_id] ?? 'Asia/Jakarta';
+                    return Carbon::parse($item->check_in_time)->timezone($tz)->format('Y-m-d');
                 }]);
                 
             $calendarLeaves = LeaveRequest::whereIn('user_id', $teamMembers->pluck('id'))
