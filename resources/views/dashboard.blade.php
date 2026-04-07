@@ -1027,17 +1027,27 @@
                                                 $isToday = $currentDateStr === $todayInBranch;
 
                                                 if($att) {
-                                                    if($att->check_out_time) {
-                                                        $statusClass = 'out'; 
-                                                        $statusValue = 'P'; 
-                                                        $statusTitle = 'Absen Pulang: ' . \Carbon\Carbon::parse($att->check_out_time)->format('H:i');
+                                                    $ps = strtolower($att->presence_status ?? '');
+                                                    if (in_array($ps, ['sakit', 'izin', 'cuti', 'wfh', 'libur', 'off'])) {
+                                                        // Jika record absensi bertipe Izin/Cuti/Libur
+                                                        if($ps == 'sakit') { $statusClass = 'sick'; $statusValue = 'S'; $statusTitle = 'Sakit'; }
+                                                        elseif($ps == 'izin') { $statusClass = 'permit'; $statusValue = 'I'; $statusTitle = 'Izin'; }
+                                                        elseif($ps == 'cuti') { $statusClass = 'leave'; $statusValue = 'C'; $statusTitle = 'Cuti'; }
+                                                        elseif($ps == 'wfh') { $statusClass = 'wfh'; $statusValue = 'W'; $statusTitle = 'WFH'; }
+                                                        else { $statusClass = 'off'; $statusValue = 'L'; $statusTitle = 'Libur/Off'; }
                                                     } else {
-                                                        $statusClass = 'present'; $statusValue = 'M'; 
-                                                        $statusTitle = 'Absen Masuk: ' . \Carbon\Carbon::parse($att->check_in_time)->format('H:i');
-                                                    }
-                                                    if($att->is_late_checkin) { 
-                                                        $statusClass .= ' telat'; $statusValue = 'T'; 
-                                                        $statusTitle .= ' (Terlambat)'; 
+                                                        if($att->check_out_time) {
+                                                            $statusClass = 'out'; 
+                                                            $statusValue = 'P'; 
+                                                            $statusTitle = 'Absen Pulang: ' . \Carbon\Carbon::parse($att->check_out_time)->format('H:i');
+                                                        } else {
+                                                            $statusClass = 'present'; $statusValue = 'M'; 
+                                                            $statusTitle = 'Absen Masuk: ' . \Carbon\Carbon::parse($att->check_in_time)->format('H:i');
+                                                        }
+                                                        if($att->is_late_checkin) { 
+                                                            $statusClass .= ' telat'; $statusValue = 'T'; 
+                                                            $statusTitle .= ' (Terlambat)'; 
+                                                        }
                                                     }
                                                 } elseif($leave) {
                                                     $lt = strtolower($leave->type);
