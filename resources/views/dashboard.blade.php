@@ -188,7 +188,8 @@
         }
 
         .calendar-matrix-wrapper {
-            overflow-x: auto;
+            max-height: 550px;
+            overflow: auto;
             position: relative;
         }
 
@@ -270,6 +271,7 @@
         .status-cell.sick { background-color: #ef4444; } /* Red */
         .status-cell.off { background-color: #94a3b8; } /* Slate - Libur */
         .status-cell.telat { background-color: #dc3545; border: 2px solid #fff; } /* Crimson */
+        .status-cell.alpha { background-color: #1f2937; } /* Dark Gray/Black for Alpha */
 
         .calendar-legend {
             display: flex;
@@ -1007,6 +1009,9 @@
                                                 $statusValue = '';
                                                 $statusTitle = 'Belum Absen / Alpha';
                                                 
+                                                $isFuture = $teamCalendar['startDate']->copy()->day($d)->isFuture();
+                                                $isToday = $teamCalendar['startDate']->copy()->day($d)->isNow($teamMember->branch?->timezone ?? 'Asia/Jakarta');
+
                                                 if($att) {
                                                     if($att->check_out_time) {
                                                         $statusClass = 'out'; 
@@ -1027,6 +1032,11 @@
                                                     elseif($lt == 'cuti') { $statusClass = 'leave'; $statusValue = 'C'; $statusTitle = 'Cuti: ' . $leave->reason; }
                                                     elseif($lt == 'wfh') { $statusClass = 'wfh'; $statusValue = 'W'; $statusTitle = 'WFH: ' . $leave->reason; }
                                                     elseif($lt == 'libur') { $statusClass = 'off'; $statusValue = 'L'; $statusTitle = 'Libur / Off'; }
+                                                } elseif (!$isFuture && !$isToday) {
+                                                    // Jika tidak ada absen, tidak ada izin, dan hari sudah berlalu = ALPHA
+                                                    $statusClass = 'alpha'; 
+                                                    $statusValue = 'A'; 
+                                                    $statusTitle = 'Alpha (Tanpa Keterangan)';
                                                 }
                                             @endphp
                                             <td>
@@ -1049,6 +1059,7 @@
                         <div class="legend-item"><div class="legend-color sick"></div> Sakit (S)</div>
                         <div class="legend-item"><div class="legend-color wfh"></div> WFH (W)</div>
                         <div class="legend-item"><div class="legend-color off"></div> Libur (L)</div>
+                        <div class="legend-item"><div class="legend-color alpha"></div> Alpha (A)</div>
                         <div class="legend-item"><div class="legend-color telat" style="border: 1px solid #ddd"></div> Terlambat (T)</div>
                     </div>
                 </div>
