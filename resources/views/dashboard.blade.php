@@ -235,6 +235,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
             font-weight: 600;
+            color: #334155;
+            font-size: 11px;
         }
 
         .calendar-table th.user-col {
@@ -245,14 +247,21 @@
         .status-cell {
             width: 100%;
             height: 100%;
+            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
             cursor: pointer;
             color: white;
-            font-weight: 700;
+            font-weight: 800;
             position: relative;
+            font-size: 13px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .calendar-table td.weekend-day {
+            background-color: #fff9f9 !important;
         }
 
         .status-cell:hover {
@@ -996,7 +1005,10 @@
                                         </td>
                                         @for($d=1; $d<=$teamCalendar['daysInMonth']; $d++)
                                             @php
-                                                $dateStr = $teamCalendar['startDate']->copy()->day($d)->format('Y-m-d');
+                                                $dateObj = $teamCalendar['startDate']->copy()->day($d);
+                                                $dateStr = $dateObj->format('Y-m-d');
+                                                $isWeekend = $dateObj->isWeekend();
+                                                
                                                 $att = $teamCalendar['attendances'][$teamMember->id][$dateStr][0] ?? null;
                                                 $leave = null;
                                                 if(isset($teamCalendar['leaves'][$teamMember->id])) {
@@ -1041,7 +1053,7 @@
                                                     $statusTitle = 'Alpha (Tanpa Keterangan)';
                                                 }
                                             @endphp
-                                            <td>
+                                            <td class="{{ $isWeekend ? 'weekend-day' : '' }}">
                                                 <div class="status-cell {{ $statusClass }}" title="{{ $statusTitle }}">
                                                     {{ $statusValue }}
                                                 </div>

@@ -517,6 +517,7 @@ class DashboardController extends Controller
             
             $calendarAttendances = Attendance::whereIn('user_id', $teamMembers->pluck('id'))
                 ->whereBetween('check_in_time', [$startDate, $endDate])
+                ->where('presence_status', '!=', 'Alpha')
                 ->get()
                 ->groupBy(['user_id', function($item) use ($tzMap) {
                     $tz = $tzMap[$item->user_id] ?? 'Asia/Jakarta';
