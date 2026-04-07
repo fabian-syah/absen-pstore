@@ -491,6 +491,61 @@ class DashboardController extends Controller
             }
         }
 
+        // =========================================================================
+        // [NEW] LOGIKA KALENDER TIM (DASHBOARD)
+        // =========================================================================
+        if (in_array($user->role, ['admin', 'audit', 'leader'])) {
+            $month = request('month', $nowInBranch->month);
+            $year = request('year', $nowInBranch->year);
+            $startDate = Carbon::create($year, $month, 1, $userTimezone)->startOfMonth();
+            $endDate = $startDate->copy()->endOfMonth();
+    
+            $teamQuery = User::where('is_active', true);
+            if ($user->role !== 'admin') {
+                $teamQuery->whereIn('branch_id', $allBranchIds);
+            }
+            $teamMembers = $teamQuery->with('branch', 'division')->orderBy('name')->get();
+            
+            $calendarAttendances = Attendance::whereIn('user_id', $teamMembers->pluck('id'))
+                ->whereBetween('check_in_time', [$startDate, $endDate])
+                ->get()
+                ->groupBy(['user_id', function($item) use ($userTimezone) {
+                    return Carbon::parse($item->check_in_time)->timezone($userTimezone)->format('Y-m-d');
+                }]);
+                
+            $calendarLeaves = LeaveRequest::whereIn('user_id', $teamMembers->pluck('id'))
+                ->where('status', 'approved')
+                ->where(function($q) use ($startDate, $endDate) {
+                    $q->whereBetween('start_date', [$startDate, $endDate])
+                      ->orWhereBetween('end_date', [$startDate, $endDate])
+                      ->orWhere(function($sub) use ($startDate, $endDate) {
+                          $sub->where('start_date', '<', $startDate)
+                              ->where('end_date', '>', $endDate);
+                      });
+                })->get()
+                ->map(function($leave) {
+                    // Create date range for easier lookup
+                    $start = Carbon::parse($leave->start_date);
+                    $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start;
+                    $leave->range = collect();
+                    for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+                        $leave->range->push($d->format('Y-m-d'));
+                    }
+                    return $leave;
+                })
+                ->groupBy('user_id');
+
+            $data['teamCalendar'] = [
+                'members' => $teamMembers,
+                'attendances' => $calendarAttendances,
+                'leaves' => $calendarLeaves,
+                'daysInMonth' => $startDate->daysInMonth,
+                'startDate' => $startDate,
+                'currentMonth' => $month,
+                'currentYear' => $year
+            ];
+        }
+
         return view('dashboard', $data);
     }
 

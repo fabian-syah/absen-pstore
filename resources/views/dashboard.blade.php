@@ -172,6 +172,145 @@
             color: #FFD700 !important;
             font-weight: bold;
         }
+
+        /* TEAM CALENDAR STYLES */
+        .calendar-container {
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .calendar-header {
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .calendar-matrix-wrapper {
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .calendar-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed;
+        }
+
+        .calendar-table th, .calendar-table td {
+            width: 45px;
+            min-width: 45px;
+            height: 45px;
+            text-align: center;
+            vertical-align: middle;
+            border-right: 1px solid #f1f1f1;
+            border-bottom: 1px solid #f1f1f1;
+            font-size: 12px;
+            padding: 0;
+        }
+
+        .calendar-table th {
+            background: #f8f9fa;
+            font-weight: 700;
+            color: #495057;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .calendar-table .user-col {
+            width: 180px;
+            min-width: 180px;
+            text-align: left;
+            padding: 0 15px;
+            position: sticky;
+            left: 0;
+            background: #ffffff;
+            z-index: 11;
+            border-right: 2px solid #dee2e6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 600;
+        }
+
+        .calendar-table th.user-col {
+            z-index: 12;
+            background: #f8f9fa;
+        }
+
+        .status-cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            color: white;
+            font-weight: 700;
+            position: relative;
+        }
+
+        .status-cell:hover {
+            transform: scale(1.1);
+            z-index: 2;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+
+        .status-cell.empty { border-radius: 0; cursor: default; }
+        .status-cell.present { background-color: #10b981; } /* Emerald */
+        .status-cell.out { background-color: #3b82f6; } /* Blue */
+        .status-cell.leave { background-color: #f59e0b; } /* Amber - Cuti Kuning */
+        .status-cell.permit { background-color: #f97316; } /* Orange - Izin */
+        .status-cell.wfh { background-color: #a855f7; } /* Purple */
+        .status-cell.sick { background-color: #ef4444; } /* Red */
+        .status-cell.off { background-color: #94a3b8; } /* Slate - Libur */
+        .status-cell.telat { background-color: #dc3545; border: 2px solid #fff; } /* Crimson */
+
+        .calendar-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px 25px;
+            background: #fff;
+            border-top: 1px solid #f1f1f1;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 6px;
+        }
+
+        /* Tooltip styling enhancements */
+        .status-cell[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            z-index: 20;
+            margin-bottom: 5px;
+        }
     </style>
 @endpush
 
@@ -787,6 +926,130 @@
                             </div>
                         </div>
                         <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ======================================================================= --}}
+    {{-- [NEW] TEAM CALENDAR SECTION --}}
+    {{-- ======================================================================= --}}
+    @if(isset($teamCalendar))
+        <div class="row mb-5 animate-enter" style="animation-delay: 0.25s">
+            <div class="col-12">
+                <div class="calendar-container card border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
+                    <div class="calendar-header d-flex justify-content-between align-items-center flex-wrap gap-3 p-4 bg-white border-bottom">
+                        <div>
+                            <h4 class="fw-bold mb-1 text-dark">
+                                <i class="mdi mdi-calendar-multiselect text-primary me-2"></i>Kalender Kehadiran Tim
+                            </h4>
+                            <p class="text-muted small mb-0">Klik pada kotak status untuk detail harian.</p>
+                        </div>
+                        
+                        <form action="{{ route('dashboard') }}" method="GET" class="d-flex align-items-center gap-2 bg-light p-2 rounded-pill">
+                            <select name="month" class="form-select form-select-sm border-0 bg-transparent fw-bold" onchange="this.form.submit()">
+                                @for($m=1; $m<=12; $m++)
+                                    <option value="{{ $m }}" {{ $teamCalendar['currentMonth'] == $m ? 'selected' : '' }}>
+                                        {{ \Carbon\Carbon::create(2024, $m, 1)->translatedFormat('F') }}
+                                    </option>
+                                @endfor
+                            </select>
+                            <select name="year" class="form-select form-select-sm border-0 bg-transparent fw-bold" onchange="this.form.submit()">
+                                @for($y=date('Y')-1; $y<=date('Y')+1; $y++)
+                                    <option value="{{ $y }}" {{ $teamCalendar['currentYear'] == $y ? 'selected' : '' }}>
+                                        {{ $y }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </form>
+                    </div>
+
+                    <div class="calendar-matrix-wrapper">
+                        <table class="calendar-table">
+                            <thead>
+                                <tr>
+                                    <th class="user-col">Nama Karyawan</th>
+                                    @for($d=1; $d<=$teamCalendar['daysInMonth']; $d++)
+                                        @php 
+                                            $date = $teamCalendar['startDate']->copy()->day($d);
+                                            $isWeekend = $date->isWeekend();
+                                        @endphp
+                                        <th class="{{ $isWeekend ? 'bg-danger-subtle text-danger' : '' }}" style="padding-top: 10px; padding-bottom: 10px;">
+                                            <span class="d-block">{{ $d }}</span>
+                                            <span style="font-size: 8px; opacity: 0.6; text-transform: uppercase;">{{ $date->translatedFormat('D') }}</span>
+                                        </th>
+                                    @endfor
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($teamCalendar['members'] as $teamMember)
+                                    <tr>
+                                        <td class="user-col" title="{{ $teamMember->name }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2 rounded-circle" style="width: 8px; height: 8px; background: {{ $teamMember->branch->color ?? '#3b82f6' }}"></div>
+                                                <span class="text-truncate" style="max-width: 140px;">{{ $teamMember->name }}</span>
+                                            </div>
+                                            <small class="text-muted d-block ps-3" style="font-size: 9px;">{{ $teamMember->branch->name ?? '-' }}</small>
+                                        </td>
+                                        @for($d=1; $d<=$teamCalendar['daysInMonth']; $d++)
+                                            @php
+                                                $dateStr = $teamCalendar['startDate']->copy()->day($d)->format('Y-m-d');
+                                                $att = $teamCalendar['attendances'][$teamMember->id][$dateStr][0] ?? null;
+                                                $leave = null;
+                                                if(isset($teamCalendar['leaves'][$teamMember->id])) {
+                                                    $leave = $teamCalendar['leaves'][$teamMember->id]->first(function($l) use ($dateStr) {
+                                                        return $l->range->contains($dateStr);
+                                                    });
+                                                }
+                                                
+                                                $statusClass = 'empty';
+                                                $statusValue = '';
+                                                $statusTitle = 'Belum Absen / Alpha';
+                                                
+                                                if($att) {
+                                                    if($att->check_out_time) {
+                                                        $statusClass = 'out'; 
+                                                        $statusValue = 'P'; 
+                                                        $statusTitle = 'Absen Pulang: ' . \Carbon\Carbon::parse($att->check_out_time)->format('H:i');
+                                                    } else {
+                                                        $statusClass = 'present'; $statusValue = 'M'; 
+                                                        $statusTitle = 'Absen Masuk: ' . \Carbon\Carbon::parse($att->check_in_time)->format('H:i');
+                                                    }
+                                                    if($att->is_late_checkin) { 
+                                                        $statusClass .= ' telat'; $statusValue = 'T'; 
+                                                        $statusTitle .= ' (Terlambat)'; 
+                                                    }
+                                                } elseif($leave) {
+                                                    $lt = strtolower($leave->type);
+                                                    if($lt == 'sakit') { $statusClass = 'sick'; $statusValue = 'S'; $statusTitle = 'Izin Sakit: ' . $leave->reason; }
+                                                    elseif($lt == 'izin') { $statusClass = 'permit'; $statusValue = 'I'; $statusTitle = 'Izin: ' . $leave->reason; }
+                                                    elseif($lt == 'cuti') { $statusClass = 'leave'; $statusValue = 'C'; $statusTitle = 'Cuti: ' . $leave->reason; }
+                                                    elseif($lt == 'wfh') { $statusClass = 'wfh'; $statusValue = 'W'; $statusTitle = 'WFH: ' . $leave->reason; }
+                                                    elseif($lt == 'libur') { $statusClass = 'off'; $statusValue = 'L'; $statusTitle = 'Libur / Off'; }
+                                                }
+                                            @endphp
+                                            <td>
+                                                <div class="status-cell {{ $statusClass }}" title="{{ $statusTitle }}">
+                                                    {{ $statusValue }}
+                                                </div>
+                                            </td>
+                                        @endfor
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="calendar-legend border-top bg-light p-3">
+                        <div class="legend-item"><div class="legend-color present"></div> Masuk (M)</div>
+                        <div class="legend-item"><div class="legend-color out"></div> Pulang (P)</div>
+                        <div class="legend-item"><div class="legend-color leave"></div> Cuti (C)</div>
+                        <div class="legend-item"><div class="legend-color permit"></div> Izin (I)</div>
+                        <div class="legend-item"><div class="legend-color sick"></div> Sakit (S)</div>
+                        <div class="legend-item"><div class="legend-color wfh"></div> WFH (W)</div>
+                        <div class="legend-item"><div class="legend-color off"></div> Libur (L)</div>
+                        <div class="legend-item"><div class="legend-color telat" style="border: 1px solid #ddd"></div> Terlambat (T)</div>
                     </div>
                 </div>
             </div>
