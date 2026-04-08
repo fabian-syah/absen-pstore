@@ -1039,7 +1039,7 @@
                                                         if($att->check_out_time) {
                                                             $statusClass = 'out'; 
                                                             $statusValue = 'P'; 
-                                                            $statusTitle = 'Absen Pulang: ' . \Carbon\Carbon::parse($att->check_out_time)->format('H:i');
+                                                            $statusTitle = 'Masuk: ' . \Carbon\Carbon::parse($att->check_in_time)->format('H:i') . ' | Pulang: ' . \Carbon\Carbon::parse($att->check_out_time)->format('H:i');
                                                         } else {
                                                             $statusClass = 'present'; $statusValue = 'M'; 
                                                             $statusTitle = 'Absen Masuk: ' . \Carbon\Carbon::parse($att->check_in_time)->format('H:i');
@@ -1439,7 +1439,7 @@
                             @if ($item->photo_out_path)
                                 <div class="gallery-item-wrapper">
                                     <div class="gallery-card shadow-sm"
-                                        onclick="previewGalleryImage('{{ Storage::url($item->photo_out_path) }}', 'Momen Pulang Kerja', '{{ $item->check_out_time ? $item->check_out_time->translatedFormat('l, d F Y - H:i') : '-' }}')">
+                                        onclick="previewGalleryImage('{{ Storage::url($item->photo_out_path) }}', 'Momen Pulang Kerja', '{{ $item->check_out_time ? 'Masuk: ' . $item->check_in_time->format('H:i') . ' | Pulang: ' . $item->check_out_time->format('H:i') : '-' }}')">
                                         <img src="{{ Storage::url($item->photo_out_path) }}" class="gallery-img">
                                         <div class="gallery-badge bg-danger">PULANG</div>
                                         <div class="gallery-date">{{ $item->check_in_time->format('d M') }}</div>
@@ -2131,7 +2131,8 @@
                                     <h5 class="mb-2 fw-bold text-info">Selamat Beristirahat!</h5>
                                     <p class="text-muted mb-4 px-3 small">
                                         Anda baru saja pulang lembur pukul
-                                        <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>.
+                                        <strong>{{ $lastOvertimeSession->check_out_time->format('H:i') }}</strong>
+                                        (Masuk: <strong>{{ $lastOvertimeSession->check_in_time->format('H:i') }}</strong>).
                                         <br>Sistem mencatat Anda lembur lintas hari. Anda dipersilakan masuk siang hari ini.
                                     </p>
 
