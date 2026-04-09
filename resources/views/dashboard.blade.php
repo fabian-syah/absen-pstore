@@ -1616,7 +1616,7 @@
                                     </div>
                                 </div>
                                 <hr>
-                                <div class="row text-center">
+                                <div class="row text-center mb-3">
                                     <div class="col-6 border-end">
                                         <small class="text-muted d-block">JAM MASUK</small>
                                         <h4 class="fw-bold text-success mb-0 count-up-time">
@@ -1629,6 +1629,13 @@
                                             {{ $myAttendanceToday->check_out_time ? $myAttendanceToday->check_out_time->format('H:i') : '-' }}
                                         </h4>
                                     </div>
+                                </div>
+                                <div class="text-center mt-3">
+                                    @if (!(Auth::user()->only_security_scan))
+                                        <a href="{{ route('self.attend.create') }}" class="btn btn-outline-success btn-sm rounded-pill px-4">
+                                            <i class="mdi mdi-plus-circle-outline me-1"></i> Mulai Shift Baru
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
 

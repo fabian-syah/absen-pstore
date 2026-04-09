@@ -135,8 +135,12 @@ class DashboardController extends Controller
             $end = \Carbon\Carbon::parse($user->workSchedule->end_time)->format('H:i');
             $scheduleText = "$start - $end";
         } else {
+            // Setup Offset untuk query timezone-aware
+            $appOffset = Carbon::now(config('app.timezone'))->format('P');
+            $branchOffset = Carbon::now($userTimezone)->format('P');
+
             $todaysAttendance = Attendance::where('user_id', $user->id)
-                ->whereDate('check_in_time', $todayInBranch)
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayInBranch])
                 ->first();
             if ($todaysAttendance && $todaysAttendance->scheduled_check_in && $todaysAttendance->scheduled_check_out) {
                 $start = \Carbon\Carbon::parse($todaysAttendance->scheduled_check_in)->format('H:i');
@@ -172,17 +176,21 @@ class DashboardController extends Controller
             ->latest('check_in_time')
             ->first();
 
+        // Setup Offset untuk query
+        $appOffset = Carbon::now(config('app.timezone'))->format('P');
+        $branchOffset = Carbon::now($userTimezone)->format('P');
+
         // B. Cek Sesi Selesai Hari Ini
         $finishedSessionToday = Attendance::where('user_id', $user->id)
-            ->whereDate('check_in_time', $todayInBranch)
+            ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayInBranch])
             ->whereNotNull('check_out_time')
             ->latest('check_in_time')
             ->first();
 
         // C. Cek Sesi Lembur Lintas Hari (Pulang hari ini tapi masuk kemarin)
         $lastOvertimeSession = Attendance::where('user_id', $user->id)
-            ->whereDate('check_in_time', '<', $todayInBranch)
-            ->whereDate('check_out_time', $todayInBranch)
+            ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) < ?", [$appOffset, $branchOffset, $todayInBranch])
+            ->whereRaw("DATE(CONVERT_TZ(check_out_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayInBranch])
             ->latest('check_out_time')
             ->first();
 

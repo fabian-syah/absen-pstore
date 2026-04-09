@@ -92,14 +92,15 @@ class SelfAttendanceController extends Controller
             $appOffset = $this->getOffset(config('app.timezone'));
             $branchOffset = $this->getOffset($branchTimezone);
 
-            $finishedToday = Attendance::where('user_id', $user->id)
+            $finishedRecently = Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayLocal->format('Y-m-d')])
                 ->whereNotNull('check_out_time')
+                ->where('check_out_time', '>=', $localTime->copy()->subMinutes(5)) // Cooldown 5 menit setelah pulang baru boleh masuk lagi
                 ->where('status', '!=', 'alpha')
                 ->exists();
 
-            if ($finishedToday) {
-                return redirect()->route('dashboard')->with('success', 'Anda sudah menyelesaikan absensi hari ini.');
+            if ($finishedRecently) {
+                return redirect()->route('dashboard')->with('success', 'Anda baru saja menyelesaikan absensi. Mohon tunggu beberapa saat jika ingin memulai shift baru.');
             }
 
             // 5. Cek Laporan Telat (LateNotification)
@@ -322,10 +323,13 @@ class SelfAttendanceController extends Controller
                 ->first();
 
             if ($existingAttendanceToday) {
-                // Jika sudah ada jam pulang, blok aksi masuk
+                // Jika sudah ada jam pulang di record ini, jangan update record ini tapi izinkan buat baru (Shift Baru)
                 if ($existingAttendanceToday->check_out_time != null) {
-                    return redirect()->route('dashboard')->with('error', 'Anda sudah menyelesaikan absensi hari ini.');
+                    $existingAttendanceToday = null; 
                 }
+            }
+
+            if ($existingAttendanceToday) {
 
                 $existingAttendanceToday->update([
                     'check_in_time' => $currentTime, // Ambil jam asli selfie
