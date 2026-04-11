@@ -21,10 +21,16 @@ class TeamController extends Controller
 
         // 1. Setup Cabang & Timezone
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
-        if ($user->branch_id)
+
+        // Jika Audit: homebase (64) tidak otomatis masuk agar tidak bisa intip sesama audit tanpa izin region.
+        // Jika Leader: homebase tetap masuk.
+        if ($user->role != 'audit' && $user->branch_id) {
             $myBranchIds[] = $user->branch_id;
-        if ($user->role == 'admin' && $user->branch_id == null)
+        }
+
+        if ($user->role == 'admin' && $user->branch_id == null) {
             $myBranchIds = Branch::pluck('id')->toArray();
+        }
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
         // Default Timezone
@@ -180,10 +186,15 @@ class TeamController extends Controller
             abort(403);
 
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
-        if ($user->branch_id)
+
+        // Jika Audit: homebase (64) tidak otomatis masuk.
+        if ($user->role != 'audit' && $user->branch_id) {
             $myBranchIds[] = $user->branch_id;
-        if ($user->role == 'admin' && $user->branch_id == null)
+        }
+
+        if ($user->role == 'admin' && $user->branch_id == null) {
             $myBranchIds = Branch::pluck('id')->toArray();
+        }
         $myBranchIds = array_filter(array_unique($myBranchIds));
 
         $controlledBranches = Branch::whereIn('id', $myBranchIds)
@@ -288,8 +299,7 @@ class TeamController extends Controller
 
         if ($user->role == 'audit') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
-            if ($user->branch_id)
-                $allowedBranches[] = $user->branch_id;
+            // Audit tidak otomatis dapat branch_id homebase
             if (!in_array($id, $allowedBranches))
                 abort(403);
         } elseif ($user->role == 'leader') {
