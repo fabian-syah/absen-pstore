@@ -174,9 +174,14 @@ class LeaveRequestController extends Controller
             $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
             $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
-                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
-                return redirect()->back()->with('error', "AKSES DITOLAK: Khusus $branchName, approval hanya bisa dilakukan oleh Admin, User Terdaftar, atau yang memiliki wilayah akses terkait.");
+            if ($targetBranchId == 64) {
+                if (!$isSuperUser && !$isWhitelisted) {
+                    return redirect()->back()->with('error', "AKSES DITOLAK: Khusus Team Audit, approval hanya bisa dilakukan oleh Admin atau User Terdaftar.");
+                }
+            } else {
+                if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
+                    return redirect()->back()->with('error', "AKSES DITOLAK: Khusus EX Karyawan, approval memerlukan wilayah akses terkait.");
+                }
             }
         }
 
@@ -308,9 +313,14 @@ class LeaveRequestController extends Controller
             $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
             $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
-                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
-                return redirect()->back()->with('error', "AKSES DITOLAK: Khusus $branchName, reject hanya bisa dilakukan oleh Admin, User Terdaftar, atau yang memiliki wilayah akses terkait.");
+            if ($targetBranchId == 64) {
+                if (!$isSuperUser && !$isWhitelisted) {
+                    return redirect()->back()->with('error', "AKSES DITOLAK: Khusus Team Audit, reject hanya bisa dilakukan oleh Admin atau User Terdaftar.");
+                }
+            } else {
+                if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
+                    return redirect()->back()->with('error', "AKSES DITOLAK: Khusus EX Karyawan, reject memerlukan wilayah akses terkait.");
+                }
             }
         }
 

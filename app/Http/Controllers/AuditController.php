@@ -90,9 +90,14 @@ class AuditController extends Controller
             $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
             $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
-                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
-                return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk memproses anggota $branchName.");
+            if ($targetBranchId == 64) {
+                if ($user->role != 'admin' && !$isWhitelisted) {
+                    return back()->with('error', "Akses Ditolak: Anda tidak memiliki wewenang khusus untuk memproses anggota Team Audit.");
+                }
+            } else {
+                if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
+                    return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk memproses anggota EX Karyawan.");
+                }
             }
         }
 
@@ -144,9 +149,14 @@ class AuditController extends Controller
             $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
             $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
-                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
-                return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk memproses anggota $branchName.");
+            if ($targetBranchId == 64) {
+                if ($user->role != 'admin' && !$isWhitelisted) {
+                    return back()->with('error', "Akses Ditolak: Anda tidak memiliki wewenang khusus untuk memproses anggota Team Audit.");
+                }
+            } else {
+                if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
+                    return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk memproses anggota EX Karyawan.");
+                }
             }
         }
 
@@ -444,9 +454,14 @@ class AuditController extends Controller
             $isWhitelisted = in_array(strtolower($approver->login_id), $allowedLogins);
             $hasExplicitRegion = $approver->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
-                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
-                return redirect()->back()->with('swal_error', "AKSES DITOLAK: Anda tidak memiliki wilayah akses untuk memverifikasi anggota $branchName.");
+            if ($targetBranchId == 64) {
+                if (!$isSuperUser && !$isWhitelisted) {
+                    return redirect()->back()->with('swal_error', "AKSES DITOLAK: Anda tidak memiliki wewenang khusus untuk memproses anggota Team Audit.");
+                }
+            } else {
+                if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
+                    return redirect()->back()->with('swal_error', "AKSES DITOLAK: Anda tidak memiliki wilayah akses untuk memproses anggota EX Karyawan.");
+                }
             }
         }
 
@@ -533,9 +548,14 @@ class AuditController extends Controller
             $isWhitelisted = in_array(strtolower($approver->login_id), $allowedLogins);
             $hasExplicitRegion = $approver->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
-                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
-                return redirect()->back()->with('swal_error', "AKSES DITOLAK: Anda tidak memiliki wilayah akses untuk memproses anggota $branchName.");
+            if ($targetBranchId == 64) {
+                if (!$isSuperUser && !$isWhitelisted) {
+                    return redirect()->back()->with('swal_error', "AKSES DITOLAK: Anda tidak memiliki wewenang khusus untuk memproses anggota Team Audit.");
+                }
+            } else {
+                if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
+                    return redirect()->back()->with('swal_error', "AKSES DITOLAK: Anda tidak memiliki wilayah akses untuk memproses anggota EX Karyawan.");
+                }
             }
         }
 
@@ -675,9 +695,14 @@ class AuditController extends Controller
             $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
             $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
-                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
-                return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk memverifikasi anggota $branchName.");
+            if ($targetBranchId == 64) {
+                if ($user->role != 'admin' && !$isWhitelisted) {
+                    return back()->with('error', "Akses Ditolak: Anda tidak memiliki wewenang khusus untuk memverifikasi anggota Team Audit.");
+                }
+            } else {
+                if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
+                    return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk memverifikasi anggota EX Karyawan.");
+                }
             }
         }
 
@@ -763,9 +788,14 @@ class AuditController extends Controller
             $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
             $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
-                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
-                return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk mengupdate anggota $branchName.");
+            if ($targetBranchId == 64) {
+                if ($user->role != 'admin' && !$isWhitelisted) {
+                    return back()->with('error', "Akses Ditolak: Anda tidak memiliki wewenang khusus untuk memproses anggota Team Audit.");
+                }
+            } else {
+                if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
+                    return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk mengupdate anggota EX Karyawan.");
+                }
             }
         }
 
@@ -871,9 +901,14 @@ class AuditController extends Controller
             $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
             $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if ($actor->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
-                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
-                return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk membuat absensi anggota $branchName.");
+            if ($targetBranchId == 64) {
+                if ($actor->role != 'admin' && !$isWhitelisted) {
+                    return back()->with('error', "Akses Ditolak: Anda tidak memiliki wewenang khusus untuk memproses anggota Team Audit.");
+                }
+            } else {
+                if ($actor->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
+                    return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk membuat absensi anggota EX Karyawan.");
+                }
             }
         }
 
