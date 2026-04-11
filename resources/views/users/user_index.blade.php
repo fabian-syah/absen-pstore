@@ -174,7 +174,9 @@
                                                 </td>
                                                 <td>
                                                     <a href="{{ route('users.show', $user->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail"><i class="mdi mdi-eye"></i></a>
-                                                    <a href="{{ route('users.edit', $user->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
+                                                    @if (!(auth()->user()->role == 'audit' && $user->branch_id == auth()->user()->branch_id && $user->id != auth()->id()))
+                                                        <a href="{{ route('users.edit', $user->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
+                                                    @endif
                                                     @if ($user->id != auth()->id() && auth()->user()->role != 'audit' && auth()->user()->role != 'leader')
                                                         <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?');">
                                                             @csrf @method('DELETE')
@@ -182,12 +184,17 @@
                                                         </form>
                                                     @endif
                                                     @if ($user->id != auth()->id() && in_array(auth()->user()->role, ['admin', 'audit']))
-                                                        <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-icon btn-sm btn-inverse-danger" title="Nonaktifkan">
-                                                                <i class="mdi mdi-power-off"></i>
-                                                            </button>
-                                                        </form>
+                                                        @php
+                                                            $isSameTeamAudit = auth()->user()->role == 'audit' && $user->branch_id == auth()->user()->branch_id;
+                                                        @endphp
+                                                        @if (!$isSameTeamAudit || auth()->user()->role == 'admin')
+                                                            <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-icon btn-sm btn-inverse-danger" title="Nonaktifkan">
+                                                                    <i class="mdi mdi-power-off"></i>
+                                                                </button>
+                                                            </form>
+                                                        @endif
                                                     @endif
                                                 </td>
                                             </tr>
