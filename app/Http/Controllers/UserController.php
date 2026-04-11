@@ -72,9 +72,8 @@ class UserController extends Controller
             $pivotBranchIds = $user->branches()->pluck('branches.id')->toArray();
             $allowedBranchIds = $pivotBranchIds;
 
-            // Jika Leader: homebase branch otomatis masuk.
-            // Jika Audit: homebase branch (misal 64) TIDAK otomatis masuk agar tidak bisa akses sesama audit tanpa izin region.
-            if ($user->role == 'leader' && $user->branch_id) {
+            // Jika Audit & Leader: homebase branch (misal 64) dimunculkan agar bisa LIHAT anggota tim sendiri.
+            if ($user->branch_id) {
                 $allowedBranchIds[] = $user->branch_id;
             }
 
@@ -243,10 +242,18 @@ class UserController extends Controller
 
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
+            
+            // Leader dapat akses homebase, Audit TIDAK (Audit hanya boleh LIHAT di index, tapi blok di EDIT)
             if ($auth_user->role != 'audit' && $auth_user->branch_id) {
                 $allowedBranchIds[] = $auth_user->branch_id;
             }
             $allowedBranchIds = array_unique($allowedBranchIds);
+
+            // [RESTRIKSI EDIT AUDIT]
+            // Jika Audit mencoba edit sesama anggota satu cabang (Homebase), blokir.
+            if ($auth_user->role == 'audit' && $user->branch_id == $auth_user->branch_id && $user->id != $auth_user->id) {
+                return back()->with('error', 'Akses Ditolak: Anda hanya diperbolehkan melihat data anggota tim sendiri, tidak untuk melakukan perubahan (edit).');
+            }
 
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds) && $user->id != $auth_user->id) {
                 abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
@@ -297,6 +304,14 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        $auth_user = Auth::user();
+
+        // [RESTRIKSI UPDATE AUDIT]
+        // Audit bisa LIHAT sesama tim (homebase), tapi TIDAK BISA UPDATE anggota satu cabang/timnya sendiri.
+        if ($auth_user->role == 'audit' && $user->branch_id == $auth_user->branch_id && $user->id != $auth_user->id) {
+            return back()->with('error', 'Akses Ditolak: Anda hanya diperbolehkan melihat data anggota tim sendiri, tidak untuk melakukan perubahan.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
@@ -456,6 +471,11 @@ class UserController extends Controller
     {
         $auth_user = Auth::user();
 
+        // [RESTRIKSI HAPUS AUDIT]
+        if ($auth_user->role == 'audit' && $user->branch_id == $auth_user->branch_id && $user->id != $auth_user->id) {
+            return back()->with('error', 'Akses Ditolak: Anda tidak memiliki wewenang untuk menghapus anggota tim sendiri.');
+        }
+
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id)
                 abort(403);
@@ -463,7 +483,9 @@ class UserController extends Controller
 
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
-            if ($auth_user->role != 'audit' && $auth_user->branch_id) {
+            
+            // [VIEW ACCESS] Audit & Leader boleh LIHAT anggota tim satu cabang (Homebase)
+            if ($auth_user->branch_id) {
                 $allowedBranchIds[] = $auth_user->branch_id;
             }
             $allowedBranchIds = array_unique($allowedBranchIds);
