@@ -62,17 +62,33 @@ class UserController extends Controller
             $activeQuery->where('branch_id', '!=', $adminGajiBranch->id);
             $inactiveQuery->where('branch_id', '!=', $adminGajiBranch->id);
         }
-        // --- FILTER UNTUK USER AKTIF SAJA ---
-        if ($user->role == 'admin' && $user->branch_id != null) {
-            $activeQuery->where('branch_id', $user->branch_id);
+        // --- FILTER UNTUK USER AKTIF & NON-AKTIF ---
+        if ($user->role == 'admin') {
+             if ($user->branch_id != null) {
+                $activeQuery->where('branch_id', $user->branch_id);
+                $inactiveQuery->where('branch_id', $user->branch_id);
+             }
         } elseif (in_array($user->role, ['audit', 'leader'])) {
-            $allowedBranchIds = $user->branches()->pluck('branches.id')->toArray();
-            if ($user->branch_id)
-                $allowedBranchIds[] = $user->branch_id;
+            $pivotBranchIds = $user->branches()->pluck('branches.id')->toArray();
+            $allowedBranchIds = $pivotBranchIds;
 
-            // Fix: Pastikan user selalu bisa melihat dirinya sendiri meskipun branch_id null atau tidak ada di list
+            // Jika Leader: homebase branch otomatis masuk.
+            // Jika Audit: homebase branch (misal 64) TIDAK otomatis masuk agar tidak bisa akses sesama audit tanpa izin region.
+            if ($user->role == 'leader' && $user->branch_id) {
+                $allowedBranchIds[] = $user->branch_id;
+            }
+
+            $allowedBranchIds = array_unique($allowedBranchIds);
+
+            // Filter Active Users
             $activeQuery->where(function ($q) use ($allowedBranchIds, $user) {
-                $q->whereIn('branch_id', array_unique($allowedBranchIds))
+                $q->whereIn('branch_id', $allowedBranchIds)
+                    ->orWhere('id', $user->id);
+            });
+
+            // Filter Inactive Users (EX Karyawan) - Hanya bisa lihat jika wilayah auditnya mencakup branch 83
+            $inactiveQuery->where(function ($q) use ($allowedBranchIds, $user) {
+                $q->whereIn('branch_id', $allowedBranchIds)
                     ->orWhere('id', $user->id);
             });
         }
@@ -227,9 +243,12 @@ class UserController extends Controller
 
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
-            if ($auth_user->branch_id)
+            if ($auth_user->role != 'audit' && $auth_user->branch_id) {
                 $allowedBranchIds[] = $auth_user->branch_id;
-            if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
+            }
+            $allowedBranchIds = array_unique($allowedBranchIds);
+
+            if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds) && $user->id != $auth_user->id) {
                 abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
             }
         }
@@ -444,10 +463,12 @@ class UserController extends Controller
 
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
-            if ($auth_user->branch_id)
+            if ($auth_user->role != 'audit' && $auth_user->branch_id) {
                 $allowedBranchIds[] = $auth_user->branch_id;
+            }
+            $allowedBranchIds = array_unique($allowedBranchIds);
 
-            if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds)) {
+            if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds) && $user->id != $auth_user->id) {
                 abort(403, 'Akses Ditolak: User ini berada di luar wilayah cabang Anda.');
             }
         }

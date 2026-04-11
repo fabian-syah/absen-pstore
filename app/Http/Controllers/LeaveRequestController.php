@@ -41,8 +41,7 @@ class LeaveRequestController extends Controller
         } elseif ($user->role == 'audit') {
             // AUDIT: Melihat data cabang yang dipegang + Punya sendiri
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+            $myBranchIds = $pivotBranchIds; // TIDAK otomatis tambah homebase agar tidak bisa intip sesama audit
 
             $query->where(function ($mainQ) use ($user, $myBranchIds) {
                 if (!empty($myBranchIds)) {
@@ -165,26 +164,19 @@ class LeaveRequestController extends Controller
      */
     public function approve(LeaveRequest $leaveRequest)
     {
-        // === VALIDASI KHUSUS CABANG AUDIT (ID 64) ===
-        // Hanya boleh di-ACC oleh: Admin, Herlina, Eva, Agung
-        // User request: "dia gabisa acc orang lain maupun diri sendiri untuk id 64... kecuali idlogin yang aku sebutin"
-        if ($leaveRequest->user && $leaveRequest->user->branch_id == 64) {
+        // === VALIDASI AKSES AUDIT (Branch 64 & 83) ===
+        if ($leaveRequest->user && in_array($leaveRequest->user->branch_id, [64, 83])) {
             $actor = Auth::user();
+            $targetBranchId = $leaveRequest->user->branch_id;
             $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
 
             $isSuperUser = in_array($actor->role, ['admin', 'super_admin']);
             $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
+            $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
 
-            Log::info("DEBUG AUDIT APPROVAL:", [
-                'actor' => $actor->name,
-                'login_id' => $actor->login_id,
-                'role' => $actor->role,
-                'is_super' => $isSuperUser,
-                'is_white' => $isWhitelisted
-            ]);
-
-            if (!$isSuperUser && !$isWhitelisted) {
-                return redirect()->back()->with('error', 'AKSES DITOLAK: Khusus Team Audit (ID 64), approval hanya bisa dilakukan oleh Admin, Herlina, Eva, atau Agung.');
+            if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
+                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
+                return redirect()->back()->with('error', "AKSES DITOLAK: Khusus $branchName, approval hanya bisa dilakukan oleh Admin, User Terdaftar, atau yang memiliki wilayah akses terkait.");
             }
         }
 
@@ -306,16 +298,19 @@ class LeaveRequestController extends Controller
      */
     public function reject(Request $request, LeaveRequest $leaveRequest)
     {
-        // === VALIDASI KHUSUS CABANG AUDIT (ID 64) ===
-        if ($leaveRequest->user && $leaveRequest->user->branch_id == 64) {
+        // === VALIDASI AKSES AUDIT (Branch 64 & 83) ===
+        if ($leaveRequest->user && in_array($leaveRequest->user->branch_id, [64, 83])) {
             $actor = Auth::user();
+            $targetBranchId = $leaveRequest->user->branch_id;
             $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
 
             $isSuperUser = in_array($actor->role, ['admin', 'super_admin']);
             $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
+            $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if (!$isSuperUser && !$isWhitelisted) {
-                return redirect()->back()->with('error', 'AKSES DITOLAK: Khusus Team Audit (ID 64), reject hanya bisa dilakukan oleh Admin, Herlina, Eva, atau Agung.');
+            if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
+                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
+                return redirect()->back()->with('error', "AKSES DITOLAK: Khusus $branchName, reject hanya bisa dilakukan oleh Admin, User Terdaftar, atau yang memiliki wilayah akses terkait.");
             }
         }
 

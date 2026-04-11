@@ -46,8 +46,12 @@ class AuditController extends Controller
 
         if (!$isUniversalAccess) {
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+            $myBranchIds = $pivotBranchIds;
+            // Jika Audit: homebase (64) tidak otomatis masuk. Jika Leader: masuk.
+            if ($user->role == 'leader' && $user->branch_id) {
+                $myBranchIds[] = $user->branch_id;
+            }
+            $myBranchIds = array_unique($myBranchIds);
 
             if (!empty($myBranchIds)) {
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
@@ -77,12 +81,22 @@ class AuditController extends Controller
         // Cari data absensi berdasarkan ID
         $attendance = Attendance::findOrFail($id);
 
-        // [LOGIKA BARU] Cek apakah dia Leader Audit
-        // Syarat: Role Audit DAN Nama Divisi mengandung kata 'Leader'
         $isLeaderAudit = $user->role == 'audit' && stripos($user->division->name ?? '', 'leader') !== false;
 
-        // [VALIDASI] 
-        // Jika absen milik sendiri DAN dia BUKAN Leader Audit, tolak akses.
+        // [VALIDASI AKSES AUDIT & EX]
+        if (in_array($attendance->user->branch_id, [64, 83])) {
+            $targetBranchId = $attendance->user->branch_id;
+            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+            $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
+            $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
+
+            if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
+                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
+                return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk memproses anggota $branchName.");
+            }
+        }
+
+        // [VALIDASI DIRI SENDIRI]
         if ($attendance->user_id == $user->id && !$isLeaderAudit) {
             return back()->with('error', 'Anda tidak dapat memverifikasi absensi Anda sendiri.');
         }
@@ -123,10 +137,22 @@ class AuditController extends Controller
         // Cari data absensi
         $attendance = Attendance::findOrFail($id);
 
-        // [LOGIKA BARU] Cek Leader Audit
+        // [VALIDASI AKSES AUDIT & EX]
+        if (in_array($attendance->user->branch_id, [64, 83])) {
+            $targetBranchId = $attendance->user->branch_id;
+            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+            $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
+            $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
+
+            if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
+                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
+                return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk memproses anggota $branchName.");
+            }
+        }
+
         $isLeaderAudit = $user->role == 'audit' && stripos($user->division->name ?? '', 'leader') !== false;
 
-        // [VALIDASI] Mencegah Audit biasa menolak data diri sendiri
+        // [VALIDASI DIRI SENDIRI]
         if ($attendance->user_id == $user->id && !$isLeaderAudit) {
             return back()->with('error', 'Anda tidak dapat memproses absensi Anda sendiri.');
         }
@@ -204,8 +230,12 @@ class AuditController extends Controller
 
         if (!$isUniversalAccess) {
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+            $myBranchIds = $pivotBranchIds;
+            // Jika Audit: homebase (64) tidak otomatis masuk. Jika Leader: masuk.
+            if ($user->role == 'leader' && $user->branch_id) {
+                $myBranchIds[] = $user->branch_id;
+            }
+            $myBranchIds = array_unique($myBranchIds);
 
             if (!empty($myBranchIds)) {
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
@@ -242,8 +272,12 @@ class AuditController extends Controller
 
         if (!$isUniversalAccess) {
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+            $myBranchIds = $pivotBranchIds;
+            // Jika Audit: homebase (64) tidak otomatis masuk. Jika Leader: masuk.
+            if ($user->role == 'leader' && $user->branch_id) {
+                $myBranchIds[] = $user->branch_id;
+            }
+            $myBranchIds = array_unique($myBranchIds);
 
             if (!empty($myBranchIds)) {
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
@@ -294,8 +328,12 @@ class AuditController extends Controller
 
         if (!$isUniversalAccess) {
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+            $myBranchIds = $pivotBranchIds;
+            // Jika Audit: homebase (64) tidak otomatis masuk. Jika Leader: masuk.
+            if ($user->role == 'leader' && $user->branch_id) {
+                $myBranchIds[] = $user->branch_id;
+            }
+            $myBranchIds = array_unique($myBranchIds);
 
             if (!empty($myBranchIds)) {
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
@@ -323,8 +361,12 @@ class AuditController extends Controller
 
         if (!$isUniversalAccess) {
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+            $myBranchIds = $pivotBranchIds;
+            // Jika Audit: homebase (64) tidak otomatis masuk. Jika Leader: masuk.
+            if ($user->role == 'leader' && $user->branch_id) {
+                $myBranchIds[] = $user->branch_id;
+            }
+            $myBranchIds = array_unique($myBranchIds);
 
             if (!empty($myBranchIds)) {
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
@@ -356,8 +398,12 @@ class AuditController extends Controller
 
         if (!$isUniversalAccess) {
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+            $myBranchIds = $pivotBranchIds;
+            // Jika Audit: homebase (64) tidak otomatis masuk. Jika Leader: masuk.
+            if ($user->role == 'leader' && $user->branch_id) {
+                $myBranchIds[] = $user->branch_id;
+            }
+            $myBranchIds = array_unique($myBranchIds);
 
             if (!empty($myBranchIds)) {
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
@@ -389,23 +435,18 @@ class AuditController extends Controller
             'approver_name' => $approver->name
         ]);
 
-        // === VALIDASI KHUSUS CABANG AUDIT (ID 64) ===
-        // User request: "dia gabisa acc orang lain maupun diri sendiri untuk id 64... kecuali idlogin yang aku sebutin"
-        if ($leaveRequest->user && $leaveRequest->user->branch_id == 64) {
+        // === VALIDASI AKSES AUDIT (Branch 64 & 83) ===
+        if ($leaveRequest->user && in_array($leaveRequest->user->branch_id, [64, 83])) {
+            $targetBranchId = $leaveRequest->user->branch_id;
             $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
 
             $isSuperUser = in_array($approver->role, ['admin', 'super_admin']);
             $isWhitelisted = in_array(strtolower($approver->login_id), $allowedLogins);
+            $hasExplicitRegion = $approver->branches()->where('branches.id', $targetBranchId)->exists();
 
-            // Debug Log
-            Log::info("DEBUG AUDIT VALIDATION:", [
-                'actor_login' => $approver->login_id,
-                'is_super' => $isSuperUser,
-                'is_white' => $isWhitelisted
-            ]);
-
-            if (!$isSuperUser && !$isWhitelisted) {
-                return redirect()->back()->with('swal_error', 'AKSES DITOLAK: Anda tidak memiliki akses untuk memverifikasi anggota tim ini.');
+            if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
+                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
+                return redirect()->back()->with('swal_error', "AKSES DITOLAK: Anda tidak memiliki wilayah akses untuk memverifikasi anggota $branchName.");
             }
         }
 
@@ -483,15 +524,18 @@ class AuditController extends Controller
             'approver_name' => $approver->name
         ]);
 
-        // === VALIDASI KHUSUS CABANG AUDIT (ID 64) ===
-        if ($leaveRequest->user && $leaveRequest->user->branch_id == 64) {
+        // === VALIDASI AKSES AUDIT (Branch 64 & 83) ===
+        if ($leaveRequest->user && in_array($leaveRequest->user->branch_id, [64, 83])) {
+            $targetBranchId = $leaveRequest->user->branch_id;
             $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
 
             $isSuperUser = in_array($approver->role, ['admin', 'super_admin']);
             $isWhitelisted = in_array(strtolower($approver->login_id), $allowedLogins);
+            $hasExplicitRegion = $approver->branches()->where('branches.id', $targetBranchId)->exists();
 
-            if (!$isSuperUser && !$isWhitelisted) {
-                return redirect()->back()->with('swal_error', 'AKSES DITOLAK: Anda tidak memiliki akses untuk memverifikasi anggota tim ini.');
+            if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
+                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
+                return redirect()->back()->with('swal_error', "AKSES DITOLAK: Anda tidak memiliki wilayah akses untuk memproses anggota $branchName.");
             }
         }
 
@@ -542,8 +586,12 @@ class AuditController extends Controller
 
         if (!$isUniversalAccess) {
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
-            $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
-            $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+            $myBranchIds = $pivotBranchIds;
+            // Jika Audit: homebase (64) tidak otomatis masuk. Jika Leader: masuk.
+            if ($user->role == 'leader' && $user->branch_id) {
+                $myBranchIds[] = $user->branch_id;
+            }
+            $myBranchIds = array_unique($myBranchIds);
 
             if (!empty($myBranchIds)) {
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
@@ -620,7 +668,19 @@ class AuditController extends Controller
         // 2. Cari Data Absensi
         $attendance = Attendance::findOrFail($id);
 
-        // [LOGIKA BARU] Cek Leader Audit
+        // [VALIDASI AKSES AUDIT & EX]
+        if (in_array($attendance->user->branch_id, [64, 83])) {
+            $targetBranchId = $attendance->user->branch_id;
+            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+            $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
+            $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
+
+            if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
+                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
+                return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk memverifikasi anggota $branchName.");
+            }
+        }
+
         $isLeaderAudit = $user->role == 'audit' && stripos($user->division->name ?? '', 'leader') !== false;
 
         // [VALIDASI] Mencegah Audit verifikasi diri sendiri KECUALI Leader
@@ -694,6 +754,20 @@ class AuditController extends Controller
         ]);
 
         $attendance = Attendance::findOrFail($id);
+        $user = Auth::user();
+
+        // [VALIDASI AKSES AUDIT & EX]
+        if (in_array($attendance->user->branch_id, [64, 83])) {
+            $targetBranchId = $attendance->user->branch_id;
+            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+            $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
+            $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
+
+            if ($user->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
+                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
+                return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk mengupdate anggota $branchName.");
+            }
+        }
 
         // 1. Identifikasi Timezone Cabang User
         $branchTimezone = $attendance->user->branch?->timezone ?? 'Asia/Jakarta';
@@ -776,6 +850,7 @@ class AuditController extends Controller
      */
     public function storeByAudit(Request $request)
     {
+        $actor = Auth::user();
         // 1. Validasi Input
         $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -788,6 +863,20 @@ class AuditController extends Controller
 
         // 2. Ambil User & Timezone Cabangnya
         $user = User::findOrFail($request->user_id);
+
+        // [VALIDASI AKSES AUDIT & EX]
+        if (in_array($user->branch_id, [64, 83])) {
+            $targetBranchId = $user->branch_id;
+            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+            $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
+            $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
+
+            if ($actor->role != 'admin' && !$isWhitelisted && !$hasExplicitRegion) {
+                $branchName = $targetBranchId == 64 ? 'Team Audit' : 'EX Karyawan';
+                return back()->with('error', "Akses Ditolak: Anda tidak memiliki wilayah akses untuk membuat absensi anggota $branchName.");
+            }
+        }
+
         $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
 
         // 3. Proses Waktu Check-In
