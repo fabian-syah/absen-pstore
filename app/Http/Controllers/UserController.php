@@ -471,11 +471,6 @@ class UserController extends Controller
     {
         $auth_user = Auth::user();
 
-        // [RESTRIKSI HAPUS AUDIT]
-        if ($auth_user->role == 'audit' && $user->branch_id == $auth_user->branch_id && $user->id != $auth_user->id) {
-            return back()->with('error', 'Akses Ditolak: Anda tidak memiliki wewenang untuk menghapus anggota tim sendiri.');
-        }
-
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
             if ($user->branch_id != $auth_user->branch_id)
                 abort(403);
