@@ -22,9 +22,8 @@ class TeamController extends Controller
         // 1. Setup Cabang & Timezone
         $myBranchIds = $user->branches()->pluck('branches.id')->toArray();
 
-        // Jika Audit: homebase (64) tidak otomatis masuk agar tidak bisa intip sesama audit tanpa izin region.
-        // Jika Leader: homebase tetap masuk.
-        if ($user->role != 'audit' && $user->branch_id) {
+        // Jika Audit & Leader: homebase branch (misal 64) dimunculkan agar bisa monitor tim sendiri.
+        if ($user->branch_id) {
             $myBranchIds[] = $user->branch_id;
         }
 
@@ -297,20 +296,19 @@ class TeamController extends Controller
         $nowInBranch = Carbon::now($branchTimezone);
         $dateLimit = Carbon::now($branchTimezone)->subDays(2)->format('Y-m-d 00:00:00');
 
-        if ($user->role == 'audit') {
+        if ($user->role == 'audit' || $user->role == 'leader') {
             $allowedBranches = $user->branches->pluck('id')->toArray();
-            // Audit tidak otomatis dapat branch_id homebase
-            if (!in_array($id, $allowedBranches))
+            if ($user->branch_id) {
+                $allowedBranches[] = $user->branch_id;
+            }
+            
+            if (!in_array($id, $allowedBranches)) {
                 abort(403);
-        } elseif ($user->role == 'leader') {
-            if ($user->branch_id != $id) {
-                $pivotIds = $user->branches->pluck('id')->toArray();
-                if (!in_array($id, $pivotIds))
-                    abort(403);
             }
         } elseif ($user->role == 'admin') {
-            if ($user->branch_id && $user->branch_id != $id)
+            if ($user->branch_id && $user->branch_id != $id) {
                 abort(403);
+            }
         }
 
         $employees = User::where('branch_id', $id)->where('role', '!=', 'admin')->where('is_active', true)

@@ -42,8 +42,9 @@ class BranchInventoryController extends Controller
             // Ambil cabang dari relasi many-to-many (pivot)
             $allowedBranchIds = $user->branches->pluck('id')->toArray();
             
-            // Tambahkan branch_id utama user jika ada (untuk safety agar cabang homebase tetap muncul)
-            if ($user->branch_id) {
+            // Jika Leader: homebase branch otomatis masuk.
+            // Jika Audit: homebase branch (64) TIDAK otomatis masuk agar tidak mengotori list wilayah audit aset.
+            if ($user->role == 'leader' && $user->branch_id) {
                 $allowedBranchIds[] = $user->branch_id;
             }
             
@@ -112,8 +113,8 @@ class BranchInventoryController extends Controller
         if (in_array($user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $user->branches->pluck('id')->toArray();
             
-            // Masukkan juga main branch_id ke whitelist
-            if ($user->branch_id) {
+            // Leader dapat akses homebase, Audit hanya dapat yang di pivot
+            if ($user->role != 'audit' && $user->branch_id) {
                 $allowedBranchIds[] = $user->branch_id;
             }
 
