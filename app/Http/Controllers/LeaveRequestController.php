@@ -355,12 +355,16 @@ class LeaveRequestController extends Controller
             abort(403);
         }
 
+        // [FIX] Jika sudah disetujui, bersihkan data attendance dan restore saldo
+        if ($leaveRequest->status === 'approved') {
+            $this->cleanupLeaveRelatedData($leaveRequest);
+        }
+
         $leaveRequest->update([
             'status' => 'cancelled',
             'is_active' => false
         ]);
 
-        // NOTE: Tidak perlu refund karena saldo hanya dipotong saat APPROVE
         $msg = $leaveRequest->type == 'telat' ? 'Izin telat dibatalkan.' : 'Pengajuan izin dibatalkan.';
 
         // Redirect back agar fleksibel (bisa dari dashboard atau list)
@@ -370,8 +374,6 @@ class LeaveRequestController extends Controller
     /**
      * ACTION: FINISH EARLY (Masuk kantor sebelum izin selesai)
      */
-    // app/Http/Controllers/LeaveRequestController.php
-
     public function finishEarly(LeaveRequest $leaveRequest)
     {
         if ($leaveRequest->user_id != Auth::id())
@@ -389,10 +391,14 @@ class LeaveRequestController extends Controller
             return back()->with('error', 'Tipe izin ini tidak bisa diselesaikan lebih awal.');
         }
 
-        // Logic lama untuk Sakit/Cuti (dimana user sembuh/masuk lebih cepat)
+        // [FIX] Bersihkan Data Attendance mulai HARI INI dan Restore Saldo (jika cuti)
+        $today = now()->format('Y-m-d');
+        $this->cleanupLeaveRelatedData($leaveRequest, $today);
+
+        // Update end_date menjadi kemarin agar tidak dianggap aktif hari ini
         $leaveRequest->update(['end_date' => Carbon::yesterday()]);
 
-        return redirect()->route('dashboard')->with('success', 'Status izin dibatalkan. Silahkan absen mandiri.');
+        return redirect()->route('dashboard')->with('success', 'Status izin diselesaikan lebih awal. Silahkan lakukan absen mandiri.');
     }
 
     /**
@@ -644,7 +650,7 @@ class LeaveRequestController extends Controller
     }
 
     /**
-     * MENGHAPUS CUTI YANG SUDAH DI-ACC (RESTORE SALDO)
+     * MENGHAPUS CUTI YANG SUDAH DI-ACC (RESTORE SALDO & CLEANUP ATTENDANCE)
      */
     public function destroyApproved(LeaveRequest $leaveRequest)
     {
@@ -672,60 +678,10 @@ class LeaveRequestController extends Controller
 
         DB::beginTransaction();
         try {
-            // 2. Hitung jumlah hari untuk restore saldo (jika tipe cuti)
-            if ($leaveRequest->type === 'cuti') {
-                $startDate = Carbon::parse($leaveRequest->start_date);
-                $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
-                $daysCount = $startDate->diffInDays($endDate) + 1;
+            // [FIX] Gunakan Helper untuk restore saldo dan hapus attendance
+            $this->cleanupLeaveRelatedData($leaveRequest);
 
-                // Restore User Balance
-                $user = $leaveRequest->user;
-                $user->increment('leave_balance', $daysCount);
-                $user->decrement('leave_taken', $daysCount);
-
-                Log::info("Cuti DELETED & RESTORED: User {$user->id} dikembalikan {$daysCount} hari oleh {$actor->name}");
-            }
-
-            // 3. Bersihkan Attendance yang dibuat otomatis oleh leave ini
-            // Cari attendance di range tanggal tersebut yang tipenya 'leave'
-            $startDate = Carbon::parse($leaveRequest->start_date)->format('Y-m-d');
-            $endDate = ($leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : Carbon::parse($leaveRequest->start_date))->format('Y-m-d');
-
-            // Kita cari attendance yang created_at nya mendekati approval? 
-            // Atau cukup cari presence_status = 'Cuti' / 'Sakit' dll di range tsb.
-            // Paling aman: cari yang presence_status sesuai tipe dan user_id di range tsb.
-            
-            $presenceStatusMap = [
-                'telat' => 'Izin Telat',
-                'wfh' => 'WFH',
-                'izin' => 'Izin',
-                'sakit' => 'Sakit',
-                'cuti' => 'Cuti',
-                'libur' => 'Libur',
-                'dinas' => 'Dinas Luar',
-            ];
-            $status = $presenceStatusMap[$leaveRequest->type] ?? ucfirst($leaveRequest->type);
-
-            // Karena database menyimpan check_in_time dalam UTC/App Timezone, 
-            // kita gunakan logic yang sama dengan saat create (whereRaw DATE CONVERT_TZ)
-            $branchTimezone = $leaveRequest->user->branch?->timezone ?? 'Asia/Jakarta';
-            $branchOffset = Carbon::now($branchTimezone)->format('P');
-            $appOffset = Carbon::now(config('app.timezone'))->format('P');
-
-            $attendances = Attendance::where('user_id', $leaveRequest->user_id)
-                ->where('attendance_type', 'leave')
-                ->where('presence_status', $status)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) >= ?", [$appOffset, $branchOffset, $startDate])
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) <= ?", [$appOffset, $branchOffset, $endDate])
-                ->get();
-
-            foreach ($attendances as $att) {
-                $att->delete();
-            }
-
-            // 4. Hapus/Update Leave Request
-            // Lebih baik ditandai 'cancelled' atau hapus permanen?
-            // "fiturnya bisa menghapus cuti" -> Kita hapus saja agar bersih dari history
+            // 4. Hapus Leave Request
             $leaveRequest->delete();
 
             DB::commit();
@@ -739,13 +695,12 @@ class LeaveRequestController extends Controller
 
     /**
      * MENGAKHIRI CUTI LEBIH AWAL (ADMIN/AUDIT)
-     * Misal cuti 4 hari, tapi hari ke-4 masuk. Jadi cuti cuma 3 hari.
      */
     public function finishEarlyAdmin(LeaveRequest $leaveRequest)
     {
         $actor = Auth::user();
-        $today = now()->startOfDay();
-        $yesterday = now()->yesterday()->startOfDay();
+        $today = now()->format('Y-m-d');
+        $yesterday = now()->yesterday()->format('Y-m-d');
 
         // 1. Security Check
         if (!in_array($actor->role, ['admin', 'admin_gaji', 'audit'])) {
@@ -757,59 +712,76 @@ class LeaveRequestController extends Controller
         }
 
         $startDate = Carbon::parse($leaveRequest->start_date)->startOfDay();
-        $endDate = Carbon::parse($leaveRequest->end_date)->startOfDay();
 
         // Jika hari ini adalah hari pertama cuti, lebih baik gunakan fitur HAPUS saja
-        if ($today->lte($startDate)) {
+        if (now()->startOfDay()->lte($startDate)) {
             return back()->with('info', 'Cuti baru dimulai hari ini atau belum dimulai. Silakan gunakan fitur Hapus Permanen jika ingin membatalkan seluruhnya.');
         }
 
         DB::beginTransaction();
         try {
-            // Hitung durasi lama
-            $oldDuration = $startDate->diffInDays($endDate) + 1;
-            
-            // Urutan baru: end_date menjadi kemarin (yesterday)
-            $newEndDate = $yesterday;
-            $newDuration = $startDate->diffInDays($newEndDate) + 1;
+            // [FIX] Gunakan Helper untuk cleanup dan restore saldo
+            $this->cleanupLeaveRelatedData($leaveRequest, $today);
 
-            $diff = $oldDuration - $newDuration;
-
-            if ($diff <= 0) {
-                return back()->with('error', 'Tidak ada sisa hari untuk dikembalikan.');
-            }
-
-            // 2. Update User Balance (Kembalikan selisih hari)
-            $user = $leaveRequest->user;
-            $user->increment('leave_balance', $diff);
-            $user->decrement('leave_taken', $diff);
-
-            // 3. Bersihkan Attendance yang "Akan Datang" (Hari ini ke depan)
-            $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
-            $branchOffset = Carbon::now($branchTimezone)->format('P');
-            $appOffset = Carbon::now(config('app.timezone'))->format('P');
-
-            $deletedAttendances = Attendance::where('user_id', $user->id)
-                ->where('attendance_type', 'leave')
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) >= ?", [$appOffset, $branchOffset, $today->format('Y-m-d')])
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) <= ?", [$appOffset, $branchOffset, $endDate->format('Y-m-d')])
-                ->delete();
-
-            // 4. Update Leave Request
+            // 4. Update Leave Request agar status history akurat
             $leaveRequest->update([
-                'end_date' => $newEndDate->format('Y-m-d'),
-                'reason' => $leaveRequest->reason . " (Diakhiri lebih awal oleh {$actor->name} pada {$today->format('d/m/Y')})"
+                'end_date' => $yesterday,
             ]);
 
             DB::commit();
-            Log::info("Cuti FINISHED EARLY by Admin: User {$user->id} dikembalikan {$diff} hari oleh {$actor->name}");
-
-            return back()->with('success', "Cuti berhasil diakhiri. Durasi disesuaikan menjadi {$newDuration} hari. Saldo {$diff} hari telah dikembalikan ke user.");
-
+            return back()->with('success', 'Cuti berhasil diselesaikan lebih awal. Saldo sisa telah dikembalikan ke user.');
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error("Gagal Akhiri Cuti: " . $e->getMessage());
             return back()->with('error', 'Gagal memproses data: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * HELPER: Membersihkan data Attendance dan Restore Saldo Cuti
+     * Digunakan saat pembatalan atau penyelesaian izin lebih awal.
+     */
+    private function cleanupLeaveRelatedData(LeaveRequest $leaveRequest, $deleteFromDate = null)
+    {
+        $user = $leaveRequest->user;
+        $startDate = Carbon::parse($leaveRequest->start_date);
+        $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
+
+        // 1. Restore Saldo Cuti (Hanya jika status Approved)
+        if ($leaveRequest->type === 'cuti' && $leaveRequest->status === 'approved') {
+            $daysToRestore = 0;
+            if ($deleteFromDate) {
+                // Restore mulai dari tanggal tersebut sampai akhir range asli
+                $from = Carbon::parse($deleteFromDate)->startOfDay();
+                if ($from->lte($endDate)) {
+                    $daysToRestore = $from->diffInDays($endDate) + 1;
+                }
+            } else {
+                // Restore seluruh range
+                $daysToRestore = $startDate->diffInDays($endDate) + 1;
+            }
+
+            if ($daysToRestore > 0) {
+                $user->increment('leave_balance', $daysToRestore);
+                $user->decrement('leave_taken', $daysToRestore);
+                Log::info("Cuti Balance RESTORED: User {$user->id} reclaimed {$daysToRestore} days (Request ID: {$leaveRequest->id})");
+            }
+        }
+
+        // 2. Hapus Data Attendance terkait (attendance_type = 'leave')
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
+        $branchOffset = Carbon::now($branchTimezone)->format('P');
+        $appOffset = Carbon::now(config('app.timezone'))->format('P');
+
+        $query = Attendance::where('user_id', $leaveRequest->user_id)
+            ->where('attendance_type', 'leave');
+
+        $cleanStart = $deleteFromDate ?: $startDate->format('Y-m-d');
+        $cleanEnd = $endDate->format('Y-m-d');
+
+        $query->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) >= ?", [$appOffset, $branchOffset, $cleanStart])
+              ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) <= ?", [$appOffset, $branchOffset, $cleanEnd]);
+
+        $deletedCount = $query->delete();
+        Log::info("Attendance Records CLEARED: Deleted {$deletedCount} records for user {$user->id} range {$cleanStart} - {$cleanEnd}");
     }
 }
