@@ -17,6 +17,7 @@ class SyncApprovedLeavesToAttendance extends Command
      */
     protected $signature = 'attendance:sync-leaves 
                             {--dry-run : Run without making changes}
+                            {--cleanup : Delete attendance records that no longer have a matching approved leave request}
                             {--user= : Sync only for specific user ID}';
 
     /**
@@ -24,7 +25,7 @@ class SyncApprovedLeavesToAttendance extends Command
      *
      * @var string
      */
-    protected $description = 'Sync approved leave requests to attendance records (fix Alpha status for approved leaves)';
+    protected $description = 'Sync approved leave requests to attendance records and optionally cleanup cancelled/orphaned records';
 
     /**
      * Execute the console command.
@@ -32,35 +33,98 @@ class SyncApprovedLeavesToAttendance extends Command
     public function handle()
     {
         $dryRun = $this->option('dry-run');
+        $cleanup = $this->option('cleanup');
         $userId = $this->option('user');
 
         $this->info('🚀 Starting Leave-to-Attendance Sync...');
         $this->info($dryRun ? '⚠️  DRY RUN MODE - No changes will be made' : '✅ LIVE MODE - Changes will be saved');
-        $this->newLine();
-
-        // Query approved leaves
-        $query = LeaveRequest::with(['user', 'user.branch'])
-            ->where('status', 'approved');
-
-        if ($userId) {
-            $query->where('user_id', $userId);
-            $this->info("Filtering for User ID: {$userId}");
+        if ($cleanup) {
+            $this->info('🧹 Cleanup mode is ENABLED');
         }
-
-        $approvedLeaves = $query->get();
-
-        $this->info("Found {$approvedLeaves->count()} approved leave requests");
         $this->newLine();
-
-        $bar = $this->output->createProgressBar($approvedLeaves->count());
-        $bar->start();
 
         $stats = [
             'updated' => 0,
             'created' => 0,
             'skipped' => 0,
+            'deleted' => 0, // <--- New stat
             'errors' => 0
         ];
+
+        // --- STEP 1: CLEANUP (If requested) ---
+        if ($cleanup) {
+            $this->info('Step 1: Cleaning up orphaned leave attendance records...');
+
+            $orphanQuery = Attendance::where('attendance_type', 'leave')
+                ->with(['user', 'user.branch']);
+
+            if ($userId) {
+                $orphanQuery->where('user_id', $userId);
+            }
+
+            $potentialOrphans = $orphanQuery->get();
+            $this->info("Found {$potentialOrphans->count()} attendance records of type 'leave' to verify.");
+
+            $cleanBar = $this->output->createProgressBar($potentialOrphans->count());
+            $cleanBar->start();
+
+            foreach ($potentialOrphans as $att) {
+                try {
+                    $user = $att->user;
+                    if (!$user) {
+                        if (!$dryRun)
+                            $att->delete();
+                        $stats['deleted']++;
+                        $cleanBar->advance();
+                        continue;
+                    }
+
+                    $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
+                    // We need to know what LOCAL DATE this attendance represents
+                    $localDateString = Carbon::parse($att->check_in_time)
+                        ->timezone($branchTimezone)
+                        ->format('Y-m-d');
+
+                    // Check if an approved leave exists for this user covering this date
+                    $hasApprovedLeave = LeaveRequest::where('user_id', $att->user_id)
+                        ->where('status', 'approved')
+                        ->where('start_date', '<=', $localDateString)
+                        ->where(function ($q) use ($localDateString) {
+                            $q->whereNull('end_date')
+                                ->orWhere('end_date', '>=', $localDateString);
+                        })
+                        ->exists();
+
+                    if (!$hasApprovedLeave) {
+                        if (!$dryRun) {
+                            $att->delete();
+                        }
+                        $stats['deleted']++;
+                    }
+                } catch (\Exception $e) {
+                    $stats['errors']++;
+                }
+                $cleanBar->advance();
+            }
+            $cleanBar->finish();
+            $this->newLine(2);
+        }
+
+        // --- STEP 2: SYNC (Original logic) ---
+        $this->info('Step 2: Syncing approved leave requests...');
+
+        $query = LeaveRequest::with(['user', 'user.branch'])
+            ->where('status', 'approved');
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        }
+
+        $approvedLeaves = $query->get();
+        $this->info("Found {$approvedLeaves->count()} approved leave requests to process.");
+
+        $bar = $this->output->createProgressBar($approvedLeaves->count());
+        $bar->start();
 
         // Map leave type to presence status
         $presenceStatusMap = [
@@ -70,10 +134,16 @@ class SyncApprovedLeavesToAttendance extends Command
             'izin' => 'Izin',
             'sakit' => 'Sakit',
             'cuti' => 'Cuti',
+            'libur' => 'Libur',
         ];
 
         foreach ($approvedLeaves as $leave) {
             try {
+                if (!$leave->user) {
+                    $bar->advance();
+                    continue;
+                }
+
                 $startDate = Carbon::parse($leave->start_date);
                 $endDate = $leave->end_date ? Carbon::parse($leave->end_date) : $startDate;
                 $presenceStatus = $presenceStatusMap[$leave->type] ?? ucfirst($leave->type);
@@ -82,37 +152,27 @@ class SyncApprovedLeavesToAttendance extends Command
                 for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
                     $currentDate = $date->format('Y-m-d');
 
-                    // Branch-specific timezone for correct date matching
                     $branchTimezone = $leave->user->branch->timezone ?? 'Asia/Jakarta';
                     $branchOffset = Carbon::now($branchTimezone)->format('P');
                     $appOffset = Carbon::now(config('app.timezone'))->format('P');
 
-                    // Find ALL attendance records for this user on this local date
                     $attendances = Attendance::where('user_id', $leave->user_id)
                         ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $currentDate])
-                        ->orderBy('attendance_type', 'desc') // Prioritize 'self' or 'scan' over 'leave'
+                        ->orderBy('attendance_type', 'desc')
                         ->get();
 
                     if ($attendances->count() > 0) {
-                        // DEDUPLICATION: If multiple records exist, we merge them
                         $mainAttendance = $attendances->first();
 
-                        // If we have duplicates, delete the extras
                         if ($attendances->count() > 1 && !$dryRun) {
-                            $this->warn("Merging {$attendances->count()} duplicates for User {$leave->user_id} on {$currentDate}");
                             foreach ($attendances->slice(1) as $duplicate) {
-                                // Keep photos if they exist and main doesn't
                                 if ($duplicate->photo_path && !$mainAttendance->photo_path) {
                                     $mainAttendance->photo_path = $duplicate->photo_path;
-                                }
-                                if ($duplicate->photo_out_path && !$mainAttendance->photo_out_path) {
-                                    $mainAttendance->photo_out_path = $duplicate->photo_out_path;
                                 }
                                 $duplicate->delete();
                             }
                         }
 
-                        // UPDATE logic: Ensure status is 'Izin Telat' if it was 'Masuk' or 'Alpha'
                         $shouldUpdate = (
                             !$mainAttendance->presence_status ||
                             in_array(strtolower($mainAttendance->presence_status), ['alpha', 'masuk', 'hadir']) ||
@@ -128,14 +188,10 @@ class SyncApprovedLeavesToAttendance extends Command
                                 ];
 
                                 if ($leave->type === 'telat' && $leave->start_time) {
-                                    // Don't overwrite actual check_in_time if it's already set by a selfie/scan
                                     if ($mainAttendance->attendance_type === 'leave') {
                                         $updateData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leave->start_time);
                                     }
                                     $updateData['is_late_checkin'] = true;
-                                    $updateData['notes'] = ($mainAttendance->notes ? $mainAttendance->notes . " | " : "") . 'Izin Telat: ' . $leave->reason;
-                                } else {
-                                    $updateData['notes'] = ($mainAttendance->notes ? $mainAttendance->notes . " | " : "") . ucfirst($leave->type) . ': ' . $leave->reason;
                                 }
 
                                 $mainAttendance->update($updateData);
@@ -145,7 +201,6 @@ class SyncApprovedLeavesToAttendance extends Command
                             $stats['skipped']++;
                         }
                     } else {
-                        // Create new attendance
                         if (!$dryRun) {
                             $attendanceData = [
                                 'user_id' => $leave->user_id,
@@ -154,36 +209,24 @@ class SyncApprovedLeavesToAttendance extends Command
                                 'status' => 'verified',
                                 'attendance_type' => 'leave',
                                 'verified_by_user_id' => $leave->approved_by,
+                                'check_in_time' => ($leave->type === 'telat' && $leave->start_time)
+                                    ? Carbon::parse($currentDate . ' ' . $leave->start_time)
+                                    : Carbon::parse($currentDate)->startOfDay()
                             ];
-
-                            if ($leave->type === 'telat' && $leave->start_time) {
-                                $attendanceData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leave->start_time);
-                                $attendanceData['is_late_checkin'] = true;
-                                $attendanceData['notes'] = 'Izin Telat: ' . $leave->reason;
-                            } else {
-                                $attendanceData['check_in_time'] = Carbon::parse($currentDate)->startOfDay();
-                                $attendanceData['notes'] = ucfirst($leave->type) . ': ' . $leave->reason;
-                            }
-
                             Attendance::create($attendanceData);
                         }
-
                         $stats['created']++;
                     }
                 }
             } catch (\Exception $e) {
                 $stats['errors']++;
-                $this->newLine();
-                $this->error("Error processing Leave ID {$leave->id}: {$e->getMessage()}");
             }
-
             $bar->advance();
         }
 
         $bar->finish();
         $this->newLine(2);
 
-        // Display results
         $this->info('📊 Sync Results:');
         $this->table(
             ['Action', 'Count'],
@@ -191,16 +234,17 @@ class SyncApprovedLeavesToAttendance extends Command
                 ['Updated (Alpha → Leave Type)', $stats['updated']],
                 ['Created (New Attendance)', $stats['created']],
                 ['Skipped (Already synced)', $stats['skipped']],
+                ['Deleted (Orphaned/Cancelled)', $stats['deleted']],
                 ['Errors', $stats['errors']],
             ]
         );
 
         if ($dryRun) {
             $this->newLine();
-            $this->warn('🔍 This was a DRY RUN. Run without --dry-run to apply changes.');
+            $this->warn('🔍 This was a DRY RUN. Run with --cleanup (and without --dry-run) to apply.');
         } else {
             $this->newLine();
-            $this->info('✅ Sync completed successfully!');
+            $this->info('✅ Sync and Cleanup completed successfully!');
         }
 
         return Command::SUCCESS;
