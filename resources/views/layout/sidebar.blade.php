@@ -265,7 +265,7 @@
         {{-- DASHBOARD (SEMUA ROLE) --}}
         {{-- =================================== --}}
         <li class="nav-item">
-            <a class="nav-link" href="/">
+            <a class="nav-link {{ request()->is('/') || request()->routeIs('dashboard*') ? 'active' : '' }}" href="/">
                 <i class="mdi mdi-grid-large menu-icon"></i>
                 <span class="menu-title">Dashboard</span>
             </a>
@@ -548,34 +548,34 @@
             <li class="nav-item nav-category">Verifikasi</li>
 
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('audit.verify.list') }}">
+                <a class="nav-link {{ request()->routeIs('audit.verify.*') ? 'active' : '' }}" href="{{ route('audit.verify.list') }}">
                     <i class="menu-icon mdi mdi-checkbox-marked-outline"></i>
                     <span class="menu-title">Verifikasi Absensi</span>
                 </a>
             </li>
             {{-- [NEW] Monitoring Cuti --}}
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.admin-summary') }}">
+                <a class="nav-link {{ request()->routeIs('leave-requests.admin-summary') ? 'active' : '' }}" href="{{ route('leave-requests.admin-summary') }}">
                     <i class="menu-icon mdi mdi-account-search"></i>
                     <span class="menu-title">Monitoring Cuti</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.active') }}">
+                <a class="nav-link {{ request()->routeIs('leave-requests.active') ? 'active' : '' }}" href="{{ route('leave-requests.active') }}">
                     <i class="menu-icon mdi mdi-account-clock-outline"></i>
                     <span class="menu-title">User Aktif Cuti</span>
                     <span class="badge badge-success rounded-pill ms-auto">Today</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.index') }}">
+                <a class="nav-link {{ request()->routeIs('leave-requests.index') ? 'active' : '' }}" href="{{ route('leave-requests.index') }}">
                     <i class="menu-icon mdi mdi-clock-alert-outline"></i>
                     <span class="menu-title">Daftar Izin / Telat</span>
                 </a>
             </li>
             {{-- [NEW] Persetujuan Cuti --}}
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.approvals') }}">
+                <a class="nav-link {{ request()->routeIs('leave-requests.approvals') ? 'active' : '' }}" href="{{ route('leave-requests.approvals') }}">
                     <i class="menu-icon mdi mdi-check-decagram"></i>
                     <span class="menu-title">Persetujuan Cuti</span>
                 </a>

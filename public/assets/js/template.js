@@ -11,31 +11,36 @@
     //Active class can be hard coded directly in html file also as required
 
     function addActiveClass(element) {
-      if (current === "") {
-        //for root url
-        if (element.attr('href').indexOf("index.html") !== -1) {
-          element.parents('.nav-item').last().addClass('active');
-          if (element.parents('.sub-menu').length) {
-            element.closest('.collapse').addClass('show');
-            element.addClass('active');
+      var href = element.attr('href');
+      if (!href || href === "#" || href === "javascript:void(0)") return;
+
+      // Normalize current path and link path
+      var currentPath = window.location.pathname;
+      try {
+        var linkPath = new URL(href, window.location.origin).pathname;
+        
+        if (currentPath === "/" || currentPath === "/index.html") {
+          if (linkPath === "/" || linkPath === "/index.html") {
+            element.parents('.nav-item').last().addClass('active');
+          }
+        } else {
+          // Precise match for the link
+          if (linkPath === currentPath) {
+            element.parents('.nav-item').last().addClass('active');
+            if (element.parents('.sub-menu').length) {
+              element.closest('.collapse').addClass('show');
+              element.addClass('active');
+            }
+            if (element.parents('.submenu-item').length) {
+              element.addClass('active');
+            }
           }
         }
-      } else {
-        //for other url
-        if (element.attr('href').indexOf(current) !== -1) {
-          element.parents('.nav-item').last().addClass('active');
-          if (element.parents('.sub-menu').length) {
-            element.closest('.collapse').addClass('show');
-            element.addClass('active');
-          }
-          if (element.parents('.submenu-item').length) {
-            element.addClass('active');
-          }
-        }
+      } catch (e) {
+        // Fallback or ignore invalid URLs
       }
     }
 
-    var current = location.pathname.split("/").slice(-1)[0].replace(/^\/|\/$/g, '');
     $('.nav li a', sidebar).each(function () {
       var $this = $(this);
       addActiveClass($this);
