@@ -330,6 +330,18 @@
         <div>
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
             <h3 class="fw-bold mb-0">{{ Auth::user()->name }}!</h3>
+            <div class="d-flex align-items-center mt-2">
+                <span class="badge me-2 shadow-sm" style="background-color: {{ Auth::user()->calculateRank()['color'] }}; color: #000; font-weight: 800; border: 1px solid rgba(0,0,0,0.1); font-size: 11px;">
+                    <i class="mdi {{ Auth::user()->calculateRank()['icon'] }} me-1"></i> {{ Auth::user()->rank_title }}
+                </span>
+                <div class="progress flex-grow-1" style="height: 6px; max-width: 120px; background-color: rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                         style="width: {{ Auth::user()->getRankProgress() }}%; background-color: {{ Auth::user()->calculateRank()['color'] }};" 
+                         aria-valuenow="{{ Auth::user()->getRankProgress() }}" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+                <small class="ms-2 text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">{{ number_format(Auth::user()->xp) }} XP</small>
+            </div>
         </div>
         <div class="text-end d-none d-md-block">
             @if(in_array(Auth::user()->role, ['audit', 'admin']))

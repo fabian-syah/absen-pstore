@@ -177,7 +177,13 @@
                                                     @endif
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-1 fw-bold text-dark">{{ $member->name }} @if(Auth::id() == $member->id) (Saya) @endif</h6>
+                                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                                        <h6 class="mb-0 fw-bold text-dark">{{ $member->name }} @if(Auth::id() == $member->id) (Saya) @endif</h6>
+                                                        @php $rank = $member->calculateRank(); @endphp
+                                                        <span class="badge shadow-sm" style="background-color: {{ $rank['color'] }}; color: #000; font-size: 9px; font-weight: 800; padding: 2px 6px;">
+                                                            {{ $member->rank_title ?? 'Novice' }}
+                                                        </span>
+                                                    </div>
                                                     <small class="text-muted">{{ $member->division->name ?? '-' }}</small>
                                                 </div>
                                             </div>

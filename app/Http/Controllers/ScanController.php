@@ -96,6 +96,9 @@ class ScanController extends Controller
             'data' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'rank_title' => $user->rank_title,
+                'rank_icon' => $user->calculateRank()['icon'],
+                'rank_color' => $user->calculateRank()['color'],
                 'role' => $user->role,
                 'division' => $user->division->name ?? '-',
                 'branch' => $user->branch?->name ?? 'Pusat',
@@ -297,6 +300,9 @@ class ScanController extends Controller
             'message' => $msg,
             'data' => [
                 'name' => $user->name,
+                'rank_title' => $user->rank_title,
+                'rank_icon' => $user->calculateRank()['icon'],
+                'rank_color' => $user->calculateRank()['color'],
                 'role' => $user->role,
                 'division' => $user->division->name ?? '-',
                 'branch' => $user->branch?->name ?? '-',

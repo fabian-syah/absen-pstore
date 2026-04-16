@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany; // <-- TAMBAHAN PENTIN
 // --- MODEL IMPORTS ---
 use App\Models\WorkHistory;
 use App\Models\Inventory;
+use App\Traits\SendFcmNotification;
+use App\Traits\HasGamification;
 use App\Models\LateNotification;
 use App\Models\Division;
 use App\Models\Branch;
@@ -24,7 +26,7 @@ use App\Models\Broadcast;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasGamification;
 
     /**
      * The attributes that are mass assignable.

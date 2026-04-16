@@ -648,7 +648,12 @@
             </button>
             <img src="" id="dbPhoto" class="profile-img-db mb-3" alt="User">
             <h4 id="dbName" class="fw-bold m-0">Nama Karyawan</h4>
-            <p id="dbRole" class="text-muted small m-0">Jabatan</p>
+            <div id="dbRankContainer" class="mt-2" style="display: none;">
+                <span id="dbRankBadge" class="badge shadow-sm" style="font-weight: 800; font-size: 11px;">
+                    <i id="dbRankIcon" class="fas me-1"></i> <span id="dbRankTitle">Rank</span>
+                </span>
+            </div>
+            <p id="dbRole" class="text-muted small mt-1 mb-0">Jabatan</p>
             <span id="dbBranch" class="badge bg-primary mt-2">Cabang</span>
         </div>
 
@@ -700,6 +705,11 @@
             <div class="result-profile-card" id="resultProfileCard">
                 <img id="resultUserPhoto" src="" class="result-profile-img" alt="User Photo">
                 <h3 id="resultUserName" class="fw-bold mb-1"></h3>
+                <div id="resultRankContainer" class="mb-3">
+                     <span id="resultRankBadge" class="badge shadow-sm px-3 py-2" style="font-weight: 800; font-size: 14px; border: 1px solid rgba(255,255,255,0.2);">
+                        <i id="resultRankIcon" class="fas me-2"></i> <span id="resultRankTitle">Rank</span>
+                    </span>
+                </div>
                 <p id="resultUserRole" class="text-white-50 mb-3"></p>
 
                 <div class="user-info-row">
@@ -1025,6 +1035,16 @@
             document.getElementById('dbRole').innerText = user.role + ' - ' + user.division;
             document.getElementById('dbBranch').innerText = user.branch;
             document.getElementById('dbPhoto').src = user.photo_url;
+            
+            // Show Rank in verification
+            if (user.rank_title) {
+                document.getElementById('dbRankContainer').style.display = 'block';
+                document.getElementById('dbRankTitle').innerText = user.rank_title;
+                document.getElementById('dbRankBadge').style.backgroundColor = user.rank_color;
+                document.getElementById('dbRankBadge').style.color = '#000';
+                // Convert mdi to font-awesome if possible, otherwise use a generic star
+                document.getElementById('dbRankIcon').className = 'fas fa-star'; 
+            }
 
             // Reset UI State
             retakePhoto();
@@ -1262,6 +1282,17 @@
                     resultUserRole.innerText = currentUserData.role + ' - ' + currentUserData.division;
                     resultUserDivision.innerText = currentUserData.division;
                     resultUserBranch.innerText = currentUserData.branch;
+                    
+                    // Rank in result
+                    if (currentUserData.rank_title) {
+                        document.getElementById('resultRankContainer').style.display = 'block';
+                        document.getElementById('resultRankTitle').innerText = currentUserData.rank_title;
+                        document.getElementById('resultRankBadge').style.backgroundColor = currentUserData.rank_color;
+                        document.getElementById('resultRankBadge').style.color = '#000';
+                        document.getElementById('resultRankIcon').className = 'fas fa-medal';
+                    } else {
+                        document.getElementById('resultRankContainer').style.display = 'none';
+                    }
                 }
 
                 // Set informasi absen

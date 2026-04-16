@@ -55,6 +55,27 @@
                             <span class="badge rounded-pill bg-danger px-3 py-2"><i class="mdi mdi-account-off me-1"></i> NON-AKTIF</span>
                         @endif
 
+                        {{-- [GAMIFICATION] USER RANK & XP --}}
+                        <div class="mt-4 p-3 rounded-3 border shadow-sm bg-light text-start">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="text-muted small fw-bold mb-0">CURRENT RANK</h6>
+                                <i class="mdi {{ $user->calculateRank()['icon'] }} fs-4" style="color: {{ $user->calculateRank()['color'] }}"></i>
+                            </div>
+                            <h4 class="fw-bolder mb-1" style="color: {{ $user->calculateRank()['color'] }}; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                {{ $user->rank_title }}
+                            </h4>
+                            <div class="progress mb-2" style="height: 10px; border-radius: 5px; background-color: #e9ecef;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                                     style="width: {{ $user->getRankProgress() }}%; background-color: {{ $user->calculateRank()['color'] }};" 
+                                     aria-valuenow="{{ $user->getRankProgress() }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted fw-bold">{{ number_format($user->xp) }} XP</small>
+                                <small class="text-muted small">Level Progress: {{ $user->getRankProgress() }}%</small>
+                            </div>
+                        </div>
+
                         {{-- Tombol Toggle Status (Admin & Audit Only) --}}
                         @if(in_array(auth()->user()->role, ['admin', 'audit']) && $user->id != auth()->id())
                             <div class="mt-3 d-grid">

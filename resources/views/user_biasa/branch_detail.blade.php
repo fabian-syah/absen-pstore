@@ -111,7 +111,13 @@
                                                     {{-- Link pada Nama --}}
                                                     <a href="{{ route('users.show', $emp->id) }}"
                                                         class="text-decoration-none text-dark">
-                                                        <div class="fw-bold hover-text-primary">{{ $emp->name }}</div>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div class="fw-bold hover-text-primary">{{ $emp->name }}</div>
+                                                            @php $rank = $emp->calculateRank(); @endphp
+                                                            <span class="badge shadow-sm" style="background-color: {{ $rank['color'] }}; color: #000; font-size: 8px; font-weight: 800; padding: 1px 4px;">
+                                                                {{ $emp->rank_title ?? 'Novice' }}
+                                                            </span>
+                                                        </div>
                                                     </a>
                                                     <small class="text-muted">{{ $emp->email }}</small>
                                                 </div>
