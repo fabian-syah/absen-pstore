@@ -186,7 +186,7 @@
             </li>
 
             {{-- User Profile --}}
-            {{-- Rank & XP Global Display --}}
+            {{-- Rank & XP Global Display - HIDDEN PER USER REQUEST
             <li class="nav-item d-none d-sm-flex align-items-center me-3">
                 @php 
                     $rankData = Auth::user()->calculateRank(); 
@@ -215,6 +215,7 @@
                     </div>
                 </div>
             </li>
+            --}}
 
             <li class="nav-item dropdown user-dropdown">
                 <a class="nav-link p-0" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
@@ -272,6 +273,7 @@
                         </p>
                         <p class="fw-light text-muted mb-0">{{ Auth::user()->email }}</p>
                         <small class="text-muted d-block">{{ Auth::user()->role }} - {{ Auth::user()->division->name ?? 'N/A' }}</small>
+                        {{-- Rank Badge - HIDDEN PER USER REQUEST
                         <div class="mt-2 text-center">
                             @php $rank = Auth::user()->calculateRank(); @endphp
                             <span class="badge shadow-sm {{ $rank['effect_class'] }}" 
@@ -289,6 +291,7 @@
                                 @endif
                             </span>
                         </div>
+                        --}}
                     </div>
 
                     <a href="{{ route('profile.edit') }}" class="dropdown-item">

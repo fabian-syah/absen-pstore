@@ -358,16 +358,19 @@
                                     $isDarkText = in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]);
                                     $isEternal = $rank['level'] == 20;
                                 @endphp
+                            {{-- Rank Title - HIDDEN PER USER REQUEST
                             <h2 class="fw-bold mb-3" style="font-size: 2.5rem; letter-spacing: -1px; display: none;">
                                 @if(isset($rank))
                                     <span class="rank-name-premium" style="color: {{ $rank['color'] }};">{{ $rank['name'] }}</span>
                                 @endif
                             </h2>
+                            --}}
                             <h2 class="text-white fw-bold mb-3" style="font-size: 3rem; line-height: 1.1;">
                                 Selamat Datang, <br>
                                 <span class="text-warning">{{ explode(' ', Auth::user()->name)[0] }}!</span>
                             </h2>
                             
+                            {{-- Rank Progress Bar - HIDDEN PER USER REQUEST
                             <div class="mt-4">
                                 <div class="d-flex justify-content-between align-items-end mb-2">
                                     <span class="text-white fw-bold" style="font-size: 14px;">Rank Progress</span>
@@ -380,13 +383,16 @@
                                     </div>
                                 </div>
                             </div>
+                            --}}
                         </div>
+                        {{-- XP Visual Counter - HIDDEN PER USER REQUEST
                         <div class="col-md-5 d-none d-md-block text-end">
                             <div class="xp-visual d-inline-block p-4 rounded-4 bg-white bg-opacity-5 border border-white border-opacity-10">
                                 <h1 class="text-white fw-black mb-0" style="font-size: 3.5rem; line-height: 1;">{{ number_format(Auth::user()->xp) }}</h1>
                                 <p class="text-white text-uppercase fw-bold opacity-50 mb-0" style="letter-spacing: 2px;">Total Experience</p>
                             </div>
                         </div>
+                        --}}
                     </div>
                 </div>
             </div>

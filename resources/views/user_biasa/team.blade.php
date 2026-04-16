@@ -179,6 +179,7 @@
                                                 <div>
                                                     <div class="d-flex align-items-center gap-2 mb-1">
                                                         <h6 class="mb-0 fw-bold text-dark">{{ $member->name }} @if(Auth::id() == $member->id) (Saya) @endif</h6>
+                                                        {{-- Rank Badge - HIDDEN PER USER REQUEST
                                                         @php 
                                                             $rank = $member->calculateRank(); 
                                                             $isDarkText = in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]);
@@ -192,6 +193,7 @@
                                                             @endif
                                                             {{ $member->rank_title ?? 'Novice' }}
                                                         </span>
+                                                        --}}
                                                     </div>
                                                     <small class="text-muted">{{ $member->division->name ?? '-' }}</small>
                                                 </div>
