@@ -118,8 +118,13 @@
                                                                 $isDarkText = in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]);
                                                             @endphp
                                                             <span class="badge shadow-sm {{ $rank['effect_class'] }}" 
-                                                                  style="background-color: {{ $rank['color'] }}; color: {{ $isDarkText ? '#000' : '#fff' }}; font-size: 8px; font-weight: 800; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.1);">
-                                                                <i class="mdi {{ $rank['icon'] }}"></i> {{ $emp->rank_title ?? 'Novice' }}
+                                                                  style="background-color: {{ $rank['color'] }}; color: {{ $isDarkText ? '#000' : '#fff' }}; font-size: 8px; font-weight: 800; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.1); display: inline-flex; align-items: center; gap: 3px;">
+                                                                @if($rank['rank_image'])
+                                                                    <img src="{{ asset($rank['rank_image']) }}" alt="{{ $rank['name'] }}" style="width: 10px; height: 10px; object-fit: contain;">
+                                                                @else
+                                                                    <i class="mdi {{ $rank['icon'] }}"></i>
+                                                                @endif
+                                                                {{ $emp->rank_title ?? 'Novice' }}
                                                             </span>
                                                         </div>
                                                     </a>

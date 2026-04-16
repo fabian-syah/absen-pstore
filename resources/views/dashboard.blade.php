@@ -361,8 +361,12 @@
                                 <div class="rank-icon-wrapper position-relative me-4">
                                     <div class="rank-shield-glow" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: {{ $rank['color'] }}; filter: blur(25px); opacity: 0.4; border-radius: 50%;"></div>
                                     <div class="rank-shield d-flex align-items-center justify-content-center shadow-lg {{ $rank['effect_class'] }}" 
-                                         style="width: 80px; height: 80px; background: {{ $rank['color'] }}; border-radius: 20px; color: {{ $isDarkText ? '#000' : '#fff' }}; font-size: 38px; border: 4px solid rgba(255,255,255,0.2); position: relative; z-index: 2;">
-                                        <i class="mdi {{ $rank['icon'] }}"></i>
+                                         style="width: 80px; height: 80px; background: {{ $rank['color'] }}; border-radius: 20px; color: {{ $isDarkText ? '#000' : '#fff' }}; font-size: 38px; border: 4px solid rgba(255,255,255,0.2); position: relative; z-index: 2; overflow: hidden;">
+                                        @if($rank['rank_image'])
+                                            <img src="{{ asset($rank['rank_image']) }}" alt="{{ $rank['name'] }}" style="width: 100%; height: 100%; object-fit: contain; transform: scale(1.3);">
+                                        @else
+                                            <i class="mdi {{ $rank['icon'] }}"></i>
+                                        @endif
                                     </div>
                                 </div>
                                 <div>

@@ -65,8 +65,12 @@
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="text-muted small fw-bold mb-0">CURRENT RANK</h6>
                                 <div class="rank-icon-mini shadow-sm d-flex align-items-center justify-content-center {{ $rank['effect_class'] }}" 
-                                     style="width: 35px; height: 35px; background: {{ $rank['color'] }}; border-radius: 8px; color: {{ $isDarkText ? '#000' : '#fff' }};">
-                                    <i class="mdi {{ $rank['icon'] }} fs-5"></i>
+                                     style="width: 35px; height: 35px; background: {{ $rank['color'] }}; border-radius: 8px; color: {{ $isDarkText ? '#000' : '#fff' }}; overflow: hidden;">
+                                    @if($rank['rank_image'])
+                                        <img src="{{ asset($rank['rank_image']) }}" alt="{{ $rank['name'] }}" style="width: 100%; height: 100%; object-fit: contain; transform: scale(1.2);">
+                                    @else
+                                        <i class="mdi {{ $rank['icon'] }} fs-5"></i>
+                                    @endif
                                 </div>
                             </div>
                             <h4 class="fw-bolder mb-1" style="color: {{ $rank['color'] }}; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
