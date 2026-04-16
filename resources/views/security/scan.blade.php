@@ -616,6 +616,7 @@
             height: 100%;
             object-fit: contain;
             transform: scale(1.2);
+            filter: url(#remove-white-bg); /* Global Transparency Fix */
         }
 
         .icon-box-premium {
@@ -679,6 +680,16 @@
 <body>
 
     <div class="scanner-wrapper" id="qrSection">
+    
+    <!-- GAMIFICATION SVG FILTERS -->
+    <svg style="visibility: hidden; position: absolute;" width="0" height="0" xmlns="http://www.w3.org/2000/svg">
+        <filter id="remove-white-bg">
+            <feColorMatrix type="matrix" values="1 0 0 0 0
+                                               0 1 0 0 0
+                                               0 0 1 0 0
+                                               -1.5 -1.5 -1.5 1 0.2"/>
+        </filter>
+    </svg>
         <div class="scanner-header">
             <h5 class="m-0 fw-bold"><i class="fas fa-qrcode me-2"></i>Scan Absensi</h5>
             <small class="text-white-50">Arahkan kamera ke QR Code</small>

@@ -619,6 +619,10 @@
             position: relative;
             display: inline-block;
         }
+
+        .rank-icon-3d {
+            filter: url(#remove-white-bg); /* Global Transparency Fix */
+        }
         
         /* 1. Base/Foundation Tiers */
         .rank-foundation {
@@ -944,6 +948,24 @@
     </script>
 
     @stack('scripts')
+    
+    <!-- SVG Filters for Gamification -->
+    <svg style="position: absolute; width: 0; height: 0;" xmlns="http://www.w3.org/2000/svg">
+        <filter id="remove-white-bg">
+            <!-- Matrix that targets white (1,1,1) and makes it transparent -->
+            <feColorMatrix type="matrix" values="1 0 0 0 0
+                                               0 1 0 0 0
+                                               0 0 1 0 0
+                                               -1.5 -1.5 -1.5 1 0.2"/>
+        </filter>
+        <filter id="rank-glow">
+            <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </svg>
 </body>
 
 </html>
