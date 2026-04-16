@@ -59,12 +59,13 @@
                         @php 
                             $rank = $user->calculateRank(); 
                             $isEternal = $rank['level'] == 20;
+                            $isDarkText = in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]);
                         @endphp
-                        <div class="mt-4 p-3 rounded-3 border shadow-sm bg-light text-start {{ $isEternal ? 'rank-eternal' : '' }}">
+                        <div class="mt-4 p-3 rounded-3 border shadow-sm bg-light text-start {{ $rank['effect_class'] }}">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="text-muted small fw-bold mb-0">CURRENT RANK</h6>
-                                <div class="rank-icon-mini shadow-sm d-flex align-items-center justify-content-center rank-{{ $rank['category'] }}" 
-                                     style="width: 35px; height: 35px; background: {{ $rank['color'] }}; border-radius: 8px; color: {{ in_array($rank['level'], [1,5,7,8,12,14,16,19,20]) ? '#000' : '#fff' }};">
+                                <div class="rank-icon-mini shadow-sm d-flex align-items-center justify-content-center {{ $rank['effect_class'] }}" 
+                                     style="width: 35px; height: 35px; background: {{ $rank['color'] }}; border-radius: 8px; color: {{ $isDarkText ? '#000' : '#fff' }};">
                                     <i class="mdi {{ $rank['icon'] }} fs-5"></i>
                                 </div>
                             </div>

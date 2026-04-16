@@ -14,33 +14,33 @@ trait HasGamification
     public static function getRankConfig()
     {
         return [
-            // 1. Tier Pemula (The Foundation)
-            ['level' => 1, 'name' => 'Novice', 'min_xp' => 0, 'color' => '#475569', 'icon' => 'mdi-stone-variant', 'category' => 'foundation'],
-            ['level' => 2, 'name' => 'Apprentice', 'min_xp' => 100, 'color' => '#8B4513', 'icon' => 'mdi-wood', 'category' => 'foundation'],
-            ['level' => 3, 'name' => 'Iron', 'min_xp' => 300, 'color' => '#1A1A1A', 'icon' => 'mdi-anvil', 'category' => 'foundation'],
-            ['level' => 4, 'name' => 'Bronze', 'min_xp' => 600, 'color' => '#CD7F32', 'icon' => 'mdi-shield-outline', 'category' => 'foundation'],
-            ['level' => 5, 'name' => 'Silver', 'min_xp' => 1000, 'color' => '#C0C0C0', 'icon' => 'mdi-shield-check-outline', 'category' => 'foundation'],
+            // 1. The Foundation (Level 1-5)
+            ['level' => 1, 'name' => 'Novice', 'min_xp' => 0, 'color' => '#6B7280', 'icon' => 'mdi-stone-variant', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
+            ['level' => 2, 'name' => 'Apprentice', 'min_xp' => 100, 'color' => '#92400E', 'icon' => 'mdi-wood', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
+            ['level' => 3, 'name' => 'Iron', 'min_xp' => 300, 'color' => '#1F2937', 'icon' => 'mdi-anvil', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
+            ['level' => 4, 'name' => 'Bronze', 'min_xp' => 600, 'color' => '#B45309', 'icon' => 'mdi-shield-outline', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
+            ['level' => 5, 'name' => 'Silver', 'min_xp' => 1000, 'color' => '#9CA3AF', 'icon' => 'mdi-shield-check-outline', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
 
-            // 2. Tier Menengah (The Elite)
-            ['level' => 6, 'name' => 'Gold', 'min_xp' => 1500, 'color' => '#FFD700', 'icon' => 'mdi-trophy-outline', 'category' => 'elite'],
-            ['level' => 7, 'name' => 'Platinum', 'min_xp' => 2500, 'color' => '#E2E8F0', 'icon' => 'mdi-trophy-variant', 'category' => 'elite'],
-            ['level' => 8, 'name' => 'Diamond', 'min_xp' => 4000, 'color' => '#B9F2FF', 'icon' => 'mdi-diamond-stone', 'category' => 'elite'],
-            ['level' => 9, 'name' => 'Emerald', 'min_xp' => 6000, 'color' => '#50C878', 'icon' => 'mdi-gemstone-outline', 'category' => 'elite'],
-            ['level' => 10, 'name' => 'Ruby', 'min_xp' => 9000, 'color' => '#E0115F', 'icon' => 'mdi-ruby', 'category' => 'elite'],
+            // 2. The Elite (Level 6-10)
+            ['level' => 6, 'name' => 'Gold', 'min_xp' => 1500, 'color' => '#FBBF24', 'icon' => 'mdi-trophy-outline', 'category' => 'elite', 'effect_class' => 'rank-elite'],
+            ['level' => 7, 'name' => 'Platinum', 'min_xp' => 2500, 'color' => '#CBD5E1', 'icon' => 'mdi-trophy-variant', 'category' => 'elite', 'effect_class' => 'rank-elite'],
+            ['level' => 8, 'name' => 'Diamond', 'min_xp' => 4000, 'color' => '#22D3EE', 'icon' => 'mdi-diamond-stone', 'category' => 'elite', 'effect_class' => 'rank-elite'],
+            ['level' => 9, 'name' => 'Emerald', 'min_xp' => 6000, 'color' => '#10B981', 'icon' => 'mdi-gemstone-outline', 'category' => 'elite', 'effect_class' => 'rank-elite'],
+            ['level' => 10, 'name' => 'Ruby', 'min_xp' => 9000, 'color' => '#EF4444', 'icon' => 'mdi-ruby', 'category' => 'elite', 'effect_class' => 'rank-elite'],
 
-            // 3. Tier Tinggi (The Masterclass)
-            ['level' => 11, 'name' => 'Sapphire', 'min_xp' => 13000, 'color' => '#0F52BA', 'icon' => 'mdi-star-face', 'category' => 'masterclass'],
-            ['level' => 12, 'name' => 'Crystal', 'min_xp' => 18000, 'color' => '#E0FFFF', 'icon' => 'mdi-crystal-ball', 'category' => 'masterclass'],
-            ['level' => 13, 'name' => 'Master', 'min_xp' => 25000, 'color' => '#7851A9', 'icon' => 'mdi-crown-outline', 'category' => 'masterclass'],
-            ['level' => 14, 'name' => 'Grandmaster', 'min_xp' => 35000, 'color' => '#FFBF00', 'icon' => 'mdi-crown', 'category' => 'masterclass'],
-            ['level' => 15, 'name' => 'Epic', 'min_xp' => 50000, 'color' => '#40E0D0', 'icon' => 'mdi-flash-circle', 'category' => 'masterclass'],
+            // 3. The Masterclass (Level 11-15)
+            ['level' => 11, 'name' => 'Sapphire', 'min_xp' => 13000, 'color' => '#2563EB', 'icon' => 'mdi-star-face', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
+            ['level' => 12, 'name' => 'Crystal', 'min_xp' => 18000, 'color' => '#F0ABFC', 'icon' => 'mdi-crystal-ball', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
+            ['level' => 13, 'name' => 'Master', 'min_xp' => 25000, 'color' => '#7C3AED', 'icon' => 'mdi-crown-outline', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
+            ['level' => 14, 'name' => 'Grandmaster', 'min_xp' => 35000, 'color' => '#F59E0B', 'icon' => 'mdi-crown', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
+            ['level' => 15, 'name' => 'Epic', 'min_xp' => 50000, 'color' => '#06B6D4', 'icon' => 'mdi-flash-circle', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
 
-            // 4. Tier Puncak (The Godlike)
-            ['level' => 16, 'name' => 'Legend', 'min_xp' => 100000, 'color' => '#F5F5F5', 'icon' => 'mdi-auto-fix', 'category' => 'godlike'],
-            ['level' => 17, 'name' => 'Mythic', 'min_xp' => 250000, 'color' => '#663399', 'icon' => 'mdi-creation', 'category' => 'godlike'],
-            ['level' => 18, 'name' => 'Immortal', 'min_xp' => 750000, 'color' => '#FF0000', 'icon' => 'mdi-death-star', 'category' => 'godlike'],
-            ['level' => 19, 'name' => 'Celestial', 'min_xp' => 2000000, 'color' => '#00FFFF', 'icon' => 'mdi-weather-night', 'category' => 'godlike'],
-            ['level' => 20, 'name' => 'Eternal', 'min_xp' => 5000000, 'color' => '#000000', 'icon' => 'mdi-infinity', 'category' => 'godlike'],
+            // 4. The Godlike (Level 16-20)
+            ['level' => 16, 'name' => 'Legend', 'min_xp' => 100000, 'color' => '#FFFBEB', 'icon' => 'mdi-auto-fix', 'category' => 'godlike', 'effect_class' => 'rank-legend'],
+            ['level' => 17, 'name' => 'Mythic', 'min_xp' => 250000, 'color' => '#581C87', 'icon' => 'mdi-creation', 'category' => 'godlike', 'effect_class' => 'rank-mythic'],
+            ['level' => 18, 'name' => 'Immortal', 'min_xp' => 750000, 'color' => '#B91C1C', 'icon' => 'mdi-fire', 'category' => 'godlike', 'effect_class' => 'rank-immortal'],
+            ['level' => 19, 'name' => 'Celestial', 'min_xp' => 2000000, 'color' => '#BAE6FD', 'icon' => 'mdi-weather-night', 'category' => 'godlike', 'effect_class' => 'rank-celestial'],
+            ['level' => 20, 'name' => 'Eternal', 'min_xp' => 5000000, 'color' => '#000000', 'icon' => 'mdi-infinity', 'category' => 'godlike', 'effect_class' => 'rank-eternal'],
         ];
     }
 

@@ -608,81 +608,145 @@
         }
 
         /* ==========================================================
-           GAMIFICATION EFFECTS (RANK SYSTEM)
+           GAMIFICATION EFFECTS (RANK SYSTEM) - INSPIRED BY REFERENCE IMAGE
            ========================================================== */
         
-        /* 1. Elite (Glint Effect) */
+        /* 1. Base/Foundation Tiers */
+        .rank-foundation {
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        /* 2. Elite Tiers (Glint/Shine) */
         .rank-elite {
             position: relative;
             overflow: hidden !important;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
         }
         .rank-elite::after {
             content: '';
             position: absolute;
             top: -50%;
-            left: -50%;
+            left: -150%;
             width: 200%;
             height: 200%;
             background: linear-gradient(
                 to right,
                 rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.3) 50%,
+                rgba(255,255,255,0.4) 50%,
                 rgba(255,255,255,0) 100%
             );
             transform: rotate(45deg);
-            animation: glint 3s infinite;
+            animation: silverGlint 4s infinite;
         }
-        @keyframes glint {
+        @keyframes silverGlint {
             0% { left: -150%; }
+            30% { left: 150%; }
             100% { left: 150%; }
         }
 
-        /* 2. Masterclass (Aura Glow) */
+        /* 3. Masterclass Tiers (Crystalline/Aura) */
         .rank-masterclass {
-            box-shadow: 0 0 15px currentColor !important;
-            animation: auraPulse 2s ease-in-out infinite alternate;
+            position: relative;
+            box-shadow: 0 0 15px currentColor;
+            animation: crystalShine 3s linear infinite;
         }
-        @keyframes auraPulse {
-            from { box-shadow: 0 0 5px currentColor; filter: brightness(1); }
-            to { box-shadow: 0 0 20px currentColor; filter: brightness(1.2); }
+        @keyframes crystalShine {
+            0% { filter: hue-rotate(0deg) brightness(1); }
+            50% { filter: hue-rotate(15deg) brightness(1.2); }
+            100% { filter: hue-rotate(0deg) brightness(1); }
         }
 
-        /* 3. Godlike (Animated/Particle Effect) */
-        .rank-godlike {
-            position: relative;
-            animation: godlikeShake 0.5s infinite alternate;
+        /* 4. Legend (Tier 16) - Golden Wings/White Glow */
+        .rank-legend {
+            animation: legendFloat 3s ease-in-out infinite;
+            box-shadow: 0 0 25px #FFFBEB, inset 0 0 10px #FFFBEB;
+            border: 2px solid #FEF3C7 !important;
         }
-        .rank-godlike::before {
+        @keyframes legendFloat {
+            0%, 100% { transform: translateY(0) scale(1.05); }
+            50% { transform: translateY(-5px) scale(1.1); }
+        }
+
+        /* 5. Mythic (Tier 17) - Dark Nebula/Star Clusters */
+        .rank-mythic {
+            background: radial-gradient(circle at center, #581C87 0%, #170728 100%) !important;
+            box-shadow: 0 0 20px #7C3AED !important;
+            overflow: hidden !important;
+        }
+        .rank-mythic::before {
             content: '';
             position: absolute;
-            inset: -4px;
-            background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
-            background-size: 400%;
-            z-index: -1;
-            filter: blur(5px);
-            animation: godlikeAnim 20s linear infinite;
-            border-radius: inherit;
-            opacity: 0.6;
+            inset: 0;
+            background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+            background-size: 15px 15px;
+            opacity: 0.3;
+            animation: starsMove 10s linear infinite;
         }
-        @keyframes godlikeAnim {
-            0% { background-position: 0 0; }
-            50% { background-position: 400% 0; }
-            100% { background-position: 0 0; }
+        @keyframes starsMove {
+            from { transform: scale(1) rotate(0deg); }
+            to { transform: scale(1.5) rotate(15deg); }
         }
 
-        /* 4. Eternal Special (Black Hole) */
+        /* 6. Immortal (Tier 18) - Burning Crimson Flame */
+        .rank-immortal {
+            background: linear-gradient(to top, #7F1D1D, #EF4444) !important;
+            box-shadow: 0 0 25px #EF4444, inset 0 0 10px #7F1D1D !important;
+            position: relative;
+        }
+        .rank-immortal::after {
+            content: '';
+            position: absolute;
+            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            background: inherit;
+            filter: blur(15px);
+            opacity: 0.5;
+            z-index: -1;
+            animation: firePulse 1.5s infinite alternate;
+        }
+        @keyframes firePulse {
+            from { transform: scale(1); opacity: 0.3; }
+            to { transform: scale(1.2); opacity: 0.6; }
+        }
+
+        /* 7. Celestial (Tier 19) - Neon Blue/Light Aura */
+        .rank-celestial {
+            background: #BAE6FD !important;
+            box-shadow: 0 0 30px #0EA5E9, 0 0 60px rgba(14, 165, 233, 0.3) !important;
+            border: 3px solid #FFF !important;
+            animation: celestialGlow 2s ease-in-out infinite alternate;
+        }
+        @keyframes celestialGlow {
+            from { filter: brightness(1) drop-shadow(0 0 5px #FFF); }
+            to { filter: brightness(1.3) drop-shadow(0 0 15px #FFF); }
+        }
+
+        /* 8. Eternal (Tier 20) - Black Hole/Floating Gold */
         .rank-eternal {
-            transform: scale(1.15);
-            background: radial-gradient(circle, #000 0%, #1a1a1a 100%) !important;
-            border: 3px solid #FFD700 !important;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4) !important;
+            background: #000 !important;
+            border: 3px solid #F59E0B !important;
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.5), inset 0 0 20px rgba(0,0,0,1) !important;
+            position: relative;
+            transform: scale(1.1);
+        }
+        .rank-eternal::before {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            background: conic-gradient(from 0deg, transparent, #F59E0B, transparent);
+            animation: rotateGlow 4s linear infinite;
+            border-radius: inherit;
+            z-index: -1;
         }
         .rank-eternal i {
-            animation: eternalSpin 10s linear infinite;
+            color: #F59E0B !important;
+            animation: floatGold 3s ease-in-out infinite alternate;
         }
-        @keyframes eternalSpin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        @keyframes rotateGlow {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes floatGold {
+            from { transform: translateY(0) scale(1); filter: drop-shadow(0 0 2px #F59E0B); }
+            to { transform: translateY(-3px) scale(1.1); filter: drop-shadow(0 0 8px #F59E0B); }
         }
     </style>
 </head>

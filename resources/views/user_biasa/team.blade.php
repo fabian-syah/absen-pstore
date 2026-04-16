@@ -181,10 +181,10 @@
                                                         <h6 class="mb-0 fw-bold text-dark">{{ $member->name }} @if(Auth::id() == $member->id) (Saya) @endif</h6>
                                                         @php 
                                                             $rank = $member->calculateRank(); 
-                                                            $isDarkIcon = in_array($rank['level'], [1,5,7,8,12,14,16,19,20]);
+                                                            $isDarkText = in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]);
                                                         @endphp
-                                                        <span class="badge shadow-sm rank-{{ $rank['category'] }} {{ $rank['level'] == 20 ? 'rank-eternal' : '' }}" 
-                                                              style="background-color: {{ $rank['color'] }}; color: {{ $isDarkIcon ? '#000' : '#fff' }}; font-size: 8px; font-weight: 800; padding: 2px 6px; border: 1px solid rgba(255,255,255,0.2);">
+                                                        <span class="badge shadow-sm {{ $rank['effect_class'] }}" 
+                                                              style="background-color: {{ $rank['color'] }}; color: {{ $isDarkText ? '#000' : '#fff' }}; font-size: 8px; font-weight: 800; padding: 2px 6px; border: 1px solid rgba(255,255,255,0.2);">
                                                             <i class="mdi {{ $rank['icon'] }} me-1"></i> {{ $member->rank_title ?? 'Novice' }}
                                                         </span>
                                                     </div>

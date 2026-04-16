@@ -354,13 +354,14 @@
                             <div class="d-flex align-items-center mb-3">
                                  @php 
                                     $rank = Auth::user()->calculateRank(); 
+                                    $progress = Auth::user()->getRankProgress();
+                                    $isDarkText = in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]);
                                     $isEternal = $rank['level'] == 20;
-                                    $isDarkIcon = in_array($rank['level'], [1, 5, 7, 8, 12, 14, 16, 19, 20]);
                                 @endphp
                                 <div class="rank-icon-wrapper position-relative me-4">
                                     <div class="rank-shield-glow" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: {{ $rank['color'] }}; filter: blur(25px); opacity: 0.4; border-radius: 50%;"></div>
-                                    <div class="rank-shield d-flex align-items-center justify-content-center shadow-lg rank-{{ $rank['category'] }} {{ $isEternal ? 'rank-eternal' : '' }}" 
-                                         style="width: 80px; height: 80px; background: {{ $rank['color'] }}; border-radius: 20px; color: {{ $isDarkIcon ? '#000' : '#fff' }}; font-size: 38px; border: 4px solid rgba(255,255,255,0.2); position: relative; z-index: 2; {{ $isEternal ? '' : 'transform: rotate(-5deg);' }}">
+                                    <div class="rank-shield d-flex align-items-center justify-content-center shadow-lg {{ $rank['effect_class'] }}" 
+                                         style="width: 80px; height: 80px; background: {{ $rank['color'] }}; border-radius: 20px; color: {{ $isDarkText ? '#000' : '#fff' }}; font-size: 38px; border: 4px solid rgba(255,255,255,0.2); position: relative; z-index: 2;">
                                         <i class="mdi {{ $rank['icon'] }}"></i>
                                     </div>
                                 </div>

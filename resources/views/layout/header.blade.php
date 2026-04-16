@@ -191,12 +191,12 @@
                 @php 
                     $rankData = Auth::user()->calculateRank(); 
                     $progress = Auth::user()->getRankProgress();
-                    $isDarkIcon = in_array($rankData['level'], [1, 5, 7, 8, 12, 14, 16, 19, 20]);
+                    $isDarkText = in_array($rankData['level'], [5, 7, 8, 12, 14, 16, 19]);
                 @endphp
                 <div class="rank-header-card d-flex align-items-center px-3 py-1 rounded-pill" 
                      style="background: #f8f9fa; border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
-                    <div class="rank-icon-circle me-2 d-flex align-items-center justify-content-center shadow-sm rank-{{ $rankData['category'] }} {{ $rankData['level'] == 20 ? 'rank-eternal' : '' }}" 
-                         style="width: 28px; height: 28px; background: {{ $rankData['color'] }}; border-radius: 50%; color: {{ $isDarkIcon ? '#000' : '#fff' }}; font-size: 14px; border: 2px solid #fff;">
+                    <div class="rank-icon-circle me-2 d-flex align-items-center justify-content-center shadow-sm {{ $rankData['effect_class'] }}" 
+                         style="width: 28px; height: 28px; background: {{ $rankData['color'] }}; border-radius: 50%; color: {{ $isDarkText ? '#000' : '#fff' }}; font-size: 14px; border: 2px solid #fff;">
                         <i class="mdi {{ $rankData['icon'] }}"></i>
                     </div>
                     <div class="rank-info-mini d-flex flex-column" style="min-width: 80px;">
@@ -270,8 +270,8 @@
                         <small class="text-muted d-block">{{ Auth::user()->role }} - {{ Auth::user()->division->name ?? 'N/A' }}</small>
                         <div class="mt-2 text-center">
                             @php $rank = Auth::user()->calculateRank(); @endphp
-                            <span class="badge shadow-sm rank-{{ $rank['category'] }} {{ $rank['level'] == 20 ? 'rank-eternal' : '' }}" 
-                                  style="background-color: {{ $rank['color'] }}; color: {{ in_array($rank['level'], [1,5,7,8,12,14,16,19,20]) ? '#000' : '#fff' }}; font-size: 10px; font-weight: 800; border: 1px solid #fff; padding: 5px 10px;">
+                            <span class="badge shadow-sm {{ $rank['effect_class'] }}" 
+                                  style="background-color: {{ $rank['color'] }}; color: {{ in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]) ? '#000' : '#fff' }}; font-size: 10px; font-weight: 800; border: 1px solid #fff; padding: 5px 10px;">
                                 <i class="mdi {{ $rank['icon'] }} me-1"></i> {{ Auth::user()->rank_title }}
                             </span>
                         </div>
