@@ -186,6 +186,31 @@
             </li>
 
             {{-- User Profile --}}
+            {{-- Rank & XP Global Display --}}
+            <li class="nav-item d-none d-sm-flex align-items-center me-3">
+                @php 
+                    $rankData = Auth::user()->calculateRank(); 
+                    $progress = Auth::user()->getRankProgress();
+                @endphp
+                <div class="rank-header-card d-flex align-items-center px-3 py-1 rounded-pill" 
+                     style="background: #f8f9fa; border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+                    <div class="rank-icon-circle me-2 d-flex align-items-center justify-content-center shadow-sm" 
+                         style="width: 28px; height: 28px; background: {{ $rankData['color'] }}; border-radius: 50%; color: #000; font-size: 14px; border: 2px solid #fff;">
+                        <i class="mdi {{ $rankData['icon'] }}"></i>
+                    </div>
+                    <div class="rank-info-mini d-flex flex-column" style="min-width: 80px;">
+                        <div class="d-flex justify-content-between align-items-center line-height-1">
+                            <span class="fw-bold text-dark mb-0" style="font-size: 11px;">{{ Auth::user()->rank_title }}</span>
+                            <span class="text-muted fw-bold" style="font-size: 9px; opacity: 0.8;">{{ number_format(Auth::user()->xp) }} XP</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 4px; background-color: #e9ecef; border-radius: 10px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 style="width: {{ $progress }}%; background-color: {{ $rankData['color'] }};"></div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+
             <li class="nav-item dropdown user-dropdown">
                 <a class="nav-link p-0" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
                     <div class="position-relative d-inline-block">
@@ -241,8 +266,12 @@
                             @endif
                         </p>
                         <p class="fw-light text-muted mb-0">{{ Auth::user()->email }}</p>
-                        <small class="text-muted">{{ Auth::user()->role }} -
-                            {{ Auth::user()->division->name ?? 'N/A' }}</small>
+                        <small class="text-muted d-block">{{ Auth::user()->role }} - {{ Auth::user()->division->name ?? 'N/A' }}</small>
+                        <div class="mt-2 text-center">
+                            <span class="badge shadow-sm" style="background-color: {{ Auth::user()->calculateRank()['color'] }}; color: #000; font-size: 10px; font-weight: 800; border: 1px solid #fff;">
+                                <i class="mdi {{ Auth::user()->calculateRank()['icon'] }} me-1"></i> {{ Auth::user()->rank_title }}
+                            </span>
+                        </div>
                     </div>
 
                     <a href="{{ route('profile.edit') }}" class="dropdown-item">

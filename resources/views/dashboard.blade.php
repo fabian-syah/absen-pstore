@@ -329,19 +329,7 @@
     <div class="d-flex justify-content-between align-items-center w-100">
         <div>
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
-            <h3 class="fw-bold mb-0">{{ Auth::user()->name }}!</h3>
-            <div class="d-flex align-items-center mt-2">
-                <span class="badge me-2 shadow-sm" style="background-color: {{ Auth::user()->calculateRank()['color'] }}; color: #000; font-weight: 800; border: 1px solid rgba(0,0,0,0.1); font-size: 11px;">
-                    <i class="mdi {{ Auth::user()->calculateRank()['icon'] }} me-1"></i> {{ Auth::user()->rank_title }}
-                </span>
-                <div class="progress flex-grow-1" style="height: 6px; max-width: 120px; background-color: rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden;">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
-                         style="width: {{ Auth::user()->getRankProgress() }}%; background-color: {{ Auth::user()->calculateRank()['color'] }};" 
-                         aria-valuenow="{{ Auth::user()->getRankProgress() }}" aria-valuemin="0" aria-valuemax="100">
-                    </div>
-                </div>
-                <small class="ms-2 text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">{{ number_format(Auth::user()->xp) }} XP</small>
-            </div>
+            <h3 class="fw-bold mb-0 text-dark">{{ Auth::user()->name }}!</h3>
         </div>
         <div class="text-end d-none d-md-block">
             @if(in_array(Auth::user()->role, ['audit', 'admin']))
@@ -356,8 +344,58 @@
 @endsection
 
 @section('content')
-
-    {{-- ======================================================================= --}}
+    {{-- RANK CARD PREMIUM (Top of Content) --}}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+                <div class="card-body p-4 p-md-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-7">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rank-icon-wrapper position-relative me-4">
+                                    <div class="rank-shield-glow" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: {{ Auth::user()->calculateRank()['color'] }}; filter: blur(25px); opacity: 0.4; border-radius: 50%;"></div>
+                                    <div class="rank-shield d-flex align-items-center justify-content-center shadow-lg" 
+                                         style="width: 80px; height: 80px; background: {{ Auth::user()->calculateRank()['color'] }}; border-radius: 20px; color: #000; font-size: 38px; border: 4px solid rgba(255,255,255,0.2); position: relative; z-index: 2; transform: rotate(-5deg);">
+                                        <i class="mdi {{ Auth::user()->calculateRank()['icon'] }}"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h2 class="fw-bold mb-0 text-white" style="font-size: 2rem;">{{ Auth::user()->rank_title }}</h2>
+                                        <span class="badge rounded-pill bg-white bg-opacity-10 text-white border border-white border-opacity-20" style="padding: 4px 12px; font-size: 12px;">
+                                            Tier {{ Auth::user()->calculateRank()['level'] }}
+                                        </span>
+                                    </div>
+                                    <p class="text-white opacity-75 mb-0" style="font-size: 1rem; letter-spacing: 0.5px;">
+                                        Leveling up based on your attendance & performance.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <div class="d-flex justify-content-between align-items-end mb-2">
+                                    <span class="text-white fw-bold" style="font-size: 14px;">Rank Progress</span>
+                                    <span class="text-white opacity-75 fw-bold" style="font-size: 14px;">{{ number_format(Auth::user()->xp) }} / {{ number_format(Auth::user()->calculateRank()['min_xp'] + 1000) }} XP ({{ Auth::user()->getRankProgress() }}%)</span>
+                                </div>
+                                <div class="progress" style="height: 12px; background-color: rgba(255,255,255,0.1); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                                         style="width: {{ Auth::user()->getRankProgress() }}%; background-color: {{ Auth::user()->calculateRank()['color'] }}; box-shadow: 0 0 15px {{ Auth::user()->calculateRank()['color'] }}88;" 
+                                         aria-valuenow="{{ Auth::user()->getRankProgress() }}" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5 d-none d-md-block text-end">
+                            <div class="xp-visual d-inline-block p-4 rounded-4 bg-white bg-opacity-5 border border-white border-opacity-10">
+                                <h1 class="text-white fw-black mb-0" style="font-size: 3.5rem; line-height: 1;">{{ number_format(Auth::user()->xp) }}</h1>
+                                <p class="text-white text-uppercase fw-bold opacity-50 mb-0" style="letter-spacing: 2px;">Total Experience</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     {{-- POPUP WARNING: UPLOAD KTP & FOTO PROFIL --}}
     {{-- ======================================================================= --}}
     @if ((!Auth::user()->ktp_photo_path || !Auth::user()->profile_photo_path) && Auth::user()->role != 'admin_gaji' && Auth::user()->role != 'admin')
