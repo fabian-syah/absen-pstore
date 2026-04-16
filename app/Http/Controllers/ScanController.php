@@ -96,7 +96,7 @@ class ScanController extends Controller
             'data' => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'rank_title' => $user->rank_title,
+                'rank_title' => $user->calculateRank()['name'],
                 'rank_image' => $user->calculateRank()['rank_image'] ? asset($user->calculateRank()['rank_image']) : null,
                 'rank_icon' => $user->calculateRank()['icon'],
                 'rank_color' => $user->calculateRank()['color'],
@@ -302,7 +302,7 @@ class ScanController extends Controller
             'message' => $msg,
             'data' => [
                 'name' => $user->name,
-                'rank_title' => $user->rank_title,
+                'rank_title' => $user->calculateRank()['name'],
                 'rank_image' => $user->calculateRank()['rank_image'] ? asset($user->calculateRank()['rank_image']) : null,
                 'rank_icon' => $user->calculateRank()['icon'],
                 'rank_color' => $user->calculateRank()['color'],

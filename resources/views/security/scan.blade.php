@@ -620,11 +620,11 @@
         }
 
         .icon-box-premium {
-            width: 38px;
-            height: 38px;
+            width: 42px; /* Diperbesar sedikit agar gambar tidak tercekik */
+            height: 42px;
             background: #fff; /* Blend with white image bg */
             border-radius: 50%;
-            padding: 4px;
+            padding: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -635,8 +635,8 @@
         }
 
         .rank-badge-scan {
-            padding: 4px 16px 4px 6px !important;
-            border-radius: 30px !important;
+            padding: 5px 22px 5px 8px !important; /* Padding kanan ditambah */
+            border-radius: 40px !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 12px !important;
