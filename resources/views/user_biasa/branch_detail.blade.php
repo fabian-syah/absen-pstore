@@ -113,9 +113,13 @@
                                                         class="text-decoration-none text-dark">
                                                         <div class="d-flex align-items-center gap-2">
                                                             <div class="fw-bold hover-text-primary">{{ $emp->name }}</div>
-                                                            @php $rank = $emp->calculateRank(); @endphp
-                                                            <span class="badge shadow-sm" style="background-color: {{ $rank['color'] }}; color: #000; font-size: 8px; font-weight: 800; padding: 1px 4px;">
-                                                                {{ $emp->rank_title ?? 'Novice' }}
+                                                            @php 
+                                                                $rank = $emp->calculateRank(); 
+                                                                $isDarkIcon = in_array($rank['level'], [1,5,7,8,12,14,16,19,20]);
+                                                            @endphp
+                                                            <span class="badge shadow-sm rank-{{ $rank['category'] }} {{ $rank['level'] == 20 ? 'rank-eternal' : '' }}" 
+                                                                  style="background-color: {{ $rank['color'] }}; color: {{ $isDarkIcon ? '#000' : '#fff' }}; font-size: 8px; font-weight: 800; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.1);">
+                                                                <i class="mdi {{ $rank['icon'] }}"></i> {{ $emp->rank_title ?? 'Novice' }}
                                                             </span>
                                                         </div>
                                                     </a>

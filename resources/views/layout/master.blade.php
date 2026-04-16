@@ -606,6 +606,84 @@
         .hover-lift:hover {
             transform: translateY(-4px);
         }
+
+        /* ==========================================================
+           GAMIFICATION EFFECTS (RANK SYSTEM)
+           ========================================================== */
+        
+        /* 1. Elite (Glint Effect) */
+        .rank-elite {
+            position: relative;
+            overflow: hidden !important;
+        }
+        .rank-elite::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.3) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            transform: rotate(45deg);
+            animation: glint 3s infinite;
+        }
+        @keyframes glint {
+            0% { left: -150%; }
+            100% { left: 150%; }
+        }
+
+        /* 2. Masterclass (Aura Glow) */
+        .rank-masterclass {
+            box-shadow: 0 0 15px currentColor !important;
+            animation: auraPulse 2s ease-in-out infinite alternate;
+        }
+        @keyframes auraPulse {
+            from { box-shadow: 0 0 5px currentColor; filter: brightness(1); }
+            to { box-shadow: 0 0 20px currentColor; filter: brightness(1.2); }
+        }
+
+        /* 3. Godlike (Animated/Particle Effect) */
+        .rank-godlike {
+            position: relative;
+            animation: godlikeShake 0.5s infinite alternate;
+        }
+        .rank-godlike::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+            background-size: 400%;
+            z-index: -1;
+            filter: blur(5px);
+            animation: godlikeAnim 20s linear infinite;
+            border-radius: inherit;
+            opacity: 0.6;
+        }
+        @keyframes godlikeAnim {
+            0% { background-position: 0 0; }
+            50% { background-position: 400% 0; }
+            100% { background-position: 0 0; }
+        }
+
+        /* 4. Eternal Special (Black Hole) */
+        .rank-eternal {
+            transform: scale(1.15);
+            background: radial-gradient(circle, #000 0%, #1a1a1a 100%) !important;
+            border: 3px solid #FFD700 !important;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4) !important;
+        }
+        .rank-eternal i {
+            animation: eternalSpin 10s linear infinite;
+        }
+        @keyframes eternalSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 

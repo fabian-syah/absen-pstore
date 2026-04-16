@@ -56,23 +56,31 @@
                         @endif
 
                         {{-- [GAMIFICATION] USER RANK & XP --}}
-                        <div class="mt-4 p-3 rounded-3 border shadow-sm bg-light text-start">
+                        @php 
+                            $rank = $user->calculateRank(); 
+                            $isEternal = $rank['level'] == 20;
+                        @endphp
+                        <div class="mt-4 p-3 rounded-3 border shadow-sm bg-light text-start {{ $isEternal ? 'rank-eternal' : '' }}">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="text-muted small fw-bold mb-0">CURRENT RANK</h6>
-                                <i class="mdi {{ $user->calculateRank()['icon'] }} fs-4" style="color: {{ $user->calculateRank()['color'] }}"></i>
+                                <div class="rank-icon-mini shadow-sm d-flex align-items-center justify-content-center rank-{{ $rank['category'] }}" 
+                                     style="width: 35px; height: 35px; background: {{ $rank['color'] }}; border-radius: 8px; color: {{ in_array($rank['level'], [1,5,7,8,12,14,16,19,20]) ? '#000' : '#fff' }};">
+                                    <i class="mdi {{ $rank['icon'] }} fs-5"></i>
+                                </div>
                             </div>
-                            <h4 class="fw-bolder mb-1" style="color: {{ $user->calculateRank()['color'] }}; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                                {{ $user->rank_title }}
+                            <h4 class="fw-bolder mb-1" style="color: {{ $rank['color'] }}; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                {{ $user->rank_title }} 
+                                <span class="badge bg-dark text-white rounded-pill" style="font-size: 10px; vertical-align: middle; padding: 3px 8px;">Tier {{ $rank['level'] }}</span>
                             </h4>
                             <div class="progress mb-2" style="height: 10px; border-radius: 5px; background-color: #e9ecef;">
                                 <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
-                                     style="width: {{ $user->getRankProgress() }}%; background-color: {{ $user->calculateRank()['color'] }};" 
+                                     style="width: {{ $user->getRankProgress() }}%; background-color: {{ $rank['color'] }};" 
                                      aria-valuenow="{{ $user->getRankProgress() }}" aria-valuemin="0" aria-valuemax="100">
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <small class="text-muted fw-bold">{{ number_format($user->xp) }} XP</small>
-                                <small class="text-muted small">Level Progress: {{ $user->getRankProgress() }}%</small>
+                                <small class="text-muted small">Level {{ $rank['level'] }} Progress</small>
                             </div>
                         </div>
 

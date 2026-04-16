@@ -14,26 +14,33 @@ trait HasGamification
     public static function getRankConfig()
     {
         return [
-            ['level' => 1, 'name' => 'Novice', 'min_xp' => 0, 'color' => '#94a3b8', 'icon' => 'mdi-account-outline'],
-            ['level' => 2, 'name' => 'Apprentice', 'min_xp' => 100, 'color' => '#64748b', 'icon' => 'mdi-account-badge-outline'],
-            ['level' => 3, 'name' => 'Iron', 'min_xp' => 300, 'color' => '#475569', 'icon' => 'mdi-shield-outline'],
-            ['level' => 4, 'name' => 'Bronze', 'min_xp' => 600, 'color' => '#865231', 'icon' => 'mdi-shield-half-full'],
-            ['level' => 5, 'name' => 'Silver', 'min_xp' => 1000, 'color' => '#9ca3af', 'icon' => 'mdi-shield-check'],
-            ['level' => 6, 'name' => 'Gold', 'min_xp' => 1500, 'color' => '#fbbf24', 'icon' => 'mdi-trophy-outline'],
-            ['level' => 7, 'name' => 'Platinum', 'min_xp' => 2500, 'color' => '#b4d4ff', 'icon' => 'mdi-trophy-variant'],
-            ['level' => 8, 'name' => 'Diamond', 'min_xp' => 4000, 'color' => '#22d3ee', 'icon' => 'mdi-diamond-stone'],
-            ['level' => 9, 'name' => 'Emerald', 'min_xp' => 6000, 'color' => '#10b981', 'icon' => 'mdi-gemstone-outline'],
-            ['level' => 10, 'name' => 'Ruby', 'min_xp' => 9000, 'color' => '#ef4444', 'icon' => 'mdi-ruby'],
-            ['level' => 11, 'name' => 'Sapphire', 'min_xp' => 13000, 'color' => '#3b82f6', 'icon' => 'mdi-star-face'],
-            ['level' => 12, 'name' => 'Crystal', 'min_xp' => 18000, 'color' => '#afeeee', 'icon' => 'mdi-crystal-ball'],
-            ['level' => 13, 'name' => 'Master', 'min_xp' => 25000, 'color' => '#f59e0b', 'icon' => 'mdi-crown-outline'],
-            ['level' => 14, 'name' => 'Grandmaster', 'min_xp' => 35000, 'color' => '#8b5cf6', 'icon' => 'mdi-crown'],
-            ['level' => 15, 'name' => 'Epic', 'min_xp' => 50000, 'color' => '#f87171', 'icon' => 'mdi-flash-circle'],
-            ['level' => 16, 'name' => 'Legend', 'min_xp' => 100000, 'color' => '#ec4899', 'icon' => 'mdi-auto-fix'],
-            ['level' => 17, 'name' => 'Mythic', 'min_xp' => 250000, 'color' => '#06b6d4', 'icon' => 'mdi-creation'],
-            ['level' => 18, 'name' => 'Immortal', 'min_xp' => 750000, 'color' => '#991b1b', 'icon' => 'mdi-death-star'],
-            ['level' => 19, 'name' => 'Celestial', 'min_xp' => 2000000, 'color' => '#fef08a', 'icon' => 'mdi-weather-night'],
-            ['level' => 20, 'name' => 'Eternal', 'min_xp' => 5000000, 'color' => '#ffffff', 'icon' => 'mdi-infinity'],
+            // 1. Tier Pemula (The Foundation)
+            ['level' => 1, 'name' => 'Novice', 'min_xp' => 0, 'color' => '#475569', 'icon' => 'mdi-stone-variant', 'category' => 'foundation'],
+            ['level' => 2, 'name' => 'Apprentice', 'min_xp' => 100, 'color' => '#8B4513', 'icon' => 'mdi-wood', 'category' => 'foundation'],
+            ['level' => 3, 'name' => 'Iron', 'min_xp' => 300, 'color' => '#1A1A1A', 'icon' => 'mdi-anvil', 'category' => 'foundation'],
+            ['level' => 4, 'name' => 'Bronze', 'min_xp' => 600, 'color' => '#CD7F32', 'icon' => 'mdi-shield-outline', 'category' => 'foundation'],
+            ['level' => 5, 'name' => 'Silver', 'min_xp' => 1000, 'color' => '#C0C0C0', 'icon' => 'mdi-shield-check-outline', 'category' => 'foundation'],
+
+            // 2. Tier Menengah (The Elite)
+            ['level' => 6, 'name' => 'Gold', 'min_xp' => 1500, 'color' => '#FFD700', 'icon' => 'mdi-trophy-outline', 'category' => 'elite'],
+            ['level' => 7, 'name' => 'Platinum', 'min_xp' => 2500, 'color' => '#E2E8F0', 'icon' => 'mdi-trophy-variant', 'category' => 'elite'],
+            ['level' => 8, 'name' => 'Diamond', 'min_xp' => 4000, 'color' => '#B9F2FF', 'icon' => 'mdi-diamond-stone', 'category' => 'elite'],
+            ['level' => 9, 'name' => 'Emerald', 'min_xp' => 6000, 'color' => '#50C878', 'icon' => 'mdi-gemstone-outline', 'category' => 'elite'],
+            ['level' => 10, 'name' => 'Ruby', 'min_xp' => 9000, 'color' => '#E0115F', 'icon' => 'mdi-ruby', 'category' => 'elite'],
+
+            // 3. Tier Tinggi (The Masterclass)
+            ['level' => 11, 'name' => 'Sapphire', 'min_xp' => 13000, 'color' => '#0F52BA', 'icon' => 'mdi-star-face', 'category' => 'masterclass'],
+            ['level' => 12, 'name' => 'Crystal', 'min_xp' => 18000, 'color' => '#E0FFFF', 'icon' => 'mdi-crystal-ball', 'category' => 'masterclass'],
+            ['level' => 13, 'name' => 'Master', 'min_xp' => 25000, 'color' => '#7851A9', 'icon' => 'mdi-crown-outline', 'category' => 'masterclass'],
+            ['level' => 14, 'name' => 'Grandmaster', 'min_xp' => 35000, 'color' => '#FFBF00', 'icon' => 'mdi-crown', 'category' => 'masterclass'],
+            ['level' => 15, 'name' => 'Epic', 'min_xp' => 50000, 'color' => '#40E0D0', 'icon' => 'mdi-flash-circle', 'category' => 'masterclass'],
+
+            // 4. Tier Puncak (The Godlike)
+            ['level' => 16, 'name' => 'Legend', 'min_xp' => 100000, 'color' => '#F5F5F5', 'icon' => 'mdi-auto-fix', 'category' => 'godlike'],
+            ['level' => 17, 'name' => 'Mythic', 'min_xp' => 250000, 'color' => '#663399', 'icon' => 'mdi-creation', 'category' => 'godlike'],
+            ['level' => 18, 'name' => 'Immortal', 'min_xp' => 750000, 'color' => '#FF0000', 'icon' => 'mdi-death-star', 'category' => 'godlike'],
+            ['level' => 19, 'name' => 'Celestial', 'min_xp' => 2000000, 'color' => '#00FFFF', 'icon' => 'mdi-weather-night', 'category' => 'godlike'],
+            ['level' => 20, 'name' => 'Eternal', 'min_xp' => 5000000, 'color' => '#000000', 'icon' => 'mdi-infinity', 'category' => 'godlike'],
         ];
     }
 
@@ -43,6 +50,12 @@ trait HasGamification
     public function calculateRank()
     {
         $config = self::getRankConfig();
+
+        // Admin Special Case: Always Eternal
+        if ($this->role === 'admin') {
+            return $config[19]; // Level 20 (Eternal) is at index 19
+        }
+
         $currentRank = $config[0];
 
         foreach ($config as $rank) {
