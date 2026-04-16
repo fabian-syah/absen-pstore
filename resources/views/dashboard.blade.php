@@ -358,32 +358,15 @@
                                     $isDarkText = in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]);
                                     $isEternal = $rank['level'] == 20;
                                 @endphp
-                                <div class="rank-icon-wrapper position-relative me-4">
-                                    <div class="rank-shield-glow" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: {{ $rank['color'] }}; filter: blur(25px); opacity: 0.4; border-radius: 50%;"></div>
-                                    <div class="rank-shield d-flex align-items-center justify-content-center shadow-lg {{ $rank['effect_class'] }}" 
-                                         style="width: 80px; height: 80px; background: {{ $rank['color'] }}; border-radius: 20px; color: {{ $isDarkText ? '#000' : '#fff' }}; font-size: 38px; border: 4px solid rgba(255,255,255,0.2); position: relative; z-index: 2; overflow: hidden;">
-                                        @if($rank['rank_image'])
-                                            <img src="{{ asset($rank['rank_image']) }}" alt="{{ $rank['name'] }}" style="width: 100%; height: 100%; object-fit: contain; transform: scale(1.3);">
-                                        @else
-                                            <i class="mdi {{ $rank['icon'] }}"></i>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                        <h2 class="fw-bold mb-0 rank-name-premium" 
-                                            style="color: {{ $rank['color'] }}; font-size: 2.8rem; text-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                                            {{ Auth::user()->rank_title }}
-                                        </h2>
-                                        <span class="badge rounded-pill bg-white bg-opacity-10 text-white border border-white border-opacity-20" style="padding: 6px 14px; font-size: 14px; font-weight: 800; vertical-align: middle;">
-                                            Tier {{ $rank['level'] }}
-                                        </span>
-                                    </div>
-                                    <p class="text-white opacity-75 mb-0 fw-bold" style="font-size: 1.1rem; letter-spacing: 0.5px;">
-                                        {{ $isEternal ? 'The Ultimate Sovereign of PStore.' : 'Leveling up based on your attendance & performance.' }}
-                                    </p>
-                                </div>
-                            </div>
+                            <h2 class="fw-bold mb-3" style="font-size: 2.5rem; letter-spacing: -1px; display: none;">
+                                @if(isset($rank))
+                                    <span class="rank-name-premium" style="color: {{ $rank['color'] }};">{{ $rank['name'] }}</span>
+                                @endif
+                            </h2>
+                            <h2 class="text-white fw-bold mb-3" style="font-size: 3rem; line-height: 1.1;">
+                                Selamat Datang, <br>
+                                <span class="text-warning">{{ explode(' ', Auth::user()->name)[0] }}!</span>
+                            </h2>
                             
                             <div class="mt-4">
                                 <div class="d-flex justify-content-between align-items-end mb-2">

@@ -730,7 +730,7 @@
             </button>
             <img src="" id="dbPhoto" class="profile-img-db mb-3" alt="User">
             <h4 id="dbName" class="fw-bold m-0 mt-2">Nama Karyawan</h4>
-            <div id="dbRankContainer" class="mt-3">
+            <div id="dbRankContainer" class="mt-3" style="display: none !important;">
                 <div id="dbRankBadge" class="rank-badge-scan badge shadow-sm">
                     <div id="dbRankIconWrapper" class="icon-box-premium">
                         <i id="dbRankIcon" class="fas fa-medal text-dark"></i>
@@ -790,7 +790,7 @@
             <div class="result-profile-card" id="resultProfileCard">
                 <img id="resultUserPhoto" src="" class="result-profile-img" alt="User Photo">
                 <h3 id="resultUserName" class="fw-bold mb-1"></h3>
-                <div id="resultRankContainer" class="mb-3">
+                <div id="resultRankContainer" class="mb-3" style="display: none !important;">
                      <div id="resultRankBadge" class="rank-badge-scan badge shadow-sm" style="transform: scale(1.1);">
                         <div id="resultRankIconWrapper" class="icon-box-premium">
                             <i id="resultRankIcon" class="fas fa-medal text-dark"></i>
