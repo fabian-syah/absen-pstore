@@ -73,8 +73,9 @@
                                     @endif
                                 </div>
                             </div>
-                            <h4 class="fw-bolder mb-1" style="color: {{ $rank['color'] }}; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                                {{ $user->rank_title }} 
+                            <h4 class="fw-bolder mb-1 rank-name-premium" 
+                                style="color: {{ $rank['color'] }}; text-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 1.8rem;">
+                                {{ $rank['name'] }}
                                 <span class="badge bg-dark text-white rounded-pill" style="font-size: 10px; vertical-align: middle; padding: 3px 8px;">Tier {{ $rank['level'] }}</span>
                             </h4>
                             <div class="progress mb-2" style="height: 10px; border-radius: 5px; background-color: #e9ecef;">

@@ -38,7 +38,7 @@ trait HasGamification
             // 4. The Godlike (Level 16-20)
             ['level' => 16, 'name' => 'Legend', 'min_xp' => 100000, 'color' => '#FFFBEB', 'icon' => 'mdi-auto-fix', 'rank_image' => '/public/rank_icons/rank16.png', 'category' => 'godlike', 'effect_class' => 'rank-legend'],
             ['level' => 17, 'name' => 'Mythic', 'min_xp' => 250000, 'color' => '#581C87', 'icon' => 'mdi-creation', 'rank_image' => '/public/rank_icons/rank17.png', 'category' => 'godlike', 'effect_class' => 'rank-mythic'],
-            ['level' => 18, 'name' => 'Immortal', 'min_xp' => 750000, 'color' => '#B91C1C', 'icon' => 'mdi-fire', 'rank_image' => null, 'category' => 'godlike', 'effect_class' => 'rank-immortal'],
+            ['level' => 18, 'name' => 'Immortal', 'min_xp' => 750000, 'color' => '#B91C1C', 'icon' => 'mdi-fire', 'rank_image' => '/public/rank_icons/rank18.png', 'category' => 'godlike', 'effect_class' => 'rank-immortal'],
             ['level' => 19, 'name' => 'Celestial', 'min_xp' => 2000000, 'color' => '#BAE6FD', 'icon' => 'mdi-weather-night', 'rank_image' => null, 'category' => 'godlike', 'effect_class' => 'rank-celestial'],
             ['level' => 20, 'name' => 'Eternal', 'min_xp' => 5000000, 'color' => '#000000', 'icon' => 'mdi-infinity', 'rank_image' => null, 'category' => 'godlike', 'effect_class' => 'rank-eternal'],
         ];

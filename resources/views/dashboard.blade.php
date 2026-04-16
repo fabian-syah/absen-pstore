@@ -371,8 +371,11 @@
                                 </div>
                                 <div>
                                     <div class="d-flex align-items-center gap-2 mb-1">
-                                        <h2 class="fw-bold mb-0 text-white" style="font-size: 2.5rem; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">{{ Auth::user()->rank_title }}</h2>
-                                        <span class="badge rounded-pill bg-white bg-opacity-10 text-white border border-white border-opacity-20" style="padding: 6px 14px; font-size: 14px; font-weight: 800;">
+                                        <h2 class="fw-bold mb-0 rank-name-premium" 
+                                            style="color: {{ $rank['color'] }}; font-size: 2.8rem; text-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                            {{ Auth::user()->rank_title }}
+                                        </h2>
+                                        <span class="badge rounded-pill bg-white bg-opacity-10 text-white border border-white border-opacity-20" style="padding: 6px 14px; font-size: 14px; font-weight: 800; vertical-align: middle;">
                                             Tier {{ $rank['level'] }}
                                         </span>
                                     </div>

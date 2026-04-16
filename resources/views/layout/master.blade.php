@@ -611,6 +611,15 @@
            GAMIFICATION EFFECTS (RANK SYSTEM) - INSPIRED BY REFERENCE IMAGE
            ========================================================== */
         
+        /* Rank Text Styling */
+        .rank-name-premium {
+            text-shadow: 0 0 10px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.2);
+            letter-spacing: 0.5px;
+            text-transform: capitalize;
+            position: relative;
+            display: inline-block;
+        }
+        
         /* 1. Base/Foundation Tiers */
         .rank-foundation {
             border: 2px solid rgba(255,255,255,0.1);
