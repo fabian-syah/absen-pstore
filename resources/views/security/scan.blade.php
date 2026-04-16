@@ -602,6 +602,42 @@
             font-size: 0.8rem;
             margin-bottom: 15px;
         }
+
+        /* [NEW] RANK PREMIUM STYLES */
+        .rank-name-premium {
+            text-shadow: 0 0 10px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.2);
+            letter-spacing: 0.5px;
+            text-transform: capitalize;
+        }
+        
+        .rank-icon-3d {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            transform: scale(1.4);
+        }
+
+        /* 8. Eternal (Tier 20) - The Singularity */
+        .rank-eternal {
+            background: #000 !important;
+            border: 2px solid #F59E0B !important;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6) !important;
+            position: relative;
+        }
+        .rank-eternal::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: conic-gradient(from 0deg, transparent, #F59E0B, transparent, #F59E0B, transparent);
+            animation: rotateGlow 2s linear infinite;
+            border-radius: inherit;
+            z-index: -1;
+            filter: blur(4px);
+        }
+        @keyframes rotateGlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 
@@ -649,9 +685,13 @@
             <img src="" id="dbPhoto" class="profile-img-db mb-3" alt="User">
             <h4 id="dbName" class="fw-bold m-0">Nama Karyawan</h4>
             <div id="dbRankContainer" class="mt-2" style="display: none;">
-                <span id="dbRankBadge" class="badge shadow-sm" style="font-weight: 800; font-size: 11px;">
-                    <i id="dbRankIcon" class="fas me-1"></i> <span id="dbRankTitle">Rank</span>
-                </span>
+                <div id="dbRankBadge" class="badge shadow-sm d-inline-flex align-items-center gap-2" 
+                     style="font-weight: 800; font-size: 11px; padding: 6px 12px; border-radius: 20px;">
+                    <div id="dbRankIconWrapper" class="d-flex align-items-center justify-content-center" style="width: 18px; height: 18px;">
+                        <i id="dbRankIcon" class="fas me-1"></i>
+                    </div>
+                    <span id="dbRankTitle" class="rank-name-premium">Rank</span>
+                </div>
             </div>
             <p id="dbRole" class="text-muted small mt-1 mb-0">Jabatan</p>
             <span id="dbBranch" class="badge bg-primary mt-2">Cabang</span>
@@ -706,9 +746,13 @@
                 <img id="resultUserPhoto" src="" class="result-profile-img" alt="User Photo">
                 <h3 id="resultUserName" class="fw-bold mb-1"></h3>
                 <div id="resultRankContainer" class="mb-3">
-                     <span id="resultRankBadge" class="badge shadow-sm px-3 py-2" style="font-weight: 800; font-size: 14px; border: 1px solid rgba(255,255,255,0.2);">
-                        <i id="resultRankIcon" class="fas me-2"></i> <span id="resultRankTitle">Rank</span>
-                    </span>
+                     <div id="resultRankBadge" class="badge shadow-sm px-3 py-2 d-inline-flex align-items-center gap-2" 
+                          style="font-weight: 800; font-size: 14px; border: 1px solid rgba(255,255,255,0.2); border-radius: 25px;">
+                        <div id="resultRankIconWrapper" class="d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                            <i id="resultRankIcon" class="fas me-2"></i>
+                        </div>
+                        <span id="resultRankTitle" class="rank-name-premium">Rank</span>
+                    </div>
                 </div>
                 <p id="resultUserRole" class="text-white-50 mb-3"></p>
 
@@ -1040,10 +1084,20 @@
             if (user.rank_title) {
                 document.getElementById('dbRankContainer').style.display = 'block';
                 document.getElementById('dbRankTitle').innerText = user.rank_title;
-                document.getElementById('dbRankBadge').style.backgroundColor = user.rank_color;
-                document.getElementById('dbRankBadge').style.color = '#000';
-                // Convert mdi to font-awesome if possible, otherwise use a generic star
-                document.getElementById('dbRankIcon').className = 'fas fa-star'; 
+                const badge = document.getElementById('dbRankBadge');
+                badge.style.backgroundColor = user.rank_color;
+                badge.style.color = (user.rank_effect === 'rank-platinum' || ['Silver', 'Diamond', 'Crystal', 'Platinum', 'Gold', 'Grandmaster', 'Legend', 'Celestial'].includes(user.rank_title)) ? '#000' : '#fff';
+                
+                // Add effect class
+                badge.className = 'badge shadow-sm d-inline-flex align-items-center gap-2 ' + (user.rank_effect || '');
+
+                // Image vs Icon
+                const iconWrapper = document.getElementById('dbRankIconWrapper');
+                if (user.rank_image) {
+                    iconWrapper.innerHTML = `<img src="${user.rank_image}" class="rank-icon-3d">`;
+                } else {
+                    iconWrapper.innerHTML = `<i class="fas fa-medal"></i>`;
+                }
             }
 
             // Reset UI State
@@ -1287,9 +1341,20 @@
                     if (currentUserData.rank_title) {
                         document.getElementById('resultRankContainer').style.display = 'block';
                         document.getElementById('resultRankTitle').innerText = currentUserData.rank_title;
-                        document.getElementById('resultRankBadge').style.backgroundColor = currentUserData.rank_color;
-                        document.getElementById('resultRankBadge').style.color = '#000';
-                        document.getElementById('resultRankIcon').className = 'fas fa-medal';
+                        const badge = document.getElementById('resultRankBadge');
+                        badge.style.backgroundColor = currentUserData.rank_color;
+                        badge.style.color = (currentUserData.rank_effect === 'rank-platinum' || ['Silver', 'Diamond', 'Crystal', 'Platinum', 'Gold', 'Grandmaster', 'Legend', 'Celestial'].includes(currentUserData.rank_title)) ? '#000' : '#fff';
+                        
+                        // Add effect class
+                        badge.className = 'badge shadow-sm px-3 py-2 d-inline-flex align-items-center gap-2 ' + (currentUserData.rank_effect || '');
+                        
+                        // Image vs Icon
+                        const iconWrapper = document.getElementById('resultRankIconWrapper');
+                        if (currentUserData.rank_image) {
+                            iconWrapper.innerHTML = `<img src="${currentUserData.rank_image}" class="rank-icon-3d" style="width: 24px; height: 24px;">`;
+                        } else {
+                            iconWrapper.innerHTML = `<i class="fas fa-medal"></i>`;
+                        }
                     } else {
                         document.getElementById('resultRankContainer').style.display = 'none';
                     }
