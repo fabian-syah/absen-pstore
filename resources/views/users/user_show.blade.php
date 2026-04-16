@@ -246,6 +246,25 @@
                             <p class="h6 text-dark">{{ $user->whatsapp ?? '-' }}</p>
                         </div>
 
+                        {{-- Akses Wilayah (Khusus Audit & Leader) --}}
+                        @if(in_array($user->role, ['audit', 'leader']))
+                            <div class="col-12 mb-3">
+                                <label class="fw-bold text-primary small">
+                                    <i class="mdi mdi-map-marker-multiple me-1"></i>
+                                    {{ $user->role == 'audit' ? 'Wilayah Kerja Audit' : 'Wilayah Kendali Leader' }}
+                                </label>
+                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                    @forelse($user->branches as $b)
+                                        <span class="badge bg-white text-primary border border-primary rounded-pill px-3 py-2 shadow-sm" style="font-weight: 600; font-size: 0.75rem;">
+                                            <i class="mdi mdi-storefront-outline me-1"></i> {{ $b->name }}
+                                        </span>
+                                    @empty
+                                        <p class="text-muted small"><i>Belum ada cabang khusus yang ditugaskan.</i></p>
+                                    @endforelse
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- Tanggal Join PStore (Visible: admin, audit, admin_gaji) --}}
                         @if(in_array(auth()->user()->role, ['admin', 'audit', 'admin_gaji']))
                             <div class="col-md-6 mb-3">
