@@ -283,7 +283,7 @@
                                 @else
                                     <i class="mdi {{ $rank['icon'] }}"></i>
                                 @endif
-                                @if(false) {{-- Hidden as requested --}}
+                                @if(false)
                                     <h6 class="mb-1 font-weight-bold" style="color: {{ $rank['color'] ?? '#000' }}; font-size: 13px;">
                                         {{ Auth::user()->rank_title }} 
                                         <span class="badge rounded-pill bg-dark text-white ms-1" style="font-size: 9px; vertical-align: middle;">Tier {{ $rank['level'] ?? 1 }}</span>
