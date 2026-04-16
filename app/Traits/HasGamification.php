@@ -53,7 +53,7 @@ trait HasGamification
 
         // Admin Special Case: Always Eternal
         if ($this->role === 'admin') {
-            return $config[19]; // Level 20 (Eternal) is at index 19
+            return $config[18]; // Level 20 (Eternal) is at index 19
         }
 
         $currentRank = $config[0];
