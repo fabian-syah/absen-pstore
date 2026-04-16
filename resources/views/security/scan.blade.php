@@ -83,16 +83,16 @@
 
         .scan-area {
             position: absolute;
-            top: 45%; /* Diangkat sedikit agar space bawah lebih lega */
+            top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: min(250px, 70vw);
-            height: min(250px, 70vw);
+            width: min(280px, 75vw);
+            height: min(280px, 75vw);
             z-index: 15;
             pointer-events: none;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 20px;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.6); /* High contrast masking */
         }
 
         .scan-laser {
@@ -497,10 +497,10 @@
         /* [NEW] Keamanan Lanjutan Styles */
         .panic-btn {
             position: absolute;
-            bottom: 30px;
+            bottom: 25px; /* Sesuaikan agar tidak tertutup nav browser */
             right: 20px;
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             background: #ff0000;
             border-radius: 50%;
             display: flex;
@@ -539,7 +539,7 @@
 
         .recent-scans-feed {
             position: absolute;
-            bottom: 100px;
+            bottom: 110px;
             left: 0;
             width: 100%;
             padding: 10px;
@@ -1011,13 +1011,11 @@
             });
 
             const qrConfig = {
-                fps: 20,
-                qrbox: {
-                    width: 250,
-                    height: 250
-                },
+                fps: 30,
+                // Hilangkan qrbox internal agar tidak dobel dengan CSS kita
                 aspectRatio: 1.0,
-                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+                disableFlip: true // Sangat penting agar tidak mirror di kamera belakang
             };
 
             html5QrCode.start({
