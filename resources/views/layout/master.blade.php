@@ -699,7 +699,7 @@
             to { transform: scale(1.5) rotate(15deg); }
         }
 
-        /* 6. Immortal (Tier 18) - Burning Crimson Flame */
+        /* 6. Immortal (Tier 18) - Living Crimson Flame */
         .rank-immortal {
             background: linear-gradient(to top, #7F1D1D, #EF4444) !important;
             box-shadow: 0 0 25px #EF4444, inset 0 0 10px #7F1D1D !important;
@@ -708,46 +708,53 @@
         .rank-immortal::after {
             content: '';
             position: absolute;
-            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            inset: -5px;
             background: inherit;
-            filter: blur(15px);
-            opacity: 0.5;
+            filter: url(#rank-fire) blur(4px);
+            opacity: 0.8;
             z-index: -1;
-            animation: firePulse 1.5s infinite alternate;
+            animation: immortalFire 2s steps(10) infinite;
         }
-        @keyframes firePulse {
-            from { transform: scale(1); opacity: 0.3; }
-            to { transform: scale(1.2); opacity: 0.6; }
+        @keyframes immortalFire {
+            from { filter: url(#rank-fire) hue-rotate(0deg); }
+            to { filter: url(#rank-fire) hue-rotate(15deg); }
         }
 
-        /* 7. Celestial (Tier 19) - Neon Blue/Light Aura */
+        /* 7. Celestial (Tier 19) - Divine Radiance */
         .rank-celestial {
             background: #BAE6FD !important;
-            box-shadow: 0 0 30px #0EA5E9, 0 0 60px rgba(14, 165, 233, 0.3) !important;
+            box-shadow: 0 0 30px #0EA5E9, 0 0 60px rgba(14, 165, 233, 0.4) !important;
             border: 3px solid #FFF !important;
-            animation: celestialGlow 2s ease-in-out infinite alternate;
+            filter: url(#rank-glow);
+            animation: celestialPulse 3s ease-in-out infinite alternate;
         }
-        @keyframes celestialGlow {
-            from { filter: brightness(1) drop-shadow(0 0 5px #FFF); }
-            to { filter: brightness(1.3) drop-shadow(0 0 15px #FFF); }
+        @keyframes celestialPulse {
+            from { transform: scale(1.05); filter: url(#rank-glow) brightness(1); }
+            to { transform: scale(1.15); filter: url(#rank-glow) brightness(1.4); }
         }
 
-        /* 8. Eternal (Tier 20) - Black Hole/Floating Gold */
+        /* 8. Eternal (Tier 20) - The Singularity */
         .rank-eternal {
             background: #000 !important;
             border: 3px solid #F59E0B !important;
-            box-shadow: 0 0 40px rgba(245, 158, 11, 0.5), inset 0 0 20px rgba(0,0,0,1) !important;
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.6), inset 0 0 30px #000 !important;
             position: relative;
-            transform: scale(1.1);
+            transform: scale(1.2);
+            animation: eternalFloat 4s ease-in-out infinite;
         }
         .rank-eternal::before {
             content: '';
             position: absolute;
-            inset: -5px;
-            background: conic-gradient(from 0deg, transparent, #F59E0B, transparent);
-            animation: rotateGlow 4s linear infinite;
+            inset: -8px;
+            background: conic-gradient(from 0deg, transparent, #F59E0B, transparent, #F59E0B, transparent);
+            animation: rotateGlow 2s linear infinite;
             border-radius: inherit;
             z-index: -1;
+            filter: blur(8px);
+        }
+        @keyframes eternalFloat {
+            0%, 100% { transform: scale(1.2) translateY(0); }
+            50% { transform: scale(1.25) translateY(-5px); }
         }
         .rank-eternal i {
             color: #F59E0B !important;
@@ -764,6 +771,20 @@
 </head>
 
 <body class="with-welcome-text">
+    {{-- GAMIFICATION SVG FILTERS --}}
+    <svg style="visibility: hidden; position: absolute;" width="0" height="0" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="rank-fire">
+                <feTurbulence type="fractalNoise" baseFrequency="0.05 0.2" numOctaves="3" result="noise" />
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="10" />
+            </filter>
+            <filter id="rank-glow">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="glow" />
+                <feComposite in="SourceGraphic" in2="glow" operator="over" />
+            </filter>
+        </defs>
+    </svg>
     <div class="container-scroller">
 
         {{-- Include Header --}}
