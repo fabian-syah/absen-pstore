@@ -344,7 +344,7 @@
 @endsection
 
 @section('content')
-    {{-- RANK CARD PREMIUM (Top of Content) --}}
+    {{-- RANK CARD PREMIUM - HIDDEN PER USER REQUEST
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
@@ -398,6 +398,7 @@
             </div>
         </div>
     </div>
+    --}}
     {{-- POPUP WARNING: UPLOAD KTP & FOTO PROFIL --}}
     {{-- ======================================================================= --}}
     @if ((!Auth::user()->ktp_photo_path || !Auth::user()->profile_photo_path) && Auth::user()->role != 'admin_gaji' && Auth::user()->role != 'admin')
