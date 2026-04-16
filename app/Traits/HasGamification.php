@@ -15,29 +15,29 @@ trait HasGamification
     {
         return [
             // 1. The Foundation (Level 1-5)
-            ['level' => 1, 'name' => 'Novice', 'min_xp' => 0, 'color' => '#6B7280', 'icon' => 'mdi-stone-variant', 'rank_image' => 'assets/images/ranks/rank1.png', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
-            ['level' => 2, 'name' => 'Apprentice', 'min_xp' => 100, 'color' => '#92400E', 'icon' => 'mdi-wood', 'rank_image' => 'assets/images/ranks/rank2.png', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
-            ['level' => 3, 'name' => 'Iron', 'min_xp' => 300, 'color' => '#1F2937', 'icon' => 'mdi-anvil', 'rank_image' => 'assets/images/ranks/rank3.png', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
-            ['level' => 4, 'name' => 'Bronze', 'min_xp' => 600, 'color' => '#B45309', 'icon' => 'mdi-shield-outline', 'rank_image' => 'assets/images/ranks/rank4.png', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
-            ['level' => 5, 'name' => 'Silver', 'min_xp' => 1000, 'color' => '#9CA3AF', 'icon' => 'mdi-shield-check-outline', 'rank_image' => 'assets/images/ranks/rank5.png', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
+            ['level' => 1, 'name' => 'Novice', 'min_xp' => 0, 'color' => '#6B7280', 'icon' => 'mdi-stone-variant', 'rank_image' => '/rank_icons/rank1.png', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
+            ['level' => 2, 'name' => 'Apprentice', 'min_xp' => 100, 'color' => '#92400E', 'icon' => 'mdi-wood', 'rank_image' => '/rank_icons/rank2.png', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
+            ['level' => 3, 'name' => 'Iron', 'min_xp' => 300, 'color' => '#1F2937', 'icon' => 'mdi-anvil', 'rank_image' => '/rank_icons/rank3.png', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
+            ['level' => 4, 'name' => 'Bronze', 'min_xp' => 600, 'color' => '#B45309', 'icon' => 'mdi-shield-outline', 'rank_image' => '/rank_icons/rank4.png', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
+            ['level' => 5, 'name' => 'Silver', 'min_xp' => 1000, 'color' => '#9CA3AF', 'icon' => 'mdi-shield-check-outline', 'rank_image' => '/rank_icons/rank5.png', 'category' => 'foundation', 'effect_class' => 'rank-foundation'],
 
             // 2. The Elite (Level 6-10)
-            ['level' => 6, 'name' => 'Gold', 'min_xp' => 1500, 'color' => '#FBBF24', 'icon' => 'mdi-trophy-outline', 'rank_image' => 'assets/images/ranks/rank6.png', 'category' => 'elite', 'effect_class' => 'rank-elite'],
-            ['level' => 7, 'name' => 'Platinum', 'min_xp' => 2500, 'color' => '#CBD5E1', 'icon' => 'mdi-trophy-variant', 'rank_image' => 'assets/images/ranks/rank7.png', 'category' => 'elite', 'effect_class' => 'rank-platinum'],
-            ['level' => 8, 'name' => 'Diamond', 'min_xp' => 4000, 'color' => '#22D3EE', 'icon' => 'mdi-diamond-stone', 'rank_image' => 'assets/images/ranks/rank8.png', 'category' => 'elite', 'effect_class' => 'rank-elite'],
-            ['level' => 9, 'name' => 'Emerald', 'min_xp' => 6000, 'color' => '#10B981', 'icon' => 'mdi-gemstone-outline', 'rank_image' => 'assets/images/ranks/rank9.png', 'category' => 'elite', 'effect_class' => 'rank-elite'],
-            ['level' => 10, 'name' => 'Ruby', 'min_xp' => 9000, 'color' => '#EF4444', 'icon' => 'mdi-ruby', 'rank_image' => 'assets/images/ranks/rank10.png', 'category' => 'elite', 'effect_class' => 'rank-elite'],
+            ['level' => 6, 'name' => 'Gold', 'min_xp' => 1500, 'color' => '#FBBF24', 'icon' => 'mdi-trophy-outline', 'rank_image' => '/rank_icons/rank6.png', 'category' => 'elite', 'effect_class' => 'rank-elite'],
+            ['level' => 7, 'name' => 'Platinum', 'min_xp' => 2500, 'color' => '#CBD5E1', 'icon' => 'mdi-trophy-variant', 'rank_image' => '/rank_icons/rank7.png', 'category' => 'elite', 'effect_class' => 'rank-platinum'],
+            ['level' => 8, 'name' => 'Diamond', 'min_xp' => 4000, 'color' => '#22D3EE', 'icon' => 'mdi-diamond-stone', 'rank_image' => '/rank_icons/rank8.png', 'category' => 'elite', 'effect_class' => 'rank-elite'],
+            ['level' => 9, 'name' => 'Emerald', 'min_xp' => 6000, 'color' => '#10B981', 'icon' => 'mdi-gemstone-outline', 'rank_image' => '/rank_icons/rank9.png', 'category' => 'elite', 'effect_class' => 'rank-elite'],
+            ['level' => 10, 'name' => 'Ruby', 'min_xp' => 9000, 'color' => '#EF4444', 'icon' => 'mdi-ruby', 'rank_image' => '/rank_icons/rank10.png', 'category' => 'elite', 'effect_class' => 'rank-elite'],
 
             // 3. The Masterclass (Level 11-15)
-            ['level' => 11, 'name' => 'Sapphire', 'min_xp' => 13000, 'color' => '#2563EB', 'icon' => 'mdi-star-face', 'rank_image' => 'assets/images/ranks/rank11.png', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
-            ['level' => 12, 'name' => 'Crystal', 'min_xp' => 18000, 'color' => '#F0ABFC', 'icon' => 'mdi-crystal-ball', 'rank_image' => 'assets/images/ranks/rank12.png', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
-            ['level' => 13, 'name' => 'Master', 'min_xp' => 25000, 'color' => '#7C3AED', 'icon' => 'mdi-crown-outline', 'rank_image' => 'assets/images/ranks/rank13.png', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
-            ['level' => 14, 'name' => 'Grandmaster', 'min_xp' => 35000, 'color' => '#F59E0B', 'icon' => 'mdi-crown', 'rank_image' => 'assets/images/ranks/rank14.png', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
-            ['level' => 15, 'name' => 'Epic', 'min_xp' => 50000, 'color' => '#06B6D4', 'icon' => 'mdi-flash-circle', 'rank_image' => 'assets/images/ranks/rank15.png', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
+            ['level' => 11, 'name' => 'Sapphire', 'min_xp' => 13000, 'color' => '#2563EB', 'icon' => 'mdi-star-face', 'rank_image' => '/rank_icons/rank11.png', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
+            ['level' => 12, 'name' => 'Crystal', 'min_xp' => 18000, 'color' => '#F0ABFC', 'icon' => 'mdi-crystal-ball', 'rank_image' => '/rank_icons/rank12.png', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
+            ['level' => 13, 'name' => 'Master', 'min_xp' => 25000, 'color' => '#7C3AED', 'icon' => 'mdi-crown-outline', 'rank_image' => '/rank_icons/rank13.png', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
+            ['level' => 14, 'name' => 'Grandmaster', 'min_xp' => 35000, 'color' => '#F59E0B', 'icon' => 'mdi-crown', 'rank_image' => '/rank_icons/rank14.png', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
+            ['level' => 15, 'name' => 'Epic', 'min_xp' => 50000, 'color' => '#06B6D4', 'icon' => 'mdi-flash-circle', 'rank_image' => '/rank_icons/rank15.png', 'category' => 'masterclass', 'effect_class' => 'rank-masterclass'],
 
             // 4. The Godlike (Level 16-20)
-            ['level' => 16, 'name' => 'Legend', 'min_xp' => 100000, 'color' => '#FFFBEB', 'icon' => 'mdi-auto-fix', 'rank_image' => 'assets/images/ranks/rank16.png', 'category' => 'godlike', 'effect_class' => 'rank-legend'],
-            ['level' => 17, 'name' => 'Mythic', 'min_xp' => 250000, 'color' => '#581C87', 'icon' => 'mdi-creation', 'rank_image' => 'assets/images/ranks/rank17.png', 'category' => 'godlike', 'effect_class' => 'rank-mythic'],
+            ['level' => 16, 'name' => 'Legend', 'min_xp' => 100000, 'color' => '#FFFBEB', 'icon' => 'mdi-auto-fix', 'rank_image' => '/rank_icons/rank16.png', 'category' => 'godlike', 'effect_class' => 'rank-legend'],
+            ['level' => 17, 'name' => 'Mythic', 'min_xp' => 250000, 'color' => '#581C87', 'icon' => 'mdi-creation', 'rank_image' => '/rank_icons/rank17.png', 'category' => 'godlike', 'effect_class' => 'rank-mythic'],
             ['level' => 18, 'name' => 'Immortal', 'min_xp' => 750000, 'color' => '#B91C1C', 'icon' => 'mdi-fire', 'rank_image' => null, 'category' => 'godlike', 'effect_class' => 'rank-immortal'],
             ['level' => 19, 'name' => 'Celestial', 'min_xp' => 2000000, 'color' => '#BAE6FD', 'icon' => 'mdi-weather-night', 'rank_image' => null, 'category' => 'godlike', 'effect_class' => 'rank-celestial'],
             ['level' => 20, 'name' => 'Eternal', 'min_xp' => 5000000, 'color' => '#000000', 'icon' => 'mdi-infinity', 'rank_image' => null, 'category' => 'godlike', 'effect_class' => 'rank-eternal'],
