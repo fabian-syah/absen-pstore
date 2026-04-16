@@ -55,7 +55,7 @@
                             <span class="badge rounded-pill bg-danger px-3 py-2"><i class="mdi mdi-account-off me-1"></i> NON-AKTIF</span>
                         @endif
 
-                        {{-- [GAMIFICATION] USER RANK & XP --}}
+                        {{-- [GAMIFICATION] USER RANK & XP - HIDDEN PER USER REQUEST
                         @php 
                             $rank = $user->calculateRank(); 
                             $isEternal = $rank['level'] == 20;
@@ -89,6 +89,7 @@
                                 <small class="text-muted small">Level {{ $rank['level'] }} Progress</small>
                             </div>
                         </div>
+                        --}}
 
                         {{-- Tombol Toggle Status (Admin & Audit Only) --}}
                         @if(in_array(auth()->user()->role, ['admin', 'audit']) && $user->id != auth()->id())

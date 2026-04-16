@@ -113,6 +113,7 @@
                                                         class="text-decoration-none text-dark">
                                                         <div class="d-flex align-items-center gap-2">
                                                             <div class="fw-bold hover-text-primary">{{ $emp->name }}</div>
+                                                            {{-- Rank Badge - HIDDEN PER USER REQUEST
                                                             @php 
                                                                 $rank = $emp->calculateRank(); 
                                                                 $isDarkText = in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]);
@@ -126,6 +127,7 @@
                                                                 @endif
                                                                 {{ $emp->rank_title ?? 'Novice' }}
                                                             </span>
+                                                            --}}
                                                         </div>
                                                     </a>
                                                     <small class="text-muted">{{ $emp->email }}</small>
