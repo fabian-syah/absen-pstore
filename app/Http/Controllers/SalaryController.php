@@ -94,11 +94,18 @@ class SalaryController extends Controller
                 ->get();
 
             // Absensi Regular (Bulanan) untuk Employee/Promotor
-            $lateCount = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone) {
-                $attDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone)->startOfDay();
+            $lateDates = [];
+            $lateCount = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone, &$lateDates) {
+                $attFullDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone);
+                $attDate = $attFullDate->copy()->startOfDay();
                 $isInRange = $attDate->between($monthStartDate, $limitDate);
                 $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
-                return $isInRange && $isTelat;
+                
+                if ($isInRange && $isTelat) {
+                    $lateDates[] = $attFullDate->format('d/m');
+                    return true;
+                }
+                return false;
             })->count();
 
             // ALPHA COUNT - LOGIC TRANSLASI LANGSUNG DARI AttendanceHistoryController
@@ -121,6 +128,7 @@ class SalaryController extends Controller
             // Buat period (PENTING: Gunakan startOfDay agar tidak terpotong jam)
             $period = \Carbon\CarbonPeriod::create($monthStartDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
 
+            $alphaDates = [];
             foreach ($period as $date) {
                 $currentDateStr = $date->format('Y-m-d');
 
@@ -140,11 +148,13 @@ class SalaryController extends Controller
                 if (!$att && $leave->isEmpty()) {
                     // Tidak ada attendance dan tidak ada leave = Alpha
                     $alphaCount++;
+                    $alphaDates[] = $date->format('d/m');
                 } else if ($att) {
                     // Jika ADA attendance, cek apakah statusnya secara eksplisit 'Alpha' (system generated)
                     $status = strtolower($att->presence_status ?? '');
                     if ($status === 'alpha') {
                         $alphaCount++;
+                        $alphaDates[] = $date->format('d/m');
                     }
                 }
             }
@@ -211,7 +221,9 @@ class SalaryController extends Controller
             'sakitCount',
             'izinCount',
             'wfhCount',
-            'cutiLebih'
+            'cutiLebih',
+            'alphaDates',
+            'lateDates'
         ));
     }
 
@@ -276,6 +288,18 @@ class SalaryController extends Controller
             if ($request->category == 'freelance') {
                 $rangeInfo = "Periode Kerja: " . $request->start_date . " s/d " . $request->end_date;
                 $data['notes'] = $data['notes'] ? $data['notes'] . "\n" . $rangeInfo : $rangeInfo;
+            }
+
+            // [BARU] Simpan Tanggal Alpha & Terlambat di Notes agar muncul di Slip
+            $attendanceNotes = "";
+            if ($request->filled('alpha_dates_str')) {
+                $attendanceNotes .= "\nDetail Alpha: " . $request->alpha_dates_str;
+            }
+            if ($request->filled('late_dates_str')) {
+                $attendanceNotes .= "\nDetail Terlambat: " . $request->late_dates_str;
+            }
+            if ($attendanceNotes) {
+                $data['notes'] = ($data['notes'] ?? '') . $attendanceNotes;
             }
 
             // Logic Potong Kasbon
@@ -348,8 +372,67 @@ class SalaryController extends Controller
     // ... method lain (show, edit, update, destroy) ...
     public function show($id)
     {
-        $salary = Salary::with(['user.branch', 'user.division'])->findOrFail($id);
-        return view('salaries.show', compact('salary'));
+        $salary = Salary::with(['user.branch', 'user.division', 'user.employeeSalary'])->findOrFail($id);
+        $user = $salary->user;
+
+        // [BARU] Hitung ulang tanggal alpha/terlambat khusus untuk ditampilkan di struk
+        $alphaDates = [];
+        $lateDates = [];
+
+        try {
+            $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
+            $monthStartDate = Carbon::createFromDate($salary->year, $salary->month, 1, $branchTimezone)->subMonth()->day(26)->startOfDay();
+            $monthEndDate = Carbon::createFromDate($salary->year, $salary->month, 1, $branchTimezone)->day(25)->endOfDay();
+            
+            // Ambil data absen & leave dalam range
+            $attendances = Attendance::where('user_id', $user->id)
+                ->whereBetween('check_in_time', [
+                        $monthStartDate->copy()->subDays(2)->startOfDay(),
+                        $monthEndDate->copy()->addDays(2)->endOfDay()
+                ])->get();
+
+            $leaves = LeaveRequest::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->where('start_date', '<=', $monthEndDate->format('Y-m-d'))
+                ->where(function ($q) use ($monthStartDate) {
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', $monthStartDate->format('Y-m-d'));
+                })->get();
+
+            // 1. Cari Tanggal Terlambat
+            $attendances->filter(function ($a) use ($monthStartDate, $monthEndDate, $branchTimezone, &$lateDates) {
+                $attFullDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone);
+                $attDate = $attFullDate->copy()->startOfDay();
+                $isInRange = $attDate->between($monthStartDate, $monthEndDate);
+                $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
+                
+                if ($isInRange && $isTelat) {
+                    $lateDates[] = $attFullDate->format('d/m');
+                }
+            });
+
+            // 2. Cari Tanggal Alpha
+            $period = \Carbon\CarbonPeriod::create($monthStartDate->copy()->startOfDay(), min(now($branchTimezone), $monthEndDate)->startOfDay());
+            foreach ($period as $date) {
+                $currentDateStr = $date->format('Y-m-d');
+                $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
+                    return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
+                })->first();
+
+                $leave = $leaves->filter(function ($l) use ($date) {
+                    return $date->between(Carbon::parse($l->start_date)->startOfDay(), Carbon::parse($l->end_date ?? $l->start_date)->endOfDay());
+                });
+
+                if (!$att && $leave->isEmpty()) {
+                    $alphaDates[] = $date->format('d/m');
+                } elseif ($att && strtolower($att->presence_status ?? '') === 'alpha') {
+                    $alphaDates[] = $date->format('d/m');
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail if something goes wrong with calculation, just don't show dates
+        }
+
+        return view('salaries.show', compact('salary', 'alphaDates', 'lateDates'));
     }
     public function edit(Salary $salary)
     {

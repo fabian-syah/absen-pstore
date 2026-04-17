@@ -230,6 +230,12 @@
                                         <span class="input-group-text text-danger bg-white">Rp</span>
                                         <input type="text" name="alpha_deduction" id="alpha_deduction" class="form-control deduction-input fw-bold text-danger" readonly>
                                     </div>
+                                    @if(isset($alphaDates) && count($alphaDates) > 0)
+                                        <div class="mt-1">
+                                            <small class="text-danger fw-bold" style="font-size: 10px;">Tanggal: {{ implode(', ', $alphaDates) }}</small>
+                                            <input type="hidden" name="alpha_dates_str" value="{{ implode(', ', $alphaDates) }}">
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
 
@@ -245,6 +251,12 @@
                                         <span class="input-group-text text-danger bg-white">Rp</span>
                                         <input type="text" name="late_deduction" id="late_deduction" class="form-control deduction-input fw-bold text-danger" readonly>
                                     </div>
+                                    @if(isset($lateDates) && count($lateDates) > 0)
+                                        <div class="mt-1">
+                                            <small class="text-danger fw-bold" style="font-size: 10px;">Tanggal: {{ implode(', ', $lateDates) }}</small>
+                                            <input type="hidden" name="late_dates_str" value="{{ implode(', ', $lateDates) }}">
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
 

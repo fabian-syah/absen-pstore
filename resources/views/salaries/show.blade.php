@@ -183,7 +183,12 @@
                             <tbody>
                                 @if($salary->alpha_deduction > 0)
                                     <tr>
-                                        <td class="ps-4">Potongan Alpha ({{ $salary->alpha_days }} Hari)</td>
+                                        <td class="ps-4">
+                                            Potongan Alpha ({{ $salary->alpha_days }} Hari)
+                                            @if(!empty($alphaDates))
+                                                <br><small class="text-muted fst-italic">Tgl: {{ implode(', ', array_unique($alphaDates)) }}</small>
+                                            @endif
+                                        </td>
                                         <td class="text-end pe-4 text-danger">(Rp
                                             {{ number_format($salary->alpha_deduction, 0, ',', '.') }})
                                         </td>
@@ -192,7 +197,12 @@
 
                                 @if($salary->late_deduction > 0)
                                     <tr>
-                                        <td class="ps-4">Potongan Telat ({{ $salary->late_days }} Kali)</td>
+                                        <td class="ps-4">
+                                            Potongan Telat ({{ $salary->late_days }} Kali)
+                                            @if(!empty($lateDates))
+                                                <br><small class="text-muted fst-italic">Tgl: {{ implode(', ', array_unique($lateDates)) }}</small>
+                                            @endif
+                                        </td>
                                         <td class="text-end pe-4 text-danger">(Rp
                                             {{ number_format($salary->late_deduction, 0, ',', '.') }})
                                         </td>
