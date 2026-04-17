@@ -373,66 +373,9 @@ class SalaryController extends Controller
     public function show($id)
     {
         $salary = Salary::with(['user.branch', 'user.division', 'user.employeeSalary'])->findOrFail($id);
-        $user = $salary->user;
+        $details = $salary->getAttendanceDetails();
 
-        // [BARU] Hitung ulang tanggal alpha/terlambat khusus untuk ditampilkan di struk
-        $alphaDates = [];
-        $lateDates = [];
-
-        try {
-            $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
-            $monthStartDate = Carbon::createFromDate($salary->year, $salary->month, 1, $branchTimezone)->subMonth()->day(26)->startOfDay();
-            $monthEndDate = Carbon::createFromDate($salary->year, $salary->month, 1, $branchTimezone)->day(25)->endOfDay();
-            
-            // Ambil data absen & leave dalam range
-            $attendances = Attendance::where('user_id', $user->id)
-                ->whereBetween('check_in_time', [
-                        $monthStartDate->copy()->subDays(2)->startOfDay(),
-                        $monthEndDate->copy()->addDays(2)->endOfDay()
-                ])->get();
-
-            $leaves = LeaveRequest::where('user_id', $user->id)
-                ->where('status', 'approved')
-                ->where('start_date', '<=', $monthEndDate->format('Y-m-d'))
-                ->where(function ($q) use ($monthStartDate) {
-                    $q->whereNull('end_date')->orWhere('end_date', '>=', $monthStartDate->format('Y-m-d'));
-                })->get();
-
-            // 1. Cari Tanggal Terlambat
-            $attendances->filter(function ($a) use ($monthStartDate, $monthEndDate, $branchTimezone, &$lateDates) {
-                $attFullDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone);
-                $attDate = $attFullDate->copy()->startOfDay();
-                $isInRange = $attDate->between($monthStartDate, $monthEndDate);
-                $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
-                
-                if ($isInRange && $isTelat) {
-                    $lateDates[] = $attFullDate->format('d/m');
-                }
-            });
-
-            // 2. Cari Tanggal Alpha
-            $period = \Carbon\CarbonPeriod::create($monthStartDate->copy()->startOfDay(), min(now($branchTimezone), $monthEndDate)->startOfDay());
-            foreach ($period as $date) {
-                $currentDateStr = $date->format('Y-m-d');
-                $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
-                    return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
-                })->first();
-
-                $leave = $leaves->filter(function ($l) use ($date) {
-                    return $date->between(Carbon::parse($l->start_date)->startOfDay(), Carbon::parse($l->end_date ?? $l->start_date)->endOfDay());
-                });
-
-                if (!$att && $leave->isEmpty()) {
-                    $alphaDates[] = $date->format('d/m');
-                } elseif ($att && strtolower($att->presence_status ?? '') === 'alpha') {
-                    $alphaDates[] = $date->format('d/m');
-                }
-            }
-        } catch (\Exception $e) {
-            // Silently fail if something goes wrong with calculation, just don't show dates
-        }
-
-        return view('salaries.show', compact('salary', 'alphaDates', 'lateDates'));
+        return view('salaries.show', array_merge(compact('salary'), $details));
     }
     public function edit(Salary $salary)
     {

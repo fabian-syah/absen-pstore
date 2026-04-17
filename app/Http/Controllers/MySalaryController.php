@@ -97,6 +97,7 @@ class MySalaryController extends Controller
         }
 
         // Kita gunakan view yang sama dengan admin agar desain konsisten
-        return view('salaries.show', compact('salary'));
+        $details = $salary->getAttendanceDetails();
+        return view('salaries.show', array_merge(compact('salary'), $details));
     }
 }
