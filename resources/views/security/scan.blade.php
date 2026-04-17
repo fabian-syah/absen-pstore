@@ -1122,6 +1122,32 @@
             document.getElementById('dbBranch').innerText = user.branch;
             document.getElementById('dbPhoto').src = user.photo_url;
             
+            // Logic Visibilitas Tombol (Mencegah salah pencet)
+            const btnMasuk = document.querySelector('.btn-masuk');
+            const btnPulang = document.querySelector('.btn-pulang');
+            const actionButtons = document.querySelector('.action-buttons');
+
+            // Default State
+            btnMasuk.style.display = 'flex';
+            btnPulang.style.display = 'flex';
+            if (actionButtons) actionButtons.style.gridTemplateColumns = '1fr 1fr';
+
+            if (user.attendance_status) {
+                if (user.attendance_status.has_checked_in && !user.attendance_status.has_checked_out) {
+                    // Sedang Shift (Belum Pulang) -> Sembunyikan Masuk
+                    btnMasuk.style.display = 'none';
+                    if (actionButtons) actionButtons.style.gridTemplateColumns = '1fr';
+                } else if (user.attendance_status.has_checked_in && user.attendance_status.has_checked_out) {
+                    // Sudah Pulang -> Sembunyikan Pulang (Mencegah Double Pulang)
+                    btnPulang.style.display = 'none';
+                    if (actionButtons) actionButtons.style.gridTemplateColumns = '1fr';
+                }
+            } else {
+                // Belum ada record (Belum Masuk) -> Sembunyikan Pulang
+                btnPulang.style.display = 'none';
+                if (actionButtons) actionButtons.style.gridTemplateColumns = '1fr';
+            }
+
             // Show Rank in verification
             if (user.rank_title) {
                 document.getElementById('dbRankContainer').style.display = 'block';
