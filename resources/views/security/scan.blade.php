@@ -730,6 +730,7 @@
             </button>
             <img src="" id="dbPhoto" class="profile-img-db mb-3" alt="User">
             <h4 id="dbName" class="fw-bold m-0 mt-2">Nama Karyawan</h4>
+            {{-- 
             <div id="dbRankContainer" class="mt-3" style="display: none !important;">
                 <div id="dbRankBadge" class="rank-badge-scan badge shadow-sm">
                     <div id="dbRankIconWrapper" class="icon-box-premium">
@@ -738,6 +739,7 @@
                     <span id="dbRankTitle" class="rank-name-premium" style="font-size: 13px;">Rank</span>
                 </div>
             </div>
+            --}}
             <p id="dbRole" class="text-muted small mt-1 mb-0">Jabatan</p>
             <span id="dbBranch" class="badge bg-primary mt-2">Cabang</span>
         </div>
@@ -790,6 +792,7 @@
             <div class="result-profile-card" id="resultProfileCard">
                 <img id="resultUserPhoto" src="" class="result-profile-img" alt="User Photo">
                 <h3 id="resultUserName" class="fw-bold mb-1"></h3>
+                {{-- 
                 <div id="resultRankContainer" class="mb-3" style="display: none !important;">
                      <div id="resultRankBadge" class="rank-badge-scan badge shadow-sm" style="transform: scale(1.1);">
                         <div id="resultRankIconWrapper" class="icon-box-premium">
@@ -798,6 +801,7 @@
                         <span id="resultRankTitle" class="rank-name-premium" style="font-size: 14px;">Rank</span>
                     </div>
                 </div>
+                --}}
                 <p id="resultUserRole" class="text-white-50 mb-3"></p>
 
                 <div class="user-info-row">
@@ -1148,7 +1152,7 @@
                 if (actionButtons) actionButtons.style.gridTemplateColumns = '1fr';
             }
 
-            // Show Rank in verification
+            /* [DISABLED] Show Rank in verification
             if (user.rank_title) {
                 document.getElementById('dbRankContainer').style.display = 'block';
                 document.getElementById('dbRankTitle').innerText = user.rank_title;
@@ -1174,6 +1178,7 @@
             } else {
                 document.getElementById('dbRankContainer').style.display = 'none';
             }
+            */
 
             // Reset UI State
             retakePhoto();
@@ -1412,7 +1417,7 @@
                     resultUserDivision.innerText = currentUserData.division;
                     resultUserBranch.innerText = currentUserData.branch;
                     
-                    // Rank in result
+                    /* [DISABLED] Rank in result
                     if (currentUserData.rank_title) {
                         document.getElementById('resultRankContainer').style.display = 'block';
                         document.getElementById('resultRankTitle').innerText = currentUserData.rank_title;
@@ -1437,6 +1442,7 @@
                     } else {
                         document.getElementById('resultRankContainer').style.display = 'none';
                     }
+                    */
                 }
 
                 // Set informasi absen
