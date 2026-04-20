@@ -231,11 +231,12 @@ class LeaveRequestController extends Controller
                 // Branch-specific timezone for correct date matching
                 $branchTimezone = $leaveRequest->user->branch?->timezone ?? 'Asia/Jakarta';
                 $branchOffset = Carbon::now($branchTimezone)->format('P');
-                $appOffset = Carbon::now(config('app.timezone'))->format('P');
+                // Storage is UTC, so source offset must be '+00:00'
+                $storageOffset = '+00:00';
 
                 // Cek apakah sudah ada attendance di tanggal tersebut (Timezone Aware)
                 $existingAttendance = Attendance::where('user_id', $leaveRequest->user_id)
-                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $currentDate])
+                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate])
                     ->first();
 
                 if ($existingAttendance) {

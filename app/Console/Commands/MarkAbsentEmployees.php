@@ -48,16 +48,13 @@ class MarkAbsentEmployees extends Command
                 // Baik itu Hadir, Telat, atau BAHKAN SUDAH ALPHA (dari run sebelumnya)
                 $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
                 $branchOffset = Carbon::now($branchTimezone)->format('P');
-                $appOffset = Carbon::now(config('app.timezone'))->format('P');
+                // Storage is UTC, so source offset must be '+00:00'
+                $storageOffset = '+00:00';
 
+                // --- CEK 1: Apakah SUDAH ADA data absensi di tanggal ini? ---
                 $existingAttendance = Attendance::where('user_id', $user->id)
-                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $currentDate->format('Y-m-d')])
-                    ->exists();
-
-                if ($existingAttendance) {
-                    // Skip, karena data hari itu sudah terisi (entah dia masuk, atau script ini sudah pernah jalan sebelumnya)
-                    continue;
-                }
+                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate->format('Y-m-d')])
+                    ->first();
 
                 // --- CEK 2: Apakah user SEDANG CUTI / IZIN di tanggal ini? ---
                 $isOnLeave = LeaveRequest::where('user_id', $user->id)
@@ -67,33 +64,47 @@ class MarkAbsentEmployees extends Command
                         $query->whereDate('start_date', '<=', $currentDate)
                             ->whereDate('end_date', '>=', $currentDate);
                     })
-                    ->exists();
+                    ->first();
+
+                if ($existingAttendance) {
+                    // Jika ada attendance dan itu ALPHA, tapi sekarang ternyata ada IZIN/CUTI yang di-acc
+                    // Maka update record Alpha tersebut menjadi status Izin/Cuti
+                    if (strtolower($existingAttendance->presence_status) === 'alpha' && $isOnLeave) {
+                        $presenceStatusMap = [
+                            'wfh' => 'WFH',
+                            'izin' => 'Izin',
+                            'sakit' => 'Sakit',
+                            'cuti' => 'Cuti',
+                            'libur' => 'Libur',
+                            'dinas' => 'Dinas Luar',
+                        ];
+                        $newStatus = $presenceStatusMap[$isOnLeave->type] ?? ucfirst($isOnLeave->type);
+                        
+                        $existingAttendance->update([
+                            'presence_status' => $newStatus,
+                            'attendance_type' => 'leave',
+                            'notes' => 'Auto-Update: Leave approved after Alpha generation. Reason: ' . $isOnLeave->reason
+                        ]);
+                        $this->comment("  -> Tanggal " . $currentDate->format('d-m-Y') . ": Alpha diperbarui menjadi " . $newStatus);
+                    }
+                    continue; // Skip ke tanggal berikutnya
+                }
 
                 if ($isOnLeave) {
-                    continue; // Skip, dia izin resmi
+                    continue; // Skip, dia izin resmi (dan belum ada record attendance)
                 }
-
-                // --- CEK 3: Apakah Hari Libur (Sabtu/Minggu)? ---
-                // Hapus komentar di bawah jika Alpha tidak berlaku di weekend
-                /*
-                if ($currentDate->isWeekend()) {
-                     continue;
-                }
-                */
 
                 // --- EKSEKUSI: BUAT DATA ALPHA ---
-                // Data kosong & tidak izin = ALPHA
                 try {
                     Attendance::create([
                         'user_id' => $user->id,
-                        'branch_id' => $user->branch_id ?? 1, // Default 1 jika null
-                        'check_in_time' => $currentDate->setTime(0, 0, 0),
-                        'check_out_time' => $currentDate->setTime(0, 0, 0),
+                        'branch_id' => $user->branch_id ?? 1,
+                        'check_in_time' => $currentDate->copy()->startOfDay(),
+                        'check_out_time' => $currentDate->copy()->startOfDay(),
                         'status' => 'verified',
                         'presence_status' => 'Alpha',
                         'attendance_type' => 'system',
                         'audit_note' => 'System Auto-Generate: Backfill Alpha check.',
-                        // Field lain set default/null
                         'photo_path' => null,
                         'is_late_checkin' => false,
                         'is_early_checkout' => false,

@@ -80,11 +80,11 @@ class ScanController extends Controller
             }
 
             // Cek Sesi Hari Ini (Lokal)
-            $appOffset = $this->getOffset(config('app.timezone'));
             $branchOffset = $this->getOffset($branchTimezone);
+            $storageOffset = '+00:00';
 
             $attendanceSession = Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayLocal->format('Y-m-d')])
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayLocal->format('Y-m-d')])
                 ->latest('check_in_time')
                 ->first();
         }
@@ -174,11 +174,11 @@ class ScanController extends Controller
 
             // Check existing session today (Timezone Aware)
             $todayDateLocal = Carbon::now($branchTimezone)->format('Y-m-d');
-            $appOffset = $this->getOffset(config('app.timezone'));
             $branchOffset = $this->getOffset($branchTimezone);
+            $storageOffset = '+00:00';
 
             $existingAttendanceToday = Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayDateLocal])
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayDateLocal])
                 ->first();
 
             if ($existingAttendanceToday) {
@@ -198,7 +198,7 @@ class ScanController extends Controller
             // Cek sudah absen hari ini (Lokal)
             if (
                 Attendance::where('user_id', $user->id)
-                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayLocal->format('Y-m-d')])
+                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayLocal->format('Y-m-d')])
                     ->whereNotNull('check_out_time')->exists()
             ) {
                 return response()->json(['status' => 'error', 'message' => 'Karyawan ini sudah selesai absen hari ini.'], 409);

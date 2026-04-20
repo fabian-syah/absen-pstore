@@ -154,10 +154,11 @@ class SyncApprovedLeavesToAttendance extends Command
 
                     $branchTimezone = $leave->user->branch->timezone ?? 'Asia/Jakarta';
                     $branchOffset = Carbon::now($branchTimezone)->format('P');
-                    $appOffset = Carbon::now(config('app.timezone'))->format('P');
+                    // Storage is UTC, so source offset must be '+00:00'
+                    $storageOffset = '+00:00';
 
                     $attendances = Attendance::where('user_id', $leave->user_id)
-                        ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $currentDate])
+                        ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate])
                         ->orderBy('attendance_type', 'desc')
                         ->get();
 

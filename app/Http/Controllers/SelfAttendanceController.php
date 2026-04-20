@@ -89,11 +89,11 @@ class SelfAttendanceController extends Controller
 
             // 4. Cek apakah sudah selesai absen hari ini (Lokal Time)
             // Menggunakan Offset dari Config App sebagai Source, dan Offset Cabang sebagai Target
-            $appOffset = $this->getOffset(config('app.timezone'));
             $branchOffset = $this->getOffset($branchTimezone);
+            $storageOffset = '+00:00';
 
             $finishedRecently = Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayLocal->format('Y-m-d')])
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayLocal->format('Y-m-d')])
                 ->whereNotNull('check_out_time')
                 ->where('check_out_time', '>=', $localTime->copy()->subMinutes(5)) // Cooldown 5 menit setelah pulang baru boleh masuk lagi
                 ->where('status', '!=', 'alpha')
@@ -280,7 +280,7 @@ class SelfAttendanceController extends Controller
                 return redirect()->route('dashboard')->with('error', 'Anda masih memiliki sesi aktif. Mohon refresh halaman.');
             }
 
-            $appOffset = $this->getOffset(config('app.timezone'));
+            $storageOffset = '+00:00';
             $branchOffset = $this->getOffset($branchTimezone);
 
             $isLate = false;
@@ -319,7 +319,7 @@ class SelfAttendanceController extends Controller
             // FIX: Cek apakah hari ini sudah ada record attendance (apapun jenisnya)
             // Jika ada, UPDATE record tersebut, jangan create baru (biar tidak double)
             $existingAttendanceToday = Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $todayDateLocal])
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayDateLocal])
                 ->first();
 
             if ($existingAttendanceToday) {

@@ -177,19 +177,24 @@
 @push('styles')
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-light: #818cf8;
+            --primary: #ef4444; /* PStore Red */
+            --primary-light: #f87171;
+            --primary-dark: #b91c1c;
             --success: #10b981;
             --warning: #f59e0b;
-            --danger: #ef4444;
-            --dark: #1f2937;
-            --dark-light: #374151;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
+            --danger: #dc2626;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
             --bg-light: #f8fafc;
             --bg-card: #ffffff;
-            --glass: rgba(255, 255, 255, 0.9);
-            --glass-border: rgba(0, 0, 0, 0.08);
+            --glass: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-sm: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --shadow-red: 0 10px 20px -5px rgba(239, 68, 68, 0.4);
         }
 
         /* === PAGE LAYOUT === */
@@ -206,7 +211,9 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 50%, #f8fafc 100%);
+            background: radial-gradient(circle at top right, rgba(239, 68, 68, 0.1), transparent 400px),
+                        radial-gradient(circle at bottom left, rgba(239, 68, 68, 0.05), transparent 400px),
+                        #f8fafc;
             z-index: -2;
         }
 
@@ -216,8 +223,9 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: radial-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px);
-            background-size: 30px 30px;
+            background-image: radial-gradient(rgba(239, 68, 68, 0.05) 1.5px, transparent 1.5px);
+            background-size: 40px 40px;
+            opacity: 0.8;
             z-index: -1;
         }
 
@@ -326,33 +334,44 @@
 
         /* === CHECKIN INFO === */
         .checkin-info {
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            border-radius: 16px;
+            padding: 1rem;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 1rem;
             color: var(--primary);
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
         }
 
         .checkin-info i {
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 1.1rem;
+            box-shadow: 0 2px 5px rgba(239, 68, 68, 0.1);
         }
 
         .checkin-info strong {
             color: var(--text-primary);
+            font-weight: 700;
         }
 
         /* === CAMERA CARD === */
         .camera-card {
             background: var(--bg-card);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 1.25rem;
-            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 32px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.02);
+            position: relative;
         }
 
         /* === CAMERA WRAPPER === */
@@ -633,66 +652,73 @@
         .capture-section {
             display: flex;
             justify-content: center;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
         }
 
         .capture-btn {
-            width: 72px;
-            height: 72px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            border: 4px solid #e5e7eb;
+            border: 4px solid #f1f5f9;
             background: transparent;
-            padding: 4px;
+            padding: 5px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
+            box-shadow: var(--shadow-md);
         }
 
         .capture-btn:disabled {
-            opacity: 0.4;
+            opacity: 0.3;
+            filter: grayscale(1);
             cursor: not-allowed;
         }
 
         .capture-inner {
             width: 100%;
             height: 100%;
-            background: #e5e7eb;
+            background: #cbd5e1;
             border-radius: 50%;
             transition: all 0.3s;
         }
 
         .capture-btn.ready {
-            border-color: var(--primary);
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-red);
         }
 
         .capture-btn.ready .capture-inner {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         }
 
         .capture-btn.ready:active {
-            transform: scale(0.95);
+            transform: scale(0.9);
         }
 
         .capture-btn.ready:active .capture-inner {
-            transform: scale(0.85);
+            transform: scale(0.8);
         }
 
         /* === INFO CARDS === */
         .info-card {
             background: #f8fafc;
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 0.875rem 1rem;
+            border: 1px solid #f1f5f9;
+            border-radius: 20px;
+            padding: 1rem 1.25rem;
             display: flex;
             align-items: center;
-            gap: 0.875rem;
-            margin-bottom: 0.75rem;
+            gap: 1rem;
+            margin-bottom: 1rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
         .info-card:hover {
-            background: #f1f5f9;
+            background: white;
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
         }
 
         .info-icon {
@@ -781,24 +807,30 @@
 
         .slide-track {
             position: relative;
-            height: 56px;
-            background: #e5e7eb;
-            border-radius: 28px;
+            height: 60px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
             overflow: hidden;
             transition: all 0.3s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .slide-track.disabled {
             opacity: 0.5;
             pointer-events: none;
+            filter: grayscale(1);
         }
 
         .slide-track.active {
-            background: rgba(99, 102, 241, 0.15);
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.2);
+            box-shadow: var(--shadow-sm);
         }
 
         .slide-track.submitted {
             background: var(--success);
+            border-color: var(--success);
         }
 
         .slide-text {
@@ -806,16 +838,18 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #9ca3af;
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
             transition: all 0.3s;
             white-space: nowrap;
+            text-transform: uppercase;
         }
 
         .slide-track.active .slide-text {
             color: var(--primary);
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
         }
 
         .slide-progress {
@@ -824,10 +858,10 @@
             left: 0;
             bottom: 0;
             background: linear-gradient(90deg, var(--primary), var(--primary-light));
-            border-radius: 28px;
+            border-radius: 30px;
             width: 0;
             transition: width 0.1s;
-            opacity: 0.3;
+            opacity: 0.2;
         }
 
         .slide-thumb {
