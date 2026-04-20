@@ -472,7 +472,7 @@ class LeaveRequestController extends Controller
             ->with(['branch', 'division'])
             ->where('is_active', 1) // Hanya user aktif
             ->whereNotIn('role', ['super_admin', 'admin_gaji']) // Exclude admin roles
-            ->whereHas('branch', function($q) {
+            ->whereHas('branch', function ($q) {
                 $q->where('name', '!=', 'Cabang User Non Karyawan');
             });
 
@@ -782,7 +782,7 @@ class LeaveRequestController extends Controller
         $cleanEnd = $endDate->format('Y-m-d');
 
         $query->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) >= ?", [$appOffset, $branchOffset, $cleanStart])
-              ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) <= ?", [$appOffset, $branchOffset, $cleanEnd]);
+            ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) <= ?", [$appOffset, $branchOffset, $cleanEnd]);
 
         $deletedCount = $query->delete();
         Log::info("Attendance Records CLEARED: Deleted {$deletedCount} records for user {$user->id} range {$cleanStart} - {$cleanEnd}");

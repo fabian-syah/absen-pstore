@@ -270,10 +270,10 @@ class DashboardController extends Controller
                 ->whereHas('user', function ($q) use ($user, $allBranchIds) {
                     $q->where('is_active', true)
                         ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji', 'security']) // Admin & Security dilarang masuk ranking umum
-                        ->whereHas('branch', function($qb) {
+                        ->whereHas('branch', function ($qb) {
                             $qb->where('name', '!=', 'Cabang User Non Karyawan');
                         });
-    
+
                     // Jika bukan admin, hanya tampilkan leaderboard dari cabang yang diakses user
                     if ($user->role !== 'admin') {
                         $q->whereIn('branch_id', $allBranchIds);
@@ -364,7 +364,7 @@ class DashboardController extends Controller
             }
             $data['totalUsers'] = (clone $userQuery)
                 ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji'])
-                ->whereHas('branch', function($q) {
+                ->whereHas('branch', function ($q) {
                     $q->where('name', '!=', 'Cabang User Non Karyawan');
                 })
                 ->where('is_active', true)
@@ -477,7 +477,7 @@ class DashboardController extends Controller
             ->whereHas('user', function ($q) {
                 $q->where('is_active', true)
                     ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji', 'security']) // Admin & Security tidak masuk Hall of Fame
-                    ->whereHas('branch', function($qb) {
+                    ->whereHas('branch', function ($qb) {
                         $qb->where('name', '!=', 'Cabang User Non Karyawan');
                     });
             })
@@ -498,8 +498,8 @@ class DashboardController extends Controller
 
         // [NEW] Logic Scanner Winner Prize
         $data['isScannerWinner'] = false;
-        $data['prizeClaimed'] = (bool)($user->metadata['prize_claimed_at'] ?? false);
-        
+        $data['prizeClaimed'] = (bool) ($user->metadata['prize_claimed_at'] ?? false);
+
         if ($user->role == 'security' || $user->role == 'admin') {
             $lastMonth = now()->subMonth();
             $topScanner = Attendance::select('scanned_by_user_id', DB::raw('count(*) as total_scans'))
@@ -524,41 +524,44 @@ class DashboardController extends Controller
             $year = request('year', $nowInBranch->year);
             $startDate = Carbon::create($year, $month, 1, 0, 0, 0, $userTimezone)->startOfMonth();
             $endDate = $startDate->copy()->endOfMonth();
-    
+
             $teamQuery = User::where('is_active', true)
                 ->whereNotIn('role', ['super_admin', 'admin_gaji'])
-                ->whereHas('branch', function($q) {
+                ->whereHas('branch', function ($q) {
                     $q->where('name', '!=', 'Cabang User Non Karyawan');
                 });
             if ($user->role !== 'admin') {
                 $teamQuery->whereIn('branch_id', $allBranchIds);
             }
             $teamMembers = $teamQuery->with('branch', 'division')->orderBy('name')->get();
-            
-            $tzMap = $teamMembers->pluck('branch.timezone', 'id')->map(function($tz) {
+
+            $tzMap = $teamMembers->pluck('branch.timezone', 'id')->map(function ($tz) {
                 return $tz ?: 'Asia/Jakarta';
             });
-            
+
             $calendarAttendances = Attendance::whereIn('user_id', $teamMembers->pluck('id'))
                 ->whereBetween('check_in_time', [$startDate, $endDate])
                 ->where('presence_status', '!=', 'Alpha')
                 ->get()
-                ->groupBy(['user_id', function($item) use ($tzMap) {
-                    $tz = $tzMap[$item->user_id] ?? 'Asia/Jakarta';
-                    return Carbon::parse($item->check_in_time)->timezone($tz)->format('Y-m-d');
-                }]);
-                
+                ->groupBy([
+                    'user_id',
+                    function ($item) use ($tzMap) {
+                        $tz = $tzMap[$item->user_id] ?? 'Asia/Jakarta';
+                        return Carbon::parse($item->check_in_time)->timezone($tz)->format('Y-m-d');
+                    }
+                ]);
+
             $calendarLeaves = LeaveRequest::whereIn('user_id', $teamMembers->pluck('id'))
                 ->where('status', 'approved')
-                ->where(function($q) use ($startDate, $endDate) {
+                ->where(function ($q) use ($startDate, $endDate) {
                     $q->whereBetween('start_date', [$startDate, $endDate])
-                      ->orWhereBetween('end_date', [$startDate, $endDate])
-                      ->orWhere(function($sub) use ($startDate, $endDate) {
-                          $sub->where('start_date', '<', $startDate)
-                              ->where('end_date', '>', $endDate);
-                      });
+                        ->orWhereBetween('end_date', [$startDate, $endDate])
+                        ->orWhere(function ($sub) use ($startDate, $endDate) {
+                            $sub->where('start_date', '<', $startDate)
+                                ->where('end_date', '>', $endDate);
+                        });
                 })->get()
-                ->map(function($leave) {
+                ->map(function ($leave) {
                     // Create date range for easier lookup
                     $start = Carbon::parse($leave->start_date);
                     $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start;
@@ -590,14 +593,14 @@ class DashboardController extends Controller
     public function claimPrize(Request $request)
     {
         $user = Auth::user();
-        
+
         // Simpan status klaim ke metadata JSON
         $metadata = $user->metadata ?? [];
         $metadata['prize_claimed_at'] = now()->toDateTimeString();
-        
+
         // Gunakan forceFill jika kolom tidak ada di fillable, atau update biasa jika ada
         $user->forceFill(['metadata' => $metadata])->save();
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Hadiah 1jt akan dikirim ke e-wallet Anda oleh Admin!'
@@ -631,12 +634,12 @@ class DashboardController extends Controller
         $totalUsers = User::when($branch_id, function ($q) use ($branch_id) {
             return $q->where('branch_id', $branch_id);
         })
-        ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji'])
-        ->whereHas('branch', function($q) {
-            $q->where('name', '!=', 'Cabang User Non Karyawan');
-        })
-        ->where('is_active', true)
-        ->count();
+            ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji'])
+            ->whereHas('branch', function ($q) {
+                $q->where('name', '!=', 'Cabang User Non Karyawan');
+            })
+            ->where('is_active', true)
+            ->count();
 
         return $this->calculateStats($query, $totalUsers);
     }

@@ -68,10 +68,10 @@ class UserController extends Controller
         $inactiveQuery->whereNotIn('role', ['super_admin', 'admin_gaji']);
         // --- FILTER UNTUK USER AKTIF & NON-AKTIF ---
         if ($user->role == 'admin') {
-             if ($user->branch_id != null) {
+            if ($user->branch_id != null) {
                 $activeQuery->where('branch_id', $user->branch_id);
                 $inactiveQuery->where('branch_id', $user->branch_id);
-             }
+            }
         } elseif (in_array($user->role, ['audit', 'leader'])) {
             $pivotBranchIds = $user->branches()->pluck('branches.id')->toArray();
             $allowedBranchIds = $pivotBranchIds;
@@ -246,7 +246,7 @@ class UserController extends Controller
 
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
-            
+
             // Leader dapat akses homebase, Audit TIDAK (Audit hanya boleh LIHAT di index, tapi blok di EDIT)
             if ($auth_user->role != 'audit' && $auth_user->branch_id) {
                 $allowedBranchIds[] = $auth_user->branch_id;
@@ -482,7 +482,7 @@ class UserController extends Controller
 
         if (in_array($auth_user->role, ['audit', 'leader'])) {
             $allowedBranchIds = $auth_user->branches()->pluck('branches.id')->toArray();
-            
+
             // [VIEW ACCESS] Audit & Leader boleh LIHAT anggota tim satu cabang (Homebase)
             if ($auth_user->branch_id) {
                 $allowedBranchIds[] = $auth_user->branch_id;
