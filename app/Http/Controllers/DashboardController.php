@@ -269,7 +269,10 @@ class DashboardController extends Controller
                 // SESUDAH (Samakan dengan BranchLeaderboardController)
                 ->whereHas('user', function ($q) use ($user, $allBranchIds) {
                     $q->where('is_active', true)
-                        ->whereNotIn('role', ['admin', 'security']); // Admin & Security dilarang masuk ranking umum
+                        ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji', 'security']) // Admin & Security dilarang masuk ranking umum
+                        ->whereHas('branch', function($qb) {
+                            $qb->where('name', '!=', 'Cabang User Non Karyawan');
+                        });
     
                     // Jika bukan admin, hanya tampilkan leaderboard dari cabang yang diakses user
                     if ($user->role !== 'admin') {
@@ -359,7 +362,13 @@ class DashboardController extends Controller
                 $attendanceQuery->where('branch_id', $branch_id);
                 $userQuery->where('branch_id', $branch_id);
             }
-            $data['totalUsers'] = (clone $userQuery)->where('role', '!=', 'admin')->where('is_active', true)->count();
+            $data['totalUsers'] = (clone $userQuery)
+                ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji'])
+                ->whereHas('branch', function($q) {
+                    $q->where('name', '!=', 'Cabang User Non Karyawan');
+                })
+                ->where('is_active', true)
+                ->count();
             $data['totalBranches'] = $branch_id ? 1 : Branch::count();
             $data['attendancesToday'] = (clone $attendanceQuery)->whereDate('check_in_time', $todayInBranch)->count();
             $data['pendingVerifications'] = (clone $attendanceQuery)->where('status', 'pending_verification')->count();
@@ -467,7 +476,10 @@ class DashboardController extends Controller
             ])
             ->whereHas('user', function ($q) {
                 $q->where('is_active', true)
-                    ->whereNotIn('role', ['admin', 'security']); // Admin & Security tidak masuk Hall of Fame
+                    ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji', 'security']) // Admin & Security tidak masuk Hall of Fame
+                    ->whereHas('branch', function($qb) {
+                        $qb->where('name', '!=', 'Cabang User Non Karyawan');
+                    });
             })
             ->groupBy('user_id')
             ->orderByDesc('total_attendance') // Urutkan dari yang masuk paling banyak
@@ -513,7 +525,11 @@ class DashboardController extends Controller
             $startDate = Carbon::create($year, $month, 1, 0, 0, 0, $userTimezone)->startOfMonth();
             $endDate = $startDate->copy()->endOfMonth();
     
-            $teamQuery = User::where('is_active', true);
+            $teamQuery = User::where('is_active', true)
+                ->whereNotIn('role', ['super_admin', 'admin_gaji'])
+                ->whereHas('branch', function($q) {
+                    $q->where('name', '!=', 'Cabang User Non Karyawan');
+                });
             if ($user->role !== 'admin') {
                 $teamQuery->whereIn('branch_id', $allBranchIds);
             }
@@ -614,7 +630,13 @@ class DashboardController extends Controller
             $query->where('branch_id', $branch_id);
         $totalUsers = User::when($branch_id, function ($q) use ($branch_id) {
             return $q->where('branch_id', $branch_id);
-        })->where('role', '!=', 'admin')->where('is_active', true)->count();
+        })
+        ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji'])
+        ->whereHas('branch', function($q) {
+            $q->where('name', '!=', 'Cabang User Non Karyawan');
+        })
+        ->where('is_active', true)
+        ->count();
 
         return $this->calculateStats($query, $totalUsers);
     }

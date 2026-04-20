@@ -42,6 +42,9 @@ class BranchController extends Controller
             $query->whereIn('id', $allowedBranchIds);
         }
 
+        // Hide special administrative branch from general listing
+        $query->where('name', '!=', 'Cabang User Non Karyawan');
+
         if ($request->has('search') && $request->search != null) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -82,7 +85,7 @@ class BranchController extends Controller
             }
         ])
             ->where('branch_id', $branch->id)
-            ->where('role', '!=', 'admin')
+            ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji'])
             ->latest()
             ->paginate(10);
 

@@ -18,9 +18,9 @@ class BranchLeaderboardController extends Controller
         $branches = collect();
 
         if ($user->role === 'admin') {
-            $branches = Branch::orderBy('name')->get();
+            $branches = Branch::where('name', '!=', 'Cabang User Non Karyawan')->orderBy('name')->get();
         } elseif ($user->role === 'audit') {
-            $branches = $user->branches()->orderBy('name')->get();
+            $branches = $user->branches()->where('name', '!=', 'Cabang User Non Karyawan')->orderBy('name')->get();
         } elseif ($user->role === 'leader') {
             if ($user->branch_id) {
                 $branches = Branch::where('id', $user->branch_id)->get();
@@ -34,7 +34,7 @@ class BranchLeaderboardController extends Controller
         foreach ($branches as $branch) {
             $branch->total_employees = User::where('branch_id', $branch->id)
                 ->where('is_active', true)
-                ->whereNotIn('role', ['admin'])
+                ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji'])
                 ->count();
 
             // Preview Top 3 untuk Index (Logic disamakan)
@@ -102,7 +102,7 @@ class BranchLeaderboardController extends Controller
             ->whereHas('user', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
                     ->where('is_active', true)
-                    ->whereNotIn('role', ['admin', 'security']); // [FIX] Exclude Admin & Security agar sinkron dengan Dashboard
+                    ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji', 'security']); // [FIX] Exclude Admin & Security agar sinkron dengan Dashboard
             })
             ->groupBy('user_id')
             ->orderBy('total_attendance', 'desc')

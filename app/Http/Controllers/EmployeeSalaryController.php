@@ -20,7 +20,7 @@ class EmployeeSalaryController extends Controller
 
         $query = User::with(['branch', 'division', 'employeeSalary'])
             ->where('is_active', true)
-            ->whereNotIn('role', ['admin', 'admin_gaji']);
+            ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji']);
 
         // Sembunyikan user dari cabang khusus "Cabang User Non Karyawan"
         $specialBranch = Branch::where('name', 'Cabang User Non Karyawan')->first();

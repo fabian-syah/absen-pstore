@@ -471,7 +471,10 @@ class LeaveRequestController extends Controller
         $query = \App\Models\User::query()
             ->with(['branch', 'division'])
             ->where('is_active', 1) // Hanya user aktif
-            ->where('role', '!=', 'super_admin'); // Exclude super admin if needed
+            ->whereNotIn('role', ['super_admin', 'admin_gaji']) // Exclude admin roles
+            ->whereHas('branch', function($q) {
+                $q->where('name', '!=', 'Cabang User Non Karyawan');
+            });
 
         // Filter Pencarian Nama
         if ($request->has('search') && $request->search != '') {
