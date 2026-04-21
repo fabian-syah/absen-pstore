@@ -101,8 +101,10 @@ class AttendanceHistoryController extends Controller
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
 
-            // === PASS 1: Cari attendance normal (check-in di hari ini) ===
+            // === PASS 1: Cari attendance REAL (skip system Alpha) untuk hari ini ===
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
+                // Skip system-generated Alpha agar Pass 2 (shift malam) bisa jalan
+                if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
             })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
 

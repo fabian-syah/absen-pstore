@@ -21,7 +21,7 @@ class MarkAbsentEmployees extends Command
         $this->info("Memulai proses Auto-Alpha (Shift-Aware) dari: " . $startOfMonth->format('d-m-Y') . " s/d " . $yesterday->format('d-m-Y'));
 
         $users = User::where('is_active', true)
-            ->whereNotIn('role', ['admin', 'security', 'super_admin'])
+            ->whereNotIn('role', ['admin', 'super_admin'])
             ->with('branch')
             ->orderBy('name')
             ->get();
