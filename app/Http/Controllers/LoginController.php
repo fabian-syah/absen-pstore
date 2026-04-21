@@ -22,6 +22,17 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Key untuk throttling (kombinasi login_id dan IP)
+        $throttleKey = strtolower($request->login_id) . '|' . $request->ip();
+
+        // Cek apakah user sedang diblokir sementara
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            return back()->withErrors([
+                'login_id' => "Terlalu banyak percobaan login. Silakan coba lagi dalam $seconds detik."
+            ])->withInput();
+        }
+
         // Case-insensitive login_id lookup
         $user = User::whereRaw('LOWER(login_id) = ?', [strtolower($request->login_id)])->first();
 
@@ -31,6 +42,9 @@ class LoginController extends Controller
             if ($user->is_active == 0) {
                 return back()->withErrors(['login_id' => 'Akun Anda dinonaktifkan.'])->withInput();
             }
+
+            // Bersihkan percobaan gagal jika berhasil
+            \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
 
             // --- LOGIKA BARU: Update Last Login ---
             $user->update([
@@ -42,6 +56,9 @@ class LoginController extends Controller
             $request->session()->regenerate();
             return redirect()->route('dashboard');
         }
+
+        // Catat percobaan gagal
+        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 60); // Blokir 60 detik jika limit tercapai
 
         return back()->withErrors(['login_id' => 'ID Login atau Password salah.'])->withInput();
     }
