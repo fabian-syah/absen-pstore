@@ -353,18 +353,19 @@
                             <tbody>
                                 @forelse ($history as $att)
                                     @php
+                                        $displayDate = $att->check_in_time ?? $att->check_out_time ?? now();
                                         $fixedScheduleIn = $att->scheduled_check_in ?? ($att->user->check_in_start ?? ($att->user->workSchedule->start_time ?? null));
                                         $fixedScheduleOut = $att->scheduled_check_out ?? ($att->user->check_out_start ?? ($att->user->workSchedule->end_time ?? null));
 
-                                        $isLateApproval = $att->verified_by_user_id && $att->updated_at && $att->updated_at->gt($att->check_in_time->endOfDay());
+                                        $isLateApproval = $att->check_in_time && $att->verified_by_user_id && $att->updated_at && $att->updated_at->gt($att->check_in_time->endOfDay());
                                         $approvalDelay = $isLateApproval ? $att->check_in_time->startOfDay()->diffInDays($att->updated_at->startOfDay()) : 0;
                                         $approverName = $att->verifier->name ?? null;
                                     @endphp
                                     <tr>
                                         <td class="ps-4 py-3">
-                                            <div class="fw-bold text-dark">{{ $att->check_in_time->format('d M Y') }}</div>
+                                            <div class="fw-bold text-dark">{{ $displayDate->format('d M Y') }}</div>
                                             <small class="text-muted text-uppercase fw-bold"
-                                                style="font-size: 0.7rem;">{{ $att->check_in_time->format('l') }}</small>
+                                                style="font-size: 0.7rem;">{{ $displayDate->format('l') }}</small>
                                         </td>
 
                                         <td>
@@ -372,7 +373,9 @@
                                                 <i
                                                     class="mdi mdi-login-variant {{ $att->is_calculated_late ? 'text-danger' : 'text-success' }} me-2 fs-5"></i>
                                                 <span
-                                                    class="fw-bold {{ $att->is_calculated_late ? 'text-danger' : 'text-dark' }}">{{ $att->check_in_time->format('H:i') }}</span>
+                                                    class="fw-bold {{ $att->is_calculated_late ? 'text-danger' : 'text-dark' }}">
+                                                    {{ $att->check_in_time ? $att->check_in_time->format('H:i') : '-' }}
+                                                </span>
                                             </div>
                                             <small class="text-muted" style="font-size: 0.65rem;">Jadwal:
                                                 {{ $fixedScheduleIn ? \Carbon\Carbon::parse($fixedScheduleIn)->format('H:i') : '-' }}</small>
