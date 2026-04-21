@@ -90,7 +90,7 @@ class SelfAttendanceController extends Controller
             // 4. Cek apakah sudah selesai absen hari ini (Lokal Time)
             // Menggunakan Offset dari Config App sebagai Source, dan Offset Cabang sebagai Target
             $branchOffset = $this->getOffset($branchTimezone);
-            $storageOffset = '+00:00';
+            $storageOffset = Carbon::now(config('app.timezone'))->format('P');
 
             $finishedRecently = Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayLocal->format('Y-m-d')])
@@ -280,7 +280,7 @@ class SelfAttendanceController extends Controller
                 return redirect()->route('dashboard')->with('error', 'Anda masih memiliki sesi aktif. Mohon refresh halaman.');
             }
 
-            $storageOffset = '+00:00';
+            $storageOffset = Carbon::now(config('app.timezone'))->format('P');
             $branchOffset = $this->getOffset($branchTimezone);
 
             $isLate = false;

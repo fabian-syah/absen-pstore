@@ -137,7 +137,7 @@ class DashboardController extends Controller
         } else {
             // Setup Offset untuk query timezone-aware
             $branchOffset = Carbon::now($userTimezone)->format('P');
-            $storageOffset = '+00:00';
+            $storageOffset = Carbon::now(config('app.timezone'))->format('P');
 
             $todaysAttendance = Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayInBranch])
@@ -178,7 +178,7 @@ class DashboardController extends Controller
 
         // Setup Offset untuk query
         $branchOffset = Carbon::now($userTimezone)->format('P');
-        $storageOffset = '+00:00';
+        $storageOffset = Carbon::now(config('app.timezone'))->format('P');
 
         // B. Cek Sesi Selesai Hari Ini
         $finishedSessionToday = Attendance::where('user_id', $user->id)

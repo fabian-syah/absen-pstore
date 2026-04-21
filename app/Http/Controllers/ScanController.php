@@ -81,7 +81,7 @@ class ScanController extends Controller
 
             // Cek Sesi Hari Ini (Lokal)
             $branchOffset = $this->getOffset($branchTimezone);
-            $storageOffset = '+00:00';
+            $storageOffset = Carbon::now(config('app.timezone'))->format('P');
 
             $attendanceSession = Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayLocal->format('Y-m-d')])
@@ -175,7 +175,7 @@ class ScanController extends Controller
             // Check existing session today (Timezone Aware)
             $todayDateLocal = Carbon::now($branchTimezone)->format('Y-m-d');
             $branchOffset = $this->getOffset($branchTimezone);
-            $storageOffset = '+00:00';
+            $storageOffset = Carbon::now(config('app.timezone'))->format('P');
 
             $existingAttendanceToday = Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayDateLocal])

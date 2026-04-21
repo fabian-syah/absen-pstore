@@ -34,7 +34,7 @@ class MarkAbsentEmployees extends Command
 
         $this->info("Memulai proses Auto-Alpha dari: " . $startDate->format('d-m-Y') . " s/d " . $endDate->format('d-m-Y'));
 
-        $users = User::where('role', '!=', 'super_admin')->get();
+        $users = User::where('is_active', true)->where('role', '!=', 'super_admin')->with('branch')->get();
         $totalAlphaCreated = 0;
 
         foreach ($users as $user) {
@@ -48,8 +48,7 @@ class MarkAbsentEmployees extends Command
                 // Baik itu Hadir, Telat, atau BAHKAN SUDAH ALPHA (dari run sebelumnya)
                 $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
                 $branchOffset = Carbon::now($branchTimezone)->format('P');
-                // Storage is UTC, so source offset must be '+00:00'
-                $storageOffset = '+00:00';
+                $storageOffset = Carbon::now(config('app.timezone'))->format('P');
 
                 // --- CEK 1: Apakah SUDAH ADA data absensi di tanggal ini? ---
                 $existingAttendance = Attendance::where('user_id', $user->id)
@@ -62,7 +61,10 @@ class MarkAbsentEmployees extends Command
                     ->where('type', '!=', 'telat')
                     ->where(function ($query) use ($currentDate) {
                         $query->whereDate('start_date', '<=', $currentDate)
-                            ->whereDate('end_date', '>=', $currentDate);
+                            ->where(function($q) use ($currentDate) {
+                                $q->whereNull('end_date')
+                                  ->orWhere('end_date', '>=', $currentDate);
+                            });
                     })
                     ->first();
 
