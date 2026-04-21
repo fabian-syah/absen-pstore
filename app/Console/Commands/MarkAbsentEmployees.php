@@ -7,21 +7,19 @@ use App\Models\User;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class MarkAbsentEmployees extends Command
 {
     protected $signature = 'attendance:mark-absent';
-    protected $description = 'Cek user yang tidak absen, tandai Alpha, dan bersihkan record Alpha yang salah (Repair Mode + Shift Aware)';
+    protected $description = 'Cek kehadiran karyawan dengan dukungan Shift Malam (Operational Day)';
 
     public function handle()
     {
         $startOfMonth = Carbon::now()->startOfMonth();
         $yesterday = Carbon::yesterday();
 
-        $this->info("Memulai proses Auto-Alpha dari: " . $startOfMonth->format('d-m-Y') . " s/d " . $yesterday->format('d-m-Y'));
+        $this->info("Memulai proses Auto-Alpha (Shift-Aware) dari: " . $startOfMonth->format('d-m-Y') . " s/d " . $yesterday->format('d-m-Y'));
 
-        // 1. Ambil Semua User (Kecuali Admin/Security)
         $users = User::where('is_active', true)
             ->whereNotIn('role', ['admin', 'security', 'super_admin'])
             ->with('branch')
@@ -33,128 +31,85 @@ class MarkAbsentEmployees extends Command
         foreach ($users as $user) {
             $this->info("Mengecek User: {$user->name}");
 
-            // Loop dari awal bulan sampai kemarin
             for ($currentDate = $startOfMonth->copy(); $currentDate->lte($yesterday); $currentDate->addDay()) {
+                
+                // --- DEFINISI OPERATIONAL DAY ---
+                // Kita cari absen mulai dari jam 16:00 (4 sore) hari sebelumnya 
+                // sampai jam 23:59 hari berjalan. 
+                // Ini mencakup karyawan shift malam yang masuk di sore/malam hari sebelumnya.
+                $startRange = $currentDate->copy()->subHours(8); // Jam 4 sore kemarin
+                $endRange = $currentDate->copy()->endOfDay();
 
-                // Setup Offset untuk query timezone-aware
-                $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
-                $branchOffset = Carbon::now($branchTimezone)->format('P');
-                $storageOffset = Carbon::now(config('app.timezone'))->format('P');
-
-                // --- CEK 1: Apakah SUDAH ADA data absensi di tanggal ini? ---
                 $allAttendances = Attendance::where('user_id', $user->id)
-                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate->format('Y-m-d')])
+                    ->where('check_in_time', '>=', $startRange)
+                    ->where('check_in_time', '<=', $endRange)
                     ->get();
 
-                $existingAttendance = $allAttendances->first();
+                // Cari apakah ada absen "Real" (bukan Alpha) di range tersebut
+                $hasRealPresence = $allAttendances->contains(function ($att) {
+                    return strtolower($att->presence_status) !== 'alpha';
+                });
 
-                // --- REPAIR LOGIC: Bersihkan Alpha yang "nyelip" padahal ada absen real ---
-                if ($allAttendances->count() > 1) {
-                    $hasRealPresence = $allAttendances->contains(function ($att) {
-                        return strtolower($att->presence_status) !== 'alpha';
-                    });
-
-                    if ($hasRealPresence) {
-                        foreach ($allAttendances as $att) {
-                            if (strtolower($att->presence_status) === 'alpha') {
-                                $att->delete();
-                                $this->warn("  -> Tanggal " . $currentDate->format('d-m-Y') . ": Alpha tidak valid ditemukan (padahal ada absensi), Telah dihapus.");
-                            }
+                // --- REPAIR LOGIC ---
+                // Jika sudah ada record Alpha tapi ternyata ada absen Real di range operational day, HAPUS ALPHANYA.
+                if ($hasRealPresence) {
+                    foreach ($allAttendances as $att) {
+                        if (strtolower($att->presence_status) === 'alpha') {
+                            $att->delete();
+                            $this->warn("  -> Tanggal " . $currentDate->format('d-m-Y') . ": Alpha dihapus karena ditemukan Absen Shift Malam (Security/Scan).");
                         }
-                        // Refresh data setelah delete
-                        $existingAttendance = Attendance::where('user_id', $user->id)
-                            ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate->format('Y-m-d')])
-                            ->first();
                     }
+                    continue; // Dia hadir, aman.
                 }
 
-                // --- CEK 2: Apakah user SEDANG CUTI / IZIN di tanggal ini? ---
+                // Jika sudah ada record Alpha (dan benar-benar tidak ada absen real), lewati.
+                $existingAlpha = $allAttendances->where('presence_status', 'Alpha')->first();
+                if ($existingAlpha) {
+                    continue;
+                }
+
+                // --- CEK IZIN/CUTI ---
                 $isOnLeave = LeaveRequest::where('user_id', $user->id)
                     ->where('status', 'approved')
                     ->where('type', '!=', 'telat')
-                    ->where(function ($query) use ($currentDate) {
-                        $query->whereDate('start_date', '<=', $currentDate)
-                            ->where(function ($q) use ($currentDate) {
-                                $q->whereNull('end_date')
-                                    ->orWhere('end_date', '>=', $currentDate);
-                            });
+                    ->whereDate('start_date', '<=', $currentDate)
+                    ->where(function ($q) use ($currentDate) {
+                        $q->whereNull('end_date')->orWhere('end_date', '>=', $currentDate);
                     })
                     ->first();
-
-                if ($existingAttendance) {
-                    // Perbarui status jika ada izin yang baru di-approve
-                    if (strtolower($existingAttendance->presence_status) === 'alpha' && $isOnLeave) {
-                        $presenceStatusMap = [
-                            'wfh' => 'WFH',
-                            'izin' => 'Izin',
-                            'sakit' => 'Sakit',
-                            'cuti' => 'Cuti',
-                            'libur' => 'Libur',
-                            'dinas' => 'Dinas Luar',
-                        ];
-                        $newStatus = $presenceStatusMap[$isOnLeave->type] ?? ucfirst($isOnLeave->type);
-
-                        $existingAttendance->update([
-                            'presence_status' => $newStatus,
-                            'attendance_type' => 'leave',
-                            'notes' => 'Auto-Update: Leave approved after Alpha generation. Reason: ' . $isOnLeave->reason
-                        ]);
-                        $this->comment("  -> Tanggal " . $currentDate->format('d-m-Y') . ": Alpha diperbarui menjadi " . $newStatus);
-                    }
-                    continue; 
-                }
-
-                // --- NEW: CEK CROSS-DAY SHIFT (SHIFT MALAM) ---
-                $yesterdayShift = Attendance::where('user_id', $user->id)
-                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate->copy()->subDay()->format('Y-m-d')])
-                    ->whereNotNull('check_out_time')
-                    ->first();
-
-                if ($yesterdayShift) {
-                    $checkOutLocal = Carbon::parse($yesterdayShift->check_out_time)->timezone($branchTimezone);
-                    // Jika pulang setelah jam 4 subuh hari ini, anggap dia hadir pagi ini
-                    if ($checkOutLocal->isSameDay($currentDate) && $checkOutLocal->hour >= 4) {
-                        $this->info("  -> Tanggal " . $currentDate->format('d-m-Y') . ": Skip (Karyawan Shift Malam dari kemarin)");
-                        continue;
-                    }
-                }
 
                 try {
                     if ($isOnLeave) {
                         $presenceStatusMap = [
-                            'wfh' => 'WFH',
-                            'izin' => 'Izin',
-                            'sakit' => 'Sakit',
-                            'cuti' => 'Cuti',
-                            'libur' => 'Libur',
-                            'dinas' => 'Dinas Luar',
+                            'wfh' => 'WFH', 'izin' => 'Izin', 'sakit' => 'Sakit',
+                            'cuti' => 'Cuti', 'libur' => 'Libur', 'dinas' => 'Dinas Luar',
                         ];
                         $status = $presenceStatusMap[$isOnLeave->type] ?? 'Izin';
 
                         Attendance::create([
                             'user_id' => $user->id,
                             'branch_id' => $user->branch_id ?? 1,
-                            'check_in_time' => $currentDate->copy()->startOfDay(),
+                            'check_in_time' => $currentDate->copy()->setHour(8), // Set jam standar
                             'status' => 'verified',
                             'presence_status' => $status,
                             'attendance_type' => 'leave',
-                            'notes' => 'Auto-Generated based on Leave Request: ' . $isOnLeave->reason
+                            'notes' => 'Auto-Generated: ' . $isOnLeave->reason
                         ]);
-                        $this->info("  -> Tanggal " . $currentDate->format('d-m-Y') . ": Ditetapkan " . strtoupper($status) . " (Approved Leave)");
+                        $this->info("  -> Tanggal " . $currentDate->format('d-m-Y') . ": Ditetapkan " . strtoupper($status));
                         continue;
                     }
 
-                    // ALPHA
+                    // --- TETAPKAN ALPHA (BENAR-BENAR TIDAK ADA ABSEN) ---
                     Attendance::create([
                         'user_id' => $user->id,
                         'branch_id' => $user->branch_id ?? 1,
                         'check_in_time' => $currentDate->copy()->startOfDay(),
-                        'check_out_time' => $currentDate->copy()->startOfDay(),
                         'status' => 'verified',
                         'presence_status' => 'Alpha',
                         'attendance_type' => 'system',
-                        'notes' => 'Auto-Generated: No attendance or leave request found.'
+                        'notes' => 'Auto-Generated: Tidak ada aktivitas ditemukan dalam 24 jam operasional.'
                     ]);
+
                     $this->error("  -> Tanggal " . $currentDate->format('d-m-Y') . ": Ditetapkan ALPHA.");
                     $totalAlphaCreated++;
 
