@@ -101,9 +101,26 @@ class AttendanceHistoryController extends Controller
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
 
-            // Cari attendance (Prioritaskan yang punya jam masuk asli / bukan 00:00 jika ada lebih dari satu)
-            $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
-                return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
+            // Cari attendance (Dukungan Shift Malam / Cross-Day)
+            $att = $attendances->filter(function ($a) use ($date, $branchTimezone) {
+                $checkIn = Carbon::parse($a->check_in_time)->timezone($branchTimezone);
+                $checkOut = $a->check_out_time ? Carbon::parse($a->check_out_time)->timezone($branchTimezone) : null;
+
+                // 1. Normal: check-in di hari ini
+                if ($checkIn->format('Y-m-d') === $date->format('Y-m-d')) {
+                    return true;
+                }
+
+                // 2. Shift Malam: check-in kemarin, tapi check-out hari ini
+                if ($checkIn->format('Y-m-d') === $date->copy()->subDay()->format('Y-m-d')) {
+                    if (!$checkOut) {
+                        // Masih aktif (belum pulang), dalam 24 jam terakhir
+                        return $checkIn->diffInHours(Carbon::now($branchTimezone)) < 24;
+                    }
+                    return $checkOut->format('Y-m-d') === $date->format('Y-m-d');
+                }
+
+                return false;
             })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
 
             // Cari leave
@@ -116,17 +133,19 @@ class AttendanceHistoryController extends Controller
             })->first();
 
             if ($att) {
-                $att->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
+                // Clone agar object asli di koleksi tidak rusak untuk loop tanggal lain
+                $displayAtt = clone $att;
+                $displayAtt->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
                 if ($att->check_out_time) {
-                    $att->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
+                    $displayAtt->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
                 }
 
                 // FIX: Attach relation leaveRequest manual agar foto bukti muncul di view
                 if ($leave) {
-                    $att->setRelation('leaveRequest', $leave);
+                    $displayAtt->setRelation('leaveRequest', $leave);
                 }
 
-                $historyCollection->push($att);
+                $historyCollection->push($displayAtt);
             } else {
                 // Jika tidak ada attendance (Alpha / Leave)
                 $fakeAtt = new Attendance();
