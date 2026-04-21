@@ -588,7 +588,10 @@ class TeamController extends Controller
             }
         }
 
-        $history = $historyCollection->sortByDesc('check_in_time');
+        $history = $historyCollection->sortByDesc(function ($item) {
+            $time = $item->check_in_time ?? $item->check_out_time;
+            return $time ? $time->timestamp : 0;
+        });
 
         // 5. HITUNG SUMMARY
         $summary = [

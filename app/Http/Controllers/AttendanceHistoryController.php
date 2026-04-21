@@ -216,7 +216,9 @@ class AttendanceHistoryController extends Controller
         }
 
         $history = $historyCollection->sortByDesc(function ($item) {
-            return $item->check_in_time->timestamp;
+            // Gunakan check_in_time, jika null (shift malam) gunakan check_out_time sebagai patokan urutan
+            $time = $item->check_in_time ?? $item->check_out_time;
+            return $time ? $time->timestamp : 0;
         });
 
         // 7. Kalkulasi Summary
