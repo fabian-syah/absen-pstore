@@ -151,14 +151,27 @@ class AttendanceHistoryController extends Controller
                 $shiftAtt = new Attendance();
                 $shiftAtt->user_id = $user->id;
                 $shiftAtt->user = $user;
-                // Gunakan tanggal hari ini + jam masuk dari kemarin agar sorting benar
                 $shiftAtt->check_in_time = $date->copy()->setTime($checkInLocal->hour, $checkInLocal->minute);
                 $shiftAtt->check_out_time = $checkOutLocal;
                 $shiftAtt->presence_status = $nightShift->presence_status ?? 'Masuk';
                 $shiftAtt->status = 'verified';
                 $shiftAtt->attendance_type = $nightShift->attendance_type;
                 $shiftAtt->notes = 'Shift Malam (Masuk: ' . $checkInLocal->format('d/m H:i') . ')';
+
+                // Salin foto & lokasi dari record asli
+                $shiftAtt->photo_path = $nightShift->photo_path;
+                $shiftAtt->photo_out_path = $nightShift->photo_out_path;
+                $shiftAtt->latitude = $nightShift->latitude;
+                $shiftAtt->longitude = $nightShift->longitude;
+                $shiftAtt->latitude_out = $nightShift->latitude_out;
+                $shiftAtt->longitude_out = $nightShift->longitude_out;
+                $shiftAtt->scanned_by_user_id = $nightShift->scanned_by_user_id;
+                $shiftAtt->scanned_out_by_user_id = $nightShift->scanned_out_by_user_id;
+                $shiftAtt->verified_by_user_id = $nightShift->verified_by_user_id;
+
+                // Salin relasi
                 $shiftAtt->setRelation('scanner', $nightShift->scanner);
+                $shiftAtt->setRelation('scannerOut', $nightShift->scannerOut);
                 $shiftAtt->setRelation('verifier', $nightShift->verifier);
                 if ($leave) {
                     $shiftAtt->setRelation('leaveRequest', $leave);
