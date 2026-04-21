@@ -637,6 +637,7 @@
                                             <!-- <option value="Dinas Luar">🚗 Dinas Luar</option> -->
                                             <option value="Sakit">🤒 Sakit</option>
                                             <option value="Izin">📝 Izin</option>
+                                            <option value="Libur">📅 Libur (Off Day)</option>
                                             <option value="Cuti">🏖️ Cuti</option>
                                             <option value="Alpha">❌ Alpha</option>
                                         </select>
