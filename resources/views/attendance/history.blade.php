@@ -626,7 +626,7 @@
                                 @csrf
                                 <div class="modal-body p-4">
                                     <input type="hidden" name="user_id" value="{{ $employee->id }}">
-                                    <input type="hidden" name="date" value="{{ $att->check_in_time->format('Y-m-d') }}">
+                                    <input type="hidden" name="date" value="{{ $displayDate->format('Y-m-d') }}">
                                     <div class="row g-3 mb-3">
                                         <div class="col-6"><label class="form-label small fw-bold">Jam Masuk</label><input type="time"
                                                 name="check_in_time" class="form-control"></div>
@@ -723,7 +723,7 @@
                                     <div class="row g-3 mb-3">
                                         <div class="col-6"><label class="form-label small fw-bold">Jam Masuk</label><input type="time"
                                                 name="check_in_time" class="form-control"
-                                                value="{{ $att->check_in_time->format('H:i') }}" required></div>
+                                                value="{{ $att->check_in_time ? $att->check_in_time->format('H:i') : '' }}" required></div>
                                         <div class="col-6"><label class="form-label small fw-bold">Jam Pulang</label><input type="time"
                                                 name="check_out_time" class="form-control"
                                                 value="{{ $att->check_out_time ? $att->check_out_time->format('H:i') : '' }}"></div>
