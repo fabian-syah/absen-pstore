@@ -12,7 +12,7 @@ use Carbon\CarbonPeriod; // Import ini penting untuk looping tanggal
 class MarkAbsentEmployees extends Command
 {
     protected $signature = 'attendance:mark-absent';
-    protected $description = 'Cek user yang tidak absen dari awal bulan sampai kemarin dan tandai Alpha';
+    protected $description = 'Cek user yang tidak absen, tandai Alpha, dan bersihkan record Alpha yang salah (Repair Mode)';
 
     public function handle()
     {
@@ -51,9 +51,31 @@ class MarkAbsentEmployees extends Command
                 $storageOffset = Carbon::now(config('app.timezone'))->format('P');
 
                 // --- CEK 1: Apakah SUDAH ADA data absensi di tanggal ini? ---
-                $existingAttendance = Attendance::where('user_id', $user->id)
+                $allAttendances = Attendance::where('user_id', $user->id)
                     ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate->format('Y-m-d')])
-                    ->first();
+                    ->get();
+
+                $existingAttendance = $allAttendances->first();
+
+                // --- REPAIR LOGIC: Bersihkan Alpha yang "nyelip" padahal ada absen real ---
+                if ($allAttendances->count() > 1) {
+                    $hasRealPresence = $allAttendances->contains(function ($att) {
+                        return strtolower($att->presence_status) !== 'alpha';
+                    });
+
+                    if ($hasRealPresence) {
+                        foreach ($allAttendances as $att) {
+                            if (strtolower($att->presence_status) === 'alpha') {
+                                $att->delete();
+                                $this->warn("  -> Tanggal " . $currentDate->format('d-m-Y') . ": Alpha tidak valid ditemukan (padahal ada absensi), Telah dihapus.");
+                            }
+                        }
+                        // Refresh data setelah delete
+                        $existingAttendance = Attendance::where('user_id', $user->id)
+                            ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate->format('Y-m-d')])
+                            ->first();
+                    }
+                }
 
                 // --- CEK 2: Apakah user SEDANG CUTI / IZIN di tanggal ini? ---
                 $isOnLeave = LeaveRequest::where('user_id', $user->id)
@@ -61,9 +83,9 @@ class MarkAbsentEmployees extends Command
                     ->where('type', '!=', 'telat')
                     ->where(function ($query) use ($currentDate) {
                         $query->whereDate('start_date', '<=', $currentDate)
-                            ->where(function($q) use ($currentDate) {
+                            ->where(function ($q) use ($currentDate) {
                                 $q->whereNull('end_date')
-                                  ->orWhere('end_date', '>=', $currentDate);
+                                    ->orWhere('end_date', '>=', $currentDate);
                             });
                     })
                     ->first();
@@ -81,7 +103,7 @@ class MarkAbsentEmployees extends Command
                             'dinas' => 'Dinas Luar',
                         ];
                         $newStatus = $presenceStatusMap[$isOnLeave->type] ?? ucfirst($isOnLeave->type);
-                        
+
                         $existingAttendance->update([
                             'presence_status' => $newStatus,
                             'attendance_type' => 'leave',
