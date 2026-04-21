@@ -39,26 +39,26 @@ class SecurityHeaders
  
         // 7. Content Security Policy (CSP)
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
-               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://maps.googleapis.com; " .
+               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " .
                "font-src 'self' https://fonts.gstatic.com data:; " .
-               "img-src 'self' data: https://ui-avatars.com; " .
-               "connect-src 'self'; " .
+               "img-src 'self' data: https:; " .
+               "connect-src 'self' https://maps.googleapis.com; " .
                "object-src 'none'; " .
                "frame-ancestors 'self'; " .
                "base-uri 'self'; " .
                "form-action 'self'; " .
                "upgrade-insecure-requests";
         $response->headers->set('Content-Security-Policy', $csp);
- 
-        // 8. Cross-Origin Isolation (COOP, COEP, CORP)
+
+        // 8. Cross-Origin Isolation (Paranoid Mode)
         $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
-        $response->headers->set('Cross-Origin-Embedder-Policy', 'credentialless');
+        $response->headers->set('Cross-Origin-Embedder-Policy', 'require-corp');
         $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
 
         // 9. Remove Information Leaks
         $response->headers->remove('X-Powered-By');
-        $response->headers->remove('Server'); // Opsional, tergantung apakah server hcdn mengisinya lagi
+        $response->headers->remove('Server');
         if (function_exists('header_remove')) {
             header_remove('X-Powered-By');
         }

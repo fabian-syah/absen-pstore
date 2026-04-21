@@ -1,0 +1,6 @@
+Contact: mailto:khusussharebian@gmail.com
+Expires: 2027-04-21T00:00:00.000Z
+Preferred-Languages: id, en
+Canonical: https://absenps.com/.well-known/security.txt
+Policy: https://absenps.com/security-policy
+# Terima kasih telah menjaga keamanan sistem kami.
