@@ -527,7 +527,7 @@ class TeamController extends Controller
                 $shiftAtt = new Attendance();
                 $shiftAtt->user_id = $user->id;
                 $shiftAtt->user = $user;
-                $shiftAtt->check_in_time = $date->copy()->setTime($checkInLocal->hour, $checkInLocal->minute);
+                $shiftAtt->check_in_time = null; // Kosongkan agar tidak disangka sudah absen masuk hari ini
                 $shiftAtt->check_out_time = $checkOutLocal;
                 $shiftAtt->presence_status = $nightShift->presence_status ?? 'Masuk';
                 $shiftAtt->status = 'verified';

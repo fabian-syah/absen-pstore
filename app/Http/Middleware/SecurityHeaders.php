@@ -32,7 +32,7 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
  
         // 5. Permissions Policy
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=()');
+        $response->headers->set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(self), payment=()');
  
         // 6. XSS Protection
         $response->headers->set('X-XSS-Protection', '1; mode=block');
