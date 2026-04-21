@@ -47,10 +47,10 @@ class SelfAttendanceController extends Controller
         }
 
         // 2. CEK SESI AKTIF (Termasuk Lembur Lintas Hari)
-        // Cari sesi yang belum checkout dan check_in dalam batas wajar (32 jam terakhir)
+        // Cari sesi yang belum checkout dan check_in dalam batas wajar (24 jam terakhir)
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', $localTime->copy()->subHours(32)) // Gunakan localTime (Peningkatan range ke 32jam)
+            ->where('check_in_time', '>=', $localTime->copy()->subHours(24)) // Gunakan localTime (Peningkatan range ke 24jam)
             ->where('check_in_time', '<=', $localTime) // Gunakan localTime
             ->where('status', '!=', 'alpha')
             ->where('attendance_type', '!=', 'leave')
@@ -159,7 +159,7 @@ class SelfAttendanceController extends Controller
         if (!$attendanceToUpdate && $request->has('mode') && $request->mode == 'pulang') {
             $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', $localTime->copy()->subHours(32))
+                ->where('check_in_time', '>=', $localTime->copy()->subHours(24))
                 ->where('attendance_type', '!=', 'leave')
                 ->latest('check_in_time')
                 ->first();

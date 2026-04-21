@@ -110,7 +110,7 @@ class TeamController extends Controller
                     return true;
 
                 // Case 3: MASIH Lembur (Check in kemarin, belum checkout)
-                if (!$checkOut && $checkIn->diffInHours($now) < 32 && $checkIn->format('Y-m-d') < $todayDate) {
+                if (!$checkOut && $checkIn->diffInHours($now) < 24 && $checkIn->format('Y-m-d') < $todayDate) {
                     if ($att->is_extended_shift) {
                         return true;
                     }
@@ -234,7 +234,7 @@ class TeamController extends Controller
                             return true;
                         if ($checkOut && $checkOut->format('Y-m-d') === $todayInBranch && $checkIn->format('Y-m-d') < $todayInBranch)
                             return true;
-                        if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 32 && $checkIn->format('Y-m-d') < $todayInBranch)
+                        if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 24 && $checkIn->format('Y-m-d') < $todayInBranch)
                             return true;
                         return false;
                     });
@@ -342,7 +342,7 @@ class TeamController extends Controller
                     return true;
                 if ($checkOut && $checkOut->format('Y-m-d') === $todayInBranch && $checkIn->format('Y-m-d') < $todayInBranch)
                     return true;
-                if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 32 && $checkIn->format('Y-m-d') < $todayInBranch)
+                if (!$checkOut && $checkIn->diffInHours($nowInBranch) < 24 && $checkIn->format('Y-m-d') < $todayInBranch)
                     return true;
                 return false;
             });

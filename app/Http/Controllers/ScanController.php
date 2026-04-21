@@ -47,7 +47,7 @@ class ScanController extends Controller
 
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', $localNow->copy()->subHours(32)) // Konsisten 32 jam
+            ->where('check_in_time', '>=', $localNow->copy()->subHours(24)) // Konsisten 24 jam
             ->where('attendance_type', '!=', 'leave')
             ->latest('check_in_time')
             ->first();
@@ -169,7 +169,7 @@ class ScanController extends Controller
 
             Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '<', $localTime->copy()->subHours(32))
+                ->where('check_in_time', '<', $localTime->copy()->subHours(24))
                 ->update(['check_out_time' => DB::raw("DATE_ADD(check_in_time, INTERVAL 12 HOUR)"), 'notes' => 'Auto-closed by Security Scan (Expired)']);
 
             // Check existing session today (Timezone Aware)
@@ -254,7 +254,7 @@ class ScanController extends Controller
 
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', $localTime->copy()->subHours(32)) // Konsisten 32 jam
+                ->where('check_in_time', '>=', $localTime->copy()->subHours(24)) // Konsisten 24 jam
                 ->where('attendance_type', '!=', 'leave')
                 ->latest('check_in_time')
                 ->first();
