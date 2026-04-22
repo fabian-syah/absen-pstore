@@ -62,7 +62,29 @@ class AttendanceHistoryController extends Controller
         // 3. Ambil "Hari Ini" di cabang tersebut
         $todayInBranch = Carbon::now($branchTimezone)->startOfDay();
 
-        // 4. Logika Penentuan Limit
+        // 4. Query Database (Pindah ke atas agar data tersedia untuk penentuan limit)
+        $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
+            ->where('user_id', $user->id)
+            ->whereBetween('check_in_time', [
+                $startDate->copy()->subDay()->startOfDay(),
+                $endDate->copy()->addDay()->endOfDay()
+            ])
+            ->get();
+
+        $leaves = LeaveRequest::with('verifier')
+            ->where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->where(function ($query) use ($startDate, $endDate) {
+                $s = $startDate->format('Y-m-d');
+                $e = $endDate->format('Y-m-d');
+                $query->where('start_date', '<=', $e)
+                    ->where(function ($q) use ($s) {
+                    $q->whereNull('end_date')
+                        ->orWhere('end_date', '>=', $s);
+                });
+            })->get();
+
+        // 5. Logika Penentuan Limit (Sekarang variabel sudah didefinisikan)
         $isCurrentMonth = ($selectedMonth == Carbon::now($branchTimezone)->month && $selectedYear == Carbon::now($branchTimezone)->year);
         if ($isCurrentMonth) {
             // Hanya tampilkan hari ini jika sudah ada absen masuk/leave hari ini,
@@ -78,29 +100,6 @@ class AttendanceHistoryController extends Controller
         } else {
             $limitDate = ($endDate->gt(Carbon::now($branchTimezone))) ? $todayInBranch : $endDate;
         }
-
-        // 5. Query Database dengan buffer satu hari
-        $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
-            ->where('user_id', $user->id)
-            ->whereBetween('check_in_time', [
-                $startDate->copy()->subDay()->startOfDay(),
-                $endDate->copy()->addDay()->endOfDay()
-            ])
-            ->get();
-
-        $leaves = LeaveRequest::with('verifier')
-            ->where('user_id', $user->id)
-            ->where('status', 'approved')
-            ->where(function ($query) use ($startDate, $endDate) {
-                $s = $startDate->format('Y-m-d');
-                $e = $endDate->format('Y-m-d');
-                // Overlap condition: leave starts on or before the end of the month AND ends on or after the start of the month
-                $query->where('start_date', '<=', $e)
-                    ->where(function ($q) use ($s) {
-                    $q->whereNull('end_date')
-                        ->orWhere('end_date', '>=', $s);
-                });
-            })->get();
 
         $historyCollection = collect();
 
