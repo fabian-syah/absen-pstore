@@ -65,7 +65,16 @@ class AttendanceHistoryController extends Controller
         // 4. Logika Penentuan Limit
         $isCurrentMonth = ($selectedMonth == Carbon::now($branchTimezone)->month && $selectedYear == Carbon::now($branchTimezone)->year);
         if ($isCurrentMonth) {
-            $limitDate = $todayInBranch;
+            // Hanya tampilkan hari ini jika sudah ada absen masuk/leave hari ini,
+            // atau jika sudah melewati ambang dini hari (4 pagi) agar tidak muncul Alpha prematur.
+            $hasActivityToday = $attendances->first(fn($a) => Carbon::parse($a->check_in_time)->timezone($branchTimezone)->isToday()) ||
+                                $leaves->first(fn($l) => Carbon::parse($l->start_date)->isToday());
+
+            if (!$hasActivityToday && Carbon::now($branchTimezone)->hour < 4) {
+                $limitDate = $todayInBranch->copy()->subDay();
+            } else {
+                $limitDate = $todayInBranch;
+            }
         } else {
             $limitDate = ($endDate->gt(Carbon::now($branchTimezone))) ? $todayInBranch : $endDate;
         }
@@ -120,7 +129,8 @@ class AttendanceHistoryController extends Controller
                     if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
 
                     if (!$checkOut) return $checkIn->diffInHours(Carbon::now($branchTimezone)) < 24;
-                    return $checkOut->format('Y-m-d') === $date->format('Y-m-d');
+                    // Jika sudah checkout, jangan buat baris baru di hari berikutnya (sudah muncul di hari Masuk)
+                    return false;
                 });
             }
 
