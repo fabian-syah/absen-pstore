@@ -24959,15 +24959,15 @@ code {
 }
 
 .performance-overview-carousel .carousel-inner .item .icon.icon-a::before {
-    content: url("../../images/dashboard/shape-1.svg");
+    content: url("/assets/images/dashboard/shape-1.svg");
 }
 
 .performance-overview-carousel .carousel-inner .item .icon.icon-b::before {
-    content: url("../../images/dashboard/shape-1.svg");
+    content: url("/assets/images/dashboard/shape-1.svg");
 }
 
 .performance-overview-carousel .carousel-inner .item .icon.icon-c::before {
-    content: url("../../images/dashboard/shape-3.svg");
+    content: url("/assets/images/dashboard/shape-3.svg");
 }
 
 .performance-overview-carousel .carousel-control-prev,
@@ -25687,7 +25687,7 @@ code {
 }
 
 .ad-dashboard {
-    background: #1F3BB3 url("../../images/dashboard/ad.png");
+    background: #1F3BB3 url("/assets/images/dashboard/ad.png");
     background-repeat: no-repeat;
     background-size: cover;
 }
@@ -25819,11 +25819,11 @@ code {
 }
 
 .accepted {
-    background: #1E3BB3 url("../../images/dashboard/accepted.png") repeat-y right top;
+    background: #1E3BB3 url("/assets/images/dashboard/accepted.png") repeat-y right top;
 }
 
 .rejected {
-    background: #00AAB7 url("../../images/dashboard/rejected.png") repeat-y right top;
+    background: #00AAB7 url("/assets/images/dashboard/rejected.png") repeat-y right top;
 }
 
 .application-chart-height {
@@ -28869,7 +28869,7 @@ svg {
 }
 
 .data-icon-card-primary .background-icon::before {
-    content: url("../../images/dashboard/shape-4.svg");
+    content: url("/assets/images/dashboard/shape-4.svg");
     position: absolute;
 }
 
@@ -28888,7 +28888,7 @@ svg {
 }
 
 .data-icon-card-secondary .background-icon::before {
-    content: url("../../images/dashboard/shape-4.svg");
+    content: url("/assets/images/dashboard/shape-4.svg");
     position: absolute;
 }
 
@@ -28907,7 +28907,7 @@ svg {
 }
 
 .data-icon-card-success .background-icon::before {
-    content: url("../../images/dashboard/shape-4.svg");
+    content: url("/assets/images/dashboard/shape-4.svg");
     position: absolute;
 }
 
@@ -28926,7 +28926,7 @@ svg {
 }
 
 .data-icon-card-info .background-icon::before {
-    content: url("../../images/dashboard/shape-4.svg");
+    content: url("/assets/images/dashboard/shape-4.svg");
     position: absolute;
 }
 
@@ -28945,7 +28945,7 @@ svg {
 }
 
 .data-icon-card-warning .background-icon::before {
-    content: url("../../images/dashboard/shape-4.svg");
+    content: url("/assets/images/dashboard/shape-4.svg");
     position: absolute;
 }
 
@@ -28964,7 +28964,7 @@ svg {
 }
 
 .data-icon-card-danger .background-icon::before {
-    content: url("../../images/dashboard/shape-4.svg");
+    content: url("/assets/images/dashboard/shape-4.svg");
     position: absolute;
 }
 
@@ -28983,7 +28983,7 @@ svg {
 }
 
 .data-icon-card-light .background-icon::before {
-    content: url("../../images/dashboard/shape-4.svg");
+    content: url("/assets/images/dashboard/shape-4.svg");
     position: absolute;
 }
 
@@ -29002,7 +29002,7 @@ svg {
 }
 
 .data-icon-card-dark .background-icon::before {
-    content: url("../../images/dashboard/shape-4.svg");
+    content: url("/assets/images/dashboard/shape-4.svg");
     position: absolute;
 }
 
@@ -29021,7 +29021,7 @@ svg {
 }
 
 .data-icon-card-purple .background-icon::before {
-    content: url("../../images/dashboard/shape-4.svg");
+    content: url("/assets/images/dashboard/shape-4.svg");
     position: absolute;
 }
 
@@ -29764,7 +29764,7 @@ select.tt-hint,
     outline: 1px solid #dee2e6;
     color: #c9c8c8;
     appearance: none;
-    background: url("../../images/arrow-down.svg");
+    background: url("/assets/images/arrow-down.svg");
     background-repeat: no-repeat;
     background-position: 99% center;
 }
@@ -29958,7 +29958,7 @@ select.form-select {
     outline: 1px solid #dee2e6;
     color: #c9c8c8;
     appearance: none;
-    background: url("../../images/arrow-down.svg");
+    background: url("/assets/images/arrow-down.svg");
     background-repeat: no-repeat;
     background-position: 99% center;
 }
