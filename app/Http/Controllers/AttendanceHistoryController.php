@@ -285,7 +285,7 @@ class AttendanceHistoryController extends Controller
             'check_out_time' => 'nullable',
             'status' => 'required|in:verified,pending_verification,rejected',
             'audit_note' => 'nullable|string',
-            'audit_photo' => $attendance->audit_photo_path ? 'nullable|image|max:2048' : 'required|image|max:2048'
+            'audit_photo' => 'nullable|image|max:8192'
         ]);
 
         $branchTimezone = $attendance->user->branch?->timezone ?? 'Asia/Jakarta';

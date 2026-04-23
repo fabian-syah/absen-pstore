@@ -613,6 +613,11 @@
     {{-- MODALS AUDIT --}}
     @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
         @foreach ($history as $index => $att)
+            @php
+                // Fix: Pastikan displayDate terdefinisi untuk setiap baris di loop modal
+                $dateObj = $att->check_in_time ?? $att->check_out_time ?? now();
+                $displayDateStr = $dateObj ? $dateObj->format('Y-m-d') : null;
+            @endphp
             @if (!$att->id)
                 {{-- Modal Input Manual --}}
                 <div class="modal fade" id="createAuditModal{{ $loop->index }}" tabindex="-1">
@@ -626,7 +631,7 @@
                                 @csrf
                                 <div class="modal-body p-4">
                                     <input type="hidden" name="user_id" value="{{ $employee->id }}">
-                                    <input type="hidden" name="date" value="{{ $displayDate->format('Y-m-d') }}">
+                                    <input type="hidden" name="date" value="{{ $displayDateStr }}">
                                     <div class="row g-3 mb-3">
                                         <div class="col-6"><label class="form-label small fw-bold">Jam Masuk</label><input type="time"
                                                 name="check_in_time" class="form-control"></div>
