@@ -450,7 +450,13 @@
                     <span class="menu-title">Ringkasan Gaji Cabang</span>
                 </a>
             </li>
-            {{-- DATA USER KHUSUS ADMIN GAJI --}}
+        {{-- DATA USER KHUSUS ADMIN GAJI --}}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('users.index') }}">
+                    <i class="menu-icon mdi mdi-account-group"></i>
+                    <span class="menu-title">Data User (Reguler)</span>
+                </a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin-gaji.users.index') }}">
                     <i class="menu-icon mdi mdi-account-group-outline"></i>

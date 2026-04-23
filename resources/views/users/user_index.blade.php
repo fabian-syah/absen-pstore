@@ -49,6 +49,13 @@
                     @endphp
                     {{-- NAV TABS UNTUK MEMISAHKAN AKTIF & NON-AKTIF --}}
                     <ul class="nav nav-tabs tab-basic mb-3" role="tablist">
+                        @if(auth()->user()->role == 'admin_gaji')
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('admin-gaji.users.index') }}">
+                                <i class="mdi mdi-arrow-left me-1"></i> Non Karyawan
+                            </a>
+                        </li>
+                        @endif
                         <li class="nav-item">
                             <a class="nav-link {{ $activeTab == 'active' ? 'active' : '' }}" id="active-tab" data-bs-toggle="tab" href="#active-users" role="tab" aria-controls="active-users" aria-selected="{{ $activeTab == 'active' ? 'true' : 'false' }}">
                                 User Aktif <span class="badge bg-success ms-1 text-white">{{ $users->total() }}</span>
