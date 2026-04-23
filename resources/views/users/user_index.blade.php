@@ -45,7 +45,9 @@
                     @endif
 
                     @php
-                        $activeTab = request('tab') == 'inactive' ? 'inactive' : 'active';
+                        // Jika role admin_gaji, default ke tab inactive (EX Karyawan)
+                        $defaultTab = auth()->user()->role == 'admin_gaji' ? 'inactive' : 'active';
+                        $activeTab = request('tab') ?: $defaultTab;
                     @endphp
                     {{-- NAV TABS UNTUK MEMISAHKAN AKTIF & NON-AKTIF --}}
                     <ul class="nav nav-tabs tab-basic mb-3" role="tablist">
@@ -56,11 +58,15 @@
                             </a>
                         </li>
                         @endif
+
+                        @if(auth()->user()->role != 'admin_gaji')
                         <li class="nav-item">
                             <a class="nav-link {{ $activeTab == 'active' ? 'active' : '' }}" id="active-tab" data-bs-toggle="tab" href="#active-users" role="tab" aria-controls="active-users" aria-selected="{{ $activeTab == 'active' ? 'true' : 'false' }}">
                                 User Aktif <span class="badge bg-success ms-1 text-white">{{ $users->total() }}</span>
                             </a>
                         </li>
+                        @endif
+
                         <li class="nav-item">
                             <a class="nav-link {{ $activeTab == 'inactive' ? 'active' : '' }}" id="inactive-tab" data-bs-toggle="tab" href="#inactive-users" role="tab" aria-controls="inactive-users" aria-selected="{{ $activeTab == 'inactive' ? 'true' : 'false' }}">
                                 EX Karyawan <span class="badge bg-danger ms-1 text-white">{{ $inactiveUsers->total() }}</span>
