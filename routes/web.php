@@ -228,9 +228,11 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // === RUTE BROADCAST ===
     Route::prefix('broadcast')->name('broadcast.')->group(function () {
-        Route::get('/notifications', [BroadcastController::class, 'getNotifications'])->name('notifications');
         Route::post('/{broadcast}/mark-read', [BroadcastController::class, 'markAsRead'])->name('mark-read');
         Route::get('/{broadcast}', [BroadcastController::class, 'show'])->name('show');
+        
+        // Rute API notifikasi (di luar middleware admin agar bisa diakses semua)
+        Route::get('/api/notifications', [BroadcastController::class, 'getNotifications'])->name('notifications');
 
         Route::middleware(['role:admin'])->group(function () {
             Route::get('/', [BroadcastController::class, 'index'])->name('index');
@@ -239,8 +241,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::get('/{broadcast}/edit', [BroadcastController::class, 'edit'])->name('edit');
             Route::put('/{broadcast}', [BroadcastController::class, 'update'])->name('update');
             Route::delete('/{broadcast}', [BroadcastController::class, 'destroy'])->name('destroy');
-            Route::get('/api/notifications', [BroadcastController::class, 'getNotifications'])->name('notifications');
         });
+        
     });
 
     // === RUTE WORK SCHEDULES ===

@@ -870,7 +870,9 @@
     <script src="{{ asset('assets/js/hoverable-collapse.js') }}"></script>
     <script src="{{ asset('assets/js/todolist.js') }}"></script>
     <script src="{{ asset('assets/js/jquery.cookie.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('assets/js/dashboard.js') }}"></script>
+    @if(request()->is('/') || request()->routeIs('dashboard') || request()->routeIs('dashboard.index'))
+        <script src="{{ asset('assets/js/dashboard.js') }}"></script>
+    @endif
 
     {{-- Firebase Notification Logic --}}
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
