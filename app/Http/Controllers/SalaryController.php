@@ -53,7 +53,12 @@ class SalaryController extends Controller
         $izinCount = 0;
         $wfhCount = 0;
 
-        $users = User::where('is_active', true)->orderBy('name')->get();
+        $role = Auth::user()->role;
+        if (in_array($role, ['admin', 'super_admin', 'admin_gaji', 'owner'])) {
+            $users = User::orderBy('is_active', 'desc')->orderBy('name')->get();
+        } else {
+            $users = User::where('is_active', true)->orderBy('name')->get();
+        }
 
         if ($selectedUserId) {
             $selectedUser = User::with(['branch', 'division', 'employeeSalary'])->find($selectedUserId);

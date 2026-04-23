@@ -19,8 +19,16 @@ class EmployeeSalaryController extends Controller
         $divisions = Division::orderBy('name')->get();
 
         $query = User::with(['branch', 'division', 'employeeSalary'])
-            ->where('is_active', true)
             ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji']);
+
+        if ($request->category == 'inactive') {
+            $query->where('is_active', false);
+        } else {
+            // Default show active, unless searching for inactive
+            if (!$request->filled('search')) {
+                $query->where('is_active', true);
+            }
+        }
 
         // Sembunyikan user dari cabang khusus "Cabang User Non Karyawan"
         $specialBranch = Branch::where('name', 'Cabang User Non Karyawan')->first();

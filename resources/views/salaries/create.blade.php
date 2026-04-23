@@ -38,7 +38,7 @@
                                 <select name="user_id" class="form-control text-dark" onchange="updateParams('user_id', this.value)">
                                     <option value="">-- Cari Karyawan --</option>
                                     @foreach($users as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }} - {{ $user->branch->name ?? '' }}</option>
+                                        <option value="{{ $user->id }}">{{ $user->name }} {{ !$user->is_active ? '(INACTIVE)' : '' }} - {{ $user->branch->name ?? '' }}</option>
                                     @endforeach
                                 </select>
                             @endif

@@ -35,7 +35,10 @@ class SalarySummaryController extends Controller
         if (in_array($user->role, ['admin', 'admin_gaji', 'owner', 'audit', 'leader'])) {
             $userId = $request->input('user_id'); // Bisa NULL (untuk lihat semua)
 
-            $usersQuery = User::where('is_active', true);
+            $usersQuery = User::query();
+            if (!in_array($user->role, ['admin', 'admin_gaji', 'owner', 'audit'])) {
+                $usersQuery->where('is_active', true);
+            }
             if ($branchId) {
                 $usersQuery->where('branch_id', $branchId);
             } elseif (!in_array($user->role, ['admin', 'admin_gaji', 'owner'])) {

@@ -453,6 +453,12 @@
                                     <i class="mdi mdi-alert-circle me-2"></i>Belum Diatur
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request('category') == 'inactive' ? 'active' : '' }}" 
+                                   href="{{ route('employee-salaries.index', [...request()->except(['category', 'page']), 'category' => 'inactive']) }}">
+                                    <i class="mdi mdi-account-off me-2"></i>Ex Karyawan
+                                </a>
+                            </li>
                         </ul>
                     </div>
 
@@ -481,7 +487,12 @@
                                                 @endif
                                             </div>
                                             <div class="user-info">
-                                                <h6 class="mb-1">{{ $user->name }}</h6>
+                                                <h6 class="mb-1">
+                                                    {{ $user->name }}
+                                                    @if(!$user->is_active)
+                                                        <span class="badge badge-danger p-1" style="font-size: 8px;">INACTIVE</span>
+                                                    @endif
+                                                </h6>
                                                 <small class="text-primary fw-bold">ID: {{ $user->login_id ?? '-' }}</small>
                                             </div>
                                         </div>

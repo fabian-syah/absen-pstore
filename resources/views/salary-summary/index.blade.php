@@ -46,7 +46,7 @@
                                         <option value="">-- Semua Karyawan (Kumulatif) --</option>
                                         @foreach($users as $user)
                                             <option value="{{ $user->id }}" {{ $userId == $user->id ? 'selected' : '' }}>
-                                                {{ $user->login_id }} - {{ $user->name }} ({{ $user->branch->name ?? 'Pusat' }})
+                                                {{ $user->login_id }} - {{ $user->name }} {{ !$user->is_active ? '(INACTIVE)' : '' }} ({{ $user->branch->name ?? 'Pusat' }})
                                             </option>
                                         @endforeach
                                     </select>
