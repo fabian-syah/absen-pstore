@@ -137,12 +137,13 @@ class SalaryController extends Controller
             foreach ($period as $date) {
                 $currentDateStr = $date->format('Y-m-d');
 
-                // Cari attendance (Prioritaskan yang punya jam masuk asli / bukan 00:00 jika ada lebih dari satu)
+                // 1. Cari Attendance yang Scan Masuk-nya di tanggal ini (Prioritaskan 'Masuk')
                 $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
-                    return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
-                })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
+                    if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
+                    return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
+                })->sortBy(fn($a) => strtolower($a->presence_status) === 'masuk' ? 0 : 1)->first();
 
-                // Cari leave
+                // 2. Cari leave
                 $leave = $leaves->filter(function ($l) use ($date) {
                     return $date->between(
                         Carbon::parse($l->start_date)->startOfDay(),
@@ -150,12 +151,12 @@ class SalaryController extends Controller
                     );
                 });
 
+                // Syarat Alpha Hard Reset 00:00: Tidak ada Masuk baru & Tidak ada Izin
                 if (!$att && $leave->isEmpty()) {
-                    // Tidak ada attendance dan tidak ada leave = Alpha
                     $alphaCount++;
                     $alphaDates[] = $date->format('d/m');
                 } else if ($att) {
-                    // Jika ADA attendance, cek apakah statusnya secara eksplisit 'Alpha' (system generated)
+                    // Jika ADA record tapi statusnya khusus sistem Alpha
                     $status = strtolower($att->presence_status ?? '');
                     if ($status === 'alpha') {
                         $alphaCount++;

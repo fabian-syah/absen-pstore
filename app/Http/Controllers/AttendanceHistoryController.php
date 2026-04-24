@@ -132,7 +132,7 @@ class AttendanceHistoryController extends Controller
                 return $date->between($lStart, $lEnd);
             })->first();
 
-            // 1. PRIORITAS: Scan MASUK di tanggal ini
+            // 1. PRIORITAS: Scan MASUK di tanggal ini (Berdasarkan Reset 00:00)
             if ($att) {
                 $displayAtt = clone $att;
                 $displayAtt->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
@@ -140,7 +140,7 @@ class AttendanceHistoryController extends Controller
                 if ($att->check_out_time) {
                     $displayAtt->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
                     
-                    // Catatan tambahan jika ini shift malam (biar audit tahu pulangnya besok)
+                    // Tampilkan info jika ini shift malam (Pencatatan tetap lengkap di baris masuk)
                     $inDate = $displayAtt->check_in_time->format('Y-m-d');
                     $outDate = $displayAtt->check_out_time->format('Y-m-d');
                     if ($inDate !== $outDate) {
@@ -153,32 +153,8 @@ class AttendanceHistoryController extends Controller
                 }
                 $historyCollection->push($displayAtt);
 
-            } elseif ($endedShift) {
-                // 2. JIKA TIDAK ADA MASUK BARU, tapi ada PULANG shift kemarin pagi ini
-                // Tampilkan ini agar hari tersebut TIDAK ALPHA (Sangat penting untuk shift malam)
-                $shiftAtt = new Attendance();
-                $shiftAtt->id = $endedShift->id;
-                $shiftAtt->user_id = $user->id;
-                $shiftAtt->check_in_time = null;
-                $shiftAtt->check_out_time = Carbon::parse($endedShift->check_out_time)->timezone($branchTimezone);
-                $shiftAtt->presence_status = 'Masuk';
-                $shiftAtt->status = $endedShift->status;
-                $shiftAtt->attendance_type = $endedShift->attendance_type;
-                $shiftAtt->notes = 'Selesai Shift Malam';
-                
-                // Metadata Pulang
-                $shiftAtt->photo_out_path = $endedShift->photo_out_path;
-                $shiftAtt->latitude_out = $endedShift->latitude_out;
-                $shiftAtt->longitude_out = $endedShift->longitude_out;
-                $shiftAtt->check_out_location = $endedShift->check_out_location;
-                
-                $shiftAtt->setRelation('verifier', $endedShift->verifier);
-                $shiftAtt->setRelation('scannerOut', $endedShift->scannerOut);
-                
-                $historyCollection->push($shiftAtt);
-
             } elseif ($leave) {
-                // 3. Izin / Cuti
+                // 2. Izin / Cuti
                 $leaveAtt = new Attendance();
                 $leaveAtt->user_id = $user->id;
                 $leaveAtt->check_in_time = $date->copy()->startOfDay();
@@ -201,7 +177,7 @@ class AttendanceHistoryController extends Controller
                 $historyCollection->push($leaveAtt);
 
             } else {
-                // 4. Alpha (Tidak ada Scan Masuk baru & Tidak ada Sisa Pulang pagi ini)
+                // 3. Alpha (Hard Reset 00:00)
                 $alphaAtt = new Attendance();
                 $alphaAtt->user_id = $user->id;
                 $alphaAtt->check_in_time = $date->copy()->startOfDay();
