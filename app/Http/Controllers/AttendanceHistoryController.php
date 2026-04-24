@@ -231,8 +231,10 @@ class AttendanceHistoryController extends Controller
                     $fakeAtt->setRelation('verifier', $leave->verifier);
                 } elseif ($endedShift && !$date->isToday()) {
                     // Tampilkan sebagai "Masuk" dengan menyalin data asli agar lengkap
+                    $fakeAtt->id = $endedShift->id; // Set ID asli agar tombol edit konsisten (ikon kecil)
                     $fakeAtt->presence_status = 'Masuk';
                     $fakeAtt->attendance_type = $endedShift->attendance_type;
+                    $fakeAtt->status = $endedShift->status;
                     $fakeAtt->notes = 'Masuk (Lanjutan Shift Malam)';
                     
                     // Foto & Lokasi (Copy dari record asli)
