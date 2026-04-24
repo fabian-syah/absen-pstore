@@ -158,9 +158,23 @@ class AttendanceHistoryController extends Controller
                 // Normal attendance
                 $displayAtt = clone $att;
                 $displayAtt->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
+                
                 if ($att->check_out_time) {
                     $displayAtt->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
+                    
+                    // JIKA PULANG DI HARI BERBEDA (Shift Malam):
+                    // Sembunyikan data pulang dari baris ini agar tidak duplikat dengan baris besok
+                    if ($displayAtt->check_in_time->format('Y-m-d') !== $displayAtt->check_out_time->format('Y-m-d')) {
+                        $displayAtt->check_out_time = null;
+                        $displayAtt->photo_out_path = null;
+                        $displayAtt->latitude_out = null;
+                        $displayAtt->longitude_out = null;
+                        if (!$displayAtt->notes) {
+                            $displayAtt->notes = 'Shift Malam (Selesai Besok Pagi)';
+                        }
+                    }
                 }
+
                 if ($leave) {
                     $displayAtt->setRelation('leaveRequest', $leave);
                 }
