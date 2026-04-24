@@ -109,12 +109,13 @@ class AttendanceHistoryController extends Controller
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
 
-            // 1. Cari Attendance yang Scan Masuk-nya di tanggal ini
-            $att = $attendances->first(function ($a) use ($currentDateStr, $branchTimezone) {
-                // Skip system alpha agar tidak mengganggu pencarian data real
+            // 1. PRIORITAS: Scan MASUK di tanggal ini (Utamakan status 'Masuk' jika ada dobel data)
+            $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
-            });
+            })->sortBy(function($a) {
+                return strtolower($a->presence_status) === 'masuk' ? 0 : 1;
+            })->first();
 
             // 2. Jika tidak ada scan masuk baru, cek apakah ada PULANG shift malam hari ini
             $endedShift = $attendances->first(function ($a) use ($currentDateStr, $branchTimezone) {
