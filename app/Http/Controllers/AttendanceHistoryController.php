@@ -128,7 +128,6 @@ class AttendanceHistoryController extends Controller
                     if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
 
                     if (!$checkOut) return $checkIn->diffInHours(Carbon::now($branchTimezone)) < 24;
-                    // Jika sudah checkout, jangan buat baris baru di sini (tapi dicek di Pass 3)
                     return false;
                 });
             }
@@ -156,7 +155,7 @@ class AttendanceHistoryController extends Controller
             })->first();
 
             if ($att) {
-                // Normal attendance — clone dan display
+                // Normal attendance
                 $displayAtt = clone $att;
                 $displayAtt->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
                 if ($att->check_out_time) {
@@ -175,14 +174,14 @@ class AttendanceHistoryController extends Controller
                 $shiftAtt = new Attendance();
                 $shiftAtt->user_id = $user->id;
                 $shiftAtt->user = $user;
-                $shiftAtt->check_in_time = null; // Kosongkan agar tidak disangka baru masuk hari ini
+                $shiftAtt->check_in_time = null;
                 $shiftAtt->check_out_time = $checkOutLocal;
                 $shiftAtt->presence_status = $nightShift->presence_status ?? 'Masuk';
-                $shiftAtt->status = 'verified';
+                $shiftAtt->status = $nightShift->status;
                 $shiftAtt->attendance_type = $nightShift->attendance_type;
-                $shiftAtt->notes = 'Shift Malam (Masuk: ' . $checkInLocal->format('d/m H:i') . ')';
+                $shiftAtt->notes = 'Lanjutan Shift Malam (Masuk: ' . $checkInLocal->format('d/m H:i') . ')';
 
-                // Salin foto & lokasi dari record asli
+                // COPY METADATA
                 $shiftAtt->photo_path = $nightShift->photo_path;
                 $shiftAtt->photo_out_path = $nightShift->photo_out_path;
                 $shiftAtt->latitude = $nightShift->latitude;
@@ -202,19 +201,30 @@ class AttendanceHistoryController extends Controller
                 $historyCollection->push($shiftAtt);
 
             } elseif ($endedShift) {
-                // Hari ini adalah hari PULANG — Tampilkan record kepulangan agar tidak Alpha
+                // Hari ini adalah hari PULANG
                 $checkInLocal = Carbon::parse($endedShift->check_in_time)->timezone($branchTimezone);
                 $checkOutLocal = Carbon::parse($endedShift->check_out_time)->timezone($branchTimezone);
 
                 $outAtt = new Attendance();
                 $outAtt->user_id = $user->id;
                 $outAtt->user = $user;
-                $outAtt->check_in_time = null;
+                $outAtt->check_in_time = $checkInLocal; // Set agar Jam Kerja muncul
                 $outAtt->check_out_time = $checkOutLocal;
-                $outAtt->presence_status = 'Masuk'; // Tampilkan sebagai masuk
-                $outAtt->status = 'verified';
+                $outAtt->presence_status = 'Masuk';
+                $outAtt->status = $endedShift->status;
                 $outAtt->attendance_type = $endedShift->attendance_type;
-                $outAtt->notes = 'Selesai Shift (Masuk: ' . $checkInLocal->format('d/m H:i') . ')';
+                $outAtt->notes = 'Selesai Shift Malam (Masuk: ' . $checkInLocal->format('d/m H:i') . ')';
+
+                // COPY METADATA PENTING
+                $outAtt->photo_path = $endedShift->photo_path;
+                $outAtt->photo_out_path = $endedShift->photo_out_path;
+                $outAtt->latitude = $endedShift->latitude;
+                $outAtt->longitude = $endedShift->longitude;
+                $outAtt->latitude_out = $endedShift->latitude_out;
+                $outAtt->longitude_out = $endedShift->longitude_out;
+                $outAtt->scanned_by_user_id = $endedShift->scanned_by_user_id;
+                $outAtt->scanned_out_by_user_id = $endedShift->scanned_out_by_user_id;
+                $outAtt->verified_by_user_id = $endedShift->verified_by_user_id;
 
                 $outAtt->setRelation('scanner', $endedShift->scanner);
                 $outAtt->setRelation('scannerOut', $endedShift->scannerOut);
@@ -225,7 +235,7 @@ class AttendanceHistoryController extends Controller
                 $historyCollection->push($outAtt);
 
             } else {
-                // Jika tidak ada attendance (Alpha / Leave)
+                // Alpha / Leave
                 $fakeAtt = new Attendance();
                 $fakeAtt->user_id = $user->id;
                 $fakeAtt->user = $user;
