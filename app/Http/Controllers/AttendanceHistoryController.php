@@ -116,7 +116,7 @@ class AttendanceHistoryController extends Controller
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
             })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
 
-            // === PASS 2: Jika tidak ada, cek Shift Malam dari kemarin ===
+            // === PASS 2: Jika tidak ada, cek Shift Malam yang MASIH BERJALAN dari kemarin ===
             $nightShift = null;
             if (!$att) {
                 $nightShift = $attendances->first(function ($a) use ($date, $branchTimezone) {
@@ -128,8 +128,23 @@ class AttendanceHistoryController extends Controller
                     if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
 
                     if (!$checkOut) return $checkIn->diffInHours(Carbon::now($branchTimezone)) < 24;
-                    // Jika sudah checkout, jangan buat baris baru di hari berikutnya (sudah muncul di hari Masuk)
+                    // Jika sudah checkout, jangan buat baris baru di sini (tapi dicek di Pass 3)
                     return false;
+                });
+            }
+
+            // === PASS 3: Cek apakah hari ini adalah hari "Pulang" dari shift malam kemarin ===
+            $endedShift = null;
+            if (!$att && !$nightShift) {
+                $endedShift = $attendances->first(function ($a) use ($date, $branchTimezone) {
+                    $checkIn = Carbon::parse($a->check_in_time)->timezone($branchTimezone);
+                    $checkOut = $a->check_out_time ? Carbon::parse($a->check_out_time)->timezone($branchTimezone) : null;
+
+                    if (!$checkOut) return false;
+
+                    // Apakah check_in kemarin DAN check_out hari ini?
+                    return $checkIn->format('Y-m-d') === $date->copy()->subDay()->format('Y-m-d') &&
+                           $checkOut->format('Y-m-d') === $date->format('Y-m-d');
                 });
             }
 
@@ -153,14 +168,14 @@ class AttendanceHistoryController extends Controller
                 $historyCollection->push($displayAtt);
 
             } elseif ($nightShift) {
-                // Shift Malam dari kemarin — buat baris "Masuk" untuk hari ini
+                // Shift Malam dari kemarin (Masih Berjalan)
                 $checkInLocal = Carbon::parse($nightShift->check_in_time)->timezone($branchTimezone);
                 $checkOutLocal = $nightShift->check_out_time ? Carbon::parse($nightShift->check_out_time)->timezone($branchTimezone) : null;
 
                 $shiftAtt = new Attendance();
                 $shiftAtt->user_id = $user->id;
                 $shiftAtt->user = $user;
-                $shiftAtt->check_in_time = null; // Kosongkan agar tidak disangka sudah absen masuk hari ini
+                $shiftAtt->check_in_time = null; // Kosongkan agar tidak disangka baru masuk hari ini
                 $shiftAtt->check_out_time = $checkOutLocal;
                 $shiftAtt->presence_status = $nightShift->presence_status ?? 'Masuk';
                 $shiftAtt->status = 'verified';
@@ -178,7 +193,6 @@ class AttendanceHistoryController extends Controller
                 $shiftAtt->scanned_out_by_user_id = $nightShift->scanned_out_by_user_id;
                 $shiftAtt->verified_by_user_id = $nightShift->verified_by_user_id;
 
-                // Salin relasi
                 $shiftAtt->setRelation('scanner', $nightShift->scanner);
                 $shiftAtt->setRelation('scannerOut', $nightShift->scannerOut);
                 $shiftAtt->setRelation('verifier', $nightShift->verifier);
@@ -186,6 +200,30 @@ class AttendanceHistoryController extends Controller
                     $shiftAtt->setRelation('leaveRequest', $leave);
                 }
                 $historyCollection->push($shiftAtt);
+
+            } elseif ($endedShift) {
+                // Hari ini adalah hari PULANG — Tampilkan record kepulangan agar tidak Alpha
+                $checkInLocal = Carbon::parse($endedShift->check_in_time)->timezone($branchTimezone);
+                $checkOutLocal = Carbon::parse($endedShift->check_out_time)->timezone($branchTimezone);
+
+                $outAtt = new Attendance();
+                $outAtt->user_id = $user->id;
+                $outAtt->user = $user;
+                $outAtt->check_in_time = null;
+                $outAtt->check_out_time = $checkOutLocal;
+                $outAtt->presence_status = 'Masuk'; // Tampilkan sebagai masuk
+                $outAtt->status = 'verified';
+                $outAtt->attendance_type = $endedShift->attendance_type;
+                $outAtt->notes = 'Selesai Shift (Masuk: ' . $checkInLocal->format('d/m H:i') . ')';
+
+                $outAtt->setRelation('scanner', $endedShift->scanner);
+                $outAtt->setRelation('scannerOut', $endedShift->scannerOut);
+                $outAtt->setRelation('verifier', $endedShift->verifier);
+                if ($leave) {
+                    $outAtt->setRelation('leaveRequest', $leave);
+                }
+                $historyCollection->push($outAtt);
+
             } else {
                 // Jika tidak ada attendance (Alpha / Leave)
                 $fakeAtt = new Attendance();
