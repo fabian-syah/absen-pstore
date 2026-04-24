@@ -230,24 +230,26 @@ class AttendanceHistoryController extends Controller
                     $fakeAtt->setRelation('leaveRequest', $leave);
                     $fakeAtt->setRelation('verifier', $leave->verifier);
                 } elseif ($endedShift && !$date->isToday()) {
-                    // Tampilkan sebagai "Masuk" dengan menyalin data asli agar lengkap
-                    $fakeAtt->id = $endedShift->id; // Set ID asli agar tombol edit konsisten (ikon kecil)
+                    // Baris untuk Hari Pulang: Hanya tampilkan data Pulang agar tidak duplikat dengan kemarin
+                    $fakeAtt->id = $endedShift->id;
+                    $fakeAtt->check_in_time = null; 
                     $fakeAtt->presence_status = 'Masuk';
                     $fakeAtt->attendance_type = $endedShift->attendance_type;
                     $fakeAtt->status = $endedShift->status;
-                    $fakeAtt->notes = 'Masuk (Lanjutan Shift Malam)';
+                    $fakeAtt->notes = 'Selesai Shift (Pulang Pagi)';
                     
-                    // Foto & Lokasi (Copy dari record asli)
-                    $fakeAtt->photo_path = $endedShift->photo_path;
+                    // KOSONGKAN data Masuk agar tidak sama dengan hari kemarin
+                    $fakeAtt->photo_path = null;
+                    $fakeAtt->latitude = null;
+                    $fakeAtt->longitude = null;
+
+                    // HANYA tampilkan data Pulang (yang terjadi di tanggal ini)
                     $fakeAtt->photo_out_path = $endedShift->photo_out_path;
-                    $fakeAtt->latitude = $endedShift->latitude;
-                    $fakeAtt->longitude = $endedShift->longitude;
                     $fakeAtt->latitude_out = $endedShift->latitude_out;
                     $fakeAtt->longitude_out = $endedShift->longitude_out;
 
                     // Timestamps & Relasi
                     $fakeAtt->check_out_time = Carbon::parse($endedShift->check_out_time)->timezone($branchTimezone);
-                    $fakeAtt->setRelation('scanner', $endedShift->scanner);
                     $fakeAtt->setRelation('scannerOut', $endedShift->scannerOut);
                     $fakeAtt->setRelation('verifier', $endedShift->verifier);
                 } else {
