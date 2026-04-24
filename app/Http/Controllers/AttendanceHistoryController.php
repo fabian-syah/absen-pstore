@@ -116,7 +116,15 @@ class AttendanceHistoryController extends Controller
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
             });
 
-            // 2. Cari Izin/Cuti di tanggal ini
+            // 2. Jika tidak ada scan masuk baru, cek apakah ada PULANG shift malam hari ini
+            $endedShift = $attendances->first(function ($a) use ($currentDateStr, $branchTimezone) {
+                if (!$a->check_out_time) return false;
+                $outDate = Carbon::parse($a->check_out_time)->timezone($branchTimezone)->format('Y-m-d');
+                $inDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d');
+                return $outDate === $currentDateStr && $inDate !== $currentDateStr;
+            });
+
+            // 3. Cari Izin/Cuti di tanggal ini
             $leave = $leaves->filter(function ($l) use ($date, $branchTimezone) {
                 $lStart = Carbon::parse($l->start_date, $branchTimezone)->startOfDay();
                 $lEnd = Carbon::parse($l->end_date ?? $l->start_date, $branchTimezone)->endOfDay();
@@ -124,21 +132,40 @@ class AttendanceHistoryController extends Controller
             })->first();
 
             if ($att) {
-                // Tampilkan data absen (Masuk & Pulang tetap satu baris di tanggal Scan Masuk)
+                // Tampilkan data absen masuk
                 $displayAtt = clone $att;
                 $displayAtt->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
                 if ($att->check_out_time) {
                     $displayAtt->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
-                    // Tambahkan catatan jika checkout di hari yang berbeda
-                    if ($displayAtt->check_in_time->format('Y-m-d') !== $displayAtt->check_out_time->format('Y-m-d')) {
-                        $displayAtt->notes = ($displayAtt->notes ? $displayAtt->notes . ' | ' : '') . 'Pulang: ' . $displayAtt->check_out_time->format('d/m H:i');
-                    }
                 }
                 
                 if ($leave) {
                     $displayAtt->setRelation('leaveRequest', $leave);
                 }
                 $historyCollection->push($displayAtt);
+
+            } elseif ($endedShift) {
+                // Tampilkan baris "Selesai Shift" untuk shift malam yang pulang hari ini
+                $shiftAtt = new Attendance();
+                $shiftAtt->id = $endedShift->id; // Gunakan ID asli agar bisa diedit
+                $shiftAtt->user_id = $user->id;
+                $shiftAtt->check_in_time = null; // Menandakan dia tidak masuk baru hari ini
+                $shiftAtt->check_out_time = Carbon::parse($endedShift->check_out_time)->timezone($branchTimezone);
+                $shiftAtt->presence_status = 'Masuk'; // Tetap dianggap masuk agar summary benar
+                $shiftAtt->status = $endedShift->status;
+                $shiftAtt->attendance_type = $endedShift->attendance_type;
+                $shiftAtt->notes = 'Selesai Shift Malam';
+                
+                // Metadata Pulang
+                $shiftAtt->photo_out_path = $endedShift->photo_out_path;
+                $shiftAtt->latitude_out = $endedShift->latitude_out;
+                $shiftAtt->longitude_out = $endedShift->longitude_out;
+                $shiftAtt->check_out_location = $endedShift->check_out_location;
+                
+                $shiftAtt->setRelation('verifier', $endedShift->verifier);
+                $shiftAtt->setRelation('scannerOut', $endedShift->scannerOut);
+                
+                $historyCollection->push($shiftAtt);
 
             } elseif ($leave) {
                 // Tampilkan Izin/Cuti
