@@ -230,11 +230,24 @@ class AttendanceHistoryController extends Controller
                     $fakeAtt->setRelation('leaveRequest', $leave);
                     $fakeAtt->setRelation('verifier', $leave->verifier);
                 } elseif ($endedShift && !$date->isToday()) {
-                    // Tampilkan sebagai "Masuk" di riwayat masa lalu agar tidak Alpha 
-                    // dan tidak membingungkan bagi HR/Admin saat rekap.
+                    // Tampilkan sebagai "Masuk" dengan menyalin data asli agar lengkap
                     $fakeAtt->presence_status = 'Masuk';
-                    $fakeAtt->attendance_type = 'system';
-                    $fakeAtt->notes = 'Masuk (Lanjutan Shift Malam kemarin)';
+                    $fakeAtt->attendance_type = $endedShift->attendance_type;
+                    $fakeAtt->notes = 'Masuk (Lanjutan Shift Malam)';
+                    
+                    // Foto & Lokasi (Copy dari record asli)
+                    $fakeAtt->photo_path = $endedShift->photo_path;
+                    $fakeAtt->photo_out_path = $endedShift->photo_out_path;
+                    $fakeAtt->latitude = $endedShift->latitude;
+                    $fakeAtt->longitude = $endedShift->longitude;
+                    $fakeAtt->latitude_out = $endedShift->latitude_out;
+                    $fakeAtt->longitude_out = $endedShift->longitude_out;
+
+                    // Timestamps & Relasi
+                    $fakeAtt->check_out_time = Carbon::parse($endedShift->check_out_time)->timezone($branchTimezone);
+                    $fakeAtt->setRelation('scanner', $endedShift->scanner);
+                    $fakeAtt->setRelation('scannerOut', $endedShift->scannerOut);
+                    $fakeAtt->setRelation('verifier', $endedShift->verifier);
                 } else {
                     $fakeAtt->presence_status = 'Alpha';
                     $fakeAtt->attendance_type = 'system';
