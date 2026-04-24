@@ -229,9 +229,10 @@ class AttendanceHistoryController extends Controller
                     $fakeAtt->notes = $leave->reason;
                     $fakeAtt->setRelation('leaveRequest', $leave);
                     $fakeAtt->setRelation('verifier', $leave->verifier);
-                } elseif ($endedShift) {
-                    // JANGAN ALPHA jika dia baru pulang shift malam tadi pagi
-                    // Ini menghindari baris double tapi tetap menghilangkan status Alpha
+                } elseif ($endedShift && !$date->isToday()) {
+                    // JANGAN ALPHA jika di riwayat masa lalu (Past Days) dia baru pulang shift malam tadi pagi
+                    // Ini menghindari riwayat kotor, tapi tetap membiarkan status Alpha untuk HARI INI (Today) 
+                    // sampai ybs scan masuk nanti malam.
                     $fakeAtt->presence_status = 'Selesai Shift';
                     $fakeAtt->attendance_type = 'system';
                     $fakeAtt->notes = 'Istirahat (Selesai Shift Pagi tadi)';
