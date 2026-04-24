@@ -135,8 +135,23 @@ class AttendanceHistoryController extends Controller
                 // Tampilkan data absen masuk
                 $displayAtt = clone $att;
                 $displayAtt->check_in_time = Carbon::parse($att->check_in_time)->timezone($branchTimezone);
+                
                 if ($att->check_out_time) {
-                    $displayAtt->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
+                    $inDate = $displayAtt->check_in_time->format('Y-m-d');
+                    $outDate = Carbon::parse($att->check_out_time)->timezone($branchTimezone)->format('Y-m-d');
+                    
+                    if ($inDate === $outDate) {
+                        // Normal Day Shift: Tampilkan pulang di baris yang sama (Untuk data bulan lalu)
+                        $displayAtt->check_out_time = Carbon::parse($att->check_out_time)->timezone($branchTimezone);
+                    } else {
+                        // Night Shift: Sembunyikan pulang dari baris MASUK (agar tidak double dengan baris besok)
+                        $displayAtt->check_out_time = null;
+                        $displayAtt->photo_out_path = null;
+                        $displayAtt->latitude_out = null;
+                        $displayAtt->longitude_out = null;
+                        $displayAtt->check_out_location = null;
+                        $displayAtt->notes = 'Shift Malam (Selesai Besok)';
+                    }
                 }
                 
                 if ($leave) {
@@ -147,16 +162,16 @@ class AttendanceHistoryController extends Controller
             } elseif ($endedShift) {
                 // Tampilkan baris "Selesai Shift" untuk shift malam yang pulang hari ini
                 $shiftAtt = new Attendance();
-                $shiftAtt->id = $endedShift->id; // Gunakan ID asli agar bisa diedit
+                $shiftAtt->id = $endedShift->id; // ID asli agar bisa diedit
                 $shiftAtt->user_id = $user->id;
                 $shiftAtt->check_in_time = null; // Menandakan dia tidak masuk baru hari ini
                 $shiftAtt->check_out_time = Carbon::parse($endedShift->check_out_time)->timezone($branchTimezone);
-                $shiftAtt->presence_status = 'Masuk'; // Tetap dianggap masuk agar summary benar
+                $shiftAtt->presence_status = 'Masuk'; // Tetap 'Masuk' agar summary Hadir benar
                 $shiftAtt->status = $endedShift->status;
                 $shiftAtt->attendance_type = $endedShift->attendance_type;
                 $shiftAtt->notes = 'Selesai Shift Malam';
                 
-                // Metadata Pulang
+                // Metadata Pulang (PENTING: Ambil data asli dari database)
                 $shiftAtt->photo_out_path = $endedShift->photo_out_path;
                 $shiftAtt->latitude_out = $endedShift->latitude_out;
                 $shiftAtt->longitude_out = $endedShift->longitude_out;
@@ -166,7 +181,6 @@ class AttendanceHistoryController extends Controller
                 $shiftAtt->setRelation('scannerOut', $endedShift->scannerOut);
                 
                 $historyCollection->push($shiftAtt);
-
             } elseif ($leave) {
                 // Tampilkan Izin/Cuti
                 $leaveAtt = new Attendance();
