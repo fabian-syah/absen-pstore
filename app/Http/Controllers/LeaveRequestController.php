@@ -155,6 +155,19 @@ class LeaveRequestController extends Controller
 
         LeaveRequest::create($data);
 
+        // --- NOTIFIKASI KE AUDIT & ADMIN ---
+        try {
+            $user = Auth::user();
+            $branchName = $user->branch?->name ?? '-';
+            $title = "Pengajuan " . ucfirst($request->type);
+            $body = "{$user->name} mengajukan " . ucfirst($request->type) . " di {$branchName}.";
+            
+            // Dispatch job agar tidak membebani request user
+            \App\Jobs\SendAuditNotificationJob::dispatch(['audit', 'admin'], $user->branch_id, $title, $body);
+        } catch (\Exception $e) {
+            \Log::error("Leave Request Notification Error: " . $e->getMessage());
+        }
+
         // === REDIRECT KE DASHBOARD (Agar status pending terlihat) ===
         return redirect()->route('dashboard')->with('success', 'Pengajuan berhasil dikirim.');
     }

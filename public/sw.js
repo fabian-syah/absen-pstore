@@ -20,6 +20,9 @@ self.addEventListener('push', function (event) {
         body: data.body || "Cek aplikasi untuk informasi terbaru.",
         icon: data.icon || "/favicon.ico",
         badge: "/favicon.ico",
+        vibrate: [300, 100, 300, 100, 300], // Getaran untuk High Priority
+        tag: 'audit-verification-' + (data.id || Date.now()), // Unik agar tidak digabung browser
+        renotify: true, // Bunyikan suara lagi
         data: {
             url: data.url || "/"
         }

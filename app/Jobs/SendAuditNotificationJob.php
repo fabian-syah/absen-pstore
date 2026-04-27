@@ -7,12 +7,12 @@ use Illuminate\Contracts\Queue\ShouldQueue; // <--- Implement ShouldQueue is key
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Traits\SendFcmNotification;
+use App\Traits\SendWebPushNotification;
 use Illuminate\Support\Facades\Log;
 
 class SendAuditNotificationJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, SendFcmNotification;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, SendWebPushNotification;
 
     protected $roles;
     protected $branchId;
@@ -40,8 +40,14 @@ class SendAuditNotificationJob implements ShouldQueue
     public function handle()
     {
         try {
-            // Using the trait method to send notification
-            $this->sendNotificationToBranchRoles($this->roles, $this->branchId, $this->title, $this->body);
+            // Using the new Web Push trait method
+            $this->sendWebPushToBranchRoles(
+                $this->roles, 
+                $this->branchId, 
+                $this->title, 
+                $this->body,
+                url('/dashboard')
+            );
         } catch (\Throwable $e) {
             echo " [ERROR] " . $e->getMessage() . "\n";
             Log::error("FCM Background Job Error: " . $e->getMessage());
