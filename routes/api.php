@@ -20,10 +20,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-
-    // Push Notifications (Web-Push VAPID)
-    Route::post('/push-subscription', [App\Http\Controllers\PushSubscriptionController::class, 'update']);
-    Route::delete('/push-subscription', [App\Http\Controllers\PushSubscriptionController::class, 'destroy']);
 });
 
 Route::post('/get-user-by-qr', [ScanController::class, 'getUserByQr'])->name('api.get.user');

@@ -81,6 +81,11 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/attendance-certificate', [App\Http\Controllers\CertificateController::class, 'show'])->name('certificate.attendance');
 
     Route::post('/update-fcm-token', [UserController::class, 'updateFcmToken'])->name('update.fcm.token');
+    
+    // Push Notifications (Web-Push VAPID)
+    Route::post('/push-subscription', [App\Http\Controllers\PushSubscriptionController::class, 'update'])->name('push.subscribe');
+    Route::delete('/push-subscription', [App\Http\Controllers\PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
+
     Route::get('/kasbon/export', [App\Http\Controllers\CashAdvanceController::class, 'export'])->name('kasbon.export');
     Route::post('/kasbon/bulk-approve', [CashAdvanceController::class, 'bulkApprove'])->name('kasbon.bulk-approve'); // <--- NEW ROUTE
 

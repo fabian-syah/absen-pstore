@@ -41,12 +41,12 @@ function initPush() {
         })
         .then(function (subscription) {
             // Kirim ke Backend VPS
-            fetch('/api/push-subscription', {
+            fetch('/push-subscription', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'Authorization': 'Bearer ' + (window.api_token || '') // Sesuaikan jika pakai Sanctum
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify(subscription)
             })
