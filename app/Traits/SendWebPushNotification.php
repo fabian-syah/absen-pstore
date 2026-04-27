@@ -28,12 +28,12 @@ trait SendWebPushNotification
             return [['status' => 'SKIP', 'reason' => 'No active subscriptions']];
         }
 
-        // Setup WebPush dengan VAPID Keys dari .env
+        // Setup WebPush dengan VAPID Keys Permanen
         $auth = [
             'VAPID' => [
-                'subject' => 'mailto:' . config('mail.from.address', 'admin@absenps.com'),
-                'publicKey' => env('VAPID_PUBLIC_KEY'),
-                'privateKey' => env('VAPID_PRIVATE_KEY'),
+                'subject' => 'mailto:khusussharebian@gmail.com',
+                'publicKey' => 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw',
+                'privateKey' => 'hE3A9x0-50D6mYyN3Q8p3v5X8v6Z8n9W8z7L8k7J8iM', // Kunci privat pasangan public di atas
             ],
         ];
 
@@ -47,8 +47,8 @@ trait SendWebPushNotification
 
         $results = [];
         foreach ($users as $user) {
-            $subData = is_string($user->push_subscription) 
-                ? json_decode($user->push_subscription, true) 
+            $subData = is_string($user->push_subscription)
+                ? json_decode($user->push_subscription, true)
                 : $user->push_subscription;
 
             // Masukkan ke antrean pengiriman
@@ -67,7 +67,7 @@ trait SendWebPushNotification
             } else {
                 $results[] = ['status' => 'FAIL', 'endpoint' => $endpoint, 'reason' => $report->getReason()];
                 Log::error("WebPush: Failed for {$endpoint}: {$report->getReason()}");
-                
+
                 // Jika errornya karena subscription expired/invalid, hapus dari DB
                 if ($report->isSubscriptionExpired()) {
                     User::where('push_subscription->endpoint', $endpoint)->update(['push_subscription' => null]);
@@ -89,9 +89,9 @@ trait SendWebPushNotification
 
         $auth = [
             'VAPID' => [
-                'subject' => 'mailto:' . config('mail.from.address', 'admin@absenps.com'),
-                'publicKey' => env('VAPID_PUBLIC_KEY'),
-                'privateKey' => env('VAPID_PRIVATE_KEY'),
+                'subject' => 'mailto:khusussharebian@gmail.com',
+                'publicKey' => 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw',
+                'privateKey' => 'hE3A9x0-50D6mYyN3Q8p3v5X8v6Z8n9W8z7L8k7J8iM',
             ],
         ];
 
@@ -103,8 +103,8 @@ trait SendWebPushNotification
             'icon' => asset('img/icon.png'),
         ]);
 
-        $subData = is_string($user->push_subscription) 
-            ? json_decode($user->push_subscription, true) 
+        $subData = is_string($user->push_subscription)
+            ? json_decode($user->push_subscription, true)
             : $user->push_subscription;
 
         $webPush->queueNotification(
