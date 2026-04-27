@@ -1,22 +1,25 @@
 self.addEventListener('push', function (event) {
-    if (!(self.Notification && self.Notification.permission === 'granted')) {
-        return;
+    let data = {};
+    if (event.data) {
+        try {
+            data = event.data.json();
+        } catch (e) {
+            data = { title: "Notifikasi Baru", body: event.data.text() };
+        }
     }
 
-    const data = event.data?.json() ?? {};
-    const title = data.title || "Notifikasi Baru";
-    const body = data.body || "Anda memiliki pesan baru.";
-    const icon = data.icon || "/img/icon.png";
-    const url = data.url || "/";
+    const title = data.title || "Notifikasi Absensi";
+    const options = {
+        body: data.body || "Cek aplikasi untuk informasi terbaru.",
+        icon: data.icon || "/favicon.ico",
+        badge: "/favicon.ico",
+        data: {
+            url: data.url || "/"
+        }
+    };
 
     event.waitUntil(
-        self.registration.showNotification(title, {
-            body: body,
-            icon: icon,
-            data: {
-                url: url
-            }
-        })
+        self.registration.showNotification(title, options)
     );
 });
 
