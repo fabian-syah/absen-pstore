@@ -911,7 +911,7 @@
             }
 
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                navigator.serviceWorker.register('/sw.js?v=3')
                     .then(function (registration) {
                         Notification.requestPermission().then((permission) => {
                             if (permission === 'granted') {
