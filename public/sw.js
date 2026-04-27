@@ -1,13 +1,17 @@
 self.addEventListener('push', function (event) {
     console.log('[Service Worker] Push Received.');
     let data = {};
+    
     if (event.data) {
         try {
+            // Coba baca sebagai JSON
             data = event.data.json();
-            console.log('[Service Worker] Push Data:', data);
+            console.log('[Service Worker] Push Data (JSON):', data);
         } catch (e) {
-            data = { title: "Notifikasi Baru", body: event.data.text() };
-            console.log('[Service Worker] Push Text:', event.data.text());
+            // Jika bukan JSON (seperti tes manual tadi), baca sebagai teks
+            const text = event.data.text();
+            data = { title: "Notifikasi Absensi", body: text };
+            console.log('[Service Worker] Push Data (Text):', text);
         }
     }
 
