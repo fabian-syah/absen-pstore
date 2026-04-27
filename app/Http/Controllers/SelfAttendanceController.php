@@ -371,10 +371,11 @@ class SelfAttendanceController extends Controller
         // <-- TAMBAHKAN INI DI AWAL
         if ($shouldSendNotif) {
             try {
-                // Menggunakan Job Queue agar tidak loading lama
-                SendAuditNotificationJob::dispatch(['audit', 'admin'], $user->branch_id, $notifTitle, $notifBody);
+                // Gunakan class khusus untuk kirim langsung (bukan Job)
+                $notifier = new class { use \App\Traits\SendWebPushNotification; };
+                $notifier->sendWebPushToBranchRoles(['audit', 'admin'], $user->branch_id, $notifTitle, $notifBody, url('/verifikasi/absensi'));
             } catch (\Exception $e) {
-                Log::error("FCM Dispatch Error: " . $e->getMessage());
+                \Log::error("Web Push Error: " . $e->getMessage());
             }
         }
 

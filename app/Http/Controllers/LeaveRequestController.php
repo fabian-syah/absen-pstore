@@ -162,8 +162,9 @@ class LeaveRequestController extends Controller
             $title = "Pengajuan " . ucfirst($request->type);
             $body = "{$user->name} mengajukan " . ucfirst($request->type) . " di {$branchName}.";
             
-            // Dispatch job agar tidak membebani request user
-            \App\Jobs\SendAuditNotificationJob::dispatch(['audit', 'admin'], $user->branch_id, $title, $body);
+            // Kirim langsung (bukan Job) untuk memastikan notifikasi sampai
+            $notifier = new class { use \App\Traits\SendWebPushNotification; };
+            $notifier->sendWebPushToBranchRoles(['audit', 'admin'], $user->branch_id, $title, $body, url('/leave-requests'));
         } catch (\Exception $e) {
             \Log::error("Leave Request Notification Error: " . $e->getMessage());
         }
