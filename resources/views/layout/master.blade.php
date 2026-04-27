@@ -911,7 +911,7 @@
             }
 
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js?v=3')
+                navigator.serviceWorker.register('/push-sw.js')
                     .then(function (registration) {
                         Notification.requestPermission().then((permission) => {
                             if (permission === 'granted') {
