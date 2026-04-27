@@ -924,25 +924,6 @@
                                         if (currentToken) sendTokenToServer(currentToken);
                                     }).catch(err => console.log("FCM Token error suppressed."));
 
-                                // VAPID Web Push Subscription
-                                var vapidKey = 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw';
-                                var padding = '='.repeat((4 - vapidKey.length % 4) % 4);
-                                var base64 = (vapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
-                                var rawData = atob(base64);
-                                var outputArray = new Uint8Array(rawData.length);
-                                for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-
-                                registration.pushManager.getSubscription().then(function(sub) {
-                                    if (sub) return sub;
-                                    return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: outputArray });
-                                }).then(function(subscription) {
-                                    var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                                    fetch('/push-subscription', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                                        body: JSON.stringify(subscription)
-                                    }).then(function(r) { return r.json(); }).then(function(d) { console.log('Push Subscription Saved:', d); });
-                                }).catch(function(e) { console.log('Push subscribe error:', e); });
                             }
                         });
                     }).catch(err => console.log("Service Worker registration suppressed."));
@@ -989,7 +970,37 @@
             </feMerge>
         </filter>
     </svg>
-    <!-- push subscription now handled inline above -->
+    {{-- Push Notification Registration (ALL ROLES) --}}
+    @if(auth()->check())
+    <script>
+        (function() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+            navigator.serviceWorker.register('/sw.js?v=' + Date.now()).then(function(registration) {
+                if (Notification.permission !== 'granted') return;
+
+                var vapidKey = 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw';
+                var padding = '='.repeat((4 - vapidKey.length % 4) % 4);
+                var base64 = (vapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+                var rawData = atob(base64);
+                var outputArray = new Uint8Array(rawData.length);
+                for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+
+                registration.pushManager.getSubscription().then(function(sub) {
+                    if (sub) return sub;
+                    return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: outputArray });
+                }).then(function(subscription) {
+                    var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    fetch('/push-subscription', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                        body: JSON.stringify(subscription)
+                    }).then(function(r) { return r.json(); }).then(function(d) { console.log('Push Subscription Saved:', d); });
+                }).catch(function(e) { console.log('Push subscribe error:', e); });
+            }).catch(function(e) { console.log('SW register error:', e); });
+        })();
+    </script>
+    @endif
 </body>
 
 </html>
