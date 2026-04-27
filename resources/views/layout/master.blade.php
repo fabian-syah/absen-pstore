@@ -974,30 +974,49 @@
     @if(auth()->check())
     <script>
         (function() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+            if (!('serviceWorker' in navigator)) return;
 
             navigator.serviceWorker.register('/sw.js?v=' + Date.now()).then(function(registration) {
-                if (Notification.permission !== 'granted') return;
+                console.log('SW Registered:', registration.scope);
 
-                var vapidKey = 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw';
-                var padding = '='.repeat((4 - vapidKey.length % 4) % 4);
-                var base64 = (vapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
-                var rawData = atob(base64);
-                var outputArray = new Uint8Array(rawData.length);
-                for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+                Notification.requestPermission().then(function(permission) {
+                    if (permission !== 'granted') return;
 
-                registration.pushManager.getSubscription().then(function(sub) {
-                    if (sub) return sub;
-                    return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: outputArray });
-                }).then(function(subscription) {
-                    var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    fetch('/push-subscription', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                        body: JSON.stringify(subscription)
-                    }).then(function(r) { return r.json(); }).then(function(d) { console.log('Push Subscription Saved:', d); });
-                }).catch(function(e) { console.log('Push subscribe error:', e); });
-            }).catch(function(e) { console.log('SW register error:', e); });
+                    // 1. Firebase Messaging (Only for specific roles)
+                    @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji'))
+                    messaging.getToken({
+                        vapidKey: "{{ config('services.firebase.vapid_key') }}",
+                        serviceWorkerRegistration: registration
+                    }).then(function(token) {
+                        if (token) sendTokenToServer(token);
+                    }).catch(function(e) { console.log('FCM Token Error:', e); });
+                    @endif
+
+                    // 2. VAPID Web Push (For ALL roles)
+                    if ('PushManager' in window) {
+                        var vapidKey = 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw';
+                        var padding = '='.repeat((4 - vapidKey.length % 4) % 4);
+                        var base64 = (vapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+                        var rawData = atob(base64);
+                        var outputArray = new Uint8Array(rawData.length);
+                        for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+
+                        registration.pushManager.getSubscription().then(function(sub) {
+                            if (sub) return sub;
+                            return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: outputArray });
+                        }).then(function(subscription) {
+                            fetch('/push-subscription', {
+                                method: 'POST',
+                                headers: { 
+                                    'Content-Type': 'application/json', 
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+                                },
+                                body: JSON.stringify(subscription)
+                            }).then(function(r) { return r.json(); }).then(function(d) { console.log('Push Saved:', d); });
+                        }).catch(function(e) { console.log('Push Error:', e); });
+                    }
+                });
+            }).catch(function(e) { console.log('SW Error:', e); });
         })();
     </script>
     @endif
