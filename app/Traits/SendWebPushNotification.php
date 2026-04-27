@@ -107,21 +107,26 @@ trait SendWebPushNotification
             ? json_decode($user->push_subscription, true)
             : $user->push_subscription;
 
-        $webPush->queueNotification(
-            Subscription::create($subData),
-            $payload
-        );
+        try {
+            $webPush->queueNotification(
+                Subscription::create($subData),
+                $payload
+            );
 
-        foreach ($webPush->flush() as $report) {
-            if ($report->isSuccess()) {
-                return true;
-            } else {
-                Log::error("WebPush Single Fail: " . $report->getReason());
-                if ($report->isSubscriptionExpired()) {
-                    $user->update(['push_subscription' => null]);
+            foreach ($webPush->flush() as $report) {
+                if ($report->isSuccess()) {
+                    \Log::info("WebPush: Success for {$report->getEndpoint()}");
+                    return true;
+                } else {
+                    \Log::error("WebPush: Failed for {$report->getEndpoint()}. Reason: {$report->getReason()}");
+                    if ($report->isSubscriptionExpired()) {
+                        $user->update(['push_subscription' => null]);
+                    }
+                    return false;
                 }
-                return false;
             }
+        } catch (\Exception $e) {
+            \Log::error("WebPush Error: " . $e->getMessage());
         }
 
         return false;

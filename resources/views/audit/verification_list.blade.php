@@ -328,6 +328,32 @@
                     imgModal.show();
                 });
             });
+
+            // --- AUTO REFRESH LOGIC (POLLING) ---
+            let currentCount = {{ $pendingAttendances->total() }};
+            
+            function checkNewData() {
+                fetch(window.location.href, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Ekstrak jumlah pending dari HTML response (sederhana)
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newCountText = doc.querySelector('.badge-pending-count .fw-bold')?.textContent;
+                    const newCount = parseInt(newCountText || '0');
+
+                    if (newCount !== currentCount) {
+                        console.log('New data detected! Refreshing...');
+                        window.location.reload();
+                    }
+                })
+                .catch(err => console.error('Polling error:', err));
+            }
+
+            // Jalankan setiap 10 detik
+            setInterval(checkNewData, 10000);
         });
     </script>
     <style>
