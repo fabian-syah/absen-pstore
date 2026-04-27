@@ -895,7 +895,7 @@
 
         const messaging = firebase.messaging();
 
-        @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
+        @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji'))
             function sendTokenToServer(token) {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 fetch("{{ route('update.fcm.token') }}", {
