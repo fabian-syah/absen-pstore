@@ -76,6 +76,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // Route Test Notifikasi
     Route::get('/test-notification', [DashboardController::class, 'testNotification'])->name('test.notification');
+    
+    Route::get('/test-push', function() {
+        $user = auth()->user();
+        $sender = new class { use \App\Traits\SendWebPushNotification; };
+        $result = $sender->sendWebPushToUser($user, "Tes Berhasil", "Ini adalah notifikasi percobaan.");
+        return response()->json(['result' => $result]);
+    });
 
     // Route Sertifikat Penghargaan
     Route::get('/attendance-certificate', [App\Http\Controllers\CertificateController::class, 'show'])->name('certificate.attendance');
