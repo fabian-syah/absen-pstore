@@ -971,31 +971,108 @@
         </filter>
     </svg>
     @if(auth()->check() && auth()->user()->role == 'audit')
-        <div id="audit-notif-blocker" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999999; backdrop-filter: blur(10px); color: white; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 40px; border-radius: 24px; border: 2px solid #3b82f6; max-width: 500px; box-shadow: 0 0 50px rgba(59, 130, 246, 0.5);">
+        <div id="audit-notif-blocker" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 999999; backdrop-filter: blur(15px); color: white; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
+            <div id="audit-content-request" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 40px; border-radius: 24px; border: 2px solid #3b82f6; max-width: 500px; box-shadow: 0 0 50px rgba(59, 130, 246, 0.5);">
                 <div style="font-size: 80px; margin-bottom: 20px;">🔔</div>
                 <h2 style="font-weight: 800; margin-bottom: 15px; color: #fff;">NOTIFIKASI WAJIB AKTIF</h2>
                 <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 30px;">
-                    Sebagai <b>Audit</b>, Anda wajib mengaktifkan notifikasi browser untuk memantau absensi masuk secara real-time. Anda tidak dapat mengakses fitur sistem sebelum notifikasi diaktifkan.
+                    Sebagai <b>Audit</b>, Anda wajib mengaktifkan notifikasi browser untuk memantau absensi masuk secara real-time.
                 </p>
                 <button onclick="forceEnableNotif()" style="background: #3b82f6; color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);">
-                    AKTIFKAN NOTIFIKASI SEKARANG
+                    AKTIFKAN SEKARANG
                 </button>
-                <p id="audit-error-msg" style="margin-top: 20px; color: #f87171; font-size: 14px; display: none;">
-                    Notifikasi diblokir! Silakan klik ikon gembok di sebelah URL browser dan pilih 'Allow' untuk Notifikasi, lalu refresh halaman.
+            </div>
+
+            <div id="audit-content-denied" style="display: none; background: linear-gradient(135deg, #2d0a0a 0%, #1a0505 100%); padding: 40px; border-radius: 24px; border: 2px solid #ef4444; max-width: 600px; box-shadow: 0 0 50px rgba(239, 68, 68, 0.3);">
+                <div style="font-size: 60px; margin-bottom: 20px;">🚫</div>
+                <h2 style="font-weight: 800; margin-bottom: 15px; color: #fff;">NOTIFIKASI DIBLOKIR</h2>
+                <p style="font-size: 15px; color: #fca5a5; margin-bottom: 25px;">
+                    Anda telah memblokir izin notifikasi. Ikuti langkah di bawah untuk membukanya kembali agar bisa masuk ke sistem:
                 </p>
+                
+                <div id="denied-guide-container" style="text-align: left; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
+                    <!-- Content will be injected by JS based on OS -->
+                </div>
+
+                <script>
+                    function getOSGuide() {
+                        var userAgent = window.navigator.userAgent,
+                            platform = window.navigator.platform,
+                            macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'],
+                            windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'],
+                            iosPlatforms = ['iPhone', 'iPad', 'iPod'],
+                            os = null;
+
+                        if (macosPlatforms.indexOf(platform) !== -1) {
+                            return `
+                                <p style="font-weight: bold; color: #fff; margin-bottom: 10px;"><i class="mdi mdi-apple me-2"></i>Panduan MacBook (Safari/Chrome):</p>
+                                <ol style="color: #cbd5e1; font-size: 13px; padding-left: 20px;">
+                                    <li><b>Safari:</b> Klik menu <b>Safari</b> di baris atas -> <b>Settings</b> -> <b>Websites</b> -> <b>Notifications</b>. Cari 'absenps.com' dan ubah ke <b>Allow</b>.</li>
+                                    <li><b>Chrome:</b> Klik ikon <b>Gembok (🔒)</b> di sebelah URL -> <b>Site Settings</b> -> <b>Notifications</b> -> <b>Allow</b>.</li>
+                                    <li>Pastikan mode <b>Do Not Disturb</b> (Fokus) di MacBook Anda sedang OFF.</li>
+                                </ol>
+                            `;
+                        } else if (iosPlatforms.indexOf(platform) !== -1) {
+                            return `
+                                <p style="font-weight: bold; color: #fff; margin-bottom: 10px;"><i class="mdi mdi-cellphone-iphone me-2"></i>Panduan iPhone (iOS):</p>
+                                <ol style="color: #cbd5e1; font-size: 13px; padding-left: 20px;">
+                                    <li>Buka aplikasi <b>Settings</b> di iPhone Anda.</li>
+                                    <li>Pilih menu <b>Notifications</b>.</li>
+                                    <li>Cari aplikasi <b>'PStore System'</b> (atau nama PWA ini).</li>
+                                    <li>Aktifkan <b>Allow Notifications</b>.</li>
+                                    <li><i>Catatan: Notifikasi iPhone hanya jalan jika web ini sudah Anda 'Add to Home Screen'.</i></li>
+                                </ol>
+                            `;
+                        } else if (/Android/.test(userAgent)) {
+                            return `
+                                <p style="font-weight: bold; color: #fff; margin-bottom: 10px;"><i class="mdi mdi-android me-2"></i>Panduan HP Android (Chrome):</p>
+                                <ol style="color: #cbd5e1; font-size: 13px; padding-left: 20px;">
+                                    <li>Klik titik tiga <b>(⋮)</b> di pojok kanan atas browser.</li>
+                                    <li>Klik ikon <b>(ⓘ) Info</b> -> <b>Permissions</b> atau <b>Site Settings</b>.</li>
+                                    <li>Pilih <b>Notifications</b> dan klik <b>Allow</b>.</li>
+                                    <li>Pastikan mode <b>Hemat Baterai</b> tidak memblokir notifikasi.</li>
+                                </ol>
+                            `;
+                        } else {
+                            return `
+                                <p style="font-weight: bold; color: #fff; margin-bottom: 10px;"><i class="mdi mdi-microsoft-windows me-2"></i>Panduan Windows (PC/Laptop):</p>
+                                <ol style="color: #cbd5e1; font-size: 13px; padding-left: 20px;">
+                                    <li>Klik ikon <b>Gembok (🔒)</b> di sebelah URL web.</li>
+                                    <li>Cari menu <b>Notifications</b> (Notifikasi).</li>
+                                    <li>Ubah statusnya menjadi <b>Allow</b> (Izinkan).</li>
+                                    <li>Jika tidak ada, klik <b>Site Settings</b> lalu cari Notifikasi.</li>
+                                </ol>
+                            `;
+                        }
+                    }
+                    document.getElementById('denied-guide-container').innerHTML = getOSGuide();
+                </script>
+
+                <button onclick="location.reload()" style="background: #ef4444; color: white; border: none; padding: 12px 30px; border-radius: 50px; font-weight: bold; cursor: pointer;">
+                    SAYA SUDAH IZINKAN, REFRESH SEKARANG
+                </button>
             </div>
         </div>
         <script>
             function checkAuditNotif() {
                 var blocker = document.getElementById('audit-notif-blocker');
-                if (Notification.permission !== 'granted') {
-                    blocker.style.display = 'flex';
-                    // Sembunyikan scrollbar agar tidak bisa scroll ke bawah
-                    document.body.style.overflow = 'hidden';
-                } else {
+                var reqContent = document.getElementById('audit-content-request');
+                var deniedContent = document.getElementById('audit-content-denied');
+
+                if (Notification.permission === 'granted') {
                     blocker.style.display = 'none';
                     document.body.style.overflow = 'auto';
+                } else {
+                    blocker.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                    
+                    if (Notification.permission === 'denied') {
+                        reqContent.style.display = 'none';
+                        deniedContent.style.display = 'block';
+                    } else {
+                        reqContent.style.display = 'block';
+                        deniedContent.style.display = 'none';
+                    }
                 }
             }
 
@@ -1004,14 +1081,12 @@
                     if (permission === 'granted') {
                         location.reload();
                     } else {
-                        document.getElementById('audit-error-msg').style.display = 'block';
+                        checkAuditNotif();
                     }
                 });
             }
 
-            // Cek saat halaman dimuat
             document.addEventListener('DOMContentLoaded', checkAuditNotif);
-            // Cek berkala jika mereka ubah via settings
             setInterval(checkAuditNotif, 2000);
         </script>
     @endif
