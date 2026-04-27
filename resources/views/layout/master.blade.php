@@ -970,6 +970,52 @@
             </feMerge>
         </filter>
     </svg>
+    @if(auth()->check() && auth()->user()->role == 'audit')
+        <div id="audit-notif-blocker" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999999; backdrop-filter: blur(10px); color: white; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 40px; border-radius: 24px; border: 2px solid #3b82f6; max-width: 500px; box-shadow: 0 0 50px rgba(59, 130, 246, 0.5);">
+                <div style="font-size: 80px; margin-bottom: 20px;">🔔</div>
+                <h2 style="font-weight: 800; margin-bottom: 15px; color: #fff;">NOTIFIKASI WAJIB AKTIF</h2>
+                <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 30px;">
+                    Sebagai <b>Audit</b>, Anda wajib mengaktifkan notifikasi browser untuk memantau absensi masuk secara real-time. Anda tidak dapat mengakses fitur sistem sebelum notifikasi diaktifkan.
+                </p>
+                <button onclick="forceEnableNotif()" style="background: #3b82f6; color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);">
+                    AKTIFKAN NOTIFIKASI SEKARANG
+                </button>
+                <p id="audit-error-msg" style="margin-top: 20px; color: #f87171; font-size: 14px; display: none;">
+                    Notifikasi diblokir! Silakan klik ikon gembok di sebelah URL browser dan pilih 'Allow' untuk Notifikasi, lalu refresh halaman.
+                </p>
+            </div>
+        </div>
+        <script>
+            function checkAuditNotif() {
+                var blocker = document.getElementById('audit-notif-blocker');
+                if (Notification.permission !== 'granted') {
+                    blocker.style.display = 'flex';
+                    // Sembunyikan scrollbar agar tidak bisa scroll ke bawah
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    blocker.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            }
+
+            function forceEnableNotif() {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        location.reload();
+                    } else {
+                        document.getElementById('audit-error-msg').style.display = 'block';
+                    }
+                });
+            }
+
+            // Cek saat halaman dimuat
+            document.addEventListener('DOMContentLoaded', checkAuditNotif);
+            // Cek berkala jika mereka ubah via settings
+            setInterval(checkAuditNotif, 2000);
+        </script>
+    @endif
+
     {{-- Push Notification Registration (ALL ROLES) --}}
     @if(auth()->check())
     <script>
