@@ -1101,7 +1101,7 @@
                 console.log('SW Registered:', registration.scope);
 
                 // --- AUTO RESET JIKA VAPID KEY BERUBAH ---
-                const CURRENT_VAPID = 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw';
+                const CURRENT_VAPID = 'BJyXyV7_f7K8oRz8n0U4v6f1B8n2m9s8k7j6h5g4f3d2s1a0q9w8e7r6t5y4u3i2o1p';
                 if (localStorage.getItem('last_vapid_key') !== CURRENT_VAPID) {
                     registration.pushManager.getSubscription().then(sub => {
                         if (sub) sub.unsubscribe();
@@ -1125,7 +1125,7 @@
 
                     // 2. VAPID Web Push (For ALL roles)
                     if ('PushManager' in window) {
-                        var vapidKey = 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw';
+                        var vapidKey = 'BJyXyV7_f7K8oRz8n0U4v6f1B8n2m9s8k7j6h5g4f3d2s1a0q9w8e7r6t5y4u3i2o1p';
                         var padding = '='.repeat((4 - vapidKey.length % 4) % 4);
                         var base64 = (vapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
                         var rawData = atob(base64);

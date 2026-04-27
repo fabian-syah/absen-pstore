@@ -32,8 +32,8 @@ trait SendWebPushNotification
         $auth = [
             'VAPID' => [
                 'subject' => 'mailto:khusussharebian@gmail.com',
-                'publicKey' => 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw',
-                'privateKey' => 'hE3A9x0-50D6mYyN3Q8p3v5X8v6Z8n9W8z7L8k7J8iM', // Kunci privat pasangan public di atas
+                'publicKey' => 'BJyXyV7_f7K8oRz8n0U4v6f1B8n2m9s8k7j6h5g4f3d2s1a0q9w8e7r6t5y4u3i2o1p',
+                'privateKey' => 'z1x2c3v4b5n6m7k8l9j0h1g2f3d4s5a6q7w8e9r0t1y2u3',
             ],
         ];
 
@@ -90,8 +90,8 @@ trait SendWebPushNotification
         $auth = [
             'VAPID' => [
                 'subject' => 'mailto:khusussharebian@gmail.com',
-                'publicKey' => 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw',
-                'privateKey' => 'hE3A9x0-50D6mYyN3Q8p3v5X8v6Z8n9W8z7L8k7J8iM',
+                'publicKey' => 'BJyXyV7_f7K8oRz8n0U4v6f1B8n2m9s8k7j6h5g4f3d2s1a0q9w8e7r6t5y4u3i2o1p',
+                'privateKey' => 'z1x2c3v4b5n6m7k8l9j0h1g2f3d4s5a6q7w8e9r0t1y2u3',
             ],
         ];
 
