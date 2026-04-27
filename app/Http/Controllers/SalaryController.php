@@ -252,7 +252,8 @@ class SalaryController extends Controller
 
         foreach ($inputsToClean as $field) {
             if ($request->has($field)) {
-                $cleanValue = str_replace('.', '', $request->input($field));
+                $val = $request->input($field);
+                $cleanValue = ($val === '' || $val === null) ? 0 : str_replace('.', '', $val);
                 $request->merge([$field => $cleanValue]);
             }
         }
