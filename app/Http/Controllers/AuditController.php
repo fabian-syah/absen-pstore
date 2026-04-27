@@ -11,11 +11,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Traits\SendFcmNotification;
+use App\Traits\SendWebPushNotification;
 use Carbon\Carbon;
 
 class AuditController extends Controller
 {
-    use SendFcmNotification;
+    use SendFcmNotification, SendWebPushNotification;
 
     /**
      * Menampilkan daftar izin telat (HANYA PENDING - Status: pending)
@@ -856,20 +857,20 @@ class AuditController extends Controller
      */
     private function sendNotificationToUser($user, $title, $body)
     {
-        // 1. Cek apakah user ada dan punya token
-        if (!$user || !$user->fcm_token) {
-            Log::info("Skip notifikasi: User tidak ditemukan atau tidak punya token FCM.");
-            return;
+        // 1. Kirim via WebPush (Sistem Baru)
+        if ($user && $user->push_subscription) {
+            $this->sendWebPushToUser($user, $title, $body);
         }
 
-        try {
-            if (method_exists($this, 'sendNotification')) {
-                $this->sendNotification($user->fcm_token, $title, $body);
-            } else {
-                Log::warning("Method 'sendNotification' tidak ditemukan di Trait SendFcmNotification.");
+        // 2. Tetap kirim via FCM (Opsional, sebagai backup jika masih ada yang pakai)
+        if ($user && $user->fcm_token) {
+            try {
+                if (method_exists($this, 'sendNotification')) {
+                    $this->sendNotification($user->fcm_token, $title, $body);
+                }
+            } catch (\Exception $e) {
+                Log::error("FCM Fail: " . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            Log::error("Gagal mengirim notifikasi ke user " . $user->name . ": " . $e->getMessage());
         }
     }
 

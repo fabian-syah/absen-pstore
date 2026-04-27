@@ -968,6 +968,7 @@
             </feMerge>
         </filter>
     </svg>
+    <script src="{{ asset('js/push-config.js') }}"></script>
 </body>
 
 </html>
