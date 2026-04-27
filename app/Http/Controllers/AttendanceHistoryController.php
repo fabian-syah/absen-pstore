@@ -112,6 +112,7 @@ class AttendanceHistoryController extends Controller
             // 1. PRIORITAS: Scan MASUK di tanggal ini (Utamakan status 'Masuk' jika ada dobel data)
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
+                if ($a->status === 'rejected') return false; // <--- FIX: Abaikan data yang sudah ditolak Audit
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
             })->sortBy(function($a) {
                 return strtolower($a->presence_status) === 'masuk' ? 0 : 1;

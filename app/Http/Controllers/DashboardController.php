@@ -171,8 +171,9 @@ class DashboardController extends Controller
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(24))
-            ->where('check_in_time', '<=', $nowInBranch) // FIX: Jangan ambil data masa depan (misal Libur besok)
-            ->where('attendance_type', '!=', 'leave') // <--- FIX: Jangan ambil record izin sebagai sesi aktif
+            ->where('check_in_time', '<=', $nowInBranch)
+            ->where('attendance_type', '!=', 'leave')
+            ->where('status', '!=', 'rejected') // <--- FIX: Jangan ambil yang sudah ditolak Audit
             ->latest('check_in_time')
             ->first();
 
