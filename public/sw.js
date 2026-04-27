@@ -3,15 +3,15 @@ self.addEventListener('push', function (event) {
     let data = {};
     
     if (event.data) {
+        const rawText = event.data.text();
         try {
-            // Coba baca sebagai JSON
-            data = event.data.json();
+            // Coba parse manual dari teks
+            data = JSON.parse(rawText);
             console.log('[Service Worker] Push Data (JSON):', data);
         } catch (e) {
-            // Jika bukan JSON (seperti tes manual tadi), baca sebagai teks
-            const text = event.data.text();
-            data = { title: "Notifikasi Absensi", body: text };
-            console.log('[Service Worker] Push Data (Text):', text);
+            // Jika gagal, anggap itu teks biasa
+            data = { title: "Notifikasi Absensi", body: rawText };
+            console.log('[Service Worker] Push Data (Text):', rawText);
         }
     }
 
