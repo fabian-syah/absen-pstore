@@ -53,6 +53,7 @@ class SelfAttendanceController extends Controller
             ->where('check_in_time', '>=', $localTime->copy()->subHours(24)) // Gunakan localTime (Peningkatan range ke 24jam)
             ->where('check_in_time', '<=', $localTime) // Gunakan localTime
             ->where('status', '!=', 'alpha')
+            ->where('status', '!=', 'rejected') // <--- FIX: Jangan anggap sesi rejected sebagai sesi aktif
             ->where('attendance_type', '!=', 'leave')
             ->latest('check_in_time')
             ->first();
@@ -156,14 +157,13 @@ class SelfAttendanceController extends Controller
         }
 
         // Fallback jika ID tidak dikirim tapi mode pulang
-        if (!$attendanceToUpdate && $request->has('mode') && $request->mode == 'pulang') {
             $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', $localTime->copy()->subHours(24))
+                ->where('status', '!=', 'rejected') // <--- FIX: Jangan ambil yang sudah ditolak
                 ->where('attendance_type', '!=', 'leave')
                 ->latest('check_in_time')
                 ->first();
-        }
 
         // --- PROSES KOMPRESI GAMBAR ---
         $path = null;
