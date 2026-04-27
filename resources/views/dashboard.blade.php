@@ -2171,7 +2171,7 @@
 
                                             function updateWorkDuration() {
                                                 const now = new Date();
-                                                const diff = now - checkInTime;
+                                                const diff = Math.max(0, now - checkInTime); // <--- FIX: Pastikan tidak negatif
 
                                                 const hours = Math.floor(diff / (1000 * 60 * 60));
                                                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));

@@ -1100,6 +1100,16 @@
             navigator.serviceWorker.register('/sw.js?v=' + Date.now()).then(function(registration) {
                 console.log('SW Registered:', registration.scope);
 
+                // --- AUTO RESET JIKA VAPID KEY BERUBAH ---
+                const CURRENT_VAPID = 'BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw';
+                if (localStorage.getItem('last_vapid_key') !== CURRENT_VAPID) {
+                    registration.pushManager.getSubscription().then(sub => {
+                        if (sub) sub.unsubscribe();
+                        localStorage.setItem('last_vapid_key', CURRENT_VAPID);
+                        console.log('VAPID Changed, Unsubscribed old.');
+                    });
+                }
+
                 Notification.requestPermission().then(function(permission) {
                     if (permission !== 'granted') return;
 
