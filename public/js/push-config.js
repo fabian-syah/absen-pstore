@@ -1,7 +1,7 @@
 /**
  * Push Notification Registration Logic (VAPID)
  */
-const VAPID_PUBLIC_KEY = "GANTI_DENGAN_PUBLIC_KEY_DARI_VPS";
+const VAPID_PUBLIC_KEY = "BCdgL0IeSqxtiJT-ymrp1RRF-1wy8-Y74PY_LZ3S7z93noZNnL19bLTXcxR-I9iPvgbKI8KuWbLObuKJsj9Skmw";
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -48,7 +48,7 @@ function initPush() {
                     'Accept': 'application/json',
                     'Authorization': 'Bearer ' + (window.api_token || '') // Sesuaikan jika pakai Sanctum
                 },
-                body: json.stringify(subscription)
+                body: JSON.stringify(subscription)
             })
             .then(res => res.json())
             .then(data => console.log('Push Subscription Saved:', data))
