@@ -84,6 +84,19 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         return response()->json(['result' => $result]);
     });
 
+    Route::post('/test-push-all', function() {
+        if (auth()->user()->role !== 'admin') abort(403);
+        $sender = new class { use \App\Traits\SendWebPushNotification; };
+        $results = $sender->sendWebPushToBranchRoles(
+            ['admin', 'audit', 'leader', 'security', 'user_biasa', 'admin_gaji'],
+            null,
+            "🔔 Test Notifikasi",
+            "Ini adalah notifikasi percobaan dari Admin. Jika Anda melihat ini, berarti push notification berfungsi!",
+            url('/')
+        );
+        return response()->json(['results' => $results]);
+    })->middleware('role:admin');
+
     // Route Sertifikat Penghargaan
     Route::get('/attendance-certificate', [App\Http\Controllers\CertificateController::class, 'show'])->name('certificate.attendance');
 

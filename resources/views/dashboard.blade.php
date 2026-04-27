@@ -393,6 +393,72 @@
         </div>
     </div>
     --}}
+    {{-- ======================================================================= --}}
+    {{-- BANNER: AKTIFKAN NOTIFIKASI --}}
+    {{-- ======================================================================= --}}
+    <div class="row mb-3 animate-enter" style="animation-delay: 0.05s; display: none;" id="notif-permission-banner">
+        <div class="col-12">
+            <div class="alert border-0 shadow-sm d-flex align-items-center position-relative"
+                style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); border-radius: 14px; padding: 16px 20px;">
+                <button type="button" class="btn-close btn-close-white position-absolute"
+                    style="top: 12px; right: 12px; opacity: 0.7; font-size: 10px;" onclick="dismissNotifBanner()" aria-label="Close"></button>
+                <div class="me-3 d-none d-sm-block">
+                    <div class="bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 45px; height: 45px;">
+                        <i class="mdi mdi-bell-ring text-white" style="font-size: 24px;"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 pe-4">
+                    <h6 class="text-white fw-bold mb-1">
+                        <i class="mdi mdi-bell-ring d-sm-none me-1"></i>Aktifkan Notifikasi
+                    </h6>
+                    <p class="text-white mb-0" style="opacity: 0.9; font-size: 13px;" id="notif-banner-text">
+                        Dapatkan pemberitahuan langsung saat absensi disetujui, ditolak, atau ada info penting lainnya.
+                    </p>
+                </div>
+                <button class="btn btn-light btn-sm fw-bold rounded-pill px-3 shadow-sm flex-shrink-0" id="btnAktifkanNotif" onclick="requestNotifPermission()">
+                    <i class="mdi mdi-bell-check me-1"></i> Aktifkan
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+            var banner = document.getElementById('notif-permission-banner');
+            var dismissed = localStorage.getItem('notif_banner_dismissed');
+
+            if (Notification.permission === 'default' && !dismissed) {
+                banner.style.display = '';
+            } else if (Notification.permission === 'denied' && !dismissed) {
+                document.getElementById('notif-banner-text').textContent = 'Notifikasi diblokir. Silakan buka pengaturan browser Anda dan izinkan notifikasi untuk absenps.com.';
+                document.getElementById('btnAktifkanNotif').textContent = 'Buka Pengaturan';
+                document.getElementById('btnAktifkanNotif').onclick = function() {
+                    alert('Buka menu Settings/Pengaturan di browser Anda:\n\n• Chrome: Klik ikon gembok (🔒) di sebelah kiri URL → Notifikasi → Izinkan\n• Edge: Klik ikon gembok → Permissions → Notifications → Allow\n• Android: Tahan lama di tab browser → Site Settings → Notifications → Allow');
+                };
+                banner.style.display = '';
+            }
+        })();
+
+        function requestNotifPermission() {
+            Notification.requestPermission().then(function(permission) {
+                if (permission === 'granted') {
+                    document.getElementById('notif-permission-banner').style.display = 'none';
+                    localStorage.setItem('notif_banner_dismissed', '1');
+                    location.reload();
+                } else if (permission === 'denied') {
+                    document.getElementById('notif-banner-text').textContent = 'Notifikasi diblokir. Silakan buka pengaturan browser dan izinkan notifikasi untuk absenps.com.';
+                    document.getElementById('btnAktifkanNotif').textContent = 'Buka Pengaturan';
+                }
+            });
+        }
+
+        function dismissNotifBanner() {
+            document.getElementById('notif-permission-banner').style.display = 'none';
+            localStorage.setItem('notif_banner_dismissed', '1');
+        }
+    </script>
+
     {{-- POPUP WARNING: UPLOAD KTP & FOTO PROFIL --}}
     {{-- ======================================================================= --}}
     @if ((!Auth::user()->ktp_photo_path || !Auth::user()->profile_photo_path) && Auth::user()->role != 'admin_gaji' && Auth::user()->role != 'admin')
@@ -822,6 +888,34 @@
                 Statistik Perusahaan
             </h3>
             <p class="section-subtitle">Ringkasan data dan performa organisasi</p>
+            <button class="btn btn-sm btn-outline-warning shadow-sm mb-3" id="btnTestPush" onclick="testPushAll()">
+                <i class="mdi mdi-bell-ring-outline me-1"></i> Test Push ke Semua User
+            </button>
+            <script>
+                function testPushAll() {
+                    var btn = document.getElementById('btnTestPush');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengirim...';
+                    fetch('/test-push-all', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        alert('Hasil: ' + JSON.stringify(data.results, null, 2));
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="mdi mdi-bell-ring-outline me-1"></i> Test Push ke Semua User';
+                    })
+                    .catch(function(e) {
+                        alert('Error: ' + e.message);
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="mdi mdi-bell-ring-outline me-1"></i> Test Push ke Semua User';
+                    });
+                }
+            </script>
         </div>
     @endif
 
