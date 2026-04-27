@@ -22,7 +22,7 @@ function initPush() {
     if (!('serviceWorker' in navigator)) return;
     if (!('PushManager' in window)) return;
 
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/push-sw.js')
         .then(function (registration) {
             console.log('Service Worker Registered');
             return registration.pushManager.getSubscription()
