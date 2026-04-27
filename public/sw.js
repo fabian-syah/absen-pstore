@@ -1,10 +1,13 @@
 self.addEventListener('push', function (event) {
+    console.log('[Service Worker] Push Received.');
     let data = {};
     if (event.data) {
         try {
             data = event.data.json();
+            console.log('[Service Worker] Push Data:', data);
         } catch (e) {
             data = { title: "Notifikasi Baru", body: event.data.text() };
+            console.log('[Service Worker] Push Text:', event.data.text());
         }
     }
 
