@@ -78,7 +78,7 @@ class BranchLeaderboardController extends Controller
     {
         return Attendance::select(
             'user_id',
-            DB::raw('count(*) as total_attendance'),
+            DB::raw('count(DISTINCT DATE(check_in_time)) as total_attendance'),
             DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
             DB::raw('SUM(COALESCE(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time), 0)) as total_work_seconds')
         )
