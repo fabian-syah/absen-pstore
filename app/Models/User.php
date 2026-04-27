@@ -68,6 +68,7 @@ class User extends Authenticatable
         'check_in_end',
         'check_out_end',
         'fcm_token',
+        'push_subscription',
         'last_login_at',
     ];
 
@@ -89,6 +90,7 @@ class User extends Authenticatable
         'only_security_scan' => 'boolean',
         'gaji' => 'decimal:2', // Casting agar outputnya selalu format desimal/angka
         'last_login_at' => 'datetime',
+        'push_subscription' => 'array',
     ];
 
     // =================================================================
