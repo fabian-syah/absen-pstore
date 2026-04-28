@@ -1110,43 +1110,70 @@
                     });
                 }
 
-                Notification.requestPermission().then(function(permission) {
-                    if (permission !== 'granted') return;
+                function subscribeUserToPush(registration) {
+                    Notification.requestPermission().then(function(permission) {
+                        if (permission !== 'granted') return;
 
-                    // 1. Firebase Messaging (Only for specific roles)
-                    @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji'))
-                    messaging.getToken({
-                        vapidKey: "{{ config('services.firebase.vapid_key') }}",
-                        serviceWorkerRegistration: registration
-                    }).then(function(token) {
-                        if (token) sendTokenToServer(token);
-                    }).catch(function(e) { console.log('FCM Token Error:', e); });
-                    @endif
+                        // 1. Firebase Messaging (Only for specific roles)
+                        @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji'))
+                        messaging.getToken({
+                            vapidKey: "{{ config('services.firebase.vapid_key') }}",
+                            serviceWorkerRegistration: registration
+                        }).then(function(token) {
+                            if (token) sendTokenToServer(token);
+                        }).catch(function(e) { console.log('FCM Token Error:', e); });
+                        @endif
 
-                    // 2. VAPID Web Push (For ALL roles)
-                    if ('PushManager' in window) {
-                        var vapidKey = 'BH6irmHXe99Jr0nLcFg0Tq_vcIQ_lWua5nm4tePfhX3gagkiN51ERk71oJ1ZGnehUAqlgYZ2-EPAmOQOUoDiIvw';
-                        var padding = '='.repeat((4 - vapidKey.length % 4) % 4);
-                        var base64 = (vapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
-                        var rawData = atob(base64);
-                        var outputArray = new Uint8Array(rawData.length);
-                        for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+                        // 2. VAPID Web Push (For ALL roles)
+                        if ('PushManager' in window) {
+                            var vapidKey = 'BH6irmHXe99Jr0nLcFg0Tq_vcIQ_lWua5nm4tePfhX3gagkiN51ERk71oJ1ZGnehUAqlgYZ2-EPAmOQOUoDiIvw';
+                            var padding = '='.repeat((4 - vapidKey.length % 4) % 4);
+                            var base64 = (vapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+                            var rawData = atob(base64);
+                            var outputArray = new Uint8Array(rawData.length);
+                            for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
 
-                        registration.pushManager.getSubscription().then(function(sub) {
-                            if (sub) return sub;
-                            return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: outputArray });
-                        }).then(function(subscription) {
-                            fetch('/push-subscription', {
-                                method: 'POST',
-                                headers: { 
-                                    'Content-Type': 'application/json', 
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
-                                },
-                                body: JSON.stringify(subscription)
-                            }).then(function(r) { return r.json(); }).then(function(d) { console.log('Push Saved:', d); });
-                        }).catch(function(e) { console.log('Push Error:', e); });
-                    }
-                });
+                            registration.pushManager.getSubscription().then(function(sub) {
+                                if (sub) return sub;
+                                return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: outputArray });
+                            }).then(function(subscription) {
+                                fetch('/push-subscription', {
+                                    method: 'POST',
+                                    headers: { 
+                                        'Content-Type': 'application/json', 
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+                                    },
+                                    body: JSON.stringify(subscription)
+                                }).then(function(r) { return r.json(); }).then(function(d) { console.log('Push Saved:', d); });
+                            }).catch(function(e) { console.log('Push Error:', e); });
+                        }
+                    });
+                }
+
+                // Cek status izin
+                if (Notification.permission === 'granted') {
+                    // Jika sudah izin, langsung jalankan tanpa nanya
+                    subscribeUserToPush(registration);
+                } else if (Notification.permission === 'default') {
+                    // Buat popup khusus iOS karena Apple mewajibkan user klik tombol secara sadar
+                    let banner = document.createElement('div');
+                    banner.innerHTML = `
+                        <div id="ios-notif-banner" style="position:fixed; bottom:20px; left:20px; right:20px; background:#fff; padding:15px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.2); z-index:9999; display:flex; align-items:center; justify-content:space-between; border-left:4px solid #10b981;">
+                            <div>
+                                <h6 style="margin:0; font-weight:bold; color:#111;">Aktifkan Notifikasi</h6>
+                                <p style="margin:0; font-size:12px; color:#555;">Dapatkan info absen secara Real-Time.</p>
+                            </div>
+                            <button id="btn-allow-notif" style="background:#10b981; color:#fff; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer;">Izinkan</button>
+                        </div>
+                    `;
+                    document.body.appendChild(banner);
+
+                    document.getElementById('btn-allow-notif').addEventListener('click', function() {
+                        subscribeUserToPush(registration);
+                        document.getElementById('ios-notif-banner').style.display = 'none';
+                    });
+                }
+
             }).catch(function(e) { console.log('SW Error:', e); });
         })();
     </script>
