@@ -79,7 +79,9 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'Security Jakarta',
             'Team Audit',
             'Team Creative',
-            'Tiktok'
+            'Tiktok',
+            'Operator',
+            'Cabang User Non Karyawan'
         ];
 
         if ($this->group === 'pusat') {
@@ -352,7 +354,9 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'Security Jakarta',
             'Team Audit',
             'Team Creative',
-            'Tiktok'
+            'Tiktok',
+            'Operator',
+            'Cabang User Non Karyawan'
         ];
 
         $isPusat = false;
