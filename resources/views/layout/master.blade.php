@@ -1163,23 +1163,33 @@
                     // Jika sudah izin, langsung jalankan tanpa nanya
                     // Tambahkan delay kecil agar unsubscribe (jika ada) selesai duluan
                     setTimeout(() => { subscribeUserToPush(registration); }, 1000);
-                } else if (Notification.permission === 'default') {
+                } else if (Notification.permission === 'default' && !localStorage.getItem('hide_notif_banner')) {
                     // Buat popup khusus iOS karena Apple mewajibkan user klik tombol secara sadar
                     let banner = document.createElement('div');
+                    banner.id = 'ios-notif-banner-container';
                     banner.innerHTML = `
-                        <div id="ios-notif-banner" style="position:fixed; bottom:20px; left:20px; right:20px; background:#fff; padding:15px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.2); z-index:9999; display:flex; align-items:center; justify-content:space-between; border-left:4px solid #10b981;">
-                            <div>
-                                <h6 style="margin:0; font-weight:bold; color:#111;">Aktifkan Notifikasi</h6>
-                                <p style="margin:0; font-size:12px; color:#555;">Dapatkan info absen secara Real-Time.</p>
+                        <div id="ios-notif-banner" style="position:fixed; bottom:20px; left:20px; right:20px; background:#fff; padding:15px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.2); z-index:9999; display:flex; align-items:center; gap:10px; border-left:4px solid #10b981;">
+                            <div style="flex-grow:1;">
+                                <h6 style="margin:0; font-weight:bold; color:#111;">Aktifkan Notifikasi?</h6>
+                                <p style="margin:0; font-size:12px; color:#555;">Klik Izinkan agar tidak ketinggalan info absen.</p>
                             </div>
-                            <button id="btn-allow-notif" style="background:#10b981; color:#fff; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer;">Izinkan</button>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <button id="btn-allow-notif" style="background:#10b981; color:#fff; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:12px;">Izinkan</button>
+                                <button id="btn-close-notif" style="background:none; border:none; color:#999; font-size:18px; cursor:pointer; padding:5px;">&times;</button>
+                            </div>
                         </div>
                     `;
                     document.body.appendChild(banner);
 
                     document.getElementById('btn-allow-notif').addEventListener('click', function() {
                         subscribeUserToPush(registration);
-                        document.getElementById('ios-notif-banner').style.display = 'none';
+                        document.getElementById('ios-notif-banner-container').remove();
+                    });
+
+                    document.getElementById('btn-close-notif').addEventListener('click', function() {
+                        // Sembunyikan selama 24 jam jika diklik tutup
+                        localStorage.setItem('hide_notif_banner', Date.now());
+                        document.getElementById('ios-notif-banner-container').remove();
                     });
                 }
 
