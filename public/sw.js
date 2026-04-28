@@ -23,6 +23,7 @@ self.addEventListener('push', function (event) {
         vibrate: [300, 100, 300, 100, 300], // Getaran untuk High Priority
         tag: 'audit-verification-' + (data.id || Date.now()), // Unik agar tidak digabung browser
         renotify: true, // Bunyikan suara lagi
+        requireInteraction: true, // Notif tetap di layar sampai diklik/ditutup
         data: {
             url: data.url || "/"
         }
