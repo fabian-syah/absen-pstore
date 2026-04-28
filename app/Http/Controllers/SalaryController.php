@@ -353,8 +353,14 @@ class SalaryController extends Controller
                 // Freelance: Gunakan Total Income yang dihitung JS (Rate * Hari)
                 $income = (float)($request->freelance_total_income ?? 0);
 
-                // Simpan Rate Harian di kolom basic_salary agar tercatat ratenya
-                $data['employee_basic_salary'] = (float)($request->freelance_daily_salary ?? 0);
+                // Simpan TOTAL ke basic_salary agar muncul di slip sebagai "Gaji Pokok"
+                $data['employee_basic_salary'] = $income;
+                
+                // Tambahkan info rate ke notes agar tetap tercatat
+                $dailyRate = (float)($request->freelance_daily_salary ?? 0);
+                $days = $request->freelance_days_count ?? 0;
+                $rateNote = "\nKalkulasi Freelance: Rp " . number_format($dailyRate, 0, ',', '.') . " x " . $days . " Hari";
+                $data['notes'] = ($data['notes'] ?? '') . $rateNote;
             }
 
             $income += (float)($request->promotor_bonus ?? 0);
