@@ -1110,50 +1110,59 @@
                     });
                 }
 
+                function performSubscription(registration) {
+                    // 1. Firebase Messaging (Only for specific roles)
+                    @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji'))
+                    messaging.getToken({
+                        vapidKey: "{{ config('services.firebase.vapid_key') }}",
+                        serviceWorkerRegistration: registration
+                    }).then(function(token) {
+                        if (token) sendTokenToServer(token);
+                    }).catch(function(e) { console.log('FCM Token Error:', e); });
+                    @endif
+
+                    // 2. VAPID Web Push (For ALL roles)
+                    if ('PushManager' in window) {
+                        var vapidKey = 'BH6irmHXe99Jr0nLcFg0Tq_vcIQ_lWua5nm4tePfhX3gagkiN51ERk71oJ1ZGnehUAqlgYZ2-EPAmOQOUoDiIvw';
+                        var padding = '='.repeat((4 - vapidKey.length % 4) % 4);
+                        var base64 = (vapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+                        var rawData = atob(base64);
+                        var outputArray = new Uint8Array(rawData.length);
+                        for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+
+                        registration.pushManager.getSubscription().then(function(sub) {
+                            if (sub) return sub;
+                            return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: outputArray });
+                        }).then(function(subscription) {
+                            fetch('/push-subscription', {
+                                method: 'POST',
+                                headers: { 
+                                    'Content-Type': 'application/json', 
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+                                },
+                                body: JSON.stringify(subscription)
+                            }).then(function(r) { return r.json(); }).then(function(d) { console.log('Push Saved:', d); });
+                        }).catch(function(e) { console.log('Push Error:', e); });
+                    }
+                }
+
                 function subscribeUserToPush(registration) {
-                    Notification.requestPermission().then(function(permission) {
-                        if (permission !== 'granted') return;
-
-                        // 1. Firebase Messaging (Only for specific roles)
-                        @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji'))
-                        messaging.getToken({
-                            vapidKey: "{{ config('services.firebase.vapid_key') }}",
-                            serviceWorkerRegistration: registration
-                        }).then(function(token) {
-                            if (token) sendTokenToServer(token);
-                        }).catch(function(e) { console.log('FCM Token Error:', e); });
-                        @endif
-
-                        // 2. VAPID Web Push (For ALL roles)
-                        if ('PushManager' in window) {
-                            var vapidKey = 'BH6irmHXe99Jr0nLcFg0Tq_vcIQ_lWua5nm4tePfhX3gagkiN51ERk71oJ1ZGnehUAqlgYZ2-EPAmOQOUoDiIvw';
-                            var padding = '='.repeat((4 - vapidKey.length % 4) % 4);
-                            var base64 = (vapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
-                            var rawData = atob(base64);
-                            var outputArray = new Uint8Array(rawData.length);
-                            for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-
-                            registration.pushManager.getSubscription().then(function(sub) {
-                                if (sub) return sub;
-                                return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: outputArray });
-                            }).then(function(subscription) {
-                                fetch('/push-subscription', {
-                                    method: 'POST',
-                                    headers: { 
-                                        'Content-Type': 'application/json', 
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
-                                    },
-                                    body: JSON.stringify(subscription)
-                                }).then(function(r) { return r.json(); }).then(function(d) { console.log('Push Saved:', d); });
-                            }).catch(function(e) { console.log('Push Error:', e); });
-                        }
-                    });
+                    if (Notification.permission === 'granted') {
+                        performSubscription(registration);
+                    } else {
+                        Notification.requestPermission().then(function(permission) {
+                            if (permission === 'granted') {
+                                performSubscription(registration);
+                            }
+                        });
+                    }
                 }
 
                 // Cek status izin
                 if (Notification.permission === 'granted') {
                     // Jika sudah izin, langsung jalankan tanpa nanya
-                    subscribeUserToPush(registration);
+                    // Tambahkan delay kecil agar unsubscribe (jika ada) selesai duluan
+                    setTimeout(() => { subscribeUserToPush(registration); }, 1000);
                 } else if (Notification.permission === 'default') {
                     // Buat popup khusus iOS karena Apple mewajibkan user klik tombol secara sadar
                     let banner = document.createElement('div');
