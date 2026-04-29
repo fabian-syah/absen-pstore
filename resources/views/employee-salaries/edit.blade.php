@@ -335,11 +335,23 @@
 
         function toggleForm() {
             const val = categorySelect.value;
-            sections.forEach(el => el.style.display = 'none');
+            sections.forEach(el => {
+                el.style.display = 'none';
+                el.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.disabled = true;
+                });
+            });
 
             if (val === 'employee') document.getElementById('form_employee').style.display = 'block';
             if (val === 'promotor') document.getElementById('form_promotor').style.display = 'block';
             if (val === 'freelance') document.getElementById('form_freelance').style.display = 'block';
+
+            const activeSection = document.querySelector('.salary-section[style*="display: block"]');
+            if (activeSection) {
+                activeSection.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.disabled = false;
+                });
+            }
 
             if(catDesc) catDesc.innerText = descriptions[val];
         }
@@ -373,13 +385,16 @@
 
         // VALIDASI GAJI POKOK MAKSIMAL 6 JUTA
         document.getElementById('salaryForm').addEventListener('submit', function(e) {
-            const basicSalaryInput = document.getElementById('basic_salary');
-            const basicSalaryValue = parseInt(basicSalaryInput.value.replace(/\./g, '').replace(/,/g, ''));
+            // Target basic_salary yang aktif saja
+            const basicSalaryInput = document.querySelector('.salary-section:not([style*="display: none"]) input[name="basic_salary"]');
             
-            if (basicSalaryValue > 6000000) {
-                e.preventDefault();
-                showErrorModal('Gaji Pokok tidak boleh lebih dari Rp 6.000.000. Silakan kurangi jumlahnya.');
-                return false;
+            if (basicSalaryInput) {
+                const basicSalaryValue = parseInt(basicSalaryInput.value.replace(/\./g, '').replace(/,/g, ''));
+                if (basicSalaryValue > 6000000) {
+                    e.preventDefault();
+                    showErrorModal('Gaji Pokok tidak boleh lebih dari Rp 6.000.000. Silakan kurangi jumlahnya.');
+                    return false;
+                }
             }
 
             rupiahInputs.forEach(input => {

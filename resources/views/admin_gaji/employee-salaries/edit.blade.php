@@ -309,10 +309,25 @@
         
         function toggleForm() {
             const val = categorySelect.value;
-            sections.forEach(el => el.style.display = 'none');
-            if (val === 'employee') document.getElementById('form_employee').style.display = 'block';
-            if (val === 'promotor') document.getElementById('form_promotor').style.display = 'block';
-            if (val === 'freelance') document.getElementById('form_freelance').style.display = 'block';
+            sections.forEach(el => {
+                el.style.display = 'none';
+                el.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.disabled = true;
+                });
+            });
+
+            let targetId = '';
+            if (val === 'employee') targetId = 'form_employee';
+            if (val === 'promotor') targetId = 'form_promotor';
+            if (val === 'freelance') targetId = 'form_freelance';
+
+            if (targetId) {
+                const target = document.getElementById(targetId);
+                target.style.display = 'block';
+                target.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.disabled = false;
+                });
+            }
         }
 
         categorySelect.addEventListener('change', toggleForm);
@@ -341,8 +356,10 @@
         }
 
         document.getElementById('salaryForm').addEventListener('submit', function(e) {
-            const basicSalaryInput = document.getElementById('basic_salary');
-            if (basicSalaryInput && basicSalaryInput.offsetParent !== null) {
+            // Target basic_salary yang aktif saja
+            const basicSalaryInput = document.querySelector('.salary-section:not([style*="display: none"]) input[name="basic_salary"]');
+            
+            if (basicSalaryInput) {
                 const basicSalaryValue = parseInt(basicSalaryInput.value.replace(/\./g, '').replace(/,/g, ''));
                 if (basicSalaryValue > 6000000) {
                     e.preventDefault();
