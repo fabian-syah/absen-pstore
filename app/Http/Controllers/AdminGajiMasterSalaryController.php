@@ -108,6 +108,7 @@ class AdminGajiMasterSalaryController extends Controller
             $data['use_privilege_mode'] = $request->has('use_privilege_mode') ? 1 : 0;
             
         } elseif ($request->category == 'promotor') {
+            $data['basic_salary'] = (int) $clean($request->basic_salary);
             $data['promotor_bonus'] = (int) $clean($request->promotor_bonus);
             
         } elseif ($request->category == 'freelance') {

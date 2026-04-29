@@ -147,7 +147,7 @@
                                     <label class="fw-bold">Insentif Tetap (Master)</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light">Rp</span>
-                                        <input type="text" id="promotor_basic" class="form-control income-input fw-bold text-dark rupiah-input bg-light" 
+                                        <input type="text" name="employee_basic_salary" id="promotor_basic" class="form-control income-input fw-bold text-dark rupiah-input bg-light" 
                                                readonly
                                                value="{{ number_format($masterSalary->basic_salary ?? 0, 0, ',', '.') }}">
                                     </div>

@@ -208,8 +208,9 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
                 $totalMaster = $dailySalary; // Per hari
             } elseif ($salary->category == 'promotor') {
                 $categoryLabel = 'Promotor';
+                $basicSalary = $salary->basic_salary;
                 $promotorBonus = $salary->promotor_bonus;
-                $totalMaster = $promotorBonus;
+                $totalMaster = $basicSalary + $promotorBonus;
             }
         }
 

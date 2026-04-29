@@ -203,8 +203,16 @@
                                 </div>
                                 
                                 <input type="hidden" name="promotor_monthly_salary" value="0">
+                                <div class="mb-4">
+                                    <label class="form-label">Gaji Pokok / Insentif Tetap</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Rp</span>
+                                        <input type="text" name="basic_salary" class="form-control rupiahe fw-bold form-control-lg" 
+                                               value="{{ number_format($user->employeeSalary->basic_salary ?? 0, 0, ',', '.') }}" placeholder="0">
+                                    </div>
+                                </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Insentif / Bonus (Estimasi)</label>
+                                    <label class="form-label">Bonus Insentif (Estimasi)</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
                                         <input type="text" name="promotor_bonus" class="form-control rupiahe fw-bold form-control-lg" 
