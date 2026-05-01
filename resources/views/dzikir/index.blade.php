@@ -42,7 +42,7 @@
                         <div class="haptic-toggle d-flex align-items-center ml-4">
                              <div class="custom-control custom-switch">
                                 <input type="checkbox" class="custom-control-input" id="vibrateSwitch" checked>
-                                <label class="custom-control-label font-weight-bold text-muted" for="vibrateSwitch">Vibrate</label>
+                                <label class="custom-control-label font-weight-bold text-muted" for="vibrateSwitch">Feedback</label>
                             </div>
                         </div>
                     </div>
@@ -50,11 +50,16 @@
             </div>
             
             <p class="text-center mt-4 text-muted" style="font-size: 0.9rem; opacity: 0.8;">
-                <i class="mdi mdi-information-outline"></i> Klik tombol di atas untuk menambah hitungan.
+                <i class="mdi mdi-information-outline"></i> Klik tombol untuk menghitung. Feedback berupa Getar (Android), Suara, dan Animasi.
             </p>
         </div>
     </div>
 </div>
+
+{{-- Hidden Audio for Feedback --}}
+<audio id="clickSound" preload="auto">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+</audio>
 
 @push('styles')
 <style>
@@ -66,11 +71,11 @@
     }
 
     #counter {
-        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     #clickBtn {
-        transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.05s cubic-bezier(0.4, 0, 0.2, 1);
         user-select: none;
         -webkit-tap-highlight-color: transparent;
         position: relative;
@@ -78,7 +83,7 @@
     }
 
     #clickBtn:active {
-        transform: scale(0.92);
+        transform: scale(0.9) !important;
         box-shadow: 0 5px 15px rgba(13, 110, 253, 0.2) !important;
     }
 
@@ -87,7 +92,7 @@
         background: rgba(255, 255, 255, 0.4);
         border-radius: 50%;
         transform: scale(0);
-        animation: ripple-animation 0.5s linear;
+        animation: ripple-animation 0.4s linear;
         pointer-events: none;
     }
 
@@ -99,7 +104,27 @@
     }
 
     .counter-bump {
-        transform: scale(1.15) translateY(-5px);
+        transform: scale(1.2) translateY(-10px);
+        color: #0a58ca !important;
+    }
+
+    /* Shake Animation for Feedback */
+    @keyframes shake {
+        0% { transform: translate(1px, 1px) rotate(0deg); }
+        10% { transform: translate(-1px, -2px) rotate(-1deg); }
+        20% { transform: translate(-3px, 0px) rotate(1deg); }
+        30% { transform: translate(3px, 2px) rotate(0deg); }
+        40% { transform: translate(1px, -1px) rotate(1deg); }
+        50% { transform: translate(-1px, 2px) rotate(-1deg); }
+        60% { transform: translate(-3px, 1px) rotate(0deg); }
+        70% { transform: translate(3px, 1px) rotate(-1deg); }
+        80% { transform: translate(-1px, -1px) rotate(1deg); }
+        90% { transform: translate(1px, 2px) rotate(0deg); }
+        100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+
+    .shake-effect {
+        animation: shake 0.2s;
     }
 
     /* Modern Switch Styling */
@@ -123,6 +148,8 @@
         const clickBtn = document.getElementById('clickBtn');
         const resetBtn = document.getElementById('resetBtn');
         const vibrateSwitch = document.getElementById('vibrateSwitch');
+        const clickSound = document.getElementById('clickSound');
+        const cardBody = document.querySelector('.card-body');
         
         // Load initial count
         let count = parseInt(localStorage.getItem('dzikir_count')) || 0;
@@ -133,16 +160,23 @@
             counterEl.innerText = count;
             localStorage.setItem('dzikir_count', count);
             
-            // Animation bump
-            counterEl.classList.add('counter-bump');
-            setTimeout(() => {
-                counterEl.classList.remove('counter-bump');
-            }, 100);
+            if (!vibrateSwitch.checked) return;
 
-            // Haptic Feedback (Vibration API)
-            if (vibrateSwitch.checked && "vibrate" in navigator) {
-                // Multi-stage vibration for better feel
-                navigator.vibrate(40);
+            // 1. Animation bump for counter
+            counterEl.classList.add('counter-bump');
+            setTimeout(() => counterEl.classList.remove('counter-bump'), 100);
+
+            // 2. Shake effect for whole card (Haptic alternative for iOS/Desktop)
+            cardBody.classList.add('shake-effect');
+            setTimeout(() => cardBody.classList.remove('shake-effect'), 200);
+
+            // 3. Audio Feedback (Works on all devices including iOS)
+            clickSound.currentTime = 0;
+            clickSound.play().catch(e => console.log('Audio play blocked'));
+
+            // 4. Actual Vibration (Android Only, ignored by iOS)
+            if ("vibrate" in navigator) {
+                navigator.vibrate(50);
             }
         }
 
