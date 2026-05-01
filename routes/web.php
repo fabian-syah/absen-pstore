@@ -43,6 +43,7 @@ use App\Http\Controllers\CashAdvanceController; // <--- ADD THIS
 // use App\Http\Controllers\RamadhanController;
 
 use App\Http\Controllers\BonusController; // <--- ADD THIS
+use App\Http\Controllers\AuditMonitoringController;
 
 /*
 |--------------------------------------------------------------------------
