@@ -147,6 +147,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         // Hapus Permanen (Hapus baris data)
         Route::delete('/correction/{id}', [AttendanceCorrectionController::class, 'destroy'])->name('correction.destroy');
+
+        // Monitoring Edit Audit
+        Route::get('/audit-monitor', [AuditMonitoringController::class, 'index'])->name('audit-monitor.index');
+        Route::delete('/audit-monitor/{id}/revert', [AuditMonitoringController::class, 'revert'])->name('audit-monitor.revert');
     });
 
     // === RUTE RIWAYAT KARIR & MUTASI (Full Resource kecuali show) ===

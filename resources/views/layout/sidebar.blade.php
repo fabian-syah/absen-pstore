@@ -489,10 +489,17 @@
 
         @if (auth()->user()->role == 'admin')
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('admin.correction.index') }}">
+                <a class="nav-link {{ request()->routeIs('admin.correction.index') ? 'active' : '' }}" href="{{ route('admin.correction.index') }}">
                     <i class="menu-icon mdi mdi-eraser"></i>
                     <span class="menu-title">Koreksi Absensi</span>
                     <span class="badge badge-danger ms-2" style="font-size: 0.6rem;">Admin</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.audit-monitor.index') ? 'active' : '' }}" href="{{ route('admin.audit-monitor.index') }}">
+                    <i class="menu-icon mdi mdi-shield-search"></i>
+                    <span class="menu-title">Monitor Edit Audit</span>
+                    <span class="badge badge-warning ms-2" style="font-size: 0.6rem;">Super Admin</span>
                 </a>
             </li>
         @endif
