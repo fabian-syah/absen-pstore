@@ -19,24 +19,33 @@ class AuditMonitoringController extends Controller
         $auditUserIds = User::where('role', 'audit')->pluck('id');
 
         // Ambil data absensi yang diverifikasi oleh Audit
-        // Filter Final:
-        // 1. Semua data yang TIDAK PUNYA foto selfie user (Pasti input manual Audit / Izin / Cuti)
-        // 2. Data yang PUNYA foto selfie user TAPI sudah diedit (Ada catatan atau bukti foto audit)
+        // Filter Super Ketat:
+        // 1. Tampilkan jika TIDAK ADA foto selfie user (Manual / Izin / Cuti)
+        // 2. Tampilkan jika ADA foto selfie user TAPI ada catatan/bukti audit yang JELAS (Editan)
         $attendances = Attendance::with(['user.branch', 'user.division', 'verifier'])
             ->whereIn('verified_by_user_id', $auditUserIds)
             ->where('status', 'verified')
             ->where(function ($q) {
-                $q->whereNull('photo_path')
-                  ->orWhere(function($sub) {
-                      $sub->whereNotNull('photo_path')
-                          ->where(function($inner) {
-                              $inner->where(function($n) {
-                                  $n->whereNotNull('audit_note')->where('audit_note', '!=', '');
-                              })->orWhere(function($p) {
-                                  $p->whereNotNull('audit_photo_path')->where('audit_photo_path', '!=', '');
-                              });
-                          });
-                  });
+                // Syarat A: Tidak ada foto selfie user (Null atau string kosong)
+                $q->where(function($sub) {
+                    $sub->whereNull('photo_path')->orWhere('photo_path', '');
+                })
+                // Syarat B: Ada foto selfie TAPI harus ada catatan atau bukti audit
+                ->orWhere(function($sub) {
+                    $sub->whereNotNull('photo_path')
+                        ->where('photo_path', '!=', '')
+                        ->where(function($inner) {
+                            $inner->where(function($note) {
+                                // Catatan tidak boleh null, tidak boleh kosong, dan harus punya karakter nyata (bukan spasi)
+                                $note->whereNotNull('audit_note')
+                                     ->whereRaw("LENGTH(TRIM(audit_note)) > 0");
+                            })->orWhere(function($photo) {
+                                // Atau punya bukti foto audit
+                                $photo->whereNotNull('audit_photo_path')
+                                      ->where('audit_photo_path', '!=', '');
+                            });
+                        });
+                });
             })
             ->latest('updated_at')
             ->paginate(30);
