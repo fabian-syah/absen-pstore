@@ -265,13 +265,15 @@ class Attendance extends Model
     {
         return match ($this->presence_status) {
             'Masuk' => 'success',
-            'WFH / Dinas Luar' => 'info',
+            'WFH / Dinas Luar', 'WFH', 'Dinas Luar' => 'info',
             'Izin Telat' => 'warning',
+            'Izin' => 'warning',
             'Sakit' => 'primary',
             'Cuti' => 'secondary',
             'Alpha' => 'danger',
             'Telat' => 'danger',
-            'default' => 'dark',
+            'Libur' => 'dark',
+            default => 'dark',
         };
     }
 
