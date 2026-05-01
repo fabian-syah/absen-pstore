@@ -271,6 +271,15 @@
             </a>
         </li>
 
+        {{-- DZIKIR ONLINE (SEMUA ROLE) --}}
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('dzikir*') ? 'active' : '' }}" href="{{ route('dzikir.index') }}">
+                <i class="mdi mdi-hands-pray menu-icon" style="color: #0d6efd;"></i>
+                <span class="menu-title">Dzikir Online</span>
+                <span class="badge badge-success rounded-pill ms-auto" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">New</span>
+            </a>
+        </li>
+
         {{-- =================================== --}}
         {{-- RIWAYAT ABSENSI (EXCEPT GAJI) --}}
         {{-- =================================== --}}
