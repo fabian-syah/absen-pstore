@@ -59,8 +59,17 @@
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <div class="font-weight-bold">{{ $attendance->check_in_time->format('d/m/Y') }}</div>
-                                            <small class="text-muted d-none d-md-block">{{ $attendance->check_in_time->format('l') }}</small>
+                                            <div class="font-weight-bold text-dark">{{ $attendance->check_in_time->timezone($attendance->user->branch->timezone ?? 'Asia/Jakarta')->format('d/m/Y') }}</div>
+                                            <div class="mt-1">
+                                                <span class="badge bg-success-light text-success border border-success-light" style="font-size: 0.7rem;">
+                                                    <i class="mdi mdi-login-variant small"></i> {{ $attendance->check_in_time->timezone($attendance->user->branch->timezone ?? 'Asia/Jakarta')->format('H:i') }}
+                                                </span>
+                                                <span class="mx-1 text-muted">|</span>
+                                                <span class="badge bg-danger-light text-danger border border-danger-light" style="font-size: 0.7rem;">
+                                                    <i class="mdi mdi-logout-variant small"></i> {{ $attendance->check_out_time ? $attendance->check_out_time->timezone($attendance->user->branch->timezone ?? 'Asia/Jakarta')->format('H:i') : '--:--' }}
+                                                </span>
+                                            </div>
+                                            <small class="text-muted d-none d-md-block mt-1" style="font-size: 10px;">{{ $attendance->check_in_time->format('l') }}</small>
                                         </td>
                                         <td class="text-center">
                                             @if($attendance->photo_path)
