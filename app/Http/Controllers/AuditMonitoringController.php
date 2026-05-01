@@ -19,34 +19,14 @@ class AuditMonitoringController extends Controller
         $auditUserIds = User::where('role', 'audit')->pluck('id');
 
         // Ambil data absensi yang diverifikasi oleh Audit
-        // Filter Super Ketat:
-        // 1. Tampilkan jika TIDAK ADA foto selfie user (Manual / Izin / Cuti)
-        // 2. Tampilkan jika ADA foto selfie user TAPI ada catatan/bukti audit yang JELAS (Editan)
+        // Filter Berdasarkan Tipe: 
+        // 1. 'manual' -> Hasil input langsung Audit atau Editan Audit (updateByAudit otomatis mengubah tipe ke manual)
+        // 2. 'leave' -> Hasil persetujuan Izin/Cuti oleh Audit
+        // Ini otomatis akan MEMBUANG tipe 'self' (selfie) dan 'scan' (QR) yang hanya diverifikasi tanpa editan.
         $attendances = Attendance::with(['user.branch', 'user.division', 'verifier'])
             ->whereIn('verified_by_user_id', $auditUserIds)
             ->where('status', 'verified')
-            ->where(function ($q) {
-                // Syarat A: Tidak ada foto selfie user (Null atau string kosong)
-                $q->where(function($sub) {
-                    $sub->whereNull('photo_path')->orWhere('photo_path', '');
-                })
-                // Syarat B: Ada foto selfie TAPI harus ada catatan atau bukti audit
-                ->orWhere(function($sub) {
-                    $sub->whereNotNull('photo_path')
-                        ->where('photo_path', '!=', '')
-                        ->where(function($inner) {
-                            $inner->where(function($note) {
-                                // Catatan tidak boleh null, tidak boleh kosong, dan harus punya karakter nyata (bukan spasi)
-                                $note->whereNotNull('audit_note')
-                                     ->whereRaw("LENGTH(TRIM(audit_note)) > 0");
-                            })->orWhere(function($photo) {
-                                // Atau punya bukti foto audit
-                                $photo->whereNotNull('audit_photo_path')
-                                      ->where('audit_photo_path', '!=', '');
-                            });
-                        });
-                });
-            })
+            ->whereIn('attendance_type', ['manual', 'leave'])
             ->latest('updated_at')
             ->paginate(30);
 
