@@ -56,9 +56,9 @@
     </div>
 </div>
 
-{{-- Hidden Audio for Feedback --}}
+{{-- Hidden Audio for Feedback (Buzz/Vibrate Sound) --}}
 <audio id="clickSound" preload="auto">
-    <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+    <source src="https://assets.mixkit.co/active_storage/sfx/1346/1346-preview.mp3" type="audio/mpeg">
 </audio>
 
 @push('styles')
@@ -170,13 +170,18 @@
             cardBody.classList.add('shake-effect');
             setTimeout(() => cardBody.classList.remove('shake-effect'), 200);
 
-            // 3. Audio Feedback (Works on all devices including iOS)
+            // 3. Audio Feedback (Buzz sound to simulate vibration on iPhone/Desktop)
             clickSound.currentTime = 0;
-            clickSound.play().catch(e => console.log('Audio play blocked'));
+            clickSound.volume = 1.0;
+            const playPromise = clickSound.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => console.log('Audio play blocked:', e));
+            }
 
-            // 4. Actual Vibration (Android Only, ignored by iOS)
+            // 4. Actual Vibration (Android Only)
             if ("vibrate" in navigator) {
-                navigator.vibrate(50);
+                // Stronger vibration pattern
+                navigator.vibrate([150]);
             }
         }
 
