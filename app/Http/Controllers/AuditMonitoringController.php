@@ -19,25 +19,23 @@ class AuditMonitoringController extends Controller
         $auditUserIds = User::where('role', 'audit')->pluck('id');
 
         // Ambil data absensi yang diverifikasi oleh Audit
-        // Syarat Munlak: Harus ada intervensi aktif dari Audit.
-        // Kita filter:
-        // 1. Tipe 'manual' (Input Audit).
-        // 2. Tipe 'leave' (Izin/Cuti) TAPI yang tidak memiliki foto selfie user (Berarti murni leave).
-        // 3. Tipe apa saja (termasuk selfie) TAPI yang sudah diberi Catatan atau Foto Bukti oleh Audit (Hasil Koreksi).
+        // Filter Final:
+        // 1. Semua data yang TIDAK PUNYA foto selfie user (Pasti input manual Audit / Izin / Cuti)
+        // 2. Data yang PUNYA foto selfie user TAPI sudah diedit (Ada catatan atau bukti foto audit)
         $attendances = Attendance::with(['user.branch', 'user.division', 'verifier'])
             ->whereIn('verified_by_user_id', $auditUserIds)
             ->where('status', 'verified')
             ->where(function ($q) {
-                $q->where('attendance_type', 'manual')
+                $q->whereNull('photo_path')
                   ->orWhere(function($sub) {
-                      $sub->where('attendance_type', 'leave')
-                          ->whereNull('photo_path');
-                  })
-                  ->orWhere(function($sub) {
-                      $sub->whereNotNull('audit_note')->where('audit_note', '!=', '');
-                  })
-                  ->orWhere(function($sub) {
-                      $sub->whereNotNull('audit_photo_path')->where('audit_photo_path', '!=', '');
+                      $sub->whereNotNull('photo_path')
+                          ->where(function($inner) {
+                              $inner->where(function($n) {
+                                  $n->whereNotNull('audit_note')->where('audit_note', '!=', '');
+                              })->orWhere(function($p) {
+                                  $p->whereNotNull('audit_photo_path')->where('audit_photo_path', '!=', '');
+                              });
+                          });
                   });
             })
             ->latest('updated_at')
