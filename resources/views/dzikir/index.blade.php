@@ -73,10 +73,6 @@
         </div>
     </div>
 
-    {{-- Hidden Audio for Feedback (Buzz/Vibrate Sound) --}}
-    <audio id="clickSound" preload="auto">
-        <source src="https://assets.mixkit.co/active_storage/sfx/1346/1346-preview.mp3" type="audio/mpeg">
-    </audio>
 
     @push('styles')
         <style>
@@ -203,12 +199,36 @@
                 const clickBtn = document.getElementById('clickBtn');
                 const resetBtn = document.getElementById('resetBtn');
                 const vibrateSwitch = document.getElementById('vibrateSwitch');
-                const clickSound = document.getElementById('clickSound');
                 const cardBody = document.querySelector('.card-body');
 
                 // Load initial count
                 let count = parseInt(localStorage.getItem('dzikir_count')) || 0;
                 counterEl.innerText = count;
+
+                // Suara getar buatan menggunakan Web Audio API (Anti-CORS & Anti-COEP)
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                function playVibrateSound() {
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                    
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+
+                    oscillator.type = 'sawtooth'; // Suara serak seperti getar
+                    oscillator.frequency.setValueAtTime(60, audioCtx.currentTime); // Low frequency buzz
+
+                    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.01);
+                    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                }
 
                 function updateCounter(newCount) {
                     count = newCount;
@@ -221,22 +241,16 @@
                     counterEl.classList.add('counter-bump');
                     setTimeout(() => counterEl.classList.remove('counter-bump'), 100);
 
-                    // 2. Shake effect for whole card (Haptic alternative for iOS/Desktop)
+                    // 2. Shake effect for whole card
                     cardBody.classList.add('shake-effect');
                     setTimeout(() => cardBody.classList.remove('shake-effect'), 200);
 
-                    // 3. Audio Feedback (Buzz sound to simulate vibration on iPhone/Desktop)
-                    clickSound.currentTime = 0;
-                    clickSound.volume = 1.0;
-                    const playPromise = clickSound.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(e => console.log('Audio play blocked:', e));
-                    }
+                    // 3. Audio Feedback (Generated Buzz)
+                    playVibrateSound();
 
                     // 4. Actual Vibration (Android Only)
                     if ("vibrate" in navigator) {
-                        // Stronger vibration pattern
-                        navigator.vibrate([150]);
+                        navigator.vibrate(150);
                     }
                 }
 
