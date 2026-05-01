@@ -19,7 +19,7 @@ class AuditMonitoringController extends Controller
         $auditUserIds = User::where('role', 'audit')->pluck('id');
 
         // Ambil data absensi yang diverifikasi oleh Audit
-        // Syarat Mutlak: Harus ada bukti (Catatan atau Foto) atau merupakan tipe Leave (Izin/Cuti)
+        // Syarat Mutlak: Harus ada bukti fisik (Catatan atau Foto) yang tersimpan di record absensi
         $attendances = Attendance::with(['user.branch', 'user.division', 'verifier'])
             ->whereIn('verified_by_user_id', $auditUserIds)
             ->where('status', 'verified')
@@ -29,8 +29,7 @@ class AuditMonitoringController extends Controller
                   })
                   ->orWhere(function($sub) {
                       $sub->whereNotNull('audit_photo_path')->where('audit_photo_path', '!=', '');
-                  })
-                  ->orWhere('attendance_type', 'leave');
+                  });
             })
             ->latest('updated_at')
             ->paginate(30);
