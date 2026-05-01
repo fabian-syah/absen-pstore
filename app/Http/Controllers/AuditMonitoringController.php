@@ -26,7 +26,7 @@ class AuditMonitoringController extends Controller
         $attendances = Attendance::with(['user.branch', 'user.division', 'verifier'])
             ->whereIn('verified_by_user_id', $auditUserIds)
             ->where('status', 'verified')
-            ->whereIn('attendance_type', ['manual', 'leave'])
+            ->where('attendance_type', 'manual')
             ->latest('updated_at')
             ->paginate(30);
 
