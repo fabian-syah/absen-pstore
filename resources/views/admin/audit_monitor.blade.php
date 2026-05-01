@@ -44,7 +44,14 @@
                                         <td class="py-3">
                                             <div class="d-flex align-items-center">
                                                 <div class="ms-1">
-                                                    <p class="font-weight-bold mb-0 text-dark">{{ $attendance->user->name }}</p>
+                                                    <p class="font-weight-bold mb-0 text-dark">
+                                                        <a href="{{ route('attendance.history', ['employeeId' => $attendance->user_id]) }}" 
+                                                           class="text-decoration-none text-dark hover-primary" 
+                                                           title="Lihat Riwayat Lengkap">
+                                                            {{ $attendance->user->name }}
+                                                            <i class="mdi mdi-open-in-new small text-muted" style="font-size: 10px;"></i>
+                                                        </a>
+                                                    </p>
                                                     <small class="text-muted text-truncate d-inline-block" style="max-width: 150px;">
                                                         {{ $attendance->user->branch->name ?? 'N/A' }}
                                                     </small>
