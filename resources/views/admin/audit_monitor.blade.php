@@ -45,60 +45,61 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="ms-1">
                                                     <p class="font-weight-bold mb-0 text-dark">{{ $attendance->user->name }}</p>
-                                                    <small class="text-muted">{{ $attendance->user->branch->name ?? 'N/A' }} | {{ $attendance->user->division->name ?? 'N/A' }}</small>
+                                                    <small class="text-muted text-truncate d-inline-block" style="max-width: 150px;">
+                                                        {{ $attendance->user->branch->name ?? 'N/A' }}
+                                                    </small>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="text-center">
                                             <div class="font-weight-bold">{{ $attendance->check_in_time->format('d/m/Y') }}</div>
-                                            <small class="text-muted">{{ $attendance->check_in_time->format('l') }}</small>
+                                            <small class="text-muted d-none d-md-block">{{ $attendance->check_in_time->format('l') }}</small>
                                         </td>
                                         <td class="text-center">
                                             @if($attendance->photo_path)
-                                                <a href="{{ Storage::url($attendance->photo_path) }}" target="_blank">
-                                                    <img src="{{ Storage::url($attendance->photo_path) }}" 
-                                                         alt="User Photo" 
-                                                         class="rounded shadow-sm" 
-                                                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #0d6efd;">
-                                                </a>
+                                                <img src="{{ Storage::url($attendance->photo_path) }}" 
+                                                     alt="User Photo" 
+                                                     class="rounded shadow-sm img-preview-trigger" 
+                                                     style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #0d6efd; cursor: pointer;"
+                                                     data-src="{{ Storage::url($attendance->photo_path) }}"
+                                                     data-title="Foto Absen: {{ $attendance->user->name }}">
                                             @else
-                                                <span class="badge badge-outline-light text-muted">No Photo</span>
+                                                <span class="text-muted" style="font-size: 10px;">No Photo</span>
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge badge-{{ $attendance->presence_status_badge }} rounded-pill px-3 py-2" style="font-size: 0.75rem;">
+                                            <span class="badge badge-{{ $attendance->presence_status_badge }} rounded-pill px-2 py-1" style="font-size: 0.7rem;">
                                                 {{ $attendance->presence_status }}
                                             </span>
                                         </td>
                                         <td class="text-center">
                                             @if($attendance->audit_photo_path)
-                                                <a href="{{ Storage::url($attendance->audit_photo_path) }}" target="_blank">
-                                                    <img src="{{ Storage::url($attendance->audit_photo_path) }}" 
-                                                         alt="Audit Photo" 
-                                                         class="rounded shadow-sm" 
-                                                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #ffc107;">
-                                                </a>
+                                                <img src="{{ Storage::url($attendance->audit_photo_path) }}" 
+                                                     alt="Audit Photo" 
+                                                     class="rounded shadow-sm img-preview-trigger" 
+                                                     style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #ffc107; cursor: pointer;"
+                                                     data-src="{{ Storage::url($attendance->audit_photo_path) }}"
+                                                     data-title="Bukti Audit: {{ $attendance->user->name }}">
                                             @else
                                                 <span class="text-muted small">Tanpa Bukti</span>
                                             @endif
                                         </td>
                                         <td>
-                                            <div class="p-2 bg-light rounded small" style="max-width: 200px; border-left: 3px solid #0d6efd;">
+                                            <div class="p-2 bg-light rounded small" style="max-width: 150px; border-left: 3px solid #0d6efd; overflow: hidden; text-overflow: ellipsis;">
                                                 {{ $attendance->audit_note ?: 'Tidak ada catatan' }}
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <div class="font-weight-bold text-primary">{{ $attendance->verifier->name ?? 'System' }}</div>
-                                            <small class="text-muted" style="font-size: 10px;">
-                                                <i class="mdi mdi-clock-outline"></i> {{ $attendance->updated_at->format('d/m H:i') }}
+                                            <div class="font-weight-bold text-primary small">{{ $attendance->verifier->name ?? 'System' }}</div>
+                                            <small class="text-muted" style="font-size: 9px;">
+                                                {{ $attendance->updated_at->format('d/m H:i') }}
                                             </small>
                                         </td>
                                         <td class="text-center">
                                             <button type="button" 
-                                                    class="btn btn-sm btn-outline-danger btn-rounded"
-                                                    onclick="confirmRevert({{ $attendance->id }}, '{{ $attendance->user->name }}')"
-                                                    title="Hapus Editan & Balikkan ke Alpha">
-                                                <i class="mdi mdi-refresh"></i> Revert
+                                                    class="btn btn-sm btn-outline-danger btn-rounded px-2"
+                                                    onclick="confirmRevert({{ $attendance->id }}, '{{ $attendance->user->name }}')">
+                                                <i class="mdi mdi-refresh"></i>
                                             </button>
                                             <form id="revert-form-{{ $attendance->id }}" 
                                                   action="{{ route('admin.audit-monitor.revert', $attendance->id) }}" 
@@ -111,7 +112,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-5">
+                                        <td colspan="8" class="text-center py-5">
                                             <div class="empty-state">
                                                 <i class="mdi mdi-shield-off-outline text-muted" style="font-size: 3rem;"></i>
                                                 <p class="mt-2 text-muted">Belum ada data editan audit yang ditemukan.</p>
@@ -123,10 +124,25 @@
                         </table>
                     </div>
 
-                    <div class="mt-4 d-flex justify-content-center">
-                        {{ $attendances->links() }}
+                    <div class="mt-4 d-flex justify-content-center overflow-auto">
+                        {!! $attendances->links() !!}
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Preview Foto --}}
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <div class="modal-header bg-primary text-white border-0 py-2">
+                <h6 class="modal-title" id="modalTitle">Preview Foto</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 bg-dark text-center">
+                <img src="" id="modalImage" class="img-fluid" style="max-height: 80vh;">
             </div>
         </div>
     </div>
@@ -135,6 +151,21 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalElement = document.getElementById('imagePreviewModal');
+        const modal = new bootstrap.Modal(modalElement);
+        const modalImg = document.getElementById('modalImage');
+        const modalTitle = document.getElementById('modalTitle');
+
+        document.querySelectorAll('.img-preview-trigger').forEach(img => {
+            img.addEventListener('click', function() {
+                modalImg.src = this.getAttribute('data-src');
+                modalTitle.innerText = this.getAttribute('data-title');
+                modal.show();
+            });
+        });
+    });
+
     function confirmRevert(id, userName) {
         Swal.fire({
             title: 'Hapus Editan Audit?',
