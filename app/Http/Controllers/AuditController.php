@@ -510,6 +510,11 @@ class AuditController extends Controller
         $attendance->status = 'verified'; // Langsung verified karena sudah di-approve Audit
         $attendance->attendance_type = 'leave';
         $attendance->verified_by_user_id = $approver->id; // Set siapa yang memverifikasi (Audit)
+        
+        // [TAMBAHAN] Salin alasan dan bukti ke record absensi agar muncul di Monitoring Audit
+        $attendance->audit_note = "Disetujui dari Pengajuan: " . $leaveRequest->reason;
+        $attendance->audit_photo_path = $leaveRequest->file_proof; 
+        
         $attendance->save();
 
         // Kirim notifikasi

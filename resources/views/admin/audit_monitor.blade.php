@@ -28,11 +28,12 @@
                         <table class="table table-hover border-0">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="border-0">User</th>
-                                    <th class="border-0 text-center">Tanggal</th>
+                                    <th class="border-0">User & Cabang</th>
+                                    <th class="border-0 text-center">Tanggal Absen</th>
+                                    <th class="border-0 text-center">Foto User</th>
                                     <th class="border-0 text-center">Status (Audit)</th>
+                                    <th class="border-0 text-center">Foto Bukti Audit</th>
                                     <th class="border-0">Catatan Audit</th>
-                                    <th class="border-0 text-center">Foto Audit</th>
                                     <th class="border-0 text-center">Diverifikasi Oleh</th>
                                     <th class="border-0 text-center">Aksi</th>
                                 </tr>
@@ -42,21 +43,31 @@
                                     <tr>
                                         <td class="py-3">
                                             <div class="d-flex align-items-center">
-                                                <div class="ms-3">
+                                                <div class="ms-1">
                                                     <p class="font-weight-bold mb-0 text-dark">{{ $attendance->user->name }}</p>
                                                     <small class="text-muted">{{ $attendance->user->branch->name ?? 'N/A' }} | {{ $attendance->user->division->name ?? 'N/A' }}</small>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="text-center font-weight-bold">{{ $attendance->check_in_time->format('d/m/Y') }}</td>
                                         <td class="text-center">
-                                            <span class="badge badge-{{ $attendance->presence_status_badge }} rounded-pill px-3">
-                                                {{ $attendance->presence_status }}
-                                            </span>
+                                            <div class="font-weight-bold">{{ $attendance->check_in_time->format('d/m/Y') }}</div>
+                                            <small class="text-muted">{{ $attendance->check_in_time->format('l') }}</small>
                                         </td>
-                                        <td>
-                                            <span class="text-muted small" title="{{ $attendance->audit_note }}">
-                                                {{ Str::limit($attendance->audit_note, 50) ?: '-' }}
+                                        <td class="text-center">
+                                            @if($attendance->photo_path)
+                                                <a href="{{ Storage::url($attendance->photo_path) }}" target="_blank">
+                                                    <img src="{{ Storage::url($attendance->photo_path) }}" 
+                                                         alt="User Photo" 
+                                                         class="rounded shadow-sm" 
+                                                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #0d6efd;">
+                                                </a>
+                                            @else
+                                                <span class="badge badge-outline-light text-muted">No Photo</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-{{ $attendance->presence_status_badge }} rounded-pill px-3 py-2" style="font-size: 0.75rem;">
+                                                {{ $attendance->presence_status }}
                                             </span>
                                         </td>
                                         <td class="text-center">
@@ -64,25 +75,30 @@
                                                 <a href="{{ Storage::url($attendance->audit_photo_path) }}" target="_blank">
                                                     <img src="{{ Storage::url($attendance->audit_photo_path) }}" 
                                                          alt="Audit Photo" 
-                                                         class="rounded" 
-                                                         style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #eee;">
+                                                         class="rounded shadow-sm" 
+                                                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #ffc107;">
                                                 </a>
                                             @else
-                                                <span class="text-muted">-</span>
+                                                <span class="text-muted small">Tanpa Bukti</span>
                                             @endif
                                         </td>
+                                        <td>
+                                            <div class="p-2 bg-light rounded small" style="max-width: 200px; border-left: 3px solid #0d6efd;">
+                                                {{ $attendance->audit_note ?: 'Tidak ada catatan' }}
+                                            </div>
+                                        </td>
                                         <td class="text-center">
-                                            <span class="badge badge-outline-primary rounded-pill">
-                                                <i class="mdi mdi-account-star mr-1"></i> {{ $attendance->verifier->name ?? 'System' }}
-                                            </span>
-                                            <br>
-                                            <small class="text-muted" style="font-size: 10px;">{{ $attendance->updated_at->format('d/m/Y H:i') }}</small>
+                                            <div class="font-weight-bold text-primary">{{ $attendance->verifier->name ?? 'System' }}</div>
+                                            <small class="text-muted" style="font-size: 10px;">
+                                                <i class="mdi mdi-clock-outline"></i> {{ $attendance->updated_at->format('d/m H:i') }}
+                                            </small>
                                         </td>
                                         <td class="text-center">
                                             <button type="button" 
-                                                    class="btn btn-sm btn-inverse-danger btn-icon-text"
-                                                    onclick="confirmRevert({{ $attendance->id }}, '{{ $attendance->user->name }}')">
-                                                <i class="mdi mdi-delete-forever btn-icon-prepend"></i> Revert Alpha
+                                                    class="btn btn-sm btn-outline-danger btn-rounded"
+                                                    onclick="confirmRevert({{ $attendance->id }}, '{{ $attendance->user->name }}')"
+                                                    title="Hapus Editan & Balikkan ke Alpha">
+                                                <i class="mdi mdi-refresh"></i> Revert
                                             </button>
                                             <form id="revert-form-{{ $attendance->id }}" 
                                                   action="{{ route('admin.audit-monitor.revert', $attendance->id) }}" 
