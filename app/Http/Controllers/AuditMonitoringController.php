@@ -25,6 +25,25 @@ class AuditMonitoringController extends Controller
             ->latest('updated_at')
             ->paginate(30);
 
+        // [TAMBAHAN] Untuk data lama yang audit_note/audit_photo_path nya masih kosong, 
+        // kita coba tarik dari LeaveRequest berdasarkan user_id dan tanggal.
+        foreach ($attendances as $attendance) {
+            if (empty($attendance->audit_note) || empty($attendance->audit_photo_path)) {
+                $leave = \App\Models\LeaveRequest::where('user_id', $attendance->user_id)
+                    ->whereDate('start_date', $attendance->check_in_time->format('Y-m-d'))
+                    ->first();
+                
+                if ($leave) {
+                    if (empty($attendance->audit_note)) {
+                        $attendance->audit_note = "(Auto-Fetch) " . $leave->reason;
+                    }
+                    if (empty($attendance->audit_photo_path)) {
+                        $attendance->audit_photo_path = $leave->file_proof;
+                    }
+                }
+            }
+        }
+
         return view('admin.audit_monitor', compact('attendances'));
     }
 
