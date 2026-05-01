@@ -19,12 +19,14 @@ class AuditMonitoringController extends Controller
         $auditUserIds = User::where('role', 'audit')->pluck('id');
 
         // Ambil data absensi yang diverifikasi oleh Audit
-        // Hanya ambil yang tipe 'manual', 'leave' (Izin/Cuti), atau yang memiliki catatan/foto audit (Hasil Koreksi)
+        // Hanya ambil yang:
+        // 1. Tipe 'manual' atau 'leave' (Pasti intervensi audit)
+        // 2. Tipe lain (self/scan) tapi ada Catatan atau Foto Audit (Pasti hasil koreksi/editan)
         $attendances = Attendance::with(['user.branch', 'user.division', 'verifier'])
             ->whereIn('verified_by_user_id', $auditUserIds)
             ->where('status', 'verified')
             ->where(function ($q) {
-                $q->whereIn('attendance_type', ['manual', 'leave'])
+                $q->whereNotIn('attendance_type', ['self', 'scan'])
                   ->orWhere(function($sub) {
                       $sub->whereNotNull('audit_note')->where('audit_note', '!=', '');
                   })
