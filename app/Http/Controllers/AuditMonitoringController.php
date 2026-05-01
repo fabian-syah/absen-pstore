@@ -25,8 +25,12 @@ class AuditMonitoringController extends Controller
             ->where('status', 'verified')
             ->where(function ($q) {
                 $q->whereIn('attendance_type', ['manual', 'leave'])
-                  ->orWhereNotNull('audit_note')
-                  ->orWhereNotNull('audit_photo_path');
+                  ->orWhere(function($sub) {
+                      $sub->whereNotNull('audit_note')->where('audit_note', '!=', '');
+                  })
+                  ->orWhere(function($sub) {
+                      $sub->whereNotNull('audit_photo_path')->where('audit_photo_path', '!=', '');
+                  });
             })
             ->latest('updated_at')
             ->paginate(30);
