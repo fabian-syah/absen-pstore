@@ -62,7 +62,31 @@ class AttendanceSummaryController extends Controller
             })
             ->get();
 
-        // --- 3. HITUNG PER BULAN ---
+        // --- 3. AMBIL TIMEZONE ---
+        $branchTimezone = $targetUser->branch?->timezone ?? 'Asia/Jakarta';
+
+        // --- 4. PRE-PROCESS DATA (Group by Local Date) ---
+        // Group attendances by local date to handle timezone shifts and multiple records per day
+        $attendancesByDate = $attendances->groupBy(function ($att) use ($branchTimezone) {
+            return Carbon::parse($att->check_in_time)->timezone($branchTimezone)->format('Y-m-d');
+        });
+
+        // Group leaves by local date (potentially multiple days per leave)
+        $leavesByDate = collect();
+        foreach ($leaves as $leave) {
+            $start = Carbon::parse($leave->start_date);
+            $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
+            $period = CarbonPeriod::create($start, $end);
+            foreach ($period as $date) {
+                $dateStr = $date->format('Y-m-d');
+                if (!$leavesByDate->has($dateStr)) {
+                    $leavesByDate->put($dateStr, collect());
+                }
+                $leavesByDate->get($dateStr)->push($leave);
+            }
+        }
+
+        // --- 5. HITUNG PER BULAN ---
         $monthsData = [];
         $grandTotal = [
             'total_hari' => 0,
@@ -78,29 +102,8 @@ class AttendanceSummaryController extends Controller
             'pending' => 0
         ];
 
-        // --- 4. LOOPING 12 BULAN ---
+        // --- 6. LOOPING 12 BULAN ---
         for ($m = 1; $m <= 12; $m++) {
-            // Data dari Attendance
-            $monthAtt = $attendances->filter(
-                fn($q) =>
-                $q->check_in_time->month == $m && $q->check_in_time->year == $selectedYear
-            );
-
-            // Data dari LeaveRequest untuk bulan ini
-            $monthLeaves = $leaves->filter(function ($leave) use ($m, $selectedYear) {
-                $start = Carbon::parse($leave->start_date);
-                $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
-
-                $period = CarbonPeriod::create($start, $end);
-                foreach ($period as $date) {
-                    if ($date->month == $m && $date->year == $selectedYear) {
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            // Hitung dari Attendance
             $masukCount = 0;
             $wfhCount = 0;
             $sakitCount = 0;
@@ -112,30 +115,71 @@ class AttendanceSummaryController extends Controller
             $pulangCepatCount = 0;
             $pendingCount = 0;
 
-            // Proses setiap attendance
-            foreach ($monthAtt as $att) {
-                $date = $att->check_in_time->format('Y-m-d');
+            // Tentukan range hari di bulan ini (LOKAL)
+            $monthStart = Carbon::createFromDate($selectedYear, $m, 1, $branchTimezone)->startOfMonth();
+            $monthEnd = $monthStart->copy()->endOfMonth();
+            
+            // Kita hanya hitung hari yang sudah lewat atau sedang berjalan (limitDate)
+            $todayInBranch = Carbon::now($branchTimezone)->startOfDay();
+            $limitDate = ($monthEnd->gt($todayInBranch)) ? $todayInBranch : $monthEnd;
+            
+            // Period untuk iterasi hari demi hari agar akurat
+            $period = CarbonPeriod::create($monthStart, $limitDate);
 
-                // Cek apakah ada leave untuk tanggal ini
-                $leaveForDate = $monthLeaves->filter(function ($leave) use ($date) {
-                    $start = Carbon::parse($leave->start_date);
-                    $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
-                    $period = CarbonPeriod::create($start, $end);
-
-                    foreach ($period as $d) {
-                        if ($d->format('Y-m-d') == $date) {
-                            return true;
-                        }
-                    }
-                    return false;
+            foreach ($period as $date) {
+                $dateStr = $date->format('Y-m-d');
+                
+                // 1. Ambil Attendance "Terbaik" untuk hari ini
+                $dayAtts = $attendancesByDate->get($dateStr, collect());
+                
+                // Prioritas: Manual/Scan/Self > Leave > System Alpha
+                $bestAtt = $dayAtts->filter(fn($a) => $a->attendance_type !== 'system')->sortBy(function($a) {
+                    $s = strtolower($a->presence_status ?? '');
+                    if (in_array($s, ['masuk', 'wfh', 'dinas', 'telat', 'izin telat'])) return 0;
+                    return 1;
                 })->first();
 
-                if ($leaveForDate) {
-                    // Ada leave, gunakan tipe leave
-                    $leaveType = strtolower($leaveForDate->type);
+                // Jika tidak ada data real, cek apakah ada System Alpha
+                if (!$bestAtt) {
+                    $bestAtt = $dayAtts->filter(fn($a) => $a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha')->first();
+                }
+
+                // 2. Cek Izin/Cuti untuk hari ini
+                $dayLeave = $leavesByDate->get($dateStr, collect())->first();
+
+                if ($bestAtt && $bestAtt->attendance_type !== 'system') {
+                    // Ada data absensi real
+                    $status = strtolower($bestAtt->presence_status ?? '');
+
+                    if ($status == 'masuk' || $status == 'telat' || $status == 'izin telat' || str_contains($status, 'hadir')) {
+                        $masukCount++;
+                        if ($bestAtt->is_late_checkin || str_contains($status, 'telat')) {
+                            $telatCount++;
+                        }
+                    } elseif (str_contains($status, 'wfh') || str_contains($status, 'dinas')) {
+                        $masukCount++;
+                        $wfhCount++;
+                    } elseif ($status == 'sakit') {
+                        $sakitCount++;
+                    } elseif ($status == 'izin') {
+                        $izinCount++;
+                    } elseif ($status == 'cuti') {
+                        $cutiCount++;
+                    } elseif ($status == 'libur') {
+                        $liburCount++;
+                    }
+
+                    if ($bestAtt->is_early_checkout) {
+                        $pulangCepatCount++;
+                    }
+                    if ($bestAtt->status == 'pending_verification') {
+                        $pendingCount++;
+                    }
+                } elseif ($dayLeave) {
+                    // Tidak ada absensi real tapi ada Izin/Cuti
+                    $leaveType = strtolower($dayLeave->type);
 
                     if ($leaveType == 'telat') {
-                        // Telat special case: attendance tetap masuk tapi status telat
                         $masukCount++;
                         $telatCount++;
                     } elseif ($leaveType == 'sakit') {
@@ -150,78 +194,15 @@ class AttendanceSummaryController extends Controller
                         $masukCount++;
                         $wfhCount++;
                     }
-                } else {
-                    // Tidak ada leave, gunakan attendance
-                    $status = strtolower($att->presence_status ?? '');
-
-                    if ($status == 'masuk' || $status == 'telat' || $status == 'izin telat') {
-                        $masukCount++;
-                        if ($att->is_late_checkin) {
-                            $telatCount++;
-                        }
-                    } elseif (str_contains($status, 'wfh') || str_contains($status, 'dinas')) {
-                        $masukCount++;
-                        $wfhCount++;
-                    } elseif ($status == 'sakit') {
-                        $sakitCount++;
-                    } elseif ($status == 'izin') {
-                        $izinCount++;
-                    } elseif ($status == 'cuti') {
-                        $cutiCount++;
-                    } elseif ($status == 'libur') {
-                        $liburCount++;
-                    } elseif ($status == 'alpha') {
-                        $alphaCount++;
-                    }
-
-                    if ($att->is_early_checkout) {
-                        $pulangCepatCount++;
-                    }
-
-                    if ($att->status == 'pending_verification') {
-                        $pendingCount++;
-                    }
+                } elseif ($bestAtt && $bestAtt->attendance_type === 'system') {
+                    // Hanya ada record System Alpha
+                    $alphaCount++;
                 }
+                // Jika benar-benar kosong (dan sudah lewat hari), Alpha biasanya dihitung oleh system command.
+                // Tapi untuk summary, kita hanya hitung yang terekam di DB (baik Alpha sistem maupun status Alpha).
             }
 
-            // Hitung leaves yang tidak memiliki attendance
-            $processedDates = $monthAtt->map(fn($att) => $att->check_in_time->format('Y-m-d'))->toArray();
-
-            foreach ($monthLeaves as $leave) {
-                $start = Carbon::parse($leave->start_date);
-                $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start->copy();
-                $period = CarbonPeriod::create($start, $end);
-
-                foreach ($period as $date) {
-                    if ($date->month == $m && $date->year == $selectedYear) {
-                        $dateStr = $date->format('Y-m-d');
-
-                        // Skip jika sudah diproses di attendance
-                        if (in_array($dateStr, $processedDates))
-                            continue;
-
-                        $leaveType = strtolower($leave->type);
-
-                        if ($leaveType == 'telat') {
-                            $masukCount++;
-                            $telatCount++;
-                        } elseif ($leaveType == 'sakit') {
-                            $sakitCount++;
-                        } elseif ($leaveType == 'izin') {
-                            $izinCount++;
-                        } elseif ($leaveType == 'cuti') {
-                            $cutiCount++;
-                        } elseif ($leaveType == 'libur') {
-                            $liburCount++;
-                        } elseif ($leaveType == 'wfh') {
-                            $masukCount++;
-                            $wfhCount++;
-                        }
-                    }
-                }
-            }
-
-            // Total hari
+            // Total hari (yang memiliki status kehadiran)
             $totalHari = $masukCount + $sakitCount + $izinCount + $cutiCount + $liburCount + $alphaCount;
 
             $monthsData[$m] = [
@@ -245,7 +226,7 @@ class AttendanceSummaryController extends Controller
             }
         }
 
-        // --- 5. DATA UNTUK BOX ATAS ---
+        // --- 7. DATA UNTUK BOX ATAS ---
         $rawSummary = $monthsData[$selectedMonth];
         $summary = [
             'present' => $rawSummary['masuk'],
