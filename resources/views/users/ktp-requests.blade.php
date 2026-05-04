@@ -118,13 +118,23 @@
                                             </div>
                                         </div>
                                     </td>
-                                             style="width: 60px; height: auto; cursor: pointer; border-radius: 4px;"
-                                             data-bs-toggle="modal" 
-                                             data-bs-target="#modalOldKtp{{ $user->id }}">
-                                    @else
-                                        <span class="badge bg-secondary">Kosong</span>
-                                    @endif
-                                </td>
+                                 
+                                 {{-- KOLOM 2: DIVISI --}}
+                                 <td>{{ $user->division->name ?? '-' }}</td>
+                                 
+                                 {{-- KOLOM 3: KTP LAMA --}}
+                                 <td class="text-center">
+                                     @if($user->ktp_photo_path)
+                                         <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
+                                              alt="Old KTP" 
+                                              class="shadow-sm"
+                                              style="width: 60px; height: auto; cursor: pointer; border-radius: 4px;"
+                                              data-bs-toggle="modal" 
+                                              data-bs-target="#modalOldKtp{{ $user->id }}">
+                                     @else
+                                         <span class="badge bg-secondary">Kosong</span>
+                                     @endif
+                                 </td>
 
                                 {{-- =================================== --}}
                                 {{-- KOLOM 4: KTP BARU (PENGAJUAN)       --}}
