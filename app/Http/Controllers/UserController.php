@@ -60,7 +60,7 @@ class UserController extends Controller
         $adminGajiBranch = Branch::where('name', 'Cabang User Non Karyawan')->first();
         if ($adminGajiBranch) {
             $activeQuery->where('branch_id', '!=', $adminGajiBranch->id);
-            // $inactiveQuery->where('branch_id', '!=', $adminGajiBranch->id); // Biarkan tetap muncul di tab EX Karyawan
+            $inactiveQuery->where('branch_id', '!=', $adminGajiBranch->id);
         }
 
         // Hide Super Admin & Admin Gaji from employee list
@@ -81,14 +81,6 @@ class UserController extends Controller
                 $allowedBranchIds[] = $user->branch_id;
             }
 
-            $allowedBranchIds = array_unique($allowedBranchIds);
-
-            // [TAMBAHAN] Bypass untuk user khusus agar bisa melihat EX Karyawan (83) & Non Karyawan (84)
-            $specialLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
-            if (in_array(strtolower($user->login_id), array_map('strtolower', $specialLogins))) {
-                $allowedBranchIds[] = 83; // EX Karyawan
-                $allowedBranchIds[] = 84; // Non Karyawan
-            }
             $allowedBranchIds = array_unique($allowedBranchIds);
 
             // Filter Active Users
