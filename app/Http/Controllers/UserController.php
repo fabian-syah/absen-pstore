@@ -81,6 +81,28 @@ class UserController extends Controller
                 $allowedBranchIds[] = $user->branch_id;
             }
 
+            // [TAMBAHAN] Bypass untuk user khusus agar bisa melihat EX Karyawan & Non Karyawan
+            $specialLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
+            $isSpecialUser = in_array(strtolower($user->login_id), array_map('strtolower', $specialLogins)) || 
+                             str_contains(strtolower($user->name), 'herlina');
+            
+            if ($isSpecialUser) {
+                // Gunakan LIKE untuk antisipasi spasi/karakter aneh
+                $exBranch = Branch::where('name', 'like', '%EX Karyawan%')->first();
+                $nonKaryawanBranch = Branch::where('name', 'like', '%Non Karyawan%')->first();
+                
+                if ($exBranch) {
+                    $allowedBranchIds[] = $exBranch->id;
+                } else {
+                    $allowedBranchIds[] = 83; // Fallback ID
+                }
+
+                if ($nonKaryawanBranch) {
+                    $allowedBranchIds[] = $nonKaryawanBranch->id;
+                } else {
+                    $allowedBranchIds[] = 107; // Fallback ID dari script user
+                }
+            }
             $allowedBranchIds = array_unique($allowedBranchIds);
 
             // Filter Active Users
@@ -89,7 +111,7 @@ class UserController extends Controller
                     ->orWhere('id', $user->id);
             });
 
-            // Filter Inactive Users (EX Karyawan) - Hanya bisa lihat jika wilayah auditnya mencakup branch 83
+            // Filter Inactive Users (EX Karyawan)
             $inactiveQuery->where(function ($q) use ($allowedBranchIds, $user) {
                 $q->whereIn('branch_id', $allowedBranchIds)
                     ->orWhere('id', $user->id);
