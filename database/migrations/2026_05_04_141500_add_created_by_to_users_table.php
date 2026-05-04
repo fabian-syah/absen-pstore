@@ -18,13 +18,22 @@ return new class extends Migration
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });
 
-        // Backfill data lama dari EmploymentHistory (Tipe 'join')
+        // Backfill data lama dari EmploymentHistory
         try {
             $users = \App\Models\User::whereNull('created_by')->get();
             foreach ($users as $user) {
+                // Cari riwayat 'join' dulu
                 $history = \App\Models\EmploymentHistory::where('user_id', $user->id)
                     ->where('type', 'join')
                     ->first();
+                
+                // Jika tidak ada 'join', ambil riwayat paling awal apa saja
+                if (!$history) {
+                    $history = \App\Models\EmploymentHistory::where('user_id', $user->id)
+                        ->orderBy('event_date', 'asc')
+                        ->orderBy('created_at', 'asc')
+                        ->first();
+                }
                 
                 if ($history && $history->created_by) {
                     $user->update(['created_by' => $history->created_by]);
