@@ -457,7 +457,7 @@ class SelfAttendanceController extends Controller
 
         $attendance = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', $localNow->copy()->subHours(48)) // Tetap range luas
+            ->where('check_in_time', '>=', $localNow->copy()->subHours(48)) 
             ->latest('check_in_time')
             ->first();
 
@@ -465,18 +465,22 @@ class SelfAttendanceController extends Controller
             return redirect()->route('dashboard')->with('error', 'Tidak ada sesi aktif yang ditemukan.');
         }
 
-        // Gunakan waktu lokal saat memproses (mencegah mismatch antar timezone server vs user)
-        $currentTime = Carbon::now($branchTimezone);
-        $notes = ($attendance->notes ? $attendance->notes . " | " : "") . "[Manual: Lupa Absen Pulang (" . $branchTimezone . ")]";
+        // --- LOGIKA BARU: Jam Masuk + 8 Jam ---
+        $checkInTime = Carbon::parse($attendance->check_in_time);
+        $checkOutTime = $checkInTime->copy()->addHours(8);
+
+        // Catatan otomatis sesuai permintaan user
+        $autoNote = "saya lupa absen pulang maaf gak ada foto";
+        $notes = ($attendance->notes ? $attendance->notes . " | " : "") . $autoNote;
 
         $attendance->update([
-            'check_out_time' => $currentTime,
+            'check_out_time' => $checkOutTime,
             'notes' => $notes,
-            'status' => 'verified', // Langsung verified sesuai request user
+            'status' => 'verified', // Langsung verified sesuai sistem PStore
             'verified_at' => now(),
-            'verified_by_user_id' => Auth::id(), // Dianggap diverifikasi oleh dirinya sendiri/sistem
+            'verified_by_user_id' => Auth::id(), 
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Absen pulang manual berhasil diproses (Lupa Absen Pulang).');
+        return redirect()->route('dashboard')->with('success', 'Absen pulang manual berhasil diproses (Jam Masuk + 8 Jam).');
     }
 }
