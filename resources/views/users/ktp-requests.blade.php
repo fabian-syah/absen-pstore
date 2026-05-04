@@ -118,35 +118,6 @@
                                             </div>
                                         </div>
                                     </td>
-                                                     data-bs-toggle="modal" 
-                                                     data-bs-target="#modalProfile{{ $user->id }}"
-                                                     title="Lihat Foto Profil">
-                                            @else
-                                                <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center shadow-sm" 
-                                                     style="width: 50px; height: 50px; font-weight: bold; font-size: 20px; border-radius: 8px !important;">
-                                                    {{ substr($user->name, 0, 1) }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0 fw-bold">{{ $user->name }}</h6>
-                                            <small class="text-muted">{{ $user->email }}</small>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                {{-- KOLOM 2: DIVISI --}}
-                                <td>{{ $user->division->name ?? '-' }}</td>
-                                
-                                {{-- =================================== --}}
-                                {{-- KOLOM 3: KTP LAMA (SESUAI REQUEST)  --}}
-                                {{-- =================================== --}}
-                                <td class="text-center">
-                                    @if($user->ktp_photo_path)
-                                        {{-- Thumbnail --}}
-                                        <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
-                                             alt="Old KTP" 
-                                             class="shadow-sm"
                                              style="width: 60px; height: auto; cursor: pointer; border-radius: 4px;"
                                              data-bs-toggle="modal" 
                                              data-bs-target="#modalOldKtp{{ $user->id }}">
