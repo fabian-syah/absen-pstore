@@ -83,6 +83,14 @@ class UserController extends Controller
 
             $allowedBranchIds = array_unique($allowedBranchIds);
 
+            // [TAMBAHAN] Bypass untuk user khusus agar bisa melihat EX Karyawan (83) & Non Karyawan (84)
+            $specialLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
+            if (in_array(strtolower($user->login_id), array_map('strtolower', $specialLogins))) {
+                $allowedBranchIds[] = 83; // EX Karyawan
+                $allowedBranchIds[] = 84; // Non Karyawan
+            }
+            $allowedBranchIds = array_unique($allowedBranchIds);
+
             // Filter Active Users
             $activeQuery->where(function ($q) use ($allowedBranchIds, $user) {
                 $q->whereIn('branch_id', $allowedBranchIds)
