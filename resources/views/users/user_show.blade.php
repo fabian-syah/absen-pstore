@@ -313,6 +313,18 @@
                                     @endif
                                 </p>
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold text-muted small">Akun Dibuat Oleh</label>
+                                <p class="h6 text-dark">
+                                    <i class="mdi mdi-account-plus text-primary me-1"></i>
+                                    @if($user->creator)
+                                        {{ $user->creator->name }} 
+                                        <span class="badge bg-light text-muted border ms-1" style="font-size: 10px;">{{ strtoupper($user->creator->role) }}</span>
+                                    @else
+                                        <span class="text-muted">System / Migrasi</span>
+                                    @endif
+                                </p>
+                            </div>
                         @endif
                         
                         @if(auth()->user()->role == 'admin_gaji')

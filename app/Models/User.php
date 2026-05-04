@@ -70,6 +70,7 @@ class User extends Authenticatable
         'fcm_token',
         'push_subscription',
         'last_login_at',
+        'created_by',
     ];
 
     /**
@@ -249,5 +250,10 @@ class User extends Authenticatable
     public function employeeSalary()
     {
         return $this->hasOne(EmployeeSalary::class, 'user_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

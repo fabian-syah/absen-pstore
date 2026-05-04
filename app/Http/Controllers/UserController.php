@@ -209,6 +209,7 @@ class UserController extends Controller
         $data['password'] = Hash::make($request->password);
         $data['qr_code_value'] = (string) Str::uuid();
         $data['hire_date'] = $request->hire_date ?? null;
+        $data['created_by'] = Auth::id();
 
         if ($request->hasFile('profile_photo_path')) {
             $path = $request->file('profile_photo_path')->store('profile-photos', 'public');

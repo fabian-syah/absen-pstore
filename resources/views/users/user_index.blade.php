@@ -87,6 +87,7 @@
                                             <th> Status Login </th> {{-- <--- KOLOM BARU --}}
                                             <th> Role </th>
                                             <th> Penempatan & Divisi </th>
+                                            <th> Dibuat Oleh </th>
                                             <th> Tanggal Join </th>
                                             <th> QR Code </th>
                                             <th> Aksi </th>
@@ -172,6 +173,14 @@
                                                         @endif
                                                     </div>
                                                 </td>
+                                                <td>
+                                                    @if($user->creator)
+                                                        <div class="fw-bold small">{{ $user->creator->name }}</div>
+                                                        <small class="text-muted" style="font-size: 0.7rem;">{{ $user->creator->role }}</small>
+                                                    @else
+                                                        <span class="text-muted small">System</span>
+                                                    @endif
+                                                </td>
                                                 <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}</td>
                                                 <td>
                                                     @if ($user->qr_code_value)
@@ -230,6 +239,7 @@
                                             <th> Profil Pengguna </th>
                                             <th> Email </th>
                                             <th> Penempatan Terakhir </th>
+                                            <th> Dibuat Oleh </th>
                                             <th> Tanggal Join </th>
                                             <th> Aksi </th>
                                         </tr>
@@ -260,6 +270,14 @@
                                                     <span class="badge bg-dark text-white">
                                                         <i class="mdi mdi-store me-1"></i> {{ $user->branch->name ?? 'EX Karyawan' }}
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    @if($user->creator)
+                                                        <div class="fw-bold small">{{ $user->creator->name }}</div>
+                                                        <small class="text-muted" style="font-size: 0.7rem;">{{ $user->creator->role }}</small>
+                                                    @else
+                                                        <span class="text-muted small">System</span>
+                                                    @endif
                                                 </td>
                                                 <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}</td>
                                                 <td>
