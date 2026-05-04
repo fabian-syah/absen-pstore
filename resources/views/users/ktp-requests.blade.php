@@ -60,7 +60,7 @@
     </div>
 @endif
 
-<div class="row">
+<div class="row" style="min-height: 75vh;">
     <div class="col-lg-12">
         {{-- Header Page --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
