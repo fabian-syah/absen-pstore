@@ -74,26 +74,6 @@
                                             <small class="text-muted">{{ $user->email }}</small>
                                         </div>
                                     </div>
-
-                                    {{-- MODAL FOTO PROFIL --}}
-                                    @if($user->profile_photo_path)
-                                    <div class="modal fade" id="modalProfile{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered modal-xl">
-                                            <div class="modal-content">
-                                                <div class="modal-header border-0 pb-0">
-                                                    <h5 class="modal-title">Foto Profil: {{ $user->name }}</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body text-center">
-                                                    {{-- PERBAIKAN STYLE: width: 100% agar memenuhi modal --}}
-                                                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
-                                                         class="img-fluid rounded" 
-                                                         style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endif
                                 </td>
 
                                 {{-- KOLOM 2: DIVISI --}}
@@ -111,24 +91,6 @@
                                              style="width: 60px; height: auto; cursor: pointer; border-radius: 4px;"
                                              data-bs-toggle="modal" 
                                              data-bs-target="#modalOldKtp{{ $user->id }}">
-                                    
-                                        {{-- Modal View Old --}}
-                                        <div class="modal fade" id="modalOldKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered modal-xl">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">KTP Lama: {{ $user->name }}</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body text-center p-4">
-                                                        {{-- PERBAIKAN STYLE: width: 100% agar memenuhi modal --}}
-                                                        <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
-                                                             class="img-fluid rounded"
-                                                             style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     @else
                                         <span class="badge bg-secondary">Kosong</span>
                                     @endif
@@ -150,49 +112,14 @@
                                                 <span class="visually-hidden">New</span>
                                             </span>
                                         </div>
-
-                                        {{-- MODAL KTP BARU (Besar & Jelas) --}}
-                                        <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered modal-xl">
-                                                <div class="modal-content">
-                                                    {{-- Header --}}
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title text-success fs-4">Calon KTP Baru: {{ $user->name }}</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    
-                                                    {{-- Body: PERBAIKAN STYLE DISINI --}}
-                                                    <div class="modal-body text-center p-3">
-                                                        {{-- 
-                                                            LOGIKA BARU UNTUK GAMBAR BESAR:
-                                                            width: 100%      -> Paksa gambar memenuhi lebar modal.
-                                                            height: auto     -> Tinggi menyesuaikan agar proporsional.
-                                                            max-height: 85vh -> Batasi tinggi agar tidak melebihi layar.
-                                                            object-fit: contain -> Pastikan seluruh gambar terlihat jelas.
-                                                        --}}
-                                                        <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
-                                                             class="img-fluid rounded"
-                                                             style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                                                    </div>
-
-                                                    {{-- Footer --}}
-                                                    <div class="modal-footer justify-content-center border-0 pt-0 pb-4">
-                                                        <small class="text-muted fs-6">Pastikan data terlihat jelas sebelum disetujui.</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     @else
                                         <span class="text-danger small"><i class="mdi mdi-alert"></i> File Error</span>
                                     @endif
                                 </td>
 
-                                {{-- =================================== --}}
-                                {{-- KOLOM 5: AKSI                       --}}
-                                {{-- =================================== --}}
+                                {{-- KOLOM 5: AKSI --}}
                                 <td>
                                     <div class="d-flex gap-2">
-                                        {{-- Tombol Approve --}}
                                         <form action="{{ route('users.approve-ktp', $user->id) }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=\'mdi mdi-loading mdi-spin\'></i>';">
                                             @csrf
                                             @method('PATCH')
@@ -204,7 +131,6 @@
                                             </button>
                                         </form>
 
-                                        {{-- Tombol Reject --}}
                                         <form action="{{ route('users.reject-ktp', $user->id) }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=\'mdi mdi-loading mdi-spin\'></i>';">
                                             @csrf
                                             @method('PATCH')
@@ -222,6 +148,67 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{-- MODAL SECTION --}}
+                @foreach($users as $user)
+                    @if($user->profile_photo_path)
+                    <div class="modal fade" id="modalProfile{{ $user->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="modal-title">Foto Profil: {{ $user->name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" 
+                                         class="img-fluid rounded" 
+                                         style="width: 100%; height: auto; max-height: 85vh; object-fit: contain;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if($user->ktp_photo_path)
+                    <div class="modal fade" id="modalOldKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">KTP Lama: {{ $user->name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-center p-4">
+                                    <img src="{{ asset('storage/' . $user->ktp_photo_path) }}" 
+                                         class="img-fluid rounded"
+                                         style="width: 100%; height: auto; max-height: 85vh; object-fit: contain;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if($user->ktp_photo_temp_path)
+                    <div class="modal fade" id="modalNewKtp{{ $user->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title text-success fs-4">Calon KTP Baru: {{ $user->name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-center p-3">
+                                    <img src="{{ asset('storage/' . $user->ktp_photo_temp_path) }}" 
+                                         class="img-fluid rounded shadow"
+                                         style="width: 100%; height: auto; max-height: 85vh; object-fit: contain;">
+                                </div>
+                                <div class="modal-footer justify-content-center border-0 pt-0 pb-4">
+                                    <small class="text-muted fs-6">Pastikan data terlihat jelas sebelum disetujui.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                @endforeach
+                
                 @else
                     {{-- State Kosong --}}
                     <div class="alert alert-light border text-center py-5">
