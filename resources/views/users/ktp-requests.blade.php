@@ -193,7 +193,7 @@
                                 <td>
                                     <div class="d-flex gap-2">
                                         {{-- Tombol Approve --}}
-                                        <form action="{{ route('users.approve-ktp', $user->id) }}" method="POST">
+                                        <form action="{{ route('users.approve-ktp', $user->id) }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=\'mdi mdi-loading mdi-spin\'></i>';">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="btn btn-success btn-sm text-white rounded-circle p-2" 
@@ -205,7 +205,7 @@
                                         </form>
 
                                         {{-- Tombol Reject --}}
-                                        <form action="{{ route('users.reject-ktp', $user->id) }}" method="POST">
+                                        <form action="{{ route('users.reject-ktp', $user->id) }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=\'mdi mdi-loading mdi-spin\'></i>';">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="btn btn-danger btn-sm text-white rounded-circle p-2" 

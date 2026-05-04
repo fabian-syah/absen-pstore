@@ -40,44 +40,6 @@
         border-radius: 12px;
         overflow: hidden;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        animation: slideInLeft 0.3s ease-out backwards;
-    }
-
-    @keyframes slideInLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-15px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    /* Stagger animation for menu items */
-    .sidebar .nav-item:nth-child(1) {
-        animation-delay: 0.05s;
-    }
-
-    .sidebar .nav-item:nth-child(2) {
-        animation-delay: 0.1s;
-    }
-
-    .sidebar .nav-item:nth-child(3) {
-        animation-delay: 0.15s;
-    }
-
-    .sidebar .nav-item:nth-child(4) {
-        animation-delay: 0.2s;
-    }
-
-    .sidebar .nav-item:nth-child(5) {
-        animation-delay: 0.25s;
-    }
-
-    .sidebar .nav-item:nth-child(6) {
-        animation-delay: 0.3s;
     }
 
     .sidebar .nav-item .nav-link {
