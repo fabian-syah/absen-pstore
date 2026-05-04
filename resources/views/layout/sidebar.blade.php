@@ -449,7 +449,7 @@
             </li>
         @endif
 
-        @if (auth()->user()->role == 'admin')
+        @if (auth()->user()->role === 'admin' || auth()->user()->role === 'admin_gaji')
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.correction.index') ? 'active' : '' }}" href="{{ route('admin.correction.index') }}">
                     <i class="menu-icon mdi mdi-eraser"></i>

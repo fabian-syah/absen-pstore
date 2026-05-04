@@ -87,8 +87,8 @@ class AuditController extends Controller
         // [VALIDASI AKSES AUDIT & EX]
         if (in_array($attendance->user->branch_id, [64, 83])) {
             $targetBranchId = $attendance->user->branch_id;
-            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
-            $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
+            $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
+            $isWhitelisted = in_array(strtolower($user->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {
@@ -146,8 +146,8 @@ class AuditController extends Controller
         // [VALIDASI AKSES AUDIT & EX]
         if (in_array($attendance->user->branch_id, [64, 83])) {
             $targetBranchId = $attendance->user->branch_id;
-            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
-            $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
+            $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
+            $isWhitelisted = in_array(strtolower($user->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {
@@ -449,10 +449,10 @@ class AuditController extends Controller
         // === VALIDASI AKSES AUDIT (Branch 64 & 83) ===
         if ($leaveRequest->user && in_array($leaveRequest->user->branch_id, [64, 83])) {
             $targetBranchId = $leaveRequest->user->branch_id;
-            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+            $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
 
             $isSuperUser = in_array($approver->role, ['admin', 'super_admin']);
-            $isWhitelisted = in_array(strtolower($approver->login_id), $allowedLogins);
+            $isWhitelisted = in_array(strtolower($approver->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $approver->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {
@@ -548,10 +548,10 @@ class AuditController extends Controller
         // === VALIDASI AKSES AUDIT (Branch 64 & 83) ===
         if ($leaveRequest->user && in_array($leaveRequest->user->branch_id, [64, 83])) {
             $targetBranchId = $leaveRequest->user->branch_id;
-            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+            $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
 
             $isSuperUser = in_array($approver->role, ['admin', 'super_admin']);
-            $isWhitelisted = in_array(strtolower($approver->login_id), $allowedLogins);
+            $isWhitelisted = in_array(strtolower($approver->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $approver->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {
@@ -697,8 +697,8 @@ class AuditController extends Controller
         // [VALIDASI AKSES AUDIT & EX]
         if (in_array($attendance->user->branch_id, [64, 83])) {
             $targetBranchId = $attendance->user->branch_id;
-            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
-            $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
+            $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
+            $isWhitelisted = in_array(strtolower($user->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {
@@ -790,8 +790,8 @@ class AuditController extends Controller
         // [VALIDASI AKSES AUDIT & EX]
         if (in_array($attendance->user->branch_id, [64, 83])) {
             $targetBranchId = $attendance->user->branch_id;
-            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
-            $isWhitelisted = in_array(strtolower($user->login_id), $allowedLogins);
+            $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
+            $isWhitelisted = in_array(strtolower($user->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $user->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {
@@ -903,8 +903,8 @@ class AuditController extends Controller
         // [VALIDASI AKSES AUDIT & EX]
         if (in_array($user->branch_id, [64, 83])) {
             $targetBranchId = $user->branch_id;
-            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
-            $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
+            $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
+            $isWhitelisted = in_array(strtolower($actor->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {

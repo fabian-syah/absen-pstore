@@ -29,7 +29,9 @@ class AdminGajiUserController extends Controller
 
     public function index()
     {
-        $users = AdminGajiUser::with('user')->latest()->get();
+        $users = AdminGajiUser::whereHas('user', function ($query) {
+            $query->where('is_active', true);
+        })->with('user')->latest()->get();
         return view('admin_gaji.users.index', compact('users'));
     }
 

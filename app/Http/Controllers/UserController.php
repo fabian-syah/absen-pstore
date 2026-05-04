@@ -60,7 +60,7 @@ class UserController extends Controller
         $adminGajiBranch = Branch::where('name', 'Cabang User Non Karyawan')->first();
         if ($adminGajiBranch) {
             $activeQuery->where('branch_id', '!=', $adminGajiBranch->id);
-            $inactiveQuery->where('branch_id', '!=', $adminGajiBranch->id);
+            // $inactiveQuery->where('branch_id', '!=', $adminGajiBranch->id); // Biarkan tetap muncul di tab EX Karyawan
         }
 
         // Hide Super Admin & Admin Gaji from employee list

@@ -182,10 +182,10 @@ class LeaveRequestController extends Controller
         if ($leaveRequest->user && in_array($leaveRequest->user->branch_id, [64, 83])) {
             $actor = Auth::user();
             $targetBranchId = $leaveRequest->user->branch_id;
-            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+            $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
 
             $isSuperUser = in_array($actor->role, ['admin', 'super_admin']);
-            $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
+            $isWhitelisted = in_array(strtolower($actor->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {
@@ -322,10 +322,10 @@ class LeaveRequestController extends Controller
         if ($leaveRequest->user && in_array($leaveRequest->user->branch_id, [64, 83])) {
             $actor = Auth::user();
             $targetBranchId = $leaveRequest->user->branch_id;
-            $allowedLogins = ['herlina', 'eva', 'agung', 'adminherlina'];
+            $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
 
             $isSuperUser = in_array($actor->role, ['admin', 'super_admin']);
-            $isWhitelisted = in_array(strtolower($actor->login_id), $allowedLogins);
+            $isWhitelisted = in_array(strtolower($actor->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {
