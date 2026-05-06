@@ -164,6 +164,15 @@ class ArtisanDashboardController extends Controller
                     'admin_name' => Auth::user()->name,
                 ]);
 
+                // Cek apakah shell_exec diaktifkan di server Hostinger
+                $disabledFunctions = explode(',', ini_get('disable_functions'));
+                if (!function_exists('shell_exec') || in_array('shell_exec', array_map('trim', $disabledFunctions))) {
+                    return response()->json([
+                        'success' => false,
+                        'output' => "Gagal menjalankan git pull!\n\nError: Fungsi shell_exec() dinonaktifkan pada server Hostinger Anda demi alasan keamanan.\n\nCara Mengaktifkan di Hostinger hPanel Anda:\n1. Masuk ke hPanel Hostinger.\n2. Buka menu Advanced -> PHP Configuration.\n3. Pilih tab PHP Options.\n4. Cari bagian 'disable_functions' dan hapus kata 'shell_exec' dari daftar tersebut.\n5. Klik Save / Simpan di bagian bawah.\n6. Refresh halaman web ini dan coba klik tombol Git Pull kembali."
+                    ]);
+                }
+
                 $output = shell_exec('git pull 2>&1');
 
                 return response()->json([
