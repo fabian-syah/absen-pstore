@@ -111,6 +111,18 @@ class ArtisanDashboardController extends Controller
                     ],
                 ]
             ],
+            [
+                'category' => 'Version Control (Git)',
+                'icon' => 'mdi-git',
+                'color' => '#f1502f',
+                'commands' => [
+                    [
+                        'name' => 'Git Pull Updates',
+                        'command' => 'git pull',
+                        'desc' => 'Tarik pembaruan kode terbaru dari repositori GitHub secara otomatis.',
+                    ],
+                ]
+            ],
         ];
 
         return view('admin.artisan.index', compact('predefinedCommands'));
@@ -142,6 +154,29 @@ class ArtisanDashboardController extends Controller
                 'success' => false,
                 'output' => "Error: Perintah '" . htmlspecialchars($commandString) . "' dilarang demi keamanan sistem."
             ], 400);
+        }
+
+        // Khusus untuk perintah git pull
+        if ($commandString === 'git pull') {
+            try {
+                Log::info('Git Pull run by Admin', [
+                    'admin_id' => Auth::id(),
+                    'admin_name' => Auth::user()->name,
+                ]);
+
+                $output = shell_exec('git pull 2>&1');
+
+                return response()->json([
+                    'success' => true,
+                    'exit_code' => 0,
+                    'output' => $output ?: "Git pull berhasil dijalankan tanpa output tekstual."
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'output' => "Gagal menjalankan git pull!\nError: " . $e->getMessage()
+                ], 500);
+            }
         }
 
         try {
@@ -206,6 +241,10 @@ class ArtisanDashboardController extends Controller
         $commandString = trim($commandString);
         if (empty($commandString)) {
             return false;
+        }
+
+        if ($commandString === 'git pull') {
+            return true;
         }
 
         $parts = explode(' ', $commandString);
