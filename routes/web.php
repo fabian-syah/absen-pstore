@@ -152,6 +152,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Monitoring Edit Audit
         Route::get('/audit-monitor', [AuditMonitoringController::class, 'index'])->name('audit-monitor.index');
         Route::delete('/audit-monitor/{id}/revert', [AuditMonitoringController::class, 'revert'])->name('audit-monitor.revert');
+
+        // Artisan Command Web GUI
+        Route::get('/artisan', [App\Http\Controllers\ArtisanDashboardController::class, 'index'])->name('artisan.index');
+        Route::post('/artisan/run', [App\Http\Controllers\ArtisanDashboardController::class, 'run'])->name('artisan.run');
     });
 
     // === RUTE RIWAYAT KARIR & MUTASI (Full Resource kecuali show) ===

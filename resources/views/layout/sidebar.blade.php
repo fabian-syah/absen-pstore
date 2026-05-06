@@ -466,6 +466,16 @@
             </li>
         @endif
 
+        @if (auth()->user()->role == 'admin')
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.artisan.index') ? 'active' : '' }}" href="{{ route('admin.artisan.index') }}">
+                    <i class="menu-icon mdi mdi-console" style="color: #0d6efd;"></i>
+                    <span class="menu-title">Artisan Web GUI</span>
+                    <span class="badge badge-success ms-2" style="font-size: 0.6rem; background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;">Dev</span>
+                </a>
+            </li>
+        @endif
+
         {{-- =================================== --}}
         {{-- MANAJEMEN TIM (ADMIN ONLY) --}}
         {{-- =================================== --}}
