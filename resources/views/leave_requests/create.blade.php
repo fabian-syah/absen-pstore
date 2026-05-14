@@ -37,6 +37,7 @@
                                 <option value="wfh" {{ old('type') == 'wfh' ? 'selected' : '' }}>WFH (Work From Home)</option>
                                 <option value="dinas" {{ old('type') == 'dinas' ? 'selected' : '' }}>Dinas Luar</option>
                                 <option value="telat" {{ old('type') == 'telat' ? 'selected' : '' }}>Izin Terlambat</option>
+                                <option value="cuti" {{ old('type') == 'cuti' ? 'selected' : '' }}>Cuti</option>
                                 <option value="libur" {{ old('type') == 'libur' ? 'selected' : '' }}>Izin Libur</option>
                             </select>
                         </div>

@@ -476,54 +476,136 @@ class AuditController extends Controller
             return back()->with('error', 'Izin ini sudah diproses sebelumnya (Status: ' . $leaveRequest->status . ').');
         }
 
-        $leaveRequest->update([
-            'status' => 'approved',
-            'approved_by' => $approver->id,
-            'is_active' => true,
-        ]);
+        \DB::beginTransaction();
+        try {
+            $leaveRequest->update([
+                'status' => 'approved',
+                'approved_by' => $approver->id,
+                'is_active' => true,
+            ]);
 
-        Log::info('Izin berhasil diapprove', [
-            'leave_request_id' => $id,
-            'new_status' => 'approved',
-            'approved_by' => $approver->id
-        ]);
+            Log::info('Izin berhasil diapprove', [
+                'leave_request_id' => $id,
+                'new_status' => 'approved',
+                'approved_by' => $approver->id
+            ]);
 
-        // Cari atau buat data absensi untuk tanggal izin tersebut
-        $attendance = Attendance::firstOrNew([
-            'user_id' => $leaveRequest->user_id,
-            // Pastikan format tanggal sesuai
-            'check_in_time' => $leaveRequest->start_date->startOfDay()
-        ]);
+            // === POTONG SALDO CUTI SAAT APPROVE ===
+            if ($leaveRequest->type === 'cuti') {
+                $startDate = Carbon::parse($leaveRequest->start_date);
+                $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
+                $daysCount = $startDate->diffInDays($endDate) + 1;
 
-        // Mapping status dari tipe izin ke status kehadiran
-        $statusMap = [
-            'telat' => 'Masuk',
-            'wfh' => 'WFH',
-            'dinas' => 'Dinas Luar',
-            'izin' => 'Izin',
-            'sakit' => 'Sakit',
-            'cuti' => 'Cuti',
-            'libur' => 'Libur',
-        ];
+                $leaveRequest->user->decrement('leave_balance', $daysCount);
+                $leaveRequest->user->increment('leave_taken', $daysCount);
 
-        $attendance->presence_status = $statusMap[$leaveRequest->type] ?? ucfirst($leaveRequest->type);
-        $attendance->status = 'verified'; // Langsung verified karena sudah di-approve Audit
-        $attendance->attendance_type = 'leave';
-        $attendance->verified_by_user_id = $approver->id; // Set siapa yang memverifikasi (Audit)
-        
-        // [TAMBAHAN] Salin alasan dan bukti ke record absensi agar muncul di Monitoring Audit
-        $attendance->audit_note = "Disetujui dari Pengajuan: " . $leaveRequest->reason;
-        $attendance->audit_photo_path = $leaveRequest->file_proof; 
-        
-        $attendance->save();
+                Log::info("Cuti APPROVED (AuditController): User {$leaveRequest->user_id} dipotong {$daysCount} hari");
+            }
 
-        // Kirim notifikasi
-        $title = "Izin Disetujui";
-        $body = "Pengajuan izin Anda pada " . $leaveRequest->start_date->format('d/m/Y') . " telah disetujui oleh " . $approver->name . ".";
-        $this->sendNotificationToUser($leaveRequest->user, $title, $body);
+            // AUTO-CREATE/UPDATE ATTENDANCE FOR ALL LEAVE TYPES (MULTI-DAY AWARE)
+            $startDate = Carbon::parse($leaveRequest->start_date);
+            $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
 
-        return redirect()->back()
-            ->with('success', 'Izin telah disetujui dan dipindahkan ke riwayat.');
+            // Mapping status dari tipe izin ke status kehadiran
+            $presenceStatusMap = [
+                'telat' => 'Masuk',
+                'wfh' => 'WFH',
+                'dinas' => 'Dinas Luar',
+                'izin' => 'Izin',
+                'sakit' => 'Sakit',
+                'cuti' => 'Cuti',
+                'libur' => 'Libur',
+            ];
+
+            $presenceStatus = $presenceStatusMap[$leaveRequest->type] ?? ucfirst($leaveRequest->type);
+
+            // Loop through each date in the range
+            for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+                $currentDate = $date->format('Y-m-d');
+
+                // Branch-specific timezone for correct date matching
+                $branchTimezone = $leaveRequest->user->branch?->timezone ?? 'Asia/Jakarta';
+                $branchOffset = Carbon::now($branchTimezone)->format('P');
+                $storageOffset = Carbon::now(config('app.timezone'))->format('P');
+
+                // Cek apakah sudah ada attendance di tanggal tersebut (Timezone Aware)
+                $existingAttendance = Attendance::where('user_id', $leaveRequest->user_id)
+                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate])
+                    ->first();
+
+                if ($existingAttendance) {
+                    // SUDAH ADA ATTENDANCE: Update presence_status jika masih Alpha atau jika ini Izin Telat
+                    if (
+                        !$existingAttendance->presence_status ||
+                        strtolower($existingAttendance->presence_status) === 'alpha' ||
+                        $leaveRequest->type === 'telat'
+                    ) {
+
+                        $updateData = [
+                            'presence_status' => $presenceStatus,
+                            'status' => 'verified',
+                            'attendance_type' => 'leave',
+                            'verified_by_user_id' => $approver->id,
+                            'audit_note' => "Disetujui dari Pengajuan: " . $leaveRequest->reason,
+                            'audit_photo_path' => $leaveRequest->file_proof,
+                            'notes' => ucfirst($leaveRequest->type) . ': ' . $leaveRequest->reason,
+                        ];
+
+                        // Khusus untuk telat: update jam masuk dan flag is_late_checkin
+                        if ($leaveRequest->type === 'telat' && $leaveRequest->start_time) {
+                            $updateData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leaveRequest->start_time);
+                            $updateData['is_late_checkin'] = true;
+                            $updateData['presence_status'] = 'Masuk';
+                        }
+
+                        $existingAttendance->update($updateData);
+                    }
+                } else {
+                    // BELUM ADA ATTENDANCE: Create baru
+                    $attendanceData = [
+                        'user_id' => $leaveRequest->user_id,
+                        'branch_id' => $leaveRequest->user->branch_id,
+                        'presence_status' => $presenceStatus,
+                        'status' => 'verified',
+                        'attendance_type' => 'leave',
+                        'verified_by_user_id' => $approver->id,
+                        'audit_note' => "Disetujui dari Pengajuan: " . $leaveRequest->reason,
+                        'audit_photo_path' => $leaveRequest->file_proof,
+                        'notes' => ucfirst($leaveRequest->type) . ': ' . $leaveRequest->reason,
+                    ];
+
+                    // Khusus untuk telat: set jam masuk sesuai izin
+                    if ($leaveRequest->type === 'telat' && $leaveRequest->start_time) {
+                        $attendanceData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leaveRequest->start_time);
+                        $attendanceData['is_late_checkin'] = true;
+                        $attendanceData['presence_status'] = 'Masuk';
+                    } else {
+                        // Untuk tipe lain: set jam masuk 00:00
+                        $attendanceData['check_in_time'] = Carbon::parse($currentDate)->startOfDay();
+                    }
+
+                    Attendance::create($attendanceData);
+                }
+            }
+
+            \DB::commit();
+
+            // Kirim notifikasi
+            try {
+                $title = "Izin Disetujui";
+                $body = "Pengajuan izin Anda pada " . $startDate->format('d/m/Y') . " telah disetujui oleh " . $approver->name . ".";
+                $this->sendNotificationToUser($leaveRequest->user, $title, $body);
+            } catch (\Exception $e) {
+                Log::error("Gagal kirim notif: " . $e->getMessage());
+            }
+
+            return redirect()->back()
+                ->with('success', 'Izin telah disetujui dan dipindahkan ke riwayat.');
+        } catch (\Exception $e) {
+            \DB::rollback();
+            Log::error("Gagal memproses approval izin: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal memproses data: ' . $e->getMessage());
+        }
     }
 
     /**

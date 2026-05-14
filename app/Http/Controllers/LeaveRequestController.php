@@ -112,7 +112,7 @@ class LeaveRequestController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:telat,wfh,izin,sakit,cuti,libur',
+            'type' => 'required|in:telat,wfh,izin,sakit,cuti,libur,dinas',
             'reason' => 'required|string|max:255',
             'file_proof' => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:10240',
             'start_date' => 'required|date',
