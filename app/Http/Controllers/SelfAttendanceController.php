@@ -50,8 +50,8 @@ class SelfAttendanceController extends Controller
         // Cari sesi yang belum checkout dan check_in dalam batas wajar (24 jam terakhir)
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', $localTime->copy()->subHours(24)) // Gunakan localTime (Peningkatan range ke 24jam)
-            ->where('check_in_time', '<=', $localTime) // Gunakan localTime
+            ->where('check_in_time', '>=', now()->subHours(24))
+            ->where('check_in_time', '<=', now())
             ->where('status', '!=', 'alpha')
             ->where('status', '!=', 'rejected') // <--- FIX: Jangan anggap sesi rejected sebagai sesi aktif
             ->where('attendance_type', '!=', 'leave')
@@ -96,7 +96,7 @@ class SelfAttendanceController extends Controller
             $finishedRecently = Attendance::where('user_id', $user->id)
                 ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayLocal->format('Y-m-d')])
                 ->whereNotNull('check_out_time')
-                ->where('check_out_time', '>=', $localTime->copy()->subMinutes(5)) // Cooldown 5 menit setelah pulang baru boleh masuk lagi
+                ->where('check_out_time', '>=', now()->subMinutes(5)) // Cooldown 5 menit setelah pulang baru boleh masuk lagi
                 ->where('status', '!=', 'alpha')
                 ->exists();
 
@@ -159,7 +159,7 @@ class SelfAttendanceController extends Controller
         // Fallback jika ID tidak dikirim tapi mode pulang
             $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
-                ->where('check_in_time', '>=', $localTime->copy()->subHours(24))
+                ->where('check_in_time', '>=', now()->subHours(24))
                 ->where('status', '!=', 'rejected') // <--- FIX: Jangan ambil yang sudah ditolak
                 ->where('attendance_type', '!=', 'leave')
                 ->latest('check_in_time')
@@ -452,12 +452,10 @@ class SelfAttendanceController extends Controller
     public function manualCheckOut(Request $request)
     {
         $user = Auth::user();
-        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
-        $localNow = Carbon::now($branchTimezone);
 
         $attendance = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', $localNow->copy()->subHours(48)) 
+            ->where('check_in_time', '>=', now()->subHours(48)) 
             ->latest('check_in_time')
             ->first();
 

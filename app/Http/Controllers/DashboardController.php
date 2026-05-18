@@ -170,8 +170,8 @@ class DashboardController extends Controller
         // A. Cek Sesi Aktif (Masuk tapi belum Pulang)
         $activeSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
-            ->where('check_in_time', '>=', $nowInBranch->copy()->subHours(24))
-            ->where('check_in_time', '<=', $nowInBranch)
+            ->where('check_in_time', '>=', now()->subHours(24))
+            ->where('check_in_time', '<=', now())
             ->where('attendance_type', '!=', 'leave')
             ->where('status', '!=', 'rejected') // <--- FIX: Jangan ambil yang sudah ditolak Audit
             ->latest('check_in_time')
