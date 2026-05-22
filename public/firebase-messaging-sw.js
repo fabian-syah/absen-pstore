@@ -1,7 +1,7 @@
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-// --- KONFIGURASI FIREBASE (Wajib Diisi sama dengan di .env) ---
+// --- KONFIGURASI FIREBASE ---
 firebase.initializeApp({
     apiKey: "AIzaSyA27iUWIsqv_6A4kzGq12qt0eEicfkgOmI",
     authDomain: "bote-1a4b9.firebaseapp.com",
@@ -13,16 +13,34 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// Handle background FCM messages
 messaging.onBackgroundMessage(function (payload) {
-    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+    console.log('[firebase-messaging-sw.js] Background message received:', payload);
 
-    const notificationTitle = payload.notification.title;
+    // Ambil title dan body dari notification ATAU data field
+    const title = (payload.notification && payload.notification.title) 
+        || (payload.data && payload.data.title) 
+        || "Notifikasi";
+    const body = (payload.notification && payload.notification.body) 
+        || (payload.data && payload.data.body) 
+        || "";
+    const icon = (payload.notification && payload.notification.icon)
+        || (payload.data && payload.data.icon)
+        || '/assets/images/logo-mini.svg';
+    const url = (payload.data && payload.data.url) 
+        || (payload.fcmOptions && payload.fcmOptions.link)
+        || '/';
+
     const notificationOptions = {
-        body: payload.notification.body,
-        icon: '/assets/images/logo-mini.svg', // Ganti dengan path icon app jika ada
-        sound: 'default'
+        body: body,
+        icon: icon,
+        badge: '/favicon.ico',
+        vibrate: [300, 100, 300, 100, 300],
+        tag: 'push-' + Date.now(),
+        renotify: true,
+        requireInteraction: true,
+        data: { url: url }
     };
 
-    self.registration.showNotification(notificationTitle,
-        notificationOptions);
+    return self.registration.showNotification(title, notificationOptions);
 });

@@ -931,15 +931,21 @@
 
             messaging.onMessage((payload) => {
                 console.log("🔥 Foreground Message Received:", payload); // DEBUG LOG
-                const title = payload.notification ? payload.notification.title : "Notifikasi Baru";
-                const body = payload.notification ? payload.notification.body : "Cek dashboard.";
-                const url = payload.data ? payload.data.click_action : '/';
+                const title = (payload.notification && payload.notification.title) 
+                    || (payload.data && payload.data.title) 
+                    || "Notifikasi Baru";
+                const body = (payload.notification && payload.notification.body) 
+                    || (payload.data && payload.data.body) 
+                    || "";
+                const url = (payload.data && payload.data.url) 
+                    || (payload.data && payload.data.click_action) 
+                    || '/';
 
                 if (Notification.permission === 'granted') {
                     var notif = new Notification(title, {
                         body: body,
-                        icon: 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png',
-                        tag: 'audit-alert-' + Date.now()
+                        icon: '/assets/images/logo-mini.svg',
+                        tag: 'push-alert-' + Date.now()
                     });
                     notif.onclick = function () {
                         window.focus();
