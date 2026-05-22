@@ -28,26 +28,26 @@
                 {{-- Statistik --}}
                 <div class="row text-center mb-4">
                     <div class="col-md-4 col-12 mb-3">
-                        <div class="card bg-light border-0">
+                        <div class="card border" style="background: #f0f4ff;">
                             <div class="card-body py-3">
-                                <h2 class="text-primary mb-1">{{ $results['total'] }}</h2>
-                                <small class="text-muted">Total Target</small>
+                                <h2 class="mb-1" style="color: #0d6efd;">{{ $results['total'] }}</h2>
+                                <small style="color: #333;">Total Target</small>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4 col-12 mb-3">
-                        <div class="card bg-success bg-opacity-10 border-0">
+                        <div class="card border" style="background: #e8f5e9;">
                             <div class="card-body py-3">
-                                <h2 class="text-success mb-1">{{ count($results['success']) }}</h2>
-                                <small class="text-muted">Berhasil Terkirim</small>
+                                <h2 class="mb-1" style="color: #2e7d32;">{{ count($results['success']) }}</h2>
+                                <small style="color: #333;">Berhasil Terkirim</small>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4 col-12 mb-3">
-                        <div class="card bg-danger bg-opacity-10 border-0">
+                        <div class="card border" style="background: #ffebee;">
                             <div class="card-body py-3">
-                                <h2 class="text-danger mb-1">{{ count($results['failed']) }}</h2>
-                                <small class="text-muted">Gagal Terkirim</small>
+                                <h2 class="mb-1" style="color: #c62828;">{{ count($results['failed']) }}</h2>
+                                <small style="color: #333;">Gagal Terkirim</small>
                             </div>
                         </div>
                     </div>

@@ -136,23 +136,27 @@ class PushBroadcastController extends Controller
             $payload = [
                 "message" => [
                     "token" => $user->fcm_token,
-                    "notification" => [
-                        "title" => $title,
-                        "body" => $body,
-                    ],
+
+                    // Kirim via webpush data-only agar service worker yang handle
+                    // (notification field dihapus agar SW bisa kontrol tampilan)
                     "webpush" => [
                         "headers" => [
                             "Urgency" => "high"
                         ],
-                        "notification" => [
-                            "title" => $title,
-                            "body" => $body,
+                        "data" => [
+                            "title" => (string) $title,
+                            "body" => (string) $body,
                             "icon" => "https://cdn-icons-png.flaticon.com/512/1827/1827301.png",
-                        ],
+                            "url" => url('/'),
+                            "type" => "broadcast_push"
+                        ]
                     ],
+
+                    // Data field sebagai fallback untuk Android/iOS native
                     "data" => [
                         "title" => (string) $title,
                         "body" => (string) $body,
+                        "url" => url('/'),
                         "type" => "broadcast_push"
                     ]
                 ]
