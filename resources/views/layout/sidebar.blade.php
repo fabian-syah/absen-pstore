@@ -468,6 +468,12 @@
 
         @if (auth()->user()->role == 'admin')
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('push-broadcast.*') ? 'active' : '' }}" href="{{ route('push-broadcast.create') }}">
+                    <i class="menu-icon mdi mdi-bell-ring" style="color: #198754;"></i>
+                    <span class="menu-title">Push Notification</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.artisan.index') ? 'active' : '' }}" href="{{ route('admin.artisan.index') }}">
                     <i class="menu-icon mdi mdi-console" style="color: #0d6efd;"></i>
                     <span class="menu-title">Artisan Web GUI</span>
