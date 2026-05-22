@@ -28,6 +28,7 @@ use App\Http\Controllers\WorkHistoryController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\WorkScheduleController;
 use App\Http\Controllers\BroadcastController;
+use App\Http\Controllers\PushBroadcastController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InventoryReturnController;
@@ -280,6 +281,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             Route::delete('/{broadcast}', [BroadcastController::class, 'destroy'])->name('destroy');
         });
         
+    });
+
+    // === RUTE PUSH NOTIFICATION BROADCAST (ADMIN ONLY) ===
+    Route::prefix('push-broadcast')->name('push-broadcast.')->middleware('role:admin')->group(function () {
+        Route::get('/', [PushBroadcastController::class, 'create'])->name('create');
+        Route::post('/send', [PushBroadcastController::class, 'send'])->name('send');
+        Route::get('/result', [PushBroadcastController::class, 'result'])->name('result');
     });
 
     // === RUTE WORK SCHEDULES ===

@@ -10,9 +10,14 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">Daftar Pesan Broadcast</h5>
                 @if(auth()->user()->role == 'admin')
-                <a href="{{ route('broadcast.create') }}" class="btn btn-primary">
-                    <i class="mdi mdi-plus me-2"></i>Buat Broadcast
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('push-broadcast.create') }}" class="btn btn-success">
+                        <i class="mdi mdi-bell-ring me-2"></i>Push Notification
+                    </a>
+                    <a href="{{ route('broadcast.create') }}" class="btn btn-primary">
+                        <i class="mdi mdi-plus me-2"></i>Buat Broadcast
+                    </a>
+                </div>
                 @endif
             </div>
             <div class="card-body">
