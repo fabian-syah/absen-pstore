@@ -73,7 +73,7 @@ class Salary extends Model
                 })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
 
                 $leave = $leaves->filter(function ($l) use ($date) {
-                    return $date->between(\Carbon\Carbon::parse($l->start_date)->startOfDay(), \Carbon\Carbon::parse($l->end_date ?? $l->start_date)->endOfDay());
+                    return $l->type !== 'telat' && $date->between(\Carbon\Carbon::parse($l->start_date)->startOfDay(), \Carbon\Carbon::parse($l->end_date ?? $l->start_date)->endOfDay());
                 });
 
                 if (!$att && $leave->isEmpty()) {

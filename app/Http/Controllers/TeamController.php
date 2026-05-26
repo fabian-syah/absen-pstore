@@ -504,8 +504,11 @@ class TeamController extends Controller
                 return strtolower($a->presence_status) === 'masuk' ? 0 : 1;
             })->first();
 
-            // JIKA ABSEN KOSONG, Cek Izin di tabel leaves
-            $leave = $leaves->filter(function ($l) use ($date, $branchTimezone) {
+            // JIKA ABSEN KOSONG, Cek Izin di tabel leaves (Semua tipe kecuali 'telat' jika tidak ada absensi masuk)
+            $leave = $leaves->filter(function ($l) use ($date, $branchTimezone, $att) {
+                if ($l->type === 'telat' && !$att) {
+                    return false;
+                }
                 $lStart = Carbon::parse($l->start_date, $branchTimezone)->startOfDay();
                 $lEnd = Carbon::parse($l->end_date ?? $l->start_date, $branchTimezone)->endOfDay();
                 return $date->between($lStart, $lEnd);

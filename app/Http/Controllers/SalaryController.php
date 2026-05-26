@@ -52,6 +52,9 @@ class SalaryController extends Controller
         $sakitCount = 0;
         $izinCount = 0;
         $wfhCount = 0;
+        $liburCount = 0;
+        $dinasCount = 0;
+        $telatCount = 0;
 
         $role = Auth::user()->role;
         if (in_array($role, ['admin', 'super_admin', 'admin_gaji', 'owner'])) {
@@ -143,9 +146,9 @@ class SalaryController extends Controller
                     return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
                 })->sortBy(fn($a) => strtolower($a->presence_status) === 'masuk' ? 0 : 1)->first();
 
-                // 2. Cari leave
+                // 2. Cari leave yang membebaskan dari Alpha (semua tipe leave kecuali 'telat')
                 $leave = $leaves->filter(function ($l) use ($date) {
-                    return $date->between(
+                    return $l->type !== 'telat' && $date->between(
                         Carbon::parse($l->start_date)->startOfDay(),
                         Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
                     );
@@ -170,10 +173,25 @@ class SalaryController extends Controller
             $freelanceAttendance = Attendance::where('user_id', $selectedUserId)
                 ->whereDate('check_in_time', '>=', $startDate)
                 ->whereDate('check_in_time', '<=', $endDate)
+                ->where('status', '!=', 'rejected')
                 ->where(function ($q) {
-                    $q->whereIn('presence_status', ['Masuk', 'WFH', 'Telat', 'Izin Telat', 'Dinas Luar'])
-                        ->orWhereIn('status', ['present', 'late', 'wfh']);
+                    $q->whereIn('presence_status', [
+                        'Masuk',
+                        'Hadir',
+                        'Tepat Waktu',
+                        'WFH',
+                        'Work From Home',
+                        'Kunjungan Rutin',
+                        'Lembur',
+                        'Telat',
+                        'Izin Telat'
+                    ])
+                    ->orWhere(function ($sub) {
+                        $sub->whereNull('presence_status')
+                            ->whereIn('status', ['present', 'late', 'wfh']);
+                    });
                 })->count();
+
 
             // Info Cuti (Bulanan) - Ikut Cutoff
             $approvedLeaves = LeaveRequest::where('user_id', $selectedUserId)
@@ -184,6 +202,9 @@ class SalaryController extends Controller
             $sakitCount = $approvedLeaves->where('type', 'sakit')->count();
             $izinCount = $approvedLeaves->where('type', 'izin')->count();
             $wfhCount = $approvedLeaves->where('type', 'wfh')->count();
+            $liburCount = $approvedLeaves->where('type', 'libur')->count();
+            $dinasCount = $approvedLeaves->where('type', 'dinas')->count();
+            $telatCount = $approvedLeaves->where('type', 'telat')->count();
         }
 
         // [BARU] Hitung Cuti Lebih (kelebihan dari jatah tahunan)
@@ -227,6 +248,9 @@ class SalaryController extends Controller
             'sakitCount',
             'izinCount',
             'wfhCount',
+            'liburCount',
+            'dinasCount',
+            'telatCount',
             'cutiLebih',
             'alphaDates',
             'lateDates'

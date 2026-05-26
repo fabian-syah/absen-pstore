@@ -126,8 +126,11 @@ class AttendanceHistoryController extends Controller
                 return $outDate === $currentDateStr && $inDate !== $currentDateStr;
             });
 
-            // 3. Cari Izin/Cuti di tanggal ini
-            $leave = $leaves->filter(function ($l) use ($date, $branchTimezone) {
+            // 3. Cari Izin/Cuti di tanggal ini (Semua tipe kecuali 'telat' jika tidak ada absensi masuk)
+            $leave = $leaves->filter(function ($l) use ($date, $branchTimezone, $att) {
+                if ($l->type === 'telat' && !$att) {
+                    return false;
+                }
                 $lStart = Carbon::parse($l->start_date, $branchTimezone)->startOfDay();
                 $lEnd = Carbon::parse($l->end_date ?? $l->start_date, $branchTimezone)->endOfDay();
                 return $date->between($lStart, $lEnd);
