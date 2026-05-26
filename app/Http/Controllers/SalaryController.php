@@ -70,6 +70,16 @@ class SalaryController extends Controller
                 $masterSalary = $selectedUser->employeeSalary;
             }
 
+            // Override range tanggal default untuk freelance Mei 2026 jika tidak dispesifikasikan di URL
+            if ($masterSalary && $masterSalary->category === 'freelance' && $month == 5 && $year == 2026) {
+                if (!$request->query('start_date')) {
+                    $startDate = Carbon::createFromDate(2026, 5, 15);
+                }
+                if (!$request->query('end_date')) {
+                    $endDate = Carbon::createFromDate(2026, 5, 30);
+                }
+            }
+
             // Hutang Aktif
             $activeLoans = CashAdvance::where('user_id', $selectedUserId)
                 ->where('status', 'approved')
@@ -101,69 +111,72 @@ class SalaryController extends Controller
                 ])
                 ->get();
 
-            // Absensi Regular (Bulanan) untuk Employee/Promotor
+            // Absensi Regular (Bulanan) untuk Employee/Promotor (Freelance dilewati)
             $lateDates = [];
-            $lateCount = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone, &$lateDates) {
-                $attFullDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone);
-                $attDate = $attFullDate->copy()->startOfDay();
-                $isInRange = $attDate->between($monthStartDate, $limitDate);
-                $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
-                
-                if ($isInRange && $isTelat) {
-                    $lateDates[] = $attFullDate->format('d/m');
-                    return true;
-                }
-                return false;
-            })->count();
-
-            // ALPHA COUNT - LOGIC TRANSLASI LANGSUNG DARI AttendanceHistoryController
+            $lateCount = 0;
             $alphaCount = 0;
-
-            // Sesuaikan query LeaveRequest menggunakan format 'Y-m-d' sesuai AttendanceHistoryController
-            $leaves = LeaveRequest::where('user_id', $selectedUserId)
-                ->where('status', 'approved')
-                ->where(function ($query) use ($monthStartDate, $monthEndDate) {
-                    $s = $monthStartDate->format('Y-m-d');
-                    $e = $monthEndDate->format('Y-m-d');
-                    // Overlap condition: leave starts on or before the end of the month AND ends on or after the start of the month
-                    $query->where('start_date', '<=', $e)
-                        ->where(function ($q) use ($s) {
-                        $q->whereNull('end_date')
-                            ->orWhere('end_date', '>=', $s);
-                    });
-                })->get();
-
-            // Buat period (PENTING: Gunakan startOfDay agar tidak terpotong jam)
-            $period = \Carbon\CarbonPeriod::create($monthStartDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
-
             $alphaDates = [];
-            foreach ($period as $date) {
-                $currentDateStr = $date->format('Y-m-d');
 
-                // 1. Cari Attendance yang Scan Masuk-nya di tanggal ini (Prioritaskan 'Masuk')
-                $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
-                    if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
-                    return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
-                })->sortBy(fn($a) => strtolower($a->presence_status) === 'masuk' ? 0 : 1)->first();
+            if (!$masterSalary || $masterSalary->category !== 'freelance') {
+                $lateCount = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone, &$lateDates) {
+                    $attFullDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone);
+                    $attDate = $attFullDate->copy()->startOfDay();
+                    $isInRange = $attDate->between($monthStartDate, $limitDate);
+                    $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
+                    
+                    if ($isInRange && $isTelat) {
+                        $lateDates[] = $attFullDate->format('d/m');
+                        return true;
+                    }
+                    return false;
+                })->count();
 
-                // 2. Cari leave yang membebaskan dari Alpha (semua tipe leave kecuali 'telat')
-                $leave = $leaves->filter(function ($l) use ($date) {
-                    return $l->type !== 'telat' && $date->between(
-                        Carbon::parse($l->start_date)->startOfDay(),
-                        Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
-                    );
-                });
+                // ALPHA COUNT - LOGIC TRANSLASI LANGSUNG DARI AttendanceHistoryController
+                // Sesuaikan query LeaveRequest menggunakan format 'Y-m-d' sesuai AttendanceHistoryController
+                $leaves = LeaveRequest::where('user_id', $selectedUserId)
+                    ->where('status', 'approved')
+                    ->where(function ($query) use ($monthStartDate, $monthEndDate) {
+                        $s = $monthStartDate->format('Y-m-d');
+                        $e = $monthEndDate->format('Y-m-d');
+                        // Overlap condition: leave starts on or before the end of the month AND ends on or after the start of the month
+                        $query->where('start_date', '<=', $e)
+                            ->where(function ($q) use ($s) {
+                            $q->whereNull('end_date')
+                                ->orWhere('end_date', '>=', $s);
+                        });
+                    })->get();
 
-                // Syarat Alpha Hard Reset 00:00: Tidak ada Masuk baru & Tidak ada Izin
-                if (!$att && $leave->isEmpty()) {
-                    $alphaCount++;
-                    $alphaDates[] = $date->format('d/m');
-                } else if ($att) {
-                    // Jika ADA record tapi statusnya khusus sistem Alpha
-                    $status = strtolower($att->presence_status ?? '');
-                    if ($status === 'alpha') {
+                // Buat period (PENTING: Gunakan startOfDay agar tidak terpotong jam)
+                $period = \Carbon\CarbonPeriod::create($monthStartDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
+
+                foreach ($period as $date) {
+                    $currentDateStr = $date->format('Y-m-d');
+
+                    // 1. Cari Attendance yang Scan Masuk-nya di tanggal ini (Prioritaskan 'Masuk')
+                    $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
+                        if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
+                        return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
+                    })->sortBy(fn($a) => strtolower($a->presence_status) === 'masuk' ? 0 : 1)->first();
+
+                    // 2. Cari leave yang membebaskan dari Alpha (semua tipe leave kecuali 'telat')
+                    $leave = $leaves->filter(function ($l) use ($date) {
+                        return $l->type !== 'telat' && $date->between(
+                            Carbon::parse($l->start_date)->startOfDay(),
+                            Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
+                        );
+                    });
+
+                    // Syarat Alpha Hard Reset 00:00: Tidak ada Masuk baru & Tidak ada Izin
+                    if (!$att && $leave->isEmpty()) {
                         $alphaCount++;
                         $alphaDates[] = $date->format('d/m');
+                    } else if ($att) {
+                        // Jika ADA record tapi statusnya khusus sistem Alpha
+                        $status = strtolower($att->presence_status ?? '');
+                        if ($status === 'alpha') {
+                            $alphaCount++;
+                            $alphaDates[] = $date->format('d/m');
+                        }
                     }
                 }
             }
@@ -191,6 +204,13 @@ class SalaryController extends Controller
                             ->whereIn('status', ['present', 'late', 'wfh']);
                     });
                 })->count();
+
+            // Khusus Freelance Bulan Mei 2026 (periode 15 Mei - 30/31 Mei) di-set minimal 15 hari kerja
+            if ($masterSalary && $masterSalary->category === 'freelance' && $month == 5 && $year == 2026) {
+                if ($startDate->format('Y-m-d') === '2026-05-15') {
+                    $freelanceAttendance = 15;
+                }
+            }
 
 
             // Info Cuti (Bulanan) - Ikut Cutoff
@@ -319,18 +339,28 @@ class SalaryController extends Controller
             if ($request->category == 'freelance') {
                 $rangeInfo = "Periode Kerja: " . $request->start_date . " s/d " . $request->end_date;
                 $data['notes'] = $data['notes'] ? $data['notes'] . "\n" . $rangeInfo : $rangeInfo;
+
+                // Force alpha and late counts/deductions to 0 for freelance
+                $data['alpha_days'] = 0;
+                $data['alpha_deduction'] = 0;
+                $data['late_days'] = 0;
+                $data['late_deduction'] = 0;
+                $data['cuti_lebih_days'] = 0;
+                $data['cuti_lebih_deduction'] = 0;
             }
 
             // [BARU] Simpan Tanggal Alpha & Terlambat di Notes agar muncul di Slip
-            $attendanceNotes = "";
-            if ($request->filled('alpha_dates_str')) {
-                $attendanceNotes .= "\nDetail Alpha: " . $request->alpha_dates_str;
-            }
-            if ($request->filled('late_dates_str')) {
-                $attendanceNotes .= "\nDetail Terlambat: " . $request->late_dates_str;
-            }
-            if ($attendanceNotes) {
-                $data['notes'] = ($data['notes'] ?? '') . $attendanceNotes;
+            if ($request->category != 'freelance') {
+                $attendanceNotes = "";
+                if ($request->filled('alpha_dates_str')) {
+                    $attendanceNotes .= "\nDetail Alpha: " . $request->alpha_dates_str;
+                }
+                if ($request->filled('late_dates_str')) {
+                    $attendanceNotes .= "\nDetail Terlambat: " . $request->late_dates_str;
+                }
+                if ($attendanceNotes) {
+                    $data['notes'] = ($data['notes'] ?? '') . $attendanceNotes;
+                }
             }
 
             // Logic Potong Kasbon

@@ -26,6 +26,13 @@ class Salary extends Model
      */
     public function getAttendanceDetails()
     {
+        if ($this->category === 'freelance') {
+            return [
+                'alphaDates' => [],
+                'lateDates' => []
+            ];
+        }
+
         $user = $this->user;
         $alphaDates = [];
         $lateDates = [];

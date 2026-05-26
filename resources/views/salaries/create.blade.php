@@ -173,7 +173,7 @@
                                     <div class="col-6">
                                         <label class="fw-bold small">Jml Hadir</label>
                                         <div class="input-group input-group-sm">
-                                            <input type="text" id="freelance_days_count" class="form-control fw-bold text-center text-primary" 
+                                            <input type="text" id="freelance_days_count" name="freelance_days_count" class="form-control fw-bold text-center text-primary" 
                                                    value="{{ $freelanceAttendance }}" readonly>
                                             <span class="input-group-text">Hari</span>
                                         </div>

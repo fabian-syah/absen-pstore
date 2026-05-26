@@ -17,6 +17,7 @@ class TeamController extends Controller
 {
     public function index()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         // 1. Setup Cabang & Timezone
@@ -180,6 +181,7 @@ class TeamController extends Controller
 
     public function myBranches()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!in_array($user->role, ['audit', 'leader', 'admin']))
             abort(403);
@@ -288,6 +290,7 @@ class TeamController extends Controller
 
     public function showBranch($id)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $branch = Branch::findOrFail($id);
         $branchTimezone = $branch->timezone ?? 'Asia/Jakarta';
@@ -499,12 +502,12 @@ class TeamController extends Controller
             // === PASS 1: Cari attendance REAL (skip system Alpha) untuk hari ini ===
             $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
                 if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
+                if ($a->status === 'rejected') return false;
                 return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
             })->sortBy(function($a) {
                 return strtolower($a->presence_status) === 'masuk' ? 0 : 1;
             })->first();
 
-            // JIKA ABSEN KOSONG, Cek Izin di tabel leaves (Semua tipe kecuali 'telat' jika tidak ada absensi masuk)
             $leave = $leaves->filter(function ($l) use ($date, $branchTimezone, $att) {
                 if ($l->type === 'telat' && !$att) {
                     return false;
