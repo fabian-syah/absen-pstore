@@ -6,26 +6,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
+/**
+ * CONTROLLER DINONAKTIFKAN
+ * 
+ * Controller ini sebelumnya memiliki bug keamanan kritis:
+ * - Hardcode User ID 47, sehingga siapa pun yang mengakses endpoint ini
+ *   akan login sebagai user tersebut (session hijacking).
+ * - Tidak ada session regeneration setelah Auth::login().
+ * 
+ * Route sudah dinonaktifkan di web.php.
+ * Jangan aktifkan kembali tanpa implementasi WebAuthn/FIDO2 yang benar.
+ */
 class FingerprintAuthController extends Controller
 {
     public function index()
     {
-        return view('auth.fingerprint');
+        abort(403, 'Fitur fingerprint login dinonaktifkan.');
     }
 
     public function authenticate(Request $request)
     {
-        // TARGET: User ID 47 (bianajah5)
-        $userId = 47;
-
-        $user = User::find($userId);
-
-        if (!$user) {
-            return back()->with('error', 'User ID 47 tidak ditemukan.');
-        }
-
-        Auth::login($user);
-
-        return redirect()->route('dashboard')->with('success', 'Login Fingerprint Berhasil! Selamat datang, ' . $user->name);
+        abort(403, 'Fitur fingerprint login dinonaktifkan.');
     }
 }
