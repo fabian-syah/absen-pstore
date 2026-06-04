@@ -26,15 +26,39 @@
         --zk-outline-variant: #2d4d35;
     }
 
+    /* ---- FULLSCREEN: hide header, sidebar, footer, mobile nav ---- */
+    .navbar,
+    .sidebar,
+    .mobile-bottom-nav,
+    footer,
+    .footer {
+        display: none !important;
+    }
+    .main-panel {
+        margin-left: 0 !important;
+        width: 100% !important;
+        min-height: 100vh;
+    }
+    .page-body-wrapper {
+        padding-top: 0 !important;
+    }
+    .content-wrapper {
+        padding: 0 !important;
+    }
+
     /* Page wrapper */
     .zikir-page {
         font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
         background: var(--zk-bg);
         min-height: 100vh;
+        min-height: 100dvh; /* iOS safe */
         padding: 0 !important;
         position: relative;
         overflow-x: hidden;
+        /* iOS safe area */
+        padding-top: env(safe-area-inset-top) !important;
+        padding-bottom: env(safe-area-inset-bottom) !important;
     }
 
     /* Background image - mosque dome */
