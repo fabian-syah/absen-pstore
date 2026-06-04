@@ -500,9 +500,6 @@
         <button class="zk-bottom-btn" title="Kompas">
             <span class="material-symbols-outlined">explore</span>
         </button>
-        <button class="zk-bottom-btn center" title="Menu">
-            <span class="material-symbols-outlined">more_horiz</span>
-        </button>
         <a href="{{ route('dashboard') }}" class="zk-bottom-btn" title="Kembali">
             <span class="material-symbols-outlined">arrow_back</span>
         </a>
