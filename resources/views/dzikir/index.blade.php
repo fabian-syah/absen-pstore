@@ -29,7 +29,6 @@
     html, body, .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper, .zikir-page {
         background-color: var(--zk-bg, #0a1f14) !important;
         background: var(--zk-bg, #0a1f14) !important;
-        overscroll-behavior-y: none; /* Prevent white bounce on refresh/scroll in iOS */
     }
 
     /* ---- FULLSCREEN: hide header, sidebar, footer, mobile nav ---- */
@@ -70,7 +69,7 @@
     .zikir-page::before {
         content: '';
         position: fixed;
-        top: -20px; left: -20px; right: -20px; bottom: -20px;
+        top: -40px; left: -40px; right: -40px; bottom: -40px;
         background-color: var(--zk-bg);
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
@@ -80,7 +79,6 @@
         background-repeat: no-repeat;
         filter: blur(4px);
         -webkit-filter: blur(4px);
-        transform: scale(1.15); /* Scale up to completely hide any blurred edges */
         pointer-events: none;
         z-index: 0;
     }
