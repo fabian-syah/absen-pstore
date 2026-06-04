@@ -44,7 +44,7 @@
         top: 0; left: 0; right: 0; bottom: 0;
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
-            url('{{ asset("images/mosque_dome_bg.png") }}');
+            url('{{ asset("public/images/mosque_dome_bg.png") }}');
         background-size: cover;
         background-position: center bottom;
         background-repeat: no-repeat;
