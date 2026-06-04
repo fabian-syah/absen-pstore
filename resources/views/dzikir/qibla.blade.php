@@ -17,6 +17,11 @@
         --qibla-accent: #f59e0b; /* Kaaba icon color */
     }
 
+    html, body {
+        background-color: var(--qibla-bg) !important;
+        overscroll-behavior-y: none; /* Prevent iOS bounce white edges */
+    }
+
     /* ---- FULLSCREEN: hide header, sidebar, footer, mobile nav ---- */
     .navbar,
     .sidebar,
@@ -206,29 +211,17 @@
         transform: translateX(-50%);
     }
 
-    /* Device pointer needle */
-    .needle {
+    /* Pointer from center to Qibla */
+    .qibla-pointer-line {
         position: absolute;
         width: 4px;
         height: 120px;
         background: #fff;
         border-radius: 2px;
-        top: 50%;
+        bottom: 50%;
         left: 50%;
-        transform: translate(-50%, -100%);
-        transform-origin: bottom center;
+        transform: translateX(-50%);
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    .needle::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 4px;
-        height: 120px;
-        background: rgba(255,255,255,0.3);
-        transform: translateY(100%);
-        border-radius: 2px;
     }
 
     /* Bottom Text Area */
@@ -416,13 +409,9 @@
 
             <!-- Qibla Marker (Kaaba) -->
             <div class="qibla-marker-container" id="qiblaMarkerContainer">
+                <div class="qibla-pointer-line"></div>
                 <div class="qibla-marker" id="qiblaMarker"></div>
             </div>
-        </div>
-        
-        <!-- Fixed Needle (Phone direction) -->
-        <div style="position: absolute; top: 50%; left: 50%; width: 0; height: 0;">
-            <div class="needle"></div>
         </div>
     </div>
 
@@ -533,19 +522,33 @@
     function updateQiblaMarker() {
         const container = document.getElementById('qiblaMarkerContainer');
         container.style.transform = `rotate(${qiblaHeading}deg)`;
+        
+        // Show Qibla bearing instead of device heading
+        degreeValue.innerText = qiblaHeading.toFixed(1) + "° N";
     }
 
     // Device Orientation for Compass
+    let currentAlpha = null;
+
     function handleOrientation(event) {
         let alpha = event.webkitCompassHeading || Math.abs(event.alpha - 360);
         if (alpha == null) return;
 
-        // Rotate the ring based on phone orientation
-        // If phone points North (alpha=0), ring rotation is 0.
-        // If phone points East (alpha=90), we rotate ring -90deg so N is on the left.
-        compassRing.style.transform = `rotate(${-alpha}deg)`;
+        if (currentAlpha === null) {
+            currentAlpha = alpha;
+        }
+
+        // Smoothing filter to prevent jittering (gerak-gerak)
+        let diff = alpha - currentAlpha;
+        if (diff > 180) {
+            currentAlpha += 360;
+        } else if (diff < -180) {
+            currentAlpha -= 360;
+        }
         
-        degreeValue.innerText = Math.round(alpha) + "° N";
+        currentAlpha = currentAlpha + (alpha - currentAlpha) * 0.08;
+
+        compassRing.style.transform = `rotate(${-currentAlpha}deg)`;
     }
 
     function requestDeviceOrientation() {
