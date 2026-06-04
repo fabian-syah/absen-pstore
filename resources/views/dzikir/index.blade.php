@@ -1,317 +1,166 @@
 @extends('layout.master')
 
-@section('title', 'Dzikir Online')
+@section('title', 'Zikir Online')
 
 @section('content')
-    <div class="content-wrapper d-flex flex-column align-items-center justify-content-center"
-        style="min-height: calc(100vh - 150px);">
-        <div class="row w-100 justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="card glass-effect border-0 shadow-lg text-center p-4 overflow-hidden"
-                    style="border-radius: 40px; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(25px); position: relative;">
-                    {{-- Decorative circles --}}
-                    <div
-                        style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(13, 110, 253, 0.05); border-radius: 50%; z-index: 0;">
-                    </div>
-                    <div
-                        style="position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px; background: rgba(13, 110, 253, 0.05); border-radius: 50%; z-index: 0;">
-                    </div>
+    <div class="content-wrapper zikir-menu-wrapper" style="min-height: calc(100vh - 70px); background-image: url('{{ asset('images/islamic_bg.png') }}'); background-size: cover; background-position: center; background-attachment: fixed; padding: 20px 15px;">
+        
+        {{-- Overlay to ensure text readability --}}
+        <div class="zikir-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(13, 27, 42, 0.7), rgba(27, 38, 59, 0.9)); z-index: 0; pointer-events: none;"></div>
 
-                    <div class="card-body" style="position: relative; z-index: 1;">
-                        <div class="d-flex align-items-center justify-content-center mb-4">
-                            <i class="mdi mdi-hands-pray mr-2" style="font-size: 2rem; color: var(--pstore-primary);"></i>
-                            <h2 class="mb-0 font-weight-bold gradient-text"
-                                style="font-size: 2.2rem; letter-spacing: -1px;">Dzikir Online</h2>
-                        </div>
+        <div class="container-fluid" style="position: relative; z-index: 1; max-width: 600px; margin: 0 auto; color: white;">
+            
+            <h5 class="text-uppercase font-weight-bold mb-4 mt-2" style="letter-spacing: 1.5px; font-size: 0.9rem; opacity: 0.9;">
+                Zikir
+            </h5>
 
-                        <div class="counter-container mb-5">
-                            <div id="counter" class="display-1 font-weight-bold mb-0"
-                                style="font-size: 8rem; color: var(--pstore-primary); text-shadow: 0 15px 35px rgba(13, 110, 253, 0.25); line-height: 1;">
-                                0</div>
-                            <p class="text-muted font-weight-medium mt-2"
-                                style="letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem;">Jumlah Hitungan
-                            </p>
-                        </div>
-
-                        <div class="dzikir-button-container mb-5 d-flex justify-content-center">
-                            <div class="tap-circle-outer"
-                                style="padding: 15px; background: rgba(13, 110, 253, 0.05); border-radius: 50%; box-shadow: inset 0 0 20px rgba(0,0,0,0.02);">
-                                <button id="clickBtn"
-                                    class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center"
-                                    style="width: 180px; height: 180px; font-size: 2.5rem; border: 8px solid #fff; box-shadow: 0 15px 45px rgba(13, 110, 253, 0.4);">
-                                    <div class="d-flex flex-column align-items-center">
-                                        <span style="font-weight: 800;">TAP</span>
-                                        <i class="mdi mdi-fingerprint mt-n2" style="font-size: 1.5rem; opacity: 0.6;"></i>
-                                    </div>
-                                </button>
+            <div class="row custom-gx mb-4">
+                {{-- Semua Zikir --}}
+                <div class="col-6 mb-3">
+                    <a href="#" class="text-decoration-none text-white">
+                        <div class="zikir-card card-dark">
+                            <div class="icon-wrapper mb-3">
+                                <i class="mdi mdi-dots-horizontal-circle-outline icon-lg"></i>
                             </div>
+                            <h6 class="font-weight-bold mb-1">Semua zikir</h6>
+                            <p class="text-muted small mb-0">{{ $totalZikir }} dzikir</p>
                         </div>
-
-                        <div class="actions-container d-flex justify-content-center align-items-center gap-4">
-                            <button id="resetBtn" class="btn btn-link text-danger p-0"
-                                style="text-decoration: none; font-weight: 600; font-size: 1rem;">
-                                <i class="mdi mdi-refresh-circle mr-1"
-                                    style="font-size: 1.5rem; vertical-align: middle;"></i> Reset
-                            </button>
-
-                            <div class="haptic-toggle d-flex align-items-center ml-4">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="vibrateSwitch" checked>
-                                    <label class="custom-control-label font-weight-bold text-muted"
-                                        for="vibrateSwitch">Feedback</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    </a>
                 </div>
 
-                <p class="text-center mt-4 text-muted" style="font-size: 0.9rem; opacity: 0.8;">
-                    <i class="mdi mdi-information-outline"></i> Klik tombol untuk menghitung. Feedback berupa Getar
-                    (Android), Suara, dan Animasi.
-                </p>
+                {{-- Kesukaanku --}}
+                <div class="col-6 mb-3">
+                    <a href="#" class="text-decoration-none text-white">
+                        <div class="zikir-card card-dark">
+                            <div class="icon-wrapper mb-3">
+                                <i class="mdi mdi-star icon-lg"></i>
+                            </div>
+                            <h6 class="font-weight-bold mb-1">Kesukaanku</h6>
+                            <p class="text-muted small mb-0">{{ $totalFavorites > 0 ? $totalFavorites . ' favorit' : 'Tidak ada favorit' }}</p>
+                        </div>
+                    </a>
+                </div>
+
+                {{-- Zikir Pagi --}}
+                <div class="col-6 mb-3">
+                    <a href="#" class="text-decoration-none text-white">
+                        <div class="zikir-card card-gradient-morning border-0">
+                            <div class="icon-wrapper mb-3">
+                                <i class="mdi mdi-white-balance-sunny icon-lg"></i>
+                            </div>
+                            <h6 class="font-weight-bold mb-1">Zikir pagi</h6>
+                            <p class="text-light small mb-0" style="opacity: 0.8">{{ $zikirPagi }} dzikir</p>
+                        </div>
+                    </a>
+                </div>
+
+                {{-- Zikir Petang --}}
+                <div class="col-6 mb-3">
+                    <a href="#" class="text-decoration-none text-white">
+                        <div class="zikir-card card-gradient-evening border-0">
+                            <div class="icon-wrapper mb-3">
+                                <i class="mdi mdi-moon-waning-crescent icon-lg"></i>
+                            </div>
+                            <h6 class="font-weight-bold mb-1">Zikir petang</h6>
+                            <p class="text-light small mb-0" style="opacity: 0.8">{{ $zikirPetang }} dzikir</p>
+                        </div>
+                    </a>
+                </div>
             </div>
+
+            <h5 class="font-weight-bold mb-3 mt-4" style="font-size: 1rem; opacity: 0.95;">
+                Aktivitas Anda
+            </h5>
+
+            <div class="row custom-gx">
+                {{-- Aktivitas Terakhir --}}
+                <div class="col-6 mb-3">
+                    <a href="#" class="text-decoration-none text-white">
+                        <div class="zikir-card card-dark">
+                            <div class="icon-wrapper mb-3">
+                                <div class="bg-white text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="mdi mdi-check" style="font-size: 1.2rem; font-weight: bold;"></i>
+                                </div>
+                            </div>
+                            <h6 class="font-weight-bold mb-1" style="line-height: 1.3;">
+                                {{ $recentActivity ? $recentActivity->zikir->title : 'Belum ada' }}
+                            </h6>
+                            <p class="text-muted small mb-0">
+                                {{ $recentActivity ? $recentActivity->last_read_at->diffForHumans() : 'Belum ada aktivitas' }}
+                            </p>
+                        </div>
+                    </a>
+                </div>
+
+                {{-- Koleksi --}}
+                <div class="col-6 mb-3">
+                    <a href="#" class="text-decoration-none text-white">
+                        <div class="zikir-card card-dark">
+                            <div class="icon-wrapper mb-3 text-center" style="position: relative;">
+                                <i class="mdi mdi-book-open-page-variant icon-lg" style="color: #4ade80;"></i>
+                                {{-- Sparkles effect --}}
+                                <i class="mdi mdi-star-four-points" style="position: absolute; top: -5px; right: 0; font-size: 10px; color: #facc15;"></i>
+                                <i class="mdi mdi-star-four-points" style="position: absolute; bottom: 0; left: -5px; font-size: 8px; color: #facc15;"></i>
+                            </div>
+                            <h6 class="font-weight-bold mb-1">Koleksi</h6>
+                            <p class="text-muted small mb-0">{{ $totalCollection }} / {{ $totalZikir > 0 ? $totalZikir : 454 }}</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
         </div>
     </div>
 
-
     @push('styles')
         <style>
-            .gradient-text {
-                background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-            }
-
-            #counter {
-                transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            }
-
-            #clickBtn {
-                transition: all 0.05s cubic-bezier(0.4, 0, 0.2, 1);
-                user-select: none;
-                -webkit-tap-highlight-color: transparent;
+            .zikir-menu-wrapper {
                 position: relative;
                 overflow: hidden;
             }
-
-            #clickBtn:active {
-                transform: scale(0.9) !important;
-                box-shadow: 0 5px 15px rgba(13, 110, 253, 0.2) !important;
+            .custom-gx {
+                margin-left: -8px;
+                margin-right: -8px;
             }
-
-            .ripple {
-                position: absolute;
-                background: rgba(255, 255, 255, 0.4);
-                border-radius: 50%;
-                transform: scale(0);
-                animation: ripple-animation 0.4s linear;
-                pointer-events: none;
+            .custom-gx > [class*="col-"] {
+                padding-left: 8px;
+                padding-right: 8px;
             }
-
-            @keyframes ripple-animation {
-                to {
-                    transform: scale(4);
-                    opacity: 0;
-                }
+            .zikir-card {
+                border-radius: 20px;
+                padding: 20px;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+                min-height: 160px;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             }
-
-            .counter-bump {
-                transform: scale(1.2) translateY(-10px);
-                color: #0a58ca !important;
+            .zikir-card:active {
+                transform: scale(0.97);
             }
-
-            /* Shake Animation for Feedback */
-            @keyframes shake {
-                0% {
-                    transform: translate(1px, 1px) rotate(0deg);
-                }
-
-                10% {
-                    transform: translate(-1px, -2px) rotate(-1deg);
-                }
-
-                20% {
-                    transform: translate(-3px, 0px) rotate(1deg);
-                }
-
-                30% {
-                    transform: translate(3px, 2px) rotate(0deg);
-                }
-
-                40% {
-                    transform: translate(1px, -1px) rotate(1deg);
-                }
-
-                50% {
-                    transform: translate(-1px, 2px) rotate(-1deg);
-                }
-
-                60% {
-                    transform: translate(-3px, 1px) rotate(0deg);
-                }
-
-                70% {
-                    transform: translate(3px, 1px) rotate(-1deg);
-                }
-
-                80% {
-                    transform: translate(-1px, -1px) rotate(1deg);
-                }
-
-                90% {
-                    transform: translate(1px, 2px) rotate(0deg);
-                }
-
-                100% {
-                    transform: translate(1px, -2px) rotate(-1deg);
-                }
+            .card-dark {
+                background-color: rgba(30, 41, 59, 0.8);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.05);
             }
-
-            .shake-effect {
-                animation: shake 0.2s;
+            .card-gradient-morning {
+                background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
             }
-
-            /* Modern Switch Styling */
-            .custom-switch .custom-control-input:checked~.custom-control-label::before {
-                background-color: var(--pstore-primary);
-                border-color: var(--pstore-primary);
+            .card-gradient-evening {
+                background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
             }
-
-            @media (max-width: 576px) {
-                #counter {
-                    font-size: 6rem !important;
-                }
-
-                #clickBtn {
-                    width: 150px !important;
-                    height: 150px !important;
-                }
+            .icon-lg {
+                font-size: 2rem;
+            }
+            .icon-wrapper {
+                margin-top: auto;
+                margin-bottom: auto !important;
+            }
+            .text-muted {
+                color: #94a3b8 !important;
             }
         </style>
-    @endpush
-
-    @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const counterEl = document.getElementById('counter');
-                const clickBtn = document.getElementById('clickBtn');
-                const resetBtn = document.getElementById('resetBtn');
-                const vibrateSwitch = document.getElementById('vibrateSwitch');
-                const cardBody = document.querySelector('.card-body');
-
-                // Load initial count
-                let count = parseInt(localStorage.getItem('dzikir_count')) || 0;
-                counterEl.innerText = count;
-
-                // Suara getar buatan menggunakan Web Audio API (Anti-CORS & Anti-COEP)
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                
-                function playVibrateSound() {
-                    if (audioCtx.state === 'suspended') {
-                        audioCtx.resume();
-                    }
-                    
-                    const oscillator = audioCtx.createOscillator();
-                    const gainNode = audioCtx.createGain();
-
-                    oscillator.type = 'sawtooth'; // Suara serak seperti getar
-                    oscillator.frequency.setValueAtTime(60, audioCtx.currentTime); // Low frequency buzz
-
-                    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.01);
-                    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
-
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
-
-                    oscillator.start();
-                    oscillator.stop(audioCtx.currentTime + 0.1);
-                }
-
-                function updateCounter(newCount) {
-                    count = newCount;
-                    counterEl.innerText = count;
-                    localStorage.setItem('dzikir_count', count);
-
-                    if (!vibrateSwitch.checked) return;
-
-                    // 1. Animation bump for counter
-                    counterEl.classList.add('counter-bump');
-                    setTimeout(() => counterEl.classList.remove('counter-bump'), 100);
-
-                    // 2. Shake effect for whole card
-                    cardBody.classList.add('shake-effect');
-                    setTimeout(() => cardBody.classList.remove('shake-effect'), 200);
-
-                    // 3. Audio Feedback (Generated Buzz)
-                    playVibrateSound();
-
-                    // 4. Actual Vibration (Android Only)
-                    if ("vibrate" in navigator) {
-                        navigator.vibrate(150);
-                    }
-                }
-
-                // Handle Tap/Click
-                const handleTap = (e) => {
-                    updateCounter(count + 1);
-
-                    // Ripple Effect
-                    const ripple = document.createElement('span');
-                    ripple.classList.add('ripple');
-                    clickBtn.appendChild(ripple);
-
-                    const rect = clickBtn.getBoundingClientRect();
-                    const size = Math.max(rect.width, rect.height);
-                    ripple.style.width = ripple.style.height = `${size}px`;
-
-                    // Check if it's a touch event or mouse event
-                    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-                    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-
-                    if (clientX && clientY) {
-                        const x = clientX - rect.left - size / 2;
-                        const y = clientY - rect.top - size / 2;
-                        ripple.style.left = `${x}px`;
-                        ripple.style.top = `${y}px`;
-                    } else {
-                        ripple.style.left = '50%';
-                        ripple.style.top = '50%';
-                        ripple.style.transform = 'translate(-50%, -50%) scale(0)';
-                    }
-
-                    setTimeout(() => ripple.remove(), 600);
-                };
-
-                // Standard click for desktop
-                clickBtn.addEventListener('mousedown', handleTap);
-
-                // Touch event for mobile (faster response)
-                clickBtn.addEventListener('touchstart', function (e) {
-                    e.preventDefault(); // Prevent ghost clicks
-                    handleTap(e);
-                }, { passive: false });
-
-                // Reset Logic
-                resetBtn.addEventListener('click', function () {
-                    Swal.fire({
-                        title: 'Reset Hitungan?',
-                        text: "Hitungan akan kembali ke nol.",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#0d6efd',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ya, Reset!',
-                        cancelButtonText: 'Batal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            updateCounter(0);
-                        }
-                    });
-                });
-            });
-        </script>
     @endpush
 @endsection

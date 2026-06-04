@@ -157,6 +157,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Artisan Command Web GUI
         Route::get('/artisan', [App\Http\Controllers\ArtisanDashboardController::class, 'index'])->name('artisan.index');
         Route::post('/artisan/run', [App\Http\Controllers\ArtisanDashboardController::class, 'run'])->name('artisan.run');
+
+        // Admin Dzikir
+        Route::get('/dzikir-stats', [App\Http\Controllers\AdminDzikirController::class, 'stats'])->name('dzikir.stats');
+        Route::resource('dzikir', App\Http\Controllers\AdminDzikirController::class);
     });
 
     // === RUTE RIWAYAT KARIR & MUTASI (Full Resource kecuali show) ===
