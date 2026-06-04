@@ -3,11 +3,14 @@
 @section('title', 'Zikir Online')
 
 @section('content')
-    <div class="content-wrapper zikir-menu-wrapper" style="min-height: calc(100vh - 70px); padding: 20px 15px;">
+    <div class="content-wrapper zikir-menu-wrapper" style="min-height: calc(100vh - 70px); padding: 20px 15px; background-image: url('{{ asset('images/islamic_bg.png') }}'); background-size: cover; background-position: center; background-attachment: fixed;">
         
+        {{-- Overlay to ensure text readability --}}
+        <div class="zikir-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95)); z-index: 0; pointer-events: none;"></div>
+
         <div class="container-fluid" style="position: relative; z-index: 1; max-width: 600px; margin: 0 auto; color: white;">
             
-            <h5 class="text-uppercase font-weight-bold mb-4 mt-2" style="letter-spacing: 1.5px; font-size: 0.9rem; opacity: 0.9;">
+            <h5 class="text-uppercase font-weight-bold mb-4 mt-2" style="letter-spacing: 1.5px; font-size: 0.95rem; opacity: 1;">
                 Zikir
             </h5>
 
@@ -65,7 +68,7 @@
                 </div>
             </div>
 
-            <h5 class="font-weight-bold mb-3 mt-4" style="font-size: 1rem; opacity: 0.95;">
+            <h5 class="font-weight-bold mb-3 mt-4" style="font-size: 1.05rem; opacity: 1;">
                 Aktivitas Anda
             </h5>
 
@@ -162,7 +165,7 @@
                 margin-bottom: auto !important;
             }
             .text-muted {
-                color: #94a3b8 !important;
+                color: #cbd5e1 !important;
             }
         </style>
     @endpush
