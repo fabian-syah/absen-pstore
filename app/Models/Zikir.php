@@ -10,7 +10,7 @@ class Zikir extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'category', 'arabic_text', 'latin_text', 'translation', 'default_target', 'information'
+        'title', 'category', 'prayer_time', 'arabic_text', 'latin_text', 'translation', 'default_target', 'information'
     ];
 
     public function favorites()
