@@ -53,15 +53,18 @@
 
     /* Background image */
     .qibla-bg {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
+        position: fixed;
+        top: -20px; left: -20px; right: -20px; bottom: -20px;
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.4) 0%, rgba(10, 31, 20, 0.2) 40%, rgba(10, 31, 20, 0.8) 100%),
             url('{{ asset("public/images/qibla_bg.png") }}');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
+        filter: blur(4px);
+        -webkit-filter: blur(4px);
         z-index: 0;
+        pointer-events: none;
     }
 
     /* Top actions */
@@ -158,17 +161,25 @@
     .label-e { right: 30px; top: 50%; transform: translateY(-50%); }
     .label-w { left: 30px; top: 50%; transform: translateY(-50%); }
 
-    /* Qibla Indicator (Kaaba box on ring) */
+    /* Qibla Indicator Container */
+    .qibla-marker-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0; top: 0;
+        transition: transform 0.5s ease;
+    }
+
+    /* Qibla Marker (Kaaba) */
     .qibla-marker {
         position: absolute;
-        width: 32px;
-        height: 32px;
-        background: #c28722;
-        border-radius: 6px;
-        top: -16px; /* offset by half height */
+        width: 42px;
+        height: 42px;
+        background: #d98a2c;
+        border-radius: 8px;
+        top: -21px; /* offset by half height */
         left: 50%;
-        margin-left: -16px;
-        transform-origin: 16px 166px; /* center of the ring */
+        transform: translateX(-50%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -177,11 +188,22 @@
     /* Kaaba icon lines */
     .qibla-marker::before {
         content: '';
-        width: 20px;
-        height: 12px;
+        width: 16px;
+        height: 26px;
         border: 2px solid #fff;
-        border-radius: 2px;
-        opacity: 0.9;
+        border-radius: 4px;
+        opacity: 1;
+    }
+    /* Stem pointing down */
+    .qibla-marker::after {
+        content: '';
+        position: absolute;
+        width: 3px;
+        height: 12px;
+        background: #fff;
+        bottom: -12px;
+        left: 50%;
+        transform: translateX(-50%);
     }
 
     /* Device pointer needle */
@@ -393,7 +415,9 @@
             <div class="cross-line-h"></div>
 
             <!-- Qibla Marker (Kaaba) -->
-            <div class="qibla-marker" id="qiblaMarker"></div>
+            <div class="qibla-marker-container" id="qiblaMarkerContainer">
+                <div class="qibla-marker" id="qiblaMarker"></div>
+            </div>
         </div>
         
         <!-- Fixed Needle (Phone direction) -->
@@ -498,7 +522,8 @@
                 (error) => {
                     console.log("Geolocation error, using default Jakarta location.");
                     updateQiblaMarker();
-                }
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         } else {
             updateQiblaMarker();
@@ -506,10 +531,8 @@
     }
 
     function updateQiblaMarker() {
-        // Place the Qibla marker on the ring at the correct angle
-        // 0 degrees is top, so we rotate transform origin
-        qiblaMarker.style.transform = `rotate(${qiblaHeading}deg)`;
-        qiblaMarker.style.transformOrigin = `16px 150px`; // Half of ring width 300px
+        const container = document.getElementById('qiblaMarkerContainer');
+        container.style.transform = `rotate(${qiblaHeading}deg)`;
     }
 
     // Device Orientation for Compass
@@ -544,7 +567,6 @@
     // Check if orientation is supported without permission (Android)
     if (window.DeviceOrientationEvent) {
         window.addEventListener("deviceorientationabsolute", handleOrientation, true);
-        // Fallback for some browsers
         window.addEventListener("deviceorientation", handleOrientation, true);
     } else {
         document.getElementById('sensor-warning').style.display = 'block';
@@ -568,15 +590,6 @@
 
     // Run init
     initLocation();
-    
-    // Fix marker origin based on responsive ring size
-    function adjustMarkerOrigin() {
-        const ringSize = compassRing.offsetWidth;
-        const originY = ringSize / 2;
-        qiblaMarker.style.transformOrigin = `16px ${originY}px`;
-    }
-    window.addEventListener('resize', adjustMarkerOrigin);
-    adjustMarkerOrigin();
 
 </script>
 @endpush
