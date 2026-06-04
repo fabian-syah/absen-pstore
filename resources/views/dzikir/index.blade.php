@@ -52,26 +52,28 @@
         -webkit-font-smoothing: antialiased;
         background: var(--zk-bg);
         min-height: 100vh;
-        min-height: 100dvh; /* iOS safe */
+        min-height: 100dvh;
         padding: 0 !important;
         position: relative;
         overflow-x: hidden;
-        /* iOS safe area */
         padding-top: env(safe-area-inset-top) !important;
         padding-bottom: env(safe-area-inset-bottom) !important;
     }
 
-    /* Background image - mosque dome */
+    /* Background image - blurred mosque dome, stays fixed */
     .zikir-page::before {
         content: '';
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
-            url('{{ asset("public/images/mosque_dome_bg.png") }}');
+            url('{{ asset("images/mosque_dome_bg.png") }}');
         background-size: cover;
         background-position: center bottom;
         background-repeat: no-repeat;
+        filter: blur(4px);
+        -webkit-filter: blur(4px);
+        transform: scale(1.05); /* prevent blur edge white lines */
         pointer-events: none;
         z-index: 0;
     }
@@ -81,34 +83,31 @@
         font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
     }
 
-    /* Header */
+    /* ---- Fixed Header (ZIKIR text, left-aligned) ---- */
     .zk-header {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 24px 20px 8px 20px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        padding: 20px 20px 12px 20px;
+        padding-top: max(20px, env(safe-area-inset-top));
+        background: linear-gradient(180deg, rgba(10, 31, 20, 0.7) 0%, transparent 100%);
     }
     .zk-header-title {
         font-size: 16px;
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: 0.15em;
         color: var(--zk-on-surface);
         text-transform: uppercase;
         margin: 0;
     }
-    .zk-header .material-symbols-outlined {
-        color: var(--zk-on-surface);
-        cursor: pointer;
-        font-size: 24px;
-    }
 
-    /* Main Content */
+    /* Main Content - pushed down for fixed header */
     .zk-main {
         position: relative;
         z-index: 1;
-        padding: 16px 20px 40px 20px;
+        padding: 70px 20px 100px 20px;
         max-width: 900px;
         margin: 0 auto;
     }
@@ -143,14 +142,10 @@
         box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         text-decoration: none !important;
     }
-    .zk-card:active {
-        transform: scale(0.97);
-    }
+    .zk-card:active { transform: scale(0.97); }
 
     /* Card Icon */
-    .zk-card-icon {
-        font-size: 28px;
-    }
+    .zk-card-icon { font-size: 28px; }
     .zk-card-icon.icon-primary { color: var(--zk-primary); }
     .zk-card-icon.icon-secondary { color: var(--zk-secondary); }
     .zk-card-icon.icon-white { color: rgba(255,255,255,0.9); }
@@ -193,10 +188,7 @@
         text-decoration: none !important;
     }
     .zk-card-sholat:active { transform: scale(0.97); }
-    .zk-sholat-left {
-        display: flex;
-        flex-direction: column;
-    }
+    .zk-sholat-left { display: flex; flex-direction: column; }
     .zk-sholat-left .material-symbols-outlined {
         color: rgba(255,255,255,0.9);
         font-size: 28px;
@@ -205,19 +197,13 @@
     .zk-sholat-left .zk-card-title { color: #fff; }
     .zk-sholat-left .zk-card-sub { color: rgba(255,255,255,0.7); }
     .zk-sholat-arrow {
-        width: 48px;
-        height: 48px;
+        width: 48px; height: 48px;
         border-radius: 50%;
         border: 2px solid rgba(255,255,255,0.2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
         flex-shrink: 0;
     }
-    .zk-sholat-arrow .material-symbols-outlined {
-        color: #fff;
-        font-size: 20px;
-    }
+    .zk-sholat-arrow .material-symbols-outlined { color: #fff; font-size: 20px; }
 
     /* Pagi Card */
     .zk-card-pagi {
@@ -295,31 +281,17 @@
         gap: 14px;
     }
     .zk-activity-icon {
-        width: 40px;
-        height: 40px;
+        width: 40px; height: 40px;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
     }
-    .zk-activity-icon.bg-primary {
-        background: rgba(111, 207, 151, 0.15) !important;
-    }
-    .zk-activity-icon.bg-secondary {
-        background: rgba(168, 230, 207, 0.15) !important;
-    }
-    .zk-activity-icon .material-symbols-outlined.text-primary {
-        color: var(--zk-primary) !important;
-    }
-    .zk-activity-icon .material-symbols-outlined.text-secondary {
-        color: var(--zk-secondary) !important;
-    }
+    .zk-activity-icon.bg-primary { background: rgba(111, 207, 151, 0.15) !important; }
+    .zk-activity-icon.bg-secondary { background: rgba(168, 230, 207, 0.15) !important; }
+    .zk-activity-icon .material-symbols-outlined.text-primary { color: var(--zk-primary) !important; }
+    .zk-activity-icon .material-symbols-outlined.text-secondary { color: var(--zk-secondary) !important; }
     .zk-activity-title {
-        font-size: 14px;
-        font-weight: 400;
-        color: #ffffff;
-        margin: 0;
-        line-height: 1.4;
+        font-size: 14px; font-weight: 400;
+        color: #ffffff; margin: 0; line-height: 1.4;
     }
     .zk-activity-sub {
         font-size: 12px;
@@ -327,62 +299,85 @@
         margin: 4px 0 0 0;
     }
 
+    /* ---- Bottom Nav ---- */
+    .zk-bottom-nav {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 28px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        background: transparent;
+    }
+    .zk-bottom-btn {
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(255,255,255,0.25);
+        background: rgba(18, 42, 28, 0.5);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none !important;
+        color: inherit !important;
+    }
+    .zk-bottom-btn:hover {
+        background: rgba(18, 42, 28, 0.8);
+        border-color: rgba(111, 207, 151, 0.4);
+        transform: scale(1.05);
+    }
+    .zk-bottom-btn:active {
+        transform: scale(0.93);
+    }
+    .zk-bottom-btn .material-symbols-outlined {
+        color: rgba(255,255,255,0.85);
+        font-size: 20px;
+    }
+    /* Center dot button - slightly bigger */
+    .zk-bottom-btn.center {
+        width: 52px; height: 52px;
+        border-color: rgba(111, 207, 151, 0.3);
+        background: rgba(15, 61, 36, 0.6);
+    }
+    .zk-bottom-btn.center .material-symbols-outlined {
+        font-size: 24px;
+        color: var(--zk-primary);
+    }
+
     /* ======================
        RESPONSIVE BREAKPOINTS
        ====================== */
-
-    /* Tablet landscape & Desktop: 4 column grid */
     @media (min-width: 768px) {
-        .zk-main {
-            padding: 24px 32px 48px 32px;
-        }
-        .zk-bento-grid {
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-        }
-        .zk-card {
-            aspect-ratio: auto;
-            min-height: 160px;
-        }
-        .zk-card-sholat {
-            grid-column: 1 / -1;
-            padding: 24px 32px;
-        }
-        .zk-activity-row {
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-        }
+        .zk-main { padding: 70px 32px 100px 32px; }
+        .zk-bento-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .zk-card { aspect-ratio: auto; min-height: 160px; }
+        .zk-card-sholat { grid-column: 1 / -1; padding: 24px 32px; }
+        .zk-activity-row { grid-template-columns: repeat(4, 1fr); gap: 16px; }
     }
 
-    /* Small mobile */
     @media (max-width: 400px) {
-        .zk-main {
-            padding: 12px 12px 32px 12px;
-        }
+        .zk-main { padding: 60px 12px 90px 12px; }
         .zk-bento-grid { gap: 8px; }
         .zk-card { padding: 14px; }
         .zk-card-title { font-size: 14px; }
         .zk-card-icon { font-size: 24px; }
         .zk-card-sholat { padding: 14px; }
         .zk-sholat-arrow { width: 40px; height: 40px; }
-        .zk-activity-row {
-            grid-template-columns: 1fr;
-            gap: 8px;
-        }
+        .zk-activity-row { grid-template-columns: 1fr; gap: 8px; }
         .zk-pill { padding: 8px 14px; font-size: 11px; }
+        .zk-bottom-nav { padding: 10px 20px; }
     }
 </style>
 @endpush
 
 @section('content')
 <div class="content-wrapper zikir-page">
-    {{-- Header --}}
+    {{-- Fixed Header - ZIKIR aligned left --}}
     <header class="zk-header">
-        <div data-widget="pushmenu" role="button">
-            <span class="material-symbols-outlined">menu</span>
-        </div>
         <h1 class="zk-header-title">ZIKIR</h1>
-        <div style="width:24px;"></div>
     </header>
 
     {{-- Main Content --}}
@@ -477,6 +472,19 @@
             </div>
         </div>
     </div>
+
+    {{-- Bottom Nav: Copy | Dots | Back --}}
+    <nav class="zk-bottom-nav">
+        <button class="zk-bottom-btn" title="Salin" onclick="navigator.clipboard.writeText(window.location.href)">
+            <span class="material-symbols-outlined">content_copy</span>
+        </button>
+        <button class="zk-bottom-btn center" title="Menu">
+            <span class="material-symbols-outlined">more_horiz</span>
+        </button>
+        <a href="{{ route('dashboard') }}" class="zk-bottom-btn" title="Kembali">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+    </nav>
 </div>
 @endsection
 
