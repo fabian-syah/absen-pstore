@@ -447,6 +447,20 @@
                     <span class="menu-title">Data Cabang</span>
                 </a>
             </li>
+            
+            <li class="nav-item nav-category">Admin Dzikir</li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.dzikir.index', 'admin.dzikir.create', 'admin.dzikir.edit') ? 'active' : '' }}" href="{{ route('admin.dzikir.index') }}">
+                    <i class="menu-icon mdi mdi-hands-pray"></i>
+                    <span class="menu-title">Setting Dzikir</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.dzikir.stats') ? 'active' : '' }}" href="{{ route('admin.dzikir.stats') }}">
+                    <i class="menu-icon mdi mdi-chart-bar"></i>
+                    <span class="menu-title">Statistik Dzikir User</span>
+                </a>
+            </li>
         @endif
 
         @if (auth()->user()->role === 'admin' || auth()->user()->role === 'admin_gaji')
