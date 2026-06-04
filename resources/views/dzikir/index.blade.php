@@ -64,7 +64,7 @@
     .zikir-page::before {
         content: '';
         position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
+        top: -20px; left: -20px; right: -20px; bottom: -20px;
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
             url('{{ asset("public/images/mosque_dome_bg.png") }}');
@@ -73,7 +73,6 @@
         background-repeat: no-repeat;
         filter: blur(4px);
         -webkit-filter: blur(4px);
-        transform: scale(1.05); /* prevent blur edge white lines */
         pointer-events: none;
         z-index: 0;
     }
@@ -108,8 +107,6 @@
         position: relative;
         z-index: 1;
         padding: 70px 20px 100px 20px;
-        max-width: 900px;
-        margin: 0 auto;
     }
 
     /* ---- Bento Grid ---- */
@@ -350,14 +347,25 @@
     /* ======================
        RESPONSIVE BREAKPOINTS
        ====================== */
-    @media (min-width: 768px) {
-        .zk-main { padding: 70px 32px 100px 32px; }
+
+    /* Tablet portrait (600px - 900px) */
+    @media (min-width: 600px) {
+        .zk-main { padding: 70px 24px 100px 24px; }
+        .zk-bento-grid { gap: 14px; }
+        .zk-card { aspect-ratio: auto; min-height: 180px; }
+        .zk-activity-row { gap: 14px; }
+    }
+
+    /* Tablet landscape & small desktop (900px+) */
+    @media (min-width: 900px) {
+        .zk-main { padding: 80px 40px 100px 40px; max-width: 1100px; margin: 0 auto; }
         .zk-bento-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
-        .zk-card { aspect-ratio: auto; min-height: 160px; }
-        .zk-card-sholat { grid-column: 1 / -1; padding: 24px 32px; }
+        .zk-card { min-height: 200px; }
+        .zk-card-sholat { padding: 28px 36px; }
         .zk-activity-row { grid-template-columns: repeat(4, 1fr); gap: 16px; }
     }
 
+    /* Small mobile (< 400px) */
     @media (max-width: 400px) {
         .zk-main { padding: 60px 12px 90px 12px; }
         .zk-bento-grid { gap: 8px; }
