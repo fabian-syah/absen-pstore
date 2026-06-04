@@ -495,11 +495,8 @@
         </div>
     </div>
 
-    {{-- Bottom Nav: Copy | Dots | Back --}}
-    <nav class="zk-bottom-nav">
-        <a href="{{ route('dzikir.qibla') }}" class="zk-bottom-btn" title="Kompas">
-            <span class="material-symbols-outlined">explore</span>
-        </a>
+    {{-- Bottom Nav: Back Only --}}
+    <nav class="zk-bottom-nav" style="justify-content: flex-end;">
         <a href="{{ route('dashboard') }}" class="zk-bottom-btn" title="Kembali">
             <span class="material-symbols-outlined">arrow_back</span>
         </a>
