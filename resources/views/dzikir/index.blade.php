@@ -67,7 +67,7 @@
         top: 0; left: 0; right: 0; bottom: 0;
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
-            url('{{ asset("images/mosque_dome_bg.png") }}');
+            url('{{ asset("public/images/mosque_dome_bg.png") }}');
         background-size: cover;
         background-position: center bottom;
         background-repeat: no-repeat;
@@ -475,8 +475,8 @@
 
     {{-- Bottom Nav: Copy | Dots | Back --}}
     <nav class="zk-bottom-nav">
-        <button class="zk-bottom-btn" title="Salin" onclick="navigator.clipboard.writeText(window.location.href)">
-            <span class="material-symbols-outlined">content_copy</span>
+        <button class="zk-bottom-btn" title="Kompas">
+            <span class="material-symbols-outlined">explore</span>
         </button>
         <button class="zk-bottom-btn center" title="Menu">
             <span class="material-symbols-outlined">more_horiz</span>
