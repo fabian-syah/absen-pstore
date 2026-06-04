@@ -26,6 +26,11 @@
         --zk-outline-variant: #2d4d35;
     }
 
+    html, body {
+        background-color: var(--zk-bg, #0a1f14) !important;
+        overscroll-behavior-y: none; /* Prevent white bounce on refresh/scroll in iOS */
+    }
+
     /* ---- FULLSCREEN: hide header, sidebar, footer, mobile nav ---- */
     .navbar,
     .sidebar,
@@ -64,7 +69,7 @@
     .zikir-page::before {
         content: '';
         position: fixed;
-        top: -20px; left: -20px; right: -20px; bottom: -20px;
+        top: -40px; left: -40px; right: -40px; bottom: -40px;
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
             url('{{ asset("public/images/mosque_dome_bg.png") }}');
