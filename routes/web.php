@@ -78,6 +78,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // --- Rute Dzikir Online ---
     Route::get('/dzikir', [App\Http\Controllers\DzikirController::class, 'index'])->name('dzikir.index');
+    Route::get('/dzikir/qibla', [App\Http\Controllers\DzikirController::class, 'qibla'])->name('dzikir.qibla');
 
     // Route Test Notifikasi
     Route::get('/test-notification', [DashboardController::class, 'testNotification'])->name('test.notification');

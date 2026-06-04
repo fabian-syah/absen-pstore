@@ -93,4 +93,9 @@ class DzikirController extends Controller
             'totalCollection'
         ));
     }
+
+    public function qibla()
+    {
+        return view('dzikir.qibla');
+    }
 }

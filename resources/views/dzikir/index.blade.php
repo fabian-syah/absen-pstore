@@ -497,9 +497,9 @@
 
     {{-- Bottom Nav: Copy | Dots | Back --}}
     <nav class="zk-bottom-nav">
-        <button class="zk-bottom-btn" title="Kompas">
+        <a href="{{ route('dzikir.qibla') }}" class="zk-bottom-btn" title="Kompas">
             <span class="material-symbols-outlined">explore</span>
-        </button>
+        </a>
         <a href="{{ route('dashboard') }}" class="zk-bottom-btn" title="Kembali">
             <span class="material-symbols-outlined">arrow_back</span>
         </a>
