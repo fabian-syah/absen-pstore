@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <style>
     /* =============================================
-       DZIKIR PAGE - DARK SPIRITUAL THEME
+       DZIKIR PAGE - GREEN ISLAMIC THEME
        ============================================= */
 
     :root {
@@ -26,6 +26,7 @@
         --zk-outline-variant: #2d4d35;
     }
 
+    /* Page wrapper */
     .zikir-page {
         font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
@@ -36,29 +37,24 @@
         overflow-x: hidden;
     }
 
+    /* Background image - mosque dome */
     .zikir-page::before {
         content: '';
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
         background-image:
-            linear-gradient(180deg, rgba(10, 31, 20, 0.6) 0%, rgba(10, 31, 20, 0.4) 40%, rgba(10, 31, 20, 0.3) 100%),
-            url('{{ asset("public/images/mosque_dome_bg.png") }}');
-        background-size: cover, cover;
-        background-position: center, center;
-        background-attachment: fixed;
+            linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
+            url('{{ asset("images/mosque_dome_bg.png") }}');
+        background-size: cover;
+        background-position: center bottom;
+        background-repeat: no-repeat;
         pointer-events: none;
         z-index: 0;
     }
 
-    .zikir-page::after {
-        content: '';
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background:
-            radial-gradient(ellipse at 20% 0%, rgba(15, 61, 36, 0.5) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 100%, rgba(27, 94, 58, 0.2) 0%, transparent 50%);
-        pointer-events: none;
-        z-index: 0;
+    /* Material Symbols Config */
+    .zikir-page .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
     }
 
     /* Header */
@@ -88,7 +84,9 @@
     .zk-main {
         position: relative;
         z-index: 1;
-        padding: 16px 20px 140px 20px;
+        padding: 16px 20px 40px 20px;
+        max-width: 900px;
+        margin: 0 auto;
     }
 
     /* ---- Bento Grid ---- */
@@ -99,7 +97,7 @@
         margin-bottom: 24px;
     }
 
-    /* Glass Card (base) */
+    /* Glass Card */
     .zk-card {
         background: rgba(18, 42, 28, 0.75);
         backdrop-filter: blur(12px);
@@ -114,11 +112,12 @@
         color: inherit !important;
         transition: transform 0.15s ease, box-shadow 0.2s ease;
         cursor: pointer;
-        min-height: 140px;
+        aspect-ratio: 1 / 1;
     }
     .zk-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        text-decoration: none !important;
     }
     .zk-card:active {
         transform: scale(0.97);
@@ -127,7 +126,6 @@
     /* Card Icon */
     .zk-card-icon {
         font-size: 28px;
-        margin-bottom: auto;
     }
     .zk-card-icon.icon-primary { color: var(--zk-primary); }
     .zk-card-icon.icon-secondary { color: var(--zk-secondary); }
@@ -136,7 +134,7 @@
     /* Card Text */
     .zk-card-title {
         font-size: 16px;
-        font-weight: 500;
+        font-weight: 600;
         color: #ffffff;
         margin: 0 0 4px 0;
         line-height: 1.4;
@@ -149,7 +147,7 @@
         line-height: 1.3;
     }
 
-    /* Sholat Card - Spans 2 columns */
+    /* Sholat Card - full width */
     .zk-card-sholat {
         grid-column: 1 / -1;
         background: linear-gradient(135deg, #0f6b3c 0%, #1a8a5a 60%, #0d9488 100%);
@@ -164,30 +162,24 @@
         transition: transform 0.15s ease, box-shadow 0.2s ease;
         cursor: pointer;
         box-shadow: 0 4px 20px rgba(15, 107, 60, 0.35);
-        min-height: 80px;
     }
     .zk-card-sholat:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 30px rgba(15, 107, 60, 0.45);
+        text-decoration: none !important;
     }
-    .zk-card-sholat:active {
-        transform: scale(0.97);
-    }
-    .zk-card-sholat .zk-sholat-left {
+    .zk-card-sholat:active { transform: scale(0.97); }
+    .zk-sholat-left {
         display: flex;
         flex-direction: column;
     }
-    .zk-card-sholat .zk-sholat-left .material-symbols-outlined {
+    .zk-sholat-left .material-symbols-outlined {
         color: rgba(255,255,255,0.9);
         font-size: 28px;
         margin-bottom: 12px;
     }
-    .zk-card-sholat .zk-sholat-left .zk-card-title {
-        color: #fff;
-    }
-    .zk-card-sholat .zk-sholat-left .zk-card-sub {
-        color: rgba(255,255,255,0.7);
-    }
+    .zk-sholat-left .zk-card-title { color: #fff; }
+    .zk-sholat-left .zk-card-sub { color: rgba(255,255,255,0.7); }
     .zk-sholat-arrow {
         width: 48px;
         height: 48px;
@@ -234,7 +226,6 @@
         gap: 10px;
         overflow-x: auto;
         padding-bottom: 8px;
-        margin-bottom: 24px;
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
@@ -248,7 +239,6 @@
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         border: 1px solid rgba(111, 207, 151, 0.08);
-
         font-size: 12px;
         font-weight: 400;
         color: var(--zk-on-surface-variant);
@@ -260,7 +250,7 @@
     .zk-pill:hover, .zk-pill.active {
         border-color: rgba(111, 207, 151, 0.3);
         color: var(--zk-primary);
-        background: rgba(15, 38, 38, 0.6);
+        background: rgba(15, 61, 36, 0.6);
     }
 
     /* ---- Activity Cards ---- */
@@ -268,7 +258,6 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 12px;
-        margin-bottom: 24px;
     }
     .zk-activity-card {
         background: rgba(18, 42, 28, 0.75);
@@ -314,85 +303,49 @@
         margin: 4px 0 0 0;
     }
 
-    /* ---- Bottom Nav ---- */
-    .zk-bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 50;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        padding: 12px 24px;
-        padding-bottom: max(12px, env(safe-area-inset-bottom));
-        background: rgba(10, 31, 20, 0.7);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(111, 207, 151, 0.08);
-    }
-    .zk-nav-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 8px 12px;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        text-decoration: none !important;
-        transition: transform 0.2s ease;
-    }
-    .zk-nav-btn:hover {
-        transform: translateY(-2px);
-    }
-    .zk-nav-btn .material-symbols-outlined {
-        font-size: 24px;
-        color: var(--zk-on-surface-variant);
-    }
-    .zk-nav-btn.active .material-symbols-outlined {
-        color: var(--zk-primary);
-    }
-    .zk-nav-center {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: var(--zk-primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        cursor: pointer;
-        margin-top: -28px;
-        box-shadow: 0 4px 20px rgba(111, 207, 151, 0.35);
-        transition: transform 0.2s ease;
-    }
-    .zk-nav-center:hover {
-        transform: scale(1.08);
-    }
-    .zk-nav-center:active {
-        transform: scale(0.95);
-    }
-    .zk-nav-center .material-symbols-outlined {
-        color: #1e3434;
-        font-size: 26px;
-    }
+    /* ======================
+       RESPONSIVE BREAKPOINTS
+       ====================== */
 
-    /* Material Symbols Config */
-    .zk-main .material-symbols-outlined,
-    .zk-header .material-symbols-outlined,
-    .zk-bottom-nav .material-symbols-outlined {
-        font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
-    }
-
-    /* ---- Responsive ---- */
-    @media (max-width: 400px) {
+    /* Tablet landscape & Desktop: 4 column grid */
+    @media (min-width: 768px) {
+        .zk-main {
+            padding: 24px 32px 48px 32px;
+        }
+        .zk-bento-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
         .zk-card {
-            padding: 16px;
-            min-height: 120px;
+            aspect-ratio: auto;
+            min-height: 160px;
+        }
+        .zk-card-sholat {
+            grid-column: 1 / -1;
+            padding: 24px 32px;
+        }
+        .zk-activity-row {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+    }
+
+    /* Small mobile */
+    @media (max-width: 400px) {
+        .zk-main {
+            padding: 12px 12px 32px 12px;
         }
         .zk-bento-grid { gap: 8px; }
-        .zk-activity-row { gap: 8px; }
+        .zk-card { padding: 14px; }
+        .zk-card-title { font-size: 14px; }
+        .zk-card-icon { font-size: 24px; }
+        .zk-card-sholat { padding: 14px; }
+        .zk-sholat-arrow { width: 40px; height: 40px; }
+        .zk-activity-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        .zk-pill { padding: 8px 14px; font-size: 11px; }
     }
 </style>
 @endpush
@@ -500,19 +453,6 @@
             </div>
         </div>
     </div>
-
-    {{-- Bottom Navigation --}}
-    <nav class="zk-bottom-nav">
-        <a href="{{ route('dashboard') }}" class="zk-nav-btn active">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
-        </a>
-        <button class="zk-nav-center">
-            <span class="material-symbols-outlined">more_horiz</span>
-        </button>
-        <button class="zk-nav-btn" onclick="history.back()">
-            <span class="material-symbols-outlined">close</span>
-        </button>
-    </nav>
 </div>
 @endsection
 
