@@ -11,19 +11,19 @@
        ============================================= */
 
     :root {
-        --zk-bg: #121413;
-        --zk-surface: #1f2020;
-        --zk-surface-high: #292a2a;
-        --zk-surface-variant: #343535;
-        --zk-primary: #b3cbcb;
-        --zk-primary-container: #0f2626;
-        --zk-secondary: #d5baff;
-        --zk-secondary-container: #5d15b7;
-        --zk-tertiary: #ffb693;
-        --zk-on-surface: #e3e2e1;
-        --zk-on-surface-variant: #c2c8c7;
-        --zk-outline: #8c9291;
-        --zk-outline-variant: #424848;
+        --zk-bg: #0a1f14;
+        --zk-surface: #122a1c;
+        --zk-surface-high: #1a3526;
+        --zk-surface-variant: #234030;
+        --zk-primary: #6fcf97;
+        --zk-primary-container: #0f3d24;
+        --zk-secondary: #a8e6cf;
+        --zk-secondary-container: #1b5e3a;
+        --zk-tertiary: #f0e68c;
+        --zk-on-surface: #e8f0e8;
+        --zk-on-surface-variant: #b0c8b0;
+        --zk-outline: #6e8e6e;
+        --zk-outline-variant: #2d4d35;
     }
 
     .zikir-page {
@@ -40,9 +40,23 @@
         content: '';
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
+        background-image:
+            linear-gradient(180deg, rgba(10, 31, 20, 0.6) 0%, rgba(10, 31, 20, 0.4) 40%, rgba(10, 31, 20, 0.3) 100%),
+            url('{{ asset("public/images/mosque_dome_bg.png") }}');
+        background-size: cover, cover;
+        background-position: center, center;
+        background-attachment: fixed;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .zikir-page::after {
+        content: '';
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
         background:
-            radial-gradient(ellipse at 20% 0%, rgba(15, 38, 38, 0.6) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 100%, rgba(93, 21, 183, 0.15) 0%, transparent 50%);
+            radial-gradient(ellipse at 20% 0%, rgba(15, 61, 36, 0.5) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 100%, rgba(27, 94, 58, 0.2) 0%, transparent 50%);
         pointer-events: none;
         z-index: 0;
     }
@@ -87,10 +101,10 @@
 
     /* Glass Card (base) */
     .zk-card {
-        background: rgba(31, 32, 32, 0.7);
+        background: rgba(18, 42, 28, 0.75);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(111, 207, 151, 0.1);
         border-radius: 16px;
         padding: 20px;
         display: flex;
@@ -138,7 +152,7 @@
     /* Sholat Card - Spans 2 columns */
     .zk-card-sholat {
         grid-column: 1 / -1;
-        background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #0f6b3c 0%, #1a8a5a 60%, #0d9488 100%);
         border: none;
         border-radius: 16px;
         padding: 20px;
@@ -149,12 +163,12 @@
         color: inherit !important;
         transition: transform 0.15s ease, box-shadow 0.2s ease;
         cursor: pointer;
-        box-shadow: 0 4px 20px rgba(13, 148, 136, 0.3);
+        box-shadow: 0 4px 20px rgba(15, 107, 60, 0.35);
         min-height: 80px;
     }
     .zk-card-sholat:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 30px rgba(13, 148, 136, 0.4);
+        box-shadow: 0 8px 30px rgba(15, 107, 60, 0.45);
     }
     .zk-card-sholat:active {
         transform: scale(0.97);
@@ -230,10 +244,11 @@
         flex-shrink: 0;
         padding: 10px 20px;
         border-radius: 999px;
-        background: rgba(31, 32, 32, 0.7);
+        background: rgba(18, 42, 28, 0.75);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.06);
+        border: 1px solid rgba(111, 207, 151, 0.08);
+
         font-size: 12px;
         font-weight: 400;
         color: var(--zk-on-surface-variant);
@@ -243,7 +258,7 @@
         font-family: "Manrope", sans-serif;
     }
     .zk-pill:hover, .zk-pill.active {
-        border-color: rgba(179, 203, 203, 0.3);
+        border-color: rgba(111, 207, 151, 0.3);
         color: var(--zk-primary);
         background: rgba(15, 38, 38, 0.6);
     }
@@ -256,10 +271,10 @@
         margin-bottom: 24px;
     }
     .zk-activity-card {
-        background: rgba(31, 32, 32, 0.7);
+        background: rgba(18, 42, 28, 0.75);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(111, 207, 151, 0.1);
         border-radius: 16px;
         padding: 20px;
         display: flex;
@@ -275,10 +290,10 @@
         justify-content: center;
     }
     .zk-activity-icon.bg-primary {
-        background: rgba(179, 203, 203, 0.15) !important;
+        background: rgba(111, 207, 151, 0.15) !important;
     }
     .zk-activity-icon.bg-secondary {
-        background: rgba(213, 186, 255, 0.15) !important;
+        background: rgba(168, 230, 207, 0.15) !important;
     }
     .zk-activity-icon .material-symbols-outlined.text-primary {
         color: var(--zk-primary) !important;
@@ -311,10 +326,10 @@
         align-items: center;
         padding: 12px 24px;
         padding-bottom: max(12px, env(safe-area-inset-bottom));
-        background: rgba(18, 20, 19, 0.6);
+        background: rgba(10, 31, 20, 0.7);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(255,255,255,0.05);
+        border-top: 1px solid rgba(111, 207, 151, 0.08);
     }
     .zk-nav-btn {
         display: flex;
@@ -349,7 +364,7 @@
         border: none;
         cursor: pointer;
         margin-top: -28px;
-        box-shadow: 0 4px 20px rgba(179, 203, 203, 0.3);
+        box-shadow: 0 4px 20px rgba(111, 207, 151, 0.35);
         transition: transform 0.2s ease;
     }
     .zk-nav-center:hover {
