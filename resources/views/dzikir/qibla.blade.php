@@ -178,11 +178,11 @@
     /* Qibla Marker (Kaaba) */
     .qibla-marker {
         position: absolute;
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         background: #d98a2c;
         border-radius: 8px;
-        top: -21px; /* offset by half height */
+        top: -22px; /* offset by half height */
         left: 50%;
         transform: translateX(-50%);
         display: flex;
@@ -190,23 +190,16 @@
         justify-content: center;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    /* Kaaba icon lines */
-    .qibla-marker::before {
-        content: '';
-        width: 16px;
-        height: 26px;
-        border: 2px solid #fff;
-        border-radius: 4px;
-        opacity: 1;
-    }
-    /* Stem pointing down */
+    /* Arrow pointing down */
     .qibla-marker::after {
         content: '';
         position: absolute;
-        width: 3px;
-        height: 12px;
-        background: #fff;
-        bottom: -12px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 8px solid #d98a2c;
+        bottom: -8px;
         left: 50%;
         transform: translateX(-50%);
     }
@@ -410,7 +403,12 @@
             <!-- Qibla Marker (Kaaba) -->
             <div class="qibla-marker-container" id="qiblaMarkerContainer">
                 <div class="qibla-pointer-line"></div>
-                <div class="qibla-marker" id="qiblaMarker"></div>
+                <div class="qibla-marker" id="qiblaMarker">
+                    <svg viewBox="0 0 24 24" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="4" width="16" height="16" rx="2" fill="#111" />
+                        <rect x="4" y="8" width="16" height="3" fill="#D4AF37" />
+                    </svg>
+                </div>
             </div>
         </div>
     </div>
@@ -531,8 +529,23 @@
     let currentAlpha = null;
 
     function handleOrientation(event) {
-        let alpha = event.webkitCompassHeading || Math.abs(event.alpha - 360);
+        let alpha = null;
+        if (event.webkitCompassHeading !== undefined) {
+            alpha = event.webkitCompassHeading;
+        } else if (event.alpha !== null) {
+            alpha = 360 - event.alpha;
+        }
         if (alpha == null) return;
+
+        // Compensate for screen orientation (Crucial for Tablets in portrait mode)
+        let screenOrientation = 0;
+        if (window.screen && window.screen.orientation && window.screen.orientation.angle) {
+            screenOrientation = window.screen.orientation.angle;
+        } else if (window.orientation !== undefined) {
+            screenOrientation = window.orientation;
+        }
+
+        alpha = (alpha + screenOrientation) % 360;
 
         if (currentAlpha === null) {
             currentAlpha = alpha;
