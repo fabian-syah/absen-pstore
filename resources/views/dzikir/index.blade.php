@@ -3,11 +3,8 @@
 @section('title', 'Zikir Online')
 
 @section('content')
-    <div class="content-wrapper zikir-menu-wrapper" style="min-height: calc(100vh - 70px); background-image: url('{{ asset('images/islamic_bg.png') }}'); background-size: cover; background-position: center; background-attachment: fixed; padding: 20px 15px;">
+    <div class="content-wrapper zikir-menu-wrapper" style="min-height: calc(100vh - 70px); padding: 20px 15px;">
         
-        {{-- Overlay to ensure text readability --}}
-        <div class="zikir-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(13, 27, 42, 0.7), rgba(27, 38, 59, 0.9)); z-index: 0; pointer-events: none;"></div>
-
         <div class="container-fluid" style="position: relative; z-index: 1; max-width: 600px; margin: 0 auto; color: white;">
             
             <h5 class="text-uppercase font-weight-bold mb-4 mt-2" style="letter-spacing: 1.5px; font-size: 0.9rem; opacity: 0.9;">
@@ -44,12 +41,12 @@
                 {{-- Zikir Pagi --}}
                 <div class="col-6 mb-3">
                     <a href="#" class="text-decoration-none text-white">
-                        <div class="zikir-card card-gradient-morning border-0">
+                        <div class="zikir-card card-dark">
                             <div class="icon-wrapper mb-3">
-                                <i class="mdi mdi-white-balance-sunny icon-lg"></i>
+                                <i class="mdi mdi-white-balance-sunny icon-lg" style="color: #facc15;"></i>
                             </div>
                             <h6 class="font-weight-bold mb-1">Zikir pagi</h6>
-                            <p class="text-light small mb-0" style="opacity: 0.8">{{ $zikirPagi }} dzikir</p>
+                            <p class="text-muted small mb-0">{{ $zikirPagi }} dzikir</p>
                         </div>
                     </a>
                 </div>
@@ -57,12 +54,12 @@
                 {{-- Zikir Petang --}}
                 <div class="col-6 mb-3">
                     <a href="#" class="text-decoration-none text-white">
-                        <div class="zikir-card card-gradient-evening border-0">
+                        <div class="zikir-card card-dark">
                             <div class="icon-wrapper mb-3">
-                                <i class="mdi mdi-moon-waning-crescent icon-lg"></i>
+                                <i class="mdi mdi-moon-waning-crescent icon-lg" style="color: #38bdf8;"></i>
                             </div>
                             <h6 class="font-weight-bold mb-1">Zikir petang</h6>
-                            <p class="text-light small mb-0" style="opacity: 0.8">{{ $zikirPetang }} dzikir</p>
+                            <p class="text-muted small mb-0">{{ $zikirPetang }} dzikir</p>
                         </div>
                     </a>
                 </div>
@@ -141,15 +138,8 @@
                 transform: scale(0.97);
             }
             .card-dark {
-                background-color: rgba(30, 41, 59, 0.8);
-                backdrop-filter: blur(10px);
+                background-color: #2a3038;
                 border: 1px solid rgba(255, 255, 255, 0.05);
-            }
-            .card-gradient-morning {
-                background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-            }
-            .card-gradient-evening {
-                background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
             }
             .icon-lg {
                 font-size: 2rem;
