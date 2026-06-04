@@ -12,28 +12,28 @@
             </h5>
 
             <div class="row custom-gx mb-4">
-                {{-- Semua Zikir --}}
+                {{-- Dzikir Umum --}}
                 <div class="col-6 mb-3">
                     <a href="#" class="text-decoration-none text-white">
                         <div class="zikir-card card-dark">
                             <div class="icon-wrapper mb-3">
-                                <i class="mdi mdi-dots-horizontal-circle-outline icon-lg"></i>
+                                <i class="mdi mdi-dots-horizontal-circle-outline icon-lg" style="color: #cbd5e1;"></i>
                             </div>
-                            <h6 class="font-weight-bold mb-1">Semua zikir</h6>
-                            <p class="text-muted small mb-0">{{ $totalZikir }} dzikir</p>
+                            <h6 class="font-weight-bold mb-1">Dzikir umum</h6>
+                            <p class="text-muted small mb-0">{{ $zikirUmum }} dzikir</p>
                         </div>
                     </a>
                 </div>
 
-                {{-- Kesukaanku --}}
+                {{-- Dzikir Sholat --}}
                 <div class="col-6 mb-3">
                     <a href="#" class="text-decoration-none text-white">
                         <div class="zikir-card card-dark">
                             <div class="icon-wrapper mb-3">
-                                <i class="mdi mdi-star icon-lg"></i>
+                                <i class="mdi mdi-clock-outline icon-lg" style="color: #4ade80;"></i>
                             </div>
-                            <h6 class="font-weight-bold mb-1">Kesukaanku</h6>
-                            <p class="text-muted small mb-0">{{ $totalFavorites > 0 ? $totalFavorites . ' favorit' : 'Tidak ada favorit' }}</p>
+                            <h6 class="font-weight-bold mb-1">{{ $currentPrayerName }}</h6>
+                            <p class="text-muted small mb-0">{{ $currentPrayerTime ? $currentPrayerTime : ($zikirSholat . ' dzikir') }}</p>
                         </div>
                     </a>
                 </div>
@@ -101,6 +101,19 @@
                             </div>
                             <h6 class="font-weight-bold mb-1">Koleksi</h6>
                             <p class="text-muted small mb-0">{{ $totalCollection }} / {{ $totalZikir > 0 ? $totalZikir : 454 }}</p>
+                        </div>
+                    </a>
+                </div>
+
+                {{-- Kesukaanku --}}
+                <div class="col-6 mb-3">
+                    <a href="#" class="text-decoration-none text-white">
+                        <div class="zikir-card card-dark">
+                            <div class="icon-wrapper mb-3 text-center" style="position: relative;">
+                                <i class="mdi mdi-star icon-lg" style="color: #facc15;"></i>
+                            </div>
+                            <h6 class="font-weight-bold mb-1">Kesukaanku</h6>
+                            <p class="text-muted small mb-0">{{ $totalFavorites > 0 ? $totalFavorites . ' favorit' : 'Tidak ada favorit' }}</p>
                         </div>
                     </a>
                 </div>

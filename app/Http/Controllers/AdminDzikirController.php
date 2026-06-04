@@ -33,7 +33,7 @@ class AdminDzikirController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'category' => 'required|string|in:pagi,petang,semua',
+            'category' => 'required|string|in:umum,pagi,petang,sholat',
             'arabic_text' => 'nullable|string',
             'latin_text' => 'nullable|string',
             'translation' => 'nullable|string',
@@ -61,7 +61,7 @@ class AdminDzikirController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'category' => 'required|string|in:pagi,petang,semua',
+            'category' => 'required|string|in:umum,pagi,petang,sholat',
             'arabic_text' => 'nullable|string',
             'latin_text' => 'nullable|string',
             'translation' => 'nullable|string',

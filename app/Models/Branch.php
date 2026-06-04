@@ -13,7 +13,8 @@ class Branch extends Model
         'name', 
         'address', 
         'is_active', 
-        'timezone' // <--- KOLOM BARU DITAMBAHKAN
+        'timezone',
+        'kemenag_city_id'
     ];
 
     // Relasi: Satu cabang punya banyak user

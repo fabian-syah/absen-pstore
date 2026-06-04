@@ -32,9 +32,10 @@
                         <div class="form-group">
                             <label for="category">Kategori Dzikir</label>
                             <select class="form-control" id="category" name="category" required>
-                                <option value="semua" {{ old('category') == 'semua' ? 'selected' : '' }}>Semua Waktu</option>
-                                <option value="pagi" {{ old('category') == 'pagi' ? 'selected' : '' }}>Pagi</option>
-                                <option value="petang" {{ old('category') == 'petang' ? 'selected' : '' }}>Petang</option>
+                                <option value="umum" {{ old('category') == 'umum' ? 'selected' : '' }}>Dzikir Umum</option>
+                                <option value="pagi" {{ old('category') == 'pagi' ? 'selected' : '' }}>Dzikir Pagi</option>
+                                <option value="petang" {{ old('category') == 'petang' ? 'selected' : '' }}>Dzikir Petang</option>
+                                <option value="sholat" {{ old('category') == 'sholat' ? 'selected' : '' }}>Dzikir Sholat 5 Waktu</option>
                             </select>
                         </div>
 

@@ -43,6 +43,13 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="kemenag_city_id">ID Kota Kemenag (Untuk Jadwal Shalat)</label>
+                            <input type="text" class="form-control" id="kemenag_city_id" name="kemenag_city_id"
+                                placeholder="Contoh: 1301 (Jakarta)" value="{{ old('kemenag_city_id') }}">
+                            <small class="form-text text-muted">ID Kota dapat dicari di API MyQuran. Kosongkan jika tidak perlu jadwal shalat spesifik cabang.</small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="address">Alamat Cabang</label>
                             <textarea class="form-control" id="address" name="address"
                                 rows="3">{{ old('address') }}</textarea>

@@ -141,7 +141,8 @@ class BranchController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:branches',
             'address' => 'nullable|string',
-            'timezone' => 'required|string|in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura', // Validasi Timezone
+            'timezone' => 'required|string|in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura',
+            'kemenag_city_id' => 'nullable|string',
         ]);
 
         Branch::create($request->all());
@@ -177,7 +178,8 @@ class BranchController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:branches,name,' . $branch->id,
             'address' => 'nullable|string',
-            'timezone' => 'required|string|in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura', // Validasi Timezone
+            'timezone' => 'required|string|in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura',
+            'kemenag_city_id' => 'nullable|string',
             'is_active' => 'required|boolean',
         ]);
 

@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('zikirs', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('category')->default('semua'); // pagi, petang, semua
+            $table->string('category')->default('umum'); // umum, pagi, petang, sholat
             $table->text('arabic_text')->nullable();
             $table->text('latin_text')->nullable();
             $table->text('translation')->nullable();

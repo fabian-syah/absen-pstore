@@ -53,6 +53,14 @@
                             </select>
                         </div>
 
+                        {{-- Kemenag City ID --}}
+                        <div class="form-group mb-3">
+                            <label for="kemenag_city_id" class="fw-bold mb-1">ID Kota Kemenag (Untuk Jadwal Shalat)</label>
+                            <input type="text" class="form-control" id="kemenag_city_id" name="kemenag_city_id"
+                                value="{{ old('kemenag_city_id', $branch->kemenag_city_id) }}" placeholder="Contoh: 1301 (Jakarta)">
+                            <small class="form-text text-muted">ID Kota dapat dicari di API MyQuran. Kosongkan jika tidak perlu jadwal shalat spesifik cabang.</small>
+                        </div>
+
                         {{-- Alamat Cabang --}}
                         <div class="form-group mb-3">
                             <label for="address" class="fw-bold mb-1">Alamat Cabang</label>
