@@ -115,6 +115,7 @@
         grid-template-columns: 1fr 1fr;
         gap: 12px;
         margin-bottom: 24px;
+        width: 100%;
     }
 
     /* Glass Card */
@@ -132,7 +133,9 @@
         color: inherit !important;
         transition: transform 0.15s ease, box-shadow 0.2s ease;
         cursor: pointer;
-        aspect-ratio: 1 / 1;
+        min-height: 150px;
+        width: 100%;
+        box-sizing: border-box;
     }
     .zk-card:hover {
         transform: translateY(-2px);
@@ -348,28 +351,39 @@
        RESPONSIVE BREAKPOINTS
        ====================== */
 
-    /* Tablet portrait (600px - 900px) */
+    /* Tablet portrait (600px+) */
     @media (min-width: 600px) {
-        .zk-main { padding: 70px 24px 100px 24px; }
-        .zk-bento-grid { gap: 14px; }
-        .zk-card { aspect-ratio: auto; min-height: 180px; }
-        .zk-activity-row { gap: 14px; }
+        .zk-main { padding: 70px 28px 100px 28px; }
+        .zk-bento-grid { gap: 16px; }
+        .zk-card { min-height: 200px; padding: 24px; }
+        .zk-card-title { font-size: 18px; }
+        .zk-card-icon { font-size: 32px; }
+        .zk-card-sholat { padding: 24px 28px; }
+        .zk-sholat-left .material-symbols-outlined { font-size: 32px; }
+        .zk-activity-row { gap: 16px; }
+        .zk-activity-card { padding: 24px; }
+        .zk-pill { padding: 12px 24px; font-size: 13px; }
+        .zk-section-title { font-size: 14px; }
     }
 
-    /* Tablet landscape & small desktop (900px+) */
-    @media (min-width: 900px) {
-        .zk-main { padding: 80px 40px 100px 40px; max-width: 1100px; margin: 0 auto; }
-        .zk-bento-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
-        .zk-card { min-height: 200px; }
+    /* Tablet landscape & desktop (1024px+) */
+    @media (min-width: 1024px) {
+        .zk-main { padding: 80px 48px 100px 48px; }
+        .zk-bento-grid { gap: 20px; }
+        .zk-card { min-height: 220px; padding: 28px; }
+        .zk-card-title { font-size: 20px; }
+        .zk-card-icon { font-size: 36px; }
         .zk-card-sholat { padding: 28px 36px; }
-        .zk-activity-row { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .zk-activity-row { gap: 20px; }
+        .zk-activity-card { padding: 28px; }
+        .zk-activity-title { font-size: 16px; }
     }
 
     /* Small mobile (< 400px) */
     @media (max-width: 400px) {
         .zk-main { padding: 60px 12px 90px 12px; }
         .zk-bento-grid { gap: 8px; }
-        .zk-card { padding: 14px; }
+        .zk-card { padding: 14px; min-height: 120px; }
         .zk-card-title { font-size: 14px; }
         .zk-card-icon { font-size: 24px; }
         .zk-card-sholat { padding: 14px; }
