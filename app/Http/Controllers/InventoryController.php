@@ -165,7 +165,33 @@ class InventoryController extends Controller
         }
 
         $fileName = 'Semua_Inventaris_Aktif_' . date('Y-m-d') . '.xlsx';
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\InventoryExport(), $fileName);
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\InventoryExport('all'), $fileName);
+    }
+
+    /**
+     * EXPORT EXCEL BARANG PUSAT AJA (ADMIN ONLY)
+     */
+    public function exportPusat()
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $fileName = 'Inventaris_Pusat_' . date('Y-m-d') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\InventoryExport('pusat'), $fileName);
+    }
+
+    /**
+     * EXPORT EXCEL BEBERAPA CABANG AJA (ADMIN ONLY)
+     */
+    public function exportCabang()
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $fileName = 'Inventaris_Cabang_' . date('Y-m-d') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\InventoryExport('cabang'), $fileName);
     }
 
     /**

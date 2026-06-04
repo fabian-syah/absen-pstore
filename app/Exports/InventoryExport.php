@@ -20,12 +20,52 @@ class InventoryExport extends DefaultValueBinder implements FromCollection, With
 {
     private $inventoryData;
 
-    public function __construct()
+    public function __construct($group = 'all')
     {
-        $this->inventoryData = Inventory::with(['user', 'user.division', 'user.branch'])
-            ->whereNotNull('user_id')
-            ->latest()
-            ->get();
+        $query = Inventory::with(['user', 'user.division', 'user.branch'])
+            ->whereNotNull('user_id');
+
+        $pusatList = [
+            'AppleLux',
+            'Arcis & Debs',
+            'Cleaning service',
+            'Dokter Pstore',
+            'Driver pstore',
+            'Finance',
+            'Inventory',
+            'keluarga Pstore',
+            'Managament',
+            'Marketing Creative',
+            'Masjid abdurrohman bin auf',
+            'Mega pstore',
+            'Ps arwana',
+            'PS bakery',
+            'PS big jakarta',
+            'PS catering',
+            'PS new jakarta',
+            'Pskontraktor',
+            'Pstore Lenteng Agung',
+            'Pstore Peduli',
+            'Pstore Qcell jakarta',
+            'Shopee',
+            'Security Jakarta',
+            'Team Audit',
+            'Team Creative',
+            'Tiktok',
+            'Operator',
+        ];
+
+        if ($group === 'pusat') {
+            $query->whereHas('user.branch', function ($q) use ($pusatList) {
+                $q->whereIn('name', $pusatList);
+            });
+        } elseif ($group === 'cabang') {
+            $query->whereHas('user.branch', function ($q) use ($pusatList) {
+                $q->whereNotIn('name', $pusatList);
+            });
+        }
+
+        $this->inventoryData = $query->latest()->get();
     }
 
     /**

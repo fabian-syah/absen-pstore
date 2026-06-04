@@ -19,9 +19,16 @@
 
                         {{-- TOMBOL EXPORT ADMIN ONLY --}}
                         @if(auth()->user()->role == 'admin')
-                            <a href="{{ route('inventory.export.active') }}" class="btn btn-success btn-sm text-white">
-                                <i class="mdi mdi-file-excel"></i> Export Excel
-                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-success btn-sm text-white dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="mdi mdi-file-excel"></i> Export Excel
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                                    <li><a class="dropdown-item" href="{{ route('inventory.export.active') }}">Semua Data</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('inventory.export.pusat') }}">Data Pusat Aja</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('inventory.export.cabang') }}">Beberapa Cabang Aja</a></li>
+                                </ul>
+                            </div>
                         @endif
 
                         {{-- TOMBOL NAVIGASI FILTER --}}

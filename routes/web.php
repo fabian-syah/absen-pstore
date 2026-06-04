@@ -599,6 +599,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             ->name('inventory.export.active')
             ->middleware('role:admin');
 
+        Route::get('/inventory/export/pusat', [InventoryController::class, 'exportPusat'])
+            ->name('inventory.export.pusat')
+            ->middleware('role:admin');
+
+        Route::get('/inventory/export/cabang', [InventoryController::class, 'exportCabang'])
+            ->name('inventory.export.cabang')
+            ->middleware('role:admin');
+
         Route::get('/top-absensi-cabang', [BranchLeaderboardController::class, 'index'])
             ->name('branch-leaderboard.index');
 
