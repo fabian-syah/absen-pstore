@@ -81,18 +81,19 @@
         padding-bottom: env(safe-area-inset-bottom) !important;
     }
 
-    /* Background image - blurred mosque dome, using sticky wrapper to prevent scroll issues */
+    /* Background image - blurred mosque dome, using absolute wrapper + sticky child to prevent scroll issues */
     .zk-sticky-wrapper {
-        position: -webkit-sticky;
-        position: sticky;
+        position: absolute;
         top: 0;
-        width: 100%;
-        height: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         z-index: 0;
         pointer-events: none;
     }
     .zk-bg-sticky {
-        position: absolute;
+        position: -webkit-sticky;
+        position: sticky;
         top: -40px;
         left: -40px;
         width: calc(100vw + 80px);
