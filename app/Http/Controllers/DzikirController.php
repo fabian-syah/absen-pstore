@@ -179,11 +179,11 @@ class DzikirController extends Controller
             'zikir_id' => $request->zikir_id
         ]);
 
-        if ($request->has('all_time')) {
-            $activity->all_time_count = max($activity->all_time_count ?? 0, $request->all_time);
-        }
+        $increment = (int) $request->count;
 
-        $activity->total_count = $request->count;
+        $activity->total_count = ($activity->total_count ?? 0) + $increment;
+        $activity->all_time_count = ($activity->all_time_count ?? 0) + $increment;
+
         $activity->last_read_at = now();
         $activity->save();
 

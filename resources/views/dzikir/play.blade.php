@@ -632,6 +632,7 @@
 
         // --- COUNTER LOGIC ---
         let saveTimeout;
+        let unsavedCounts = {};
 
         window.incrementCounter = function() {
             if(totalSlides === 0) return;
@@ -639,10 +640,14 @@
             let count = parseInt(slide.dataset.count) || 0;
             let allTime = parseInt(slide.dataset.allTime) || 0;
             const target = parseInt(slide.dataset.target) || 33;
+            const zikirId = slide.dataset.id;
             
             // Increment
             count++;
             allTime++;
+            
+            if (!unsavedCounts[zikirId]) unsavedCounts[zikirId] = 0;
+            unsavedCounts[zikirId]++;
             
             slide.dataset.count = count;
             slide.dataset.allTime = allTime;
@@ -654,7 +659,7 @@
             }
 
             updateCounterUI();
-            debouncedSave(slide.dataset.id, count, allTime);
+            debouncedSave(zikirId);
         };
 
         function updateCounterUI() {
@@ -684,20 +689,52 @@
             }
         }
 
-        function debouncedSave(zikirId, count, allTime) {
+        function debouncedSave(zikirId) {
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(() => {
+                const incrementToSave = unsavedCounts[zikirId] || 0;
+                if (incrementToSave === 0) return;
+                
+                unsavedCounts[zikirId] = 0; // reset locally immediately
+
                 const form = document.getElementById('progressForm');
                 document.getElementById('formZikirId').value = zikirId;
-                document.getElementById('formCount').value = count;
-                document.getElementById('formAllTime').value = allTime;
+                document.getElementById('formCount').value = incrementToSave; // send increment amount
                 
                 const formData = new FormData(form);
                 fetch(form.action, {
                     method: 'POST',
                     body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                }).catch(err => console.error(err));
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json' 
+                    }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const slide = document.querySelector(`.zp-slide[data-id="${zikirId}"]`);
+                        if (slide) {
+                            let trueTotal = data.activity.total_count;
+                            let trueAllTime = data.activity.all_time_count;
+                            
+                            // add back any clicks that happened WHILE the request was flying
+                            let pending = unsavedCounts[zikirId] || 0;
+                            slide.dataset.count = trueTotal + pending;
+                            slide.dataset.allTime = trueAllTime + pending;
+                            
+                            // Only update UI if we are currently looking at this slide
+                            if (slides[currentIndex] === slide) {
+                                updateCounterUI();
+                            }
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    // if failed, add back the unsaved count so it tries again next time
+                    unsavedCounts[zikirId] = (unsavedCounts[zikirId] || 0) + incrementToSave;
+                });
             }, 1000);
         }
 
