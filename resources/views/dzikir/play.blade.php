@@ -22,10 +22,10 @@
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
         background-color: #061c23;
-        background-image: linear-gradient(to bottom, rgba(13, 52, 64, 0.85) 0%, rgba(6, 28, 35, 1) 100%),
+        background-image: linear-gradient(to bottom, rgba(6, 28, 35, 0.4) 0%, rgba(6, 28, 35, 0.95) 100%),
                           url('{{ asset("public/images/mosque-bg.png") }}');
         background-size: cover;
-        background-position: center top;
+        background-position: center;
         background-repeat: no-repeat;
         display: flex;
         flex-direction: column;
