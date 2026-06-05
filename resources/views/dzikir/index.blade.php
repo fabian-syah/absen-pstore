@@ -27,8 +27,8 @@
     }
 
     html, body, .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper, .zikir-page {
-        background-color: var(--zk-bg, #0a1f14) !important;
-        background: var(--zk-bg, #0a1f14) !important;
+        background-color: transparent !important;
+        background: transparent !important;
     }
 
     /* ---- FULLSCREEN: hide header, sidebar, footer, mobile nav ---- */
@@ -55,7 +55,6 @@
     .zikir-page {
         font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
-        background: var(--zk-bg);
         min-height: 100vh;
         min-height: 100dvh;
         padding: 0 !important;
@@ -66,7 +65,7 @@
     }
 
     /* Background image - blurred mosque dome, stays fixed */
-    .zikir-page::before {
+    body::before {
         content: '';
         position: fixed;
         top: -40px; left: -40px; right: -40px; bottom: -40px;
@@ -80,7 +79,7 @@
         filter: blur(6px);
         -webkit-filter: blur(6px);
         pointer-events: none;
-        z-index: 0;
+        z-index: -9999;
     }
 
     /* Material Symbols Config */
