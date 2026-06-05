@@ -6,16 +6,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <style>
-    /* ---- NATIVE SCROLL TO HIDE BROWSER UI ---- */
+    /* Lock the page into a full-screen app container */
     html, body {
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        height: auto !important;
+        overflow: hidden !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
-    .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper, .zikir-page {
+    .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper {
         overflow: visible !important;
-        height: auto !important;
-        min-height: auto !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
         transform: none !important;
         -webkit-transform: none !important;
         filter: none !important;
@@ -23,6 +26,8 @@
         perspective: none !important;
         backdrop-filter: none !important;
         will-change: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     .navbar, .sidebar, .mobile-bottom-nav, footer, .footer {
@@ -31,7 +36,7 @@
     .main-panel {
         margin-left: 0 !important;
         width: 100% !important;
-        min-height: auto !important;
+        min-height: 0 !important;
     }
     .page-body-wrapper { padding-top: 0 !important; }
     .content-wrapper { padding: 0 !important; }
@@ -39,12 +44,15 @@
     .zikir-page {
         font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
-        min-height: auto !important;
+        position: fixed !important;
+        top: 0; left: 0; right: 0; bottom: 0;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch;
         padding: 0 !important;
-        position: relative;
-        overflow-x: hidden;
-        padding-top: env(safe-area-inset-top) !important;
-        padding-bottom: env(safe-area-inset-bottom) !important;
+        margin: 0 !important;
+        min-height: 0 !important;
+        height: 100% !important;
         --zk-bg: #0a1f14;
         --zk-card-bg: #14281d;
         --zk-primary: #1ed760;
@@ -123,10 +131,10 @@
     .zk-main {
         position: relative;
         z-index: 1;
-        padding: 80px 12px 24px 12px; /* Remove empty space below the last card */
+        padding: 70px 12px 80px 12px; /* top for header, bottom for bottom nav */
         display: flex;
         flex-direction: column;
-        gap: 8px; /* Dempet (smaller gap) */
+        gap: 8px;
         max-width: 800px;
         margin: 0 auto;
     }
@@ -264,7 +272,39 @@
         color: #f1c40f; /* Star color */
     }
 
-
+    /* Bottom Nav */
+    .zk-bottom-nav {
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 24px;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
+        z-index: 10;
+    }
+    .zk-nav-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition: background 0.2s;
+    }
+    .zk-nav-btn:active {
+        background: rgba(255, 255, 255, 0.2);
+    }
     
     @media (min-width: 1024px) {
         .zk-main { padding-top: 100px; }
@@ -327,7 +367,15 @@
         @endforeach
     </div>
 
-
+    {{-- Bottom Nav Controls --}}
+    <div class="zk-bottom-nav">
+        <a href="{{ route('dzikir.index') }}" class="zk-nav-btn">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <a href="{{ route('dzikir.index') }}" class="zk-nav-btn">
+            <span class="material-symbols-outlined">close</span>
+        </a>
+    </div>
 </div>
 
 @push('scripts')
