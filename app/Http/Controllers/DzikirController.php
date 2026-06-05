@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Zikir;
+use App\Models\ZikirCampaign;
 use App\Models\UserZikirFavorite;
 use App\Models\UserZikirActivity;
 use Illuminate\Support\Facades\Auth;
@@ -113,13 +114,11 @@ class DzikirController extends Controller
                         ->pluck('zikir_id')
                         ->toArray();
 
-        // Ambil zikir unggulan (misal yang pertama) dan hitung total global untuk card paling atas
-        $featuredZikir = $zikirs->first();
-        $globalCount = 0;
-        if ($featuredZikir) {
-            $globalCount = UserZikirActivity::where('zikir_id', $featuredZikir->id)->sum('total_count');
-        }
+        // Ambil active campaigns untuk carousel
+        $campaigns = ZikirCampaign::where('is_active', true)
+                        ->orderBy('created_at', 'desc')
+                        ->get();
 
-        return view('dzikir.umum', compact('zikirs', 'activities', 'favorites', 'featuredZikir', 'globalCount'));
+        return view('dzikir.umum', compact('zikirs', 'activities', 'favorites', 'campaigns'));
     }
 }

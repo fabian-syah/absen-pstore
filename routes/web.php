@@ -162,6 +162,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // Admin Dzikir
         Route::get('/dzikir-stats', [App\Http\Controllers\AdminDzikirController::class, 'stats'])->name('dzikir.stats');
         Route::resource('dzikir', App\Http\Controllers\AdminDzikirController::class);
+
+        // Admin Dzikir Campaign
+        Route::resource('dzikir-campaign', App\Http\Controllers\AdminZikirCampaignController::class);
     });
 
     // === RUTE RIWAYAT KARIR & MUTASI (Full Resource kecuali show) ===

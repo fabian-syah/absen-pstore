@@ -118,21 +118,33 @@
         margin: 0 auto;
     }
 
-    /* Featured Card */
-    .zk-featured {
+    /* ===== CAMPAIGN CAROUSEL ===== */
+    .zk-carousel-wrapper {
+        position: relative;
+        margin: 0 8px 8px 8px;
+        overflow: hidden;
+        border-radius: 20px;
+    }
+    .zk-carousel-track {
+        display: flex;
+        transition: transform 0.4s ease;
+        will-change: transform;
+    }
+    .zk-carousel-slide {
+        flex: 0 0 100%;
+        min-width: 100%;
         background: var(--zk-card-bg);
         border-radius: 20px;
         padding: 20px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        margin-bottom: 8px;
+        box-sizing: border-box;
     }
-    .zk-featured-header {
+    .zk-campaign-header {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
     }
-    .zk-featured-icon {
+    .zk-campaign-icon {
         background: rgba(30, 215, 96, 0.2);
         color: var(--zk-primary);
         width: 32px;
@@ -143,36 +155,74 @@
         justify-content: center;
         font-size: 18px;
     }
-    .zk-featured-title {
+    .zk-campaign-title {
         color: var(--zk-text-main);
         font-size: 16px;
         font-weight: 600;
         margin: 0;
     }
-    .zk-featured-number {
+    .zk-campaign-number {
         color: var(--zk-primary);
-        font-size: 40px;
+        font-size: 36px;
         font-weight: 800;
-        margin: 0;
+        margin: 4px 0;
         line-height: 1.1;
         letter-spacing: -1px;
     }
-    .zk-featured-footer {
+    .zk-campaign-target {
+        color: var(--zk-text-muted);
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    /* Progress bar */
+    .zk-progress-bar-bg {
+        background: rgba(255, 255, 255, 0.1);
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+    .zk-progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #1ed760, #4ade80);
+        border-radius: 4px;
+        transition: width 0.6s ease;
+    }
+    .zk-campaign-footer {
         display: flex;
         justify-content: space-between;
-        align-items: flex-end;
-        margin-top: 10px;
+        align-items: center;
     }
-    .zk-featured-label {
+    .zk-campaign-label {
         color: var(--zk-text-muted);
         font-size: 10px;
         font-weight: 700;
         letter-spacing: 1px;
     }
-    .zk-featured-percent {
+    .zk-campaign-percent {
         color: var(--zk-text-main);
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
+    }
+    /* Carousel dots */
+    .zk-carousel-dots {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 14px;
+    }
+    .zk-carousel-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.25);
+        transition: background 0.3s, width 0.3s;
+    }
+    .zk-carousel-dot.active {
+        width: 18px;
+        border-radius: 3px;
+        background: #fff;
     }
 
     /* List Card */
@@ -298,9 +348,10 @@
         .zk-list-progress { font-size: 11px; }
         .zk-hex-number { width: 26px; height: 30px; font-size: 12px; }
         .zk-list-action { width: 34px; height: 34px; }
-        .zk-featured { padding: 14px; border-radius: 14px; margin: 0 6px; }
-        .zk-featured-title { font-size: 14px; }
-        .zk-featured-number { font-size: 32px; }
+        .zk-carousel-wrapper { margin: 0 6px 6px 6px; border-radius: 14px; }
+        .zk-carousel-slide { padding: 14px; border-radius: 14px; }
+        .zk-campaign-title { font-size: 14px; }
+        .zk-campaign-number { font-size: 28px; }
         .zk-bottom-nav { padding: 6px 16px; }
         .zk-nav-btn { width: 38px; height: 38px; }
     }
@@ -309,7 +360,7 @@
     @media (min-width: 381px) and (max-width: 767px) {
         .zk-main { padding: 60px 0 16px 0; gap: 4px; }
         .zk-list-card { margin: 0 8px; }
-        .zk-featured { margin: 0 8px; }
+        .zk-carousel-wrapper { margin: 0 8px 8px 8px; }
     }
 
     /* ---- RESPONSIVE: Tablets (768px - 1023px) ---- */
@@ -321,9 +372,10 @@
         .zk-list-title { font-size: 20px; }
         .zk-list-latin { font-size: 15px; }
         .zk-hex-number { width: 34px; height: 38px; font-size: 16px; }
-        .zk-featured { padding: 24px; border-radius: 22px; margin: 0 12px; }
-        .zk-featured-title { font-size: 18px; }
-        .zk-featured-number { font-size: 48px; }
+        .zk-carousel-wrapper { margin: 0 12px 10px 12px; border-radius: 22px; }
+        .zk-carousel-slide { padding: 24px; border-radius: 22px; }
+        .zk-campaign-title { font-size: 18px; }
+        .zk-campaign-number { font-size: 44px; }
         .zk-bottom-nav { padding: 12px 40px; }
         .zk-nav-btn { width: 48px; height: 48px; }
     }
@@ -336,8 +388,9 @@
         .zk-list-card { padding: 22px; margin: 0 16px; border-radius: 16px; }
         .zk-list-title { font-size: 20px; }
         .zk-hex-number { width: 36px; height: 40px; font-size: 16px; }
-        .zk-featured { padding: 28px; border-radius: 24px; margin: 0 16px; }
-        .zk-featured-number { font-size: 52px; }
+        .zk-carousel-wrapper { margin: 0 16px 12px 16px; border-radius: 24px; }
+        .zk-carousel-slide { padding: 28px; border-radius: 24px; }
+        .zk-campaign-number { font-size: 48px; }
         .zk-bottom-nav { padding: 14px 48px; }
         .zk-nav-btn { width: 50px; height: 50px; }
     }
@@ -346,7 +399,8 @@
     @media (min-width: 1440px) {
         .zk-main { max-width: 720px; }
         .zk-list-card { padding: 24px; margin: 0 20px; }
-        .zk-featured { padding: 32px; margin: 0 20px; }
+        .zk-carousel-wrapper { margin: 0 20px 14px 20px; }
+        .zk-carousel-slide { padding: 32px; }
     }
 </style>
 @endpush
@@ -358,27 +412,37 @@
     </header>
 
     <div class="zk-main">
-        {{-- Featured Card --}}
-        @if($featuredZikir)
-        <div class="zk-featured">
-            <div class="zk-featured-header">
-                <div class="zk-featured-icon">
-                    <span class="material-symbols-outlined">group</span>
+        {{-- Campaign Carousel --}}
+        @if($campaigns->count() > 0)
+        <div class="zk-carousel-wrapper" id="campaignCarousel">
+            <div class="zk-carousel-track" id="carouselTrack">
+                @foreach($campaigns as $campaign)
+                <div class="zk-carousel-slide">
+                    <div class="zk-campaign-header">
+                        <div class="zk-campaign-icon">
+                            <span class="material-symbols-outlined">group</span>
+                        </div>
+                        <h3 class="zk-campaign-title">{{ $campaign->title }} {{ $campaign->emoji }}</h3>
+                    </div>
+                    <h2 class="zk-campaign-number">{{ number_format($campaign->current_count, 0, ',', '.') }}</h2>
+                    <div class="zk-campaign-target">TARGET: {{ number_format($campaign->target, 0, ',', '.') }}</div>
+                    <div class="zk-progress-bar-bg">
+                        <div class="zk-progress-bar-fill" style="width: {{ $campaign->progress_percent }}%"></div>
+                    </div>
+                    <div class="zk-campaign-footer">
+                        <span class="zk-campaign-label">LAGI</span>
+                        <span class="zk-campaign-percent">{{ $campaign->progress_percent }}%</span>
+                    </div>
                 </div>
-                <h3 class="zk-featured-title">{{ $featuredZikir->title }} ☝️</h3>
+                @endforeach
             </div>
-            <h2 class="zk-featured-number">{{ number_format($globalCount, 0, ',', ' ') }}</h2>
-            <div class="zk-featured-footer">
-                <span class="zk-featured-label">LAGI</span>
-                <span class="zk-featured-percent">3.5%</span>
+            @if($campaigns->count() > 1)
+            <div class="zk-carousel-dots" id="carouselDots">
+                @foreach($campaigns as $i => $c)
+                <div class="zk-carousel-dot {{ $i === 0 ? 'active' : '' }}" data-index="{{ $i }}"></div>
+                @endforeach
             </div>
-            {{-- Carousel Dots Placeholder --}}
-            <div style="display: flex; justify-content: center; gap: 6px; margin-top: 15px;">
-                <div style="width: 6px; height: 6px; border-radius: 50%; background: #fff;"></div>
-                <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
-                <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
-                <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
-            </div>
+            @endif
         </div>
         @endif
 
@@ -417,7 +481,6 @@
 @push('scripts')
 <script>
     function toggleFavorite(zikirId, btn) {
-        // Simple toggle visual effect (logic for saving to DB should be added here via AJAX)
         btn.classList.toggle('active');
         const icon = btn.querySelector('.material-symbols-outlined');
         if (btn.classList.contains('active')) {
@@ -425,18 +488,78 @@
         } else {
             icon.classList.remove('filled');
         }
-        
-        // TODO: Send AJAX request to save favorite
-        /*
-        fetch('/dzikir/favorite/' + zikirId, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            }
-        });
-        */
     }
+
+    // ===== CAMPAIGN CAROUSEL =====
+    (function() {
+        const track = document.getElementById('carouselTrack');
+        const dotsContainer = document.getElementById('carouselDots');
+        if (!track) return;
+
+        const slides = track.querySelectorAll('.zk-carousel-slide');
+        const totalSlides = slides.length;
+        if (totalSlides <= 1) return;
+
+        let currentIndex = 0;
+        let autoSlideTimer = null;
+        let startX = 0;
+        let isDragging = false;
+
+        function goToSlide(index) {
+            currentIndex = ((index % totalSlides) + totalSlides) % totalSlides;
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+            updateDots();
+        }
+
+        function updateDots() {
+            if (!dotsContainer) return;
+            const dots = dotsContainer.querySelectorAll('.zk-carousel-dot');
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentIndex);
+            });
+        }
+
+        function startAutoSlide() {
+            stopAutoSlide();
+            autoSlideTimer = setInterval(() => goToSlide(currentIndex + 1), 4000);
+        }
+
+        function stopAutoSlide() {
+            if (autoSlideTimer) clearInterval(autoSlideTimer);
+        }
+
+        // Touch events for swipe
+        track.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+            stopAutoSlide();
+        }, { passive: true });
+
+        track.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            const endX = e.changedTouches[0].clientX;
+            const diff = startX - endX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) goToSlide(currentIndex + 1);
+                else goToSlide(currentIndex - 1);
+            }
+            startAutoSlide();
+        }, { passive: true });
+
+        // Dot click
+        if (dotsContainer) {
+            dotsContainer.addEventListener('click', (e) => {
+                const dot = e.target.closest('.zk-carousel-dot');
+                if (!dot) return;
+                goToSlide(parseInt(dot.dataset.index));
+                startAutoSlide();
+            });
+        }
+
+        // Start auto-slide
+        startAutoSlide();
+    })();
 </script>
 @endpush
 @endsection

@@ -461,6 +461,12 @@
                     <span class="menu-title">Statistik Dzikir User</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.dzikir-campaign.*') ? 'active' : '' }}" href="{{ route('admin.dzikir-campaign.index') }}">
+                    <i class="menu-icon mdi mdi-bullhorn-outline"></i>
+                    <span class="menu-title">Campaign Zikir</span>
+                </a>
+            </li>
         @endif
 
         @if (auth()->user()->role === 'admin' || auth()->user()->role === 'admin_gaji')
