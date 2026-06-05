@@ -14,8 +14,19 @@
     html, body {
         margin: 0; padding: 0;
         height: 100%;
-        overflow: hidden; /* Lock scroll, app-like */
+        overflow: hidden !important; /* Lock scroll, app-like */
         background-color: #061c23; /* Dark base */
+    }
+
+    /* Sembunyikan elemen layout bawaan secara instan untuk mencegah flash putih */
+    .navbar, .sidebar {
+        display: none !important;
+    }
+    .page-body-wrapper {
+        padding-top: 0 !important;
+    }
+    .main-panel {
+        width: 100% !important;
     }
     
     .content-wrapper.zikir-player {
