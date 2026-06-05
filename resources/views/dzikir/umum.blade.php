@@ -100,31 +100,10 @@
     .zk-header {
         position: fixed;
         top: 0; left: 0; right: 0;
-        padding: 16px 24px 10px 24px;
+        padding: 16px 16px 10px 16px;
         padding-top: calc(16px + env(safe-area-inset-top));
         z-index: 10;
         background: transparent;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .zk-back-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        flex-shrink: 0;
-    }
-    .zk-back-btn:active {
-        background: rgba(255, 255, 255, 0.2);
     }
 
     .zk-header-title {
@@ -139,10 +118,10 @@
     .zk-main {
         position: relative;
         z-index: 1;
-        padding: 70px 12px 16px 12px;
+        padding: 60px 0 16px 0; /* No side padding - cards edge to edge */
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 4px; /* Very tight gap */
         max-width: 800px;
         margin: 0 auto;
     }
@@ -207,8 +186,9 @@
     /* List Card */
     .zk-list-card {
         background: var(--zk-card-bg);
-        border-radius: 12px; /* Less rounded */
-        padding: 16px; /* Less inner padding */
+        border-radius: 10px;
+        padding: 16px;
+        margin: 0 8px; /* Small side margin for breathing room */
         display: flex;
         align-items: flex-start;
         gap: 16px;
@@ -283,12 +263,12 @@
     /* Bottom Nav */
     .zk-bottom-nav {
         flex-shrink: 0;
-        background: rgba(10, 31, 20, 0.85);
+        background: none;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 24px;
-        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        padding: 4px 24px;
+        padding-bottom: env(safe-area-inset-bottom);
         z-index: 10;
     }
     .zk-nav-btn {
@@ -321,9 +301,6 @@
     {{-- Scrollable Content Area --}}
     <div class="zk-scroll-area">
         <header class="zk-header">
-            <a href="{{ route('dzikir.index') }}" class="zk-back-btn">
-                <span class="material-symbols-outlined">arrow_back</span>
-            </a>
             <h1 class="zk-header-title">SEMUA ZIKIR</h1>
         </header>
 
