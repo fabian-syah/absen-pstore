@@ -1049,15 +1049,17 @@
                     btn.innerText = originalText;
                     btn.disabled = false;
                     
-                    const file = new File([blob], 'zikir-share.png', { type: 'image/png' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        navigator.share({
-                            files: [file],
-                            title: 'Bagikan Zikir',
-                        }).catch(console.error);
-                    } else {
-                        alert("Maaf, browser Anda tidak mendukung fitur berbagi gambar secara langsung.");
-                    }
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'Zikir-Harian.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    shareOverlay.classList.remove('active');
+                    alert('Gambar berhasil diunduh! Anda sekarang bisa membagikannya ke media sosial secara manual.');
                 });
             });
         });
