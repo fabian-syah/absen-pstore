@@ -3,6 +3,10 @@
 @section('title', 'Zikir Online')
 
 @push('styles')
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a1f14">
+<meta name="mobile-web-app-capable" content="yes">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <style>
@@ -29,6 +33,18 @@
     html, body, .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper, .zikir-page {
         background-color: var(--zk-bg, #0a1f14) !important;
         background: var(--zk-bg, #0a1f14) !important;
+    }
+
+    /* ---- NATIVE SCROLL TO HIDE BROWSER UI ---- */
+    html, body {
+        overflow-y: auto !important;
+        height: auto !important;
+    }
+    .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper {
+        overflow: visible !important;
+        height: auto !important;
+        transform: none !important;
+        -webkit-transform: none !important;
     }
 
     /* ---- FULLSCREEN: hide header, sidebar, footer, mobile nav ---- */
