@@ -148,6 +148,12 @@ class DzikirController extends Controller
         $activities = UserZikirActivity::where('user_id', $user->id)
                         ->whereIn('zikir_id', $zikirs->pluck('id'))
                         ->get()
+                        ->each(function($activity) {
+                            if ($activity->last_read_at && !$activity->last_read_at->isToday()) {
+                                $activity->total_count = 0;
+                                $activity->save();
+                            }
+                        })
                         ->keyBy('zikir_id');
 
         // Ambil data favorite user
@@ -168,10 +174,20 @@ class DzikirController extends Controller
 
         $user = Auth::user();
         
-        $activity = UserZikirActivity::updateOrCreate(
-            ['user_id' => $user->id, 'zikir_id' => $request->zikir_id],
-            ['total_count' => $request->count, 'last_read_at' => now()]
-        );
+        $activity = UserZikirActivity::firstOrNew([
+            'user_id' => $user->id, 
+            'zikir_id' => $request->zikir_id
+        ]);
+
+        // Hitung selisih untuk all_time_count
+        $diff = $request->count - ($activity->total_count ?? 0);
+        if ($diff > 0) {
+            $activity->all_time_count = ($activity->all_time_count ?? 0) + $diff;
+        }
+
+        $activity->total_count = $request->count;
+        $activity->last_read_at = now();
+        $activity->save();
 
         return response()->json(['success' => true, 'activity' => $activity]);
     }

@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::table('user_zikir_activities', function (Blueprint $table) {
             $table->integer('target_count')->nullable()->after('total_count');
+            $table->bigInteger('all_time_count')->default(0)->after('total_count');
         });
     }
 
@@ -26,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('user_zikir_activities', function (Blueprint $table) {
-            $table->dropColumn('target_count');
+            $table->dropColumn(['target_count', 'all_time_count']);
         });
     }
 };

@@ -442,6 +442,7 @@
                     $activity = $activities[$zikir->id] ?? null;
                     $target = $activity->target_count ?? $zikir->default_target ?? 33;
                     $progress = $activity->total_count ?? 0;
+                    $allTime = $activity->all_time_count ?? 0;
                     $isFavorite = in_array($zikir->id, $favorites);
                 @endphp
                 <div class="zp-slide" 
@@ -449,6 +450,7 @@
                      data-title="{{ $zikir->title }}"
                      data-target="{{ $target }}" 
                      data-count="{{ $progress }}"
+                     data-all-time="{{ $allTime }}"
                      data-favorite="{{ $isFavorite ? '1' : '0' }}">
                     
                     {{-- Text Card --}}
@@ -483,7 +485,7 @@
 
                         <div class="zp-bottom-icons">
                             <div style="width:24px"></div>
-                            <div class="zp-bottom-number"></div>
+                            <div class="zp-bottom-number">{{ $allTime }}</div>
                             <span class="material-symbols-outlined zp-mic-icon">mic</span>
                         </div>
                     </div>
@@ -632,14 +634,15 @@
             if(totalSlides === 0) return;
             const slide = slides[currentIndex];
             let count = parseInt(slide.dataset.count) || 0;
+            let allTime = parseInt(slide.dataset.allTime) || 0;
             const target = parseInt(slide.dataset.target) || 33;
             
             // Increment
             count++;
+            allTime++;
             
-            // Limit to target? Usually yes, or allow overflow. Let's allow overflow but cap UI if needed.
-            // Or reset if it hits target? Let's just increment.
             slide.dataset.count = count;
+            slide.dataset.allTime = allTime;
             
             // Haptic feedback
             if (window.navigator && window.navigator.vibrate) {
@@ -655,13 +658,16 @@
             if(totalSlides === 0) return;
             const slide = slides[currentIndex];
             const count = parseInt(slide.dataset.count) || 0;
+            const allTime = parseInt(slide.dataset.allTime) || 0;
             const target = parseInt(slide.dataset.target) || 33;
             
             const countEl = slide.querySelector('.zp-count');
             const fillEl = slide.querySelector('.zp-progress-fill');
             const counterCard = slide.querySelector('.zp-card-counter');
+            const allTimeEl = slide.querySelector('.zp-bottom-number');
             
             if(countEl) countEl.innerText = count;
+            if(allTimeEl) allTimeEl.innerText = allTime;
             
             if(fillEl) {
                 const percent = target > 0 ? Math.min(100, (count / target) * 100) : 0;
