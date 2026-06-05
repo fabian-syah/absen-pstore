@@ -971,8 +971,28 @@
             'https://images.unsplash.com/photo-1564121211835-e88c852648ab?q=80&w=800&auto=format&fit=crop',
             'https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?q=80&w=800&auto=format&fit=crop',
             'https://images.unsplash.com/photo-1519817914152-2a3b04313f8c?q=80&w=800&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1542816417-0983c9c9ad53?q=80&w=800&auto=format&fit=crop'
+            'https://images.unsplash.com/photo-1542816417-0983c9c9ad53?q=80&w=800&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1563203369-26f2e4a5ccf7?q=80&w=800&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=800&auto=format&fit=crop'
         ];
+
+        let imageErrorCount = 0;
+        shareBg.onerror = function() {
+            imageErrorCount++;
+            if(imageErrorCount < 3) {
+                // Retry with another random image
+                this.src = shareImages[Math.floor(Math.random() * shareImages.length)];
+            } else {
+                // Fallback to elegant dark gradient if images keep failing
+                this.style.display = 'none';
+                document.getElementById('shareCard').style.background = 'linear-gradient(135deg, #0f1e19 0%, #061c23 100%)';
+            }
+        };
+
+        shareBg.onload = function() {
+            this.style.display = 'block';
+            document.getElementById('shareCard').style.background = '#000';
+        };
 
         document.getElementById('optShare').addEventListener('click', function(e) {
             e.preventDefault();
@@ -984,6 +1004,8 @@
             
             shareArabic.innerText = arabicText;
             shareMeaning.innerText = meaningText;
+            
+            imageErrorCount = 0;
             shareBg.src = shareImages[Math.floor(Math.random() * shareImages.length)];
             
             shareOverlay.classList.add('active');
