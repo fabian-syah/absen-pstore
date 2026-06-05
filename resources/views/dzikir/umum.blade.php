@@ -46,9 +46,9 @@
         -webkit-font-smoothing: antialiased;
         position: fixed !important;
         top: 0; left: 0; right: 0; bottom: 0;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden !important;
         padding: 0 !important;
         margin: 0 !important;
         min-height: 0 !important;
@@ -58,6 +58,14 @@
         --zk-primary: #1ed760;
         --zk-text-main: #ffffff;
         --zk-text-muted: #a0aab2;
+    }
+
+    .zk-scroll-area {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        position: relative;
     }
 
     .zikir-page::before {
@@ -131,7 +139,7 @@
     .zk-main {
         position: relative;
         z-index: 1;
-        padding: 70px 12px 80px 12px; /* top for header, bottom for bottom nav */
+        padding: 70px 12px 16px 12px;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -274,17 +282,13 @@
 
     /* Bottom Nav */
     .zk-bottom-nav {
-        position: sticky;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 60px;
-        background: transparent;
+        flex-shrink: 0;
+        background: rgba(10, 31, 20, 0.85);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 8px 24px;
-        padding-bottom: calc(8px + env(safe-area-inset-bottom));
+        padding: 10px 24px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
         z-index: 10;
     }
     .zk-nav-btn {
@@ -314,12 +318,14 @@
 
 @section('content')
 <div class="content-wrapper zikir-page">
-    <header class="zk-header">
-        <a href="{{ route('dzikir.index') }}" class="zk-back-btn">
-            <span class="material-symbols-outlined">arrow_back</span>
-        </a>
-        <h1 class="zk-header-title">SEMUA ZIKIR</h1>
-    </header>
+    {{-- Scrollable Content Area --}}
+    <div class="zk-scroll-area">
+        <header class="zk-header">
+            <a href="{{ route('dzikir.index') }}" class="zk-back-btn">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <h1 class="zk-header-title">SEMUA ZIKIR</h1>
+        </header>
 
     <div class="zk-main">
         {{-- Featured Card --}}
@@ -366,8 +372,9 @@
             </a>
         @endforeach
     </div>
+    </div> {{-- end .zk-scroll-area --}}
 
-    {{-- Bottom Nav Controls --}}
+    {{-- Bottom Nav Controls (fixed at bottom) --}}
     <div class="zk-bottom-nav">
         <a href="{{ route('dzikir.index') }}" class="zk-nav-btn">
             <span class="material-symbols-outlined">arrow_back</span>
