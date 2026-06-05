@@ -121,4 +121,52 @@ class DzikirController extends Controller
 
         return view('dzikir.umum', compact('zikirs', 'activities', 'favorites', 'campaigns'));
     }
+
+    public function play($category, $id = null)
+    {
+        $user = Auth::user();
+
+        // Ambil semua zikir berdasarkan kategori (contoh: umum)
+        $zikirs = Zikir::where('category', $category)->orderBy('id')->get();
+        
+        if ($zikirs->isEmpty()) {
+            return redirect()->route('dzikir.index')->with('error', 'Kategori tidak ditemukan');
+        }
+
+        // Tentukan initial index berdasarkan ID (jika ada)
+        $initialIndex = 0;
+        if ($id) {
+            $findIndex = $zikirs->search(function ($zikir) use ($id) {
+                return $zikir->id == $id;
+            });
+            if ($findIndex !== false) {
+                $initialIndex = $findIndex;
+            }
+        }
+
+        // Ambil data progres user untuk zikir-zikir tersebut
+        $activities = UserZikirActivity::where('user_id', $user->id)
+                        ->whereIn('zikir_id', $zikirs->pluck('id'))
+                        ->get()
+                        ->keyBy('zikir_id');
+
+        return view('dzikir.play', compact('zikirs', 'activities', 'category', 'initialIndex'));
+    }
+
+    public function saveProgress(Request $request)
+    {
+        $request->validate([
+            'zikir_id' => 'required|exists:zikirs,id',
+            'count' => 'required|integer|min:0'
+        ]);
+
+        $user = Auth::user();
+        
+        $activity = UserZikirActivity::updateOrCreate(
+            ['user_id' => $user->id, 'zikir_id' => $request->zikir_id],
+            ['total_count' => $request->count, 'last_read_at' => now()]
+        );
+
+        return response()->json(['success' => true, 'activity' => $activity]);
+    }
 }

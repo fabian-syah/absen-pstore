@@ -453,7 +453,7 @@
                 $progress = isset($activities[$zikir->id]) ? $activities[$zikir->id]->total_count : 0;
                 $isFavorite = in_array($zikir->id, $favorites);
             @endphp
-            <a href="#" class="zk-list-card">
+            <a href="{{ route('dzikir.play', ['category' => 'umum', 'id' => $zikir->id]) }}" class="zk-list-card">
                 <div class="zk-hex-number">{{ $index + 1 }}</div>
                 <div class="zk-list-content">
                     <h3 class="zk-list-title">{{ $zikir->title }}</h3>
