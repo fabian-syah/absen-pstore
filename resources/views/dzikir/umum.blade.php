@@ -104,7 +104,7 @@
     .zk-main {
         position: relative;
         z-index: 1;
-        padding: 80px 24px 100px 24px; /* Space for header and nav */
+        padding: 80px 24px 180px 24px; /* Space for header and extra scroll space */
         display: flex;
         flex-direction: column;
         gap: 16px;
