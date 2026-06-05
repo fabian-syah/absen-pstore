@@ -419,6 +419,93 @@
     .zp-modal-btn.save {
         color: #2e7d32;
     }
+
+    /* Share Overlay */
+    .zp-share-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 30000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .zp-share-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .zp-share-card {
+        width: 100%;
+        max-width: 360px;
+        aspect-ratio: 3/4;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        background-color: #000;
+        margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .zp-share-bg {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        object-fit: cover;
+        opacity: 0.5;
+    }
+    .zp-share-content {
+        position: relative;
+        z-index: 2;
+        padding: 30px;
+        text-align: center;
+    }
+    .zp-share-arabic {
+        font-family: 'Amiri', serif;
+        font-size: 32px;
+        color: #fff;
+        margin-bottom: 16px;
+        line-height: 1.6;
+    }
+    .zp-share-meaning {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.5;
+    }
+    .zp-share-actions {
+        width: 100%;
+        max-width: 360px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .zp-share-btn-primary {
+        background: #1976d2;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 14px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        text-transform: uppercase;
+    }
+    .zp-share-btn-cancel {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.6);
+        border: none;
+        padding: 10px;
+        font-size: 14px;
+        cursor: pointer;
+        width: 100%;
+    }
 </style>
 </head>
 <body>
@@ -539,6 +626,24 @@
     <input type="hidden" name="count" id="formCount">
     <input type="hidden" name="all_time" id="formAllTime">
 </form>
+
+{{-- Share Overlay --}}
+<div class="zp-share-overlay" id="shareOverlay">
+    <div class="zp-share-card" id="shareCard">
+        <img src="" class="zp-share-bg" id="shareBg" crossorigin="anonymous">
+        <div class="zp-share-content">
+            <div class="zp-share-arabic" id="shareArabic"></div>
+            <div class="zp-share-meaning" id="shareMeaning"></div>
+        </div>
+    </div>
+    
+    <div class="zp-share-actions">
+        <button class="zp-share-btn-primary" id="btnShareConfirm">BERBAGI</button>
+        <button class="zp-share-btn-cancel" id="btnShareCancel">Batal</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 @push('scripts')
 <script>
@@ -854,6 +959,65 @@
                     slide.dataset.target = newTarget;
                     updateCounterUI();
                 }
+            });
+        });
+
+        // --- SHARE LOGIC ---
+        const shareOverlay = document.getElementById('shareOverlay');
+        const shareArabic = document.getElementById('shareArabic');
+        const shareMeaning = document.getElementById('shareMeaning');
+        const shareBg = document.getElementById('shareBg');
+        const shareImages = [
+            'https://images.unsplash.com/photo-1564121211835-e88c852648ab?q=80&w=800&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?q=80&w=800&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1519817914152-2a3b04313f8c?q=80&w=800&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1542816417-0983c9c9ad53?q=80&w=800&auto=format&fit=crop'
+        ];
+
+        document.getElementById('optShare').addEventListener('click', function(e) {
+            e.preventDefault();
+            overlay.classList.remove('active');
+            
+            const slide = slides[currentIndex];
+            const arabicText = slide.querySelector('.zp-arabic').innerText;
+            const meaningText = slide.querySelector('.zp-meaning').innerText;
+            
+            shareArabic.innerText = arabicText;
+            shareMeaning.innerText = meaningText;
+            shareBg.src = shareImages[Math.floor(Math.random() * shareImages.length)];
+            
+            shareOverlay.classList.add('active');
+        });
+
+        document.getElementById('btnShareCancel').addEventListener('click', function() {
+            shareOverlay.classList.remove('active');
+        });
+
+        document.getElementById('btnShareConfirm').addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.innerText;
+            btn.innerText = 'MEMPROSES...';
+            btn.disabled = true;
+
+            html2canvas(document.getElementById('shareCard'), { 
+                useCORS: true, 
+                backgroundColor: '#000',
+                scale: 2 // High resolution
+            }).then(canvas => {
+                canvas.toBlob(function(blob) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    
+                    const file = new File([blob], 'zikir-share.png', { type: 'image/png' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({
+                            files: [file],
+                            title: 'Bagikan Zikir',
+                        }).catch(console.error);
+                    } else {
+                        alert("Maaf, browser Anda tidak mendukung fitur berbagi gambar secara langsung.");
+                    }
+                });
             });
         });
 
