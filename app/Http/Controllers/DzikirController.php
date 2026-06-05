@@ -179,10 +179,8 @@ class DzikirController extends Controller
             'zikir_id' => $request->zikir_id
         ]);
 
-        // Hitung selisih untuk all_time_count
-        $diff = $request->count - ($activity->total_count ?? 0);
-        if ($diff > 0) {
-            $activity->all_time_count = ($activity->all_time_count ?? 0) + $diff;
+        if ($request->has('all_time')) {
+            $activity->all_time_count = max($activity->all_time_count ?? 0, $request->all_time);
         }
 
         $activity->total_count = $request->count;

@@ -537,6 +537,7 @@
     @csrf
     <input type="hidden" name="zikir_id" id="formZikirId">
     <input type="hidden" name="count" id="formCount">
+    <input type="hidden" name="all_time" id="formAllTime">
 </form>
 
 @push('scripts')
@@ -653,7 +654,7 @@
             }
 
             updateCounterUI();
-            debouncedSave(slide.dataset.id, count);
+            debouncedSave(slide.dataset.id, count, allTime);
         };
 
         function updateCounterUI() {
@@ -683,12 +684,13 @@
             }
         }
 
-        function debouncedSave(zikirId, count) {
+        function debouncedSave(zikirId, count, allTime) {
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(() => {
                 const form = document.getElementById('progressForm');
                 document.getElementById('formZikirId').value = zikirId;
                 document.getElementById('formCount').value = count;
+                document.getElementById('formAllTime').value = allTime;
                 
                 const formData = new FormData(form);
                 fetch(form.action, {
