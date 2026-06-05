@@ -884,17 +884,6 @@
             });
         });
 
-        // Share
-        document.getElementById('optShare').addEventListener('click', function(e) {
-            e.preventDefault();
-            overlay.classList.remove('active');
-            if(navigator.share) {
-                navigator.share({
-                    title: 'Ayo berzikir',
-                    text: `Saya sedang membaca zikir ${slides[currentIndex].dataset.title}. Yuk ikut berzikir di aplikasi absensi-pstore!`
-                });
-            }
-        });
 
         // --- RESET LOGIC ---
         document.getElementById('optReset').addEventListener('click', function(e) {
@@ -1049,17 +1038,28 @@
                     btn.innerText = originalText;
                     btn.disabled = false;
                     
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'Zikir-Harian.png';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    
-                    shareOverlay.classList.remove('active');
-                    alert('Gambar berhasil diunduh! Anda sekarang bisa membagikannya ke media sosial secara manual.');
+                    const file = new File([blob], 'zikir-share.png', { type: 'image/png' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({
+                            files: [file],
+                            title: 'Bagikan Zikir',
+                        }).then(() => {
+                            shareOverlay.classList.remove('active');
+                        }).catch(console.error);
+                    } else {
+                        // Fallback to download if browser doesn't support sharing files
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'Zikir-Harian.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        shareOverlay.classList.remove('active');
+                        alert('Gambar berhasil diunduh karena browser ini tidak mendukung fitur Berbagi Langsung.');
+                    }
                 });
             });
         });
