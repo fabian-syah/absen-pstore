@@ -383,6 +383,9 @@
         .zk-activity-row { gap: 20px; }
         .zk-activity-card { padding: 28px; }
         .zk-activity-title { font-size: 16px; }
+        .zikir-page::before {
+            background-position: center center;
+        }
     }
 
     /* Small mobile (< 400px) */
