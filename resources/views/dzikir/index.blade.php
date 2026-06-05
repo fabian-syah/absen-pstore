@@ -27,8 +27,8 @@
     }
 
     html, body, .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper, .zikir-page {
-        background-color: transparent !important;
-        background: transparent !important;
+        background-color: var(--zk-bg, #0a1f14) !important;
+        background: var(--zk-bg, #0a1f14) !important;
     }
 
     /* ---- FULLSCREEN: hide header, sidebar, footer, mobile nav ---- */
@@ -55,6 +55,7 @@
     .zikir-page {
         font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
+        background: var(--zk-bg);
         min-height: 100vh;
         min-height: 100dvh;
         padding: 0 !important;
@@ -65,21 +66,21 @@
     }
 
     /* Background image - blurred mosque dome, stays fixed */
-    body::before {
+    .zikir-page::before {
         content: '';
         position: fixed;
         top: -40px; left: -40px; right: -40px; bottom: -40px;
         background-color: var(--zk-bg);
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
-            url('{{ asset("public/images/mosque-bg.png") }}');
+            url('{{ asset("public/images/mosque_dome_bg.png") }}');
         background-size: cover;
         background-position: center bottom;
         background-repeat: no-repeat;
-        filter: blur(6px);
-        -webkit-filter: blur(6px);
+        filter: blur(4px);
+        -webkit-filter: blur(4px);
         pointer-events: none;
-        z-index: -9999;
+        z-index: 0;
     }
 
     /* Material Symbols Config */
