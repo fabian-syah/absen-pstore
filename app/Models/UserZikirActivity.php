@@ -10,7 +10,7 @@ class UserZikirActivity extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'zikir_id', 'total_count', 'last_read_at'
+        'user_id', 'zikir_id', 'total_count', 'target_count', 'last_read_at'
     ];
 
     protected $casts = [

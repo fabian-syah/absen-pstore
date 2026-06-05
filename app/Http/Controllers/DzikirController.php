@@ -150,7 +150,13 @@ class DzikirController extends Controller
                         ->get()
                         ->keyBy('zikir_id');
 
-        return view('dzikir.play', compact('zikirs', 'activities', 'category', 'initialIndex'));
+        // Ambil data favorite user
+        $favorites = UserZikirFavorite::where('user_id', $user->id)
+                        ->whereIn('zikir_id', $zikirs->pluck('id'))
+                        ->pluck('zikir_id')
+                        ->toArray();
+
+        return view('dzikir.play', compact('zikirs', 'activities', 'favorites', 'category', 'initialIndex'));
     }
 
     public function saveProgress(Request $request)
@@ -166,6 +172,47 @@ class DzikirController extends Controller
             ['user_id' => $user->id, 'zikir_id' => $request->zikir_id],
             ['total_count' => $request->count, 'last_read_at' => now()]
         );
+
+        return response()->json(['success' => true, 'activity' => $activity]);
+    }
+    public function updateTarget(Request $request)
+    {
+        $request->validate([
+            'zikir_id' => 'required|exists:zikirs,id',
+            'target_count' => 'required|integer|min:1'
+        ]);
+
+        $user = Auth::user();
+        
+        $activity = UserZikirActivity::updateOrCreate(
+            ['user_id' => $user->id, 'zikir_id' => $request->zikir_id],
+            ['target_count' => $request->target_count]
+        );
+
+        return response()->json(['success' => true, 'activity' => $activity]);
+    }
+
+    public function resetProgress(Request $request)
+    {
+        $request->validate([
+            'zikir_id' => 'required|exists:zikirs,id'
+        ]);
+
+        $user = Auth::user();
+        
+        $activity = UserZikirActivity::where('user_id', $user->id)
+            ->where('zikir_id', $request->zikir_id)
+            ->first();
+
+        if ($activity) {
+            $activity->update(['total_count' => 0]);
+        } else {
+            $activity = UserZikirActivity::create([
+                'user_id' => $user->id,
+                'zikir_id' => $request->zikir_id,
+                'total_count' => 0
+            ]);
+        }
 
         return response()->json(['success' => true, 'activity' => $activity]);
     }

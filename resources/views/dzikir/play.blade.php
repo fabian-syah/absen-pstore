@@ -296,6 +296,126 @@
         color: #1ed760;
         font-weight: 600;
     }
+
+    /* Options Dropdown */
+    .zp-options-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 10000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+    .zp-options-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .zp-options-menu {
+        position: absolute;
+        top: 80px; left: 24px;
+        background: #fdf5f5; /* Light reddish white like screenshot */
+        border-radius: 12px;
+        width: 250px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        transform: translateY(-10px);
+        transition: transform 0.2s;
+        overflow: hidden;
+    }
+    .zp-options-overlay.active .zp-options-menu {
+        transform: translateY(0);
+    }
+    .zp-option-title {
+        padding: 16px;
+        font-size: 14px;
+        color: rgba(0,0,0,0.4);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .zp-option-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        font-size: 15px;
+        color: rgba(0,0,0,0.7);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .zp-option-item:active {
+        background: rgba(0,0,0,0.05);
+    }
+    .zp-option-item.text-red {
+        color: #e53935;
+    }
+    .zp-option-value {
+        font-weight: 600;
+    }
+
+    /* Target Modal */
+    .zp-modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 10001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+    .zp-modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .zp-modal {
+        background: #fdf5f5;
+        border-radius: 16px;
+        width: 80%;
+        max-width: 300px;
+        padding: 24px;
+        text-align: center;
+        transform: scale(0.95);
+        transition: transform 0.2s;
+    }
+    .zp-modal-overlay.active .zp-modal {
+        transform: scale(1);
+    }
+    .zp-modal-title {
+        color: rgba(0,0,0,0.6);
+        font-size: 18px;
+        margin-bottom: 24px;
+    }
+    .zp-modal-input {
+        width: 60px;
+        font-size: 24px;
+        text-align: center;
+        border: none;
+        border-bottom: 2px solid #2e7d32;
+        background: transparent;
+        color: rgba(0,0,0,0.7);
+        padding-bottom: 4px;
+        outline: none;
+        margin-bottom: 32px;
+    }
+    .zp-modal-actions {
+        display: flex;
+        justify-content: space-around;
+    }
+    .zp-modal-btn {
+        background: none;
+        border: none;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 8px 16px;
+    }
+    .zp-modal-btn.cancel {
+        color: rgba(0,0,0,0.4);
+    }
+    .zp-modal-btn.save {
+        color: #2e7d32;
+    }
 </style>
 @endpush
 
@@ -319,18 +439,22 @@
         <div class="zp-track" id="sliderTrack">
             @foreach($zikirs as $index => $zikir)
                 @php
-                    $target = $zikir->default_target ?? 33;
-                    $progress = isset($activities[$zikir->id]) ? $activities[$zikir->id]->total_count : 0;
+                    $activity = $activities[$zikir->id] ?? null;
+                    $target = $activity->target_count ?? $zikir->default_target ?? 33;
+                    $progress = $activity->total_count ?? 0;
+                    $isFavorite = in_array($zikir->id, $favorites);
                 @endphp
                 <div class="zp-slide" 
                      data-id="{{ $zikir->id }}" 
+                     data-title="{{ $zikir->title }}"
                      data-target="{{ $target }}" 
-                     data-count="{{ $progress }}">
+                     data-count="{{ $progress }}"
+                     data-favorite="{{ $isFavorite ? '1' : '0' }}">
                     
                     {{-- Text Card --}}
                     <div class="zp-card-text">
                         <div class="zp-card-icons">
-                            <a href="#" class="zp-icon-btn"><span class="material-symbols-outlined" style="font-size: 20px;">more_vert</span></a>
+                            <a href="#" class="zp-icon-btn btn-more-options"><span class="material-symbols-outlined" style="font-size: 20px;">more_vert</span></a>
                             <a href="#" class="zp-icon-btn"><span class="material-symbols-outlined" style="font-size: 20px;">info</span></a>
                         </div>
                         
@@ -376,6 +500,32 @@
         <a href="{{ route('dzikir.umum') }}" class="zp-close-btn">
             <span class="material-symbols-outlined">close</span>
         </a>
+    </div>
+    </div>
+</div>
+
+{{-- Options Dropdown Menu --}}
+<div class="zp-options-overlay" id="optionsOverlay">
+    <div class="zp-options-menu">
+        <div class="zp-option-title" id="optTitle">Kalimat Tauhid</div>
+        <a href="#" class="zp-option-item" id="optShare">Berbagi</a>
+        <a href="#" class="zp-option-item" id="optFavorite">Tambahkan ke Favorit</a>
+        <a href="#" class="zp-option-item" id="optTarget">
+            Tujuan harian <span class="zp-option-value" id="optTargetValue">33</span>
+        </a>
+        <a href="#" class="zp-option-item text-red" id="optReset">Mengatur ulang penghitung</a>
+    </div>
+</div>
+
+{{-- Target Modal --}}
+<div class="zp-modal-overlay" id="targetModalOverlay">
+    <div class="zp-modal">
+        <div class="zp-modal-title">Tujuan harian</div>
+        <input type="number" class="zp-modal-input" id="targetInput" inputmode="numeric" min="1">
+        <div class="zp-modal-actions">
+            <button class="zp-modal-btn cancel" id="btnCancelTarget">BATAL</button>
+            <button class="zp-modal-btn save" id="btnSaveTarget">SIMPAN</button>
+        </div>
     </div>
 </div>
 
@@ -536,14 +686,129 @@
                 fetch(form.action, {
                     method: 'POST',
                     body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                }).then(res => res.json())
-                  .then(data => console.log('Saved:', data))
-                  .catch(err => console.error(err));
-            }, 1000); // Save to DB 1 sec after last tap
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).catch(err => console.error(err));
+            }, 1000);
         }
+
+        // --- OPTIONS MENU LOGIC ---
+        const overlay = document.getElementById('optionsOverlay');
+        const optTitle = document.getElementById('optTitle');
+        const optTargetValue = document.getElementById('optTargetValue');
+        const optFavorite = document.getElementById('optFavorite');
+        
+        document.querySelectorAll('.btn-more-options').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const slide = slides[currentIndex];
+                optTitle.innerText = slide.dataset.title;
+                optTargetValue.innerText = slide.dataset.target;
+                optFavorite.innerText = slide.dataset.favorite === '1' ? 'Hapus dari Favorit' : 'Tambahkan ke Favorit';
+                overlay.classList.add('active');
+            });
+        });
+
+        overlay.addEventListener('click', function(e) {
+            if(e.target === overlay) overlay.classList.remove('active');
+        });
+
+        // Favorite
+        optFavorite.addEventListener('click', function(e) {
+            e.preventDefault();
+            overlay.classList.remove('active');
+            const slide = slides[currentIndex];
+            const zikirId = slide.dataset.id;
+            
+            fetch(`{{ url('dzikir/favorite/toggle') }}/${zikirId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            }).then(r => r.json()).then(data => {
+                slide.dataset.favorite = slide.dataset.favorite === '1' ? '0' : '1';
+                // optional alert
+            });
+        });
+
+        // Share
+        document.getElementById('optShare').addEventListener('click', function(e) {
+            e.preventDefault();
+            overlay.classList.remove('active');
+            if(navigator.share) {
+                navigator.share({
+                    title: 'Ayo berzikir',
+                    text: `Saya sedang membaca zikir ${slides[currentIndex].dataset.title}. Yuk ikut berzikir di aplikasi absensi-pstore!`
+                });
+            }
+        });
+
+        // --- RESET LOGIC ---
+        document.getElementById('optReset').addEventListener('click', function(e) {
+            e.preventDefault();
+            overlay.classList.remove('active');
+            
+            const slide = slides[currentIndex];
+            const zikirId = slide.dataset.id;
+            
+            fetch('{{ route("dzikir.reset-progress") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ zikir_id: zikirId })
+            }).then(r => r.json()).then(data => {
+                if(data.success) {
+                    slide.dataset.count = 0;
+                    updateCounterUI();
+                }
+            });
+        });
+
+        // --- TARGET MODAL LOGIC ---
+        const modalOverlay = document.getElementById('targetModalOverlay');
+        const targetInput = document.getElementById('targetInput');
+
+        document.getElementById('optTarget').addEventListener('click', function(e) {
+            e.preventDefault();
+            overlay.classList.remove('active');
+            const currentTarget = slides[currentIndex].dataset.target;
+            targetInput.value = currentTarget;
+            modalOverlay.classList.add('active');
+            targetInput.focus();
+        });
+
+        document.getElementById('btnCancelTarget').addEventListener('click', function() {
+            modalOverlay.classList.remove('active');
+        });
+
+        document.getElementById('btnSaveTarget').addEventListener('click', function() {
+            const newTarget = parseInt(targetInput.value);
+            if(isNaN(newTarget) || newTarget < 1) return;
+
+            modalOverlay.classList.remove('active');
+            
+            const slide = slides[currentIndex];
+            const zikirId = slide.dataset.id;
+            
+            fetch('{{ route("dzikir.update-target") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ zikir_id: zikirId, target_count: newTarget })
+            }).then(r => r.json()).then(data => {
+                if(data.success) {
+                    slide.dataset.target = newTarget;
+                    updateCounterUI();
+                }
+            });
+        });
 
         // Hide browser native UI (if installed as PWA)
         document.body.style.overflow = 'hidden';

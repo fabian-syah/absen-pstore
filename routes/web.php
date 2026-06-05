@@ -81,6 +81,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/dzikir/umum', [App\Http\Controllers\DzikirController::class, 'umum'])->name('dzikir.umum');
     Route::get('/dzikir/play/{category}/{id?}', [App\Http\Controllers\DzikirController::class, 'play'])->name('dzikir.play');
     Route::post('/dzikir/progress', [App\Http\Controllers\DzikirController::class, 'saveProgress'])->name('dzikir.progress');
+    Route::post('/dzikir/update-target', [App\Http\Controllers\DzikirController::class, 'updateTarget'])->name('dzikir.update-target');
+    Route::post('/dzikir/reset-progress', [App\Http\Controllers\DzikirController::class, 'resetProgress'])->name('dzikir.reset-progress');
 
     // Route Test Notifikasi
     Route::get('/test-notification', [DashboardController::class, 'testNotification'])->name('test.notification');
