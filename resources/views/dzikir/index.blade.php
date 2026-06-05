@@ -38,13 +38,21 @@
     /* ---- NATIVE SCROLL TO HIDE BROWSER UI ---- */
     html, body {
         overflow-y: auto !important;
+        overflow-x: hidden !important;
         height: auto !important;
     }
-    .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper {
+    .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper, .zikir-page {
         overflow: visible !important;
         height: auto !important;
+        min-height: 100vh;
+        /* BREAK ALL CONTAINING BLOCKS */
         transform: none !important;
         -webkit-transform: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+        perspective: none !important;
+        backdrop-filter: none !important;
+        will-change: auto !important;
     }
 
     /* ---- FULLSCREEN: hide header, sidebar, footer, mobile nav ---- */
@@ -71,7 +79,6 @@
     .zikir-page {
         font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
-        background: var(--zk-bg);
         min-height: 100vh;
         min-height: 100dvh;
         padding: 0 !important;
@@ -81,23 +88,17 @@
         padding-bottom: env(safe-area-inset-bottom) !important;
     }
 
-    /* Background image - blurred mosque dome, using absolute wrapper + sticky child to prevent scroll issues */
-    .zk-sticky-wrapper {
-        position: absolute;
+    /* Background image - blurred mosque dome, fixed without scrolling */
+    .zikir-page::before {
+        content: '';
+        position: fixed !important;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 0;
-        pointer-events: none;
-    }
-    .zk-bg-sticky {
-        position: -webkit-sticky;
-        position: sticky;
-        top: -40px;
-        left: -40px;
-        width: calc(100vw + 80px);
-        height: calc(100vh + 80px);
+        width: 100vw;
+        height: 100vh;
+        /* Use scale to cover blur edges without expanding layout bounds */
+        transform: scale(1.1) !important;
+        -webkit-transform: scale(1.1) !important;
         background-color: var(--zk-bg);
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
@@ -107,6 +108,8 @@
         background-repeat: no-repeat;
         filter: blur(6px);
         -webkit-filter: blur(6px);
+        pointer-events: none;
+        z-index: 0;
     }
 
     /* Material Symbols Config */
@@ -409,7 +412,7 @@
         .zk-activity-row { gap: 20px; }
         .zk-activity-card { padding: 28px; }
         .zk-activity-title { font-size: 16px; }
-        .zk-bg-sticky {
+        .zikir-page::before {
             background-position: center center;
         }
     }
@@ -432,11 +435,6 @@
 
 @section('content')
 <div class="content-wrapper zikir-page">
-    {{-- Sticky Background Wrapper --}}
-    <div class="zk-sticky-wrapper">
-        <div class="zk-bg-sticky"></div>
-    </div>
-
     {{-- Fixed Header - ZIKIR aligned left --}}
     <header class="zk-header">
         <h1 class="zk-header-title">ZIKIR</h1>
