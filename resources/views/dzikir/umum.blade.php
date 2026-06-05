@@ -311,9 +311,9 @@
         background: none;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 8px 24px;
-        padding-bottom: env(safe-area-inset-bottom);
+        justify-content: flex-end;
+        padding: 24px 24px;
+        padding-bottom: calc(24px + env(safe-area-inset-bottom));
         z-index: 10;
         pointer-events: none;
     }
@@ -352,7 +352,7 @@
         .zk-carousel-slide { padding: 14px; border-radius: 14px; }
         .zk-campaign-title { font-size: 14px; }
         .zk-campaign-number { font-size: 28px; }
-        .zk-bottom-nav { padding: 6px 16px; }
+        .zk-bottom-nav { padding: 16px 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
         .zk-nav-btn { width: 38px; height: 38px; }
     }
 
@@ -376,7 +376,7 @@
         .zk-carousel-slide { padding: 24px; border-radius: 22px; }
         .zk-campaign-title { font-size: 18px; }
         .zk-campaign-number { font-size: 44px; }
-        .zk-bottom-nav { padding: 12px 40px; }
+        .zk-bottom-nav { padding: 24px 40px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
         .zk-nav-btn { width: 48px; height: 48px; }
     }
 
@@ -391,7 +391,7 @@
         .zk-carousel-wrapper { margin: 0 16px 12px 16px; border-radius: 24px; }
         .zk-carousel-slide { padding: 28px; border-radius: 24px; }
         .zk-campaign-number { font-size: 48px; }
-        .zk-bottom-nav { padding: 14px 48px; }
+        .zk-bottom-nav { padding: 32px 48px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
         .zk-nav-btn { width: 50px; height: 50px; }
     }
 
@@ -471,9 +471,6 @@
     <div class="zk-bottom-nav">
         <a href="{{ route('dzikir.index') }}" class="zk-nav-btn">
             <span class="material-symbols-outlined">arrow_back</span>
-        </a>
-        <a href="{{ route('dzikir.index') }}" class="zk-nav-btn">
-            <span class="material-symbols-outlined">close</span>
         </a>
     </div>
 </div>
