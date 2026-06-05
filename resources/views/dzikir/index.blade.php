@@ -81,11 +81,22 @@
         padding-bottom: env(safe-area-inset-bottom) !important;
     }
 
-    /* Background image - blurred mosque dome, stays fixed */
-    .zikir-page::before {
-        content: '';
-        position: fixed;
-        top: -40px; left: -40px; right: -40px; bottom: -40px;
+    /* Background image - blurred mosque dome, using sticky wrapper to prevent scroll issues */
+    .zk-sticky-wrapper {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+        width: 100%;
+        height: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .zk-bg-sticky {
+        position: absolute;
+        top: -40px;
+        left: -40px;
+        width: calc(100vw + 80px);
+        height: calc(100vh + 80px);
         background-color: var(--zk-bg);
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
@@ -95,8 +106,6 @@
         background-repeat: no-repeat;
         filter: blur(6px);
         -webkit-filter: blur(6px);
-        pointer-events: none;
-        z-index: 0;
     }
 
     /* Material Symbols Config */
@@ -399,7 +408,7 @@
         .zk-activity-row { gap: 20px; }
         .zk-activity-card { padding: 28px; }
         .zk-activity-title { font-size: 16px; }
-        .zikir-page::before {
+        .zk-bg-sticky {
             background-position: center center;
         }
     }
@@ -422,6 +431,11 @@
 
 @section('content')
 <div class="content-wrapper zikir-page">
+    {{-- Sticky Background Wrapper --}}
+    <div class="zk-sticky-wrapper">
+        <div class="zk-bg-sticky"></div>
+    </div>
+
     {{-- Fixed Header - ZIKIR aligned left --}}
     <header class="zk-header">
         <h1 class="zk-header-title">ZIKIR</h1>
