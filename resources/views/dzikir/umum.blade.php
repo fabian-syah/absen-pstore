@@ -15,7 +15,7 @@
     .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper, .zikir-page {
         overflow: visible !important;
         height: auto !important;
-        min-height: 100vh;
+        min-height: auto !important;
         transform: none !important;
         -webkit-transform: none !important;
         filter: none !important;
@@ -31,7 +31,7 @@
     .main-panel {
         margin-left: 0 !important;
         width: 100% !important;
-        min-height: 100vh;
+        min-height: auto !important;
     }
     .page-body-wrapper { padding-top: 0 !important; }
     .content-wrapper { padding: 0 !important; }
@@ -39,8 +39,7 @@
     .zikir-page {
         font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
-        min-height: 100vh;
-        min-height: 100dvh;
+        min-height: auto !important;
         padding: 0 !important;
         position: relative;
         overflow-x: hidden;
@@ -85,11 +84,31 @@
     .zk-header {
         position: fixed;
         top: 0; left: 0; right: 0;
-        padding: 24px 24px 10px 24px;
-        padding-top: calc(24px + env(safe-area-inset-top));
+        padding: 16px 24px 10px 24px;
+        padding-top: calc(16px + env(safe-area-inset-top));
         z-index: 10;
-        /* Transparent background as requested */
         background: transparent;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .zk-back-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        flex-shrink: 0;
+    }
+    .zk-back-btn:active {
+        background: rgba(255, 255, 255, 0.2);
     }
 
     .zk-header-title {
@@ -245,39 +264,7 @@
         color: #f1c40f; /* Star color */
     }
 
-    /* Bottom Nav */
-    .zk-bottom-nav {
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        height: 80px;
-        background: transparent; /* Remove gradient background */
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 24px;
-        padding-bottom: env(safe-area-inset-bottom);
-        z-index: 10;
-        pointer-events: none;
-    }
-    .zk-nav-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        pointer-events: auto;
-        transition: background 0.2s;
-    }
-    .zk-nav-btn:active {
-        background: rgba(255, 255, 255, 0.2);
-    }
+
     
     @media (min-width: 1024px) {
         .zk-main { padding-top: 100px; }
@@ -288,6 +275,9 @@
 @section('content')
 <div class="content-wrapper zikir-page">
     <header class="zk-header">
+        <a href="{{ route('dzikir.index') }}" class="zk-back-btn">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </a>
         <h1 class="zk-header-title">SEMUA ZIKIR</h1>
     </header>
 
@@ -337,15 +327,7 @@
         @endforeach
     </div>
 
-    {{-- Bottom Nav Controls --}}
-    <div class="zk-bottom-nav">
-        <a href="{{ route('dzikir.index') }}" class="zk-nav-btn">
-            <span class="material-symbols-outlined">arrow_back</span>
-        </a>
-        <a href="{{ route('dzikir.index') }}" class="zk-nav-btn">
-            <span class="material-symbols-outlined">close</span>
-        </a>
-    </div>
+
 </div>
 
 @push('scripts')
