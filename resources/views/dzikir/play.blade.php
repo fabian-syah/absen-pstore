@@ -1,16 +1,17 @@
-@extends('layout.master')
-
-@section('title', 'Zikir Player')
-
-@push('styles')
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#061c23">
-<meta name="mobile-web-app-capable" content="yes">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<style>
-    /* Reset & Base */
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1, user-scalable=0">
+    <title>Zikir Player</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#061c23">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        /* Reset & Base */
     html, body {
         margin: 0; padding: 0;
         height: 100%;
@@ -18,16 +19,7 @@
         background-color: #061c23; /* Dark base */
     }
 
-    /* Sembunyikan elemen layout bawaan secara instan untuk mencegah flash putih */
-    .navbar, .sidebar {
-        display: none !important;
-    }
-    .page-body-wrapper {
-        padding-top: 0 !important;
-    }
-    .main-panel {
-        width: 100% !important;
-    }
+
     
     .content-wrapper.zikir-player {
         position: fixed;
@@ -428,9 +420,8 @@
         color: #2e7d32;
     }
 </style>
-@endpush
-
-@section('content')
+</head>
+<body>
 <div class="content-wrapper zikir-player">
     {{-- Top Info --}}
     <div class="zp-top">
@@ -827,13 +818,7 @@
             });
         });
 
-        // Hide browser native UI (if installed as PWA)
-        document.body.style.overflow = 'hidden';
-        const sidebar = document.querySelector('.sidebar');
-        const navbar = document.querySelector('.navbar');
-        if(sidebar) sidebar.style.display = 'none';
-        if(navbar) navbar.style.display = 'none';
     });
 </script>
-@endpush
-@endsection
+</body>
+</html>
