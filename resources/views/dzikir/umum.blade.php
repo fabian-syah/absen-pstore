@@ -293,8 +293,66 @@
         background: rgba(255, 255, 255, 0.2);
     }
     
+    /* ---- RESPONSIVE: Small phones (< 380px) ---- */
+    @media (max-width: 380px) {
+        .zk-header { padding: 12px 12px 8px 12px; }
+        .zk-header-title { font-size: 12px; }
+        .zk-main { padding: 50px 0 16px 0; gap: 3px; }
+        .zk-list-card { padding: 12px; margin: 0 6px; gap: 10px; }
+        .zk-list-title { font-size: 15px; }
+        .zk-list-latin { font-size: 12px; }
+        .zk-list-progress { font-size: 11px; }
+        .zk-hex-number { width: 26px; height: 30px; font-size: 12px; }
+        .zk-list-action { width: 34px; height: 34px; }
+        .zk-featured { padding: 14px; border-radius: 14px; margin: 0 6px; }
+        .zk-featured-title { font-size: 14px; }
+        .zk-featured-number { font-size: 32px; }
+        .zk-bottom-nav { padding: 6px 16px; }
+        .zk-nav-btn { width: 38px; height: 38px; }
+    }
+
+    /* ---- RESPONSIVE: Regular phones (381px - 767px) ---- */
+    @media (min-width: 381px) and (max-width: 767px) {
+        .zk-main { padding: 60px 0 16px 0; gap: 4px; }
+        .zk-list-card { margin: 0 8px; }
+        .zk-featured { margin: 0 8px; }
+    }
+
+    /* ---- RESPONSIVE: Tablets (768px - 1023px) ---- */
+    @media (min-width: 768px) {
+        .zk-main { padding: 80px 0 20px 0; gap: 6px; max-width: 600px; }
+        .zk-header { padding: 20px 24px 12px 24px; }
+        .zk-header-title { font-size: 16px; }
+        .zk-list-card { padding: 20px; margin: 0 12px; border-radius: 14px; }
+        .zk-list-title { font-size: 20px; }
+        .zk-list-latin { font-size: 15px; }
+        .zk-hex-number { width: 34px; height: 38px; font-size: 16px; }
+        .zk-featured { padding: 24px; border-radius: 22px; margin: 0 12px; }
+        .zk-featured-title { font-size: 18px; }
+        .zk-featured-number { font-size: 48px; }
+        .zk-bottom-nav { padding: 12px 40px; }
+        .zk-nav-btn { width: 48px; height: 48px; }
+    }
+
+    /* ---- RESPONSIVE: Desktop (1024px+) ---- */
     @media (min-width: 1024px) {
-        .zk-main { padding-top: 100px; }
+        .zk-main { padding-top: 100px; max-width: 640px; gap: 8px; }
+        .zk-header { padding: 24px 32px 14px 32px; }
+        .zk-header-title { font-size: 16px; }
+        .zk-list-card { padding: 22px; margin: 0 16px; border-radius: 16px; }
+        .zk-list-title { font-size: 20px; }
+        .zk-hex-number { width: 36px; height: 40px; font-size: 16px; }
+        .zk-featured { padding: 28px; border-radius: 24px; margin: 0 16px; }
+        .zk-featured-number { font-size: 52px; }
+        .zk-bottom-nav { padding: 14px 48px; }
+        .zk-nav-btn { width: 50px; height: 50px; }
+    }
+
+    /* ---- RESPONSIVE: Large desktop (1440px+) ---- */
+    @media (min-width: 1440px) {
+        .zk-main { max-width: 720px; }
+        .zk-list-card { padding: 24px; margin: 0 20px; }
+        .zk-featured { padding: 32px; margin: 0 20px; }
     }
 </style>
 @endpush
