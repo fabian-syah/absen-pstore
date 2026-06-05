@@ -73,12 +73,12 @@
         background-color: var(--zk-bg);
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
-            url('{{ asset("public/images/mosque_dome_bg.png") }}');
+            url('{{ asset("public/images/mosque-bg.png") }}');
         background-size: cover;
         background-position: center bottom;
         background-repeat: no-repeat;
-        filter: blur(4px);
-        -webkit-filter: blur(4px);
+        filter: blur(6px);
+        -webkit-filter: blur(6px);
         pointer-events: none;
         z-index: 0;
     }
