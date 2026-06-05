@@ -3,6 +3,12 @@
 @section('title', 'Zikir Player')
 
 @push('styles')
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#061c23">
+<meta name="mobile-web-app-capable" content="yes">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <style>
     /* Reset & Base */
     html, body {
@@ -348,7 +354,7 @@
 
                         <div class="zp-bottom-icons">
                             <div style="width:24px"></div>
-                            <div class="zp-bottom-number">{{ $index + 1 }}</div>
+                            <div class="zp-bottom-number"></div>
                             <span class="material-symbols-outlined zp-mic-icon">mic</span>
                         </div>
                     </div>
