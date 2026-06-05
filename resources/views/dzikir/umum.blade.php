@@ -104,7 +104,7 @@
     .zk-main {
         position: relative;
         z-index: 1;
-        padding: 80px 12px 180px 12px; /* Reduced left/right padding to make cards wider */
+        padding: 80px 12px 90px 12px; /* Reduced bottom padding so it stops exactly after the last card */
         display: flex;
         flex-direction: column;
         gap: 8px; /* Dempet (smaller gap) */
