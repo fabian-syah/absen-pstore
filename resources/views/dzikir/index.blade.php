@@ -445,7 +445,7 @@
         {{-- Bento Grid --}}
         <div class="zk-bento-grid">
             {{-- Dzikir Umum --}}
-            <a href="#" class="zk-card">
+            <a href="{{ route('dzikir.umum') }}" class="zk-card">
                 <span class="material-symbols-outlined zk-card-icon icon-primary">history</span>
                 <div>
                     <h3 class="zk-card-title">Dzikir umum</h3>

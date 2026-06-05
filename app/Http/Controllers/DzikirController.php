@@ -93,4 +93,33 @@ class DzikirController extends Controller
             'totalCollection'
         ));
     }
+
+    public function umum()
+    {
+        $user = Auth::user();
+
+        // Ambil semua zikir kategori umum
+        $zikirs = Zikir::where('category', 'umum')->get();
+        
+        // Ambil progress target zikir user ini
+        $activities = UserZikirActivity::where('user_id', $user->id)
+                        ->whereIn('zikir_id', $zikirs->pluck('id'))
+                        ->get()
+                        ->keyBy('zikir_id');
+        
+        // Ambil data favorite user
+        $favorites = UserZikirFavorite::where('user_id', $user->id)
+                        ->whereIn('zikir_id', $zikirs->pluck('id'))
+                        ->pluck('zikir_id')
+                        ->toArray();
+
+        // Ambil zikir unggulan (misal yang pertama) dan hitung total global untuk card paling atas
+        $featuredZikir = $zikirs->first();
+        $globalCount = 0;
+        if ($featuredZikir) {
+            $globalCount = UserZikirActivity::where('zikir_id', $featuredZikir->id)->sum('total_count');
+        }
+
+        return view('dzikir.umum', compact('zikirs', 'activities', 'favorites', 'featuredZikir', 'globalCount'));
+    }
 }
