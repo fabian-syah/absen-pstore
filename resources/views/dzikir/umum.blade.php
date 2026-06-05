@@ -88,8 +88,8 @@
         padding: 24px 24px 10px 24px;
         padding-top: calc(24px + env(safe-area-inset-top));
         z-index: 10;
-        /* Subtle background for header */
-        background: linear-gradient(180deg, rgba(10, 31, 20, 0.9) 0%, rgba(10, 31, 20, 0) 100%);
+        /* Transparent background as requested */
+        background: transparent;
     }
 
     .zk-header-title {
@@ -104,10 +104,10 @@
     .zk-main {
         position: relative;
         z-index: 1;
-        padding: 80px 24px 180px 24px; /* Space for header and extra scroll space */
+        padding: 80px 12px 180px 12px; /* Reduced left/right padding to make cards wider */
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 8px; /* Dempet (smaller gap) */
         max-width: 800px;
         margin: 0 auto;
     }
@@ -172,8 +172,8 @@
     /* List Card */
     .zk-list-card {
         background: var(--zk-card-bg);
-        border-radius: 16px;
-        padding: 20px;
+        border-radius: 12px; /* Less rounded */
+        padding: 16px; /* Less inner padding */
         display: flex;
         align-items: flex-start;
         gap: 16px;
@@ -250,7 +250,7 @@
         position: fixed;
         bottom: 0; left: 0; right: 0;
         height: 80px;
-        background: linear-gradient(0deg, rgba(10, 31, 20, 0.95) 0%, rgba(10, 31, 20, 0) 100%);
+        background: transparent; /* Remove gradient background */
         display: flex;
         align-items: center;
         justify-content: space-between;
