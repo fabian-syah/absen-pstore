@@ -3,22 +3,26 @@
 @section('title', 'Semua Zikir')
 
 @push('styles')
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a1f14">
+<meta name="mobile-web-app-capable" content="yes">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <style>
-    /* Lock the page into a full-screen app container */
+    /* ---- NATIVE SCROLL TO HIDE BROWSER UI ---- */
     html, body {
-        overflow: hidden !important;
-        height: 100vh !important;
-        height: 100dvh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: auto !important;
         margin: 0 !important;
         padding: 0 !important;
+        background: #0a1f14 !important;
     }
     .container-scroller, .page-body-wrapper, .main-panel, .content-wrapper {
         overflow: visible !important;
-        height: 100% !important;
+        height: auto !important;
         min-height: 0 !important;
-        max-height: 100% !important;
         transform: none !important;
         -webkit-transform: none !important;
         filter: none !important;
@@ -28,6 +32,7 @@
         will-change: auto !important;
         margin: 0 !important;
         padding: 0 !important;
+        background: transparent !important;
     }
 
     .navbar, .sidebar, .mobile-bottom-nav, footer, .footer {
@@ -44,28 +49,15 @@
     .zikir-page {
         font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
-        position: fixed !important;
-        top: 0; left: 0; right: 0; bottom: 0;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden !important;
+        position: relative;
+        min-height: 0 !important;
         padding: 0 !important;
         margin: 0 !important;
-        min-height: 0 !important;
-        height: 100% !important;
         --zk-bg: #0a1f14;
         --zk-card-bg: #14281d;
         --zk-primary: #1ed760;
         --zk-text-main: #ffffff;
         --zk-text-muted: #a0aab2;
-    }
-
-    .zk-scroll-area {
-        flex: 1;
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-        position: relative;
     }
 
     .zikir-page::before {
@@ -262,7 +254,7 @@
 
     /* Bottom Nav */
     .zk-bottom-nav {
-        position: absolute;
+        position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
@@ -273,8 +265,10 @@
         padding: 8px 24px;
         padding-bottom: env(safe-area-inset-bottom);
         z-index: 10;
+        pointer-events: none;
     }
     .zk-nav-btn {
+        pointer-events: auto;
         width: 44px;
         height: 44px;
         border-radius: 50%;
@@ -359,11 +353,9 @@
 
 @section('content')
 <div class="content-wrapper zikir-page">
-    {{-- Scrollable Content Area --}}
-    <div class="zk-scroll-area">
-        <header class="zk-header">
-            <h1 class="zk-header-title">SEMUA ZIKIR</h1>
-        </header>
+    <header class="zk-header">
+        <h1 class="zk-header-title">SEMUA ZIKIR</h1>
+    </header>
 
     <div class="zk-main">
         {{-- Featured Card --}}
@@ -410,9 +402,8 @@
             </a>
         @endforeach
     </div>
-    </div> {{-- end .zk-scroll-area --}}
 
-    {{-- Bottom Nav Controls (fixed at bottom) --}}
+    {{-- Bottom Nav Controls --}}
     <div class="zk-bottom-nav">
         <a href="{{ route('dzikir.index') }}" class="zk-nav-btn">
             <span class="material-symbols-outlined">arrow_back</span>
