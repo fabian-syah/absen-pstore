@@ -36,13 +36,20 @@
                                         <td>{{ $key + 1 }}</td>
                                         <td>{{ $zikir->title }}</td>
                                         <td>
-                                            @if($zikir->category == 'pagi')
-                                                <span class="badge badge-info">Pagi</span>
-                                            @elseif($zikir->category == 'petang')
-                                                <span class="badge badge-warning">Petang</span>
-                                            @else
-                                                <span class="badge badge-secondary">Semua</span>
-                                            @endif
+                                            @php
+                                                $categories = is_array($zikir->category) ? $zikir->category : [$zikir->category];
+                                            @endphp
+                                            @foreach($categories as $cat)
+                                                @if($cat == 'pagi')
+                                                    <span class="badge badge-info mb-1">Pagi</span>
+                                                @elseif($cat == 'petang')
+                                                    <span class="badge badge-warning mb-1">Petang</span>
+                                                @elseif($cat == 'sholat')
+                                                    <span class="badge badge-success mb-1">Sholat</span>
+                                                @else
+                                                    <span class="badge badge-secondary mb-1">Umum</span>
+                                                @endif
+                                            @endforeach
                                         </td>
                                         <td>{{ $zikir->default_target }}</td>
                                         <td>

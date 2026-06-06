@@ -32,15 +32,19 @@
 
                         <div class="form-group">
                             <label for="category">Kategori Dzikir</label>
-                            <select class="form-control" id="category" name="category" required onchange="togglePrayerTime()">
-                                <option value="umum" {{ old('category', $dzikir->category) == 'umum' ? 'selected' : '' }}>Dzikir Umum</option>
-                                <option value="pagi" {{ old('category', $dzikir->category) == 'pagi' ? 'selected' : '' }}>Dzikir Pagi</option>
-                                <option value="petang" {{ old('category', $dzikir->category) == 'petang' ? 'selected' : '' }}>Dzikir Petang</option>
-                                <option value="sholat" {{ old('category', $dzikir->category) == 'sholat' ? 'selected' : '' }}>Dzikir Sholat 5 Waktu</option>
+                            <select class="form-control select2-multiple" id="category" name="category[]" multiple required onchange="togglePrayerTime()">
+                                @php
+                                    $selectedCategories = old('category', is_array($dzikir->category) ? $dzikir->category : [$dzikir->category]);
+                                @endphp
+                                <option value="umum" {{ in_array('umum', $selectedCategories) ? 'selected' : '' }}>Dzikir Umum</option>
+                                <option value="pagi" {{ in_array('pagi', $selectedCategories) ? 'selected' : '' }}>Dzikir Pagi</option>
+                                <option value="petang" {{ in_array('petang', $selectedCategories) ? 'selected' : '' }}>Dzikir Petang</option>
+                                <option value="sholat" {{ in_array('sholat', $selectedCategories) ? 'selected' : '' }}>Dzikir Sholat 5 Waktu</option>
                             </select>
+                            <small class="form-text text-muted">Pilih maksimal 3 kategori. Tahan tombol Ctrl (Windows) atau Command (Mac) untuk memilih lebih dari satu.</small>
                         </div>
 
-                        <div class="form-group" id="prayer_time_div" style="{{ old('category', $dzikir->category) == 'sholat' ? '' : 'display: none;' }}">
+                        <div class="form-group" id="prayer_time_div" style="{{ in_array('sholat', $selectedCategories) ? '' : 'display: none;' }}">
                             <label for="prayer_time">Waktu Sholat</label>
                             <select class="form-control" id="prayer_time" name="prayer_time">
                                 <option value="semua" {{ old('prayer_time', $dzikir->prayer_time) == 'semua' ? 'selected' : '' }}>Semua Waktu Sholat</option>
@@ -90,12 +94,24 @@
 @push('scripts')
 <script>
     function togglePrayerTime() {
-        var category = document.getElementById('category').value;
+        var select = document.getElementById('category');
+        var selected = Array.from(select.selectedOptions).map(option => option.value);
         var prayerTimeDiv = document.getElementById('prayer_time_div');
-        if (category === 'sholat') {
+        if (selected.includes('sholat')) {
             prayerTimeDiv.style.display = 'block';
         } else {
             prayerTimeDiv.style.display = 'none';
+        }
+
+        // Limit to 3 categories
+        if (selected.length > 3) {
+            alert('Maksimal 3 kategori yang bisa dipilih');
+            // Unselect the last option
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].selected && selected.indexOf(select.options[i].value) === selected.length - 1) {
+                    select.options[i].selected = false;
+                }
+            }
         }
     }
 </script>

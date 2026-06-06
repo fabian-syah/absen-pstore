@@ -33,7 +33,8 @@ class AdminDzikirController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'category' => 'required|string|in:umum,pagi,petang,sholat',
+            'category' => 'required|array|min:1|max:3',
+            'category.*' => 'string|in:umum,pagi,petang,sholat',
             'prayer_time' => 'nullable|string|in:semua,subuh,dzuhur,ashar,maghrib,isya',
             'arabic_text' => 'nullable|string',
             'latin_text' => 'nullable|string',
@@ -62,7 +63,8 @@ class AdminDzikirController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'category' => 'required|string|in:umum,pagi,petang,sholat',
+            'category' => 'required|array|min:1|max:3',
+            'category.*' => 'string|in:umum,pagi,petang,sholat',
             'prayer_time' => 'nullable|string|in:semua,subuh,dzuhur,ashar,maghrib,isya',
             'arabic_text' => 'nullable|string',
             'latin_text' => 'nullable|string',

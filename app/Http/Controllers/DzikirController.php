@@ -17,10 +17,10 @@ class DzikirController extends Controller
 
         // Get Zikir counts
         $totalZikir = Zikir::count();
-        $zikirUmum = Zikir::where('category', 'umum')->count();
-        $zikirPagi = Zikir::where('category', 'pagi')->count();
-        $zikirPetang = Zikir::where('category', 'petang')->count();
-        $zikirSholat = Zikir::where('category', 'sholat')->count();
+        $zikirUmum = Zikir::whereJsonContains('category', 'umum')->count();
+        $zikirPagi = Zikir::whereJsonContains('category', 'pagi')->count();
+        $zikirPetang = Zikir::whereJsonContains('category', 'petang')->count();
+        $zikirSholat = Zikir::whereJsonContains('category', 'sholat')->count();
 
         // Prayer Time Logic (Kemenag API via MyQuran)
         $cityId = $user->branch ? $user->branch->kemenag_city_id : '1301'; // Default 1301 = Jakarta
@@ -100,7 +100,7 @@ class DzikirController extends Controller
         $user = Auth::user();
 
         // Ambil semua zikir kategori umum
-        $zikirs = Zikir::where('category', 'umum')->get();
+        $zikirs = Zikir::whereJsonContains('category', 'umum')->get();
         
         // Ambil progress target zikir user ini
         $activities = UserZikirActivity::where('user_id', $user->id)
@@ -127,7 +127,7 @@ class DzikirController extends Controller
         $user = Auth::user();
 
         // Ambil semua zikir berdasarkan kategori (contoh: umum)
-        $zikirs = Zikir::where('category', $category)->orderBy('id')->get();
+        $zikirs = Zikir::whereJsonContains('category', $category)->orderBy('id')->get();
         
         if ($zikirs->isEmpty()) {
             return redirect()->route('dzikir.index')->with('error', 'Kategori tidak ditemukan');
