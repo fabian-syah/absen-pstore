@@ -9,6 +9,7 @@ class ZikirCampaign extends Model
     protected $table = 'zikir_campaigns';
 
     protected $fillable = [
+        'zikir_id',
         'title',
         'arabic_text',
         'latin_text',
@@ -27,6 +28,14 @@ class ZikirCampaign extends Model
         'start_date' => 'date',
         'end_date' => 'date',
     ];
+
+    /**
+     * Get the associated zikir.
+     */
+    public function zikir()
+    {
+        return $this->belongsTo(Zikir::class, 'zikir_id');
+    }
 
     /**
      * Get the progress percentage.

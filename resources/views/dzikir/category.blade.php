@@ -418,6 +418,16 @@
             <div class="zk-carousel-track" id="carouselTrack">
                 @foreach($campaigns as $campaign)
                 <div class="zk-carousel-slide">
+                    @if($campaign->zikir_id)
+                        @php
+                            $playCat = 'umum';
+                            if($campaign->zikir && is_array($campaign->zikir->category) && count($campaign->zikir->category) > 0) {
+                                $playCat = $campaign->zikir->category[0];
+                            }
+                        @endphp
+                        <a href="{{ route('dzikir.play', ['category' => $playCat, 'id' => $campaign->zikir_id]) }}" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
+                    @endif
+
                     <div class="zk-campaign-header">
                         <div class="zk-campaign-icon">
                             <span class="material-symbols-outlined">group</span>
@@ -433,6 +443,10 @@
                         <span class="zk-campaign-label">LAGI</span>
                         <span class="zk-campaign-percent">{{ $campaign->progress_percent }}%</span>
                     </div>
+
+                    @if($campaign->zikir_id)
+                        </a>
+                    @endif
                 </div>
                 @endforeach
             </div>

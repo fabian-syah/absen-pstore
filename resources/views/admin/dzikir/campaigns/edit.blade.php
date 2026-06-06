@@ -26,6 +26,17 @@
                         @method('PUT')
 
                         <div class="form-group">
+                            <label for="zikir_id">Pilih Zikir (Opsional)</label>
+                            <select class="form-control" id="zikir_id" name="zikir_id">
+                                <option value="">-- Tanpa Zikir (Hanya Campaign Visual) --</option>
+                                @foreach($zikirs as $z)
+                                    <option value="{{ $z->id }}" {{ old('zikir_id', $campaign->zikir_id) == $z->id ? 'selected' : '' }}>{{ $z->title }}</option>
+                                @endforeach
+                            </select>
+                            <small class="form-text text-muted">Jika dipilih, zikir ini akan terhubung dengan progres campaign.</small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="title">Judul Campaign</label>
                             <input type="text" class="form-control" id="title" name="title" value="{{ old('title', $campaign->title) }}" required>
                         </div>

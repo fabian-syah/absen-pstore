@@ -197,6 +197,14 @@ class DzikirController extends Controller
         $activity->last_read_at = now();
         $activity->save();
 
+        // Increment related active campaigns
+        $campaigns = ZikirCampaign::where('zikir_id', $request->zikir_id)
+                        ->where('is_active', true)
+                        ->get();
+        foreach ($campaigns as $campaign) {
+            $campaign->increment('current_count', $increment);
+        }
+
         return response()->json(['success' => true, 'activity' => $activity]);
     }
     public function updateTarget(Request $request)

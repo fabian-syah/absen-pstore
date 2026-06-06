@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ZikirCampaign;
+use App\Models\Zikir;
 use Illuminate\Http\Request;
 
 class AdminZikirCampaignController extends Controller
@@ -21,7 +22,8 @@ class AdminZikirCampaignController extends Controller
      */
     public function create()
     {
-        return view('admin.dzikir.campaigns.create');
+        $zikirs = Zikir::orderBy('title')->get();
+        return view('admin.dzikir.campaigns.create', compact('zikirs'));
     }
 
     /**
@@ -30,6 +32,7 @@ class AdminZikirCampaignController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'zikir_id' => 'nullable|exists:zikirs,id',
             'title' => 'required|string|max:255',
             'arabic_text' => 'nullable|string',
             'latin_text' => 'nullable|string',
@@ -55,7 +58,8 @@ class AdminZikirCampaignController extends Controller
      */
     public function edit(ZikirCampaign $dzikir_campaign)
     {
-        return view('admin.dzikir.campaigns.edit', ['campaign' => $dzikir_campaign]);
+        $zikirs = Zikir::orderBy('title')->get();
+        return view('admin.dzikir.campaigns.edit', ['campaign' => $dzikir_campaign, 'zikirs' => $zikirs]);
     }
 
     /**
@@ -64,6 +68,7 @@ class AdminZikirCampaignController extends Controller
     public function update(Request $request, ZikirCampaign $dzikir_campaign)
     {
         $request->validate([
+            'zikir_id' => 'nullable|exists:zikirs,id',
             'title' => 'required|string|max:255',
             'arabic_text' => 'nullable|string',
             'latin_text' => 'nullable|string',
