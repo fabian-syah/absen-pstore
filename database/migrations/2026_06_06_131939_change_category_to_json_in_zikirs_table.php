@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -14,19 +15,17 @@ return new class extends Migration
     public function up()
     {
         // Convert existing data to JSON first
-        $zikirs = \DB::table('zikirs')->get();
+        $zikirs = DB::table('zikirs')->get();
         foreach ($zikirs as $zikir) {
             $cat = $zikir->category;
             if ($cat && !str_starts_with($cat, '[')) {
-                \DB::table('zikirs')->where('id', $zikir->id)->update([
+                DB::table('zikirs')->where('id', $zikir->id)->update([
                     'category' => json_encode([$cat])
                 ]);
             }
         }
 
-        Schema::table('zikirs', function (Blueprint $table) {
-            $table->json('category')->nullable()->change();
-        });
+        DB::statement('ALTER TABLE zikirs MODIFY category TEXT');
     }
 
     /**
@@ -36,8 +35,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('zikirs', function (Blueprint $table) {
-            $table->string('category')->default('umum')->change();
-        });
+        DB::statement('ALTER TABLE zikirs MODIFY category VARCHAR(255) DEFAULT \'umum\'');
     }
 };
