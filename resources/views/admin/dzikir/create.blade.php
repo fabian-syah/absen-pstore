@@ -47,7 +47,6 @@
                                 <option value="petang" {{ in_array('petang', old('category', [])) ? 'selected' : '' }}>Dzikir Petang</option>
                                 <option value="sholat" {{ in_array('sholat', old('category', [])) ? 'selected' : '' }}>Dzikir Sholat 5 Waktu</option>
                             </select>
-                            <small class="form-text text-muted">Pilih maksimal 3 kategori. Tahan tombol Ctrl (Windows) atau Command (Mac) untuk memilih lebih dari satu.</small>
                         </div>
 
                         <div class="form-group" id="prayer_time_div" style="{{ in_array('sholat', old('category', [])) ? '' : 'display: none;' }}">
@@ -107,13 +106,7 @@
             width: '100%',
             placeholder: "Pilih kategori zikir...",
             closeOnSelect: false,
-            allowClear: true,
-            maximumSelectionLength: 3,
-            language: {
-                maximumSelected: function (e) {
-                    return "Maksimal 3 kategori yang bisa dipilih";
-                }
-            }
+            allowClear: true
         });
 
         // Toggle prayer time on change
