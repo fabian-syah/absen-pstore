@@ -203,6 +203,12 @@ class DzikirController extends Controller
                         ->get();
         foreach ($campaigns as $campaign) {
             $campaign->increment('current_count', $increment);
+            
+            // Check if target is reached
+            if ($campaign->current_count >= $campaign->target) {
+                $campaign->is_active = false;
+                $campaign->save();
+            }
         }
 
         return response()->json(['success' => true, 'activity' => $activity]);

@@ -68,20 +68,7 @@
                             <small class="form-text text-muted">Jumlah bacaan yang sudah tercapai (default 0).</small>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="start_date">Tanggal Mulai (opsional)</label>
-                                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ old('start_date') }}">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="end_date">Tanggal Selesai (opsional)</label>
-                                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ old('end_date') }}">
-                                </div>
-                            </div>
-                        </div>
+
 
                         <div class="form-group">
                             <div class="form-check">
