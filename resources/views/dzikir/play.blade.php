@@ -588,7 +588,7 @@
         <a href="#" class="zp-options-btn">
             <span class="material-symbols-outlined">more_horiz</span>
         </a>
-        <a href="{{ route('dzikir.umum') }}" class="zp-close-btn">
+        <a href="{{ route('dzikir.list', ['category' => $category]) }}" class="zp-close-btn">
             <span class="material-symbols-outlined">close</span>
         </a>
     </div>
