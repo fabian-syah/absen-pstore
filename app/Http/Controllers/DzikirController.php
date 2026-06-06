@@ -202,9 +202,7 @@ class DzikirController extends Controller
                         ->where('is_active', true)
                         ->get();
         foreach ($campaigns as $campaign) {
-            $campaign->increment('current_count', $increment);
-            
-            // Check if target is reached
+            // Check if target is reached based on the dynamic current_count
             if ($campaign->current_count >= $campaign->target) {
                 $campaign->is_active = false;
                 $campaign->save();

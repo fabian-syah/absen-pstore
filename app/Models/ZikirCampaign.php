@@ -38,6 +38,17 @@ class ZikirCampaign extends Model
     }
 
     /**
+     * Get the dynamic current count based on all time user activity.
+     */
+    public function getCurrentCountAttribute($value)
+    {
+        if ($this->zikir_id) {
+            return \App\Models\UserZikirActivity::where('zikir_id', $this->zikir_id)->sum('all_time_count');
+        }
+        return $value ?? 0;
+    }
+
+    /**
      * Get the progress percentage.
      */
     public function getProgressPercentAttribute(): float
