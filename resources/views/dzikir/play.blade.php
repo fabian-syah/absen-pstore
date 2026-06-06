@@ -554,9 +554,6 @@
                         <div class="zp-latin">{{ $zikir->latin_text ?? 'La ilaaha illallaah.' }}</div>
                         <div class="zp-meaning">{{ $zikir->meaning ?? 'Tiada Tuhan (yang berhak disembah) kecuali Allah.' }}</div>
                         
-                        <div class="zp-play-btn">
-                            <span class="material-symbols-outlined">play_arrow</span>
-                        </div>
                     </div>
 
                     {{-- Counter Card --}}
@@ -575,7 +572,7 @@
                         <div class="zp-bottom-icons">
                             <div style="width:24px"></div>
                             <div class="zp-bottom-number">{{ $allTime }}</div>
-                            <span class="material-symbols-outlined zp-mic-icon">mic</span>
+
                         </div>
                     </div>
                 </div>
@@ -585,9 +582,7 @@
 
     {{-- Footer Actions --}}
     <div class="zp-footer">
-        <a href="#" class="zp-options-btn">
-            <span class="material-symbols-outlined">more_horiz</span>
-        </a>
+
         <a href="{{ route('dzikir.list', ['category' => $category]) }}" class="zp-close-btn">
             <span class="material-symbols-outlined">close</span>
         </a>
