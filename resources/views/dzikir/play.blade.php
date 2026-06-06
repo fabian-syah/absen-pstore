@@ -95,6 +95,9 @@
         flex: 1;
         min-height: 0;
         overflow-y: auto;
+        /* Hide scrollbar */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
         background: rgba(10, 35, 45, 0.8);
         border-radius: 20px;
         padding: 24px;
@@ -105,6 +108,9 @@
         text-align: center;
         position: relative;
         box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .zp-card-text::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
     }
     
     .zp-card-icons {
@@ -507,6 +513,40 @@
         font-size: 14px;
         cursor: pointer;
         width: 100%;
+    }
+
+    /* Responsive adjustments for short screens (Landscape / Tablet) */
+    @media (max-height: 750px) {
+        .zp-card-counter {
+            min-height: 200px;
+            padding: 16px;
+        }
+        .zp-circle {
+            width: 100px; height: 100px;
+        }
+        .zp-count {
+            font-size: 48px;
+        }
+        .zp-progress-wrapper {
+            margin-bottom: 16px;
+        }
+        .zp-arabic {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .zp-latin {
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .zp-meaning {
+            font-size: 13px;
+        }
+        .zp-category {
+            margin-bottom: 16px;
+        }
+        .zp-bottom-icons {
+            bottom: 16px; left: 16px; right: 16px;
+        }
     }
 </style>
 </head>
