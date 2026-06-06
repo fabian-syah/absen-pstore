@@ -95,12 +95,17 @@ class DzikirController extends Controller
         ));
     }
 
-    public function umum()
+    public function category($category)
     {
         $user = Auth::user();
 
-        // Ambil semua zikir kategori umum
-        $zikirs = Zikir::whereJsonContains('category', 'umum')->get();
+        // Validasi kategori yang dibolehkan (optional, tapi baik untuk keamanan)
+        if (!in_array($category, ['umum', 'pagi', 'petang', 'sholat'])) {
+            return redirect()->route('dzikir.index')->with('error', 'Kategori tidak valid.');
+        }
+
+        // Ambil semua zikir kategori yang diminta
+        $zikirs = Zikir::whereJsonContains('category', $category)->get();
         
         // Ambil progress target zikir user ini
         $activities = UserZikirActivity::where('user_id', $user->id)
@@ -119,7 +124,12 @@ class DzikirController extends Controller
                         ->orderBy('created_at', 'desc')
                         ->get();
 
-        return view('dzikir.umum', compact('zikirs', 'activities', 'favorites', 'campaigns'));
+        $categoryName = ucfirst($category);
+        if ($category === 'sholat') {
+            $categoryName = 'Sholat 5 Waktu';
+        }
+
+        return view('dzikir.category', compact('zikirs', 'activities', 'favorites', 'campaigns', 'category', 'categoryName'));
     }
 
     public function play($category, $id = null)

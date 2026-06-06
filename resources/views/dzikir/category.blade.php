@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Semua Zikir')
+@section('title', 'Zikir ' . $categoryName)
 
 @push('styles')
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -408,7 +408,7 @@
 @section('content')
 <div class="content-wrapper zikir-page">
     <header class="zk-header">
-        <h1 class="zk-header-title">SEMUA ZIKIR</h1>
+        <h1 class="zk-header-title">ZIKIR {{ strtoupper($categoryName) }}</h1>
     </header>
 
     <div class="zk-main">
@@ -453,7 +453,7 @@
                 $progress = isset($activities[$zikir->id]) ? $activities[$zikir->id]->total_count : 0;
                 $isFavorite = in_array($zikir->id, $favorites);
             @endphp
-            <a href="{{ route('dzikir.play', ['category' => 'umum', 'id' => $zikir->id]) }}" class="zk-list-card">
+            <a href="{{ route('dzikir.play', ['category' => $category, 'id' => $zikir->id]) }}" class="zk-list-card">
                 <div class="zk-hex-number">{{ $index + 1 }}</div>
                 <div class="zk-list-content">
                     <h3 class="zk-list-title">{{ $zikir->title }}</h3>

@@ -445,7 +445,7 @@
         {{-- Bento Grid --}}
         <div class="zk-bento-grid">
             {{-- Dzikir Umum --}}
-            <a href="{{ route('dzikir.umum') }}" class="zk-card">
+            <a href="{{ route('dzikir.list', ['category' => 'umum']) }}" class="zk-card">
                 <span class="material-symbols-outlined zk-card-icon icon-primary">history</span>
                 <div>
                     <h3 class="zk-card-title">Dzikir umum</h3>
@@ -463,7 +463,7 @@
             </a>
 
             {{-- Sholat 5 Waktu (full width) --}}
-            <a href="#" class="zk-card-sholat">
+            <a href="{{ route('dzikir.list', ['category' => 'sholat']) }}" class="zk-card-sholat">
                 <div class="zk-sholat-left">
                     <span class="material-symbols-outlined">auto_awesome</span>
                     <h3 class="zk-card-title">{{ $currentPrayerName }}</h3>
@@ -475,7 +475,7 @@
             </a>
 
             {{-- Zikir Pagi --}}
-            <a href="#" class="zk-card zk-card-pagi">
+            <a href="{{ route('dzikir.list', ['category' => 'pagi']) }}" class="zk-card zk-card-pagi">
                 <span class="material-symbols-outlined zk-card-icon icon-white">light_mode</span>
                 <div>
                     <h3 class="zk-card-title">Zikir pagi</h3>
@@ -484,7 +484,7 @@
             </a>
 
             {{-- Zikir Petang --}}
-            <a href="#" class="zk-card zk-card-petang">
+            <a href="{{ route('dzikir.list', ['category' => 'petang']) }}" class="zk-card zk-card-petang">
                 <span class="material-symbols-outlined zk-card-icon icon-white">dark_mode</span>
                 <div>
                     <h3 class="zk-card-title">Zikir petang</h3>
@@ -497,10 +497,10 @@
         <div style="margin-bottom: 24px;">
             <h2 class="zk-section-title">Kolom kategori</h2>
             <div class="zk-pills-row">
-                <button class="zk-pill active">Dzikir umum</button>
-                <button class="zk-pill">Dzikir pagi</button>
-                <button class="zk-pill">Dzikir petang</button>
-                <button class="zk-pill">Dzikir sholat 5 waktu</button>
+                <a href="{{ route('dzikir.list', ['category' => 'umum']) }}" class="zk-pill" style="text-decoration:none;">Dzikir umum</a>
+                <a href="{{ route('dzikir.list', ['category' => 'pagi']) }}" class="zk-pill" style="text-decoration:none;">Dzikir pagi</a>
+                <a href="{{ route('dzikir.list', ['category' => 'petang']) }}" class="zk-pill" style="text-decoration:none;">Dzikir petang</a>
+                <a href="{{ route('dzikir.list', ['category' => 'sholat']) }}" class="zk-pill" style="text-decoration:none;">Dzikir sholat 5 waktu</a>
             </div>
         </div>
 

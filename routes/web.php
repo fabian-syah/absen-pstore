@@ -78,7 +78,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // --- Rute Dzikir Online ---
     Route::get('/dzikir', [App\Http\Controllers\DzikirController::class, 'index'])->name('dzikir.index');
-    Route::get('/dzikir/umum', [App\Http\Controllers\DzikirController::class, 'umum'])->name('dzikir.umum');
+    Route::get('/dzikir/list/{category}', [App\Http\Controllers\DzikirController::class, 'category'])->name('dzikir.list');
     Route::get('/dzikir/play/{category}/{id?}', [App\Http\Controllers\DzikirController::class, 'play'])->name('dzikir.play');
     Route::post('/dzikir/progress', [App\Http\Controllers\DzikirController::class, 'saveProgress'])->name('dzikir.progress');
     Route::post('/dzikir/update-target', [App\Http\Controllers\DzikirController::class, 'updateTarget'])->name('dzikir.update-target');
