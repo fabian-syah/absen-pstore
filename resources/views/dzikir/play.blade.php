@@ -93,6 +93,8 @@
     /* Top Card: Text */
     .zp-card-text {
         flex: 1;
+        min-height: 0;
+        overflow-y: auto;
         background: rgba(10, 35, 45, 0.8);
         border-radius: 20px;
         padding: 24px;
