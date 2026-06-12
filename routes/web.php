@@ -79,6 +79,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // --- Rute Dzikir Online ---
     Route::get('/dzikir', [App\Http\Controllers\DzikirController::class, 'index'])->name('dzikir.index');
     Route::get('/dzikir/list/{category}', [App\Http\Controllers\DzikirController::class, 'category'])->name('dzikir.list');
+    Route::get('/dzikir/favorites', [App\Http\Controllers\DzikirController::class, 'favorites'])->name('dzikir.favorites');
+    Route::post('/dzikir/toggle-favorite', [App\Http\Controllers\DzikirController::class, 'toggleFavorite'])->name('dzikir.toggle-favorite');
     Route::get('/dzikir/play/{category}/{id?}', [App\Http\Controllers\DzikirController::class, 'play'])->name('dzikir.play');
     Route::post('/dzikir/progress', [App\Http\Controllers\DzikirController::class, 'saveProgress'])->name('dzikir.progress');
     Route::post('/dzikir/update-target', [App\Http\Controllers\DzikirController::class, 'updateTarget'])->name('dzikir.update-target');

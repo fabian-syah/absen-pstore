@@ -454,7 +454,7 @@
             </a>
 
             {{-- Kesukaanku --}}
-            <a href="#" class="zk-card">
+            <a href="{{ route('dzikir.favorites') }}" class="zk-card">
                 <span class="material-symbols-outlined zk-card-icon icon-secondary">star</span>
                 <div>
                     <h3 class="zk-card-title">Kesukaanku</h3>

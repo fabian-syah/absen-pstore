@@ -252,4 +252,59 @@ class DzikirController extends Controller
 
         return response()->json(['success' => true, 'activity' => $activity]);
     }
+
+    public function favorites()
+    {
+        $user = Auth::user();
+
+        // Ambil semua zikir yang difavoritkan oleh user
+        $favoriteIds = UserZikirFavorite::where('user_id', $user->id)->pluck('zikir_id');
+        $zikirs = Zikir::whereIn('id', $favoriteIds)->get();
+
+        // Ambil data progres user untuk zikir-zikir tersebut
+        $activities = UserZikirActivity::where('user_id', $user->id)
+                        ->whereIn('zikir_id', $favoriteIds)
+                        ->get()
+                        ->keyBy('zikir_id');
+
+        $favorites = $favoriteIds->toArray();
+
+        // Tidak ada campaign khusus di halaman favorit untuk saat ini
+        $campaigns = collect([]);
+        $category = 'favorit';
+        $categoryName = 'Favorit';
+
+        return view('dzikir.favorites', compact('zikirs', 'activities', 'favorites', 'campaigns', 'category', 'categoryName'));
+    }
+
+    public function toggleFavorite(Request $request)
+    {
+        $request->validate([
+            'zikir_id' => 'required|exists:zikirs,id'
+        ]);
+
+        $user = Auth::user();
+        $zikirId = $request->zikir_id;
+
+        $favorite = UserZikirFavorite::where('user_id', $user->id)
+                                    ->where('zikir_id', $zikirId)
+                                    ->first();
+
+        if ($favorite) {
+            $favorite->delete();
+            $isFavorite = false;
+        } else {
+            UserZikirFavorite::create([
+                'user_id' => $user->id,
+                'zikir_id' => $zikirId
+            ]);
+            $isFavorite = true;
+        }
+
+        return response()->json([
+            'success' => true, 
+            'is_favorite' => $isFavorite,
+            'message' => $isFavorite ? 'Ditambahkan ke favorit' : 'Dihapus dari favorit'
+        ]);
+    }
 }

@@ -492,13 +492,39 @@
 @push('scripts')
 <script>
     function toggleFavorite(zikirId, btn) {
-        btn.classList.toggle('active');
-        const icon = btn.querySelector('.material-symbols-outlined');
-        if (btn.classList.contains('active')) {
-            icon.classList.add('filled');
-        } else {
-            icon.classList.remove('filled');
-        }
+        // Prevent multiple clicks
+        if (btn.classList.contains('loading')) return;
+        btn.classList.add('loading');
+        
+        fetch('{{ route('dzikir.toggle-favorite') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ zikir_id: zikirId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            btn.classList.remove('loading');
+            if (data.success) {
+                const icon = btn.querySelector('.material-symbols-outlined');
+                if (data.is_favorite) {
+                    btn.classList.add('active');
+                    icon.classList.add('filled');
+                } else {
+                    btn.classList.remove('active');
+                    icon.classList.remove('filled');
+                }
+            } else {
+                alert('Gagal memperbarui favorit.');
+            }
+        })
+        .catch(error => {
+            btn.classList.remove('loading');
+            console.error('Error:', error);
+            alert('Terjadi kesalahan sistem.');
+        });
     }
 
     // ===== CAMPAIGN CAROUSEL =====
