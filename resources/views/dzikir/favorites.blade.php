@@ -63,12 +63,10 @@
     .zikir-page::before {
         content: '';
         position: fixed !important;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        transform: scale(1.1) !important;
-        -webkit-transform: scale(1.1) !important;
+        top: -5%;
+        left: -5%;
+        width: 110vw;
+        height: 110vh;
         background-color: var(--zk-bg);
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
@@ -93,7 +91,7 @@
         padding: 16px 16px 10px 16px;
         padding-top: calc(16px + env(safe-area-inset-top));
         z-index: 10;
-        background: transparent;
+        background: linear-gradient(180deg, rgba(10, 31, 20, 0.95) 0%, rgba(10, 31, 20, 0.8) 50%, transparent 100%);
         display: flex;
         flex-direction: column;
     }
@@ -323,7 +321,7 @@
 @section('content')
 <div class="content-wrapper zikir-page">
     <header class="zk-header">
-        <h1 class="zk-header-title">FAVORIT</h1>
+        <h1 class="zk-header-title">ZIKIR FAVORIT</h1>
         <div class="zk-header-line"></div>
     </header>
 
