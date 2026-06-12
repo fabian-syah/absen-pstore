@@ -94,10 +94,10 @@
         padding: 16px 16px 12px 16px;
         padding-top: calc(16px + env(safe-area-inset-top));
         z-index: 10;
-        background: rgba(10, 31, 20, 0.8);
+        background: transparent;
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
         display: flex;
         flex-direction: column;
     }
@@ -113,7 +113,7 @@
     
     .zk-header-line {
         height: 1px;
-        background: rgba(255, 255, 255, 0.2);
+        background: transparent;
         width: 100%;
     }
 
@@ -126,7 +126,6 @@
         gap: 8px;
         max-width: 800px;
         margin: 0 auto;
-        min-height: 100vh;
     }
 
     /* List Card */
