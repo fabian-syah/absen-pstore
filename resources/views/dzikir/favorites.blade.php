@@ -60,13 +60,14 @@
         --zk-text-muted: #a0aab2;
     }
 
-    .zikir-page::before {
-        content: '';
+    .zk-bg-fixed {
         position: fixed !important;
-        top: -5%;
-        left: -5%;
-        width: 110vw;
-        height: 110vh;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        transform: scale(1.1) !important;
+        -webkit-transform: scale(1.1) !important;
         background-color: var(--zk-bg);
         background-image:
             linear-gradient(180deg, rgba(10, 31, 20, 0.15) 0%, rgba(10, 31, 20, 0.1) 50%, rgba(10, 31, 20, 0.3) 100%),
@@ -74,6 +75,8 @@
         background-size: cover;
         background-position: center bottom;
         background-repeat: no-repeat;
+        filter: blur(6px);
+        -webkit-filter: blur(6px);
         pointer-events: none;
         z-index: 0;
     }
@@ -88,10 +91,13 @@
     .zk-header {
         position: fixed;
         top: 0; left: 0; right: 0;
-        padding: 16px 16px 10px 16px;
+        padding: 16px 16px 12px 16px;
         padding-top: calc(16px + env(safe-area-inset-top));
         z-index: 10;
-        background: linear-gradient(180deg, rgba(10, 31, 20, 0.95) 0%, rgba(10, 31, 20, 0.8) 50%, transparent 100%);
+        background: rgba(10, 31, 20, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         display: flex;
         flex-direction: column;
     }
@@ -114,7 +120,7 @@
     .zk-main {
         position: relative;
         z-index: 1;
-        padding: 70px 0 16px 0;
+        padding: calc(75px + env(safe-area-inset-top)) 0 16px 0;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -277,9 +283,9 @@
     
     /* ---- RESPONSIVE: Small phones (< 380px) ---- */
     @media (max-width: 380px) {
-        .zk-header { padding: 12px 12px 8px 12px; }
+        .zk-header { padding: 12px 12px 8px 12px; padding-top: calc(12px + env(safe-area-inset-top)); }
         .zk-header-title { font-size: 12px; }
-        .zk-main { padding: 60px 0 16px 0; gap: 6px; }
+        .zk-main { padding: calc(65px + env(safe-area-inset-top)) 0 16px 0; gap: 6px; }
         .zk-list-card { padding: 12px; margin: 0 6px; gap: 10px; }
         .zk-list-title { font-size: 15px; }
         .zk-list-latin { font-size: 12px; }
@@ -293,8 +299,8 @@
 
     /* ---- RESPONSIVE: Tablets (768px - 1023px) ---- */
     @media (min-width: 768px) {
-        .zk-main { padding: 90px 0 20px 0; gap: 10px; max-width: 600px; }
-        .zk-header { padding: 20px 24px 12px 24px; }
+        .zk-main { padding: calc(90px + env(safe-area-inset-top)) 0 20px 0; gap: 10px; max-width: 600px; }
+        .zk-header { padding: 20px 24px 12px 24px; padding-top: calc(20px + env(safe-area-inset-top)); }
         .zk-header-title { font-size: 16px; }
         .zk-list-card { padding: 20px; margin: 0 12px; border-radius: 14px; }
         .zk-list-title { font-size: 20px; }
@@ -306,8 +312,8 @@
 
     /* ---- RESPONSIVE: Desktop (1024px+) ---- */
     @media (min-width: 1024px) {
-        .zk-main { padding-top: 100px; max-width: 640px; gap: 12px; }
-        .zk-header { padding: 24px 32px 14px 32px; }
+        .zk-main { padding-top: calc(100px + env(safe-area-inset-top)); max-width: 640px; gap: 12px; }
+        .zk-header { padding: 24px 32px 14px 32px; padding-top: calc(24px + env(safe-area-inset-top)); }
         .zk-header-title { font-size: 16px; }
         .zk-list-card { padding: 22px; margin: 0 16px; border-radius: 16px; }
         .zk-list-title { font-size: 20px; }
@@ -320,6 +326,7 @@
 
 @section('content')
 <div class="content-wrapper zikir-page">
+    <div class="zk-bg-fixed"></div>
     <header class="zk-header">
         <h1 class="zk-header-title">ZIKIR FAVORIT</h1>
         <div class="zk-header-line"></div>
