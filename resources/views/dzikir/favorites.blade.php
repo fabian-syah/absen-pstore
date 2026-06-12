@@ -353,7 +353,7 @@
                         $playCat = $zikir->category[0];
                     }
                 @endphp
-                <a href="{{ route('dzikir.play', ['category' => $playCat, 'id' => $zikir->id]) }}" class="zk-list-card" id="fav-card-{{ $zikir->id }}">
+                <a href="{{ route('dzikir.play', ['category' => $playCat, 'id' => $zikir->id, 'source' => 'favorites']) }}" class="zk-list-card" id="fav-card-{{ $zikir->id }}">
                     <div class="zk-hex-number">{{ $index + 1 }}</div>
                     <div class="zk-list-content">
                         <h3 class="zk-list-title">{{ $zikir->title }}</h3>

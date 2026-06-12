@@ -625,7 +625,7 @@
     {{-- Footer Actions --}}
     <div class="zp-footer">
 
-        <a href="{{ route('dzikir.list', ['category' => $category]) }}" class="zp-close-btn">
+        <a href="{{ request('source') === 'favorites' ? route('dzikir.favorites') : route('dzikir.list', ['category' => $category]) }}" class="zp-close-btn">
             <span class="material-symbols-outlined">close</span>
         </a>
     </div>
