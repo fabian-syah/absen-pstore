@@ -466,8 +466,8 @@
             <a href="{{ route('dzikir.list', ['category' => 'sholat']) }}" class="zk-card-sholat">
                 <div class="zk-sholat-left">
                     <span class="material-symbols-outlined">auto_awesome</span>
-                    <h3 class="zk-card-title">{{ $currentPrayerName }}</h3>
-                    <p class="zk-card-sub">{{ $currentPrayerTime ? $currentPrayerTime : ($zikirSholat . ' dzikir') }}</p>
+                    <h3 class="zk-card-title" id="prayer-name-display">{{ $currentPrayerName }}</h3>
+                    <p class="zk-card-sub" id="prayer-time-display">{{ $currentPrayerTime ? $currentPrayerTime : ($zikirSholat . ' dzikir') }}</p>
                 </div>
                 <div class="zk-sholat-arrow">
                     <span class="material-symbols-outlined">arrow_forward_ios</span>
@@ -551,5 +551,97 @@
             this.classList.add('active');
         });
     });
+
+    // Real-time GPS Prayer Time Logic with Caching
+    function updatePrayerUI(timings) {
+        const prayers = {
+            'Subuh': timings.Fajr,
+            'Dzuhur': timings.Dhuhr,
+            'Ashar': timings.Asr,
+            'Maghrib': timings.Maghrib,
+            'Isya': timings.Isha
+        };
+        
+        const now = new Date();
+        const currentHours = String(now.getHours()).padStart(2, '0');
+        const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+        const currentTime = currentHours + ':' + currentMinutes;
+        
+        let lastPassed = null;
+        let lastTime = null;
+        
+        for (const [name, time] of Object.entries(prayers)) {
+            if (currentTime >= time) {
+                lastPassed = name;
+                lastTime = time;
+            }
+        }
+        
+        let currentPrayerName = "Sholat Isya";
+        let currentPrayerTime = timings.Isha;
+        
+        if (lastPassed) {
+            currentPrayerName = "Sholat " + lastPassed;
+            currentPrayerTime = lastTime;
+        }
+        
+        document.getElementById('prayer-name-display').innerText = currentPrayerName;
+        document.getElementById('prayer-time-display').innerText = currentPrayerTime;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const cachedPrayers = localStorage.getItem('prayer_times_' + today);
+
+    // Create GPS Blocker Element
+    const gpsBlocker = document.createElement('div');
+    gpsBlocker.id = 'gps-blocker';
+    gpsBlocker.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,31,20,0.98); z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center; color:white; backdrop-filter:blur(10px);';
+    gpsBlocker.innerHTML = `
+        <span class="material-symbols-outlined" style="font-size:64px; color:#ef4444; margin-bottom:16px;">location_off</span>
+        <h2 style="font-size:20px; margin-bottom:10px; font-weight:700;">Akses Lokasi Dibutuhkan</h2>
+        <p style="font-size:14px; color:#b0c8b0; margin-bottom:24px; line-height:1.5;">Fitur jadwal sholat 5 waktu memerlukan akses lokasi (GPS) agar sangat akurat di wilayah Anda.<br><br>Mohon izinkan akses lokasi pada pengaturan browser/HP Anda.</p>
+        <button onclick="location.reload()" style="background:#6fcf97; border:none; padding:12px 24px; border-radius:8px; color:#0a1f14; font-weight:bold; font-size:16px; cursor:pointer; width:200px;">Coba Lagi / Refresh</button>
+    `;
+    document.body.appendChild(gpsBlocker);
+
+    function enforceGPS() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                // Berhasil dapat GPS
+                gpsBlocker.style.display = 'none';
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=20`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data && data.data && data.data.timings) {
+                            const timings = data.data.timings;
+                            localStorage.setItem('prayer_times_' + today, JSON.stringify(timings));
+                            updatePrayerUI(timings);
+                        }
+                    })
+                    .catch(error => console.error("Error fetching prayer times:", error));
+            }, function(error) {
+                console.log("Geolocation error:", error);
+                if (error.code === error.PERMISSION_DENIED || error.code === error.POSITION_UNAVAILABLE) {
+                    // Blokir layar kalau ditolak
+                    gpsBlocker.style.display = 'flex';
+                }
+            }, { enableHighAccuracy: true, timeout: 10000 });
+        } else {
+            alert("Browser Anda tidak mendukung GPS.");
+        }
+    }
+
+    if (cachedPrayers) {
+        updatePrayerUI(JSON.parse(cachedPrayers));
+        // Tetap pastikan GPS tidak di-block (meski cache ada) jika Kakak mau strict
+        // Namun demi performa, jika sudah ada cache hari ini, kita anggap sudah aman.
+        // Jika ingin super strict, uncomment enforceGPS() di bawah:
+        // enforceGPS(); 
+    } else {
+        enforceGPS();
+    }
 </script>
 @endpush
