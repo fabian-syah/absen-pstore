@@ -15,6 +15,7 @@
                             <label for="filter">Filter</label>
                             <select name="filter" id="filter" class="form-control" onchange="toggleFilterFields()">
                                 <option value="all" {{ $filter == 'all' ? 'selected' : '' }}>Semua Waktu (All Time)</option>
+                                <option value="24hours" {{ $filter == '24hours' ? 'selected' : '' }}>24 Jam Terakhir</option>
                                 <option value="daily" {{ $filter == 'daily' ? 'selected' : '' }}>Harian</option>
                                 <option value="monthly" {{ $filter == 'monthly' ? 'selected' : '' }}>Bulanan</option>
                             </select>

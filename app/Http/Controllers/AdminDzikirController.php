@@ -106,6 +106,8 @@ class AdminDzikirController extends Controller
             $year = date('Y', strtotime($month));
             $m = date('m', strtotime($month));
             $query->whereYear('read_date', $year)->whereMonth('read_date', $m);
+        } elseif ($filter == '24hours') {
+            $query->where('updated_at', '>=', now()->subHours(24));
         }
 
         $stats = $query->groupBy('user_id')
