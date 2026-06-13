@@ -111,6 +111,7 @@ class AdminDzikirController extends Controller
         }
 
         $stats = $query->groupBy('user_id')
+            ->having(DB::raw('SUM(count)'), '>', 0)
             ->orderBy('total_count', 'desc')
             ->get();
 
