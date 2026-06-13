@@ -796,7 +796,12 @@
             
             // Haptic feedback
             if (window.navigator && window.navigator.vibrate) {
-                if (count === target) window.navigator.vibrate([100, 50, 100]); // special vibe
+                let currentDisplay = count;
+                if (target > 0 && count > target) {
+                    currentDisplay = (count % target === 0) ? target : (count % target);
+                }
+                
+                if (currentDisplay === target && target > 0) window.navigator.vibrate([100, 50, 100]); // special vibe
                 else window.navigator.vibrate(20);
             }
 
@@ -816,15 +821,21 @@
             const counterCard = slide.querySelector('.zp-card-counter');
             const allTimeEl = slide.querySelector('.zp-bottom-number');
             
-            if(countEl) countEl.innerText = count;
+            // Hitung angka yang ditampilkan (looping setelah mencapai target)
+            let displayCount = count;
+            if (target > 0 && count > target) {
+                displayCount = (count % target === 0) ? target : (count % target);
+            }
+            
+            if(countEl) countEl.innerText = displayCount;
             if(allTimeEl) allTimeEl.innerText = allTime;
             
             if(fillEl) {
-                const percent = target > 0 ? Math.min(100, (count / target) * 100) : 0;
+                const percent = target > 0 ? Math.min(100, (displayCount / target) * 100) : 0;
                 fillEl.style.width = `${percent}%`;
             }
 
-            if(count >= target && target > 0) {
+            if(displayCount === target && target > 0) {
                 counterCard.classList.add('target-reached');
             } else {
                 counterCard.classList.remove('target-reached');
