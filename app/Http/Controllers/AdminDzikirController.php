@@ -97,8 +97,8 @@ class AdminDzikirController extends Controller
         $date = $request->query('date', date('Y-m-d'));
         $month = $request->query('month', date('Y-m'));
 
-        $query = UserZikirLog::with(['user', 'zikir'])
-            ->select('user_id', 'zikir_id', DB::raw('SUM(count) as total_count'));
+        $query = UserZikirLog::with('user')
+            ->select('user_id', DB::raw('SUM(count) as total_count'));
 
         if ($filter == 'daily') {
             $query->whereDate('read_date', $date);
@@ -110,7 +110,7 @@ class AdminDzikirController extends Controller
             $query->where('updated_at', '>=', now()->subHours(24));
         }
 
-        $stats = $query->groupBy('user_id', 'zikir_id')
+        $stats = $query->groupBy('user_id')
             ->orderBy('total_count', 'desc')
             ->get();
 
