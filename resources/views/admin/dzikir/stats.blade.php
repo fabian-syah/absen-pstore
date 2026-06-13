@@ -42,6 +42,8 @@
                                 <tr>
                                     <th>Peringkat</th>
                                     <th>Nama User</th>
+                                    <th>Nama Zikir</th>
+                                    <th>Kategori</th>
                                     <th>Total Dzikir</th>
                                 </tr>
                             </thead>
@@ -60,11 +62,19 @@
                                             @endif
                                         </td>
                                         <td>{{ $stat->user->name ?? 'User Tidak Ditemukan' }}</td>
+                                        <td>{{ $stat->zikir->title ?? '-' }}</td>
+                                        <td>
+                                            @if($stat->zikir && $stat->zikir->category)
+                                                <span class="badge badge-info">{{ implode(', ', array_map('ucfirst', $stat->zikir->category)) }}</span>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
                                         <td class="font-weight-bold text-success">{{ number_format($stat->total_count) }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="text-center">Belum ada data dzikir untuk filter ini.</td>
+                                        <td colspan="5" class="text-center">Belum ada data dzikir untuk filter ini.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
