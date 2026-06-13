@@ -7,6 +7,7 @@ use App\Models\Zikir;
 use App\Models\ZikirCampaign;
 use App\Models\UserZikirFavorite;
 use App\Models\UserZikirActivity;
+use App\Models\UserZikirLog;
 use Illuminate\Support\Facades\Auth;
 
 class DzikirController extends Controller
@@ -196,6 +197,15 @@ class DzikirController extends Controller
 
         $activity->last_read_at = now();
         $activity->save();
+
+        // Save to UserZikirLog for statistics
+        $log = UserZikirLog::firstOrNew([
+            'user_id' => $user->id,
+            'zikir_id' => $request->zikir_id,
+            'read_date' => now()->toDateString()
+        ]);
+        $log->count = ($log->count ?? 0) + $increment;
+        $log->save();
 
         // Increment related active campaigns
         $campaigns = ZikirCampaign::where('zikir_id', $request->zikir_id)
