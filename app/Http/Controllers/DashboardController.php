@@ -520,7 +520,7 @@ class DashboardController extends Controller
         // =========================================================================
         // [NEW] LOGIKA KALENDER TIM (DASHBOARD)
         // =========================================================================
-        if (in_array($user->role, ['admin', 'audit', 'leader'])) {
+        if (in_array($user->role, ['admin', 'audit', 'leader', 'admin_gaji'])) {
             $month = request('month', $nowInBranch->month);
             $year = request('year', $nowInBranch->year);
             $startDate = Carbon::create($year, $month, 1, 0, 0, 0, $userTimezone)->startOfMonth();
@@ -531,7 +531,7 @@ class DashboardController extends Controller
                 ->whereHas('branch', function ($q) {
                     $q->where('name', '!=', 'Cabang User Non Karyawan');
                 });
-            if ($user->role !== 'admin') {
+            if ($user->role !== 'admin' && $user->role !== 'admin_gaji') {
                 $teamQuery->whereIn('branch_id', $allBranchIds);
             }
             $teamMembers = $teamQuery->with('branch', 'division')->orderBy('name')->get();
