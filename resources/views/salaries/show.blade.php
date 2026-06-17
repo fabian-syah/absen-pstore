@@ -19,7 +19,7 @@
                     <div class="border-bottom pb-4 mb-4 d-flex justify-content-between align-items-start">
                         <div>
                             <h2 class="fw-bold text-dark mb-1">PSTORE</h2>
-                            <p class="text-muted mb-0">Divisi Finance & HRD</p>
+                            <p class="text-muted mb-0">Divisi {{ $salary->user->division->name ?? 'Finance & HRD' }}</p>
                             <small class="text-muted">{{ $salary->user->branch->address ?? 'Jl. Raya Condet No.13A, RT.10/RW.3, Batu Ampar, Kec. Kramat jati, Kota Jakarta Timur, Daerah Khusus Ibukota Jakarta 13530' }}</small>
                         </div>
                         <div class="text-end">
@@ -107,7 +107,7 @@
 
                     {{-- Catatan Payroll --}}
                     @if($salary->notes)
-                        <div class="alert alert-secondary mb-4 p-3 border-start border-4 border-secondary">
+                        <div class="alert alert-secondary mb-4 p-3 border-start border-4 border-secondary no-print">
                             <h6 class="fw-bold text-secondary mb-1"><i class="mdi mdi-note-text-outline"></i> Catatan
                                 Payroll
                             </h6>
@@ -186,7 +186,7 @@
                                         <td class="ps-4">
                                             Potongan Alpha ({{ $salary->alpha_days }} Hari)
                                             @if(!empty($alphaDates))
-                                                <br><small class="text-muted fst-italic" style="word-break: break-word; white-space: normal;">Tgl: {{ implode(', ', array_unique($alphaDates)) }}</small>
+                                                <br><small class="text-muted fst-italic no-print" style="word-break: break-word; white-space: normal;">Tgl: {{ implode(', ', array_unique($alphaDates)) }}</small>
                                             @endif
                                         </td>
                                         <td class="text-end pe-4 text-danger">(Rp
@@ -200,7 +200,7 @@
                                         <td class="ps-4">
                                             Potongan Telat ({{ $salary->late_days }} Kali)
                                             @if(!empty($lateDates))
-                                                <br><small class="text-muted fst-italic" style="word-break: break-word; white-space: normal;">Tgl: {{ implode(', ', array_unique($lateDates)) }}</small>
+                                                <br><small class="text-muted fst-italic no-print" style="word-break: break-word; white-space: normal;">Tgl: {{ implode(', ', array_unique($lateDates)) }}</small>
                                             @endif
                                         </td>
                                         <td class="text-end pe-4 text-danger">(Rp
