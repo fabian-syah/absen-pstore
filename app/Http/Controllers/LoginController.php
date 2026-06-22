@@ -54,10 +54,7 @@ class LoginController extends Controller
             \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 60); // Decay 60 detik
 
             // Cegah timing attack
-            $elapsed = microtime(true) - $start;
-            if ($elapsed < 1.0) {
-                usleep((int) ((1.0 - $elapsed) * 1000000));
-            }
+            sleep(1);
 
             // Universal error message (Zero Enumeration)
             return back()->withErrors([
