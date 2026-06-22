@@ -22,6 +22,17 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
+        $start = microtime(true);
+
+        // Blokir IP jika > 20 percobaan dalam 5 menit (bukan hanya per user)
+        $ipKey = 'login-attempt-ip:' . $request->ip();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($ipKey, 20)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($ipKey);
+            return back()->withErrors([
+                'login_id' => "Terlalu banyak percobaan dari IP Anda. Silakan coba lagi dalam $seconds detik."
+            ])->withInput();
+        }
+
         // Key untuk throttling (kombinasi login_id dan IP)
         $throttleKey = strtolower($request->login_id) . '|' . $request->ip();
 
@@ -36,31 +47,37 @@ class LoginController extends Controller
         // Case-insensitive login_id lookup
         $user = User::whereRaw('LOWER(login_id) = ?', [strtolower($request->login_id)])->first();
 
-        // Case-insensitive password check
-        if ($user && Hash::check($request->password, $user->password)) {
+        // Validasi User: Apakah tidak ada, password salah, atau tidak aktif
+        if (!$user || !Hash::check($request->password, $user->password) || $user->is_active == 0) {
+            // Catat percobaan gagal
+            \Illuminate\Support\Facades\RateLimiter::hit($ipKey, 300); // Decay 300 detik (5 menit)
+            \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 60); // Decay 60 detik
 
-            if ($user->is_active == 0) {
-                return back()->withErrors(['login_id' => 'Akun Anda dinonaktifkan.'])->withInput();
+            // Cegah timing attack
+            $elapsed = microtime(true) - $start;
+            if ($elapsed < 1.0) {
+                usleep((int) ((1.0 - $elapsed) * 1000000));
             }
 
-            // Bersihkan percobaan gagal jika berhasil
-            \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
-
-            // --- LOGIKA BARU: Update Last Login ---
-            $user->update([
-                'last_login_at' => now()
-            ]);
-            // --------------------------------------
-
-            Auth::login($user, $request->remember);
-            $request->session()->regenerate();
-            return redirect()->route('dashboard');
+            // Universal error message (Zero Enumeration)
+            return back()->withErrors([
+                'login_id' => 'ID Login atau Password salah. Pastikan kredensial benar.'
+            ])->withInput();
         }
 
-        // Catat percobaan gagal
-        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 60); // Blokir 60 detik jika limit tercapai
+        // Bersihkan percobaan gagal jika berhasil
+        \Illuminate\Support\Facades\RateLimiter::clear($ipKey);
+        \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
 
-        return back()->withErrors(['login_id' => 'ID Login atau Password salah.'])->withInput();
+        // --- LOGIKA BARU: Update Last Login ---
+        $user->update([
+            'last_login_at' => now()
+        ]);
+        // --------------------------------------
+
+        Auth::login($user, $request->remember);
+        $request->session()->regenerate();
+        return redirect()->route('dashboard');
     }
 
     public function logout(Request $request)
