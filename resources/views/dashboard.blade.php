@@ -332,13 +332,13 @@
             <h3 class="fw-bold mb-1 text-dark">{{ Auth::user()->name }}!</h3>
             @if(isset($attendancePercentageMonth))
                 <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
-                    <div class="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm" title="Periode: {{ $attendancePeriodMonthLabel }}">
-                        <i class="mdi mdi-calendar-month me-1" style="font-size: 14px;"></i> 
-                        <span style="font-size: 13px;">Bulan Ini: <strong>{{ $attendancePercentageMonth }}%</strong></span>
+                    <div class="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm" style="-webkit-text-fill-color: white !important;" title="Periode: {{ $attendancePeriodMonthLabel }}">
+                        <i class="mdi mdi-calendar-month me-1" style="font-size: 14px; -webkit-text-fill-color: white !important;"></i> 
+                        <span style="font-size: 13px; -webkit-text-fill-color: white !important;">Bulan Ini: <strong>{{ $attendancePercentageMonth }}%</strong></span>
                     </div>
-                    <div class="badge bg-primary text-white px-3 py-2 rounded-pill shadow-sm">
-                        <i class="mdi mdi-calendar-star me-1" style="font-size: 14px;"></i> 
-                        <span style="font-size: 13px;">Tahun Ini: <strong>{{ $attendancePercentageYear }}%</strong></span>
+                    <div class="badge bg-primary text-white px-3 py-2 rounded-pill shadow-sm" style="-webkit-text-fill-color: white !important;">
+                        <i class="mdi mdi-calendar-star me-1" style="font-size: 14px; -webkit-text-fill-color: white !important;"></i> 
+                        <span style="font-size: 13px; -webkit-text-fill-color: white !important;">Tahun Ini: <strong>{{ $attendancePercentageYear }}%</strong></span>
                     </div>
                 </div>
             @endif
@@ -406,7 +406,7 @@
     {{-- ======================================================================= --}}
     {{-- MOBILE HEADER & BADGES (Tampil khusus di HP) --}}
     {{-- ======================================================================= --}}
-    <div class="d-block d-lg-none mb-4 animate-enter" style="animation-delay: 0.05s;">
+    <div class="d-block d-lg-none mb-4 mt-3 pt-3 animate-enter" style="animation-delay: 0.05s;">
         <span class="text-muted small d-block mb-1 greeting-text-mobile">Selamat Datang,</span>
         <h3 class="fw-bold mb-2 text-dark">{{ Auth::user()->name }}!</h3>
         @if(isset($attendancePercentageMonth))
