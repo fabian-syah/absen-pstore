@@ -994,11 +994,15 @@
                         // Snap back
                         updateIndicator(activeIndex, true);
                     }
-                }
-                
-                setTimeout(() => {
+                    
+                    // Keep isDragging true for a moment to block the ghost click
+                    setTimeout(() => {
+                        isDragging = false;
+                    }, 50);
+                } else {
+                    // It was just a tap! Reset immediately so click works
                     isDragging = false;
-                }, 50);
+                }
             });
         });
     </script>
