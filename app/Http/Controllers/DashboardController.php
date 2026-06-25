@@ -585,7 +585,88 @@ class DashboardController extends Controller
             ];
         }
 
+        // [NEW] Hitung Persentase Kehadiran Bulan Ini (26 ke 25) dan Tahun Ini
+        $dateObjMonth = Carbon::createFromDate($nowInBranch->year, $nowInBranch->month, 1, $userTimezone);
+        $startDateMonth = $dateObjMonth->copy()->subMonth()->day(26)->startOfDay();
+        $endDateMonth = $dateObjMonth->copy()->day(25)->endOfDay();
+        $limitDateMonth = ($endDateMonth->gt($todayInBranch)) ? Carbon::parse($todayInBranch, $userTimezone)->startOfDay() : $endDateMonth->copy()->startOfDay();
+        
+        $startDateYear = Carbon::createFromDate($nowInBranch->year, 1, 1, $userTimezone)->startOfDay();
+        $limitDateYear = Carbon::parse($todayInBranch, $userTimezone)->startOfDay();
+
+        $data['attendancePercentageMonth'] = $this->calculateAttendancePercentageForPeriod($user->id, $startDateMonth, $limitDateMonth, $userTimezone);
+        $data['attendancePercentageYear'] = $this->calculateAttendancePercentageForPeriod($user->id, $startDateYear, $limitDateYear, $userTimezone);
+        $data['attendancePeriodMonthLabel'] = $startDateMonth->translatedFormat('d M Y') . ' - ' . $endDateMonth->translatedFormat('d M Y');
+
         return view('dashboard', $data);
+    }
+
+    /**
+     * [NEW] Helper for percentage calculation
+     */
+    private function calculateAttendancePercentageForPeriod($user_id, $startDate, $limitDate, $userTimezone)
+    {
+        if ($limitDate->lt($startDate)) return 100;
+        
+        $period = \Carbon\CarbonPeriod::create($startDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
+        $totalDays = $period->count();
+        
+        $attendances = Attendance::where('user_id', $user_id)
+            ->whereBetween('check_in_time', [$startDate->copy()->subDay(), $limitDate->copy()->addDay()])
+            ->get();
+            
+        $leaves = \App\Models\LeaveRequest::where('user_id', $user_id)
+            ->where('status', 'approved')
+            ->where('is_active', true)
+            ->where(function ($query) use ($startDate, $limitDate) {
+                $query->where('start_date', '<=', $limitDate->format('Y-m-d'))
+                    ->where(function ($q) use ($startDate) {
+                        $q->whereNull('end_date')
+                            ->orWhere('end_date', '>=', $startDate->format('Y-m-d'));
+                    });
+            })->get();
+
+        $hadir = 0;
+        $hariLiburAtauIzin = 0;
+        
+        foreach ($period as $date) {
+            $currentDateStr = $date->format('Y-m-d');
+            $att = $attendances->filter(function ($a) use ($currentDateStr, $userTimezone) {
+                if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
+                if ($a->status === 'rejected') return false;
+                return Carbon::parse($a->check_in_time)->timezone($userTimezone)->format('Y-m-d') === $currentDateStr;
+            })->sortBy(function($a) {
+                return strtolower($a->presence_status) === 'masuk' ? 0 : 1;
+            })->first();
+
+            $leave = $leaves->filter(function ($l) use ($date, $userTimezone, $att) {
+                if ($l->type === 'telat' && !$att) return false;
+                $lStart = Carbon::parse($l->start_date, $userTimezone)->startOfDay();
+                $lEnd = Carbon::parse($l->end_date ?? $l->start_date, $userTimezone)->endOfDay();
+                return $date->between($lStart, $lEnd);
+            })->first();
+
+            if ($att) {
+                $status = strtolower(trim($att->presence_status));
+                $isHadir = in_array($status, ['hadir', 'tepat waktu', 'masuk', 'wfh', 'work from home', 'dinas luar', 'kunjungan rutin', 'lembur']);
+                if ($isHadir || empty($status)) {
+                    $hadir++;
+                } else if (in_array($status, ['sakit', 'izin', 'cuti', 'libur', 'offday'])) {
+                    $hariLiburAtauIzin++;
+                }
+            } elseif ($leave) {
+                if (in_array(strtolower($leave->type), ['wfh', 'dinas', 'telat'])) {
+                    $hadir++;
+                } else {
+                    $hariLiburAtauIzin++;
+                }
+            }
+        }
+        
+        $hariKerjaEfektif = $totalDays - $hariLiburAtauIzin;
+        if ($hariKerjaEfektif <= 0) return 100;
+        
+        return round(($hadir / $hariKerjaEfektif) * 100);
     }
 
     /**

@@ -329,7 +329,19 @@
     <div class="d-flex justify-content-between align-items-center w-100">
         <div>
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
-            <h3 class="fw-bold mb-0 text-dark">{{ Auth::user()->name }}!</h3>
+            <h3 class="fw-bold mb-1 text-dark">{{ Auth::user()->name }}!</h3>
+            @if(isset($attendancePercentageMonth))
+                <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+                    <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill shadow-sm" title="Periode: {{ $attendancePeriodMonthLabel }}">
+                        <i class="mdi mdi-calendar-month me-1" style="font-size: 14px;"></i> 
+                        <span style="font-size: 13px;">Bulan Ini: <strong>{{ $attendancePercentageMonth }}%</strong></span>
+                    </div>
+                    <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill shadow-sm">
+                        <i class="mdi mdi-calendar-star me-1" style="font-size: 14px;"></i> 
+                        <span style="font-size: 13px;">Tahun Ini: <strong>{{ $attendancePercentageYear }}%</strong></span>
+                    </div>
+                </div>
+            @endif
         </div>
         <div class="text-end d-none d-md-block">
             @if(in_array(Auth::user()->role, ['audit', 'admin']))
@@ -337,8 +349,6 @@
                     <i class="mdi mdi-bell-ring"></i> Test Notif
                 </a>
             @endif
-            <!-- <h5 class="fw-bold mb-0 text-primary" id="header-clock">--:--:--</h5>
-                                                                                                <small class="text-muted">{{ \Carbon\Carbon::now($current_timezone)->translatedFormat('l, d F Y') }}</small> -->
         </div>
     </div>
 @endsection
