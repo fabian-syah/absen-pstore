@@ -532,56 +532,7 @@
                 font-weight: 700;
             }
 
-            /* Absen button - special center floating button */
-            .mobile-bottom-nav .nav-item.nav-absen {
-                position: relative;
-            }
 
-            .mobile-bottom-nav .nav-item.nav-absen .absen-bubble {
-                width: 50px;
-                height: 50px;
-                background: linear-gradient(135deg, var(--pstore-primary) 0%, var(--pstore-primary-dark) 100%);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 4px 14px rgba(0, 105, 62, 0.45);
-                margin-bottom: 2px;
-                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-                margin-top: -16px;
-                border: 3px solid #fff;
-                animation: absenPulse 2.5s ease-in-out infinite;
-            }
-
-            .mobile-bottom-nav .nav-item.nav-absen .absen-bubble i {
-                font-size: 22px;
-                color: #fff;
-                transform: none !important;
-                filter: none !important;
-                animation: none !important;
-            }
-
-            .mobile-bottom-nav .nav-item.nav-absen:active .absen-bubble {
-                transform: scale(0.9) !important;
-                transition: transform 0.1s ease;
-            }
-
-            .mobile-bottom-nav .nav-item.nav-absen:hover .absen-bubble,
-            .mobile-bottom-nav .nav-item.nav-absen.active .absen-bubble {
-                transform: scale(1.1);
-                box-shadow: 0 6px 18px rgba(0, 105, 62, 0.55);
-                animation: none;
-            }
-
-            .mobile-bottom-nav .nav-item.nav-absen span {
-                color: #8a9bad;
-                font-size: 10px;
-            }
-
-            .mobile-bottom-nav .nav-item.nav-absen.active span {
-                color: var(--pstore-primary);
-                font-weight: 700;
-            }
 
 
         }
@@ -839,10 +790,8 @@
         </a>
 
         {{-- Absen → menuju halaman absen mandiri (clock-in) --}}
-        <a href="{{ route('self.attend.create') }}" class="nav-item nav-absen {{ $isAbsen ? 'active' : '' }}">
-            <div class="absen-bubble">
-                <i class="mdi mdi-fingerprint"></i>
-            </div>
+        <a href="{{ route('self.attend.create') }}" class="nav-item {{ $isAbsen ? 'active' : '' }}">
+            <i class="mdi mdi-fingerprint"></i>
             <span>Absen</span>
         </a>
 
@@ -866,7 +815,15 @@
             const indicator = nav.querySelector('.nav-indicator');
             const items = nav.querySelectorAll('.nav-item');
             
-            function updateIndicator(index) {
+            let isDragging = false;
+            let activeIndex = 0;
+            
+            function updateIndicator(index, animate = true) {
+                if (animate) {
+                    indicator.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                } else {
+                    indicator.style.transition = 'none';
+                }
                 const itemWidth = 100 / items.length;
                 indicator.style.width = `calc(${itemWidth}% - 8px)`;
                 indicator.style.left = `calc(${index * itemWidth}% + 4px)`;
@@ -875,15 +832,99 @@
             // Set initial position
             items.forEach((item, index) => {
                 if (item.classList.contains('active')) {
-                    updateIndicator(index);
+                    activeIndex = index;
+                    updateIndicator(index, false);
                 }
                 
                 // Add click event for sliding animation before page load
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function(e) {
+                    if (isDragging) {
+                        e.preventDefault();
+                        return;
+                    }
                     if (!this.classList.contains('active')) {
-                        updateIndicator(index);
+                        updateIndicator(index, true);
                     }
                 });
+            });
+
+            // Touch scrubbing logic
+            let startX = 0;
+            let currentX = 0;
+            let hasMoved = false;
+
+            nav.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                hasMoved = false;
+                startX = e.touches[0].clientX;
+            }, { passive: true });
+
+            nav.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                hasMoved = true;
+                currentX = e.touches[0].clientX;
+                
+                const navRect = nav.getBoundingClientRect();
+                let relativeX = currentX - navRect.left;
+                
+                // Clamp
+                if (relativeX < 0) relativeX = 0;
+                if (relativeX > navRect.width) relativeX = navRect.width;
+                
+                // Calculate position percentage
+                const percentage = (relativeX / navRect.width) * 100;
+                
+                // Move indicator without transition for instant follow
+                indicator.style.transition = 'none';
+                const itemWidth = 100 / items.length;
+                
+                let leftPos = percentage - (itemWidth / 2);
+                
+                // Clamp indicator inside the nav
+                if (leftPos < 0) leftPos = 0;
+                if (leftPos > 100 - itemWidth) leftPos = 100 - itemWidth;
+                
+                indicator.style.left = `calc(${leftPos}% + 4px)`;
+                
+                // Prevent page scrolling while scrubbing the navbar
+                if (e.cancelable) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            nav.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                
+                if (hasMoved) {
+                    const navRect = nav.getBoundingClientRect();
+                    let relativeX = currentX - navRect.left;
+                    
+                    if (relativeX < 0) relativeX = 0;
+                    if (relativeX > navRect.width) relativeX = navRect.width;
+                    
+                    const itemWidthPx = navRect.width / items.length;
+                    let targetIndex = Math.floor(relativeX / itemWidthPx);
+                    
+                    if (targetIndex < 0) targetIndex = 0;
+                    if (targetIndex >= items.length) targetIndex = items.length - 1;
+                    
+                    // Snap to nearest with animation
+                    updateIndicator(targetIndex, true);
+                    
+                    // If changed, navigate
+                    if (targetIndex !== activeIndex) {
+                        setTimeout(() => {
+                            window.location.href = items[targetIndex].href;
+                        }, 150); // small delay to see the snap
+                    } else {
+                        // Snap back
+                        updateIndicator(activeIndex, true);
+                    }
+                }
+                
+                setTimeout(() => {
+                    isDragging = false;
+                }, 50);
             });
         });
     </script>
