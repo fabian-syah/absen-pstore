@@ -26,8 +26,10 @@ class BranchAttendanceExport implements FromView, ShouldAutoSize, WithStyles
 
     public function view(): View
     {
-        $startDate = Carbon::createFromDate($this->year, $this->month, 1)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
+        $dateObj = Carbon::createFromDate($this->year, $this->month, 1);
+        $startDate = $dateObj->copy()->subMonth()->day(26)->startOfDay();
+        $endDate = $dateObj->copy()->day(25)->endOfDay();
+        $periodName = $startDate->translatedFormat('d F Y') . ' - ' . $endDate->translatedFormat('d F Y');
 
         // Get Employees in this branch
         $employees = User::where('branch_id', $this->branchId)
@@ -99,7 +101,7 @@ class BranchAttendanceExport implements FromView, ShouldAutoSize, WithStyles
 
         return view('branch.export_excel', [
             'data' => $data,
-            'month' => $startDate->translatedFormat('F Y'),
+            'month' => $periodName,
             'branch' => \App\Models\Branch::find($this->branchId)
         ]);
     }

@@ -230,9 +230,9 @@ class BranchController extends Controller
         $year = $request->input('year', Carbon::now()->year);
 
         $dateObj = Carbon::createFromDate($year, $month, 1);
-        $monthName = $dateObj->translatedFormat('F Y');
-        $startDate = $dateObj->copy()->startOfMonth();
-        $endDate = $dateObj->copy()->endOfMonth();
+        $startDate = $dateObj->copy()->subMonth()->day(26)->startOfDay();
+        $endDate = $dateObj->copy()->day(25)->endOfDay();
+        $monthName = $startDate->translatedFormat('d F Y') . ' - ' . $endDate->translatedFormat('d F Y');
 
         $employees = User::where('branch_id', $branch->id)
             ->where('role', '!=', 'admin')
@@ -293,6 +293,6 @@ class BranchController extends Controller
         ]);
 
         $sanitizedBranchName = Str::slug($branch->name);
-        return $pdf->download("Laporan_Absensi_{$sanitizedBranchName}_{$monthName}.pdf");
+        return $pdf->download("Laporan_Absensi_{$sanitizedBranchName}_{$month}-{$year}.pdf");
     }
 }
