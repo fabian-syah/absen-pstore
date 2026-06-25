@@ -842,18 +842,81 @@
                         updateIndicator(index, false);
                     }
                     
-                    // Add click event for sliding animation before page load
-                    item.addEventListener('click', function(e) {
+                    // Add click event for sliding animation and AJAX navigation
+                    item.addEventListener('click', async function(e) {
                         if (isDragging) {
                             e.preventDefault();
                             return;
                         }
+                        
+                        // Only prevent default and fetch if not opening a new tab
+                        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+                        
+                        e.preventDefault();
+
                         if (!this.classList.contains('active')) {
+                            // 1. Move Indicator instantly
                             updateIndicator(index, true);
+                            
+                            // 2. Update Active Classes
+                            items.forEach(i => i.classList.remove('active'));
+                            this.classList.add('active');
+                            activeIndex = index;
+                            
+                            // 3. AJAX Fetch for "SPA" App Feel
+                            const wrapper = document.querySelector('.content-wrapper');
+                            const url = this.href;
+                            
+                            if (wrapper) {
+                                wrapper.style.transition = 'opacity 0.2s';
+                                wrapper.style.opacity = '0.3';
+                                
+                                try {
+                                    const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                                    if (response.ok) {
+                                        const html = await response.text();
+                                        const parser = new DOMParser();
+                                        const doc = parser.parseFromString(html, 'text/html');
+                                        
+                                        const newWrapper = doc.querySelector('.content-wrapper');
+                                        if (newWrapper) {
+                                            document.title = doc.title;
+                                            wrapper.innerHTML = newWrapper.innerHTML;
+                                            wrapper.style.opacity = '1';
+                                            window.history.pushState({path: url}, '', url);
+                                            window.scrollTo(0, 0);
+                                            
+                                            // Execute embedded scripts
+                                            const scripts = wrapper.querySelectorAll('script');
+                                            scripts.forEach(s => {
+                                                const newScript = document.createElement('script');
+                                                Array.from(s.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                                                newScript.appendChild(document.createTextNode(s.innerHTML));
+                                                s.parentNode.replaceChild(newScript, s);
+                                            });
+                                        } else {
+                                            window.location.href = url;
+                                        }
+                                    } else {
+                                        window.location.href = url;
+                                    }
+                                } catch (err) {
+                                    window.location.href = url;
+                                }
+                            } else {
+                                window.location.href = url;
+                            }
                         }
                     });
                 });
             }, 50);
+
+            // Handle back/forward buttons
+            window.addEventListener('popstate', function(e) {
+                // Simplest way to handle back button without complex state management: 
+                // just reload the page instantly if they use browser back/forward
+                window.location.reload();
+            });
 
             // Update on resize (device rotation)
             window.addEventListener('resize', () => {
