@@ -394,7 +394,7 @@
     {{-- ======================================================================= --}}
     {{-- WELCOME & ATTENDANCE STATS (Responsive) --}}
     {{-- ======================================================================= --}}
-    <div class="mb-4 mt-1 animate-enter" style="animation-delay: 0.05s;">
+    <div class="mb-4 mt-4 pt-2 pt-lg-0 animate-enter" style="animation-delay: 0.05s;">
         {{-- Sapaan Khusus Mobile (Karena di desktop sudah ada di Top Navbar) --}}
         <div class="d-block d-lg-none mb-2">
             <span class="text-muted small d-block mb-1 greeting-text-mobile">Selamat Datang,</span>
