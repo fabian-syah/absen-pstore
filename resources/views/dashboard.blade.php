@@ -332,15 +332,22 @@
             <h3 class="fw-bold mb-1 text-dark">{{ Auth::user()->name }}!</h3>
             @if(isset($attendancePercentageMonth))
                 <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
-                    <div class="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm" style="-webkit-text-fill-color: white !important;" title="Periode: {{ $attendancePeriodMonthLabel }}">
+                    <div class="badge {{ $attendancePercentageMonth == 100 ? 'bg-success' : 'bg-danger' }} text-white px-3 py-2 rounded-pill shadow-sm" style="-webkit-text-fill-color: white !important;" title="Periode: {{ $attendancePeriodMonthLabel }}">
                         <i class="mdi mdi-calendar-month me-1" style="font-size: 14px; -webkit-text-fill-color: white !important;"></i> 
                         <span style="font-size: 13px; -webkit-text-fill-color: white !important;">Bulan Ini: <strong>{{ $attendancePercentageMonth }}%</strong></span>
                     </div>
-                    <div class="badge bg-primary text-white px-3 py-2 rounded-pill shadow-sm" style="-webkit-text-fill-color: white !important;">
-                        <i class="mdi mdi-calendar-star me-1" style="font-size: 14px; -webkit-text-fill-color: white !important;"></i> 
-                        <span style="font-size: 13px; -webkit-text-fill-color: white !important;">Tahun Ini: <strong>{{ $attendancePercentageYear }}%</strong></span>
+                    <div class="badge {{ $attendancePercentageYear == 100 ? 'bg-primary' : 'bg-warning text-dark' }} px-3 py-2 rounded-pill shadow-sm" style="-webkit-text-fill-color: {{ $attendancePercentageYear == 100 ? 'white' : '#000' }} !important;">
+                        <i class="mdi mdi-calendar-star me-1" style="font-size: 14px; -webkit-text-fill-color: {{ $attendancePercentageYear == 100 ? 'white' : '#000' }} !important;"></i> 
+                        <span style="font-size: 13px; -webkit-text-fill-color: {{ $attendancePercentageYear == 100 ? 'white' : '#000' }} !important;">Tahun Ini: <strong>{{ $attendancePercentageYear }}%</strong></span>
                     </div>
                 </div>
+                @if(count($alphaDatesMonth) > 0)
+                    <div class="mt-1" style="max-width: 400px; line-height: 1.2;">
+                        <small class="text-danger fw-bold" style="font-size: 11px;">
+                            *Bulan ini Alpha pada: {{ implode(', ', $alphaDatesMonth) }}
+                        </small>
+                    </div>
+                @endif
             @endif
         </div>
         <div class="text-end d-none d-md-block">
@@ -411,15 +418,22 @@
         <h3 class="fw-bold mb-2 text-dark">{{ Auth::user()->name }}!</h3>
         @if(isset($attendancePercentageMonth))
             <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
-                <div class="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm" title="Periode: {{ $attendancePeriodMonthLabel }}">
+                <div class="badge {{ $attendancePercentageMonth == 100 ? 'bg-success' : 'bg-danger' }} text-white px-3 py-2 rounded-pill shadow-sm" title="Periode: {{ $attendancePeriodMonthLabel }}">
                     <i class="mdi mdi-calendar-month me-1" style="font-size: 14px;"></i> 
                     <span style="font-size: 13px;">Bulan Ini: <strong>{{ $attendancePercentageMonth }}%</strong></span>
                 </div>
-                <div class="badge bg-primary text-white px-3 py-2 rounded-pill shadow-sm">
+                <div class="badge {{ $attendancePercentageYear == 100 ? 'bg-primary' : 'bg-warning text-dark' }} px-3 py-2 rounded-pill shadow-sm">
                     <i class="mdi mdi-calendar-star me-1" style="font-size: 14px;"></i> 
                     <span style="font-size: 13px;">Tahun Ini: <strong>{{ $attendancePercentageYear }}%</strong></span>
                 </div>
             </div>
+            @if(count($alphaDatesMonth) > 0)
+                <div class="mt-1" style="line-height: 1.2;">
+                    <small class="text-danger fw-bold" style="font-size: 11px;">
+                        *Bulan ini Alpha pada: {{ implode(', ', $alphaDatesMonth) }}
+                    </small>
+                </div>
+            @endif
         @endif
     </div>
 

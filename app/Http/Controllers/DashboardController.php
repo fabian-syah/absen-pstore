@@ -594,8 +594,15 @@ class DashboardController extends Controller
         $startDateYear = Carbon::createFromDate($nowInBranch->year, 1, 1, $userTimezone)->startOfDay();
         $limitDateYear = Carbon::parse($todayInBranch, $userTimezone)->startOfDay();
 
-        $data['attendancePercentageMonth'] = $this->calculateAttendancePercentageForPeriod($user->id, $startDateMonth, $limitDateMonth, $userTimezone);
-        $data['attendancePercentageYear'] = $this->calculateAttendancePercentageForPeriod($user->id, $startDateYear, $limitDateYear, $userTimezone);
+        $monthStats = $this->calculateAttendancePercentageForPeriod($user->id, $startDateMonth, $limitDateMonth, $userTimezone);
+        $yearStats = $this->calculateAttendancePercentageForPeriod($user->id, $startDateYear, $limitDateYear, $userTimezone);
+
+        $data['attendancePercentageMonth'] = $monthStats['percentage'];
+        $data['alphaDatesMonth'] = $monthStats['alpha_dates'];
+        
+        $data['attendancePercentageYear'] = $yearStats['percentage'];
+        $data['alphaDatesYear'] = $yearStats['alpha_dates'];
+        
         $data['attendancePeriodMonthLabel'] = $startDateMonth->translatedFormat('d M Y') . ' - ' . $endDateMonth->translatedFormat('d M Y');
 
         return view('dashboard', $data);
@@ -628,6 +635,7 @@ class DashboardController extends Controller
 
         $hadir = 0;
         $hariLiburAtauIzin = 0;
+        $alphaDates = [];
         
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
@@ -653,6 +661,8 @@ class DashboardController extends Controller
                     $hadir++;
                 } else if (in_array($status, ['sakit', 'izin', 'cuti', 'libur', 'offday'])) {
                     $hariLiburAtauIzin++;
+                } else {
+                    $alphaDates[] = $date->translatedFormat('d M');
                 }
             } elseif ($leave) {
                 if (in_array(strtolower($leave->type), ['wfh', 'dinas', 'telat'])) {
@@ -660,13 +670,20 @@ class DashboardController extends Controller
                 } else {
                     $hariLiburAtauIzin++;
                 }
+            } else {
+                $alphaDates[] = $date->translatedFormat('d M');
             }
         }
         
         $hariKerjaEfektif = $totalDays - $hariLiburAtauIzin;
-        if ($hariKerjaEfektif <= 0) return 100;
+        if ($hariKerjaEfektif <= 0) {
+            return ['percentage' => 100, 'alpha_dates' => []];
+        }
         
-        return round(($hadir / $hariKerjaEfektif) * 100);
+        return [
+            'percentage' => round(($hadir / $hariKerjaEfektif) * 100),
+            'alpha_dates' => $alphaDates
+        ];
     }
 
     /**
