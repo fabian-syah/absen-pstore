@@ -824,28 +824,40 @@
                 } else {
                     indicator.style.transition = 'none';
                 }
-                const itemWidth = 100 / items.length;
-                indicator.style.width = `calc(${itemWidth}% - 8px)`;
-                indicator.style.left = `calc(${index * itemWidth}% + 4px)`;
+                const item = items[index];
+                if (item) {
+                    const pillWidth = item.offsetWidth - 20; // 10px margin on each side for balanced look
+                    const pillLeft = item.offsetLeft + 10;
+                    indicator.style.width = `${pillWidth}px`;
+                    indicator.style.left = `${pillLeft}px`;
+                }
             }
 
             // Set initial position
-            items.forEach((item, index) => {
-                if (item.classList.contains('active')) {
-                    activeIndex = index;
-                    updateIndicator(index, false);
-                }
-                
-                // Add click event for sliding animation before page load
-                item.addEventListener('click', function(e) {
-                    if (isDragging) {
-                        e.preventDefault();
-                        return;
+            // Use setTimeout to ensure fonts/icons are loaded and layout is calculated
+            setTimeout(() => {
+                items.forEach((item, index) => {
+                    if (item.classList.contains('active')) {
+                        activeIndex = index;
+                        updateIndicator(index, false);
                     }
-                    if (!this.classList.contains('active')) {
-                        updateIndicator(index, true);
-                    }
+                    
+                    // Add click event for sliding animation before page load
+                    item.addEventListener('click', function(e) {
+                        if (isDragging) {
+                            e.preventDefault();
+                            return;
+                        }
+                        if (!this.classList.contains('active')) {
+                            updateIndicator(index, true);
+                        }
+                    });
                 });
+            }, 50);
+
+            // Update on resize (device rotation)
+            window.addEventListener('resize', () => {
+                updateIndicator(activeIndex, false);
             });
 
             // Touch scrubbing logic
@@ -871,20 +883,19 @@
                 if (relativeX < 0) relativeX = 0;
                 if (relativeX > navRect.width) relativeX = navRect.width;
                 
-                // Calculate position percentage
-                const percentage = (relativeX / navRect.width) * 100;
-                
                 // Move indicator without transition for instant follow
                 indicator.style.transition = 'none';
-                const itemWidth = 100 / items.length;
                 
-                let leftPos = percentage - (itemWidth / 2);
+                const itemWidthPx = navRect.width / items.length;
+                const pillWidth = itemWidthPx - 20;
+                let leftPos = relativeX - (pillWidth / 2);
                 
                 // Clamp indicator inside the nav
-                if (leftPos < 0) leftPos = 0;
-                if (leftPos > 100 - itemWidth) leftPos = 100 - itemWidth;
+                if (leftPos < 10) leftPos = 10;
+                if (leftPos > navRect.width - pillWidth - 10) leftPos = navRect.width - pillWidth - 10;
                 
-                indicator.style.left = `calc(${leftPos}% + 4px)`;
+                indicator.style.width = `${pillWidth}px`;
+                indicator.style.left = `${leftPos}px`;
                 
                 // Prevent page scrolling while scrubbing the navbar
                 if (e.cancelable) {
