@@ -332,11 +332,11 @@
             <h3 class="fw-bold mb-1 text-dark">{{ Auth::user()->name }}!</h3>
             @if(isset($attendancePercentageMonth))
                 <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
-                    <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill shadow-sm" title="Periode: {{ $attendancePeriodMonthLabel }}">
+                    <div class="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm" title="Periode: {{ $attendancePeriodMonthLabel }}">
                         <i class="mdi mdi-calendar-month me-1" style="font-size: 14px;"></i> 
                         <span style="font-size: 13px;">Bulan Ini: <strong>{{ $attendancePercentageMonth }}%</strong></span>
                     </div>
-                    <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill shadow-sm">
+                    <div class="badge bg-primary text-white px-3 py-2 rounded-pill shadow-sm">
                         <i class="mdi mdi-calendar-star me-1" style="font-size: 14px;"></i> 
                         <span style="font-size: 13px;">Tahun Ini: <strong>{{ $attendancePercentageYear }}%</strong></span>
                     </div>
@@ -403,6 +403,26 @@
         </div>
     </div>
     --}}
+    {{-- ======================================================================= --}}
+    {{-- MOBILE HEADER & BADGES (Tampil khusus di HP) --}}
+    {{-- ======================================================================= --}}
+    <div class="d-block d-lg-none mb-4 animate-enter" style="animation-delay: 0.05s;">
+        <span class="text-muted small d-block mb-1 greeting-text-mobile">Selamat Datang,</span>
+        <h3 class="fw-bold mb-2 text-dark">{{ Auth::user()->name }}!</h3>
+        @if(isset($attendancePercentageMonth))
+            <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                <div class="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm" title="Periode: {{ $attendancePeriodMonthLabel }}">
+                    <i class="mdi mdi-calendar-month me-1" style="font-size: 14px;"></i> 
+                    <span style="font-size: 13px;">Bulan Ini: <strong>{{ $attendancePercentageMonth }}%</strong></span>
+                </div>
+                <div class="badge bg-primary text-white px-3 py-2 rounded-pill shadow-sm">
+                    <i class="mdi mdi-calendar-star me-1" style="font-size: 14px;"></i> 
+                    <span style="font-size: 13px;">Tahun Ini: <strong>{{ $attendancePercentageYear }}%</strong></span>
+                </div>
+            </div>
+        @endif
+    </div>
+
     {{-- ======================================================================= --}}
     {{-- BANNER: AKTIFKAN NOTIFIKASI --}}
     {{-- ======================================================================= --}}
@@ -4230,7 +4250,7 @@
                 // Greeting logic (Sesuai jam lokal cabang)
                 // Kita perlu ambil jam (0-23) dari string waktu lokal
                 const localHour = parseInt(timeString.split(':')[0]);
-                const greetingElement = document.getElementById('greeting-text');
+                const greetingElements = document.querySelectorAll('#greeting-text, .greeting-text-mobile');
 
                 let greeting = 'Selamat Datang,';
                 if (localHour >= 5 && localHour < 12) greeting = 'Selamat Pagi,';
@@ -4238,7 +4258,9 @@
                 else if (localHour >= 15 && localHour < 18) greeting = 'Selamat Sore,';
                 else greeting = 'Selamat Malam,';
 
-                if (greetingElement) greetingElement.innerText = greeting;
+                greetingElements.forEach(el => {
+                    el.innerText = greeting;
+                });
             }
 
             setInterval(updateClock, 1000);
