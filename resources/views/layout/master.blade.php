@@ -431,18 +431,30 @@
                 left: 12px;
                 right: 12px;
                 z-index: 1050;
-                background: rgba(255, 255, 255, 0.55);
-                border: 1px solid rgba(255, 255, 255, 0.6);
+                background: rgba(255, 255, 255, 0.65); /* iOS liquid glass */
+                border: 1px solid rgba(255, 255, 255, 0.8);
                 box-shadow:
-                    0 8px 32px rgba(0, 0, 0, 0.12),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-                    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+                    0 8px 32px rgba(0, 0, 0, 0.1),
+                    0 1px 2px rgba(0,0,0,0.05),
+                    inset 0 1px 0 rgba(255, 255, 255, 1);
                 padding: 8px 4px;
                 padding-bottom: max(8px, env(safe-area-inset-bottom));
-                backdrop-filter: blur(24px) saturate(180%);
-                -webkit-backdrop-filter: blur(24px) saturate(180%);
-                border-radius: 22px;
+                backdrop-filter: blur(20px) saturate(200%);
+                -webkit-backdrop-filter: blur(20px) saturate(200%);
+                border-radius: 28px;
                 animation: bottomNavSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+
+            /* Telegram-style sliding pill indicator */
+            .nav-indicator {
+                position: absolute;
+                height: calc(100% - 16px);
+                top: 8px;
+                background: rgba(13, 110, 253, 0.12); /* Light primary color */
+                border-radius: 22px;
+                z-index: 0;
+                transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: none;
             }
 
             .mobile-bottom-nav .nav-item {
@@ -451,49 +463,50 @@
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                padding: 4px 2px;
+                padding: 6px 2px;
                 text-decoration: none;
                 color: #8a9bad;
                 font-size: 10px;
                 font-weight: 500;
                 line-height: 1.2;
-                transition: color 0.25s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+                transition: color 0.3s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
                 position: relative;
                 gap: 3px;
+                z-index: 1; /* Above indicator */
                 -webkit-tap-highlight-color: transparent;
                 animation: bottomNavItemPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
             }
 
             /* Stagger entrance for each nav item */
-            .mobile-bottom-nav .nav-item:nth-child(1) {
+            .mobile-bottom-nav .nav-item:nth-child(2) {
                 animation-delay: 0.1s;
             }
 
-            .mobile-bottom-nav .nav-item:nth-child(2) {
+            .mobile-bottom-nav .nav-item:nth-child(3) {
                 animation-delay: 0.2s;
             }
 
-            .mobile-bottom-nav .nav-item:nth-child(3) {
+            .mobile-bottom-nav .nav-item:nth-child(4) {
                 animation-delay: 0.3s;
             }
 
-            .mobile-bottom-nav .nav-item:nth-child(4) {
+            .mobile-bottom-nav .nav-item:nth-child(5) {
                 animation-delay: 0.4s;
             }
 
             .mobile-bottom-nav .nav-item i {
                 font-size: 22px;
-                transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease;
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;
                 display: block;
             }
 
             .mobile-bottom-nav .nav-item span {
-                transition: all 0.25s ease;
+                transition: all 0.3s ease;
             }
 
             /* Press-down tap effect */
             .mobile-bottom-nav .nav-item:active {
-                transform: scale(0.88);
+                transform: scale(0.85);
                 transition: transform 0.1s ease;
             }
 
@@ -502,7 +515,7 @@
             }
 
             .mobile-bottom-nav .nav-item:hover i {
-                transform: translateY(-2px);
+                transform: translateY(-2px) scale(1.1);
             }
 
             .mobile-bottom-nav .nav-item.active {
@@ -510,27 +523,13 @@
             }
 
             .mobile-bottom-nav .nav-item.active i {
-                animation: iconBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s 1;
-                transform: translateY(-2px);
+                animation: iconBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s 1;
+                transform: translateY(-2px) scale(1.1);
                 filter: drop-shadow(0 2px 4px rgba(0, 105, 62, 0.3));
             }
 
             .mobile-bottom-nav .nav-item.active span {
                 font-weight: 700;
-            }
-
-            /* Active indicator line with grow animation */
-            .mobile-bottom-nav .nav-item.active::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                height: 3px;
-                background: linear-gradient(90deg, var(--pstore-primary), var(--pstore-accent));
-                border-radius: 0 0 4px 4px;
-                animation: activeIndicatorGrow 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
-                width: 0;
             }
 
             /* Absen button - special center floating button */
@@ -548,8 +547,8 @@
                 justify-content: center;
                 box-shadow: 0 4px 14px rgba(0, 105, 62, 0.45);
                 margin-bottom: 2px;
-                transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
-                margin-top: -12px;
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+                margin-top: -16px;
                 border: 3px solid #fff;
                 animation: absenPulse 2.5s ease-in-out infinite;
             }
@@ -558,6 +557,8 @@
                 font-size: 22px;
                 color: #fff;
                 transform: none !important;
+                filter: none !important;
+                animation: none !important;
             }
 
             .mobile-bottom-nav .nav-item.nav-absen:active .absen-bubble {
@@ -567,7 +568,7 @@
 
             .mobile-bottom-nav .nav-item.nav-absen:hover .absen-bubble,
             .mobile-bottom-nav .nav-item.nav-absen.active .absen-bubble {
-                transform: scale(1.08);
+                transform: scale(1.1);
                 box-shadow: 0 6px 18px rgba(0, 105, 62, 0.55);
                 animation: none;
             }
@@ -829,7 +830,8 @@
         $isIzin = request()->routeIs('leave-requests.create');
         $isProfile = request()->routeIs('profile.*');
     @endphp
-    <nav class="mobile-bottom-nav">
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <div class="nav-indicator"></div>
         {{-- Home --}}
         <a href="{{ url('/') }}" class="nav-item {{ $isHome ? 'active' : '' }}">
             <i class="mdi mdi-home{{ $isHome ? '' : '-outline' }}"></i>
@@ -850,14 +852,41 @@
             <span>Izin</span>
         </a>
 
-
-
         {{-- Profile --}}
         <a href="{{ route('profile.edit') }}" class="nav-item {{ $isProfile ? 'active' : '' }}">
             <i class="mdi mdi-account{{ $isProfile ? '' : '-outline' }}"></i>
             <span>Profile</span>
         </a>
     </nav>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const nav = document.getElementById('mobileBottomNav');
+            if (!nav) return;
+            const indicator = nav.querySelector('.nav-indicator');
+            const items = nav.querySelectorAll('.nav-item');
+            
+            function updateIndicator(index) {
+                const itemWidth = 100 / items.length;
+                indicator.style.width = `calc(${itemWidth}% - 8px)`;
+                indicator.style.left = `calc(${index * itemWidth}% + 4px)`;
+            }
+
+            // Set initial position
+            items.forEach((item, index) => {
+                if (item.classList.contains('active')) {
+                    updateIndicator(index);
+                }
+                
+                // Add click event for sliding animation before page load
+                item.addEventListener('click', function() {
+                    if (!this.classList.contains('active')) {
+                        updateIndicator(index);
+                    }
+                });
+            });
+        });
+    </script>
 
     {{-- JS Assets --}}
     <script src="{{ asset('assets/vendors/js/vendor.bundle.base.js') }}"></script>
