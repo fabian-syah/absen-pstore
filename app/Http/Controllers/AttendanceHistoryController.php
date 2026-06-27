@@ -30,8 +30,16 @@ class AttendanceHistoryController extends Controller
             return back()->with('error', 'Karyawan tidak ditemukan');
         }
 
-        $selectedMonth = $request->get('month', date('m'));
-        $selectedYear = $request->get('year', date('Y'));
+        // Default bulan sesuai periode 26-25 (tanggal >= 26 berarti sudah masuk periode bulan berikutnya)
+        $branchTz = $targetUser->branch?->timezone ?? 'Asia/Jakarta';
+        $now = Carbon::now($branchTz);
+        if ($now->day >= 26) {
+            $defaultPeriod = $now->copy()->addMonth();
+        } else {
+            $defaultPeriod = $now->copy();
+        }
+        $selectedMonth = $request->get('month', $defaultPeriod->month);
+        $selectedYear = $request->get('year', $defaultPeriod->year);
 
         $currentDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1);
         $prevDate = $currentDate->copy()->subMonth();

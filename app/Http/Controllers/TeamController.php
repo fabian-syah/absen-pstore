@@ -407,8 +407,17 @@ class TeamController extends Controller
     public function showEmployeeHistory(Request $request, $branchId, $employeeId)
     {
         $employee = User::with(['division', 'branch'])->findOrFail($employeeId);
-        $selectedMonth = $request->get('month', date('m'));
-        $selectedYear = $request->get('year', date('Y'));
+        
+        // Default bulan sesuai periode 26-25
+        $branchTz = $employee->branch?->timezone ?? 'Asia/Jakarta';
+        $now = Carbon::now($branchTz);
+        if ($now->day >= 26) {
+            $defaultPeriod = $now->copy()->addMonth();
+        } else {
+            $defaultPeriod = $now->copy();
+        }
+        $selectedMonth = $request->get('month', $defaultPeriod->month);
+        $selectedYear = $request->get('year', $defaultPeriod->year);
 
         $data = $this->getHistoryData($employee, $selectedMonth, $selectedYear);
 

@@ -15,8 +15,16 @@ class AttendanceSummaryController extends Controller
     public function index(Request $request)
     {
         $currentUser = Auth::user();
-        $selectedYear = $request->get('year', date('Y'));
-        $selectedMonth = $request->get('month', date('n'));
+        
+        // Default bulan sesuai periode 26-25
+        $now = Carbon::now($currentUser->branch?->timezone ?? 'Asia/Jakarta');
+        if ($now->day >= 26) {
+            $defaultPeriod = $now->copy()->addMonth();
+        } else {
+            $defaultPeriod = $now->copy();
+        }
+        $selectedYear = $request->get('year', $defaultPeriod->year);
+        $selectedMonth = $request->get('month', $defaultPeriod->month);
         $targetUserId = $request->get('user_id');
 
         // --- 1. SEARCH & SCOPE KARYAWAN ---
