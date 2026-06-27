@@ -388,7 +388,7 @@
                                                 @else
                                                     <div class="text-muted small fst-italic"><i class="mdi mdi-alert-circle-outline"></i> Data rekening karyawan belum diatur.</div>
                                                     @if($selectedUser)
-                                                        <a href="{{ route('employee-salaries.edit', $selectedUser->employeeSalary->id ?? 0) }}" target="_blank" class="small text-decoration-none">Atur Rekening</a>
+                                                        <a href="{{ route('employee-salaries.edit', $selectedUser->id) }}" target="_blank" class="small text-decoration-none">Atur Rekening</a>
                                                     @endif
                                                 @endif
                                             </div>
