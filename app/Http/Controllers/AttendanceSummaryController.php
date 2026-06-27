@@ -126,6 +126,18 @@ class AttendanceSummaryController extends Controller
             
             // Kita hanya hitung hari yang sudah lewat atau sedang berjalan (limitDate)
             $todayInBranch = Carbon::now($branchTimezone)->startOfDay();
+
+            // Skip bulan yang belum dimulai sama sekali
+            if ($monthStart->gt($todayInBranch)) {
+                $monthsData[$m] = [
+                    'name' => Carbon::create()->month($m)->translatedFormat('F'),
+                    'total_hari' => 0, 'masuk' => 0, 'wfh' => 0, 'sakit' => 0,
+                    'izin' => 0, 'cuti' => 0, 'libur' => 0, 'alpha' => 0,
+                    'telat' => 0, 'pulang_cepat' => 0, 'pending' => 0
+                ];
+                continue;
+            }
+
             $limitDate = ($monthEnd->gt($todayInBranch)) ? $todayInBranch : $monthEnd;
             
             // Period untuk iterasi hari demi hari agar akurat
