@@ -51,14 +51,19 @@ class AttendanceSummaryController extends Controller
 
         // --- 2. AMBIL DATA ---
         $attendances = Attendance::where('user_id', $targetUser->id)
-            ->whereYear('check_in_time', $selectedYear)
+            ->where(function($q) use ($selectedYear) {
+                $q->whereYear('check_in_time', $selectedYear)
+                  ->orWhereYear('check_in_time', $selectedYear - 1);
+            })
             ->get();
 
         $leaves = LeaveRequest::where('user_id', $targetUser->id)
             ->where('status', 'approved')
             ->where(function ($q) use ($selectedYear) {
                 $q->whereYear('start_date', $selectedYear)
-                    ->orWhereYear('end_date', $selectedYear);
+                    ->orWhereYear('end_date', $selectedYear)
+                    ->orWhereYear('start_date', $selectedYear - 1)
+                    ->orWhereYear('end_date', $selectedYear - 1);
             })
             ->get();
 
@@ -115,9 +120,9 @@ class AttendanceSummaryController extends Controller
             $pulangCepatCount = 0;
             $pendingCount = 0;
 
-            // Tentukan range hari di bulan ini (LOKAL)
-            $monthStart = Carbon::createFromDate($selectedYear, $m, 1, $branchTimezone)->startOfMonth();
-            $monthEnd = $monthStart->copy()->endOfMonth();
+            // Tentukan range hari di bulan ini (26 bulan lalu - 25 bulan ini)
+            $monthStart = Carbon::createFromDate($selectedYear, $m, 26, $branchTimezone)->subMonth()->startOfDay();
+            $monthEnd = Carbon::createFromDate($selectedYear, $m, 25, $branchTimezone)->endOfDay();
             
             // Kita hanya hitung hari yang sudah lewat atau sedang berjalan (limitDate)
             $todayInBranch = Carbon::now($branchTimezone)->startOfDay();

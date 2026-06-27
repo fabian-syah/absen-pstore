@@ -55,9 +55,9 @@ class AttendanceHistoryController extends Controller
         // 1. Ambil timezone cabang
         $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
 
-        // 2. Tentukan range awal bulan (Calendar Month untuk tampilan riwayat)
-        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
+        // 2. Tentukan range awal bulan (26 bulan lalu - 25 bulan ini untuk tampilan riwayat)
+        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 26, $branchTimezone)->subMonth()->startOfDay();
+        $endDate = Carbon::createFromDate($selectedYear, $selectedMonth, 25, $branchTimezone)->endOfDay();
 
         // 3. Ambil "Hari Ini" di cabang tersebut
         $todayInBranch = Carbon::now($branchTimezone)->startOfDay();
