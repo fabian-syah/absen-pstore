@@ -447,10 +447,9 @@ class TeamController extends Controller
     {
         $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
 
-        // 1. Tentukan Range Awal dan Akhir Bulan yang sedang dilihat
-        // [FIX] Gunakan branchTimezone agar konsisten dengan $today (mencegah bug lintas timezone)
-        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1, $branchTimezone)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
+        // 1. Tentukan Range Awal dan Akhir Bulan (26 bulan lalu - 25 bulan ini)
+        $startDate = Carbon::createFromDate($selectedYear, $selectedMonth, 26, $branchTimezone)->subMonth()->startOfDay();
+        $endDate = Carbon::createFromDate($selectedYear, $selectedMonth, 25, $branchTimezone)->endOfDay();
 
         // 2. Ambil Absensi Real (Include H-1 untuk lembur lintas hari)
         $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
@@ -478,8 +477,9 @@ class TeamController extends Controller
         // Batasi penampilan sampai hari ini saja (jika melihat bulan berjalan)
         $todayInBranch = Carbon::now($branchTimezone)->startOfDay();
 
-        $isCurrentMonth = ($selectedMonth == Carbon::now($branchTimezone)->month && $selectedYear == Carbon::now($branchTimezone)->year);
-        if ($isCurrentMonth) {
+        // Cek apakah hari ini masih dalam periode (26 bulan lalu - 25 bulan ini)
+        $isCurrentPeriod = $todayInBranch->between($startDate, $endDate);
+        if ($isCurrentPeriod) {
             $hasActivityToday = $attendances->first(fn($a) => Carbon::parse($a->check_in_time)->timezone($branchTimezone)->isToday()) ||
                                 $leaves->first(fn($l) => Carbon::parse($l->start_date)->isToday());
 
@@ -489,7 +489,8 @@ class TeamController extends Controller
                 $limitDate = $todayInBranch;
             }
         } else {
-            $limitDate = ($endDate->gt(Carbon::now($branchTimezone))) ? $todayInBranch : $endDate;
+            // Periode sudah selesai atau belum dimulai
+            $limitDate = ($endDate->gt($todayInBranch)) ? $todayInBranch : $endDate;
         }
 
         $historyCollection = collect();
