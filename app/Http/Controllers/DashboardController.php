@@ -523,8 +523,9 @@ class DashboardController extends Controller
         if (in_array($user->role, ['admin', 'audit', 'leader', 'admin_gaji'])) {
             $month = request('month', $nowInBranch->month);
             $year = request('year', $nowInBranch->year);
-            $startDate = Carbon::create($year, $month, 1, 0, 0, 0, $userTimezone)->startOfMonth();
-            $endDate = $startDate->copy()->endOfMonth();
+            $baseDate = Carbon::create($year, $month, 1, 0, 0, 0, $userTimezone);
+            $startDate = $baseDate->copy()->subMonth()->day(26)->startOfDay();
+            $endDate = $baseDate->copy()->day(25)->endOfDay();
 
             $teamQuery = User::where('is_active', true)
                 ->whereNotIn('role', ['super_admin', 'admin_gaji'])
@@ -574,12 +575,19 @@ class DashboardController extends Controller
                 })
                 ->groupBy('user_id');
 
+            $period = \Carbon\CarbonPeriod::create($startDate, $endDate);
+            $calendarDates = [];
+            foreach ($period as $date) {
+                $calendarDates[] = $date->copy();
+            }
+
             $data['teamCalendar'] = [
                 'members' => $teamMembers,
                 'attendances' => $calendarAttendances,
                 'leaves' => $calendarLeaves,
-                'daysInMonth' => $startDate->daysInMonth,
+                'dates' => $calendarDates,
                 'startDate' => $startDate,
+                'endDate' => $endDate,
                 'currentMonth' => $month,
                 'currentYear' => $year
             ];

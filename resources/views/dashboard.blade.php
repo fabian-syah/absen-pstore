@@ -173,75 +173,83 @@
             font-weight: bold;
         }
 
-        /* TEAM CALENDAR STYLES */
+        /* TEAM CALENDAR STYLES (ENHANCED AESTHETICS) */
         .calendar-container {
             background: #ffffff;
-            border-radius: 20px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
         .calendar-header {
-            padding: 20px 25px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-bottom: 1px solid #dee2e6;
+            padding: 25px 30px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .calendar-matrix-wrapper {
-            max-height: 550px;
+            max-height: 600px;
             overflow: auto;
             position: relative;
+            background: #f8fafc;
+            padding: 15px;
         }
 
         .calendar-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 0;
+            border-spacing: 4px; /* Added spacing for gap aesthetic */
             table-layout: fixed;
+            background: transparent;
         }
 
         .calendar-table th, .calendar-table td {
-            width: 45px;
-            min-width: 45px;
-            height: 45px;
+            width: 48px;
+            min-width: 48px;
+            height: 48px;
             text-align: center;
             vertical-align: middle;
-            border-right: 1px solid #f1f1f1;
-            border-bottom: 1px solid #f1f1f1;
-            font-size: 12px;
+            font-size: 13px;
             padding: 0;
+            border-radius: 12px; /* Rounded cells */
+            border: none;
         }
 
         .calendar-table th {
-            background: #f8f9fa;
+            background: #ffffff;
             font-weight: 700;
-            color: #495057;
+            color: #475569;
             position: sticky;
             top: 0;
             z-index: 10;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
 
         .calendar-table .user-col {
-            width: 180px;
-            min-width: 180px;
+            width: 220px;
+            min-width: 220px;
             text-align: left;
-            padding: 0 15px;
+            padding: 0 20px;
             position: sticky;
             left: 0;
             background: #ffffff;
             z-index: 11;
-            border-right: 2px solid #dee2e6;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             font-weight: 600;
-            color: #334155;
-            font-size: 11px;
+            color: #1e293b;
+            font-size: 12px;
+            box-shadow: 4px 0 6px -1px rgba(0,0,0,0.05);
+            border-radius: 12px 0 0 12px;
+            margin-right: 10px;
         }
 
         .calendar-table th.user-col {
             z-index: 12;
-            background: #f8f9fa;
+            background: #ffffff;
+            border-radius: 12px 0 0 12px;
         }
 
         .status-cell {
@@ -251,76 +259,114 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             color: white;
             font-weight: 800;
             position: relative;
-            font-size: 13px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            font-size: 14px;
+            border-radius: 12px;
+            background-color: #f1f5f9;
+            color: transparent; /* Hide text by default for clean look, show color only */
         }
 
-        .calendar-table td.weekend-day {
-            background-color: #fff9f9 !important;
+        .status-cell:not(.empty) {
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+        }
+
+        .calendar-table td.weekend-day .status-cell.empty {
+            background-color: #fee2e2; /* light red for weekend */
+            opacity: 0.7;
         }
 
         .status-cell:hover {
-            transform: scale(1.1);
-            z-index: 2;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 4px;
+            transform: scale(1.15) translateY(-2px);
+            z-index: 20;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
         }
 
-        .status-cell.empty { border-radius: 0; cursor: default; }
-        .status-cell.present { background-color: #10b981; } /* Emerald */
-        .status-cell.out { background-color: #3b82f6; } /* Blue */
-        .status-cell.leave { background-color: #f59e0b; } /* Amber - Cuti Kuning */
-        .status-cell.permit { background-color: #f97316; } /* Orange - Izin */
-        .status-cell.wfh { background-color: #a855f7; } /* Purple */
-        .status-cell.sick { background-color: #ef4444; } /* Red */
-        .status-cell.off { background-color: #94a3b8; } /* Slate - Libur */
-        .status-cell.telat { background-color: #dc3545; border: 2px solid #fff; } /* Crimson */
-        .status-cell.alpha { background-color: #1f2937; } /* Dark Gray/Black for Alpha */
+        /* Modern Gradient Colors for Statuses */
+        .status-cell.present { background: linear-gradient(135deg, #10b981 0%, #059669 100%); } /* Emerald */
+        .status-cell.out { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); } /* Blue */
+        .status-cell.leave { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); } /* Amber */
+        .status-cell.permit { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); } /* Orange */
+        .status-cell.wfh { background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); } /* Purple */
+        .status-cell.sick { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); } /* Red */
+        .status-cell.off { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); } /* Slate */
+        .status-cell.telat { background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); box-shadow: 0 0 0 2px #fff inset; } /* Rose */
+        .status-cell.alpha { background: linear-gradient(135deg, #334155 0%, #0f172a 100%); } /* Slate Dark */
 
         .calendar-legend {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
-            padding: 15px 25px;
-            background: #fff;
-            border-top: 1px solid #f1f1f1;
+            padding: 20px 30px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            justify-content: center;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
-            color: #6c757d;
+            color: #64748b;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #f8fafc;
+            transition: all 0.2s;
+        }
+        
+        .legend-item:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
         }
 
         .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-            margin-right: 6px;
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            margin-right: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* Tooltip styling enhancements */
+        /* Tooltip styling enhancements - Modern Glassmorphism */
         .status-cell[title]:hover::after {
             content: attr(title);
             position: absolute;
-            bottom: 100%;
+            bottom: 110%;
             left: 50%;
             transform: translateX(-50%);
-            padding: 5px 10px;
-            background: rgba(0,0,0,0.8);
+            padding: 8px 14px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(4px);
             color: white;
-            border-radius: 4px;
-            font-size: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
             white-space: nowrap;
-            z-index: 20;
-            margin-bottom: 5px;
+            z-index: 30;
+            margin-bottom: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+            pointer-events: none;
+            letter-spacing: 0.3px;
+        }
+        
+        /* Tooltip Arrow */
+        .status-cell[title]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: rgba(15, 23, 42, 0.9) transparent transparent transparent;
+            z-index: 30;
+            margin-bottom: -4px;
         }
     </style>
 @endpush
@@ -1151,16 +1197,15 @@
                             <thead>
                                 <tr>
                                     <th class="user-col">Nama Karyawan</th>
-                                    @for($d=1; $d<=$teamCalendar['daysInMonth']; $d++)
+                                    @foreach($teamCalendar['dates'] as $date)
                                         @php 
-                                            $date = $teamCalendar['startDate']->copy()->day($d);
                                             $isWeekend = $date->isWeekend();
                                         @endphp
-                                        <th class="{{ $isWeekend ? 'bg-danger-subtle text-danger' : '' }}" style="padding-top: 10px; padding-bottom: 10px;">
-                                            <span class="d-block">{{ $d }}</span>
+                                        <th class="{{ $isWeekend ? 'bg-danger-subtle text-danger' : '' }}" style="padding-top: 10px; padding-bottom: 10px;" title="{{ $date->translatedFormat('l, d M Y') }}">
+                                            <span class="d-block">{{ $date->format('d') }}</span>
                                             <span style="font-size: 8px; opacity: 0.6; text-transform: uppercase;">{{ $date->translatedFormat('D') }}</span>
                                         </th>
-                                    @endfor
+                                    @endforeach
                                 </tr>
                             </thead>
                             <tbody>
@@ -1173,9 +1218,8 @@
                                             </div>
                                             <small class="text-muted d-block ps-3" style="font-size: 9px;">{{ $teamMember->branch->name ?? '-' }}</small>
                                         </td>
-                                        @for($d=1; $d<=$teamCalendar['daysInMonth']; $d++)
+                                        @foreach($teamCalendar['dates'] as $dateObj)
                                             @php
-                                                $dateObj = $teamCalendar['startDate']->copy()->day($d);
                                                 $dateStr = $dateObj->format('Y-m-d');
                                                 $isWeekend = $dateObj->isWeekend();
                                                 
@@ -1191,8 +1235,8 @@
                                                 $statusValue = '';
                                                 $statusTitle = 'Belum Absen / Alpha';
                                                 
-                                                $isFuture = $teamCalendar['startDate']->copy()->day($d)->isFuture();
-                                                $currentDateStr = $teamCalendar['startDate']->copy()->day($d)->format('Y-m-d');
+                                                $isFuture = $dateObj->isFuture();
+                                                $currentDateStr = $dateObj->format('Y-m-d');
                                                 $todayInBranch = \Carbon\Carbon::now($teamMember->branch?->timezone ?? 'Asia/Jakarta')->format('Y-m-d');
                                                 $isToday = $currentDateStr === $todayInBranch;
 
@@ -1238,7 +1282,7 @@
                                                     {{ $statusValue }}
                                                 </div>
                                             </td>
-                                        @endfor
+                                        @endforeach
                                     </tr>
                                 @endforeach
                             </tbody>
