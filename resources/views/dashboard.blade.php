@@ -1173,18 +1173,17 @@
                             </h4>
                             <p class="text-muted small mb-0">Klik pada kotak status untuk detail harian.</p>
                         </div>
-                        
-                        <form action="{{ route('dashboard') }}" method="GET" class="d-flex align-items-center gap-2 bg-light p-2 rounded-pill">
-                            <select name="month" class="form-select form-select-sm border-0 bg-transparent fw-bold" onchange="this.form.submit()">
+                        <form action="{{ route('dashboard') }}" method="GET" class="d-flex align-items-center gap-2">
+                            <select name="month" class="form-select form-select-sm border border-2 text-dark fw-bold rounded-pill shadow-sm bg-white" style="cursor: pointer; min-width: 140px; padding-left: 1rem; padding-right: 2rem; border-color: #cbd5e1;" onchange="this.form.submit()">
                                 @for($m=1; $m<=12; $m++)
-                                    <option value="{{ $m }}" {{ $teamCalendar['currentMonth'] == $m ? 'selected' : '' }}>
+                                    <option value="{{ $m }}" {{ $teamCalendar['currentMonth'] == $m ? 'selected' : '' }} class="fw-bold">
                                         {{ \Carbon\Carbon::create(2024, $m, 1)->translatedFormat('F') }}
                                     </option>
                                 @endfor
                             </select>
-                            <select name="year" class="form-select form-select-sm border-0 bg-transparent fw-bold" onchange="this.form.submit()">
+                            <select name="year" class="form-select form-select-sm border border-2 text-dark fw-bold rounded-pill shadow-sm bg-white" style="cursor: pointer; padding-left: 1rem; padding-right: 2rem; border-color: #cbd5e1;" onchange="this.form.submit()">
                                 @for($y=date('Y')-1; $y<=date('Y')+1; $y++)
-                                    <option value="{{ $y }}" {{ $teamCalendar['currentYear'] == $y ? 'selected' : '' }}>
+                                    <option value="{{ $y }}" {{ $teamCalendar['currentYear'] == $y ? 'selected' : '' }} class="fw-bold">
                                         {{ $y }}
                                     </option>
                                 @endfor
