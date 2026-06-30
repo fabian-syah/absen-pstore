@@ -199,9 +199,9 @@
         .calendar-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 4px; /* Added spacing for gap aesthetic */
+            border-spacing: 0; /* Remove gap so sticky background works flawlessly */
             table-layout: fixed;
-            background: transparent;
+            background: #ffffff;
         }
 
         .calendar-table th, .calendar-table td {
@@ -211,9 +211,11 @@
             text-align: center;
             vertical-align: middle;
             font-size: 13px;
-            padding: 0;
-            border-radius: 12px; /* Rounded cells */
+            padding: 3px; /* Creates the gap effect internally */
             border: none;
+            background: #ffffff; /* Solid background prevents scroll overlap */
+            border-bottom: 1px solid #f1f5f9;
+            border-right: 1px solid #f1f5f9;
         }
 
         .calendar-table th {
@@ -222,7 +224,7 @@
             color: #475569;
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 40; /* High z-index for header */
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
 
@@ -234,7 +236,7 @@
             position: sticky;
             left: 0;
             background: #ffffff;
-            z-index: 11;
+            z-index: 30; /* Sticky left column */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -242,14 +244,11 @@
             color: #1e293b;
             font-size: 12px;
             box-shadow: 4px 0 6px -1px rgba(0,0,0,0.05);
-            border-radius: 12px 0 0 12px;
-            margin-right: 10px;
         }
 
         .calendar-table th.user-col {
-            z-index: 12;
+            z-index: 50; /* Top-left corner needs highest z-index */
             background: #ffffff;
-            border-radius: 12px 0 0 12px;
         }
 
         .status-cell {
@@ -287,16 +286,16 @@
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
         }
 
-        /* Modern Gradient Colors for Statuses */
-        .status-cell.present { background: linear-gradient(135deg, #10b981 0%, #059669 100%); } /* Emerald */
-        .status-cell.out { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); } /* Blue */
-        .status-cell.leave { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); } /* Amber */
-        .status-cell.permit { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); } /* Orange */
-        .status-cell.wfh { background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); } /* Purple */
-        .status-cell.sick { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); } /* Red */
-        .status-cell.off { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); } /* Slate */
-        .status-cell.telat { background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); box-shadow: 0 0 0 2px #fff inset; } /* Rose */
-        .status-cell.alpha { background: linear-gradient(135deg, #334155 0%, #0f172a 100%); } /* Slate Dark */
+        /* Modern Gradient Colors for Statuses & Legends */
+        .status-cell.present, .legend-color.present { background: linear-gradient(135deg, #10b981 0%, #059669 100%); } /* Emerald */
+        .status-cell.out, .legend-color.out { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); } /* Blue */
+        .status-cell.leave, .legend-color.leave { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); } /* Amber */
+        .status-cell.permit, .legend-color.permit { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); } /* Orange */
+        .status-cell.wfh, .legend-color.wfh { background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); } /* Purple */
+        .status-cell.sick, .legend-color.sick { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); } /* Red */
+        .status-cell.off, .legend-color.off { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); } /* Slate */
+        .status-cell.telat, .legend-color.telat { background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); box-shadow: 0 0 0 2px #fff inset; } /* Rose */
+        .status-cell.alpha, .legend-color.alpha { background: linear-gradient(135deg, #334155 0%, #0f172a 100%); } /* Slate Dark */
 
         .calendar-legend {
             display: flex;
