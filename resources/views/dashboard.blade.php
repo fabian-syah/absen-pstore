@@ -957,7 +957,7 @@
         }
     </style>
 
-    <div class="row mb-5 animate-enter rapor-container" style="animation-delay: 0.18s">
+    <div class="row mt-4 mb-5 animate-enter rapor-container" style="animation-delay: 0.18s">
         <div class="col-12">
             <div class="card border-0" style="background-color: #f8fafc; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.04) !important; padding: 6px;">
                 
