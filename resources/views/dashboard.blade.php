@@ -4739,6 +4739,7 @@
                     });
 
                     var qrModal = document.getElementById('qrModal');
+                    if(qrModal) document.body.appendChild(qrModal); // Fix modal backdrop overlay issue
                     qrModal.addEventListener('show.bs.modal', function (event) {
                         var qrContainer = document.getElementById('qrcode-modal-display');
                         qrContainer.innerHTML = '';
