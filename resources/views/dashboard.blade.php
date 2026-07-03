@@ -970,23 +970,26 @@
                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between position-relative z-index-1">
                         <div class="d-flex align-items-center gap-4 mb-3 mb-md-0">
                             <div class="d-flex align-items-center justify-content-center shadow-lg" style="width: 64px; height: 64px; background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
-                                <i class="mdi mdi-chart-donut" style="font-size: 32px; color: #38bdf8; text-shadow: 0 0 20px rgba(56,189,248,0.5);"></i>
+                                <i class="mdi mdi-chart-donut" style="font-size: 32px; color: #38bdf8 !important; text-shadow: 0 0 20px rgba(56,189,248,0.5);"></i>
                             </div>
                             <div>
-                                <h3 class="mb-1 fw-bolder rapor-header-text" style="font-size: 1.75rem; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">RAPOR STATISTIK KARYAWAN</h3>
-                                <p class="mb-0" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.5px;">EVALUASI PERFORMA BULANAN</p>
+                                <h3 class="mb-1 fw-bolder" style="font-size: 1.75rem; color: #ffffff !important; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">RAPOR STATISTIK KARYAWAN</h3>
+                                <p class="mb-0" style="color: #cbd5e1 !important; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.5px;">EVALUASI PERFORMA BULANAN</p>
                             </div>
                         </div>
                         
                         {{-- Evaluasi Badge & User Info --}}
                         <div class="d-flex align-items-center gap-3">
                             <div class="text-end d-none d-md-block">
-                                <h5 class="fw-bold mb-1 rapor-header-text" style="font-size: 1.1rem; text-transform: none;">{{ Auth::user()->name }}</h5>
-                                <p class="mb-0" style="color: #94a3b8; font-size: 0.8rem;">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</p>
+                                <h5 class="fw-bold mb-1" style="font-size: 1.1rem; color: #ffffff !important; text-transform: none;">
+                                    {{ Auth::user()->name }}
+                                    <i class="mdi mdi-check-decagram" style="color: #38bdf8 !important; font-size: 1.15rem; vertical-align: middle;" title="Terverifikasi"></i>
+                                </h5>
+                                <p class="mb-0" style="color: #cbd5e1 !important; font-size: 0.8rem;">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</p>
                             </div>
                             <div class="px-4 py-2 shadow-lg d-flex align-items-center gap-2" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);">
                                 <div style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981;"></div>
-                                <span class="fw-bold" style="color: #ffffff; letter-spacing: 1px; font-size: 0.85rem;">EVALUASI AKTIF</span>
+                                <span class="fw-bold" style="color: #ffffff !important; letter-spacing: 1px; font-size: 0.85rem;">EVALUASI AKTIF</span>
                             </div>
                         </div>
                     </div>
@@ -1004,15 +1007,6 @@
                                 @else
                                     <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=e2e8f0&color=475569&size=400" alt="Foto" class="img-fluid w-100 h-100" style="object-fit: cover; border-radius: 18px;">
                                 @endif
-                                {{-- Gradient Overlay --}}
-                                <div class="position-absolute w-100" style="bottom: 8px; left: 0; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); border-radius: 0 0 18px 18px; pointer-events: none;"></div>
-                                
-                                <div class="position-absolute w-100 px-4" style="bottom: 25px; left: 0;">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="mdi mdi-check-decagram fs-4 text-info"></i>
-                                        <span class="fw-bold text-white fs-5" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Terverifikasi</span>
-                                    </div>
-                                </div>
                             </div>
 
                             {{-- History Card --}}
