@@ -950,6 +950,9 @@
             gap: 1.5rem;
             grid-template-columns: 1fr;
         }
+        .bento-grid > * {
+            min-width: 0;
+        }
         @media (min-width: 992px) {
             .bento-grid {
                 grid-template-columns: 320px 1fr 380px;
