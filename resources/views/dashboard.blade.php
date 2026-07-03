@@ -904,14 +904,14 @@
     {{-- ======================================================================= --}}
     <div class="row mb-4 animate-enter" style="animation-delay: 0.18s">
         <div class="col-12">
-            <div class="card border-0 shadow-lg" style="background-color: #0b1426; border: 2px solid #1e3a5f; overflow: hidden; border-radius: 12px;">
+            <div class="card border-0 shadow-sm" style="background-color: #ffffff; border: 1px solid rgba(13, 110, 253, 0.15) !important; overflow: hidden; border-radius: 12px;">
                 
                 {{-- Header Rapor --}}
-                <div class="p-4 d-flex align-items-center justify-content-between" style="background: linear-gradient(90deg, #0b1426 0%, #1e3a5f 100%); border-bottom: 1px solid #1e3a5f;">
+                <div class="p-4 d-flex align-items-center justify-content-between text-white" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="text-white fw-bold fs-2 fst-italic" style="letter-spacing: 2px;">CSI</div>
+                        <div class="fw-bold fs-2 fst-italic" style="letter-spacing: 2px;">CSI</div>
                         <div>
-                            <h3 class="mb-0 fw-bold text-white" style="letter-spacing: 1px;">RAPOR STATISTIK KARYAWAN</h3>
+                            <h3 class="mb-0 fw-bold" style="letter-spacing: 1px;">RAPOR STATISTIK KARYAWAN</h3>
                             <p class="mb-0 text-white-50 small">EVALUASI PERFORMA BULANAN</p>
                         </div>
                     </div>
@@ -919,12 +919,12 @@
 
                 {{-- Nama & Badge Evaluasi --}}
                 <div class="d-flex justify-content-between my-3">
-                    <div class="px-5 py-2" style="background: linear-gradient(90deg, #1d8eda 0%, #0b1426 100%); clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%); width: 66%;">
-                        <h4 class="fw-bold text-white mb-0 text-uppercase">{{ Auth::user()->name }}</h4>
-                        <h6 class="fw-semibold text-white-50 mb-0">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</h6>
+                    <div class="px-5 py-2" style="background: linear-gradient(90deg, #e7f1ff 0%, #ffffff 100%); clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%); width: 66%;">
+                        <h4 class="fw-bold mb-0 text-uppercase" style="color: #0a58ca;">{{ Auth::user()->name }}</h4>
+                        <h6 class="fw-semibold text-muted mb-0">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</h6>
                     </div>
-                    <div class="px-5 py-3 d-flex align-items-center justify-content-center text-center" style="background: linear-gradient(90deg, #1d8eda 0%, #0b1426 100%); clip-path: polygon(15% 0, 100% 0, 100% 100%, 0% 100%); width: 25%;">
-                        <span class="fs-4 fw-bold text-white" style="letter-spacing: 3px;">EVALUASI</span>
+                    <div class="px-5 py-3 d-flex align-items-center justify-content-center text-center" style="background: linear-gradient(90deg, #e7f1ff 0%, #ffffff 100%); clip-path: polygon(15% 0, 100% 0, 100% 100%, 0% 100%); width: 25%;">
+                        <span class="fs-4 fw-bold" style="color: #0a58ca; letter-spacing: 3px;">EVALUASI</span>
                     </div>
                 </div>
 
@@ -933,37 +933,37 @@
                         
                         {{-- Kolom Kiri: Foto & History --}}
                         <div class="col-lg-4 d-flex flex-column gap-3">
-                            <div class="p-2 d-flex justify-content-center align-items-center h-100 shadow-inner" style="background-color: #e5f1f9; border-radius: 8px;">
+                            <div class="p-2 d-flex justify-content-center align-items-center h-100 shadow-sm" style="background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
                                 @if (Auth::user()->profile_photo_path)
                                     <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Foto" class="img-fluid rounded" style="max-height: 350px; object-fit: cover;">
                                 @else
                                     <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0d8abc&color=fff&size=300" alt="Foto" class="img-fluid rounded" style="max-height: 350px; object-fit: cover;">
                                 @endif
                             </div>
-                            <div class="p-3 shadow-inner" style="background-color: #e5f1f9; border-radius: 8px;">
-                                <h6 class="fw-bold mb-2 pb-1" style="color: #0b2b4d; border-bottom: 1px solid #93c5fd;">HISTORY PENILAIAN:</h6>
+                            <div class="p-3 shadow-sm" style="background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                                <h6 class="fw-bold mb-2 pb-1" style="color: #0a58ca; border-bottom: 1px solid #dee2e6;">HISTORY PENILAIAN:</h6>
                                 <div class="d-flex justify-content-between text-center mb-2" id="history-container">
                                     {{-- History Item --}}
                                     <div>
-                                        <div class="small fw-bold" style="color: #0b1426;">MEI '24</div>
+                                        <div class="small fw-bold text-muted">MEI '24</div>
                                         <div class="fw-bold fs-5 text-primary d-flex align-items-center justify-content-center gap-1">
                                             <i class="mdi mdi-hexagon-outline"></i> 7.8/10
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="small fw-bold" style="color: #0b1426;">JUN '24</div>
+                                        <div class="small fw-bold text-muted">JUN '24</div>
                                         <div class="fw-bold fs-5 text-primary d-flex align-items-center justify-content-center gap-1">
                                             <i class="mdi mdi-hexagon-outline"></i> 8.1/10
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="small fw-bold" style="color: #0b1426;">JUL '24</div>
+                                        <div class="small fw-bold text-muted">JUL '24</div>
                                         <div class="fw-bold fs-5 text-primary d-flex align-items-center justify-content-center gap-1">
                                             <i class="mdi mdi-hexagon-outline"></i> 8.4/10
                                         </div>
                                     </div>
                                 </div>
-                                <p class="small fst-italic mb-0" style="color: #475569; font-size: 11px;">
+                                <p class="small fst-italic text-muted mb-0" style="font-size: 11px;">
                                     Catatan: Menunjukkan peningkatan kepemimpinan yang signifikan bulan ini, khususnya dalam mentoring tim. Perlu sedikit peningkatan ketelitian.
                                 </p>
                             </div>
@@ -971,15 +971,15 @@
 
                         {{-- Kolom Tengah: Radar Chart & Penilai --}}
                         <div class="col-lg-4 d-flex flex-column gap-3">
-                            <div class="p-3 d-flex flex-column align-items-center shadow-inner h-100" style="background-color: #e5f1f9; border-radius: 8px;">
-                                <h6 class="fw-bold text-center mb-3" style="color: #0b2b4d;">PERSENTASE EVALUASI KOMPETENSI</h6>
+                            <div class="p-3 d-flex flex-column align-items-center shadow-sm h-100" style="background-color: #ffffff; border-radius: 8px; border: 1px solid #e9ecef;">
+                                <h6 class="fw-bold text-center mb-3" style="color: #0a58ca;">PERSENTASE EVALUASI KOMPETENSI</h6>
                                 <div class="w-100 position-relative" style="height: 300px;">
                                     <canvas id="radarChartRapor"></canvas>
                                 </div>
                             </div>
-                            <div class="p-3 text-white shadow-sm flex-shrink-0" style="background-color: #0b2b4d; border-radius: 8px;">
-                                <h6 class="fw-bold mb-2 pb-1" style="border-bottom: 1px solid #1e40af;">DINILAI OLEH:</h6>
-                                <table class="table table-borderless table-sm text-white mb-0 small">
+                            <div class="p-3 shadow-sm flex-shrink-0" style="background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                                <h6 class="fw-bold mb-2 pb-1" style="color: #0a58ca; border-bottom: 1px solid #dee2e6;">DINILAI OLEH:</h6>
+                                <table class="table table-borderless table-sm mb-0 small" style="color: #495057;">
                                     <tr>
                                         <td style="width: 100px; padding: 0;">Penilai</td>
                                         <td style="width: 10px; padding: 0;">:</td>
@@ -1007,7 +1007,7 @@
                     </div>
                     
                     {{-- Footer Rapor --}}
-                    <div class="text-white-50 small mt-3 pt-2 d-flex justify-content-between" style="border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px;">
+                    <div class="text-muted small mt-3 pt-2 d-flex justify-content-between" style="border-top: 1px solid #e9ecef; font-size: 11px;">
                         <span>Copyright © CORPORATE INSIGHT {{ date('Y') }}</span>
                     </div>
                 </div>
@@ -1045,12 +1045,12 @@
                         datasets: [{
                             label: 'Nilai',
                             data: dataValues,
-                            backgroundColor: 'rgba(54, 162, 235, 0.4)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            pointBackgroundColor: 'rgba(13, 110, 253, 1)',
                             pointBorderColor: '#fff',
                             pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
+                            pointHoverBorderColor: 'rgba(13, 110, 253, 1)',
                             borderWidth: 2,
                         }]
                     },
@@ -1062,7 +1062,7 @@
                                 angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
                                 grid: { color: 'rgba(0, 0, 0, 0.1)' },
                                 pointLabels: {
-                                    color: '#0b2b4d',
+                                    color: '#495057',
                                     font: { size: 10, weight: 'bold' }
                                 },
                                 ticks: {
@@ -1085,21 +1085,22 @@
             if(detailContainer) {
                 validKriteria.forEach(k => {
                     const row = document.createElement('div');
-                    row.className = 'd-flex align-items-center justify-content-between p-2 rounded text-white shadow-sm mb-1';
-                    row.style.background = 'linear-gradient(90deg, #0f5c97 0%, #0b2b4d 100%)';
-                    row.style.borderLeft = '4px solid #34a853';
+                    row.className = 'd-flex align-items-center justify-content-between p-2 rounded shadow-sm mb-1';
+                    row.style.background = '#ffffff';
+                    row.style.border = '1px solid #e9ecef';
+                    row.style.borderLeft = '4px solid #0d6efd';
                     
                     row.innerHTML = `
                         <div class="d-flex align-items-center w-75">
                             <div class="me-2 text-center" style="width: 30px;">
-                                <i class="mdi ${k.icon} fs-4 text-info"></i>
+                                <i class="mdi ${k.icon} fs-4" style="color: #0a58ca;"></i>
                             </div>
                             <div class="d-flex flex-column text-start">
-                                <span class="fw-bold small text-uppercase" style="letter-spacing: 0.5px;">${k.nama}</span>
-                                <span class="text-white-50 fst-italic" style="font-size: 10px;">Catatan: ${k.catatan || '-'}</span>
+                                <span class="fw-bold small text-uppercase" style="letter-spacing: 0.5px; color: #495057;">${k.nama}</span>
+                                <span class="text-muted fst-italic" style="font-size: 10px;">Catatan: ${k.catatan || '-'}</span>
                             </div>
                         </div>
-                        <div class="fw-bold bg-white text-primary px-2 py-1 rounded shadow-inner text-center fs-5" style="width: 50px;">
+                        <div class="fw-bold px-2 py-1 rounded text-center fs-5" style="width: 50px; background-color: #e7f1ff; color: #0a58ca;">
                             ${k.nilai}
                         </div>
                     `;
