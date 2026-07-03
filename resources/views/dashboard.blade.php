@@ -1228,13 +1228,13 @@
                     const grade = getGradeLetter(k.nilai);
 
                     row.innerHTML = `
-                        <div class="d-flex align-items-center flex-grow-1 overflow-hidden position-relative z-index-1 pe-2">
+                        <div class="d-flex align-items-center flex-grow-1 position-relative z-index-1 pe-2">
                             <div class="me-2 me-md-3 text-center icon-circle-bg shadow-sm flex-shrink-0" style="background: ${badgeBg}; border: 1px solid rgba(255,255,255,0.5);">
                                 <i class="mdi ${k.icon} fs-5" style="color: ${badgeColor};"></i>
                             </div>
-                            <div class="d-flex flex-column text-start overflow-hidden w-100">
-                                <span class="fw-bold text-uppercase text-truncate" style="letter-spacing: 0.5px; color: #1e293b; font-size: 0.85rem;">${k.nama}</span>
-                                <span class="text-truncate" style="color: #64748b; font-size: 0.75rem; margin-top: 2px;">${k.catatan || '-'}</span>
+                            <div class="d-flex flex-column text-start">
+                                <span class="fw-bold text-uppercase" style="letter-spacing: 0.5px; color: #1e293b; font-size: 0.85rem; line-height: 1.2; padding-bottom: 2px;">${k.nama}</span>
+                                <span style="color: #64748b; font-size: 0.75rem; line-height: 1.3;">${k.catatan || '-'}</span>
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-1 gap-md-2 position-relative z-index-1 flex-shrink-0">
