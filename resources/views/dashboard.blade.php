@@ -902,98 +902,122 @@
     {{-- ======================================================================= --}}
     {{-- RAPOR STATISTIK KARYAWAN (EVALUASI PERFORMA BULANAN) --}}
     {{-- ======================================================================= --}}
-    <div class="row mb-4 animate-enter" style="animation-delay: 0.18s">
+    <div class="row mb-5 animate-enter" style="animation-delay: 0.18s">
         <div class="col-12">
-            <div class="card border-0 shadow-sm" style="background-color: #ffffff; border: 1px solid rgba(13, 110, 253, 0.15) !important; overflow: hidden; border-radius: 12px;">
+            <div class="card border-0 shadow-lg" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(13, 110, 253, 0.08) !important;">
                 
-                {{-- Header Rapor --}}
-                <div class="p-4 d-flex align-items-center justify-content-between text-white" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="fw-bold fs-2 fst-italic" style="letter-spacing: 2px;">CSI</div>
-                        <div>
-                            <h3 class="mb-0 fw-bold" style="letter-spacing: 1px;">RAPOR STATISTIK KARYAWAN</h3>
-                            <p class="mb-0 text-white-50 small">EVALUASI PERFORMA BULANAN</p>
+                {{-- Header Rapor - Aesthetic Gradient & Pattern --}}
+                <div class="p-4 position-relative" style="background: linear-gradient(135deg, #0a2e5c 0%, #0d6efd 100%); overflow: hidden;">
+                    {{-- Decorative circles --}}
+                    <div class="position-absolute" style="top: -50px; right: -20px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%); border-radius: 50%;"></div>
+                    <div class="position-absolute" style="bottom: -30px; right: 100px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%); border-radius: 50%;"></div>
+                    
+                    <div class="d-flex align-items-center justify-content-between position-relative z-index-1 text-white">
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="d-flex align-items-center justify-content-center shadow-sm" style="width: 60px; height: 60px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.2);">
+                                <span class="fw-bold fs-3 fst-italic" style="letter-spacing: 1px; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">CSI</span>
+                            </div>
+                            <div>
+                                <h3 class="mb-1 fw-bold text-white" style="letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.15); font-size: 1.4rem;">RAPOR STATISTIK KARYAWAN</h3>
+                                <p class="mb-0 text-white" style="font-size: 0.85rem; letter-spacing: 1px; opacity: 0.85;">EVALUASI PERFORMA BULANAN</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Nama & Badge Evaluasi --}}
-                <div class="d-flex justify-content-between my-3">
-                    <div class="px-5 py-2" style="background: linear-gradient(90deg, #e7f1ff 0%, #ffffff 100%); clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%); width: 66%;">
-                        <h4 class="fw-bold mb-0 text-uppercase" style="color: #0a58ca;">{{ Auth::user()->name }}</h4>
-                        <h6 class="fw-semibold text-muted mb-0">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</h6>
+                <div class="d-flex justify-content-between align-items-center px-4 py-3" style="background-color: #f8fbff; border-bottom: 1px solid #eef2f6;">
+                    <div class="d-flex flex-column">
+                        <h4 class="fw-bolder mb-1 text-uppercase" style="color: #0a2e5c; letter-spacing: 0.5px;">{{ Auth::user()->name }}</h4>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="mdi mdi-briefcase-outline text-primary" style="font-size: 0.9rem;"></i>
+                            <h6 class="fw-semibold text-muted mb-0" style="font-size: 0.85rem;">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</h6>
+                        </div>
                     </div>
-                    <div class="px-5 py-3 d-flex align-items-center justify-content-center text-center" style="background: linear-gradient(90deg, #e7f1ff 0%, #ffffff 100%); clip-path: polygon(15% 0, 100% 0, 100% 100%, 0% 100%); width: 25%;">
-                        <span class="fs-4 fw-bold" style="color: #0a58ca; letter-spacing: 3px;">EVALUASI</span>
+                    <div class="px-4 py-2 shadow-sm d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #ffffff 0%, #f1f7ff 100%); border-radius: 50px; border: 1px solid rgba(13, 110, 253, 0.15);">
+                        <i class="mdi mdi-star-circle text-warning fs-5"></i>
+                        <span class="fw-bold" style="color: #0d6efd; letter-spacing: 2px; font-size: 0.9rem;">EVALUASI</span>
                     </div>
                 </div>
 
-                <div class="card-body px-3 pb-3 pt-0">
-                    <div class="row g-3">
+                <div class="card-body p-4 pt-3">
+                    <div class="row g-4">
                         
                         {{-- Kolom Kiri: Foto & History --}}
-                        <div class="col-lg-4 d-flex flex-column gap-3">
-                            <div class="p-2 d-flex justify-content-center align-items-center h-100 shadow-sm" style="background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                        <div class="col-lg-4 d-flex flex-column gap-4">
+                            <div class="p-2 d-flex justify-content-center align-items-center shadow-sm" style="background: linear-gradient(145deg, #ffffff, #f5f8fc); border-radius: 16px; border: 1px solid #e9ecef; position: relative;">
                                 @if (Auth::user()->profile_photo_path)
-                                    <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Foto" class="img-fluid rounded" style="max-height: 350px; object-fit: cover;">
+                                    <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Foto" class="img-fluid" style="max-height: 320px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                                 @else
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0d8abc&color=fff&size=300" alt="Foto" class="img-fluid rounded" style="max-height: 350px; object-fit: cover;">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0d8abc&color=fff&size=300" alt="Foto" class="img-fluid" style="max-height: 320px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                                 @endif
+                                <div class="position-absolute" style="bottom: -15px; background: #fff; padding: 5px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #eef2f6;">
+                                    <span class="fw-bold" style="color: #0a2e5c; font-size: 0.8rem;"><i class="mdi mdi-check-decagram text-primary me-1"></i>VERIFIED</span>
+                                </div>
                             </div>
-                            <div class="p-3 shadow-sm" style="background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-                                <h6 class="fw-bold mb-2 pb-1" style="color: #0a58ca; border-bottom: 1px solid #dee2e6;">HISTORY PENILAIAN:</h6>
-                                <div class="d-flex justify-content-between text-center mb-2" id="history-container">
-                                    {{-- History Item --}}
-                                    <div>
-                                        <div class="small fw-bold text-muted">MEI '24</div>
-                                        <div class="fw-bold fs-5 text-primary d-flex align-items-center justify-content-center gap-1">
-                                            <i class="mdi mdi-hexagon-outline"></i> 7.8/10
+
+                            <div class="p-4 shadow-sm h-100" style="background: #ffffff; border-radius: 16px; border: 1px solid #eef2f6; box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;">
+                                <div class="d-flex align-items-center gap-2 mb-3 pb-2" style="border-bottom: 1px dashed #dee2e6;">
+                                    <i class="mdi mdi-history text-primary fs-5"></i>
+                                    <h6 class="fw-bold mb-0" style="color: #0a2e5c;">HISTORY PENILAIAN</h6>
+                                </div>
+                                <div class="d-flex justify-content-between text-center mb-3">
+                                    <div class="p-2" style="background: #f8fbff; border-radius: 10px; width: 30%;">
+                                        <div class="small fw-semibold text-muted mb-1" style="font-size: 0.75rem;">MEI '24</div>
+                                        <div class="fw-bold text-primary d-flex align-items-center justify-content-center gap-1" style="font-size: 1rem;">
+                                            7.8
                                         </div>
                                     </div>
-                                    <div>
-                                        <div class="small fw-bold text-muted">JUN '24</div>
-                                        <div class="fw-bold fs-5 text-primary d-flex align-items-center justify-content-center gap-1">
-                                            <i class="mdi mdi-hexagon-outline"></i> 8.1/10
+                                    <div class="p-2" style="background: #f8fbff; border-radius: 10px; width: 30%;">
+                                        <div class="small fw-semibold text-muted mb-1" style="font-size: 0.75rem;">JUN '24</div>
+                                        <div class="fw-bold text-primary d-flex align-items-center justify-content-center gap-1" style="font-size: 1rem;">
+                                            8.1
                                         </div>
                                     </div>
-                                    <div>
-                                        <div class="small fw-bold text-muted">JUL '24</div>
-                                        <div class="fw-bold fs-5 text-primary d-flex align-items-center justify-content-center gap-1">
-                                            <i class="mdi mdi-hexagon-outline"></i> 8.4/10
+                                    <div class="p-2" style="background: linear-gradient(135deg, #eef5ff 0%, #e1edff 100%); border-radius: 10px; width: 30%; border: 1px solid rgba(13,110,253,0.1);">
+                                        <div class="small fw-bold mb-1" style="font-size: 0.75rem; color: #0a2e5c;">JUL '24</div>
+                                        <div class="fw-bold text-primary d-flex align-items-center justify-content-center gap-1" style="font-size: 1rem;">
+                                            8.4
                                         </div>
                                     </div>
                                 </div>
-                                <p class="small fst-italic text-muted mb-0" style="font-size: 11px;">
-                                    Catatan: Menunjukkan peningkatan kepemimpinan yang signifikan bulan ini, khususnya dalam mentoring tim. Perlu sedikit peningkatan ketelitian.
-                                </p>
+                                <div class="p-3" style="background: #fcfcfc; border-radius: 8px; border-left: 3px solid #0d6efd;">
+                                    <p class="small fst-italic text-muted mb-0" style="font-size: 0.75rem; line-height: 1.5;">
+                                        "Menunjukkan peningkatan kepemimpinan yang signifikan bulan ini, khususnya dalam mentoring tim. Perlu sedikit peningkatan ketelitian."
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
                         {{-- Kolom Tengah: Radar Chart & Penilai --}}
-                        <div class="col-lg-4 d-flex flex-column gap-3">
-                            <div class="p-3 d-flex flex-column align-items-center shadow-sm h-100" style="background-color: #ffffff; border-radius: 8px; border: 1px solid #e9ecef;">
-                                <h6 class="fw-bold text-center mb-3" style="color: #0a58ca;">PERSENTASE EVALUASI KOMPETENSI</h6>
-                                <div class="w-100 position-relative" style="height: 300px;">
+                        <div class="col-lg-4 d-flex flex-column gap-4">
+                            <div class="p-4 d-flex flex-column align-items-center shadow-sm h-100" style="background: #ffffff; border-radius: 16px; border: 1px solid #eef2f6; box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;">
+                                <h6 class="fw-bold text-center mb-4" style="color: #0a2e5c; letter-spacing: 0.5px;">PERSENTASE KOMPETENSI</h6>
+                                <div class="w-100 position-relative d-flex justify-content-center align-items-center" style="height: 280px;">
                                     <canvas id="radarChartRapor"></canvas>
                                 </div>
                             </div>
-                            <div class="p-3 shadow-sm flex-shrink-0" style="background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-                                <h6 class="fw-bold mb-2 pb-1" style="color: #0a58ca; border-bottom: 1px solid #dee2e6;">DINILAI OLEH:</h6>
+                            
+                            <div class="p-4 shadow-sm flex-shrink-0" style="background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%); border-radius: 16px; border: 1px solid #eef2f6;">
+                                <div class="d-flex align-items-center gap-2 mb-3 pb-2" style="border-bottom: 1px dashed #dee2e6;">
+                                    <i class="mdi mdi-account-check-outline text-primary fs-5"></i>
+                                    <h6 class="fw-bold mb-0" style="color: #0a2e5c;">DINILAI OLEH</h6>
+                                </div>
                                 <div class="small" style="color: #495057;">
-                                    <div class="d-flex mb-1">
-                                        <div style="width: 80px;">Penilai</div>
-                                        <div style="width: 15px;">:</div>
-                                        <div class="fw-bold">JESSICA LESTARI</div>
+                                    <div class="d-flex mb-2 align-items-center">
+                                        <div style="width: 85px;" class="text-muted">Nama</div>
+                                        <div style="width: 15px;" class="text-muted">:</div>
+                                        <div class="fw-bold text-dark">JESSICA LESTARI</div>
                                     </div>
-                                    <div class="d-flex mb-1">
-                                        <div style="width: 80px;">Username</div>
-                                        <div style="width: 15px;">:</div>
-                                        <div class="fw-bold">jess_mgr</div>
+                                    <div class="d-flex mb-2 align-items-center">
+                                        <div style="width: 85px;" class="text-muted">Username</div>
+                                        <div style="width: 15px;" class="text-muted">:</div>
+                                        <div class="fw-bold text-dark">jess_mgr</div>
                                     </div>
-                                    <div class="d-flex">
-                                        <div style="width: 80px;">Tanggal</div>
-                                        <div style="width: 15px;">:</div>
-                                        <div class="fw-bold">{{ date('d-m-Y') }}</div>
+                                    <div class="d-flex align-items-center">
+                                        <div style="width: 85px;" class="text-muted">Tanggal</div>
+                                        <div style="width: 15px;" class="text-muted">:</div>
+                                        <div class="fw-bold text-primary">{{ date('d M Y') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -1007,14 +1031,38 @@
                     </div>
                     
                     {{-- Footer Rapor --}}
-                    <div class="text-muted small mt-3 pt-2 d-flex justify-content-between" style="border-top: 1px solid #e9ecef; font-size: 11px;">
-                        <span>Copyright © CORPORATE INSIGHT {{ date('Y') }}</span>
+                    <div class="text-muted small mt-4 pt-3 d-flex justify-content-between align-items-center" style="border-top: 1px dashed #e9ecef; font-size: 0.75rem;">
+                        <span>&copy; {{ date('Y') }} CORPORATE INSIGHT. All rights reserved.</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <i class="mdi mdi-shield-check text-success"></i> Official Record
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
+    <style>
+        .aesthetic-list-item {
+            transition: all 0.3s ease;
+        }
+        .aesthetic-list-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.1) !important;
+            border-color: rgba(13, 110, 253, 0.3) !important;
+        }
+        .icon-circle-bg {
+            background: linear-gradient(135deg, #e7f1ff 0%, #f8fbff 100%);
+            border: 1px solid #d1e3ff;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+    </style>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1038,20 +1086,28 @@
             // Setup Radar Chart
             const ctxRapor = document.getElementById('radarChartRapor');
             if (ctxRapor) {
+                // Konfigurasi Chart Aesthetic
+                Chart.defaults.font.family = "'Inter', sans-serif";
+                Chart.defaults.color = '#6c757d';
+
                 new Chart(ctxRapor.getContext('2d'), {
                     type: 'radar',
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: 'Nilai',
+                            label: 'Nilai Kompetensi',
                             data: dataValues,
-                            backgroundColor: 'rgba(13, 110, 253, 0.2)',
-                            borderColor: 'rgba(13, 110, 253, 1)',
-                            pointBackgroundColor: 'rgba(13, 110, 253, 1)',
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: 'rgba(13, 110, 253, 1)',
+                            backgroundColor: 'rgba(13, 110, 253, 0.15)',
+                            borderColor: 'rgba(13, 110, 253, 0.8)',
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: 'rgba(13, 110, 253, 1)',
+                            pointHoverBackgroundColor: 'rgba(13, 110, 253, 1)',
+                            pointHoverBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                             borderWidth: 2,
+                            tension: 0.3
                         }]
                     },
                     options: {
@@ -1059,11 +1115,21 @@
                         maintainAspectRatio: false,
                         scales: {
                             r: {
-                                angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
-                                grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                                angleLines: { 
+                                    color: 'rgba(0, 0, 0, 0.05)',
+                                    lineWidth: 1
+                                },
+                                grid: { 
+                                    color: 'rgba(0, 0, 0, 0.05)',
+                                    circular: true
+                                },
                                 pointLabels: {
                                     color: '#495057',
-                                    font: { size: 10, weight: 'bold' }
+                                    font: { 
+                                        size: 10, 
+                                        weight: '600',
+                                    },
+                                    padding: 15
                                 },
                                 ticks: {
                                     display: false,
@@ -1074,7 +1140,20 @@
                             }
                         },
                         plugins: {
-                            legend: { display: false }
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(10, 46, 92, 0.9)',
+                                titleFont: { size: 13 },
+                                bodyFont: { size: 14, weight: 'bold' },
+                                padding: 12,
+                                cornerRadius: 8,
+                                displayColors: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.raw + ' / 100';
+                                    }
+                                }
+                            }
                         }
                     }
                 });
@@ -1085,22 +1164,33 @@
             if(detailContainer) {
                 validKriteria.forEach(k => {
                     const row = document.createElement('div');
-                    row.className = 'd-flex align-items-center justify-content-between p-2 rounded shadow-sm mb-1';
+                    row.className = 'd-flex align-items-center justify-content-between p-3 rounded mb-2 aesthetic-list-item';
                     row.style.background = '#ffffff';
-                    row.style.border = '1px solid #e9ecef';
-                    row.style.borderLeft = '4px solid #0d6efd';
+                    row.style.border = '1px solid #eef2f6';
+                    row.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)';
                     
+                    // Logic warna untuk nilai
+                    let badgeColor = '#0d6efd';
+                    let badgeBg = '#e7f1ff';
+                    if(k.nilai >= 90) {
+                        badgeColor = '#198754';
+                        badgeBg = '#d1e7dd';
+                    } else if (k.nilai < 80) {
+                        badgeColor = '#fd7e14';
+                        badgeBg = '#ffe8d6';
+                    }
+
                     row.innerHTML = `
                         <div class="d-flex align-items-center w-75">
-                            <div class="me-2 text-center" style="width: 30px;">
-                                <i class="mdi ${k.icon} fs-4" style="color: #0a58ca;"></i>
+                            <div class="me-3 text-center icon-circle-bg">
+                                <i class="mdi ${k.icon} fs-5" style="color: #0d6efd;"></i>
                             </div>
                             <div class="d-flex flex-column text-start">
-                                <span class="fw-bold small text-uppercase" style="letter-spacing: 0.5px; color: #495057;">${k.nama}</span>
-                                <span class="text-muted fst-italic" style="font-size: 10px;">Catatan: ${k.catatan || '-'}</span>
+                                <span class="fw-bold text-uppercase" style="letter-spacing: 0.5px; color: #0a2e5c; font-size: 0.85rem;">${k.nama}</span>
+                                <span class="text-muted mt-1" style="font-size: 0.7rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${k.catatan || '-'}</span>
                             </div>
                         </div>
-                        <div class="fw-bold px-2 py-1 rounded text-center fs-5" style="width: 50px; background-color: #e7f1ff; color: #0a58ca;">
+                        <div class="fw-bold px-3 py-1 rounded-pill text-center d-flex align-items-center justify-content-center" style="background-color: ${badgeBg}; color: ${badgeColor}; font-size: 0.95rem; min-width: 45px; border: 1px solid ${badgeColor}33;">
                             ${k.nilai}
                         </div>
                     `;
