@@ -962,19 +962,19 @@
             <div class="card border-0" style="background-color: #f8fafc; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.04) !important; padding: 6px;">
                 
                 {{-- Premium Dark Header --}}
-                <div class="position-relative" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border-radius: 26px; overflow: hidden; padding: 2rem 2.5rem;">
+                <div class="position-relative p-4 p-md-5" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border-radius: 26px; overflow: hidden;">
                     {{-- Decorative Abstract Shapes --}}
                     <div class="position-absolute" style="top: -20%; right: 5%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%;"></div>
                     <div class="position-absolute" style="bottom: -50%; right: 25%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%;"></div>
                     
                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between position-relative z-index-1">
-                        <div class="d-flex align-items-center gap-4 mb-3 mb-md-0">
-                            <div class="d-flex align-items-center justify-content-center shadow-lg" style="width: 64px; height: 64px; background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
-                                <i class="mdi mdi-chart-donut" style="font-size: 32px; color: #38bdf8 !important; text-shadow: 0 0 20px rgba(56,189,248,0.5);"></i>
+                        <div class="d-flex align-items-center gap-3 gap-md-4 mb-3 mb-md-0">
+                            <div class="d-flex align-items-center justify-content-center shadow-lg flex-shrink-0" style="width: 56px; height: 56px; background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);">
+                                <i class="mdi mdi-chart-donut" style="font-size: 28px; color: #38bdf8 !important; text-shadow: 0 0 20px rgba(56,189,248,0.5);"></i>
                             </div>
-                            <div>
-                                <h3 class="mb-1 fw-bolder" style="font-size: 1.75rem; color: #ffffff !important; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">RAPOR STATISTIK KARYAWAN</h3>
-                                <p class="mb-0" style="color: #cbd5e1 !important; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.5px;">EVALUASI PERFORMA BULANAN</p>
+                            <div style="min-width: 0;">
+                                <h3 class="mb-1 fw-bolder text-truncate" style="font-size: clamp(1.1rem, 4vw, 1.75rem); color: #ffffff !important; text-shadow: 0 2px 10px rgba(0,0,0,0.2); white-space: normal;">RAPOR STATISTIK KARYAWAN</h3>
+                                <p class="mb-0 text-truncate" style="color: #cbd5e1 !important; font-size: clamp(0.75rem, 2vw, 0.9rem); font-weight: 500; letter-spacing: 0.5px; white-space: normal;">EVALUASI PERFORMA BULANAN</p>
                             </div>
                         </div>
                         
@@ -1012,17 +1012,17 @@
                             {{-- History Card --}}
                             <div class="rapor-glass-card p-4 flex-grow-1 d-flex flex-column">
                                 <div class="d-flex align-items-center justify-content-between mb-4">
-                                    <h6 class="fw-bold mb-0" style="color: #0f172a; font-size: 0.95rem;">Riwayat Penilaian</h6>
+                                    <h6 class="fw-bold mb-0 text-truncate" style="color: #0f172a; font-size: 0.95rem; max-width: 80%;">Riwayat Penilaian</h6>
                                     <i class="mdi mdi-trending-up text-primary fs-5"></i>
                                 </div>
-                                <div class="d-flex justify-content-between text-center mb-4 gap-2">
-                                    <div class="flex-fill p-2 rounded-3" style="background: #f8fafc;">
-                                        <div class="fw-bold mb-1" style="color: #64748b; font-size: 0.7rem;">MEI</div>
-                                        <div class="fw-bold" style="color: #334155; font-size: 1.1rem;">7.8</div>
+                                <div class="d-flex justify-content-between text-center mb-4 gap-1 gap-md-2">
+                                    <div class="flex-fill p-1 p-md-2 rounded-3" style="background: #f8fafc;">
+                                        <div class="fw-bold mb-1" style="color: #64748b; font-size: 0.65rem;">MEI</div>
+                                        <div class="fw-bold" style="color: #334155; font-size: clamp(0.9rem, 3vw, 1.1rem);">7.8</div>
                                     </div>
-                                    <div class="flex-fill p-2 rounded-3" style="background: #f8fafc;">
-                                        <div class="fw-bold mb-1" style="color: #64748b; font-size: 0.7rem;">JUN</div>
-                                        <div class="fw-bold" style="color: #334155; font-size: 1.1rem;">8.1</div>
+                                    <div class="flex-fill p-1 p-md-2 rounded-3" style="background: #f8fafc;">
+                                        <div class="fw-bold mb-1" style="color: #64748b; font-size: 0.65rem;">JUN</div>
+                                        <div class="fw-bold" style="color: #334155; font-size: clamp(0.9rem, 3vw, 1.1rem);">8.1</div>
                                     </div>
                                     <div class="flex-fill p-2 rounded-3 position-relative" style="background: #eff6ff; border: 1px solid #bfdbfe;">
                                         <div class="fw-bold mb-1" style="color: #2563eb; font-size: 0.7rem;">JUL</div>
