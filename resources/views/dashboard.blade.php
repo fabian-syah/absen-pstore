@@ -902,166 +902,196 @@
     {{-- ======================================================================= --}}
     {{-- RAPOR STATISTIK KARYAWAN (EVALUASI PERFORMA BULANAN) --}}
     {{-- ======================================================================= --}}
-    <div class="row mb-5 animate-enter" style="animation-delay: 0.18s">
+    {{-- ======================================================================= --}}
+    {{-- RAPOR STATISTIK KARYAWAN (EVALUASI PERFORMA BULANAN) --}}
+    {{-- ======================================================================= --}}
+    <style>
+        .rapor-container * {
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif !important;
+        }
+        .rapor-glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .rapor-glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        }
+        .rapor-header-text {
+            color: #ffffff !important;
+            letter-spacing: -0.025em !important;
+        }
+        .aesthetic-list-item {
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .aesthetic-list-item:hover {
+            background-color: #f8fafc !important;
+            border-radius: 16px;
+            border-color: #e2e8f0;
+            transform: translateX(4px);
+        }
+        .icon-circle-bg {
+            background: #f1f5f9;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+        .bento-grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: 1fr;
+        }
+        @media (min-width: 992px) {
+            .bento-grid {
+                grid-template-columns: 320px 1fr 380px;
+            }
+        }
+    </style>
+
+    <div class="row mb-5 animate-enter rapor-container" style="animation-delay: 0.18s">
         <div class="col-12">
-            <div class="card border-0 shadow-lg" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(13, 110, 253, 0.08) !important;">
+            <div class="card border-0" style="background-color: #f8fafc; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.04) !important; padding: 6px;">
                 
-                {{-- Header Rapor - Aesthetic Gradient & Pattern --}}
-                <div class="p-4 position-relative" style="background: linear-gradient(135deg, #0a2e5c 0%, #0d6efd 100%); overflow: hidden;">
-                    {{-- Decorative circles --}}
-                    <div class="position-absolute" style="top: -50px; right: -20px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%); border-radius: 50%;"></div>
-                    <div class="position-absolute" style="bottom: -30px; right: 100px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%); border-radius: 50%;"></div>
+                {{-- Premium Dark Header --}}
+                <div class="position-relative" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border-radius: 26px; overflow: hidden; padding: 2rem 2.5rem;">
+                    {{-- Decorative Abstract Shapes --}}
+                    <div class="position-absolute" style="top: -20%; right: 5%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%;"></div>
+                    <div class="position-absolute" style="bottom: -50%; right: 25%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%;"></div>
                     
-                    <div class="d-flex align-items-center justify-content-between position-relative z-index-1 text-white">
-                        <div class="d-flex align-items-center gap-4">
-                            <div class="d-flex align-items-center justify-content-center shadow-sm" style="width: 60px; height: 60px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.2);">
-                                <span class="fw-bold fs-3 fst-italic" style="letter-spacing: 1px; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">CSI</span>
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between position-relative z-index-1">
+                        <div class="d-flex align-items-center gap-4 mb-3 mb-md-0">
+                            <div class="d-flex align-items-center justify-content-center shadow-lg" style="width: 64px; height: 64px; background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                                <i class="mdi mdi-chart-donut" style="font-size: 32px; color: #38bdf8; text-shadow: 0 0 20px rgba(56,189,248,0.5);"></i>
                             </div>
                             <div>
-                                <h3 class="mb-1 fw-bold text-white" style="letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.15); font-size: 1.4rem;">RAPOR STATISTIK KARYAWAN</h3>
-                                <p class="mb-0 text-white" style="font-size: 0.85rem; letter-spacing: 1px; opacity: 0.85;">EVALUASI PERFORMA BULANAN</p>
+                                <h3 class="mb-1 fw-bolder rapor-header-text" style="font-size: 1.75rem; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">RAPOR STATISTIK KARYAWAN</h3>
+                                <p class="mb-0" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.5px;">EVALUASI PERFORMA BULANAN</p>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                {{-- Nama & Badge Evaluasi --}}
-                <div class="d-flex justify-content-between align-items-center px-4 py-3" style="background-color: #f8fbff; border-bottom: 1px solid #eef2f6;">
-                    <div class="d-flex flex-column">
-                        <h4 class="fw-bolder mb-1 text-uppercase" style="color: #0a2e5c; letter-spacing: 0.5px;">{{ Auth::user()->name }}</h4>
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="mdi mdi-briefcase-outline text-primary" style="font-size: 0.9rem;"></i>
-                            <h6 class="fw-semibold text-muted mb-0" style="font-size: 0.85rem;">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</h6>
-                        </div>
-                    </div>
-                    <div class="px-4 py-2 shadow-sm d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #ffffff 0%, #f1f7ff 100%); border-radius: 50px; border: 1px solid rgba(13, 110, 253, 0.15);">
-                        <i class="mdi mdi-star-circle text-warning fs-5"></i>
-                        <span class="fw-bold" style="color: #0d6efd; letter-spacing: 2px; font-size: 0.9rem;">EVALUASI</span>
-                    </div>
-                </div>
-
-                <div class="card-body p-4 pt-3">
-                    <div class="row g-4">
                         
-                        {{-- Kolom Kiri: Foto & History --}}
-                        <div class="col-lg-4 d-flex flex-column gap-4">
-                            <div class="p-2 d-flex justify-content-center align-items-center shadow-sm" style="background: linear-gradient(145deg, #ffffff, #f5f8fc); border-radius: 16px; border: 1px solid #e9ecef; position: relative;">
+                        {{-- Evaluasi Badge & User Info --}}
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-end d-none d-md-block">
+                                <h5 class="fw-bold mb-1 rapor-header-text" style="font-size: 1.1rem; text-transform: none;">{{ Auth::user()->name }}</h5>
+                                <p class="mb-0" style="color: #94a3b8; font-size: 0.8rem;">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</p>
+                            </div>
+                            <div class="px-4 py-2 shadow-lg d-flex align-items-center gap-2" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);">
+                                <div style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981;"></div>
+                                <span class="fw-bold" style="color: #ffffff; letter-spacing: 1px; font-size: 0.85rem;">EVALUASI AKTIF</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 mt-1">
+                    <div class="bento-grid">
+                        
+                        {{-- Left Column: Profile & History Bento --}}
+                        <div class="d-flex flex-column gap-3">
+                            {{-- Profile Image Card --}}
+                            <div class="rapor-glass-card p-2 position-relative d-flex justify-content-center align-items-center" style="height: 320px; overflow: hidden;">
                                 @if (Auth::user()->profile_photo_path)
-                                    <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Foto" class="img-fluid" style="max-height: 320px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                                    <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Foto" class="img-fluid w-100 h-100" style="object-fit: cover; border-radius: 18px;">
                                 @else
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0d8abc&color=fff&size=300" alt="Foto" class="img-fluid" style="max-height: 320px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=e2e8f0&color=475569&size=400" alt="Foto" class="img-fluid w-100 h-100" style="object-fit: cover; border-radius: 18px;">
                                 @endif
-                                <div class="position-absolute" style="bottom: -15px; background: #fff; padding: 5px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #eef2f6;">
-                                    <span class="fw-bold" style="color: #0a2e5c; font-size: 0.8rem;"><i class="mdi mdi-check-decagram text-primary me-1"></i>VERIFIED</span>
+                                {{-- Gradient Overlay --}}
+                                <div class="position-absolute w-100" style="bottom: 8px; left: 0; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); border-radius: 0 0 18px 18px; pointer-events: none;"></div>
+                                
+                                <div class="position-absolute w-100 px-4" style="bottom: 25px; left: 0;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="mdi mdi-check-decagram fs-4 text-info"></i>
+                                        <span class="fw-bold text-white fs-5" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Terverifikasi</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="p-4 shadow-sm h-100" style="background: #ffffff; border-radius: 16px; border: 1px solid #eef2f6; box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;">
-                                <div class="d-flex align-items-center gap-2 mb-3 pb-2" style="border-bottom: 1px dashed #dee2e6;">
-                                    <i class="mdi mdi-history text-primary fs-5"></i>
-                                    <h6 class="fw-bold mb-0" style="color: #0a2e5c;">HISTORY PENILAIAN</h6>
+                            {{-- History Card --}}
+                            <div class="rapor-glass-card p-4 flex-grow-1 d-flex flex-column">
+                                <div class="d-flex align-items-center justify-content-between mb-4">
+                                    <h6 class="fw-bold mb-0" style="color: #0f172a; font-size: 0.95rem;">Riwayat Penilaian</h6>
+                                    <i class="mdi mdi-trending-up text-primary fs-5"></i>
                                 </div>
-                                <div class="d-flex justify-content-between text-center mb-3">
-                                    <div class="p-2" style="background: #f8fbff; border-radius: 10px; width: 30%;">
-                                        <div class="small fw-semibold text-muted mb-1" style="font-size: 0.75rem;">MEI '24</div>
-                                        <div class="fw-bold text-primary d-flex align-items-center justify-content-center gap-1" style="font-size: 1rem;">
-                                            7.8
-                                        </div>
+                                <div class="d-flex justify-content-between text-center mb-4 gap-2">
+                                    <div class="flex-fill p-2 rounded-3" style="background: #f8fafc;">
+                                        <div class="fw-bold mb-1" style="color: #64748b; font-size: 0.7rem;">MEI</div>
+                                        <div class="fw-bold" style="color: #334155; font-size: 1.1rem;">7.8</div>
                                     </div>
-                                    <div class="p-2" style="background: #f8fbff; border-radius: 10px; width: 30%;">
-                                        <div class="small fw-semibold text-muted mb-1" style="font-size: 0.75rem;">JUN '24</div>
-                                        <div class="fw-bold text-primary d-flex align-items-center justify-content-center gap-1" style="font-size: 1rem;">
-                                            8.1
-                                        </div>
+                                    <div class="flex-fill p-2 rounded-3" style="background: #f8fafc;">
+                                        <div class="fw-bold mb-1" style="color: #64748b; font-size: 0.7rem;">JUN</div>
+                                        <div class="fw-bold" style="color: #334155; font-size: 1.1rem;">8.1</div>
                                     </div>
-                                    <div class="p-2" style="background: linear-gradient(135deg, #eef5ff 0%, #e1edff 100%); border-radius: 10px; width: 30%; border: 1px solid rgba(13,110,253,0.1);">
-                                        <div class="small fw-bold mb-1" style="font-size: 0.75rem; color: #0a2e5c;">JUL '24</div>
-                                        <div class="fw-bold text-primary d-flex align-items-center justify-content-center gap-1" style="font-size: 1rem;">
-                                            8.4
-                                        </div>
+                                    <div class="flex-fill p-2 rounded-3 position-relative" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                                        <div class="fw-bold mb-1" style="color: #2563eb; font-size: 0.7rem;">JUL</div>
+                                        <div class="fw-bold text-primary" style="font-size: 1.1rem;">8.4</div>
+                                        <div class="position-absolute" style="top: -5px; right: -5px; width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; border: 2px solid #fff;"></div>
                                     </div>
                                 </div>
-                                <div class="p-3" style="background: #fcfcfc; border-radius: 8px; border-left: 3px solid #0d6efd;">
-                                    <p class="small fst-italic text-muted mb-0" style="font-size: 0.75rem; line-height: 1.5;">
-                                        "Menunjukkan peningkatan kepemimpinan yang signifikan bulan ini, khususnya dalam mentoring tim. Perlu sedikit peningkatan ketelitian."
+                                <div class="p-3 mt-auto rounded-3" style="background: #f8fafc; border-left: 3px solid #3b82f6;">
+                                    <p class="fst-italic mb-0" style="color: #475569; font-size: 0.75rem; line-height: 1.6;">
+                                        "Peningkatan kepemimpinan yang signifikan bulan ini, khususnya dalam mentoring tim. Perlu sedikit peningkatan pada detail."
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Kolom Tengah: Radar Chart & Penilai --}}
-                        <div class="col-lg-4 d-flex flex-column gap-4">
-                            <div class="p-4 d-flex flex-column align-items-center shadow-sm h-100" style="background: #ffffff; border-radius: 16px; border: 1px solid #eef2f6; box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;">
-                                <h6 class="fw-bold text-center mb-4" style="color: #0a2e5c; letter-spacing: 0.5px;">PERSENTASE KOMPETENSI</h6>
-                                <div class="w-100 position-relative d-flex justify-content-center align-items-center" style="height: 280px;">
+                        {{-- Middle Column: Radar Chart & Assessor Bento --}}
+                        <div class="d-flex flex-column gap-3">
+                            {{-- Chart Card --}}
+                            <div class="rapor-glass-card p-4 d-flex flex-column align-items-center justify-content-center flex-grow-1">
+                                <div class="w-100 d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0" style="color: #0f172a; font-size: 0.95rem;">Analisis Kompetensi</h6>
+                                    <div class="px-2 py-1 rounded text-primary fw-bold" style="background: #eff6ff; font-size: 0.75rem;">
+                                        Rata-rata: 88.5
+                                    </div>
+                                </div>
+                                <div class="w-100 position-relative d-flex justify-content-center align-items-center mt-3" style="height: 320px;">
                                     <canvas id="radarChartRapor"></canvas>
                                 </div>
                             </div>
                             
-                            <div class="p-4 shadow-sm flex-shrink-0" style="background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%); border-radius: 16px; border: 1px solid #eef2f6;">
-                                <div class="d-flex align-items-center gap-2 mb-3 pb-2" style="border-bottom: 1px dashed #dee2e6;">
-                                    <i class="mdi mdi-account-check-outline text-primary fs-5"></i>
-                                    <h6 class="fw-bold mb-0" style="color: #0a2e5c;">DINILAI OLEH</h6>
-                                </div>
-                                <div class="small" style="color: #495057;">
-                                    <div class="d-flex mb-2 align-items-center">
-                                        <div style="width: 85px;" class="text-muted">Nama</div>
-                                        <div style="width: 15px;" class="text-muted">:</div>
-                                        <div class="fw-bold text-dark">JESSICA LESTARI</div>
-                                    </div>
-                                    <div class="d-flex mb-2 align-items-center">
-                                        <div style="width: 85px;" class="text-muted">Username</div>
-                                        <div style="width: 15px;" class="text-muted">:</div>
-                                        <div class="fw-bold text-dark">jess_mgr</div>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <div style="width: 85px;" class="text-muted">Tanggal</div>
-                                        <div style="width: 15px;" class="text-muted">:</div>
-                                        <div class="fw-bold text-primary">{{ date('d M Y') }}</div>
+                            {{-- Dinilai Oleh Card --}}
+                            <div class="rapor-glass-card p-4">
+                                <h6 class="fw-bold mb-3" style="color: #0f172a; font-size: 0.95rem;">Dinilai Oleh</h6>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="https://ui-avatars.com/api/?name=JESSICA+LESTARI&background=f1f5f9&color=0f172a&rounded=true" alt="Penilai" style="width: 48px; height: 48px; border-radius: 50%;">
+                                    <div>
+                                        <div class="fw-bold" style="color: #0f172a; font-size: 0.9rem;">JESSICA LESTARI</div>
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <span style="color: #64748b; font-size: 0.75rem;">@jess_mgr</span>
+                                            <span style="color: #cbd5e1; font-size: 0.7rem;">•</span>
+                                            <span style="color: #64748b; font-size: 0.75rem;">{{ date('d M Y') }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Kolom Kanan: Detail List --}}
-                        <div class="col-lg-4 d-flex flex-column gap-2" id="detail-list-container">
-                            {{-- Inject JS here --}}
+                        {{-- Right Column: Detailed Metrics Bento --}}
+                        <div class="rapor-glass-card p-4 d-flex flex-column h-100">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <h6 class="fw-bold mb-0" style="color: #0f172a; font-size: 0.95rem;">Rincian Nilai</h6>
+                                <span class="badge bg-light text-dark border">Bulan Ini</span>
+                            </div>
+                            <div class="d-flex flex-column gap-1 overflow-auto pe-2" id="detail-list-container" style="max-height: 550px;">
+                                {{-- Inject JS here --}}
+                            </div>
                         </div>
 
-                    </div>
-                    
-                    {{-- Footer Rapor --}}
-                    <div class="text-muted small mt-4 pt-3 d-flex justify-content-between align-items-center" style="border-top: 1px dashed #e9ecef; font-size: 0.75rem;">
-                        <span>&copy; {{ date('Y') }} CORPORATE INSIGHT. All rights reserved.</span>
-                        <div class="d-flex align-items-center gap-1">
-                            <i class="mdi mdi-shield-check text-success"></i> Official Record
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <style>
-        .aesthetic-list-item {
-            transition: all 0.3s ease;
-        }
-        .aesthetic-list-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.1) !important;
-            border-color: rgba(13, 110, 253, 0.3) !important;
-        }
-        .icon-circle-bg {
-            background: linear-gradient(135deg, #e7f1ff 0%, #f8fbff 100%);
-            border: 1px solid #d1e3ff;
-            width: 38px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-        }
-    </style>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
