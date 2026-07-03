@@ -1050,8 +1050,9 @@
                             <div class="rapor-glass-card p-4 d-flex flex-column align-items-center justify-content-center flex-grow-1">
                                 <div class="w-100 d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="fw-bold mb-0" style="color: #0f172a; font-size: 0.95rem;">Analisis Kompetensi</h6>
-                                    <div class="px-2 py-1 rounded text-primary fw-bold" style="background: #eff6ff; font-size: 0.75rem;">
-                                        Rata-rata: 88.5
+                                    <div id="overall-grade-badge" class="px-3 py-1 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.3);">
+                                        {{-- Injected via JS --}}
+                                        Grade A <span style="opacity: 0.7;">|</span> 88.5
                                     </div>
                                 </div>
                                 <div class="w-100 position-relative d-flex justify-content-center align-items-center mt-3" style="height: 320px;">
@@ -1063,7 +1064,9 @@
                             <div class="rapor-glass-card p-4">
                                 <h6 class="fw-bold mb-3" style="color: #0f172a; font-size: 0.95rem;">Dinilai Oleh</h6>
                                 <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=JESSICA+LESTARI&background=f1f5f9&color=0f172a&rounded=true" alt="Penilai" style="width: 48px; height: 48px; border-radius: 50%;">
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 48px; height: 48px; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border: 1px solid #cbd5e1;">
+                                        <i class="mdi mdi-account-tie fs-4" style="color: #64748b;"></i>
+                                    </div>
                                     <div>
                                         <div class="fw-bold" style="color: #0f172a; font-size: 0.9rem;">JESSICA LESTARI</div>
                                         <div class="d-flex align-items-center gap-2 mt-1">
@@ -1189,10 +1192,23 @@
                 });
             }
 
+            // Helper function to get Grade Letter
+            function getGradeLetter(score) {
+                if (score >= 95) return 'A+';
+                if (score >= 90) return 'A';
+                if (score >= 85) return 'B+';
+                if (score >= 80) return 'B';
+                if (score >= 70) return 'C';
+                return 'D';
+            }
+
             // Populate Right List
             const detailContainer = document.getElementById('detail-list-container');
             if(detailContainer) {
+                let totalScore = 0;
+                
                 validKriteria.forEach(k => {
+                    totalScore += k.nilai;
                     const row = document.createElement('div');
                     row.className = 'd-flex align-items-center justify-content-between p-3 mb-2 aesthetic-list-item position-relative';
                     row.style.background = 'transparent';
@@ -1211,6 +1227,8 @@
                         badgeBg = '#fffbeb';
                         iconColor = '#fbbf24';
                     }
+                    
+                    const grade = getGradeLetter(k.nilai);
 
                     row.innerHTML = `
                         <div class="d-flex align-items-center w-75 position-relative z-index-1">
@@ -1222,13 +1240,31 @@
                                 <span style="color: #64748b; font-size: 0.75rem; margin-top: 2px;">${k.catatan || '-'}</span>
                             </div>
                         </div>
-                        <div class="fw-bolder px-3 py-1 rounded-pill text-center d-flex align-items-center justify-content-center shadow-sm position-relative z-index-1" style="background-color: ${badgeBg}; color: ${badgeColor}; font-size: 0.95rem; min-width: 50px; border: 1px solid rgba(255,255,255,0.8);">
-                            ${k.nilai}
+                        <div class="d-flex align-items-center gap-2 position-relative z-index-1">
+                            <span class="fw-bolder" style="color: ${badgeColor}; font-size: 0.9rem;">${grade}</span>
+                            <div class="fw-bolder px-2 py-1 rounded-pill text-center d-flex align-items-center justify-content-center shadow-sm" style="background-color: ${badgeBg}; color: ${badgeColor}; font-size: 0.95rem; min-width: 45px; border: 1px solid rgba(255,255,255,0.8);">
+                                ${k.nilai}
+                            </div>
                         </div>
                         <div class="position-absolute w-100 h-100 top-0 left-0 bg-white opacity-50 rounded-3 z-index-0" style="display: none;"></div>
                     `;
                     detailContainer.appendChild(row);
                 });
+                
+                // Update Overall Grade Badge
+                if (validKriteria.length > 0) {
+                    const avgScore = (totalScore / validKriteria.length).toFixed(1);
+                    const avgGrade = getGradeLetter(avgScore);
+                    const badgeEl = document.getElementById('overall-grade-badge');
+                    if (badgeEl) {
+                        let bgGrad = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+                        if (avgScore >= 90) bgGrad = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                        else if (avgScore < 80) bgGrad = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                        
+                        badgeEl.style.background = bgGrad;
+                        badgeEl.innerHTML = `Grade ${avgGrade} <span style="opacity: 0.7;">|</span> ${avgScore}`;
+                    }
+                }
             }
         });
     </script>
