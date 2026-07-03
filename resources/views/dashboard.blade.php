@@ -979,23 +979,23 @@
                             </div>
                             <div class="p-3 shadow-sm flex-shrink-0" style="background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
                                 <h6 class="fw-bold mb-2 pb-1" style="color: #0a58ca; border-bottom: 1px solid #dee2e6;">DINILAI OLEH:</h6>
-                                <table class="table table-borderless table-sm mb-0 small" style="color: #495057;">
-                                    <tr>
-                                        <td style="width: 100px; padding: 0;">Penilai</td>
-                                        <td style="width: 10px; padding: 0;">:</td>
-                                        <td class="fw-bold" style="padding: 0;">JESSICA LESTARI</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 0;">Username</td>
-                                        <td style="padding: 0;">:</td>
-                                        <td class="fw-bold" style="padding: 0;">jess_mgr</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 0;">Tanggal</td>
-                                        <td style="padding: 0;">:</td>
-                                        <td class="fw-bold" style="padding: 0;">{{ date('d-m-Y') }}</td>
-                                    </tr>
-                                </table>
+                                <div class="small" style="color: #495057;">
+                                    <div class="d-flex mb-1">
+                                        <div style="width: 80px;">Penilai</div>
+                                        <div style="width: 15px;">:</div>
+                                        <div class="fw-bold">JESSICA LESTARI</div>
+                                    </div>
+                                    <div class="d-flex mb-1">
+                                        <div style="width: 80px;">Username</div>
+                                        <div style="width: 15px;">:</div>
+                                        <div class="fw-bold">jess_mgr</div>
+                                    </div>
+                                    <div class="d-flex">
+                                        <div style="width: 80px;">Tanggal</div>
+                                        <div style="width: 15px;">:</div>
+                                        <div class="fw-bold">{{ date('d-m-Y') }}</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
