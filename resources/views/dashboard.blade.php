@@ -3071,8 +3071,15 @@
                     <h5 class="modal-title fw-bold mt-3">QR Code Saya</h5>
                 </div>
                 <div class="modal-body text-center pt-2">
-                    <div class="p-4 bg-light rounded-circle d-inline-block mb-3 shadow-inner">
-                        <div id="qrcode-modal-display" class="d-flex justify-content-center"></div>
+                    <div class="mb-3">
+                        <div id="qrcode-modal-display" class="d-flex justify-content-center" style="max-width: 100%;">
+                            <style>
+                                #qrcode-modal-display img, #qrcode-modal-display canvas {
+                                    max-width: 100% !important;
+                                    height: auto !important;
+                                }
+                            </style>
+                        </div>
                     </div>
                     <p class="text-muted small mb-3">Tunjukkan ke Security untuk Scan</p>
                     <button type="button" class="btn btn-dark rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
