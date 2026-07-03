@@ -897,9 +897,217 @@
                         </div>
                     </div>
                 </div>
+    @endif
+
+    {{-- ======================================================================= --}}
+    {{-- RAPOR STATISTIK KARYAWAN (EVALUASI PERFORMA BULANAN) --}}
+    {{-- ======================================================================= --}}
+    <div class="row mb-4 animate-enter" style="animation-delay: 0.18s">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg" style="background-color: #0b1426; border: 2px solid #1e3a5f; overflow: hidden; border-radius: 12px;">
+                
+                {{-- Header Rapor --}}
+                <div class="p-4 d-flex align-items-center justify-content-between" style="background: linear-gradient(90deg, #0b1426 0%, #1e3a5f 100%); border-bottom: 1px solid #1e3a5f;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="text-white fw-bold fs-2 fst-italic" style="letter-spacing: 2px;">CSI</div>
+                        <div>
+                            <h3 class="mb-0 fw-bold text-white" style="letter-spacing: 1px;">RAPOR STATISTIK KARYAWAN</h3>
+                            <p class="mb-0 text-white-50 small">EVALUASI PERFORMA BULANAN</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Nama & Badge Evaluasi --}}
+                <div class="d-flex justify-content-between my-3">
+                    <div class="px-5 py-2" style="background: linear-gradient(90deg, #1d8eda 0%, #0b1426 100%); clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%); width: 66%;">
+                        <h4 class="fw-bold text-white mb-0 text-uppercase">{{ Auth::user()->name }}</h4>
+                        <h6 class="fw-semibold text-white-50 mb-0">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</h6>
+                    </div>
+                    <div class="px-5 py-3 d-flex align-items-center justify-content-center text-center" style="background: linear-gradient(90deg, #1d8eda 0%, #0b1426 100%); clip-path: polygon(15% 0, 100% 0, 100% 100%, 0% 100%); width: 25%;">
+                        <span class="fs-4 fw-bold text-white" style="letter-spacing: 3px;">EVALUASI</span>
+                    </div>
+                </div>
+
+                <div class="card-body px-3 pb-3 pt-0">
+                    <div class="row g-3">
+                        
+                        {{-- Kolom Kiri: Foto & History --}}
+                        <div class="col-lg-4 d-flex flex-column gap-3">
+                            <div class="p-2 d-flex justify-content-center align-items-center h-100 shadow-inner" style="background-color: #e5f1f9; border-radius: 8px;">
+                                @if (Auth::user()->profile_photo_path)
+                                    <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Foto" class="img-fluid rounded" style="max-height: 350px; object-fit: cover;">
+                                @else
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0d8abc&color=fff&size=300" alt="Foto" class="img-fluid rounded" style="max-height: 350px; object-fit: cover;">
+                                @endif
+                            </div>
+                            <div class="p-3 shadow-inner" style="background-color: #e5f1f9; border-radius: 8px;">
+                                <h6 class="fw-bold mb-2 pb-1" style="color: #0b2b4d; border-bottom: 1px solid #93c5fd;">HISTORY PENILAIAN:</h6>
+                                <div class="d-flex justify-content-between text-center mb-2" id="history-container">
+                                    {{-- History Item --}}
+                                    <div>
+                                        <div class="small fw-bold" style="color: #0b1426;">MEI '24</div>
+                                        <div class="fw-bold fs-5 text-primary d-flex align-items-center justify-content-center gap-1">
+                                            <i class="mdi mdi-hexagon-outline"></i> 7.8/10
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="small fw-bold" style="color: #0b1426;">JUN '24</div>
+                                        <div class="fw-bold fs-5 text-primary d-flex align-items-center justify-content-center gap-1">
+                                            <i class="mdi mdi-hexagon-outline"></i> 8.1/10
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="small fw-bold" style="color: #0b1426;">JUL '24</div>
+                                        <div class="fw-bold fs-5 text-primary d-flex align-items-center justify-content-center gap-1">
+                                            <i class="mdi mdi-hexagon-outline"></i> 8.4/10
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="small fst-italic mb-0" style="color: #475569; font-size: 11px;">
+                                    Catatan: Menunjukkan peningkatan kepemimpinan yang signifikan bulan ini, khususnya dalam mentoring tim. Perlu sedikit peningkatan ketelitian.
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Kolom Tengah: Radar Chart & Penilai --}}
+                        <div class="col-lg-4 d-flex flex-column gap-3">
+                            <div class="p-3 d-flex flex-column align-items-center shadow-inner h-100" style="background-color: #e5f1f9; border-radius: 8px;">
+                                <h6 class="fw-bold text-center mb-3" style="color: #0b2b4d;">PERSENTASE EVALUASI KOMPETENSI</h6>
+                                <div class="w-100 position-relative" style="height: 300px;">
+                                    <canvas id="radarChartRapor"></canvas>
+                                </div>
+                            </div>
+                            <div class="p-3 text-white shadow-sm flex-shrink-0" style="background-color: #0b2b4d; border-radius: 8px;">
+                                <h6 class="fw-bold mb-2 pb-1" style="border-bottom: 1px solid #1e40af;">DINILAI OLEH:</h6>
+                                <table class="table table-borderless table-sm text-white mb-0 small">
+                                    <tr>
+                                        <td style="width: 100px; padding: 0;">Penilai</td>
+                                        <td style="width: 10px; padding: 0;">:</td>
+                                        <td class="fw-bold" style="padding: 0;">JESSICA LESTARI</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 0;">Username</td>
+                                        <td style="padding: 0;">:</td>
+                                        <td class="fw-bold" style="padding: 0;">jess_mgr</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 0;">Tanggal</td>
+                                        <td style="padding: 0;">:</td>
+                                        <td class="fw-bold" style="padding: 0;">{{ date('d-m-Y') }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- Kolom Kanan: Detail List --}}
+                        <div class="col-lg-4 d-flex flex-column gap-2" id="detail-list-container">
+                            {{-- Inject JS here --}}
+                        </div>
+
+                    </div>
+                    
+                    {{-- Footer Rapor --}}
+                    <div class="text-white-50 small mt-3 pt-2 d-flex justify-content-between" style="border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px;">
+                        <span>Copyright © CORPORATE INSIGHT {{ date('Y') }}</span>
+                    </div>
+                </div>
             </div>
         </div>
-    @endif
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Data Dummy Evaluasi (Bisa diisi dinamis dari backend nantinya)
+            const kriteriaPenilaian = [
+                { nama: "Kecerdasan", nilai: 85, catatan: "Problem solving sangat baik.", icon: "mdi-brain" },
+                { nama: "Amanah", nilai: 92, catatan: "-", icon: "mdi-shield-check" },
+                { nama: "Sosial media", nilai: 88, catatan: "Aktif promosi.", icon: "mdi-youtube" },
+                { nama: "Kepemimpinan", nilai: 80, catatan: "Mampu memimpin tim kecil.", icon: "mdi-account-tie" },
+                { nama: "Data & ketelitian", nilai: 85, catatan: "Cukup teliti.", icon: "mdi-clipboard-text" },
+                { nama: "Komunikasi", nilai: 91, catatan: "Sangat komunikatif.", icon: "mdi-forum" },
+                { nama: "Kedisiplinan", nilai: 98, catatan: "Selalu on-time.", icon: "mdi-calendar-clock" },
+                { nama: "Kreativitas", nilai: null, catatan: "", icon: "mdi-lightbulb" } // Kosongkan nilai untuk sembunyikan
+            ];
+
+            const validKriteria = kriteriaPenilaian.filter(k => k.nilai !== null && k.nilai !== undefined);
+            
+            const labels = validKriteria.map(k => k.nama);
+            const dataValues = validKriteria.map(k => k.nilai);
+
+            // Setup Radar Chart
+            const ctxRapor = document.getElementById('radarChartRapor');
+            if (ctxRapor) {
+                new Chart(ctxRapor.getContext('2d'), {
+                    type: 'radar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Nilai',
+                            data: dataValues,
+                            backgroundColor: 'rgba(54, 162, 235, 0.4)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                                pointLabels: {
+                                    color: '#0b2b4d',
+                                    font: { size: 10, weight: 'bold' }
+                                },
+                                ticks: {
+                                    display: false,
+                                    min: 0,
+                                    max: 100,
+                                    stepSize: 20
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+
+            // Populate Right List
+            const detailContainer = document.getElementById('detail-list-container');
+            if(detailContainer) {
+                validKriteria.forEach(k => {
+                    const row = document.createElement('div');
+                    row.className = 'd-flex align-items-center justify-content-between p-2 rounded text-white shadow-sm mb-1';
+                    row.style.background = 'linear-gradient(90deg, #0f5c97 0%, #0b2b4d 100%)';
+                    row.style.borderLeft = '4px solid #34a853';
+                    
+                    row.innerHTML = `
+                        <div class="d-flex align-items-center w-75">
+                            <div class="me-2 text-center" style="width: 30px;">
+                                <i class="mdi ${k.icon} fs-4 text-info"></i>
+                            </div>
+                            <div class="d-flex flex-column text-start">
+                                <span class="fw-bold small text-uppercase" style="letter-spacing: 0.5px;">${k.nama}</span>
+                                <span class="text-white-50 fst-italic" style="font-size: 10px;">Catatan: ${k.catatan || '-'}</span>
+                            </div>
+                        </div>
+                        <div class="fw-bold bg-white text-primary px-2 py-1 rounded shadow-inner text-center fs-5" style="width: 50px;">
+                            ${k.nilai}
+                        </div>
+                    `;
+                    detailContainer.appendChild(row);
+                });
+            }
+        });
+    </script>
 
     {{-- ======================================================================= --}}
     {{-- POPUP PEMBERITAHUAN: MENU CUTI BARU --}}
