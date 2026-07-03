@@ -1194,35 +1194,38 @@
             if(detailContainer) {
                 validKriteria.forEach(k => {
                     const row = document.createElement('div');
-                    row.className = 'd-flex align-items-center justify-content-between p-3 rounded mb-2 aesthetic-list-item';
-                    row.style.background = '#ffffff';
-                    row.style.border = '1px solid #eef2f6';
-                    row.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)';
+                    row.className = 'd-flex align-items-center justify-content-between p-3 mb-2 aesthetic-list-item position-relative';
+                    row.style.background = 'transparent';
                     
                     // Logic warna untuk nilai
-                    let badgeColor = '#0d6efd';
-                    let badgeBg = '#e7f1ff';
+                    let badgeColor = '#3b82f6';
+                    let badgeBg = '#eff6ff';
+                    let iconColor = '#60a5fa';
+                    
                     if(k.nilai >= 90) {
-                        badgeColor = '#198754';
-                        badgeBg = '#d1e7dd';
+                        badgeColor = '#10b981';
+                        badgeBg = '#ecfdf5';
+                        iconColor = '#34d399';
                     } else if (k.nilai < 80) {
-                        badgeColor = '#fd7e14';
-                        badgeBg = '#ffe8d6';
+                        badgeColor = '#f59e0b';
+                        badgeBg = '#fffbeb';
+                        iconColor = '#fbbf24';
                     }
 
                     row.innerHTML = `
-                        <div class="d-flex align-items-center w-75">
-                            <div class="me-3 text-center icon-circle-bg">
-                                <i class="mdi ${k.icon} fs-5" style="color: #0d6efd;"></i>
+                        <div class="d-flex align-items-center w-75 position-relative z-index-1">
+                            <div class="me-3 text-center icon-circle-bg shadow-sm" style="background: ${badgeBg}; border: 1px solid rgba(255,255,255,0.5);">
+                                <i class="mdi ${k.icon} fs-5" style="color: ${badgeColor};"></i>
                             </div>
                             <div class="d-flex flex-column text-start">
-                                <span class="fw-bold text-uppercase" style="letter-spacing: 0.5px; color: #0a2e5c; font-size: 0.85rem;">${k.nama}</span>
-                                <span class="text-muted mt-1" style="font-size: 0.7rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${k.catatan || '-'}</span>
+                                <span class="fw-bold text-uppercase" style="letter-spacing: 0.5px; color: #1e293b; font-size: 0.85rem;">${k.nama}</span>
+                                <span style="color: #64748b; font-size: 0.75rem; margin-top: 2px;">${k.catatan || '-'}</span>
                             </div>
                         </div>
-                        <div class="fw-bold px-3 py-1 rounded-pill text-center d-flex align-items-center justify-content-center" style="background-color: ${badgeBg}; color: ${badgeColor}; font-size: 0.95rem; min-width: 45px; border: 1px solid ${badgeColor}33;">
+                        <div class="fw-bolder px-3 py-1 rounded-pill text-center d-flex align-items-center justify-content-center shadow-sm position-relative z-index-1" style="background-color: ${badgeBg}; color: ${badgeColor}; font-size: 0.95rem; min-width: 50px; border: 1px solid rgba(255,255,255,0.8);">
                             ${k.nilai}
                         </div>
+                        <div class="position-absolute w-100 h-100 top-0 left-0 bg-white opacity-50 rounded-3 z-index-0" style="display: none;"></div>
                     `;
                     detailContainer.appendChild(row);
                 });
