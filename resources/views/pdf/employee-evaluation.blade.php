@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Rapor Evaluasi Kinerja Karyawan</title>
     <style>
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #333; line-height: 1.3; margin: 0; padding: 10px; }
+        body { font-family: 'DejaVu Sans', 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #333; line-height: 1.3; margin: 0; padding: 10px; }
         .header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 15px; }
         .header h1 { color: #1e3a8a; font-size: 18px; margin: 0 0 3px 0; text-transform: uppercase; }
         .header p { margin: 0; font-size: 11px; color: #64748b; }
@@ -52,11 +52,11 @@
                     }
                 @endphp
                 @if($photoUrl)
-                    <div style="width: 130px; height: 130px; overflow: hidden; border-radius: 8px; border: 1px solid #cbd5e1; display: inline-block;">
+                    <div style="width: 130px; height: 130px; overflow: hidden; border-radius: 8px; display: inline-block;">
                         <img src="{{ $photoUrl }}" style="height: 130px; width: auto; max-width: 130px; display: block; margin: 0 auto;">
                     </div>
                 @else
-                    <div style="width: 130px; height: 130px; background-color: #e2e8f0; border-radius: 8px; border: 1px solid #cbd5e1; line-height: 130px; color: #64748b; font-size: 14px; margin: 0 auto;">Tanpa Foto</div>
+                    <div style="width: 130px; height: 130px; background-color: #e2e8f0; border-radius: 8px; line-height: 130px; color: #64748b; font-size: 14px; margin: 0 auto;">Tanpa Foto</div>
                 @endif
             </td>
             <th>Nama Karyawan</th>
@@ -153,8 +153,7 @@
             <p>Dinilai Oleh,</p>
             <div class="signature-line"></div>
             <strong>{{ $evaluation->assessor ? $evaluation->assessor->name : 'Tim HR / Penilai' }}</strong>
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">{{ $evaluation->assessor ? $evaluation->assessor->role : 'Manajemen' }}</div>
-            <div style="font-size: 12px; color: #666;">Tanggal: {{ \Carbon\Carbon::parse($evaluation->updated_at)->translatedFormat('d F Y') }}</div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">Tanggal: {{ \Carbon\Carbon::parse($evaluation->updated_at)->translatedFormat('d F Y') }}</div>
         </div>
         <div style="clear: both;"></div>
     </div>
