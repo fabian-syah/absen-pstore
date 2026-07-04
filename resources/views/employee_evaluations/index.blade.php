@@ -134,10 +134,18 @@
                     <div class="small text-muted">
                         Role: <strong class="text-capitalize">{{ str_replace('_', ' ', $employee->role) }}</strong>
                     </div>
-                    <a href="{{ route('employee-evaluations.form', $employee->id) }}"
-                        class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                        Isi Rapor <i class="mdi mdi-arrow-right ms-1"></i>
-                    </a>
+                    <div class="d-flex gap-2">
+                        @if($latestEval)
+                        <a href="{{ route('employee-evaluations.export-pdf', ['user_id' => $employee->id, 'month' => $latestEval->month, 'year' => $latestEval->year]) }}"
+                            class="btn btn-sm btn-outline-danger rounded-pill px-2 d-flex align-items-center justify-content-center" title="Download PDF Rapor" style="width: 32px; height: 32px;">
+                            <i class="mdi mdi-file-pdf-box fs-5"></i>
+                        </a>
+                        @endif
+                        <a href="{{ route('employee-evaluations.form', $employee->id) }}"
+                            class="btn btn-sm btn-outline-primary rounded-pill px-3 d-flex align-items-center">
+                            Isi Rapor <i class="mdi mdi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
