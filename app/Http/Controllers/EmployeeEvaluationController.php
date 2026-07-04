@@ -67,13 +67,10 @@ class EmployeeEvaluationController extends Controller
 
         $branch = Branch::findOrFail($branch_id);
 
-        $query = User::with(['branch', 'division'])->where('is_active', true)
-            ->where(function($q) use ($branch_id) {
-                $q->where('branch_id', $branch_id)
-                  ->orWhereHas('branches', function($q2) use ($branch_id) {
-                      $q2->where('branches.id', $branch_id);
-                  });
-            });
+        // Hanya ambil user yang branch utamanya adalah cabang ini
+        $query = User::with(['branch', 'division'])
+            ->where('is_active', true)
+            ->where('branch_id', $branch_id);
 
         // Search by name
         if ($request->has('search') && $request->search != '') {
