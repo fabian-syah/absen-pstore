@@ -135,15 +135,19 @@ class EmployeeEvaluationController extends Controller
             return $score !== null && $score !== '';
         });
 
-        $average_score = $scores->count() > 0 ? $scores->average() : 0;
+        $average_score = $request->filled('average_score') ? $request->average_score : ($scores->count() > 0 ? $scores->average() : 0);
         
         // Tentukan Grade
-        $grade = 'D';
-        if ($average_score >= 95) $grade = 'A+';
-        elseif ($average_score >= 90) $grade = 'A';
-        elseif ($average_score >= 85) $grade = 'B+';
-        elseif ($average_score >= 80) $grade = 'B';
-        elseif ($average_score >= 70) $grade = 'C';
+        if ($request->filled('grade')) {
+            $grade = $request->grade;
+        } else {
+            $grade = 'D';
+            if ($average_score >= 95) $grade = 'A+';
+            elseif ($average_score >= 90) $grade = 'A';
+            elseif ($average_score >= 85) $grade = 'B+';
+            elseif ($average_score >= 80) $grade = 'B';
+            elseif ($average_score >= 70) $grade = 'C';
+        }
 
         EmployeeEvaluation::updateOrCreate(
             [

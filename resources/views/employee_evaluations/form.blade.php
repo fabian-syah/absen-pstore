@@ -184,14 +184,21 @@
                         </div>
                     </div>
 
-                    {{-- Live Score Calculation --}}
-                    <div class="d-flex align-items-center justify-content-between bg-white p-3 rounded-3 mt-4" style="border: 1px solid #e2e8f0;">
-                        <div>
-                            <h6 class="mb-0 fw-bold text-dark">Prediksi Hasil Penilaian</h6>
-                            <small class="text-muted">Nilai rata-rata dan grade otomatis dihitung</small>
+                    {{-- Hasil Akhir Penilaian --}}
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between bg-white p-3 rounded-3 mt-4" style="border: 1px solid #e2e8f0;">
+                        <div class="mb-3 mb-md-0">
+                            <h6 class="mb-0 fw-bold text-dark">Hasil Akhir Penilaian</h6>
+                            <small class="text-muted">Dihitung otomatis, tapi bisa Anda ubah manual</small>
                         </div>
-                        <div id="live-grade-badge" class="badge bg-secondary px-3 py-2 rounded-pill fs-6 shadow-sm">
-                            Menunggu Nilai...
+                        <div class="d-flex align-items-center gap-2">
+                            <div>
+                                <label class="small text-muted mb-1 d-block text-md-end">Total Nilai</label>
+                                <input type="number" id="input_average_score" name="average_score" class="form-control form-control-sm text-center fw-bold shadow-none" style="width: 100px; font-size: 1.1rem; color: #0f172a;" step="0.1" min="0" max="100" value="{{ old('average_score', $evaluation ? $evaluation->average_score : '') }}">
+                            </div>
+                            <div>
+                                <label class="small text-muted mb-1 d-block text-md-end">Grade</label>
+                                <input type="text" id="input_grade" name="grade" class="form-control form-control-sm text-center fw-bold shadow-none" style="width: 80px; font-size: 1.1rem; color: #0f172a;" value="{{ old('grade', $evaluation ? $evaluation->grade : '') }}">
+                            </div>
                         </div>
                     </div>
 
@@ -213,9 +220,17 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const scoreInputs = document.querySelectorAll('.score-input');
-        const liveGradeBadge = document.getElementById('live-grade-badge');
+        const inputAverage = document.getElementById('input_average_score');
+        const inputGrade = document.getElementById('input_grade');
+        let isManuallyEdited = false;
+
+        // Jika user mengetik manual di input hasil akhir, jangan dioverride otomatis lagi
+        inputAverage.addEventListener('input', () => isManuallyEdited = true);
+        inputGrade.addEventListener('input', () => isManuallyEdited = true);
 
         function calculateGrade() {
+            if (isManuallyEdited) return; // Jangan ubah jika sudah diketik manual
+
             let total = 0;
             let count = 0;
 
@@ -233,19 +248,22 @@
             if (count > 0) {
                 let average = total / count;
                 let grade = 'D';
-                let colorClass = 'bg-danger';
 
-                if (average >= 95) { grade = 'A+'; colorClass = 'bg-success'; }
-                else if (average >= 90) { grade = 'A'; colorClass = 'bg-success'; }
-                else if (average >= 85) { grade = 'B+'; colorClass = 'bg-primary'; }
-                else if (average >= 80) { grade = 'B'; colorClass = 'bg-primary'; }
-                else if (average >= 70) { grade = 'C'; colorClass = 'bg-warning text-dark'; }
+                if (average >= 95) grade = 'A+';
+                else if (average >= 90) grade = 'A';
+                else if (average >= 85) grade = 'B+';
+                else if (average >= 80) grade = 'B';
+                else if (average >= 70) grade = 'C';
 
-                liveGradeBadge.className = `badge ${colorClass} px-3 py-2 rounded-pill fs-6 shadow-sm`;
-                liveGradeBadge.innerHTML = `Grade ${grade} <span class="mx-1 fw-normal">|</span> ${average.toFixed(1)}`;
+                // Format average to max 1 decimal if needed
+                inputAverage.value = average % 1 === 0 ? average : average.toFixed(1);
+                inputGrade.value = grade;
             } else {
-                liveGradeBadge.className = 'badge bg-secondary px-3 py-2 rounded-pill fs-6 shadow-sm';
-                liveGradeBadge.innerHTML = 'Menunggu Nilai...';
+                // Jangan kosongkan jika form sedang dimuat dengan data lama
+                if (!inputAverage.defaultValue) {
+                    inputAverage.value = '';
+                    inputGrade.value = '';
+                }
             }
         }
 
@@ -253,8 +271,10 @@
             input.addEventListener('input', calculateGrade);
         });
 
-        // Hitung otomatis saat halaman dimuat (jika form sedang dalam mode edit)
-        calculateGrade();
+        // Hitung otomatis saat halaman dimuat jika belum ada isian
+        if (!inputAverage.value) {
+            calculateGrade();
+        }
     });
 </script>
 @endpush
