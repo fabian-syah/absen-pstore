@@ -4,32 +4,32 @@
     <meta charset="utf-8">
     <title>Rapor Evaluasi Kinerja Karyawan</title>
     <style>
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 14px; color: #333; line-height: 1.5; margin: 0; padding: 20px; }
-        .header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 30px; }
-        .header h1 { color: #1e3a8a; font-size: 24px; margin: 0 0 5px 0; text-transform: uppercase; }
-        .header p { margin: 0; font-size: 14px; color: #64748b; }
-        .employee-info { width: 100%; margin-bottom: 30px; border-collapse: collapse; }
-        .employee-info td { padding: 8px 12px; border: 1px solid #e2e8f0; }
-        .employee-info th { padding: 8px 12px; border: 1px solid #e2e8f0; text-align: left; background-color: #f8fafc; color: #475569; width: 30%; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 13px; color: #333; line-height: 1.4; margin: 0; padding: 15px; }
+        .header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { color: #1e3a8a; font-size: 20px; margin: 0 0 5px 0; text-transform: uppercase; }
+        .header p { margin: 0; font-size: 13px; color: #64748b; }
+        .employee-info { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
+        .employee-info td { padding: 6px 10px; border: 1px solid #e2e8f0; }
+        .employee-info th { padding: 6px 10px; border: 1px solid #e2e8f0; text-align: left; background-color: #f8fafc; color: #475569; width: 30%; }
         
-        .score-section { margin-bottom: 30px; }
-        .score-section h3 { font-size: 18px; color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; margin-bottom: 15px; }
+        .score-section { margin-bottom: 20px; }
+        .score-section h3 { font-size: 16px; color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 10px; }
         
-        .score-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .score-table th, .score-table td { padding: 10px; border: 1px solid #cbd5e1; }
+        .score-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .score-table th, .score-table td { padding: 8px; border: 1px solid #cbd5e1; }
         .score-table th { background-color: #f1f5f9; text-align: center; color: #334155; }
         .score-table td.criteria { font-weight: bold; width: 25%; }
-        .score-table td.score { text-align: center; font-weight: bold; width: 15%; font-size: 16px; }
+        .score-table td.score { text-align: center; font-weight: bold; width: 15%; font-size: 15px; }
         
-        .summary-box { background-color: #f8fafc; border: 1px solid #94a3b8; padding: 20px; text-align: center; margin-bottom: 30px; border-radius: 8px; }
-        .summary-box .grade { font-size: 36px; font-weight: bold; color: #10b981; margin: 10px 0; }
-        .summary-box .average { font-size: 18px; color: #475569; }
+        .summary-box { background-color: #f8fafc; border: 1px solid #94a3b8; padding: 15px; text-align: center; margin-bottom: 20px; border-radius: 8px; }
+        .summary-box .grade { font-size: 30px; font-weight: bold; color: #10b981; margin: 5px 0; }
+        .summary-box .average { font-size: 16px; color: #475569; }
         
-        .remark-box { background-color: #eff6ff; border-left: 5px solid #3b82f6; padding: 15px 20px; font-style: italic; margin-bottom: 40px; }
+        .remark-box { background-color: #eff6ff; border-left: 5px solid #3b82f6; padding: 12px 15px; font-style: italic; margin-bottom: 30px; }
         
-        .footer { width: 100%; margin-top: 50px; }
-        .signature-box { float: right; width: 300px; text-align: center; }
-        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; margin-bottom: 10px; }
+        .footer { width: 100%; margin-top: 30px; }
+        .signature-box { float: right; width: 250px; text-align: center; }
+        .signature-line { border-bottom: 1px solid #000; margin-top: 50px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -39,10 +39,26 @@
         <p>EVALUASI PERFORMA BULANAN</p>
     </div>
 
-    <table class="employee-info">
+    <table class="employee-info" style="border: none;">
         <tr>
+            <td rowspan="4" style="width: 100px; text-align: center; border: none; padding: 0 15px 0 0; vertical-align: top;">
+                @php
+                    $photoUrl = null;
+                    if ($user->profile_photo_path && file_exists(public_path('storage/' . $user->profile_photo_path))) {
+                        $path = public_path('storage/' . $user->profile_photo_path);
+                        $type = pathinfo($path, PATHINFO_EXTENSION);
+                        $data = file_get_contents($path);
+                        $photoUrl = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                    }
+                @endphp
+                @if($photoUrl)
+                    <img src="{{ $photoUrl }}" style="width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;">
+                @else
+                    <div style="width: 90px; height: 90px; background-color: #e2e8f0; border-radius: 8px; border: 1px solid #cbd5e1; line-height: 90px; color: #64748b; font-size: 12px;">Tanpa Foto</div>
+                @endif
+            </td>
             <th>Nama Karyawan</th>
-            <td style="font-weight: bold; font-size: 16px;">{{ $user->name }}</td>
+            <td style="font-weight: bold; font-size: 15px;">{{ $user->name }}</td>
         </tr>
         <tr>
             <th>Periode Evaluasi</th>
@@ -52,10 +68,12 @@
             <th>Divisi / Cabang</th>
             <td>{{ $user->branch->name ?? 'Pusat' }} {{ isset($user->division) ? ' - ' . $user->division->name : '' }}</td>
         </tr>
+        @if($user->role !== 'user_biasa')
         <tr>
             <th>Posisi / Role</th>
-            <td>{{ $user->role }}</td>
+            <td style="text-transform: capitalize;">{{ str_replace('_', ' ', $user->role) }}</td>
         </tr>
+        @endif
     </table>
 
     <div class="score-section">

@@ -600,13 +600,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // ==========================================================
     //  RUTE MONITORING WILAYAH (INVENTARIS CABANG & LEADERBOARD)
     // ==========================================================
+    Route::get('/employee-evaluations/{user_id}/export-pdf', [EmployeeEvaluationController::class, 'exportPdf'])->name('employee-evaluations.export-pdf');
+
     Route::middleware(['role:admin,audit,leader'])->group(function () {
         // === RUTE RAPOR KARYAWAN ===
         Route::get('/employee-evaluations', [EmployeeEvaluationController::class, 'index'])->name('employee-evaluations.index');
         Route::get('/employee-evaluations/branch/{id}', [EmployeeEvaluationController::class, 'branchEmployees'])->name('employee-evaluations.branch-employees');
         Route::get('/employee-evaluations/{user_id}/form', [EmployeeEvaluationController::class, 'form'])->name('employee-evaluations.form');
         Route::post('/employee-evaluations/{user_id}', [EmployeeEvaluationController::class, 'store'])->name('employee-evaluations.store');
-        Route::get('/employee-evaluations/{user_id}/export-pdf', [EmployeeEvaluationController::class, 'exportPdf'])->name('employee-evaluations.export-pdf');
 
         Route::get('/inventaris-cabang', [BranchInventoryController::class, 'index'])
             ->name('inventory.branches');

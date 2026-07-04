@@ -187,6 +187,11 @@ class EmployeeEvaluationController extends Controller
     {
         $user = User::findOrFail($user_id);
         
+        $currentUser = Auth::user();
+        if ($currentUser->id != $user_id && !in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+        
         $month = $request->query('month', now()->month);
         $year = $request->query('year', now()->year);
 
