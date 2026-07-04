@@ -210,7 +210,7 @@
                                 <i class="mdi mdi-auto-fix me-1"></i> Generate AI
                             </button>
                         </div>
-                        <textarea name="final_remark" id="input_final_remark" class="form-control border-0 bg-transparent shadow-none" rows="3" style="font-style: italic; font-size: 1.05rem; color: #334155; resize: none;" placeholder="Catatan kesimpulan akan diisi otomatis berdasarkan Grade...">{{ old('final_remark', $evaluation ? $evaluation->final_remark : '') }}</textarea>
+                        <textarea name="final_remark" id="input_final_remark" class="form-control border-0 bg-transparent shadow-none p-0 mt-3" rows="5" spellcheck="false" style="font-style: italic; font-size: 1.05rem; line-height: 1.6; color: #334155; resize: none; overflow-y: hidden;" placeholder="Catatan kesimpulan akan diisi otomatis berdasarkan Grade..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">{{ old('final_remark', $evaluation ? $evaluation->final_remark : '') }}</textarea>
                     </div>
 
                     <div class="d-flex justify-content-end mt-4">
@@ -270,7 +270,8 @@
                 if (score) promptText += `- ${title}: ${score}\n`;
             });
 
-            promptText += `Berikan nada yang profesional, konstruktif, dan memotivasi. Jika grade bagus, puji. Jika grade kurang, berikan semangat untuk perbaikan. Gunakan gaya bahasa semi-formal. Jangan buat terlalu panjang.`;
+            promptText += `Berikan nada yang profesional, konstruktif, dan memotivasi. Jika grade bagus, puji. Jika grade kurang, berikan semangat untuk perbaikan. Gunakan gaya bahasa semi-formal. Jangan buat terlalu panjang.\n`;
+            promptText += `PENTING: TIDAK BOLEH menggunakan format markdown (seperti bintang ganda untuk bold, atau italic). Hasil HARUS berupa teks biasa (plain text) murni.`;
 
             try {
                 const response = await fetch('https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions', {
@@ -292,8 +293,13 @@
 
                 const data = await response.json();
                 if (data.choices && data.choices.length > 0) {
-                    inputFinalRemark.value = '"' + data.choices[0].message.content.replace(/^["']|["']$/g, '') + '"';
+                    let aiText = data.choices[0].message.content.replace(/^["']|["']$/g, '');
+                    aiText = aiText.replace(/\*+/g, ''); // Hapus semua karakter markdown asteriks (bintang)
+                    inputFinalRemark.value = '"' + aiText.trim() + '"';
                     isRemarkManuallyEdited = true; // Tandai diedit agar tidak tertimpa kalkulasi standar
+                    // Auto resize textarea
+                    inputFinalRemark.style.height = '';
+                    inputFinalRemark.style.height = inputFinalRemark.scrollHeight + 'px';
                 } else {
                     inputFinalRemark.value = 'Gagal menghasilkan kesimpulan AI. Silakan coba lagi.';
                 }
