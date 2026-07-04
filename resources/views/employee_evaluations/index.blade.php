@@ -53,24 +53,23 @@
 @endpush
 
 @section('content')
+<div class="d-flex align-items-center mb-4">
+    <a href="{{ route('employee-evaluations.index') }}" class="btn btn-light shadow-sm rounded-circle p-2 me-3">
+        <i class="mdi mdi-arrow-left fs-5"></i>
+    </a>
+    <div>
+        <h4 class="mb-0 fw-bold">Evaluasi: {{ $branch->name }}</h4>
+        <p class="text-muted mb-0 small">Pilih karyawan yang ingin dinilai</p>
+    </div>
+</div>
+
 <div class="row mb-4">
     <div class="col-12">
         <div class="card shadow-sm" style="border-radius: 16px;">
             <div class="card-body">
-                <form action="{{ route('employee-evaluations.index') }}" method="GET" class="row g-3 align-items-center">
-                    <div class="col-md-5">
-                        <label class="form-label text-muted small fw-bold">Pilih Cabang</label>
-                        <select name="branch_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                            <option value="">-- Semua Cabang --</option>
-                            @foreach($allBranches as $branch)
-                                <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
-                                    {{ $branch->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <label class="form-label text-muted small fw-bold">Cari Nama</label>
+                <form action="{{ route('employee-evaluations.branch-employees', $branch->id) }}" method="GET" class="row g-3 align-items-center">
+                    <div class="col-md-10">
+                        <label class="form-label text-muted small fw-bold">Cari Nama Karyawan</label>
                         <input type="text" name="search" class="form-control form-control-sm" placeholder="Masukkan nama..." value="{{ request('search') }}">
                     </div>
                     <div class="col-md-2 d-flex align-items-end">

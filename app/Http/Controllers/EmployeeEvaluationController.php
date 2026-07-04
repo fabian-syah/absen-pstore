@@ -23,58 +23,66 @@ class EmployeeEvaluationController extends Controller
             return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        // Ambil query user
-        $query = User::with(['branch', 'division'])->where('is_active', true);
-
-        if ($user->role === 'leader' || $user->role === 'audit') {
-            // Ambil semua branch kelolaan user
-            $branchIds = $user->branches->pluck('id')->toArray();
+        // Ambil daftar cabang
+        if ($user->role === 'admin') {
+            $branches = Branch::withCount(['users' => function($q) {
+                $q->where('is_active', true);
+            }])->get();
+        } else {
+            $branches = collect();
             
-            // Tambahkan branch_id utama user jika belum masuk list
-            if ($user->branch_id && !in_array($user->branch_id, $branchIds)) {
-                $branchIds[] = $user->branch_id;
+            // Branch utama
+            if ($user->branch_id) {
+                $mainBranch = Branch::withCount(['users' => function($q) {
+                    $q->where('is_active', true);
+                }])->find($user->branch_id);
+                if ($mainBranch) $branches->push($mainBranch);
             }
             
-            $query->where(function($q) use ($branchIds) {
-                // User yang branch utamanya di branch kelolaan
-                $q->whereIn('branch_id', $branchIds)
-                  // ATAU User yang punya relasi ke branches (many-to-many) di branch kelolaan
-                  ->orWhereHas('branches', function($q2) use ($branchIds) {
-                      $q2->whereIn('branches.id', $branchIds);
-                  });
-            });
+            // Branch kelolaan
+            $managedBranches = $user->branches()->withCount(['users' => function($q) {
+                $q->where('is_active', true);
+            }])->get();
+            
+            foreach ($managedBranches as $mb) {
+                if (!$branches->contains('id', $mb->id)) {
+                    $branches->push($mb);
+                }
+            }
         }
 
-        // Filter by branch
-        if ($request->has('branch_id') && $request->branch_id != '') {
-            $branchId = $request->branch_id;
-            $query->where(function($q) use ($branchId) {
-                $q->where('branch_id', $branchId)
-                  ->orWhereHas('branches', function($q2) use ($branchId) {
-                      $q2->where('branches.id', $branchId);
+        return view('employee_evaluations.branches', compact('branches'));
+    }
+
+    /**
+     * Tampilkan daftar karyawan dalam satu cabang.
+     */
+    public function branchEmployees($branch_id, Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!in_array($user->role, ['admin', 'audit', 'leader'])) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        $branch = Branch::findOrFail($branch_id);
+
+        $query = User::with(['branch', 'division'])->where('is_active', true)
+            ->where(function($q) use ($branch_id) {
+                $q->where('branch_id', $branch_id)
+                  ->orWhereHas('branches', function($q2) use ($branch_id) {
+                      $q2->where('branches.id', $branch_id);
                   });
             });
-        }
 
         // Search by name
         if ($request->has('search') && $request->search != '') {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        // Dapatkan list branches untuk filter dropdown
-        $allBranches = collect();
-        if ($user->role === 'admin') {
-            $allBranches = Branch::all();
-        } else {
-            $allBranches = $user->branches;
-            if ($user->branch && !$allBranches->contains('id', $user->branch_id)) {
-                $allBranches->push($user->branch);
-            }
-        }
-
         $users = $query->paginate(20)->appends($request->all());
 
-        return view('employee_evaluations.index', compact('users', 'allBranches'));
+        return view('employee_evaluations.index', compact('users', 'branch'));
     }
 
     /**
@@ -170,6 +178,6 @@ class EmployeeEvaluationController extends Controller
             ]
         );
 
-        return redirect()->route('employee-evaluations.index')->with('success', 'Rapor karyawan berhasil disimpan!');
+        return redirect()->route('employee-evaluations.branch-employees', $user->branch_id ?? 1)->with('success', 'Rapor karyawan berhasil disimpan!');
     }
 }
