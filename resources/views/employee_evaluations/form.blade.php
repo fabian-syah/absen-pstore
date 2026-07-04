@@ -60,14 +60,29 @@
 <div class="row justify-content-center">
     <div class="col-xl-9 col-lg-10">
         
-        <div class="d-flex align-items-center mb-4">
-            <a href="{{ route('employee-evaluations.index') }}" class="btn btn-light shadow-sm rounded-circle p-2 me-3">
-                <i class="mdi mdi-arrow-left fs-5"></i>
-            </a>
-            <div>
-                <h4 class="mb-0 fw-bold">Penilaian Kinerja</h4>
-                <p class="text-muted mb-0 small">Karyawan: <strong>{{ $employee->name }}</strong></p>
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <a href="{{ route('employee-evaluations.index') }}" class="btn btn-light shadow-sm rounded-circle p-2 me-3">
+                    <i class="mdi mdi-arrow-left fs-5"></i>
+                </a>
+                <div>
+                    <h4 class="mb-0 fw-bold">Penilaian Kinerja</h4>
+                    <p class="text-muted mb-0 small">Karyawan: <strong>{{ $employee->name }}</strong></p>
+                </div>
             </div>
+            
+            @if($evaluation)
+                @php
+                    $badgeColor = 'bg-secondary';
+                    if (in_array($evaluation->grade, ['A+', 'A'])) $badgeColor = 'bg-success';
+                    elseif (in_array($evaluation->grade, ['B+', 'B'])) $badgeColor = 'bg-primary';
+                    elseif ($evaluation->grade == 'C') $badgeColor = 'bg-warning text-dark';
+                    elseif ($evaluation->grade == 'D') $badgeColor = 'bg-danger';
+                @endphp
+                <div class="badge {{ $badgeColor }} px-3 py-2 rounded-pill fs-6 shadow-sm">
+                    Grade {{ $evaluation->grade }} <span class="mx-1 fw-normal">|</span> {{ number_format($evaluation->average_score, 1) }}
+                </div>
+            @endif
         </div>
 
         <div class="card evaluation-card">
