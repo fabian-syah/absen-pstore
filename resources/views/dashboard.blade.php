@@ -1054,7 +1054,7 @@
                                 </div>
                                 <div class="p-3 mt-auto rounded-3" style="background: #f8fafc; border-left: 3px solid #3b82f6;">
                                     <p class="fst-italic mb-0" style="color: #475569; font-size: 0.75rem; line-height: 1.6;">
-                                        "Terus tingkatkan kinerjamu dan capai target bulan ini dengan lebih maksimal!"
+                                        {{ isset($latestEval) && $latestEval->final_remark ? $latestEval->final_remark : '"Belum ada catatan evaluasi untuk ditampilkan."' }}
                                     </p>
                                 </div>
                             </div>

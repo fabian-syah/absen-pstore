@@ -381,6 +381,12 @@
         // Hitung otomatis saat halaman dimuat jika belum ada isian
         if (!inputAverage.value) {
             calculateGrade();
+        } else {
+            // Sesuaikan tinggi otomatis jika form dimuat dengan isian (mode edit/saved)
+            setTimeout(() => {
+                inputFinalRemark.style.height = '';
+                inputFinalRemark.style.height = inputFinalRemark.scrollHeight + 'px';
+            }, 50);
         }
     });
 </script>
