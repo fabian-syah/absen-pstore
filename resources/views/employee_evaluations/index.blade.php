@@ -5,29 +5,49 @@
 
 @push('styles')
 <style>
-    .card-employee {
+    .branch-card-item {
+        background: white;
         border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
         border: 1px solid #f1f5f9;
-        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
     }
-    .card-employee:hover {
+
+    .branch-card-item:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
         border-color: #c7d2fe;
     }
-    .avatar-wrapper {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
+
+    .branch-icon-box {
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #667eea;
+        font-size: 20px;
         overflow: hidden;
-        border: 3px solid #e2e8f0;
-        margin: 0 auto;
     }
-    .avatar-wrapper img {
+    
+    .branch-icon-box img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+
+    .branch-footer {
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 </style>
 @endpush
@@ -62,32 +82,63 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row g-4">
     @forelse ($users as $employee)
-        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-            <div class="card card-employee shadow-sm h-100">
-                <div class="card-body text-center d-flex flex-column">
-                    <div class="avatar-wrapper mb-3">
+        @php
+            $latestEval = \App\Models\EmployeeEvaluation::where('user_id', $employee->id)->orderByDesc('year')->orderByDesc('month')->first();
+        @endphp
+        <div class="col-xl-3 col-md-6">
+            <div class="branch-card-item p-4">
+                {{-- Header Card --}}
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="branch-icon-box">
                         @if ($employee->profile_photo_path)
                             <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" alt="Foto">
                         @else
                             <img src="https://ui-avatars.com/api/?name={{ urlencode($employee->name) }}&background=random" alt="Foto">
                         @endif
                     </div>
-                    <h6 class="fw-bold mb-1 text-truncate" title="{{ $employee->name }}">{{ $employee->name }}</h6>
-                    <p class="text-muted small mb-2 text-truncate" title="{{ $employee->division->name ?? 'Belum ada divisi' }}">
-                        {{ $employee->division->name ?? 'Belum ada divisi' }}
-                    </p>
-                    <span class="badge bg-light text-secondary border mx-auto mb-3">
-                        <i class="mdi mdi-storefront-outline me-1"></i>
-                        {{ $employee->branch->name ?? 'Semua Cabang' }}
+                    <span class="badge bg-light text-secondary border">
+                        ID: {{ $employee->id }}
                     </span>
-                    
-                    <div class="mt-auto">
-                        <a href="{{ route('employee-evaluations.form', $employee->id) }}" class="btn btn-outline-primary btn-sm w-100 rounded-pill fw-bold">
-                            <i class="mdi mdi-pencil-box-outline me-1"></i> Isi Rapor Bulanan
-                        </a>
+                </div>
+
+                {{-- Nama --}}
+                <h5 class="fw-bold text-dark mb-1">{{ Str::limit($employee->name, 20) }}</h5>
+                <p class="text-muted small mb-3">
+                    <i class="mdi mdi-office-building-marker-outline me-1"></i>
+                    {{ Str::limit($employee->branch->name ?? 'Belum ada cabang', 40) }}
+                </p>
+
+                {{-- Statistik Terakhir --}}
+                <div class="bg-light rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small"><i class="mdi mdi-star text-warning me-1"></i>Skor Rata-rata</span>
+                        <span class="fw-bold text-dark">{{ $latestEval ? number_format($latestEval->average_score, 1) : '-' }}</span>
                     </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small"><i class="mdi mdi-medal text-primary me-1"></i>Grade</span>
+                        <span class="fw-bold {{ $latestEval && $latestEval->grade == 'A+' ? 'text-success' : 'text-dark' }}">{{ $latestEval ? $latestEval->grade : '-' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small"><i class="mdi mdi-calendar-check text-info me-1"></i>Periode Terakhir</span>
+                        <span class="fw-bold text-dark">{{ $latestEval ? \Carbon\Carbon::create()->month($latestEval->month)->translatedFormat('M') . ' ' . $latestEval->year : 'Belum Ada' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small"><i class="mdi mdi-account-edit text-success me-1"></i>Dinilai Oleh</span>
+                        <span class="fw-bold text-dark" style="font-size: 0.8rem;">{{ $latestEval && $latestEval->assessor ? Str::limit($latestEval->assessor->name, 12) : '-' }}</span>
+                    </div>
+                </div>
+
+                {{-- Footer Card --}}
+                <div class="branch-footer">
+                    <div class="small text-muted">
+                        Role: <strong class="text-capitalize">{{ str_replace('_', ' ', $employee->role) }}</strong>
+                    </div>
+                    <a href="{{ route('employee-evaluations.form', $employee->id) }}"
+                        class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        Isi Rapor <i class="mdi mdi-arrow-right ms-1"></i>
+                    </a>
                 </div>
             </div>
         </div>
