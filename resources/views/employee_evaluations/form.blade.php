@@ -184,7 +184,18 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-end mt-5">
+                    {{-- Live Score Calculation --}}
+                    <div class="d-flex align-items-center justify-content-between bg-white p-3 rounded-3 mt-4" style="border: 1px solid #e2e8f0;">
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">Prediksi Hasil Penilaian</h6>
+                            <small class="text-muted">Nilai rata-rata dan grade otomatis dihitung</small>
+                        </div>
+                        <div id="live-grade-badge" class="badge bg-secondary px-3 py-2 rounded-pill fs-6 shadow-sm">
+                            Menunggu Nilai...
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
                         <button type="submit" class="btn btn-submit shadow-lg">
                             <i class="mdi mdi-content-save me-1"></i> Simpan Penilaian
                         </button>
@@ -197,3 +208,53 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const scoreInputs = document.querySelectorAll('.score-input');
+        const liveGradeBadge = document.getElementById('live-grade-badge');
+
+        function calculateGrade() {
+            let total = 0;
+            let count = 0;
+
+            scoreInputs.forEach(input => {
+                if (input.value !== '') {
+                    // Batasi nilai max 100 dan min 0
+                    if (parseFloat(input.value) > 100) input.value = 100;
+                    if (parseFloat(input.value) < 0) input.value = 0;
+                    
+                    total += parseFloat(input.value);
+                    count++;
+                }
+            });
+
+            if (count > 0) {
+                let average = total / count;
+                let grade = 'D';
+                let colorClass = 'bg-danger';
+
+                if (average >= 95) { grade = 'A+'; colorClass = 'bg-success'; }
+                else if (average >= 90) { grade = 'A'; colorClass = 'bg-success'; }
+                else if (average >= 85) { grade = 'B+'; colorClass = 'bg-primary'; }
+                else if (average >= 80) { grade = 'B'; colorClass = 'bg-primary'; }
+                else if (average >= 70) { grade = 'C'; colorClass = 'bg-warning text-dark'; }
+
+                liveGradeBadge.className = `badge ${colorClass} px-3 py-2 rounded-pill fs-6 shadow-sm`;
+                liveGradeBadge.innerHTML = `Grade ${grade} <span class="mx-1 fw-normal">|</span> ${average.toFixed(1)}`;
+            } else {
+                liveGradeBadge.className = 'badge bg-secondary px-3 py-2 rounded-pill fs-6 shadow-sm';
+                liveGradeBadge.innerHTML = 'Menunggu Nilai...';
+            }
+        }
+
+        scoreInputs.forEach(input => {
+            input.addEventListener('input', calculateGrade);
+        });
+
+        // Hitung otomatis saat halaman dimuat (jika form sedang dalam mode edit)
+        calculateGrade();
+    });
+</script>
+@endpush
