@@ -1098,6 +1098,14 @@
                                         </div>
                                     @endif
                                 </div>
+                                
+                                @if(isset($latestEval))
+                                <div class="mt-4 pt-3 w-100" style="border-top: 1px dashed #cbd5e1;">
+                                    <a href="{{ route('employee-evaluations.export-pdf', ['user_id' => Auth::id(), 'month' => $latestEval->month, 'year' => $latestEval->year]) }}" class="btn btn-outline-primary w-100 rounded-pill d-flex justify-content-center align-items-center gap-2" style="font-size: 0.85rem; font-weight: 600;">
+                                        <i class="mdi mdi-download fs-5"></i> Download PDF Rapor
+                                    </a>
+                                </div>
+                                @endif
                             </div>
                         </div>
 

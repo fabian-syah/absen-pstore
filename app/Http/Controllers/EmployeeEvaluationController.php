@@ -182,4 +182,30 @@ class EmployeeEvaluationController extends Controller
 
         return redirect()->route('employee-evaluations.branch-employees', $user->branch_id ?? 1)->with('success', 'Rapor karyawan berhasil disimpan!');
     }
+
+    public function exportPdf(Request $request, $user_id)
+    {
+        $user = User::findOrFail($user_id);
+        
+        $month = $request->query('month', now()->month);
+        $year = $request->query('year', now()->year);
+
+        $evaluation = EmployeeEvaluation::with('assessor')
+            ->where('user_id', $user_id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+
+        if (!$evaluation) {
+            return back()->with('error', 'Data evaluasi tidak ditemukan untuk bulan tersebut.');
+        }
+
+        $pdf = app('dompdf.wrapper')->loadView('pdf.employee-evaluation', compact('user', 'evaluation', 'month', 'year'));
+        $pdf->setPaper('A4', 'portrait');
+        
+        $monthName = \Carbon\Carbon::create()->month($month)->translatedFormat('F');
+        $fileName = 'Rapor_Karyawan_' . str_replace(' ', '_', $user->name) . '_' . $monthName . '_' . $year . '.pdf';
+        
+        return $pdf->download($fileName);
+    }
 }
