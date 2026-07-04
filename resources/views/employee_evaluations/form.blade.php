@@ -90,10 +90,10 @@
                     </div>
                 @endif
 
-                <form action="{{ route('employee-evaluations.form', $employee->id) }}" method="GET" class="row g-3 mb-4 p-3 bg-light rounded-3 shadow-sm align-items-end">
+                <form action="{{ route('employee-evaluations.form', $employee->id) }}" method="GET" class="row g-3 mb-4 p-3 bg-white border rounded-3 shadow-sm align-items-end">
                     <div class="col-md-5">
-                        <label class="form-label text-muted small">Pilih Bulan</label>
-                        <select name="month" class="form-select form-select-sm shadow-none" onchange="this.form.submit()">
+                        <label class="form-label text-muted small fw-bold">Pilih Bulan</label>
+                        <select name="month" class="form-select form-select-sm shadow-none text-dark bg-white border" style="color: #334155 !important; background-color: #ffffff !important;" onchange="this.form.submit()">
                             @foreach(range(1, 12) as $m)
                                 <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
                                     {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
@@ -102,8 +102,8 @@
                         </select>
                     </div>
                     <div class="col-md-5">
-                        <label class="form-label text-muted small">Pilih Tahun</label>
-                        <select name="year" class="form-select form-select-sm shadow-none" onchange="this.form.submit()">
+                        <label class="form-label text-muted small fw-bold">Pilih Tahun</label>
+                        <select name="year" class="form-select form-select-sm shadow-none text-dark bg-white border" style="color: #334155 !important; background-color: #ffffff !important;" onchange="this.form.submit()">
                             @for($y = date('Y') - 1; $y <= date('Y') + 1; $y++)
                                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                             @endfor
