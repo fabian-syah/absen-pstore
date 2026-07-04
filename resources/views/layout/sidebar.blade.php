@@ -685,6 +685,12 @@
                         <span class="menu-title">Cabang Saya</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('employee-evaluations.index') }}">
+                        <i class="menu-icon mdi mdi-clipboard-check-outline"></i>
+                        <span class="menu-title">Rapor Karyawan</span>
+                    </a>
+                </li>
             @endif
         @endif
 

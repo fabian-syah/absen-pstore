@@ -1014,28 +1014,47 @@
 
                             {{-- History Card --}}
                             <div class="rapor-glass-card p-4 flex-grow-1 d-flex flex-column">
+                                @php
+                                    $latestEval = \App\Models\EmployeeEvaluation::where('user_id', Auth::id())
+                                        ->orderByDesc('year')
+                                        ->orderByDesc('month')
+                                        ->first();
+                                @endphp
+
                                 <div class="d-flex align-items-center justify-content-between mb-4">
                                     <h6 class="fw-bold mb-0 text-truncate" style="color: #0f172a; font-size: 0.95rem; max-width: 80%;">Riwayat Penilaian</h6>
                                     <i class="mdi mdi-trending-up text-primary fs-5"></i>
                                 </div>
                                 <div class="d-flex justify-content-between text-center mb-4 gap-1 gap-md-2">
-                                    <div class="flex-fill p-1 p-md-2 rounded-3" style="background: #f8fafc;">
-                                        <div class="fw-bold mb-1" style="color: #64748b; font-size: 0.65rem;">MEI</div>
-                                        <div class="fw-bold" style="color: #334155; font-size: clamp(0.9rem, 3vw, 1.1rem);">7.8</div>
-                                    </div>
-                                    <div class="flex-fill p-1 p-md-2 rounded-3" style="background: #f8fafc;">
-                                        <div class="fw-bold mb-1" style="color: #64748b; font-size: 0.65rem;">JUN</div>
-                                        <div class="fw-bold" style="color: #334155; font-size: clamp(0.9rem, 3vw, 1.1rem);">8.1</div>
-                                    </div>
-                                    <div class="flex-fill p-2 rounded-3 position-relative" style="background: #eff6ff; border: 1px solid #bfdbfe;">
-                                        <div class="fw-bold mb-1" style="color: #2563eb; font-size: 0.7rem;">JUL</div>
-                                        <div class="fw-bold text-primary" style="font-size: 1.1rem;">8.4</div>
-                                        <div class="position-absolute" style="top: -5px; right: -5px; width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; border: 2px solid #fff;"></div>
-                                    </div>
+                                    @php
+                                        // Ambil 3 bulan terakhir evaluasi
+                                        $historyEvals = \App\Models\EmployeeEvaluation::where('user_id', Auth::id())
+                                            ->orderByDesc('year')
+                                            ->orderByDesc('month')
+                                            ->take(3)
+                                            ->get()
+                                            ->reverse();
+                                    @endphp
+                                    
+                                    @forelse($historyEvals as $index => $eval)
+                                        @php
+                                            $isLast = $loop->last;
+                                            $monthName = strtoupper(\Carbon\Carbon::create()->month($eval->month)->translatedFormat('M'));
+                                        @endphp
+                                        <div class="flex-fill p-1 p-md-2 rounded-3 position-relative" style="{{ $isLast ? 'background: #eff6ff; border: 1px solid #bfdbfe;' : 'background: #f8fafc;' }}">
+                                            <div class="fw-bold mb-1" style="{{ $isLast ? 'color: #2563eb;' : 'color: #64748b;' }} font-size: 0.65rem;">{{ $monthName }}</div>
+                                            <div class="fw-bold {{ $isLast ? 'text-primary' : '' }}" style="color: #334155; font-size: clamp(0.9rem, 3vw, 1.1rem);">{{ number_format($eval->average_score / 10, 1) }}</div>
+                                            @if($isLast)
+                                                <div class="position-absolute" style="top: -5px; right: -5px; width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; border: 2px solid #fff;"></div>
+                                            @endif
+                                        </div>
+                                    @empty
+                                        <div class="text-muted small w-100">Belum ada riwayat penilaian.</div>
+                                    @endforelse
                                 </div>
                                 <div class="p-3 mt-auto rounded-3" style="background: #f8fafc; border-left: 3px solid #3b82f6;">
                                     <p class="fst-italic mb-0" style="color: #475569; font-size: 0.75rem; line-height: 1.6;">
-                                        "Peningkatan kepemimpinan yang signifikan bulan ini, khususnya dalam mentoring tim. Perlu sedikit peningkatan pada detail."
+                                        "Terus tingkatkan kinerjamu dan capai target bulan ini dengan lebih maksimal!"
                                     </p>
                                 </div>
                             </div>
@@ -1064,14 +1083,20 @@
                                     <div class="d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 48px; height: 48px; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border: 1px solid #cbd5e1;">
                                         <i class="mdi mdi-account-tie fs-4" style="color: #64748b;"></i>
                                     </div>
-                                    <div>
-                                        <div class="fw-bold" style="color: #0f172a; font-size: 0.9rem;">JESSICA LESTARI</div>
-                                        <div class="d-flex align-items-center gap-2 mt-1">
-                                            <span style="color: #64748b; font-size: 0.75rem;">@jess_mgr</span>
-                                            <span style="color: #cbd5e1; font-size: 0.7rem;">•</span>
-                                            <span style="color: #64748b; font-size: 0.75rem;">{{ date('d M Y') }}</span>
+                                    @if(isset($latestEval) && $latestEval->assessor)
+                                        <div>
+                                            <div class="fw-bold" style="color: #0f172a; font-size: 0.9rem;">{{ strtoupper($latestEval->assessor->name) }}</div>
+                                            <div class="d-flex align-items-center gap-2 mt-1">
+                                                <span style="color: #64748b; font-size: 0.75rem;">{{ $latestEval->assessor->role }}</span>
+                                                <span style="color: #cbd5e1; font-size: 0.7rem;">•</span>
+                                                <span style="color: #64748b; font-size: 0.75rem;">{{ \Carbon\Carbon::parse($latestEval->updated_at)->format('d M Y') }}</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    @else
+                                        <div>
+                                            <div class="fw-bold text-muted" style="font-size: 0.9rem;">BELUM DINILAI</div>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -1096,16 +1121,18 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Data Dummy Evaluasi (Bisa diisi dinamis dari backend nantinya)
+            // Data Evaluasi Dinamis dari Backend
             const kriteriaPenilaian = [
-                { nama: "Kecerdasan", nilai: 85, catatan: "Problem solving sangat baik.", icon: "mdi-brain" },
-                { nama: "Amanah", nilai: 92, catatan: "-", icon: "mdi-shield-check" },
-                { nama: "Sosial media", nilai: 88, catatan: "Aktif promosi.", icon: "mdi-youtube" },
-                { nama: "Kepemimpinan", nilai: 80, catatan: "Mampu memimpin tim kecil.", icon: "mdi-account-tie" },
-                { nama: "Data & ketelitian", nilai: 85, catatan: "Cukup teliti.", icon: "mdi-clipboard-text" },
-                { nama: "Komunikasi", nilai: 91, catatan: "Sangat komunikatif.", icon: "mdi-forum" },
-                { nama: "Kedisiplinan", nilai: 98, catatan: "Selalu on-time.", icon: "mdi-calendar-clock" },
-                { nama: "Kreativitas", nilai: null, catatan: "", icon: "mdi-lightbulb" } // Kosongkan nilai untuk sembunyikan
+                { nama: "Kecerdasan", nilai: {!! isset($latestEval) ? ($latestEval->kecerdasan_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->kecerdasan_note ?? '-') : '-' !!}", icon: "mdi-brain" },
+                { nama: "Amanah", nilai: {!! isset($latestEval) ? ($latestEval->amanah_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->amanah_note ?? '-') : '-' !!}", icon: "mdi-shield-check" },
+                { nama: "Sosial media", nilai: {!! isset($latestEval) ? ($latestEval->sosial_media_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->sosial_media_note ?? '-') : '-' !!}", icon: "mdi-youtube" },
+                { nama: "Kepemimpinan", nilai: {!! isset($latestEval) ? ($latestEval->kepemimpinan_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->kepemimpinan_note ?? '-') : '-' !!}", icon: "mdi-account-tie" },
+                { nama: "Data & ketelitian", nilai: {!! isset($latestEval) ? ($latestEval->data_ketelitian_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->data_ketelitian_note ?? '-') : '-' !!}", icon: "mdi-clipboard-text" },
+                { nama: "Komunikasi", nilai: {!! isset($latestEval) ? ($latestEval->komunikasi_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->komunikasi_note ?? '-') : '-' !!}", icon: "mdi-forum" },
+                { nama: "Kedisiplinan", nilai: {!! isset($latestEval) ? ($latestEval->kedisiplinan_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->kedisiplinan_note ?? '-') : '-' !!}", icon: "mdi-calendar-clock" }
+                @if(isset($latestEval) && $latestEval->custom_score !== null)
+                , { nama: "{!! addslashes($latestEval->custom_title ?? 'Kriteria Tambahan') !!}", nilai: {!! $latestEval->custom_score !!}, catatan: "{!! addslashes($latestEval->custom_note ?? '-') !!}", icon: "mdi-star-circle" }
+                @endif
             ];
 
             const validKriteria = kriteriaPenilaian.filter(k => k.nilai !== null && k.nilai !== undefined);
