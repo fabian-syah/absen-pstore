@@ -1063,15 +1063,15 @@
                         {{-- Middle Column: Radar Chart & Assessor Bento --}}
                         <div class="d-flex flex-column gap-3">
                             {{-- Chart Card --}}
-                            <div class="rapor-glass-card p-4 d-flex flex-column align-items-center justify-content-center flex-grow-1">
-                                <div class="w-100 d-flex justify-content-between align-items-center mb-2">
+                            <div class="rapor-glass-card p-4 d-flex flex-column flex-grow-1">
+                                <div class="w-100 d-flex justify-content-between align-items-center mb-4">
                                     <h6 class="fw-bold mb-0" style="color: #0f172a; font-size: 0.95rem;">Analisis Kompetensi</h6>
                                     <div id="overall-grade-badge" class="px-3 py-1 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.3);">
                                         {{-- Injected via JS --}}
                                         Grade A <span style="opacity: 0.7;">|</span> 88.5
                                     </div>
                                 </div>
-                                <div class="w-100 position-relative d-flex justify-content-center align-items-center mt-3" style="height: 320px;">
+                                <div class="w-100 position-relative d-flex justify-content-center align-items-center mt-auto mb-auto" style="min-height: 280px;">
                                     <canvas id="radarChartRapor"></canvas>
                                 </div>
                             </div>
