@@ -202,6 +202,17 @@
                         </div>
                     </div>
 
+                    {{-- Catatan Akhir / Motivasi --}}
+                    <div class="mt-4" style="border-left: 4px solid #3b82f6; background-color: #f8fafc; border-radius: 0 12px 12px 0; padding: 20px; position: relative;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-primary mb-0">Kesimpulan & Motivasi</h6>
+                            <button type="button" id="btn_generate_ai" class="btn btn-sm btn-outline-primary rounded-pill d-flex align-items-center" style="font-size: 0.85rem;">
+                                <i class="mdi mdi-auto-fix me-1"></i> Generate AI
+                            </button>
+                        </div>
+                        <textarea name="final_remark" id="input_final_remark" class="form-control border-0 bg-transparent shadow-none" rows="3" style="font-style: italic; font-size: 1.05rem; color: #334155; resize: none;" placeholder="Catatan kesimpulan akan diisi otomatis berdasarkan Grade...">{{ old('final_remark', $evaluation ? $evaluation->final_remark : '') }}</textarea>
+                    </div>
+
                     <div class="d-flex justify-content-end mt-4">
                         <button type="submit" class="btn btn-submit shadow-lg">
                             <i class="mdi mdi-content-save me-1"></i> Simpan Penilaian
@@ -222,15 +233,80 @@
         const scoreInputs = document.querySelectorAll('.score-input');
         const inputAverage = document.getElementById('input_average_score');
         const inputGrade = document.getElementById('input_grade');
+        const inputFinalRemark = document.getElementById('input_final_remark');
         let isManuallyEdited = false;
+        let isRemarkManuallyEdited = false;
+
+        const btnGenerateAi = document.getElementById('btn_generate_ai');
+        const qwenApiKey = 'sk-ws-H.LDDRLE.IiUg.MEQCIB6x81yiZJDmT0zgNzd5oGp1uCX0QgoPCihDz2gzePifAiA2eMX5lA6e_7ZbMmyidb5tl8sr_Va-urNbxpey4RhlmA';
+        const qwenModel = 'qwen-plus';
 
         // Jika user mengetik manual di input hasil akhir, jangan dioverride otomatis lagi
         inputAverage.addEventListener('input', () => isManuallyEdited = true);
         inputGrade.addEventListener('input', () => isManuallyEdited = true);
+        inputFinalRemark.addEventListener('input', () => isRemarkManuallyEdited = true);
+
+        // Fitur Generate AI
+        btnGenerateAi.addEventListener('click', async function() {
+            if (!inputAverage.value || !inputGrade.value) {
+                alert('Pastikan nilai sudah terisi sebelum menggunakan AI.');
+                return;
+            }
+
+            const originalText = btnGenerateAi.innerHTML;
+            btnGenerateAi.innerHTML = '<i class="mdi mdi-loading mdi-spin me-1"></i> Generating...';
+            btnGenerateAi.disabled = true;
+            inputFinalRemark.value = 'Menganalisa nilai dan membuat kesimpulan dengan AI...';
+
+            // Kumpulkan data kriteria untuk AI
+            let promptText = `Buatkan kesimpulan dan kalimat motivasi (1 paragraf singkat 2-3 kalimat) untuk rapor karyawan bernama {{ $employee->name }}.\n`;
+            promptText += `Nilai Rata-rata: ${inputAverage.value}, Grade: ${inputGrade.value}.\n`;
+            promptText += `Detail Nilai (skala 0-100):\n`;
+            
+            let criteriaRows = document.querySelectorAll('.criteria-row:not(.bg-light)');
+            criteriaRows.forEach(row => {
+                let title = row.querySelector('.criteria-title').innerText.trim();
+                let score = row.querySelector('.score-input').value;
+                if (score) promptText += `- ${title}: ${score}\n`;
+            });
+
+            promptText += `Berikan nada yang profesional, konstruktif, dan memotivasi. Jika grade bagus, puji. Jika grade kurang, berikan semangat untuk perbaikan. Gunakan gaya bahasa semi-formal. Jangan buat terlalu panjang.`;
+
+            try {
+                const response = await fetch('https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${qwenApiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: qwenModel,
+                        messages: [
+                            { role: 'system', content: 'Anda adalah asisten HR yang profesional dan pandai memberikan evaluasi kinerja yang memotivasi.' },
+                            { role: 'user', content: promptText }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 200
+                    })
+                });
+
+                const data = await response.json();
+                if (data.choices && data.choices.length > 0) {
+                    inputFinalRemark.value = '"' + data.choices[0].message.content.replace(/^["']|["']$/g, '') + '"';
+                    isRemarkManuallyEdited = true; // Tandai diedit agar tidak tertimpa kalkulasi standar
+                } else {
+                    inputFinalRemark.value = 'Gagal menghasilkan kesimpulan AI. Silakan coba lagi.';
+                }
+            } catch (error) {
+                console.error(error);
+                inputFinalRemark.value = 'Terjadi kesalahan saat menghubungi API.';
+            } finally {
+                btnGenerateAi.innerHTML = originalText;
+                btnGenerateAi.disabled = false;
+            }
+        });
 
         function calculateGrade() {
-            if (isManuallyEdited) return; // Jangan ubah jika sudah diketik manual
-
             let total = 0;
             let count = 0;
 
@@ -255,14 +331,35 @@
                 else if (average >= 80) grade = 'B';
                 else if (average >= 70) grade = 'C';
 
-                // Format average to max 1 decimal if needed
-                inputAverage.value = average % 1 === 0 ? average : average.toFixed(1);
-                inputGrade.value = grade;
+                if (!isManuallyEdited) {
+                    inputAverage.value = average % 1 === 0 ? average : average.toFixed(1);
+                    inputGrade.value = grade;
+                }
+
+                if (!isRemarkManuallyEdited) {
+                    // Hanya otomatis terisi kalimat standar jika belum disentuh AI/manual
+                    if (!inputFinalRemark.value) {
+                        let remark = '';
+                        if (grade === 'A+' || grade === 'A') {
+                            remark = '"Luar biasa! Kinerjamu sangat memuaskan. Terus pertahankan prestasi hebat ini di bulan depan!"';
+                        } else if (grade === 'B+' || grade === 'B') {
+                            remark = '"Terus tingkatkan kinerjamu dan capai target bulan ini dengan lebih maksimal!"';
+                        } else if (grade === 'C') {
+                            remark = '"Performa sudah cukup baik, namun masih ada beberapa aspek yang perlu ditingkatkan lagi."';
+                        } else {
+                            remark = '"Ayo semangat! Evaluasi ini bisa jadi pelajaran agar kamu bisa memberikan performa yang jauh lebih baik."';
+                        }
+                        inputFinalRemark.value = remark;
+                    }
+                }
             } else {
                 // Jangan kosongkan jika form sedang dimuat dengan data lama
-                if (!inputAverage.defaultValue) {
+                if (!inputAverage.defaultValue && !isManuallyEdited) {
                     inputAverage.value = '';
                     inputGrade.value = '';
+                }
+                if (!inputFinalRemark.defaultValue && !isRemarkManuallyEdited) {
+                    inputFinalRemark.value = '';
                 }
             }
         }

@@ -176,6 +176,7 @@ class EmployeeEvaluationController extends Controller
                 'custom_note' => $request->custom_note,
                 'average_score' => $average_score,
                 'grade' => $grade,
+                'final_remark' => $request->final_remark,
             ]
         );
 
