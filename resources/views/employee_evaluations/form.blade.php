@@ -210,7 +210,11 @@
                                 <i class="mdi mdi-auto-fix me-1"></i> Generate AI
                             </button>
                         </div>
-                        <textarea name="final_remark" id="input_final_remark" class="form-control border-0 bg-transparent shadow-none p-0 mt-3" rows="5" spellcheck="false" style="font-style: italic; font-size: 1.05rem; line-height: 1.6; color: #334155; resize: none; overflow-y: hidden;" placeholder="Catatan kesimpulan akan diisi otomatis berdasarkan Grade..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">{{ old('final_remark', $evaluation ? $evaluation->final_remark : '') }}</textarea>
+                        <textarea name="final_remark" id="input_final_remark" class="form-control border-0 bg-transparent shadow-none p-0 mt-3 mb-2" rows="5" spellcheck="false" style="font-style: italic; font-size: 1.05rem; line-height: 1.6; color: #334155; resize: none; overflow-y: hidden;" placeholder="Catatan kesimpulan akan diisi otomatis berdasarkan Grade..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">{{ old('final_remark', $evaluation ? $evaluation->final_remark : '') }}</textarea>
+                        
+                        <div class="text-muted text-end w-100" style="font-size: 0.75rem;">
+                            <i class="mdi mdi-pencil-outline me-1"></i> Teks di atas bisa Anda edit atau tambahkan manual sesuai kebutuhan.
+                        </div>
                     </div>
 
                     <div class="d-flex justify-content-end mt-4">
