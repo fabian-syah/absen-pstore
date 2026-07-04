@@ -4,32 +4,32 @@
     <meta charset="utf-8">
     <title>Rapor Evaluasi Kinerja Karyawan</title>
     <style>
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 13px; color: #333; line-height: 1.4; margin: 0; padding: 15px; }
-        .header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; margin-bottom: 20px; }
-        .header h1 { color: #1e3a8a; font-size: 20px; margin: 0 0 5px 0; text-transform: uppercase; }
-        .header p { margin: 0; font-size: 13px; color: #64748b; }
-        .employee-info { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
-        .employee-info td { padding: 6px 10px; border: 1px solid #e2e8f0; }
-        .employee-info th { padding: 6px 10px; border: 1px solid #e2e8f0; text-align: left; background-color: #f8fafc; color: #475569; width: 30%; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #333; line-height: 1.3; margin: 0; padding: 10px; }
+        .header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 15px; }
+        .header h1 { color: #1e3a8a; font-size: 18px; margin: 0 0 3px 0; text-transform: uppercase; }
+        .header p { margin: 0; font-size: 11px; color: #64748b; }
+        .employee-info { width: 100%; margin-bottom: 15px; border-collapse: collapse; }
+        .employee-info td { padding: 4px 8px; border: 1px solid #e2e8f0; }
+        .employee-info th { padding: 4px 8px; border: 1px solid #e2e8f0; text-align: left; background-color: #f8fafc; color: #475569; width: 25%; }
         
-        .score-section { margin-bottom: 20px; }
-        .score-section h3 { font-size: 16px; color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 10px; }
+        .score-section { margin-bottom: 15px; }
+        .score-section h3 { font-size: 14px; color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 8px; }
         
-        .score-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .score-table th, .score-table td { padding: 8px; border: 1px solid #cbd5e1; }
+        .score-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .score-table th, .score-table td { padding: 5px 8px; border: 1px solid #cbd5e1; }
         .score-table th { background-color: #f1f5f9; text-align: center; color: #334155; }
         .score-table td.criteria { font-weight: bold; width: 25%; }
-        .score-table td.score { text-align: center; font-weight: bold; width: 15%; font-size: 15px; }
+        .score-table td.score { text-align: center; font-weight: bold; width: 10%; font-size: 13px; }
         
-        .summary-box { background-color: #f8fafc; border: 1px solid #94a3b8; padding: 15px; text-align: center; margin-bottom: 20px; border-radius: 8px; }
-        .summary-box .grade { font-size: 30px; font-weight: bold; color: #10b981; margin: 5px 0; }
-        .summary-box .average { font-size: 16px; color: #475569; }
+        .summary-box { background-color: #f8fafc; border: 1px solid #94a3b8; padding: 10px; text-align: center; margin-bottom: 15px; border-radius: 6px; }
+        .summary-box .grade { font-size: 24px; font-weight: bold; color: #10b981; margin: 3px 0; }
+        .summary-box .average { font-size: 13px; color: #475569; }
         
-        .remark-box { background-color: #eff6ff; border-left: 5px solid #3b82f6; padding: 12px 15px; font-style: italic; margin-bottom: 30px; }
+        .remark-box { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 10px 12px; font-style: italic; margin-bottom: 15px; font-size: 11px; line-height: 1.4; }
         
-        .footer { width: 100%; margin-top: 30px; }
-        .signature-box { float: right; width: 250px; text-align: center; }
-        .signature-line { border-bottom: 1px solid #000; margin-top: 50px; margin-bottom: 5px; }
+        .footer { width: 100%; margin-top: 15px; }
+        .signature-box { float: right; width: 200px; text-align: center; }
+        .signature-line { border-bottom: 1px solid #000; margin-top: 40px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -41,7 +41,7 @@
 
     <table class="employee-info" style="border: none;">
         <tr>
-            <td rowspan="4" style="width: 100px; text-align: center; border: none; padding: 0 15px 0 0; vertical-align: top;">
+            <td rowspan="4" style="width: 140px; text-align: center; border: none; padding: 0 15px 0 0; vertical-align: middle;">
                 @php
                     $photoUrl = null;
                     if ($user->profile_photo_path && file_exists(public_path('storage/' . $user->profile_photo_path))) {
@@ -52,9 +52,11 @@
                     }
                 @endphp
                 @if($photoUrl)
-                    <img src="{{ $photoUrl }}" style="width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <div style="width: 130px; height: 130px; overflow: hidden; border-radius: 8px; border: 1px solid #cbd5e1; display: inline-block;">
+                        <img src="{{ $photoUrl }}" style="height: 130px; width: auto; max-width: 130px; display: block; margin: 0 auto;">
+                    </div>
                 @else
-                    <div style="width: 90px; height: 90px; background-color: #e2e8f0; border-radius: 8px; border: 1px solid #cbd5e1; line-height: 90px; color: #64748b; font-size: 12px;">Tanpa Foto</div>
+                    <div style="width: 130px; height: 130px; background-color: #e2e8f0; border-radius: 8px; border: 1px solid #cbd5e1; line-height: 130px; color: #64748b; font-size: 14px; margin: 0 auto;">Tanpa Foto</div>
                 @endif
             </td>
             <th>Nama Karyawan</th>
