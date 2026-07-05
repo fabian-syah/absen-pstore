@@ -213,4 +213,108 @@ class EmployeeEvaluationController extends Controller
         
         return $pdf->download($fileName);
     }
+
+    public function exportBranchPdf(Request $request, $branch_id)
+    {
+        $currentUser = Auth::user();
+        if (!in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        $branch = Branch::findOrFail($branch_id);
+        
+        $month = $request->query('month', now()->month);
+        $year = $request->query('year', now()->year);
+
+        $users = User::where('branch_id', $branch_id)
+            ->where('is_active', true)
+            ->orderByRaw("CASE WHEN role = 'leader' THEN 1 ELSE 2 END")
+            ->orderBy('name')
+            ->get();
+
+        if ($users->isEmpty()) {
+            return back()->with('error', 'Tidak ada karyawan di cabang ini.');
+        }
+
+        $evaluations = EmployeeEvaluation::whereIn('user_id', $users->pluck('id'))
+            ->where('month', $month)
+            ->where('year', $year)
+            ->get()
+            ->keyBy('user_id');
+
+        // Calculate average for branch chart
+        $avgScores = [
+            'kecerdasan' => 0, 'amanah' => 0, 'sosial_media' => 0,
+            'kepemimpinan' => 0, 'data_ketelitian' => 0, 'komunikasi' => 0,
+            'kedisiplinan' => 0
+        ];
+        
+        $count = 0;
+        foreach ($users as $u) {
+            $eval = $evaluations->get($u->id);
+            if ($eval) {
+                $avgScores['kecerdasan'] += (int) $eval->kecerdasan_score;
+                $avgScores['amanah'] += (int) $eval->amanah_score;
+                $avgScores['sosial_media'] += (int) $eval->sosial_media_score;
+                $avgScores['kepemimpinan'] += (int) $eval->kepemimpinan_score;
+                $avgScores['data_ketelitian'] += (int) $eval->data_ketelitian_score;
+                $avgScores['komunikasi'] += (int) $eval->komunikasi_score;
+                $avgScores['kedisiplinan'] += (int) $eval->kedisiplinan_score;
+                $count++;
+            }
+        }
+
+        if ($count > 0) {
+            foreach ($avgScores as $k => $v) {
+                $avgScores[$k] = round($v / $count, 1);
+            }
+        }
+
+        // Generate QuickChart
+        $chartData = [
+            'type' => 'radar',
+            'data' => [
+                'labels' => ['Kecerdasan', 'Amanah', 'Sosial media', 'Kepemimpinan', 'Data & ketelitian', 'Komunikasi', 'Kedisiplinan'],
+                'datasets' => [
+                    [
+                        'label' => 'Rata-rata Cabang',
+                        'data' => array_values($avgScores),
+                        'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
+                        'borderColor' => 'rgba(54, 162, 235, 1)',
+                        'pointBackgroundColor' => 'rgba(54, 162, 235, 1)',
+                        'pointBorderColor' => '#fff',
+                    ]
+                ]
+            ],
+            'options' => [
+                'scale' => [
+                    'ticks' => [
+                        'beginAtZero' => true,
+                        'max' => 100,
+                        'min' => 0,
+                        'stepSize' => 20
+                    ]
+                ]
+            ]
+        ];
+
+        $chartUrl = 'https://quickchart.io/chart?c=' . urlencode(json_encode($chartData)) . '&w=400&h=400';
+        $chartImage = null;
+        try {
+            $imageContent = file_get_contents($chartUrl);
+            if ($imageContent) {
+                $chartImage = 'data:image/png;base64,' . base64_encode($imageContent);
+            }
+        } catch (\Exception $e) {
+            // Ignore if chart fails to load
+        }
+
+        $pdf = app('dompdf.wrapper')->loadView('pdf.branch-evaluation', compact('branch', 'users', 'evaluations', 'month', 'year', 'chartImage'));
+        $pdf->setPaper('A4', 'portrait');
+        
+        $monthName = \Carbon\Carbon::create()->month($month)->translatedFormat('F');
+        $fileName = 'Rapor_Cabang_' . str_replace(' ', '_', $branch->name) . '_' . $monthName . '_' . $year . '.pdf';
+        
+        return $pdf->download($fileName);
+    }
 }

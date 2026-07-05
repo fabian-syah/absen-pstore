@@ -53,13 +53,20 @@
 @endpush
 
 @section('content')
-<div class="d-flex align-items-center mb-4">
-    <a href="{{ route('employee-evaluations.index') }}" class="btn btn-light shadow-sm rounded-circle p-2 me-3">
-        <i class="mdi mdi-arrow-left fs-5"></i>
-    </a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+        <a href="{{ route('employee-evaluations.index') }}" class="btn btn-light shadow-sm rounded-circle p-2 me-3">
+            <i class="mdi mdi-arrow-left fs-5"></i>
+        </a>
+        <div>
+            <h4 class="mb-0 fw-bold">Evaluasi: {{ $branch->name }}</h4>
+            <p class="text-muted mb-0 small">Pilih karyawan yang ingin dinilai</p>
+        </div>
+    </div>
     <div>
-        <h4 class="mb-0 fw-bold">Evaluasi: {{ $branch->name }}</h4>
-        <p class="text-muted mb-0 small">Pilih karyawan yang ingin dinilai</p>
+        <a href="{{ route('employee-evaluations.export-branch-pdf', ['id' => $branch->id, 'month' => request('month', now()->month), 'year' => request('year', now()->year)]) }}" class="btn btn-danger shadow-sm d-flex align-items-center">
+            <i class="mdi mdi-file-pdf-box fs-5 me-1"></i> Print PDF Cabang
+        </a>
     </div>
 </div>
 

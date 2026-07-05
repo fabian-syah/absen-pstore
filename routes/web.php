@@ -606,6 +606,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         // === RUTE RAPOR KARYAWAN ===
         Route::get('/employee-evaluations', [EmployeeEvaluationController::class, 'index'])->name('employee-evaluations.index');
         Route::get('/employee-evaluations/branch/{id}', [EmployeeEvaluationController::class, 'branchEmployees'])->name('employee-evaluations.branch-employees');
+        Route::get('/employee-evaluations/branch/{id}/export-pdf', [EmployeeEvaluationController::class, 'exportBranchPdf'])->name('employee-evaluations.export-branch-pdf');
         Route::get('/employee-evaluations/{user_id}/form', [EmployeeEvaluationController::class, 'form'])->name('employee-evaluations.form');
         Route::post('/employee-evaluations/{user_id}', [EmployeeEvaluationController::class, 'store'])->name('employee-evaluations.store');
 
