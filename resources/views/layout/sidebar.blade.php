@@ -691,6 +691,12 @@
                         <span class="menu-title">Rapor Karyawan</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('employee-evaluations.history') }}">
+                        <i class="menu-icon mdi mdi-history"></i>
+                        <span class="menu-title">Riwayat Evaluasi</span>
+                    </a>
+                </li>
             @endif
         @endif
 

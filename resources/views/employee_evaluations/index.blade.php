@@ -64,7 +64,7 @@
         </div>
     </div>
     <div>
-        <a href="{{ route('employee-evaluations.export-branch-pdf', ['id' => $branch->id, 'month' => request('month', now()->month), 'year' => request('year', now()->year)]) }}" class="btn btn-danger shadow-sm d-flex align-items-center">
+        <a href="{{ route('employee-evaluations.export-branch-pdf', ['id' => $branch->id, 'date' => request('date', now()->format('Y-m-d'))]) }}" class="btn btn-danger shadow-sm d-flex align-items-center">
             <i class="mdi mdi-file-pdf-box fs-5 me-1"></i> Print PDF Cabang
         </a>
     </div>
@@ -91,7 +91,7 @@
 <div class="row g-4">
     @forelse ($users as $employee)
         @php
-            $latestEval = \App\Models\EmployeeEvaluation::where('user_id', $employee->id)->orderByDesc('year')->orderByDesc('month')->first();
+            $latestEval = \App\Models\EmployeeEvaluation::where('user_id', $employee->id)->orderByDesc('evaluation_date')->first();
         @endphp
         <div class="col-xl-3 col-md-6">
             <div class="branch-card-item p-4">
@@ -127,8 +127,8 @@
                         <span class="fw-bold {{ $latestEval && $latestEval->grade == 'A+' ? 'text-success' : 'text-dark' }}">{{ $latestEval ? $latestEval->grade : '-' }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted small"><i class="mdi mdi-calendar-check text-info me-1"></i>Periode Terakhir</span>
-                        <span class="fw-bold text-dark">{{ $latestEval ? \Carbon\Carbon::create()->month($latestEval->month)->translatedFormat('M') . ' ' . $latestEval->year : 'Belum Ada' }}</span>
+                        <span class="text-muted small"><i class="mdi mdi-calendar-check text-info me-1"></i>Tanggal Terakhir</span>
+                        <span class="fw-bold text-dark">{{ $latestEval && $latestEval->evaluation_date ? \Carbon\Carbon::parse($latestEval->evaluation_date)->translatedFormat('d M Y') : 'Belum Ada' }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="text-muted small"><i class="mdi mdi-account-edit text-success me-1"></i>Dinilai Oleh</span>
@@ -143,7 +143,7 @@
                     </div>
                     <div class="d-flex gap-2">
                         @if($latestEval)
-                        <a href="{{ route('employee-evaluations.export-pdf', ['user_id' => $employee->id, 'month' => $latestEval->month, 'year' => $latestEval->year]) }}"
+                        <a href="{{ route('employee-evaluations.export-pdf', ['user_id' => $employee->id, 'date' => $latestEval->evaluation_date ? \Carbon\Carbon::parse($latestEval->evaluation_date)->format('Y-m-d') : now()->format('Y-m-d')]) }}"
                             class="btn btn-sm btn-outline-danger rounded-pill px-2 d-flex align-items-center justify-content-center" title="Download PDF Rapor" style="width: 32px; height: 32px;">
                             <i class="mdi mdi-file-pdf-box fs-5"></i>
                         </a>

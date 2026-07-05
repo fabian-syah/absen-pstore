@@ -63,8 +63,8 @@
             <td style="font-weight: bold; font-size: 13px;">{{ $user->name }}</td>
         </tr>
         <tr>
-            <th>Periode Evaluasi</th>
-            <td>{{ \Carbon\Carbon::create()->month($month)->translatedFormat('F') }} {{ $year }}</td>
+            <th>Tanggal Evaluasi</th>
+            <td>{{ \Carbon\Carbon::parse($date)->translatedFormat('d F Y') }}</td>
         </tr>
         <tr>
             <th>Divisi / Cabang</th>

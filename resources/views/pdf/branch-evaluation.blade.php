@@ -51,8 +51,8 @@
             <td style="font-weight: bold;">{{ $branch->name }}</td>
         </tr>
         <tr>
-            <th>Periode Evaluasi</th>
-            <td>{{ \Carbon\Carbon::create()->month($month)->translatedFormat('F') }} {{ $year }}</td>
+            <th>Tanggal Evaluasi</th>
+            <td>{{ \Carbon\Carbon::parse($date)->translatedFormat('d F Y') }}</td>
         </tr>
         <tr>
             <th>Total Karyawan</th>

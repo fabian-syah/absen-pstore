@@ -105,31 +105,25 @@
                     </div>
                 @endif
 
-                <form action="{{ route('employee-evaluations.form', $employee->id) }}" method="GET" class="row g-3 mb-4 p-3 bg-white border rounded-3 shadow-sm align-items-end">
-                    <div class="col-md-5">
-                        <label class="form-label text-muted small fw-bold">Pilih Bulan</label>
-                        <select name="month" class="form-select form-select-sm shadow-none text-dark bg-white border" style="color: #334155 !important; background-color: #ffffff !important;" onchange="this.form.submit()">
-                            @foreach(range(1, 12) as $m)
-                                <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
-                                    {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                                </option>
-                            @endforeach
-                        </select>
+                <div class="mb-4 p-3 bg-white border rounded-3 shadow-sm d-flex justify-content-between align-items-center">
+                    <div>
+                        <label class="form-label text-muted small fw-bold mb-1">Tanggal Evaluasi</label>
+                        <h5 class="mb-0 text-dark fw-bold"><i class="mdi mdi-calendar-today me-2 text-primary"></i>{{ \Carbon\Carbon::parse($date)->translatedFormat('d F Y') }}</h5>
                     </div>
-                    <div class="col-md-5">
-                        <label class="form-label text-muted small fw-bold">Pilih Tahun</label>
-                        <select name="year" class="form-select form-select-sm shadow-none text-dark bg-white border" style="color: #334155 !important; background-color: #ffffff !important;" onchange="this.form.submit()">
-                            @for($y = date('Y') - 1; $y <= date('Y') + 1; $y++)
-                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                </form>
+                    @if($isReadOnly)
+                        <div class="badge bg-danger px-3 py-2 rounded-3 fs-6 shadow-sm">
+                            <i class="mdi mdi-lock me-1"></i> Sudah Dinilai Hari Ini
+                        </div>
+                    @else
+                        <div class="badge bg-success px-3 py-2 rounded-3 fs-6 shadow-sm">
+                            <i class="mdi mdi-check-circle-outline me-1"></i> Belum Dinilai
+                        </div>
+                    @endif
+                </div>
 
                 <form action="{{ route('employee-evaluations.store', $employee->id) }}" method="POST">
                     @csrf
-                    <input type="hidden" name="month" value="{{ $month }}">
-                    <input type="hidden" name="year" value="{{ $year }}">
+                    <fieldset {{ $isReadOnly ? 'disabled="disabled"' : '' }}>
 
                     <div class="alert alert-info border-0 shadow-sm rounded-3 mb-4">
                         <i class="mdi mdi-information me-2"></i> <strong>Instruksi:</strong> Berikan nilai skala <strong>0 - 100</strong>. Jika ada kriteria yang tidak relevan, biarkan kosong.
@@ -218,10 +212,13 @@
                     </div>
 
                     <div class="d-flex justify-content-end mt-4">
-                        <button type="submit" class="btn btn-submit shadow-lg">
-                            <i class="mdi mdi-content-save me-1"></i> Simpan Penilaian
-                        </button>
+                        @if(!$isReadOnly)
+                            <button type="submit" class="btn btn-submit shadow-lg">
+                                <i class="mdi mdi-content-save me-1"></i> Simpan Penilaian
+                            </button>
+                        @endif
                     </div>
+                    </fieldset>
                 </form>
 
             </div>

@@ -17,7 +17,7 @@ class EmployeeEvaluationController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         // Pengecekan Hak Akses
         if (!in_array($user->role, ['admin', 'audit', 'leader'])) {
             return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
@@ -25,25 +25,25 @@ class EmployeeEvaluationController extends Controller
 
         // Ambil daftar cabang
         if ($user->role === 'admin') {
-            $branches = Branch::withCount(['users' => function($q) {
+            $branches = Branch::withCount(['users' => function ($q) {
                 $q->where('is_active', true);
             }])->get();
         } else {
             $branches = collect();
-            
+
             // Branch utama
             if ($user->branch_id) {
-                $mainBranch = Branch::withCount(['users' => function($q) {
+                $mainBranch = Branch::withCount(['users' => function ($q) {
                     $q->where('is_active', true);
                 }])->find($user->branch_id);
                 if ($mainBranch) $branches->push($mainBranch);
             }
-            
+
             // Branch kelolaan
-            $managedBranches = $user->branches()->withCount(['users' => function($q) {
+            $managedBranches = $user->branches()->withCount(['users' => function ($q) {
                 $q->where('is_active', true);
             }])->get();
-            
+
             foreach ($managedBranches as $mb) {
                 if (!$branches->contains('id', $mb->id)) {
                     $branches->push($mb);
@@ -60,7 +60,7 @@ class EmployeeEvaluationController extends Controller
     public function branchEmployees($branch_id, Request $request)
     {
         $user = Auth::user();
-        
+
         if (!in_array($user->role, ['admin', 'audit', 'leader'])) {
             return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
@@ -88,17 +88,21 @@ class EmployeeEvaluationController extends Controller
     public function form($user_id, Request $request)
     {
         $employee = User::findOrFail($user_id);
-        
-        $month = $request->get('month', date('n'));
-        $year = $request->get('year', date('Y'));
 
-        // Cek apakah sudah ada evaluasi di bulan dan tahun tersebut
+        $date = $request->get('date', now()->format('Y-m-d'));
+        // Fallback backward compatibility for month/year if they still access old URLs
+        if ($request->has('month') && $request->has('year')) {
+            $date = $request->year . '-' . str_pad($request->month, 2, '0', STR_PAD_LEFT) . '-01';
+        }
+
+        // Cek apakah sudah ada evaluasi di tanggal tersebut
         $evaluation = EmployeeEvaluation::where('user_id', $user_id)
-            ->where('month', $month)
-            ->where('year', $year)
+            ->whereDate('evaluation_date', $date)
             ->first();
 
-        return view('employee_evaluations.form', compact('employee', 'evaluation', 'month', 'year'));
+        $isReadOnly = $evaluation !== null;
+
+        return view('employee_evaluations.form', compact('employee', 'evaluation', 'date', 'isReadOnly'));
     }
 
     /**
@@ -106,9 +110,18 @@ class EmployeeEvaluationController extends Controller
      */
     public function store(Request $request, $user_id)
     {
+        $date = now()->format('Y-m-d');
+
+        // Cek apakah sudah dinilai hari ini
+        $existing = EmployeeEvaluation::where('user_id', $user_id)
+            ->whereDate('evaluation_date', $date)
+            ->first();
+
+        if ($existing) {
+            return redirect()->back()->with('error', 'Karyawan ini sudah dinilai hari ini. Tidak bisa direvisi di hari yang sama.');
+        }
+
         $request->validate([
-            'month' => 'required|integer|min:1|max:12',
-            'year' => 'required|integer',
             'kecerdasan_score' => 'nullable|integer|min:0|max:100',
             'amanah_score' => 'nullable|integer|min:0|max:100',
             'sosial_media_score' => 'nullable|integer|min:0|max:100',
@@ -136,7 +149,7 @@ class EmployeeEvaluationController extends Controller
         });
 
         $average_score = $request->filled('average_score') ? $request->average_score : ($scores->count() > 0 ? $scores->average() : 0);
-        
+
         // Tentukan Grade
         if ($request->filled('grade')) {
             $grade = $request->grade;
@@ -149,13 +162,12 @@ class EmployeeEvaluationController extends Controller
             elseif ($average_score >= 70) $grade = 'C';
         }
 
-        EmployeeEvaluation::updateOrCreate(
+        EmployeeEvaluation::create(
             [
                 'user_id' => $user_id,
-                'month' => $request->month,
-                'year' => $request->year,
-            ],
-            [
+                'evaluation_date' => $date,
+                'month' => now()->month,
+                'year' => now()->year,
                 'assessor_id' => Auth::id(),
                 'kecerdasan_score' => $request->kecerdasan_score,
                 'kecerdasan_note' => $request->kecerdasan_note,
@@ -186,31 +198,29 @@ class EmployeeEvaluationController extends Controller
     public function exportPdf(Request $request, $user_id)
     {
         $user = User::findOrFail($user_id);
-        
+
         $currentUser = Auth::user();
         if ($currentUser->id != $user_id && !in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
-        
-        $month = $request->query('month', now()->month);
-        $year = $request->query('year', now()->year);
+
+        $date = $request->query('date', now()->format('Y-m-d'));
 
         $evaluation = EmployeeEvaluation::with('assessor')
             ->where('user_id', $user_id)
-            ->where('month', $month)
-            ->where('year', $year)
+            ->whereDate('evaluation_date', $date)
             ->first();
 
         if (!$evaluation) {
-            return back()->with('error', 'Data evaluasi tidak ditemukan untuk bulan tersebut.');
+            return back()->with('error', 'Data evaluasi tidak ditemukan untuk tanggal tersebut.');
         }
 
-        $pdf = app('dompdf.wrapper')->loadView('pdf.employee-evaluation', compact('user', 'evaluation', 'month', 'year'));
+        $pdf = app('dompdf.wrapper')->loadView('pdf.employee-evaluation', compact('user', 'evaluation', 'date'));
         $pdf->setPaper('A4', 'portrait');
-        
-        $monthName = \Carbon\Carbon::create()->month($month)->translatedFormat('F');
-        $fileName = 'Rapor_Karyawan_' . str_replace(' ', '_', $user->name) . '_' . $monthName . '_' . $year . '.pdf';
-        
+
+        $dateFormatted = \Carbon\Carbon::parse($date)->translatedFormat('d_F_Y');
+        $fileName = 'Rapor_Karyawan_' . str_replace(' ', '_', $user->name) . '_' . $dateFormatted . '.pdf';
+
         return $pdf->download($fileName);
     }
 
@@ -222,9 +232,8 @@ class EmployeeEvaluationController extends Controller
         }
 
         $branch = Branch::findOrFail($branch_id);
-        
-        $month = $request->query('month', now()->month);
-        $year = $request->query('year', now()->year);
+
+        $date = $request->query('date', now()->format('Y-m-d'));
 
         $users = User::where('branch_id', $branch_id)
             ->where('is_active', true)
@@ -237,8 +246,7 @@ class EmployeeEvaluationController extends Controller
         }
 
         $evaluations = EmployeeEvaluation::whereIn('user_id', $users->pluck('id'))
-            ->where('month', $month)
-            ->where('year', $year)
+            ->whereDate('evaluation_date', $date)
             ->get()
             ->keyBy('user_id');
 
@@ -309,12 +317,41 @@ class EmployeeEvaluationController extends Controller
             }
         }
 
-        $pdf = app('dompdf.wrapper')->loadView('pdf.branch-evaluation', compact('branch', 'users', 'evaluations', 'month', 'year', 'userCharts'));
+        $pdf = app('dompdf.wrapper')->loadView('pdf.branch-evaluation', compact('branch', 'users', 'evaluations', 'date', 'userCharts'));
         $pdf->setPaper('A4', 'portrait');
-        
-        $monthName = \Carbon\Carbon::create()->month($month)->translatedFormat('F');
-        $fileName = 'Rapor_Cabang_' . str_replace(' ', '_', $branch->name) . '_' . $monthName . '_' . $year . '.pdf';
-        
+
+        $dateFormatted = \Carbon\Carbon::parse($date)->translatedFormat('d_F_Y');
+        $fileName = 'Rapor_Cabang_' . str_replace(' ', '_', $branch->name) . '_' . $dateFormatted . '.pdf';
+
         return $pdf->download($fileName);
+    }
+
+    public function history(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!in_array($user->role, ['admin', 'audit', 'leader'])) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        $date = $request->get('date', now()->format('Y-m-d'));
+
+        $query = EmployeeEvaluation::with(['user', 'user.branch', 'assessor'])
+            ->whereDate('evaluation_date', $date)
+            ->orderBy('created_at', 'desc');
+
+        // Jika leader, hanya lihat cabangnya sendiri
+        if ($user->role == 'leader') {
+            $branchIds = $user->branches()->pluck('id')->toArray();
+            if ($user->branch_id) $branchIds[] = $user->branch_id;
+
+            $query->whereHas('user', function ($q) use ($branchIds) {
+                $q->whereIn('branch_id', $branchIds);
+            });
+        }
+
+        $evaluations = $query->paginate(20)->appends($request->all());
+
+        return view('employee_evaluations.history', compact('evaluations', 'date'));
     }
 }
