@@ -272,7 +272,15 @@ class EmployeeEvaluationController extends Controller
                     ],
                     'options' => [
                         'plugins' => [
-                            'legend' => ['display' => false]
+                            'legend' => ['display' => false],
+                            'datalabels' => [
+                                'display' => true,
+                                'color' => '#1e40af',
+                                'align' => 'bottom',
+                                'font' => ['weight' => 'bold', 'size' => 10],
+                                'backgroundColor' => 'rgba(255, 255, 255, 0.7)',
+                                'borderRadius' => 3
+                            ]
                         ],
                         'scale' => [
                             'ticks' => [
