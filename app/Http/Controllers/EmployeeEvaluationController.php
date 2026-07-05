@@ -242,74 +242,65 @@ class EmployeeEvaluationController extends Controller
             ->get()
             ->keyBy('user_id');
 
-        // Calculate average for branch chart
-        $avgScores = [
-            'kecerdasan' => 0, 'amanah' => 0, 'sosial_media' => 0,
-            'kepemimpinan' => 0, 'data_ketelitian' => 0, 'komunikasi' => 0,
-            'kedisiplinan' => 0
-        ];
-        
-        $count = 0;
+        // Generate QuickChart for each user
+        $userCharts = [];
         foreach ($users as $u) {
             $eval = $evaluations->get($u->id);
             if ($eval) {
-                $avgScores['kecerdasan'] += (int) $eval->kecerdasan_score;
-                $avgScores['amanah'] += (int) $eval->amanah_score;
-                $avgScores['sosial_media'] += (int) $eval->sosial_media_score;
-                $avgScores['kepemimpinan'] += (int) $eval->kepemimpinan_score;
-                $avgScores['data_ketelitian'] += (int) $eval->data_ketelitian_score;
-                $avgScores['komunikasi'] += (int) $eval->komunikasi_score;
-                $avgScores['kedisiplinan'] += (int) $eval->kedisiplinan_score;
-                $count++;
-            }
-        }
-
-        if ($count > 0) {
-            foreach ($avgScores as $k => $v) {
-                $avgScores[$k] = round($v / $count, 1);
-            }
-        }
-
-        // Generate QuickChart
-        $chartData = [
-            'type' => 'radar',
-            'data' => [
-                'labels' => ['Kecerdasan', 'Amanah', 'Sosial media', 'Kepemimpinan', 'Data & ketelitian', 'Komunikasi', 'Kedisiplinan'],
-                'datasets' => [
-                    [
-                        'label' => 'Rata-rata Cabang',
-                        'data' => array_values($avgScores),
-                        'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
-                        'borderColor' => 'rgba(54, 162, 235, 1)',
-                        'pointBackgroundColor' => 'rgba(54, 162, 235, 1)',
-                        'pointBorderColor' => '#fff',
+                $chartData = [
+                    'type' => 'radar',
+                    'data' => [
+                        'labels' => ['Kecerdasan', 'Amanah', 'Sosial media', 'Kepemimpinan', 'Data & ketelitian', 'Komunikasi', 'Kedisiplinan'],
+                        'datasets' => [
+                            [
+                                'label' => 'Nilai',
+                                'data' => [
+                                    (int) $eval->kecerdasan_score,
+                                    (int) $eval->amanah_score,
+                                    (int) $eval->sosial_media_score,
+                                    (int) $eval->kepemimpinan_score,
+                                    (int) $eval->data_ketelitian_score,
+                                    (int) $eval->komunikasi_score,
+                                    (int) $eval->kedisiplinan_score
+                                ],
+                                'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
+                                'borderColor' => 'rgba(54, 162, 235, 1)',
+                                'pointBackgroundColor' => 'rgba(54, 162, 235, 1)',
+                                'pointBorderColor' => '#fff',
+                            ]
+                        ]
+                    ],
+                    'options' => [
+                        'plugins' => [
+                            'legend' => ['display' => false]
+                        ],
+                        'scale' => [
+                            'ticks' => [
+                                'beginAtZero' => true,
+                                'max' => 100,
+                                'min' => 0,
+                                'stepSize' => 20
+                            ]
+                        ]
                     ]
-                ]
-            ],
-            'options' => [
-                'scale' => [
-                    'ticks' => [
-                        'beginAtZero' => true,
-                        'max' => 100,
-                        'min' => 0,
-                        'stepSize' => 20
-                    ]
-                ]
-            ]
-        ];
-
-        $chartUrl = 'https://quickchart.io/chart?c=' . urlencode(json_encode($chartData)) . '&w=400&h=400';
-        $chartImage = null;
-        try {
-            $imageContent = file_get_contents($chartUrl);
-            if ($imageContent) {
-                $chartImage = 'data:image/png;base64,' . base64_encode($imageContent);
+                ];
+                $chartUrl = 'https://quickchart.io/chart?c=' . urlencode(json_encode($chartData)) . '&w=300&h=300';
+                try {
+                    $imageContent = file_get_contents($chartUrl);
+                    if ($imageContent) {
+                        $userCharts[$u->id] = 'data:image/png;base64,' . base64_encode($imageContent);
+                    } else {
+                        $userCharts[$u->id] = null;
+                    }
+                } catch (\Exception $e) {
+                    $userCharts[$u->id] = null;
+                }
+            } else {
+                $userCharts[$u->id] = null;
             }
-        } catch (\Exception $e) {
-            // Ignore if chart fails to load
         }
 
-        $pdf = app('dompdf.wrapper')->loadView('pdf.branch-evaluation', compact('branch', 'users', 'evaluations', 'month', 'year', 'chartImage'));
+        $pdf = app('dompdf.wrapper')->loadView('pdf.branch-evaluation', compact('branch', 'users', 'evaluations', 'month', 'year', 'userCharts'));
         $pdf->setPaper('A4', 'portrait');
         
         $monthName = \Carbon\Carbon::create()->month($month)->translatedFormat('F');
