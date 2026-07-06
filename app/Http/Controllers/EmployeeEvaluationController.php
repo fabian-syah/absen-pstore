@@ -340,13 +340,19 @@ class EmployeeEvaluationController extends Controller
         // Ambil daftar cabang yang boleh diakses
         $branches = collect();
         if ($user->role === 'admin' || $user->role === 'audit') {
-            $branches = Branch::all();
+            $branches = Branch::withCount(['users' => function ($q) {
+                $q->where('is_active', true);
+            }])->get();
         } else {
             if ($user->branch_id) {
-                $mainBranch = Branch::find($user->branch_id);
+                $mainBranch = Branch::withCount(['users' => function ($q) {
+                    $q->where('is_active', true);
+                }])->find($user->branch_id);
                 if ($mainBranch) $branches->push($mainBranch);
             }
-            $managedBranches = $user->branches()->get();
+            $managedBranches = $user->branches()->withCount(['users' => function ($q) {
+                $q->where('is_active', true);
+            }])->get();
             foreach ($managedBranches as $mb) {
                 if (!$branches->contains('id', $mb->id)) {
                     $branches->push($mb);
