@@ -191,7 +191,16 @@
                             </div>
                             <div>
                                 <label class="small text-muted mb-1 d-block text-md-end">Grade</label>
-                                <input type="text" id="input_grade" name="grade" class="form-control form-control-sm text-center fw-bold shadow-none" style="width: 80px; font-size: 1.1rem; color: #0f172a;" value="{{ old('grade', $evaluation ? $evaluation->grade : '') }}">
+                                <select id="input_grade" name="grade" class="form-select form-select-sm text-center fw-bold shadow-none" style="min-width: 95px; font-size: 1.1rem; color: #0f172a; cursor: pointer;">
+                                    @php
+                                        $grades = ['A++', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D'];
+                                        $currentGrade = old('grade', $evaluation ? $evaluation->grade : '');
+                                    @endphp
+                                    <option value="" disabled {{ $currentGrade == '' ? 'selected' : '' }}>-</option>
+                                    @foreach($grades as $g)
+                                        <option value="{{ $g }}" {{ $currentGrade == $g ? 'selected' : '' }}>{{ $g }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -332,11 +341,16 @@
                 let average = total / count;
                 let grade = 'D';
 
-                if (average >= 95) grade = 'A+';
+                if (average >= 98) grade = 'A++';
+                else if (average >= 95) grade = 'A+';
                 else if (average >= 90) grade = 'A';
-                else if (average >= 85) grade = 'B+';
-                else if (average >= 80) grade = 'B';
-                else if (average >= 70) grade = 'C';
+                else if (average >= 85) grade = 'A-';
+                else if (average >= 80) grade = 'B+';
+                else if (average >= 75) grade = 'B';
+                else if (average >= 70) grade = 'B-';
+                else if (average >= 65) grade = 'C+';
+                else if (average >= 60) grade = 'C';
+                else if (average >= 50) grade = 'C-';
 
                 if (!isManuallyEdited) {
                     inputAverage.value = average % 1 === 0 ? average : average.toFixed(1);
@@ -347,11 +361,11 @@
                     // Hanya otomatis terisi kalimat standar jika belum disentuh AI/manual
                     if (!inputFinalRemark.value) {
                         let remark = '';
-                        if (grade === 'A+' || grade === 'A') {
+                        if (grade.startsWith('A')) {
                             remark = '"Luar biasa! Kinerjamu sangat memuaskan. Terus pertahankan prestasi hebat ini di bulan depan!"';
-                        } else if (grade === 'B+' || grade === 'B') {
+                        } else if (grade.startsWith('B')) {
                             remark = '"Terus tingkatkan kinerjamu dan capai target bulan ini dengan lebih maksimal!"';
-                        } else if (grade === 'C') {
+                        } else if (grade.startsWith('C')) {
                             remark = '"Performa sudah cukup baik, namun masih ada beberapa aspek yang perlu ditingkatkan lagi."';
                         } else {
                             remark = '"Ayo semangat! Evaluasi ini bisa jadi pelajaran agar kamu bisa memberikan performa yang jauh lebih baik."';
