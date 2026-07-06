@@ -250,9 +250,24 @@ class EmployeeEvaluationController extends Controller
             ->get()
             ->keyBy('user_id');
 
-        // Generate QuickChart for each user
+        // Generate QuickChart & Photos for each user
         $userCharts = [];
+        $userPhotos = [];
         foreach ($users as $u) {
+            // Photo
+            if ($u->profile_photo_path) {
+                $photoPath = storage_path('app/public/' . $u->profile_photo_path);
+                if (file_exists($photoPath)) {
+                    $mime = mime_content_type($photoPath);
+                    $photoData = base64_encode(file_get_contents($photoPath));
+                    $userPhotos[$u->id] = 'data:' . $mime . ';base64,' . $photoData;
+                } else {
+                    $userPhotos[$u->id] = null;
+                }
+            } else {
+                $userPhotos[$u->id] = null;
+            }
+
             $eval = $evaluations->get($u->id);
             if ($eval) {
                 $chartData = [
@@ -317,7 +332,7 @@ class EmployeeEvaluationController extends Controller
             }
         }
 
-        $pdf = app('dompdf.wrapper')->loadView('pdf.branch-evaluation', compact('branch', 'users', 'evaluations', 'date', 'userCharts'));
+        $pdf = app('dompdf.wrapper')->loadView('pdf.branch-evaluation', compact('branch', 'users', 'evaluations', 'date', 'userCharts', 'userPhotos'));
         $pdf->setPaper('A4', 'portrait');
 
         $dateFormatted = \Carbon\Carbon::parse($date)->translatedFormat('d_F_Y');

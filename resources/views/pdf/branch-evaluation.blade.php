@@ -4,38 +4,44 @@
     <meta charset="utf-8">
     <title>Rapor Evaluasi Cabang</title>
     <style>
-        body { font-family: 'DejaVu Sans', 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #333; line-height: 1.3; margin: 0; padding: 10px; }
-        .header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 15px; }
-        .header h1 { color: #1e3a8a; font-size: 18px; margin: 0; text-transform: uppercase; }
-        .header p { margin: 5px 0 0 0; font-size: 12px; color: #64748b; }
+        body { font-family: 'DejaVu Sans', 'Helvetica', 'Arial', sans-serif; font-size: 12px; color: #1e293b; line-height: 1.4; margin: 0; padding: 20px; }
+        .header { text-align: center; border-bottom: 3px solid #1e40af; padding-bottom: 15px; margin-bottom: 25px; }
+        .header h1 { color: #1e40af; font-size: 22px; margin: 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+        .header p { margin: 5px 0 0 0; font-size: 13px; color: #64748b; }
         
-        .branch-info { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
-        .branch-info th, .branch-info td { padding: 5px; border: 1px solid #e2e8f0; }
-        .branch-info th { background-color: #f8fafc; color: #475569; text-align: left; width: 30%; }
+        .branch-info { width: 100%; margin-bottom: 30px; border-collapse: collapse; }
+        .branch-info th, .branch-info td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+        .branch-info th { color: #475569; text-align: left; width: 30%; font-weight: normal; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        .branch-info td { font-weight: bold; font-size: 13px; color: #0f172a; }
         
-        .structure-title { font-weight: bold; margin-bottom: 10px; color: #1e3a8a; font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; }
+        .role-section { margin-bottom: 30px; }
+        .role-header { background-color: #1e40af; color: white; padding: 8px 15px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
         
-        .role-section { margin-bottom: 15px; }
-        .role-header { background-color: #1e3a8a; color: white; padding: 5px 10px; font-weight: bold; border-radius: 4px; margin-bottom: 15px; font-size: 12px; }
+        .user-card { border: 1px solid #cbd5e1; background-color: #ffffff; padding: 15px; margin-bottom: 20px; border-radius: 8px; page-break-inside: avoid; }
         
-        .user-card { border: 1px solid #cbd5e1; padding: 10px; margin-bottom: 15px; border-radius: 6px; page-break-inside: avoid; }
+        .user-header-table { width: 100%; margin-bottom: 12px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 10px; border-collapse: collapse; }
+        .user-header-table td { vertical-align: middle; }
+        .user-photo { width: 45px; height: 45px; border-radius: 22.5px; border: 2px solid #e2e8f0; }
+        .user-photo-placeholder { width: 45px; height: 45px; border-radius: 22.5px; background-color: #3b82f6; color: white; text-align: center; line-height: 45px; font-weight: bold; font-size: 18px; border: 2px solid #e2e8f0; }
+        .user-info { padding-left: 15px; }
         
-        .user-header { border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px; }
-        .user-name { font-size: 14px; font-weight: bold; color: #0f172a; }
-        .user-role { font-size: 11px; color: #64748b; text-transform: capitalize; }
+        .user-name { font-size: 16px; font-weight: bold; color: #0f172a; }
+        .user-role { font-size: 12px; color: #64748b; text-transform: capitalize; margin-top: 2px; }
         
         .user-content { width: 100%; display: table; }
-        .user-chart { display: table-cell; width: 40%; text-align: center; vertical-align: middle; }
-        .user-chart img { max-width: 200px; height: auto; }
+        .user-chart { display: table-cell; width: 35%; text-align: center; vertical-align: middle; padding-right: 15px; border-right: 1px dashed #cbd5e1; }
+        .user-chart img { max-width: 180px; height: auto; }
         
-        .user-details { display: table-cell; width: 60%; vertical-align: middle; padding-left: 15px; }
+        .user-details { display: table-cell; width: 65%; vertical-align: middle; padding-left: 20px; }
         
-        .score-info { margin-bottom: 8px; }
-        .score-label { font-weight: bold; color: #475569; }
-        .score-value { font-size: 13px; font-weight: bold; color: #1e40af; }
-        .grade-value { font-size: 16px; font-weight: bold; color: #10b981; }
+        .score-info { margin-bottom: 10px; }
+        .score-label { font-weight: bold; color: #475569; font-size: 12px; }
+        .score-value { font-size: 16px; font-weight: bold; color: #1e40af; }
+        .grade-value { font-size: 20px; font-weight: bold; color: #10b981; }
+        
+        .remark-box { margin-top: 15px; padding: 12px; background-color: #f8fafc; border-left: 4px solid #3b82f6; font-size: 12px; color: #475569; font-style: italic; line-height: 1.5; border-radius: 0 6px 6px 0; }
 
-        .footer { text-align: right; font-size: 10px; color: #64748b; margin-top: 30px; border-top: 1px solid #cbd5e1; padding-top: 5px; }
+        .footer { text-align: right; font-size: 10px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
     </style>
 </head>
 <body>
@@ -71,10 +77,21 @@
         @foreach($leaders as $user)
             @php $eval = $evaluations->get($user->id); @endphp
             <div class="user-card">
-                <div class="user-header">
-                    <div class="user-name">{{ $user->name }}</div>
-                    <div class="user-role">{{ str_replace('_', ' ', $user->role) }}</div>
-                </div>
+                <table class="user-header-table">
+                    <tr>
+                        <td style="width: 50px; text-align: center;">
+                            @if(isset($userPhotos[$user->id]) && $userPhotos[$user->id])
+                                <img src="{{ $userPhotos[$user->id] }}" class="user-photo" alt="Photo">
+                            @else
+                                <div class="user-photo-placeholder">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+                            @endif
+                        </td>
+                        <td class="user-info">
+                            <div class="user-name">{{ $user->name }}</div>
+                            <div class="user-role">{{ str_replace('_', ' ', $user->role) }}</div>
+                        </td>
+                    </tr>
+                </table>
                 <div class="user-content">
                     <div class="user-chart">
                         @if(isset($userCharts[$user->id]) && $userCharts[$user->id])
@@ -92,8 +109,8 @@
                             <span class="score-label">Grade:</span> 
                             <span class="grade-value">{{ $eval ? $eval->grade : '-' }}</span>
                         </div>
-                        <div style="margin-top: 10px; font-size: 10px; color: #64748b; font-style: italic;">
-                            "{{ $eval && $eval->final_remark ? $eval->final_remark : 'Belum ada catatan' }}"
+                        <div class="remark-box">
+                            "{{ $eval && $eval->final_remark ? $eval->final_remark : 'Belum ada catatan evaluasi' }}"
                         </div>
                     </div>
                 </div>
@@ -108,10 +125,21 @@
         @foreach($staff as $user)
             @php $eval = $evaluations->get($user->id); @endphp
             <div class="user-card">
-                <div class="user-header">
-                    <div class="user-name">{{ $user->name }}</div>
-                    <div class="user-role">{{ str_replace('_', ' ', $user->role) }}</div>
-                </div>
+                <table class="user-header-table">
+                    <tr>
+                        <td style="width: 50px; text-align: center;">
+                            @if(isset($userPhotos[$user->id]) && $userPhotos[$user->id])
+                                <img src="{{ $userPhotos[$user->id] }}" class="user-photo" alt="Photo">
+                            @else
+                                <div class="user-photo-placeholder">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+                            @endif
+                        </td>
+                        <td class="user-info">
+                            <div class="user-name">{{ $user->name }}</div>
+                            <div class="user-role">{{ str_replace('_', ' ', $user->role) }}</div>
+                        </td>
+                    </tr>
+                </table>
                 <div class="user-content">
                     <div class="user-chart">
                         @if(isset($userCharts[$user->id]) && $userCharts[$user->id])
@@ -129,8 +157,8 @@
                             <span class="score-label">Grade:</span> 
                             <span class="grade-value">{{ $eval ? $eval->grade : '-' }}</span>
                         </div>
-                        <div style="margin-top: 10px; font-size: 10px; color: #64748b; font-style: italic;">
-                            "{{ $eval && $eval->final_remark ? $eval->final_remark : 'Belum ada catatan' }}"
+                        <div class="remark-box">
+                            "{{ $eval && $eval->final_remark ? $eval->final_remark : 'Belum ada catatan evaluasi' }}"
                         </div>
                     </div>
                 </div>
