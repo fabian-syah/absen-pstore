@@ -74,16 +74,12 @@
 @endpush
 
 @section('content')
+@if($branch_id)
 <div class="row mb-4">
     <div class="col-12">
         <div class="card history-card">
             <div class="card-body">
                 <form action="{{ route('employee-evaluations.history') }}" method="GET" class="row g-3 align-items-center">
-                    <div class="col-md-4">
-                        <label class="form-label text-muted small fw-bold">Pilih Tanggal</label>
-                        <input type="date" name="date" class="form-control form-control-sm" value="{{ $date }}" onchange="this.form.submit()">
-                    </div>
-                    @if($branch_id)
                     <div class="col-md-5">
                         <label class="form-label text-muted small fw-bold">Pilih Cabang</label>
                         <select name="branch_id" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -95,12 +91,12 @@
                             @endforeach
                         </select>
                     </div>
-                    @endif
                 </form>
             </div>
         </div>
     </div>
 </div>
+@endif
 
 @if(!$branch_id)
     <div class="row mb-3">
@@ -136,7 +132,7 @@
                         <div class="small text-muted">
                             Total: <strong>{{ $branch->users_count }}</strong> Karyawan
                         </div>
-                        <a href="{{ route('employee-evaluations.history', ['date' => $date, 'branch_id' => $branch->id]) }}"
+                        <a href="{{ route('employee-evaluations.history', ['branch_id' => $branch->id]) }}"
                             class="btn btn-sm btn-outline-primary rounded-pill px-3">
                             Lihat Riwayat <i class="mdi mdi-arrow-right ms-1"></i>
                         </a>

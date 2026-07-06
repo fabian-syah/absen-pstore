@@ -334,7 +334,6 @@ class EmployeeEvaluationController extends Controller
             return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        $date = $request->get('date', now()->format('Y-m-d'));
         $branch_id = $request->get('branch_id');
 
         // Ambil daftar cabang yang boleh diakses
@@ -363,11 +362,10 @@ class EmployeeEvaluationController extends Controller
         // Jika belum ada cabang yang dipilih, jangan tampilkan data
         if (!$branch_id) {
             $evaluations = collect(); // Kosongkan agar user harus pilih cabang dulu
-            return view('employee_evaluations.history', compact('evaluations', 'date', 'branches', 'branch_id'));
+            return view('employee_evaluations.history', compact('evaluations', 'branches', 'branch_id'));
         }
 
         $query = EmployeeEvaluation::with(['user', 'user.branch', 'assessor'])
-            ->whereDate('evaluation_date', $date)
             ->whereHas('user', function ($q) use ($branch_id) {
                 $q->where('branch_id', $branch_id);
             })
@@ -383,6 +381,6 @@ class EmployeeEvaluationController extends Controller
 
         $evaluations = $query->paginate(20)->appends($request->all());
 
-        return view('employee_evaluations.history', compact('evaluations', 'date', 'branches', 'branch_id'));
+        return view('employee_evaluations.history', compact('evaluations', 'branches', 'branch_id'));
     }
 }
