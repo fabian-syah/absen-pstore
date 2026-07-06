@@ -335,23 +335,48 @@ class EmployeeEvaluationController extends Controller
         }
 
         $date = $request->get('date', now()->format('Y-m-d'));
+        $branch_id = $request->get('branch_id');
+
+        // Ambil daftar cabang yang boleh diakses
+        $branches = collect();
+        if ($user->role === 'admin' || $user->role === 'audit') {
+            $branches = Branch::all();
+        } else {
+            if ($user->branch_id) {
+                $mainBranch = Branch::find($user->branch_id);
+                if ($mainBranch) $branches->push($mainBranch);
+            }
+            $managedBranches = $user->branches()->get();
+            foreach ($managedBranches as $mb) {
+                if (!$branches->contains('id', $mb->id)) {
+                    $branches->push($mb);
+                }
+            }
+        }
+
+        // Jika belum ada cabang yang dipilih, jangan tampilkan data
+        if (!$branch_id) {
+            $evaluations = collect(); // Kosongkan agar user harus pilih cabang dulu
+            return view('employee_evaluations.history', compact('evaluations', 'date', 'branches', 'branch_id'));
+        }
 
         $query = EmployeeEvaluation::with(['user', 'user.branch', 'assessor'])
             ->whereDate('evaluation_date', $date)
+            ->whereHas('user', function ($q) use ($branch_id) {
+                $q->where('branch_id', $branch_id);
+            })
             ->orderBy('created_at', 'desc');
 
-        // Jika leader, hanya lihat cabangnya sendiri
+        // Jika leader, validasi apakah cabang yang dipilih berhak diakses
         if ($user->role == 'leader') {
-            $branchIds = $user->branches()->pluck('id')->toArray();
-            if ($user->branch_id) $branchIds[] = $user->branch_id;
-
-            $query->whereHas('user', function ($q) use ($branchIds) {
-                $q->whereIn('branch_id', $branchIds);
-            });
+            $allowedBranchIds = $branches->pluck('id')->toArray();
+            if (!in_array($branch_id, $allowedBranchIds)) {
+                return redirect()->route('employee-evaluations.history')->with('error', 'Anda tidak memiliki akses ke cabang ini.');
+            }
         }
 
         $evaluations = $query->paginate(20)->appends($request->all());
 
-        return view('employee_evaluations.history', compact('evaluations', 'date'));
+        return view('employee_evaluations.history', compact('evaluations', 'date', 'branches', 'branch_id'));
     }
 }
