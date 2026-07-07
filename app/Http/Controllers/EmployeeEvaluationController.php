@@ -217,7 +217,8 @@ class EmployeeEvaluationController extends Controller
         }
 
         $pdf = app('dompdf.wrapper')->loadView('pdf.employee-evaluation', compact('user', 'evaluation', 'date'));
-        $pdf->setPaper('A4', 'portrait');
+        $paperSize = in_array(strtolower($request->query('paper', 'a4')), ['a4', 'a5']) ? strtolower($request->query('paper', 'a4')) : 'a4';
+        $pdf->setPaper($paperSize, 'portrait');
 
         $dateFormatted = \Carbon\Carbon::parse($date)->translatedFormat('d_F_Y');
         $fileName = 'Rapor_Karyawan_' . str_replace(' ', '_', $user->name) . '_' . $dateFormatted . '.pdf';
@@ -336,7 +337,8 @@ class EmployeeEvaluationController extends Controller
         }
 
         $pdf = app('dompdf.wrapper')->loadView('pdf.branch-evaluation', compact('branch', 'users', 'evaluations', 'date', 'userCharts', 'userPhotos'));
-        $pdf->setPaper('A4', 'portrait');
+        $paperSize = in_array(strtolower($request->query('paper', 'a4')), ['a4', 'a5']) ? strtolower($request->query('paper', 'a4')) : 'a4';
+        $pdf->setPaper($paperSize, 'portrait');
 
         $dateFormatted = \Carbon\Carbon::parse($date)->translatedFormat('d_F_Y');
         $fileName = 'Rapor_Cabang_' . str_replace(' ', '_', $branch->name) . '_' . $dateFormatted . '.pdf';
