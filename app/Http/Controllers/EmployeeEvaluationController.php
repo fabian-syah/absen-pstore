@@ -208,11 +208,12 @@ class EmployeeEvaluationController extends Controller
 
         $evaluation = EmployeeEvaluation::with('assessor')
             ->where('user_id', $user_id)
-            ->whereDate('evaluation_date', $date)
+            ->orderBy('evaluation_date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->first();
 
         if (!$evaluation) {
-            return back()->with('error', 'Data evaluasi tidak ditemukan untuk tanggal tersebut.');
+            return back()->with('error', 'Data evaluasi tidak ditemukan.');
         }
 
         $pdf = app('dompdf.wrapper')->loadView('pdf.employee-evaluation', compact('user', 'evaluation', 'date'));
@@ -246,8 +247,10 @@ class EmployeeEvaluationController extends Controller
         }
 
         $evaluations = EmployeeEvaluation::whereIn('user_id', $users->pluck('id'))
-            ->whereDate('evaluation_date', $date)
+            ->orderBy('evaluation_date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get()
+            ->unique('user_id')
             ->keyBy('user_id');
 
         // Generate QuickChart & Photos for each user
