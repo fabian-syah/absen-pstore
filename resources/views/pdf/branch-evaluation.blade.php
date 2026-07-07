@@ -15,7 +15,7 @@
         .branch-info td { font-weight: bold; font-size: 13px; color: #0f172a; }
         
         .role-section { margin-bottom: 30px; }
-        .role-header { background-color: #1e40af; color: white; padding: 8px 15px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .role-header { background-color: #1e40af; color: white; padding: 8px 15px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; page-break-after: avoid; }
         
         .user-card { border: 1px solid #cbd5e1; background-color: #ffffff; padding: 10px; border-radius: 8px; page-break-inside: avoid; }
         
@@ -75,11 +75,12 @@
     <div class="role-section">
         <div class="role-header">Leader / Pimpinan Cabang</div>
         <table style="width: 100%; border-collapse: separate; border-spacing: 10px; margin: -10px;">
-        @foreach($leaders->chunk(2) as $chunk)
-            <tr>
+        @php $cols = (isset($paperSize) && $paperSize == 'a5') ? 1 : 2; @endphp
+        @foreach($leaders->chunk($cols) as $chunk)
+            <tr style="page-break-inside: avoid;">
             @foreach($chunk as $user)
                 @php $eval = $evaluations->get($user->id); @endphp
-                <td style="width: 50%; vertical-align: top; padding: 0;">
+                <td style="width: {{ 100 / $cols }}%; vertical-align: top; padding: 0;">
                     <div class="user-card">
                         <table class="user-header-table">
                             <tr>
@@ -121,8 +122,8 @@
                     </div>
                 </td>
             @endforeach
-            @if($chunk->count() == 1)
-                <td style="width: 50%; padding: 0;"></td>
+            @if($chunk->count() < $cols)
+                <td style="width: {{ 100 / $cols }}%; padding: 0;"></td>
             @endif
             </tr>
         @endforeach
@@ -134,11 +135,12 @@
     <div class="role-section">
         <div class="role-header" style="background-color: #3b82f6;">Anggota Tim</div>
         <table style="width: 100%; border-collapse: separate; border-spacing: 10px; margin: -10px;">
-        @foreach($staff->chunk(2) as $chunk)
-            <tr>
+        @php $cols = (isset($paperSize) && $paperSize == 'a5') ? 1 : 2; @endphp
+        @foreach($staff->chunk($cols) as $chunk)
+            <tr style="page-break-inside: avoid;">
             @foreach($chunk as $user)
                 @php $eval = $evaluations->get($user->id); @endphp
-                <td style="width: 50%; vertical-align: top; padding: 0;">
+                <td style="width: {{ 100 / $cols }}%; vertical-align: top; padding: 0;">
                     <div class="user-card">
                         <table class="user-header-table">
                             <tr>
@@ -180,8 +182,8 @@
                     </div>
                 </td>
             @endforeach
-            @if($chunk->count() == 1)
-                <td style="width: 50%; padding: 0;"></td>
+            @if($chunk->count() < $cols)
+                <td style="width: {{ 100 / $cols }}%; padding: 0;"></td>
             @endif
             </tr>
         @endforeach
