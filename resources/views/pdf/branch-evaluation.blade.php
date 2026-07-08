@@ -90,7 +90,7 @@
                                     <td style="vertical-align: top;">
                                         <div class="user-name">{{ $user->name }}</div>
                                         <div class="user-meta">Cabang: <strong>{{ $branch->name }}</strong></div>
-                                        <div class="user-meta">Divisi: <strong>{{ str_replace('_', ' ', $user->role) }}</strong></div>
+                                        <div class="user-meta">Divisi: <strong>{{ $user->divisions && $user->divisions->count() > 0 ? $user->divisions->pluck('name')->join(', ') : ($user->division ? $user->division->name : '-') }}</strong></div>
                                     </td>
                                     <td class="score-box-wrapper" style="vertical-align: top;">
                                         <div class="score-box">
