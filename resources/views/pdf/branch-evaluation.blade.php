@@ -6,46 +6,46 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 15mm;
+            margin: 10mm 15mm;
         }
-        body { font-family: 'DejaVu Sans', 'Helvetica', 'Arial', sans-serif; font-size: 12px; color: #1e293b; line-height: 1.4; margin: 0; }
-        .header { text-align: center; border-bottom: 3px solid #1e40af; padding-bottom: 5px; margin-bottom: 10px; }
-        .header h1 { color: #1e40af; font-size: 18px; margin: 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
-        .header p { margin: 2px 0 0 0; font-size: 11px; color: #64748b; }
+        body { font-family: 'DejaVu Sans', 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #1e293b; line-height: 1.3; margin: 0; }
+        .header { text-align: center; border-bottom: 2px solid #1e40af; padding-bottom: 5px; margin-bottom: 8px; }
+        .header h1 { color: #1e40af; font-size: 16px; margin: 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+        .header p { margin: 2px 0 0 0; font-size: 10px; color: #64748b; }
         
-        .branch-info { width: 100%; margin-bottom: 10px; border-collapse: collapse; }
-        .branch-info th, .branch-info td { padding: 4px 8px; }
-        .branch-info th { color: #475569; text-align: left; width: 15%; font-weight: normal; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
-        .branch-info td { font-weight: bold; font-size: 12px; color: #0f172a; }
+        .branch-info { width: 100%; margin-bottom: 8px; border-collapse: collapse; }
+        .branch-info th, .branch-info td { padding: 3px 6px; }
+        .branch-info th { color: #475569; text-align: left; width: 15%; font-weight: normal; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
+        .branch-info td { font-weight: bold; font-size: 11px; color: #0f172a; }
         
-        .user-card { border: 1px solid #cbd5e1; background-color: #ffffff; padding: 10px; border-radius: 8px; height: 215px; box-sizing: border-box; page-break-inside: avoid; margin-bottom: 10px; }
+        .user-card { border: 1px solid #cbd5e1; background-color: #ffffff; padding: 8px; border-radius: 8px; height: 190px; box-sizing: border-box; page-break-inside: avoid; margin-bottom: 8px; }
         
-        .top-section { width: 100%; border-collapse: collapse; height: 110px; }
+        .top-section { width: 100%; border-collapse: collapse; height: 95px; }
         .top-section td { vertical-align: middle; }
         
-        .chart-cell { width: 130px; text-align: center; border-right: 1px dashed #cbd5e1; padding-right: 15px; }
-        .chart-img { width: 110px; height: 110px; object-fit: contain; }
+        .chart-cell { width: 110px; text-align: center; border-right: 1px dashed #cbd5e1; padding-right: 10px; }
+        .chart-img { width: 95px; height: 95px; object-fit: contain; }
         
-        .info-cell { padding-left: 15px; vertical-align: top; }
+        .info-cell { padding-left: 10px; vertical-align: top; }
         
         .profile-table { width: 100%; border-collapse: collapse; }
-        .user-photo { width: 45px; height: 45px; border-radius: 22.5px; border: 2px solid #e2e8f0; }
-        .user-photo-placeholder { width: 45px; height: 45px; border-radius: 22.5px; background-color: #3b82f6; color: white; text-align: center; line-height: 45px; font-weight: bold; font-size: 16px; border: 2px solid #e2e8f0; }
+        .user-photo { width: 40px; height: 40px; border-radius: 20px; border: 2px solid #e2e8f0; }
+        .user-photo-placeholder { width: 40px; height: 40px; border-radius: 20px; background-color: #3b82f6; color: white; text-align: center; line-height: 40px; font-weight: bold; font-size: 14px; border: 2px solid #e2e8f0; }
         
-        .user-name { font-size: 14px; font-weight: bold; color: #0f172a; margin-bottom: 2px; }
-        .user-meta { font-size: 11px; color: #64748b; line-height: 1.4; }
+        .user-name { font-size: 13px; font-weight: bold; color: #0f172a; margin-bottom: 2px; }
+        .user-meta { font-size: 10px; color: #64748b; line-height: 1.3; }
         
         .score-box-wrapper { text-align: right; }
-        .score-box { display: inline-block; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; text-align: center; margin-left: 5px; }
-        .score-label { font-size: 9px; color: #64748b; text-transform: uppercase; }
-        .score-value { font-size: 14px; font-weight: bold; color: #1e40af; }
-        .grade-value { font-size: 14px; font-weight: bold; color: #10b981; }
+        .score-box { display: inline-block; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px; text-align: center; margin-left: 4px; }
+        .score-label { font-size: 8px; color: #64748b; text-transform: uppercase; }
+        .score-value { font-size: 13px; font-weight: bold; color: #1e40af; }
+        .grade-value { font-size: 13px; font-weight: bold; color: #10b981; }
         
-        .notes-section { margin-top: 10px; }
-        .notes-label { font-size: 11px; font-weight: bold; color: #475569; margin-bottom: 4px; }
-        .textarea-box { border: 1px solid #cbd5e1; border-radius: 6px; height: 60px; width: 100%; background-color: #fafafa; }
+        .notes-section { margin-top: 6px; }
+        .notes-label { font-size: 10px; font-weight: bold; color: #475569; margin-bottom: 3px; }
+        .textarea-box { border: 1px solid #cbd5e1; border-radius: 6px; height: 55px; width: 100%; background-color: #fafafa; }
         
-        .footer { text-align: right; font-size: 10px; color: #94a3b8; margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 5px; }
+        .footer { text-align: right; font-size: 9px; color: #94a3b8; margin-top: 8px; border-top: 1px solid #e2e8f0; padding-top: 4px; }
     </style>
 </head>
 <body>
@@ -74,13 +74,13 @@
                             @if(isset($userCharts[$user->id]) && $userCharts[$user->id])
                                 <img src="{{ $userCharts[$user->id] }}" alt="Chart" class="chart-img">
                             @else
-                                <div style="padding: 10px; color: #94a3b8; font-size: 10px;">Belum Ada Evaluasi</div>
+                                <div style="padding: 10px; color: #94a3b8; font-size: 9px;">Belum Ada Evaluasi</div>
                             @endif
                         </td>
                         <td class="info-cell">
                             <table class="profile-table">
                                 <tr>
-                                    <td style="width: 55px; vertical-align: top;">
+                                    <td style="width: 50px; vertical-align: top;">
                                         @if(isset($userPhotos[$user->id]) && $userPhotos[$user->id])
                                             <img src="{{ $userPhotos[$user->id] }}" class="user-photo" alt="Photo">
                                         @else
