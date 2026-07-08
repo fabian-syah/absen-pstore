@@ -29,8 +29,8 @@
         .info-cell { padding-left: 10px; vertical-align: top; }
         
         .profile-table { width: 100%; border-collapse: collapse; }
-        .user-photo { width: 40px; height: 40px; border-radius: 20px; border: 2px solid #e2e8f0; }
-        .user-photo-placeholder { width: 40px; height: 40px; border-radius: 20px; background-color: #3b82f6; color: white; text-align: center; line-height: 40px; font-weight: bold; font-size: 14px; border: 2px solid #e2e8f0; }
+        .user-photo { width: 40px; height: 40px; border-radius: 20px; border: 2px solid #e2e8f0; object-fit: cover; display: inline-block; }
+        .user-photo-placeholder { width: 40px; height: 40px; border-radius: 20px; background-color: #3b82f6; color: white; text-align: center; line-height: 36px; font-weight: bold; font-size: 16px; border: 2px solid #e2e8f0; display: inline-block; box-sizing: border-box; vertical-align: middle; }
         
         .user-name { font-size: 13px; font-weight: bold; color: #0f172a; margin-bottom: 2px; }
         .user-meta { font-size: 10px; color: #64748b; line-height: 1.3; }
