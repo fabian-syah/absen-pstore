@@ -18,7 +18,7 @@
         .branch-info th { color: #475569; text-align: left; width: 15%; font-weight: normal; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
         .branch-info td { font-weight: bold; font-size: 11px; color: #0f172a; }
         
-        .user-card { border: 1px solid #cbd5e1; background-color: #ffffff; padding: 10px 15px; border-radius: 8px; height: 220px; box-sizing: border-box; page-break-inside: avoid; margin-bottom: 8px; }
+        .user-card { border: 1px solid #cbd5e1; background-color: #ffffff; padding: 10px 15px; border-radius: 8px; height: 230px; box-sizing: border-box; page-break-inside: avoid; margin-bottom: 8px; position: relative; overflow: hidden; }
         
         .main-table { width: 100%; border-collapse: collapse; height: 100%; }
         
@@ -27,22 +27,22 @@
         
         .info-cell { padding-left: 15px; vertical-align: top; }
         
-        .profile-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+        .profile-table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
         .user-photo { width: 75px; height: 75px; border-radius: 37.5px; border: 2px solid #e2e8f0; object-fit: cover; display: inline-block; }
         .user-photo-placeholder { width: 75px; height: 75px; border-radius: 37.5px; background-color: #3b82f6; color: white; text-align: center; line-height: 71px; font-weight: bold; font-size: 26px; border: 2px solid #e2e8f0; display: inline-block; box-sizing: border-box; vertical-align: middle; }
         
-        .user-name { font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 4px; }
-        .user-meta { font-size: 12px; color: #64748b; line-height: 1.4; }
+        .user-name { font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 2px; }
+        .user-meta { font-size: 11px; color: #64748b; line-height: 1.3; }
         
         .score-box-wrapper { text-align: right; vertical-align: top; }
-        .score-box { display: inline-block; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; text-align: center; margin-left: 8px; }
-        .score-label { font-size: 10px; color: #64748b; text-transform: uppercase; margin-bottom: 3px;}
+        .score-box { display: inline-block; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; text-align: center; margin-left: 8px; }
+        .score-label { font-size: 10px; color: #64748b; text-transform: uppercase; margin-bottom: 2px;}
         .score-value { font-size: 18px; font-weight: bold; color: #1e40af; }
         .grade-value { font-size: 18px; font-weight: bold; color: #10b981; }
         
-        .notes-section { width: 100%; }
-        .notes-label { font-size: 12px; font-weight: bold; color: #475569; margin-bottom: 5px; }
-        .textarea-box { border: 1px solid #cbd5e1; border-radius: 6px; height: 60px; width: 100%; background-color: #fafafa; }
+        .notes-section { width: 100%; margin-top: 5px; box-sizing: border-box; }
+        .notes-label { font-size: 11px; font-weight: bold; color: #475569; margin-bottom: 3px; }
+        .textarea-box { border: 1px solid #cbd5e1; border-radius: 6px; height: 45px; background-color: #fafafa; display: block; box-sizing: border-box; }
         
         .footer { text-align: right; font-size: 9px; color: #94a3b8; margin-top: 8px; border-top: 1px solid #e2e8f0; padding-top: 4px; }
     </style>
