@@ -496,6 +496,7 @@ class UserController extends Controller
 
     public function show(User $user)
     {
+        /** @var \App\Models\User $auth_user */
         $auth_user = Auth::user();
 
         if ($auth_user->role == 'admin' && $auth_user->branch_id != null) {
@@ -581,7 +582,13 @@ class UserController extends Controller
             ->get()
             ->sum('remaining_amount');
 
-        return view('users.user_show', compact('user', 'stats', 'recentAttendance', 'activeViolations', 'historyViolations', 'activeTargets', 'achievements', 'totalKasbon'));
+        $evaluations = \App\Models\EmployeeEvaluation::where('user_id', $user->id)
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->limit(3)
+            ->get();
+
+        return view('users.user_show', compact('user', 'stats', 'recentAttendance', 'activeViolations', 'historyViolations', 'activeTargets', 'achievements', 'totalKasbon', 'evaluations'));
     }
 
     public function verifyUser(User $user)
