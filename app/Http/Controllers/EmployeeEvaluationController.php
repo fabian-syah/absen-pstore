@@ -302,7 +302,7 @@ class EmployeeEvaluationController extends Controller
                             'legend' => ['display' => false],
                             'datalabels' => [
                                 'display' => true,
-                                'color' => '#1e40af',
+                                'color' => '#000000',
                                 'align' => 'bottom',
                                 'font' => ['weight' => 'bold', 'size' => 10],
                                 'backgroundColor' => 'rgba(255, 255, 255, 0.7)',
@@ -310,6 +310,11 @@ class EmployeeEvaluationController extends Controller
                             ]
                         ],
                         'scale' => [
+                            'pointLabels' => [
+                                'fontColor' => '#000000',
+                                'fontStyle' => 'bold',
+                                'fontSize' => 11
+                            ],
                             'ticks' => [
                                 'beginAtZero' => true,
                                 'max' => 100,

@@ -28,8 +28,8 @@
         .info-cell { padding-left: 15px; vertical-align: top; }
         
         .profile-table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
-        .user-photo { width: 75px; height: 75px; border-radius: 37.5px; border: 2px solid #e2e8f0; object-fit: cover; display: inline-block; }
-        .user-photo-placeholder { width: 75px; height: 75px; border-radius: 37.5px; background-color: #3b82f6; color: white; text-align: center; line-height: 71px; font-weight: bold; font-size: 26px; border: 2px solid #e2e8f0; display: inline-block; box-sizing: border-box; vertical-align: middle; }
+        .user-photo { width: 85px; height: 85px; border-radius: 42.5px; border: 2px solid #e2e8f0; object-fit: cover; display: inline-block; }
+        .user-photo-placeholder { width: 85px; height: 85px; border-radius: 42.5px; background-color: #3b82f6; color: white; text-align: center; line-height: 81px; font-weight: bold; font-size: 28px; border: 2px solid #e2e8f0; display: inline-block; box-sizing: border-box; vertical-align: middle; }
         
         .user-name { font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 2px; }
         .user-meta { font-size: 11px; color: #64748b; line-height: 1.3; }
@@ -72,6 +72,9 @@
                         <td class="chart-cell">
                             @if(isset($userCharts[$user->id]) && $userCharts[$user->id])
                                 <img src="{{ $userCharts[$user->id] }}" alt="Chart" class="chart-img">
+                                @if($eval)
+                                    <div style="font-size: 10px; color: #64748b; margin-top: 5px; font-weight: bold;">Evaluasi: {{ \Carbon\Carbon::parse($eval->evaluation_date)->translatedFormat('d M Y') }}</div>
+                                @endif
                             @else
                                 <div style="padding: 10px; color: #94a3b8; font-size: 9px;">Belum Ada Evaluasi</div>
                             @endif
@@ -79,7 +82,7 @@
                         <td class="info-cell">
                             <table class="profile-table">
                                 <tr>
-                                    <td style="width: 85px; vertical-align: middle;">
+                                    <td style="width: 95px; vertical-align: middle;">
                                         @if(isset($userPhotos[$user->id]) && $userPhotos[$user->id])
                                             <img src="{{ $userPhotos[$user->id] }}" class="user-photo" alt="Photo">
                                         @else
