@@ -216,22 +216,30 @@ class EmployeeEvaluationController extends Controller
             return back()->with('error', 'Data evaluasi tidak ditemukan.');
         }
 
+        $labels = ['Kecerdasan', 'Amanah', 'Sosial media', 'Kepemimpinan', 'Data & ketelitian', 'Komunikasi', 'Kedisiplinan'];
+        $dataScores = [
+            (int) $evaluation->kecerdasan_score,
+            (int) $evaluation->amanah_score,
+            (int) $evaluation->sosial_media_score,
+            (int) $evaluation->kepemimpinan_score,
+            (int) $evaluation->data_ketelitian_score,
+            (int) $evaluation->komunikasi_score,
+            (int) $evaluation->kedisiplinan_score
+        ];
+
+        if ($evaluation->custom_score !== null && $evaluation->custom_score !== '') {
+            $labels[] = $evaluation->custom_title ?? 'Kriteria Tambahan';
+            $dataScores[] = (int) $evaluation->custom_score;
+        }
+
         $chartData = [
             'type' => 'radar',
             'data' => [
-                'labels' => ['Kecerdasan', 'Amanah', 'Sosial media', 'Kepemimpinan', 'Data & ketelitian', 'Komunikasi', 'Kedisiplinan'],
+                'labels' => $labels,
                 'datasets' => [
                     [
                         'label' => 'Nilai',
-                        'data' => [
-                            (int) $evaluation->kecerdasan_score,
-                            (int) $evaluation->amanah_score,
-                            (int) $evaluation->sosial_media_score,
-                            (int) $evaluation->kepemimpinan_score,
-                            (int) $evaluation->data_ketelitian_score,
-                            (int) $evaluation->komunikasi_score,
-                            (int) $evaluation->kedisiplinan_score
-                        ],
+                        'data' => $dataScores,
                         'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
                         'borderColor' => 'rgba(54, 162, 235, 1)',
                         'pointBackgroundColor' => 'rgba(54, 162, 235, 1)',
@@ -337,22 +345,30 @@ class EmployeeEvaluationController extends Controller
 
             $eval = $evaluations->get($u->id);
             if ($eval) {
+                $labels = ['Kecerdasan', 'Amanah', 'Sosial media', 'Kepemimpinan', 'Data & ketelitian', 'Komunikasi', 'Kedisiplinan'];
+                $dataScores = [
+                    (int) $eval->kecerdasan_score,
+                    (int) $eval->amanah_score,
+                    (int) $eval->sosial_media_score,
+                    (int) $eval->kepemimpinan_score,
+                    (int) $eval->data_ketelitian_score,
+                    (int) $eval->komunikasi_score,
+                    (int) $eval->kedisiplinan_score
+                ];
+
+                if ($eval->custom_score !== null && $eval->custom_score !== '') {
+                    $labels[] = $eval->custom_title ?? 'Kriteria Tambahan';
+                    $dataScores[] = (int) $eval->custom_score;
+                }
+
                 $chartData = [
                     'type' => 'radar',
                     'data' => [
-                        'labels' => ['Kecerdasan', 'Amanah', 'Sosial media', 'Kepemimpinan', 'Data & ketelitian', 'Komunikasi', 'Kedisiplinan'],
+                        'labels' => $labels,
                         'datasets' => [
                             [
                                 'label' => 'Nilai',
-                                'data' => [
-                                    (int) $eval->kecerdasan_score,
-                                    (int) $eval->amanah_score,
-                                    (int) $eval->sosial_media_score,
-                                    (int) $eval->kepemimpinan_score,
-                                    (int) $eval->data_ketelitian_score,
-                                    (int) $eval->komunikasi_score,
-                                    (int) $eval->kedisiplinan_score
-                                ],
+                                'data' => $dataScores,
                                 'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
                                 'borderColor' => 'rgba(54, 162, 235, 1)',
                                 'pointBackgroundColor' => 'rgba(54, 162, 235, 1)',
