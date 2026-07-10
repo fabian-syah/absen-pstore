@@ -1074,30 +1074,6 @@
                                 <div class="w-100 position-relative d-flex justify-content-center align-items-center mt-auto mb-auto" style="min-height: 280px;">
                                     <canvas id="radarChartRapor"></canvas>
                                 </div>
-                            </div>
-                            
-                            {{-- Dinilai Oleh Card --}}
-                            <div class="rapor-glass-card p-4">
-                                <h6 class="fw-bold mb-3" style="color: #0f172a; font-size: 0.95rem;">Dinilai Oleh</h6>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 48px; height: 48px; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border: 1px solid #cbd5e1;">
-                                        <i class="mdi mdi-account-tie fs-4" style="color: #64748b;"></i>
-                                    </div>
-                                    @if(isset($latestEval) && $latestEval->assessor)
-                                        <div>
-                                            <div class="fw-bold" style="color: #0f172a; font-size: 0.9rem;">{{ strtoupper($latestEval->assessor->name) }}</div>
-                                            <div class="d-flex align-items-center gap-2 mt-1">
-                                                <span style="color: #64748b; font-size: 0.75rem;">{{ $latestEval->assessor->role }}</span>
-                                                <span style="color: #cbd5e1; font-size: 0.7rem;">•</span>
-                                                <span style="color: #64748b; font-size: 0.75rem;">{{ \Carbon\Carbon::parse($latestEval->updated_at)->format('d M Y') }}</span>
-                                            </div>
-                                        </div>
-                                    @else
-                                        <div>
-                                            <div class="fw-bold text-muted" style="font-size: 0.9rem;">BELUM DINILAI</div>
-                                        </div>
-                                    @endif
-                                </div>
                                 
                                 @if(isset($latestEval))
                                 <div class="mt-4 pt-3 w-100" style="border-top: 1px dashed #cbd5e1;">
