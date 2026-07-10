@@ -33,7 +33,7 @@
 
     <table class="employee-info" style="border: none;">
         <tr>
-            <td rowspan="4" style="width: 150px; text-align: center; border: none; padding: 0 15px 0 0; vertical-align: middle;">
+            <td rowspan="3" style="width: 150px; text-align: center; border: none; padding: 0 15px 0 0; vertical-align: middle;">
                 @php
                     $photoUrl = null;
                     if ($user->profile_photo_path && file_exists(public_path('storage/' . $user->profile_photo_path))) {
@@ -53,7 +53,7 @@
             </td>
             <th>Nama Karyawan</th>
             <td style="font-weight: bold; font-size: 13px;">{{ $user->name }}</td>
-            <td rowspan="4" style="width: 140px; border: 2px solid #1e3a8a; text-align: center; vertical-align: middle; background-color: #f8fafc; padding: 10px;">
+            <td rowspan="3" style="width: 140px; border: 2px solid #1e3a8a; text-align: center; vertical-align: middle; background-color: #f8fafc; padding: 10px;">
                 <div style="font-size: 11px; color: #64748b; font-weight: bold; text-transform: uppercase; margin-bottom: 8px;">Grade Akhir</div>
                 <div style="font-size: 28px; font-weight: bold; color: #10b981; margin-bottom: 5px;">{{ $evaluation->grade }}</div>
                 <div style="font-size: 13px; color: #475569;">Skor: <b>{{ $evaluation->average_score }}</b></div>
@@ -67,65 +67,66 @@
             <th>Divisi / Cabang</th>
             <td>{{ $user->branch->name ?? 'Pusat' }} {{ isset($user->division) ? ' - ' . $user->division->name : '' }}</td>
         </tr>
+    </table>
+
+    <table style="width: 100%; border: none; margin-bottom: 8px;">
         <tr>
-            <th>Posisi / Role</th>
-            <td style="text-transform: capitalize;">
-                @if($user->role !== 'user_biasa')
-                    {{ str_replace('_', ' ', $user->role) }}
-                @else
-                    -
+            <td style="width: 50%; vertical-align: top; padding-right: 15px;">
+                <div class="score-section">
+                    <h3>Detail Penilaian Kompetensi</h3>
+                    <table class="score-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 70%;">Aspek / Kriteria</th>
+                                <th style="width: 30%;">Nilai (0-100)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="criteria">Kecerdasan</td>
+                                <td class="score">{{ $evaluation->kecerdasan_score ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="criteria">Amanah</td>
+                                <td class="score">{{ $evaluation->amanah_score ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="criteria">Sosial Media</td>
+                                <td class="score">{{ $evaluation->sosial_media_score ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="criteria">Kepemimpinan</td>
+                                <td class="score">{{ $evaluation->kepemimpinan_score ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="criteria">Data & Ketelitian</td>
+                                <td class="score">{{ $evaluation->data_ketelitian_score ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="criteria">Komunikasi</td>
+                                <td class="score">{{ $evaluation->komunikasi_score ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="criteria">Kedisiplinan</td>
+                                <td class="score">{{ $evaluation->kedisiplinan_score ?? '-' }}</td>
+                            </tr>
+                            @if($evaluation->custom_title)
+                            <tr>
+                                <td class="criteria">{{ $evaluation->custom_title }}</td>
+                                <td class="score">{{ $evaluation->custom_score ?? '-' }}</td>
+                            </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </td>
+            <td style="width: 50%; vertical-align: top; text-align: center; padding-top: 5px;">
+                @if(isset($chartImage) && $chartImage)
+                    <img src="{{ $chartImage }}" style="width: 300px; height: 300px;">
                 @endif
             </td>
         </tr>
     </table>
-
-    <div class="score-section">
-        <h3>Detail Penilaian Kompetensi</h3>
-        <table class="score-table">
-            <thead>
-                <tr>
-                    <th style="width: 70%;">Aspek / Kriteria</th>
-                    <th style="width: 30%;">Nilai (0-100)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="criteria">Kecerdasan</td>
-                    <td class="score">{{ $evaluation->kecerdasan_score ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td class="criteria">Amanah</td>
-                    <td class="score">{{ $evaluation->amanah_score ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td class="criteria">Sosial Media</td>
-                    <td class="score">{{ $evaluation->sosial_media_score ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td class="criteria">Kepemimpinan</td>
-                    <td class="score">{{ $evaluation->kepemimpinan_score ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td class="criteria">Data & Ketelitian</td>
-                    <td class="score">{{ $evaluation->data_ketelitian_score ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td class="criteria">Komunikasi</td>
-                    <td class="score">{{ $evaluation->komunikasi_score ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td class="criteria">Kedisiplinan</td>
-                    <td class="score">{{ $evaluation->kedisiplinan_score ?? '-' }}</td>
-                </tr>
-                @if($evaluation->custom_title)
-                <tr>
-                    <td class="criteria">{{ $evaluation->custom_title }}</td>
-                    <td class="score">{{ $evaluation->custom_score ?? '-' }}</td>
-                </tr>
-                @endif
-            </tbody>
-        </table>
-    </div>
 
     <div class="score-section">
         <h3>Kesimpulan & Motivasi</h3>

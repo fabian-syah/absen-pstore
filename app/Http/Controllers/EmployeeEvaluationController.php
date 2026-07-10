@@ -216,7 +216,70 @@ class EmployeeEvaluationController extends Controller
             return back()->with('error', 'Data evaluasi tidak ditemukan.');
         }
 
-        $pdf = app('dompdf.wrapper')->loadView('pdf.employee-evaluation', compact('user', 'evaluation', 'date'));
+        $chartData = [
+            'type' => 'radar',
+            'data' => [
+                'labels' => ['Kecerdasan', 'Amanah', 'Sosial media', 'Kepemimpinan', 'Data & ketelitian', 'Komunikasi', 'Kedisiplinan'],
+                'datasets' => [
+                    [
+                        'label' => 'Nilai',
+                        'data' => [
+                            (int) $evaluation->kecerdasan_score,
+                            (int) $evaluation->amanah_score,
+                            (int) $evaluation->sosial_media_score,
+                            (int) $evaluation->kepemimpinan_score,
+                            (int) $evaluation->data_ketelitian_score,
+                            (int) $evaluation->komunikasi_score,
+                            (int) $evaluation->kedisiplinan_score
+                        ],
+                        'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
+                        'borderColor' => 'rgba(54, 162, 235, 1)',
+                        'pointBackgroundColor' => 'rgba(54, 162, 235, 1)',
+                        'pointBorderColor' => '#fff',
+                    ]
+                ]
+            ],
+            'options' => [
+                'plugins' => [
+                    'legend' => ['display' => false],
+                    'datalabels' => [
+                        'display' => true,
+                        'color' => '#000000',
+                        'align' => 'bottom',
+                        'font' => ['weight' => 'bold', 'size' => 12],
+                        'backgroundColor' => 'rgba(255, 255, 255, 0.7)',
+                        'borderRadius' => 3
+                    ]
+                ],
+                'scale' => [
+                    'pointLabels' => [
+                        'fontColor' => '#000000',
+                        'fontStyle' => 'bold',
+                        'fontSize' => 14
+                    ],
+                    'ticks' => [
+                        'beginAtZero' => true,
+                        'max' => 100,
+                        'min' => 0,
+                        'stepSize' => 20,
+                        'display' => false
+                    ]
+                ]
+            ]
+        ];
+        
+        $chartUrl = 'https://quickchart.io/chart?c=' . urlencode(json_encode($chartData)) . '&w=400&h=400';
+        $chartImage = null;
+        try {
+            $imageContent = file_get_contents($chartUrl);
+            if ($imageContent) {
+                $chartImage = 'data:image/png;base64,' . base64_encode($imageContent);
+            }
+        } catch (\Exception $e) {
+            // Biarkan null jika gagal fetch chart
+        }
+
+        $pdf = app('dompdf.wrapper')->loadView('pdf.employee-evaluation', compact('user', 'evaluation', 'date', 'chartImage'));
         $paperSize = in_array(strtolower($request->query('paper', 'a4')), ['a4', 'a5']) ? strtolower($request->query('paper', 'a4')) : 'a4';
         $pdf->setPaper($paperSize, 'portrait');
 
