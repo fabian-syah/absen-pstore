@@ -64,7 +64,7 @@
         </div>
     </div>
     <div>
-        <a href="{{ route('employee-evaluations.export-branch-pdf', ['id' => $branch->id, 'date' => request('date', now()->format('Y-m-d'))]) }}" class="btn btn-danger shadow-sm d-flex align-items-center">
+        <a href="{{ route('employee-evaluations.export-branch-pdf', ['id' => $branch->id, 'date' => request('date', now()->format('Y-m-d'))]) }}" target="_blank" class="btn btn-danger shadow-sm d-flex align-items-center">
             <i class="mdi mdi-file-pdf-box fs-5 me-1"></i> Print PDF Cabang
         </a>
     </div>
@@ -144,7 +144,7 @@
                     <div class="d-flex gap-2">
                         @if($latestEval)
                         <a href="{{ route('employee-evaluations.export-pdf', ['user_id' => $employee->id, 'date' => $latestEval->evaluation_date ? \Carbon\Carbon::parse($latestEval->evaluation_date)->format('Y-m-d') : now()->format('Y-m-d')]) }}"
-                            class="btn btn-sm btn-outline-danger rounded-pill px-2 d-flex align-items-center justify-content-center" title="Download PDF Rapor" style="width: 32px; height: 32px;">
+                            target="_blank" class="btn btn-sm btn-outline-danger rounded-pill px-2 d-flex align-items-center justify-content-center" title="Preview PDF Rapor" style="width: 32px; height: 32px;">
                             <i class="mdi mdi-file-pdf-box fs-5"></i>
                         </a>
                         @endif

@@ -294,7 +294,7 @@ class EmployeeEvaluationController extends Controller
         $dateFormatted = \Carbon\Carbon::parse($date)->translatedFormat('d_F_Y');
         $fileName = 'Rapor_Karyawan_' . str_replace(' ', '_', $user->name) . '_' . $dateFormatted . '.pdf';
 
-        return $pdf->download($fileName);
+        return $pdf->stream($fileName);
     }
 
     public function exportBranchPdf(Request $request, $branch_id)
@@ -427,7 +427,7 @@ class EmployeeEvaluationController extends Controller
         $dateFormatted = \Carbon\Carbon::parse($date)->translatedFormat('d_F_Y');
         $fileName = 'Rapor_Cabang_' . str_replace(' ', '_', $branch->name) . '_' . $dateFormatted . '.pdf';
 
-        return $pdf->download($fileName);
+        return $pdf->stream($fileName);
     }
 
     public function history(Request $request)
