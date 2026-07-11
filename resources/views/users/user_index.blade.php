@@ -181,7 +181,7 @@
                                                         <span class="text-muted small">System</span>
                                                     @endif
                                                 </td>
-                                                <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}</td>
+                                                <td>{{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->format('d M Y') : ($user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-') }}</td>
                                                 <td>
                                                     @if ($user->qr_code_value)
                                                         <button type="button" class="btn btn-inverse-dark btn-icon btn-sm me-1" data-bs-toggle="modal" data-bs-target="#qrModal" data-name="{{ $user->name }}" data-qr="{{ $user->qr_code_value }}" title="Lihat QR">
@@ -279,7 +279,7 @@
                                                         <span class="text-muted small">System</span>
                                                     @endif
                                                 </td>
-                                                <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}</td>
+                                                <td>{{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->format('d M Y') : ($user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-') }}</td>
                                                 <td>
                                                     @if (in_array(auth()->user()->role, ['admin', 'audit']))
                                                         <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">

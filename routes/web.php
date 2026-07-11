@@ -600,6 +600,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // ==========================================================
     //  RUTE MONITORING WILAYAH (INVENTARIS CABANG & LEADERBOARD)
     // ==========================================================
+    Route::get('/employee-evaluations/my-history', [EmployeeEvaluationController::class, 'myHistory'])->name('employee-evaluations.my-history');
     Route::get('/employee-evaluations/{user_id}/export-pdf', [EmployeeEvaluationController::class, 'exportPdf'])->name('employee-evaluations.export-pdf');
 
     Route::middleware(['role:admin,audit,leader'])->group(function () {

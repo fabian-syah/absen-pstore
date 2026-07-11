@@ -330,9 +330,12 @@
                                 <label class="fw-bold text-muted small">Tanggal Join PStore</label>
                                 <p class="h6 text-dark">
                                     <i class="mdi mdi-calendar-star text-info me-1"></i>
-                                    {{ $user->created_at ? $user->created_at->translatedFormat('d F Y') : '-' }}
-                                    @if($user->created_at)
-                                        <span class="badge bg-light text-muted border ms-1" style="font-size: 10px;">{{ $user->created_at->diffForHumans() }}</span>
+                                    {{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->translatedFormat('d F Y') : ($user->created_at ? $user->created_at->translatedFormat('d F Y') : '-') }}
+                                    @if($user->hire_date || $user->created_at)
+                                        @php
+                                            $diffDate = $user->hire_date ? \Carbon\Carbon::parse($user->hire_date) : $user->created_at;
+                                        @endphp
+                                        <span class="badge bg-light text-muted border ms-1" style="font-size: 10px;">{{ $diffDate->diffForHumans() }}</span>
                                     @endif
                                 </p>
                             </div>

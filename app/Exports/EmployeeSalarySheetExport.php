@@ -167,6 +167,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             'Nama Bank',
             'No. Rekening',
             'Gaji Terakhir',
+            'Tanggal Join PStore',
         ];
     }
 
@@ -401,6 +402,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             $bankName,
             $accountNumber . ' ',
             $gajiTerakhir,
+            $joinDate,
         ];
     }
 
@@ -428,6 +430,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             // W = Bank
             // X = Rekening
             'Y' => '"Rp " #,##0', // Gaji Terakhir
+            // Z = Tanggal Join PStore (text)
         ];
     }
 
@@ -465,8 +468,8 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
                 // 6. Freeze Header
                 $event->sheet->getDelegate()->freezePane('A2');
 
-                // 7. Auto Size Kolom (A sampai Y)
-                $columns = range('A', 'Y');
+                // 7. Auto Size Kolom (A sampai Z)
+                $columns = range('A', 'Z');
                 foreach ($columns as $columnID) {
                     $event->sheet->getDelegate()->getColumnDimension($columnID)->setAutoSize(true);
                 }

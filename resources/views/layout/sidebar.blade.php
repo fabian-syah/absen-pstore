@@ -304,6 +304,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="{{ route('employee-evaluations.my-history') }}">
+                    <i class="menu-icon mdi mdi-clipboard-text-clock-outline"></i>
+                    <span class="menu-title">Rapor Saya</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="{{ route('employment-history.index') }}">
                     <i class="menu-icon mdi mdi-history"></i>
                     <span class="menu-title">Riwayat Divisi / Cabang</span>

@@ -487,4 +487,17 @@ class EmployeeEvaluationController extends Controller
 
         return view('employee_evaluations.history', compact('evaluations', 'branches', 'branch_id'));
     }
+
+    public function myHistory(Request $request)
+    {
+        $user_id = Auth::id();
+
+        $evaluations = EmployeeEvaluation::with('assessor')
+            ->where('user_id', $user_id)
+            ->orderBy('evaluation_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
+
+        return view('employee_evaluations.my_history', compact('evaluations'));
+    }
 }
