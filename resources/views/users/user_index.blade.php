@@ -196,9 +196,7 @@
                                                 </td>
                                                 <td>
                                                     <a href="{{ route('users.show', $user->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail"><i class="mdi mdi-eye"></i></a>
-                                                    @if (!(auth()->user()->role == 'audit' && $user->branch_id == auth()->user()->branch_id && $user->id != auth()->id()))
-                                                        <a href="{{ route('users.edit', $user->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
-                                                    @endif
+                                                    <a href="{{ route('users.edit', $user->id) }}" class="btn btn-inverse-warning btn-icon btn-sm" title="Edit"><i class="mdi mdi-pencil"></i></a>
                                                     @if ($user->id != auth()->id() && auth()->user()->role != 'audit' && auth()->user()->role != 'leader')
                                                         <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?');">
                                                             @csrf @method('DELETE')

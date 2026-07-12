@@ -243,33 +243,44 @@
         </li>
 
         {{-- =================================== --}}
-        {{-- RIWAYAT ABSENSI (EXCEPT GAJI) --}}
+        {{-- MENU RIWAYAT (GABUNGAN) --}}
         {{-- =================================== --}}
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="collapse" data-bs-toggle="collapse" href="#ui-riwayat" aria-expanded="false" aria-controls="ui-riwayat">
+                <i class="menu-icon mdi mdi-history"></i>
+                <span class="menu-title">Riwayat Lengkap</span>
+                <i class="menu-arrow mdi mdi-chevron-down ms-auto" style="font-size: 1.2rem; transition: transform 0.3s;"></i>
+            </a>
+            <div class="collapse" id="ui-riwayat">
+                <ul class="nav flex-column sub-menu" style="list-style-type: none; padding-left: 2rem; margin-top: 0; background: rgba(0,0,0,0.02); border-radius: 0 0 12px 12px;">
+                    @if (auth()->user()->role != 'admin_gaji')
+                        <li class="nav-item" style="margin: 0.1rem 0;"> <a class="nav-link" href="{{ route('attendance.history') }}" style="padding: 0.5rem 1rem !important; font-size: 0.8rem !important;"><i class="mdi mdi-circle-small"></i> Riwayat Absensi</a></li>
+                        <li class="nav-item" style="margin: 0.1rem 0;"> <a class="nav-link" href="{{ route('leave-requests.personal-history') }}" style="padding: 0.5rem 1rem !important; font-size: 0.8rem !important;"><i class="mdi mdi-circle-small"></i> Riwayat Izin/Sakit</a></li>
+                        <li class="nav-item" style="margin: 0.1rem 0;"> <a class="nav-link" href="{{ route('leave-requests.cuti-history') }}" style="padding: 0.5rem 1rem !important; font-size: 0.8rem !important;"><i class="mdi mdi-circle-small"></i> Riwayat Cuti</a></li>
+                        <li class="nav-item" style="margin: 0.1rem 0;"> <a class="nav-link" href="{{ route('employment-history.index') }}" style="padding: 0.5rem 1rem !important; font-size: 0.8rem !important;"><i class="mdi mdi-circle-small"></i> Riwayat Divisi/Cabang</a></li>
+                    @endif
+                    <li class="nav-item" style="margin: 0.1rem 0;"> <a class="nav-link" href="{{ route('violations.index') }}" style="padding: 0.5rem 1rem !important; font-size: 0.8rem !important;"><i class="mdi mdi-circle-small"></i> Riwayat Pelanggaran</a></li>
+                    @if (auth()->user()->role == 'security' || auth()->user()->role == 'admin')
+                        <li class="nav-item" style="margin: 0.1rem 0;"> <a class="nav-link" href="{{ route('security.history') }}" style="padding: 0.5rem 1rem !important; font-size: 0.8rem !important;"><i class="mdi mdi-circle-small"></i> Riwayat Scan</a></li>
+                    @endif
+                    @if (in_array(auth()->user()->role, ['audit', 'leader', 'admin']))
+                        <li class="nav-item" style="margin: 0.1rem 0;"> <a class="nav-link" href="{{ route('employee-evaluations.history') }}" style="padding: 0.5rem 1rem !important; font-size: 0.8rem !important;"><i class="mdi mdi-circle-small"></i> Riwayat Evaluasi (Tim)</a></li>
+                    @endif
+                </ul>
+            </div>
+        </li>
+
+        {{-- RINGKASAN TAHUNAN --}}
         @if (auth()->user()->role != 'admin_gaji')
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('attendance.history') }}">
-                    <i class="mdi mdi-history menu-icon"></i>
-                    <span class="menu-title">Riwayat Absensi</span>
-                </a>
-            </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('attendance.summary') }}">
                     <i class="mdi mdi-text-box-multiple-outline menu-icon"></i>
                     <span class="menu-title">Ringkasan Tahunan</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.personal-history') }}">
-                    <i class="mdi mdi-calendar-check menu-icon"></i>
-                    <span class="menu-title">Riwayat Izin</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.cuti-history') }}">
-                    <i class="mdi mdi-calendar-clock menu-icon"></i>
-                    <span class="menu-title">Riwayat Cuti</span>
-                </a>
-            </li>
+        @endif
+        @if (auth()->user()->role != 'admin_gaji')
+            
 
             {{-- FORMS --}}
             <!-- <li class="nav-item">
@@ -309,28 +320,13 @@
                     <span class="menu-title">Rapor Saya</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('employment-history.index') }}">
-                    <i class="menu-icon mdi mdi-history"></i>
-                    <span class="menu-title">Riwayat Divisi / Cabang</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('violations.index') }}">
-                    <i class="menu-icon mdi mdi-alert-circle-outline"></i>
-                    <span class="menu-title">Riwayat Pelanggaran</span>
-                </a>
-            </li>
+            
+            
         @endif
 
         {{-- RIWAYAT PELANGGARAN (KHUSUS ADMIN GAJI) --}}
         @if (auth()->user()->role == 'admin_gaji')
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('violations.index') }}">
-                    <i class="menu-icon mdi mdi-alert-circle-outline"></i>
-                    <span class="menu-title">Riwayat Pelanggaran</span>
-                </a>
-            </li>
+            
         @endif
 
         {{-- =================================== --}}
@@ -652,20 +648,9 @@
                 </li>
             @endif
 
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('security.history') }}">
-                    <i class="menu-icon mdi mdi-history"></i>
-                    <span class="menu-title">Riwayat Scan</span>
-                </a>
-            </li>
+            
 
-            {{-- 7. Riwayat Izin (Excluding Cuti) --}}
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.personal-history') }}">
-                    <i class="menu-icon mdi mdi-history"></i>
-                    <span class="menu-title">Riwayat Izin/Sakit</span>
-                </a>
-            </li>
+            
 
 
         @endif
@@ -697,12 +682,7 @@
                         <span class="menu-title">Rapor Karyawan</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('employee-evaluations.history') }}">
-                        <i class="menu-icon mdi mdi-history"></i>
-                        <span class="menu-title">Riwayat Evaluasi</span>
-                    </a>
-                </li>
+                
             @endif
         @endif
 
