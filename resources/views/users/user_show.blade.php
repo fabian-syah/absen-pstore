@@ -254,18 +254,23 @@
                     @if(isset($evaluations) && $evaluations->count() > 0)
                         <div class="mt-4 pt-3 border-top text-start">
                             <h6 class="text-muted text-small fw-bold mb-3"><i class="mdi mdi-file-document-outline me-1"></i> RAPOR KARYAWAN (3 BLN)</h6>
-                            <div class="list-group list-group-flush bg-light rounded p-2 border shadow-sm">
+                            <div class="list-group list-group-flush bg-white rounded p-2 border shadow-sm">
                                 @foreach($evaluations as $evaluation)
                                     @php
-                                        $monthName = \Carbon\Carbon::create()->month($evaluation->month)->translatedFormat('M');
+                                        if ($evaluation->evaluation_date) {
+                                            $displayDate = \Carbon\Carbon::parse($evaluation->evaluation_date)->translatedFormat('d M Y');
+                                        } else {
+                                            $monthName = \Carbon\Carbon::create()->month($evaluation->month)->translatedFormat('M');
+                                            $displayDate = $monthName . ' ' . $evaluation->year;
+                                        }
                                     @endphp
                                     <div class="list-group-item bg-transparent px-2 py-2 d-flex justify-content-between align-items-center border-bottom-0">
                                         <div>
-                                            <span class="d-block fw-bold text-dark" style="font-size: 12px;">{{ $monthName }} {{ $evaluation->year }}</span>
+                                            <span class="d-block fw-bold text-dark" style="font-size: 12px;">{{ $displayDate }}</span>
                                             <span class="text-muted" style="font-size: 10px;">Skor: {{ number_format($evaluation->average_score, 1) }}</span>
                                         </div>
                                         <div>
-                                            <span class="badge {{ $evaluation->grade == 'A' || $evaluation->grade == 'B' ? 'bg-success' : ($evaluation->grade == 'C' ? 'bg-warning' : 'bg-danger') }} rounded-pill" style="font-size: 11px;">{{ $evaluation->grade }}</span>
+                                            <span class="badge {{ $evaluation->grade == 'A+' || $evaluation->grade == 'A' || $evaluation->grade == 'B+' || $evaluation->grade == 'B' ? 'bg-success' : ($evaluation->grade == 'C' ? 'bg-warning' : 'bg-danger') }} rounded-pill" style="font-size: 11px;">{{ $evaluation->grade }}</span>
                                         </div>
                                     </div>
                                 @endforeach
