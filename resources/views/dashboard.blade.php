@@ -1016,8 +1016,8 @@
                             <div class="rapor-glass-card p-4 flex-grow-1 d-flex flex-column">
                                 @php
                                     $latestEval = \App\Models\EmployeeEvaluation::where('user_id', Auth::id())
-                                        ->orderByDesc('year')
-                                        ->orderByDesc('month')
+                                        ->orderBy('evaluation_date', 'desc')
+                                        ->orderBy('created_at', 'desc')
                                         ->first();
                                 @endphp
 
@@ -1029,8 +1029,8 @@
                                     @php
                                         // Ambil 3 bulan terakhir evaluasi
                                         $historyEvals = \App\Models\EmployeeEvaluation::where('user_id', Auth::id())
-                                            ->orderByDesc('year')
-                                            ->orderByDesc('month')
+                                            ->orderBy('evaluation_date', 'desc')
+                                            ->orderBy('created_at', 'desc')
                                             ->take(3)
                                             ->get()
                                             ->reverse();
@@ -1077,7 +1077,7 @@
                                 
                                 @if(isset($latestEval))
                                 <div class="mt-4 pt-3 w-100" style="border-top: 1px dashed #cbd5e1;">
-                                    <a href="{{ route('employee-evaluations.export-pdf', ['user_id' => Auth::id(), 'month' => $latestEval->month, 'year' => $latestEval->year]) }}" class="btn btn-outline-primary w-100 rounded-pill d-flex justify-content-center align-items-center gap-2" style="font-size: 0.85rem; font-weight: 600;">
+                                    <a href="{{ route('employee-evaluations.export-pdf', ['user_id' => Auth::id(), 'id' => $latestEval->id]) }}" class="btn btn-outline-primary w-100 rounded-pill d-flex justify-content-center align-items-center gap-2" style="font-size: 0.85rem; font-weight: 600;">
                                         <i class="mdi mdi-download fs-5"></i> Download PDF Rapor
                                     </a>
                                 </div>

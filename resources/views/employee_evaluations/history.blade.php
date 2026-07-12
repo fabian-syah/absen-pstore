@@ -215,8 +215,8 @@
                                             <a href="{{ route('employee-evaluations.form', $eval->user->id) }}?date={{ $eval->evaluation_date }}" class="btn btn-sm btn-light border shadow-sm">
                                                 <i class="mdi mdi-eye text-primary"></i> Lihat
                                             </a>
-                                            <a href="{{ route('employee-evaluations.export-pdf', ['user_id' => $eval->user->id, 'date' => $eval->evaluation_date]) }}" target="_blank" class="btn btn-sm btn-light border shadow-sm">
-                                                <i class="mdi mdi-file-pdf-box text-danger"></i> PDF
+                                            <a href="{{ route('employee-evaluations.export-pdf', ['user_id' => $eval->user->id, 'id' => $eval->id]) }}" target="_blank" class="btn btn-sm btn-light border shadow-sm">
+                                                <i class="mdi mdi-file-pdf-box text-danger"></i> Unduh PDF
                                             </a>
                                         </td>
                                     </tr>

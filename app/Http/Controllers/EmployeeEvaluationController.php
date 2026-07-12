@@ -204,17 +204,23 @@ class EmployeeEvaluationController extends Controller
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        $date = $request->query('date', now()->format('Y-m-d'));
+        $evaluationQuery = EmployeeEvaluation::with('assessor')->where('user_id', $user_id);
+        
+        if ($request->has('id')) {
+            $evaluationQuery->where('id', $request->query('id'));
+        } elseif ($request->has('date')) {
+            $evaluationQuery->whereDate('evaluation_date', $request->query('date'));
+        }
 
-        $evaluation = EmployeeEvaluation::with('assessor')
-            ->where('user_id', $user_id)
-            ->orderBy('evaluation_date', 'desc')
+        $evaluation = $evaluationQuery->orderBy('evaluation_date', 'desc')
             ->orderBy('created_at', 'desc')
             ->first();
 
         if (!$evaluation) {
             return back()->with('error', 'Data evaluasi tidak ditemukan.');
         }
+
+        $date = $evaluation->evaluation_date ?? now()->format('Y-m-d');
 
         $labels = ['Kecerdasan', 'Amanah', 'Sosial media', 'Kepemimpinan', 'Data & ketelitian', 'Komunikasi', 'Kedisiplinan'];
         $dataScores = [
