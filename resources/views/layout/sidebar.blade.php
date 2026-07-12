@@ -252,25 +252,25 @@
         
         @if (auth()->user()->role != 'admin_gaji')
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('attendance.history') }}">
+                <a class="nav-link {{ request()->routeIs('self.attend.history') ? 'active' : '' }}" href="{{ route('attendance.history') }}">
                     <i class="menu-icon mdi mdi-clock-outline"></i>
                     <span class="menu-title">Riwayat Absensi</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.personal-history') }}">
+                <a class="nav-link {{ request()->routeIs('leave-requests.personal-history') ? 'active' : '' }}" href="{{ route('leave-requests.personal-history') }}">
                     <i class="menu-icon mdi mdi-hospital-box-outline"></i>
                     <span class="menu-title">Riwayat Izin/Sakit</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('leave-requests.cuti-history') }}">
+                <a class="nav-link {{ request()->routeIs('leave-requests.cuti-history') ? 'active' : '' }}" href="{{ route('leave-requests.cuti-history') }}">
                     <i class="menu-icon mdi mdi-wallet-travel"></i>
                     <span class="menu-title">Riwayat Cuti</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('employment-history.index') }}">
+                <a class="nav-link {{ request()->routeIs('employment-history.*') ? 'active' : '' }}" href="{{ route('employment-history.index') }}">
                     <i class="menu-icon mdi mdi-source-branch"></i>
                     <span class="menu-title">Riwayat Divisi/Cabang</span>
                 </a>
@@ -278,7 +278,7 @@
         @endif
         
         <li class="nav-item">
-            <a class="nav-link" href="{{ route('violations.index') }}">
+            <a class="nav-link {{ request()->routeIs('violations.*') ? 'active' : '' }}" href="{{ route('violations.index') }}">
                 <i class="menu-icon mdi mdi-alert-circle-outline"></i>
                 <span class="menu-title">Riwayat Pelanggaran</span>
             </a>
@@ -286,7 +286,7 @@
         
         @if (auth()->user()->role == 'security' || auth()->user()->role == 'admin')
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('security.history') }}">
+                <a class="nav-link {{ request()->routeIs('security.history') ? 'active' : '' }}" href="{{ route('security.history') }}">
                     <i class="menu-icon mdi mdi-qrcode-scan"></i>
                     <span class="menu-title">Riwayat Scan</span>
                 </a>
@@ -295,7 +295,7 @@
         
         @if (in_array(auth()->user()->role, ['audit', 'leader', 'admin']))
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('employee-evaluations.history') }}">
+                <a class="nav-link {{ request()->routeIs('employee-evaluations.history') ? 'active' : '' }}" href="{{ route('employee-evaluations.history') }}">
                     <i class="menu-icon mdi mdi-clipboard-text-clock-outline"></i>
                     <span class="menu-title">Riwayat Evaluasi (Tim)</span>
                 </a>
