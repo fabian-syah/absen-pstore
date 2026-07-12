@@ -602,6 +602,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // ==========================================================
     Route::get('/employee-evaluations/my-history', [EmployeeEvaluationController::class, 'myHistory'])->name('employee-evaluations.my-history');
     Route::get('/employee-evaluations/{user_id}/export-pdf', [EmployeeEvaluationController::class, 'exportPdf'])->name('employee-evaluations.export-pdf');
+    Route::get('/employee-evaluations/{user_id}/form', [EmployeeEvaluationController::class, 'form'])->name('employee-evaluations.form');
 
     Route::middleware(['role:admin,audit,leader'])->group(function () {
         // === RUTE RAPOR KARYAWAN ===
@@ -609,7 +610,6 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/employee-evaluations/history', [EmployeeEvaluationController::class, 'history'])->name('employee-evaluations.history');
         Route::get('/employee-evaluations/branch/{id}', [EmployeeEvaluationController::class, 'branchEmployees'])->name('employee-evaluations.branch-employees');
         Route::get('/employee-evaluations/branch/{id}/export-pdf', [EmployeeEvaluationController::class, 'exportBranchPdf'])->name('employee-evaluations.export-branch-pdf');
-        Route::get('/employee-evaluations/{user_id}/form', [EmployeeEvaluationController::class, 'form'])->name('employee-evaluations.form');
         Route::post('/employee-evaluations/{user_id}', [EmployeeEvaluationController::class, 'store'])->name('employee-evaluations.store');
 
         Route::get('/inventaris-cabang', [BranchInventoryController::class, 'index'])

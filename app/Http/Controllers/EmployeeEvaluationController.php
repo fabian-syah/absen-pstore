@@ -89,6 +89,11 @@ class EmployeeEvaluationController extends Controller
     {
         $employee = User::findOrFail($user_id);
 
+        // Hanya admin, audit, leader, atau karyawan yang bersangkutan yang bisa melihat rapor
+        if (!in_array(Auth::user()->role, ['admin', 'audit', 'leader']) && Auth::id() != $user_id) {
+            abort(403, 'Anda tidak memiliki akses ke rapor karyawan lain.');
+        }
+
         $date = $request->get('date', now()->format('Y-m-d'));
         // Fallback backward compatibility for month/year if they still access old URLs
         if ($request->has('month') && $request->has('year')) {

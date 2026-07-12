@@ -96,6 +96,9 @@
                                         <span class="badge {{ $gradeColor }}">{{ $eval->grade }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-center">
+                                        <a href="{{ route('employee-evaluations.form', $eval->user_id) }}?date={{ $eval->evaluation_date }}" class="btn btn-sm btn-light border shadow-sm me-1">
+                                            <i class="mdi mdi-eye text-primary"></i> Lihat
+                                        </a>
                                         <a href="{{ route('employee-evaluations.export-pdf', ['user_id' => $eval->user_id, 'id' => $eval->id]) }}" target="_blank" class="btn btn-sm btn-light border shadow-sm">
                                             <i class="mdi mdi-file-pdf-box text-danger"></i> Unduh PDF
                                         </a>

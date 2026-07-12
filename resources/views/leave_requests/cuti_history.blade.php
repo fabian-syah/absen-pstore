@@ -126,6 +126,14 @@
                                             @endif
                                         </td>
                                         <td class="text-end pe-4">
+                                            @if(in_array(auth()->user()->role, ['audit', 'admin', 'leader']) && $req->file_proof)
+                                                <button class="btn btn-sm btn-outline-info rounded-pill me-1"
+                                                    data-bs-toggle="modal" data-bs-target="#imageModal"
+                                                    data-src="{{ asset('storage/' . $req->file_proof) }}" title="Lihat Bukti Foto">
+                                                    <i class="mdi mdi-image-area me-1"></i> Foto
+                                                </button>
+                                            @endif
+
                                             @if($req->status == 'pending')
                                                 <form action="{{ route('leave-requests.cancel', $req->id) }}" method="POST"
                                                     class="d-inline"
@@ -161,4 +169,38 @@
             </div>
         </div>
     </div>
+
+    {{-- MODAL PREVIEW GAMBAR --}}
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Bukti Cuti</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center bg-light p-4">
+                    <img id="modalImagePreview" src="" class="img-fluid rounded shadow-sm"
+                        style="max-height: 500px; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var imageModal = document.getElementById('imageModal');
+            if (imageModal) {
+                imageModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    var imageUrl = button.getAttribute('data-src');
+                    var modalImage = document.getElementById('modalImagePreview');
+                    if (modalImage) modalImage.src = imageUrl;
+                });
+                imageModal.addEventListener('hidden.bs.modal', function () {
+                    var modalImage = document.getElementById('modalImagePreview');
+                    if (modalImage) modalImage.src = '';
+                });
+            }
+        });
+    </script>
 @endsection
