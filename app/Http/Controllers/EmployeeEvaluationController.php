@@ -448,7 +448,7 @@ class EmployeeEvaluationController extends Controller
 
         // Ambil daftar cabang yang boleh diakses
         $branches = collect();
-        if ($user->role === 'admin' || $user->role === 'audit') {
+        if ($user->role === 'admin') {
             $branches = Branch::withCount(['users' => function ($q) {
                 $q->where('is_active', true);
             }])->get();
