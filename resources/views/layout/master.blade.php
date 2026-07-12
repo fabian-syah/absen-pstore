@@ -970,7 +970,7 @@
     <script src="{{ asset('assets/vendors/chart.js/chart.umd.js') }}"></script>
     <script src="{{ asset('assets/vendors/progressbar.js/progressbar.min.js') }}"></script>
     <script src="{{ asset('assets/js/off-canvas.js') }}"></script>
-    <script src="{{ asset('assets/js/template.js?v={{ time() }}') }}"></script>
+    <script src="{{ asset('assets/js/template.js?v=' . time()) }}"></script>
     <script src="{{ asset('assets/js/settings.js') }}"></script>
     <script src="{{ asset('assets/js/hoverable-collapse.js') }}"></script>
     <script src="{{ asset('assets/js/todolist.js') }}"></script>
