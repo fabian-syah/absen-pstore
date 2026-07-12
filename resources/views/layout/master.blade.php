@@ -979,6 +979,27 @@
         <script src="{{ asset('assets/js/dashboard.js') }}"></script>
     @endif
 
+    <script>
+        // Perbaikan Bug Active Menu Sidebar (Timpa JS Bawaan Template)
+        $(function() {
+            var currentUrl = window.location.href.split('?')[0];
+            $('.sidebar .nav-item').each(function() {
+                var $a = $(this).find('> a.nav-link');
+                var href = $a.attr('href');
+                if (href && href !== '#' && href.indexOf('javascript') === -1 && !$a.attr('data-bs-toggle')) {
+                    // Jika ini link biasa (bukan dropdown)
+                    if (currentUrl.indexOf(href) === -1) {
+                        $(this).removeClass('active');
+                        $a.removeClass('active');
+                    } else {
+                        $(this).addClass('active');
+                        $a.addClass('active');
+                    }
+                }
+            });
+        });
+    </script>
+
     {{-- Firebase Notification Logic --}}
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
