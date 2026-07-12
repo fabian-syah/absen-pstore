@@ -125,7 +125,7 @@
                                         <td>
                                             <div class="d-flex flex-column gap-1">
                                                 <div class="d-flex align-items-center">
-                                                    <span class="badge bg-success bg-opacity-10 text-success p-1 me-1" style="font-size: 9px;">IN</span>
+                                                    <span class="badge p-1 me-1" style="background-color: #e8f5e9; color: #198754; font-size: 9px;">IN</span>
                                                     <small class="fw-bold text-dark" style="font-size: 11px;">
                                                         @if($log->scanner)
                                                             {{ $log->scanner->name }}
@@ -136,11 +136,11 @@
                                                 </div>
                                                 @if($log->check_out_time)
                                                     <div class="d-flex align-items-center">
-                                                        <span class="badge bg-danger bg-opacity-10 text-danger p-1 me-1" style="font-size: 9px;">OUT</span>
+                                                        <span class="badge p-1 me-1" style="background-color: #ffebee; color: #dc3545; font-size: 9px;">OUT</span>
                                                         <small class="fw-bold text-dark" style="font-size: 11px;">
                                                             @if (str_contains($log->notes, 'Security Scan by'))
                                                                 {{ Str::after($log->notes, 'Security Scan by ') }}
-                                                            @elseif($log->verified_by_user_id && !$log->scanned_by_user_id) 
+                                                            @elseif($log->verified_by_user_id && !$log->scanned_by_user_id)
                                                                 {{ $log->verifier->name ?? 'System' }}
                                                             @else
                                                                 <span class="text-muted fst-italic">Mandiri/System</span>
@@ -227,7 +227,7 @@
                                     {{-- JAM IN/OUT --}}
                                     <div class="row g-2 mb-2">
                                         <div class="col-6">
-                                            <div class="d-flex align-items-center bg-success bg-opacity-10 rounded p-2">
+                                            <div class="d-flex align-items-center rounded p-2" style="background-color: #e8f5e9;">
                                                 <i class="mdi mdi-login text-success me-2" style="font-size: 18px;"></i>
                                                 <div>
                                                     <small class="text-muted d-block" style="font-size: 9px;">Masuk</small>
@@ -236,7 +236,7 @@
                                             </div>
                                         </div>
                                         <div class="col-6">
-                                            <div class="d-flex align-items-center bg-danger bg-opacity-10 rounded p-2">
+                                            <div class="d-flex align-items-center rounded p-2" style="background-color: #ffebee;">
                                                 <i class="mdi mdi-logout text-danger me-2" style="font-size: 18px;"></i>
                                                 <div>
                                                     <small class="text-muted d-block" style="font-size: 9px;">Pulang</small>
@@ -274,12 +274,12 @@
                                     <div class="border-top pt-2 mt-2">
                                         <small class="text-muted d-block mb-1" style="font-size: 10px;">Petugas Scanner:</small>
                                         <div class="d-flex flex-wrap gap-2">
-                                            <span class="badge bg-success bg-opacity-10 text-success px-2 py-1" style="font-size: 10px;">
+                                            <span class="badge px-2 py-1" style="background-color: #e8f5e9; color: #198754; font-size: 10px;">
                                                 <i class="mdi mdi-login me-1"></i>
                                                 @if($log->scanner){{ $log->scanner->name }}@else Mandiri @endif
                                             </span>
                                             @if($log->check_out_time)
-                                                <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1" style="font-size: 10px;">
+                                                <span class="badge px-2 py-1" style="background-color: #ffebee; color: #dc3545; font-size: 10px;">
                                                     <i class="mdi mdi-logout me-1"></i>
                                                     @if (str_contains($log->notes, 'Security Scan by'))
                                                         {{ Str::after($log->notes, 'Security Scan by ') }}
