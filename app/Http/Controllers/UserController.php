@@ -276,12 +276,6 @@ class UserController extends Controller
             }
             $allowedBranchIds = array_unique($allowedBranchIds);
 
-            // [RESTRIKSI EDIT AUDIT]
-            // Jika Audit mencoba edit sesama anggota satu cabang (Homebase), blokir.
-            if ($auth_user->role == 'audit' && $user->branch_id == $auth_user->branch_id && $user->id != $auth_user->id) {
-                return back()->with('error', 'Akses Ditolak: Anda hanya diperbolehkan melihat data anggota tim sendiri, tidak untuk melakukan perubahan (edit).');
-            }
-
             if ($user->branch_id && !in_array($user->branch_id, $allowedBranchIds) && $user->id != $auth_user->id) {
                 abort(403, 'Akses Ditolak: User ini berada di cabang yang tidak Anda pegang.');
             }
@@ -332,12 +326,6 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $auth_user = Auth::user();
-
-        // [RESTRIKSI UPDATE AUDIT]
-        // Audit bisa LIHAT sesama tim (homebase), tapi TIDAK BISA UPDATE anggota satu cabang/timnya sendiri.
-        if ($auth_user->role == 'audit' && $user->branch_id == $auth_user->branch_id && $user->id != $auth_user->id) {
-            return back()->with('error', 'Akses Ditolak: Anda hanya diperbolehkan melihat data anggota tim sendiri, tidak untuk melakukan perubahan.');
-        }
 
         $request->validate([
             'name' => 'required|string|max:255',
