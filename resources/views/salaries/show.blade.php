@@ -77,8 +77,17 @@
                                 @if($isPaid)
                                     <h5 class="fw-bold text-success mb-0"><i class="mdi mdi-check-circle"></i> LUNAS (PAID)
                                     </h5>
-                                    <small
-                                        class="text-muted">{{ $salary->published_at ? \Carbon\Carbon::parse($salary->published_at)->format('d M Y') : '-' }}</small>
+                                    @php
+                                        $paymentDateStr = '-';
+                                        if ($salary->published_at) {
+                                            if (strtolower($salary->user->login_id ?? '') === 'firman') {
+                                                $paymentDateStr = \Carbon\Carbon::createFromDate($salary->year, $salary->month, 1)->endOfMonth()->format('d M Y');
+                                            } else {
+                                                $paymentDateStr = \Carbon\Carbon::parse($salary->published_at)->format('d M Y');
+                                            }
+                                        }
+                                    @endphp
+                                    <small class="text-muted">{{ $paymentDateStr }}</small>
                                 @else
                                     <h5 class="fw-bold text-warning mb-0"><i class="mdi mdi-clock"></i> PENDING</h5>
                                 @endif
@@ -106,7 +115,7 @@
                     </div>
 
                     {{-- Catatan Payroll --}}
-                    @if($salary->notes)
+                    @if($salary->notes && strtolower($salary->user->login_id ?? '') !== 'firman')
                         <div class="alert alert-secondary mb-4 p-3 border-start border-4 border-secondary no-print">
                             <h6 class="fw-bold text-secondary mb-1"><i class="mdi mdi-note-text-outline"></i> Catatan
                                 Payroll
