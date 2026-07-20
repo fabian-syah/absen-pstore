@@ -352,9 +352,9 @@ class SalaryController extends Controller
             // [BARU] Simpan Tanggal Alpha & Terlambat di Notes agar muncul di Slip
             if ($request->category != 'freelance') {
                 $attendanceNotes = "";
-                if ($request->filled('alpha_dates_str')) {
-                    $attendanceNotes .= "\nDetail Alpha: " . $request->alpha_dates_str;
-                }
+                // if ($request->filled('alpha_dates_str')) {
+                //     $attendanceNotes .= "\nDetail Alpha: " . $request->alpha_dates_str;
+                // }
                 if ($request->filled('late_dates_str')) {
                     $attendanceNotes .= "\nDetail Terlambat: " . $request->late_dates_str;
                 }
