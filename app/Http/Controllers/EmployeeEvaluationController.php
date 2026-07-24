@@ -31,12 +31,16 @@ class EmployeeEvaluationController extends Controller
         } else {
             $branches = collect();
 
+            $isTeamAuditNonLeader = ($user->branch_id == 64 && $user->role !== 'leader' && !in_array(strtolower($user->login_id ?? ''), ['herlina', 'eva', 'agung', 'adminherlina']));
+
             // Branch utama
             if ($user->branch_id) {
                 $mainBranch = Branch::withCount(['users' => function ($q) {
                     $q->where('is_active', true);
                 }])->find($user->branch_id);
-                if ($mainBranch) $branches->push($mainBranch);
+                if ($mainBranch && !$isTeamAuditNonLeader) {
+                    $branches->push($mainBranch);
+                }
             }
 
             // Branch kelolaan
@@ -46,6 +50,9 @@ class EmployeeEvaluationController extends Controller
 
             foreach ($managedBranches as $mb) {
                 if (!$branches->contains('id', $mb->id)) {
+                    if ($mb->id == 64 && $isTeamAuditNonLeader) {
+                        continue;
+                    }
                     $branches->push($mb);
                 }
             }
@@ -458,17 +465,24 @@ class EmployeeEvaluationController extends Controller
                 $q->where('is_active', true);
             }])->get();
         } else {
+            $isTeamAuditNonLeader = ($user->branch_id == 64 && $user->role !== 'leader' && !in_array(strtolower($user->login_id ?? ''), ['herlina', 'eva', 'agung', 'adminherlina']));
+
             if ($user->branch_id) {
                 $mainBranch = Branch::withCount(['users' => function ($q) {
                     $q->where('is_active', true);
                 }])->find($user->branch_id);
-                if ($mainBranch) $branches->push($mainBranch);
+                if ($mainBranch && !$isTeamAuditNonLeader) {
+                    $branches->push($mainBranch);
+                }
             }
             $managedBranches = $user->branches()->withCount(['users' => function ($q) {
                 $q->where('is_active', true);
             }])->get();
             foreach ($managedBranches as $mb) {
                 if (!$branches->contains('id', $mb->id)) {
+                    if ($mb->id == 64 && $isTeamAuditNonLeader) {
+                        continue;
+                    }
                     $branches->push($mb);
                 }
             }

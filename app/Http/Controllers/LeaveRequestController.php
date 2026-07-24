@@ -43,6 +43,11 @@ class LeaveRequestController extends Controller
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
             $myBranchIds = $pivotBranchIds; // TIDAK otomatis tambah homebase agar tidak bisa intip sesama audit
 
+            // TAMBAHAN: Cegah audit di Branch 64 melihat pending request Branch 64 (jika ada di pivot) kecuali dia whitelist/leader
+            if ($user->branch_id == 64 && $user->role !== 'leader' && !in_array(strtolower($user->login_id ?? ''), ['herlina', 'eva', 'agung', 'adminherlina'])) {
+                $myBranchIds = array_diff($myBranchIds, [64]);
+            }
+
             $query->where(function ($mainQ) use ($user, $myBranchIds) {
                 if (!empty($myBranchIds)) {
                     $mainQ->whereHas('user', function ($q) use ($myBranchIds) {
@@ -166,7 +171,7 @@ class LeaveRequestController extends Controller
             $notifier = new class { use \App\Traits\SendWebPushNotification; };
             $notifier->sendWebPushToBranchRoles(['audit', 'admin'], $user->branch_id, $title, $body, url('/leave-requests'));
         } catch (\Exception $e) {
-            \Log::error("Leave Request Notification Error: " . $e->getMessage());
+            Log::error("Leave Request Notification Error: " . $e->getMessage());
         }
 
         // === REDIRECT KE DASHBOARD (Agar status pending terlihat) ===
@@ -189,8 +194,8 @@ class LeaveRequestController extends Controller
             $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {
-                if (!$isSuperUser && !$isWhitelisted) {
-                    return redirect()->back()->with('error', "AKSES DITOLAK: Khusus Team Audit, approval hanya bisa dilakukan oleh Admin atau User Terdaftar.");
+                if (!$isSuperUser && !$isWhitelisted && $actor->role !== 'leader') {
+                    return redirect()->back()->with('error', "AKSES DITOLAK: Khusus Team Audit, approval hanya bisa dilakukan oleh Admin, Leader, atau User Terdaftar.");
                 }
             } else {
                 if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
@@ -329,8 +334,8 @@ class LeaveRequestController extends Controller
             $hasExplicitRegion = $actor->branches()->where('branches.id', $targetBranchId)->exists();
 
             if ($targetBranchId == 64) {
-                if (!$isSuperUser && !$isWhitelisted) {
-                    return redirect()->back()->with('error', "AKSES DITOLAK: Khusus Team Audit, reject hanya bisa dilakukan oleh Admin atau User Terdaftar.");
+                if (!$isSuperUser && !$isWhitelisted && $actor->role !== 'leader') {
+                    return redirect()->back()->with('error', "AKSES DITOLAK: Khusus Team Audit, reject hanya bisa dilakukan oleh Admin, Leader, atau User Terdaftar.");
                 }
             } else {
                 if (!$isSuperUser && !$isWhitelisted && !$hasExplicitRegion) {
@@ -507,6 +512,10 @@ class LeaveRequestController extends Controller
             $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
             $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
 
+            if ($user->branch_id == 64 && $user->role !== 'leader' && !in_array(strtolower($user->login_id ?? ''), ['herlina', 'eva', 'agung', 'adminherlina'])) {
+                $myBranchIds = array_diff($myBranchIds, [64]);
+            }
+
             if (!empty($myBranchIds)) {
                 $query->whereIn('branch_id', $myBranchIds);
             } else {
@@ -605,6 +614,10 @@ class LeaveRequestController extends Controller
             $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
             $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
 
+            if ($user->branch_id == 64 && $user->role !== 'leader' && !in_array(strtolower($user->login_id ?? ''), ['herlina', 'eva', 'agung', 'adminherlina'])) {
+                $myBranchIds = array_diff($myBranchIds, [64]);
+            }
+
             if (!empty($myBranchIds)) {
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
                     $q->whereIn('branch_id', $myBranchIds);
@@ -645,6 +658,10 @@ class LeaveRequestController extends Controller
             $homebaseBranchId = $user->branch_id ? [$user->branch_id] : [];
             $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
 
+            if ($user->branch_id == 64 && $user->role !== 'leader' && !in_array(strtolower($user->login_id ?? ''), ['herlina', 'eva', 'agung', 'adminherlina'])) {
+                $myBranchIds = array_diff($myBranchIds, [64]);
+            }
+
             if (!empty($myBranchIds)) {
                 $query->whereHas('user', function ($q) use ($myBranchIds) {
                     $q->whereIn('branch_id', $myBranchIds);
@@ -684,6 +701,10 @@ class LeaveRequestController extends Controller
             $pivotBranchIds = $actor->branches->pluck('id')->toArray();
             $homebaseBranchId = $actor->branch_id ? [$actor->branch_id] : [];
             $myBranchIds = array_unique(array_merge($pivotBranchIds, $homebaseBranchId));
+
+            if ($actor->branch_id == 64 && $actor->role !== 'leader' && !in_array(strtolower($actor->login_id ?? ''), ['herlina', 'eva', 'agung', 'adminherlina'])) {
+                $myBranchIds = array_diff($myBranchIds, [64]);
+            }
 
             if (!in_array($leaveRequest->user->branch_id, $myBranchIds)) {
                 return back()->with('error', 'Anda tidak memiliki akses untuk menghapus data di cabang ini.');
