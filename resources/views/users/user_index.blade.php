@@ -203,11 +203,11 @@
                                                             <button type="submit" class="btn btn-inverse-danger btn-icon btn-sm" title="Hapus"><i class="mdi mdi-delete"></i></button>
                                                         </form>
                                                     @endif
-                                                    @if ($user->id != auth()->id() && in_array(auth()->user()->role, ['admin', 'audit']))
+                                                    @if ($user->id != auth()->id() && in_array(auth()->user()->role, ['admin', 'audit', 'admin_gaji']))
                                                         @php
                                                             $isSameTeamAudit = auth()->user()->role == 'audit' && $user->branch_id == auth()->user()->branch_id;
                                                         @endphp
-                                                        @if (!$isSameTeamAudit || auth()->user()->role == 'admin')
+                                                        @if (!$isSameTeamAudit || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
                                                             <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
                                                                 @csrf
                                                                 <button type="submit" class="btn btn-icon btn-sm btn-inverse-danger" title="Nonaktifkan">
@@ -279,7 +279,7 @@
                                                 </td>
                                                 <td>{{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->format('d M Y') : ($user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-') }}</td>
                                                 <td>
-                                                    @if (in_array(auth()->user()->role, ['admin', 'audit']))
+                                                    @if (in_array(auth()->user()->role, ['admin', 'audit', 'admin_gaji']))
                                                         <form action="{{ route('users.toggle-status', $user->id) }}" method="POST" class="d-inline">
                                                             @csrf
                                                         <button type="submit" class="btn btn-icon btn-sm btn-inverse-success" title="Aktifkan Kembali">

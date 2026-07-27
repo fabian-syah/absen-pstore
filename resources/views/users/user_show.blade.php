@@ -91,8 +91,8 @@
                         </div>
                         --}}
 
-                        {{-- Tombol Toggle Status (Admin & Audit Only) --}}
-                        @if(in_array(auth()->user()->role, ['admin', 'audit']) && $user->id != auth()->id())
+                        {{-- Tombol Toggle Status (Admin, Audit, Admin Gaji Only) --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'audit', 'admin_gaji']) && $user->id != auth()->id())
                             <div class="mt-3 d-grid">
                                 <form action="{{ route('users.toggle-status', $user->id) }}" method="POST">
                                     @csrf
