@@ -521,7 +521,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::post('/leaderboard/claim-prize', [DashboardController::class, 'claimPrize'])->name('leaderboard.claim-prize');
 
     // === RUTE TEAM MANAGEMENT ===
-    Route::middleware(['role:user_biasa,leader,audit,security,admin'])->group(function () {
+    Route::middleware(['role:user_biasa,leader,audit,security,admin,admin_gaji'])->group(function () {
         Route::get('/kalender-tim', [TeamController::class, 'calendar'])->name('team.calendar');
         Route::get('/tim-saya', [TeamController::class, 'index'])->name('team.index');
         Route::get('/tim-saya/{user}', [TeamController::class, 'show'])->name('my.team.show');
