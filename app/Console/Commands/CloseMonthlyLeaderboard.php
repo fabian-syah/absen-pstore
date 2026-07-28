@@ -46,11 +46,16 @@ class CloseMonthlyLeaderboard extends Command
             $branchTimezone = $branch->timezone ?? 'Asia/Jakarta';
             $branchOffset = Carbon::now($branchTimezone)->format('P');
             $appOffset = Carbon::now(config('app.timezone'))->format('P');
+            
+            $baseDate = Carbon::create($year, $month, 1, 0, 0, 0, $branchTimezone);
+            $startDate = $baseDate->copy()->subMonth()->day(26)->startOfDay();
+            $endDate = $baseDate->copy()->day(25)->endOfDay();
+            $startQuery = $startDate->copy()->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
+            $endQuery = $endDate->copy()->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
 
             $winners = Attendance::select('user_id', DB::raw('count(*) as total_attendance'))
                 ->where('branch_id', $branch->id) // FILTER PER CABANG
-                ->whereRaw("MONTH(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $month])
-                ->whereRaw("YEAR(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$appOffset, $branchOffset, $year])
+                ->whereBetween('check_in_time', [$startQuery, $endQuery])
                 ->whereNotNull('check_out_time')
                 ->whereIn('presence_status', ['Masuk', 'WFH', 'WFH / Dinas Luar'])
                 ->where('status', 'verified')

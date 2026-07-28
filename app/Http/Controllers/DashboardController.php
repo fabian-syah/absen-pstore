@@ -238,6 +238,15 @@ class DashboardController extends Controller
         // 5. DATA UNTUK WIDGET & LEADERBOARD (FIXED LOGIC)
         // =========================================================================
 
+        // Define Leaderboard Date Range (26th of previous month to 25th of current month)
+        $dateObjMonth = Carbon::createFromDate($nowInBranch->year, $nowInBranch->month, 1, $userTimezone);
+        $startDateMonth = $dateObjMonth->copy()->subMonth()->day(26)->startOfDay();
+        $endDateMonth = $dateObjMonth->copy()->day(25)->endOfDay();
+
+        // For querying database, convert to app.timezone
+        $startQueryMonth = $startDateMonth->copy()->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
+        $endQueryMonth = $endDateMonth->copy()->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
+
         // --- LEADERBOARD ABSENSI (SINKRON DENGAN BRANCH LEADERBOARD) ---
         if ($user->role != 'security') {
             $data['leaderboard'] = Attendance::select(
@@ -246,8 +255,7 @@ class DashboardController extends Controller
                 DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
                 DB::raw('SUM(COALESCE(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time), 0)) as total_work_seconds')
             )
-                ->whereMonth('check_in_time', $nowInBranch->month)
-                ->whereYear('check_in_time', $nowInBranch->year)
+                ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
                 ->where('status', 'verified')
                 // Filter status yang hanya dianggap sebagai "Hadir"
                 ->whereIn('presence_status', [
@@ -305,15 +313,13 @@ class DashboardController extends Controller
 
             $securityUsers = $securityUsersQuery->get();
 
-            $scanners = $securityUsers->map(function ($sec) use ($nowInBranch) {
+            $scanners = $securityUsers->map(function ($sec) use ($nowInBranch, $startQueryMonth, $endQueryMonth) {
                 $scanIn = Attendance::where('scanned_by_user_id', $sec->id)
-                    ->whereMonth('check_in_time', $nowInBranch->month)
-                    ->whereYear('check_in_time', $nowInBranch->year)
+                    ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
                     ->count();
 
                 $scanOut = Attendance::where('scanned_out_by_user_id', $sec->id)
-                    ->whereMonth('check_in_time', $nowInBranch->month)
-                    ->whereYear('check_in_time', $nowInBranch->year)
+                    ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
                     ->count();
 
                 $sec->total_scans = $scanIn + $scanOut;
@@ -445,19 +451,24 @@ class DashboardController extends Controller
         $data['birthdayData'] = $birthdayData;
 
         // =========================================================================
-// =========================================================================
-// [FIXED] LOGIKA HALL OF FAME: HITUNG LIVE PER CABANG
-// =========================================================================
+        // =========================================================================
+        // [FIXED] LOGIKA HALL OF FAME: HITUNG LIVE PER CABANG
+        // =========================================================================
         $lastMonth = $nowInBranch->copy()->subMonth();
         $data['lastMonthName'] = $lastMonth->translatedFormat('F Y');
+
+        $dateObjLastMonth = Carbon::createFromDate($lastMonth->year, $lastMonth->month, 1, $userTimezone);
+        $startDateLastMonth = $dateObjLastMonth->copy()->subMonth()->day(26)->startOfDay();
+        $endDateLastMonth = $dateObjLastMonth->copy()->day(25)->endOfDay();
+        $startQueryLastMonth = $startDateLastMonth->copy()->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
+        $endQueryLastMonth = $endDateLastMonth->copy()->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
 
         // Kita hitung langsung dari tabel Attendance agar angka sinkron dengan Riwayat Absensi
         $data['lastMonthWinners'] = Attendance::select(
             'user_id',
             DB::raw('count(DISTINCT DATE(check_in_time)) as total_attendance')
         )
-            ->whereMonth('check_in_time', $lastMonth->month)
-            ->whereYear('check_in_time', $lastMonth->year)
+            ->whereBetween('check_in_time', [$startQueryLastMonth, $endQueryLastMonth])
             // FILTER PER CABANG: Hanya ambil karyawan yang satu cabang dengan user yang login
             ->where('branch_id', $user->branch_id)
             ->where('status', 'verified')
@@ -502,10 +513,8 @@ class DashboardController extends Controller
         $data['prizeClaimed'] = (bool) ($user->metadata['prize_claimed_at'] ?? false);
 
         if ($user->role == 'security' || $user->role == 'admin') {
-            $lastMonth = now()->subMonth();
             $topScanner = Attendance::select('scanned_by_user_id', DB::raw('count(*) as total_scans'))
-                ->whereMonth('check_in_time', $lastMonth->month)
-                ->whereYear('check_in_time', $lastMonth->year)
+                ->whereBetween('check_in_time', [$startQueryLastMonth, $endQueryLastMonth])
                 ->whereNotNull('scanned_by_user_id')
                 ->groupBy('scanned_by_user_id')
                 ->orderByDesc('total_scans')
@@ -594,11 +603,9 @@ class DashboardController extends Controller
         }
 
         // [NEW] Hitung Persentase Kehadiran Bulan Ini (26 ke 25) dan Tahun Ini
-        $dateObjMonth = Carbon::createFromDate($nowInBranch->year, $nowInBranch->month, 1, $userTimezone);
-        $startDateMonth = $dateObjMonth->copy()->subMonth()->day(26)->startOfDay();
-        $endDateMonth = $dateObjMonth->copy()->day(25)->endOfDay();
+        // Variables $dateObjMonth, $startDateMonth, $endDateMonth are already defined at line 242
         $limitDateMonth = ($endDateMonth->gt($todayInBranch)) ? Carbon::parse($todayInBranch, $userTimezone)->startOfDay() : $endDateMonth->copy()->startOfDay();
-        
+
         $startDateYear = Carbon::createFromDate($nowInBranch->year, 1, 1, $userTimezone)->startOfDay();
         $limitDateYear = Carbon::parse($todayInBranch, $userTimezone)->startOfDay();
 
@@ -607,10 +614,10 @@ class DashboardController extends Controller
 
         $data['attendancePercentageMonth'] = $monthStats['percentage'];
         $data['alphaDatesMonth'] = $monthStats['alpha_dates'];
-        
+
         $data['attendancePercentageYear'] = $yearStats['percentage'];
         $data['alphaDatesYear'] = $yearStats['alpha_dates'];
-        
+
         $data['attendancePeriodMonthLabel'] = $startDateMonth->translatedFormat('d M Y') . ' - ' . $endDateMonth->translatedFormat('d M Y');
 
         return view('dashboard', $data);
@@ -622,14 +629,14 @@ class DashboardController extends Controller
     private function calculateAttendancePercentageForPeriod($user_id, $startDate, $limitDate, $userTimezone)
     {
         if ($limitDate->lt($startDate)) return 100;
-        
+
         $period = \Carbon\CarbonPeriod::create($startDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
         $totalDays = $period->count();
-        
+
         $attendances = Attendance::where('user_id', $user_id)
             ->whereBetween('check_in_time', [$startDate->copy()->subDay(), $limitDate->copy()->addDay()])
             ->get();
-            
+
         $leaves = \App\Models\LeaveRequest::where('user_id', $user_id)
             ->where('status', 'approved')
             ->where('is_active', true)
@@ -644,14 +651,14 @@ class DashboardController extends Controller
         $hadir = 0;
         $hariLiburAtauIzin = 0;
         $alphaDates = [];
-        
+
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
             $att = $attendances->filter(function ($a) use ($currentDateStr, $userTimezone) {
                 if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
                 if ($a->status === 'rejected') return false;
                 return Carbon::parse($a->check_in_time)->timezone($userTimezone)->format('Y-m-d') === $currentDateStr;
-            })->sortBy(function($a) {
+            })->sortBy(function ($a) {
                 return strtolower($a->presence_status) === 'masuk' ? 0 : 1;
             })->first();
 
@@ -682,12 +689,12 @@ class DashboardController extends Controller
                 $alphaDates[] = $date->translatedFormat('d M');
             }
         }
-        
+
         $hariKerjaEfektif = $totalDays - $hariLiburAtauIzin;
         if ($hariKerjaEfektif <= 0) {
             return ['percentage' => 100, 'alpha_dates' => []];
         }
-        
+
         return [
             'percentage' => round(($hadir / $hariKerjaEfektif) * 100),
             'alpha_dates' => $alphaDates
@@ -931,5 +938,4 @@ class DashboardController extends Controller
             'branchName' => $user->branch?->name ?? 'PStore',
         ]);
     }
-
 }

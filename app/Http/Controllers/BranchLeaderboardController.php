@@ -82,8 +82,10 @@ class BranchLeaderboardController extends Controller
             DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
             DB::raw('SUM(COALESCE(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time), 0)) as total_work_seconds')
         )
-            ->whereMonth('check_in_time', Carbon::now()->month)
-            ->whereYear('check_in_time', Carbon::now()->year)
+            ->whereBetween('check_in_time', [
+                Carbon::now()->startOfMonth()->subMonth()->day(26)->startOfDay()->timezone(config('app.timezone'))->format('Y-m-d H:i:s'),
+                Carbon::now()->startOfMonth()->day(25)->endOfDay()->timezone(config('app.timezone'))->format('Y-m-d H:i:s')
+            ])
             ->where('status', 'verified')
             // [SYNC] Samakan daftar status dengan DashboardController
             ->whereIn('presence_status', [
