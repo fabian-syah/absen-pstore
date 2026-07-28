@@ -47,10 +47,17 @@ class SelfAttendanceController extends Controller
         }
 
         // 1.5 CEK KTP BLOCK (MANDIRI)
+        $ktpWarningMsg = null;
         if (is_null($user->ktp_photo_path) && !is_null($user->ktp_countdown_start_at)) {
             $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
             if ($daysPassed > 7 && is_null($user->ktp_unlock_at)) {
                 return redirect()->route('dashboard')->with('error', 'AKSES DIBLOKIR: Waktu 7 hari habis, KTP belum diupload. Hubungi Admin/Audit cabang Anda untuk membuka akses.');
+            }
+            $daysLeft = 7 - $daysPassed;
+            if ($daysLeft > 0) {
+                $ktpWarningMsg = "Wajib upload KTP, sisa waktu {$daysLeft} hari. Jika lewat, absensi diblokir!";
+            } else {
+                $ktpWarningMsg = "Peringatan Terakhir: Batas waktu upload KTP habis hari ini!";
             }
         }
 
@@ -127,7 +134,7 @@ class SelfAttendanceController extends Controller
         }
 
         // [PENTING] Kirim $branchTimezone ke View agar jam di UI sesuai lokasi
-        return view('user_biasa.absen', compact('mode', 'attendance', 'branchTimezone'));
+        return view('user_biasa.absen', compact('mode', 'attendance', 'branchTimezone', 'ktpWarningMsg'));
     }
 
     /**

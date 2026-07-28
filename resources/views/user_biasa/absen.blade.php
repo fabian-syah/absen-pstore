@@ -50,6 +50,17 @@
                 </div>
             @endif
 
+            {{-- KTP WARNING --}}
+            @if(isset($ktpWarningMsg) && $ktpWarningMsg)
+                <div class="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-center" style="border-radius: 16px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3) !important;">
+                    <i class="mdi mdi-alert fs-2 me-3 text-warning"></i>
+                    <div>
+                        <strong class="d-block text-warning mb-1" style="font-size: 0.95rem;">Peringatan Wajib KTP</strong>
+                        <span style="font-size: 0.85rem; color: #b45309;">{{ $ktpWarningMsg }}</span>
+                    </div>
+                </div>
+            @endif
+
             {{-- CAMERA CARD --}}
             <div class="camera-card">
                 <form action="{{ route('self.attend.store') }}" method="POST" enctype="multipart/form-data"
