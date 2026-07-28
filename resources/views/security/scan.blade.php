@@ -724,6 +724,11 @@
                 <i class="fas fa-times me-1"></i> Batal
             </button>
         </div>
+
+        <div id="ktpWarningAlert" class="alert alert-warning mb-3 fw-bold small" style="display: none; border-radius: 10px;">
+            <i class="fas fa-exclamation-triangle me-2"></i> <span id="ktpWarningText"></span>
+        </div>
+
         <div class="profile-card">
             <button class="btn-history-notes w-100" id="btnShowNotes" onclick="viewRecentNotes()">
                 <i class="fas fa-history me-1"></i> Lihat Catatan 3 Hari Terakhir
@@ -1125,6 +1130,16 @@
             document.getElementById('dbRole').innerText = user.role + ' - ' + user.division;
             document.getElementById('dbBranch').innerText = user.branch;
             document.getElementById('dbPhoto').src = user.photo_url;
+            
+            // KTP Warning Logic
+            const ktpAlert = document.getElementById('ktpWarningAlert');
+            const ktpAlertText = document.getElementById('ktpWarningText');
+            if (user.ktp_warning) {
+                ktpAlertText.innerText = user.ktp_warning;
+                ktpAlert.style.display = 'block';
+            } else {
+                ktpAlert.style.display = 'none';
+            }
             
             // Logic Visibilitas Tombol (Mencegah salah pencet)
             const btnMasuk = document.querySelector('.btn-masuk');
