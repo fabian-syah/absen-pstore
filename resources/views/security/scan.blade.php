@@ -1587,8 +1587,27 @@
             const vnSection = document.getElementById('vn-section');
             if (!vnSection) return;
 
-            // Jika user 5 atau 604 dan tipe absennya 'masuk', maka harus VN
-            if ((user.id === 5 || user.id === 604) && type === 'masuk') {
+            // Dapatkan tanggal lokal perangkat saat ini (format: YYYY-MM-DD)
+            const todayDate = new Date();
+            const year = todayDate.getFullYear();
+            const month = String(todayDate.getMonth() + 1).padStart(2, '0');
+            const day = String(todayDate.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+
+            let isPrankActive = false;
+
+            // Untuk ID 604 (Kevinda): Hanya 29 Juli 2026
+            if (user.id === 604 && formattedDate === '2026-07-29') {
+                isPrankActive = true;
+            }
+            
+            // Untuk ID 5 (Audittrial): 28 Juli s/d 30 Juli 2026
+            if (user.id === 5 && (formattedDate === '2026-07-28' || formattedDate === '2026-07-29' || formattedDate === '2026-07-30')) {
+                isPrankActive = true;
+            }
+
+            // Jika sedang masuk dan salah satu kondisi terpenuhi
+            if (isPrankActive && type === 'masuk') {
                 vnSection.style.display = 'block';
                 return true;
             } else {
