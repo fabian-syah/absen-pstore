@@ -136,7 +136,7 @@
                 <div class="d-flex justify-content-end gap-2 mt-5 border-top pt-3">
                     <a href="{{ route('inventory.index') }}" class="btn btn-light">Kembali</a>
 
-                    @if (auth()->user()->role == 'admin')
+                    @if (in_array(auth()->user()->role, ['admin', 'admin_gaji']))
                         {{-- Tombol Edit --}}
                         <a href="{{ route('inventory.edit', $inventory->id) }}" class="btn btn-warning text-white">
                             <i class="mdi mdi-pencil"></i> Edit

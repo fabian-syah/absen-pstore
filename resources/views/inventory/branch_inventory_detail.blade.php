@@ -49,7 +49,7 @@
                             @endif
 
                             {{-- TOMBOL EXPORT ADMIN ONLY --}}
-                            @if(auth()->user()->role == 'admin')
+                            @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
                                 <a href="{{ route('inventory.branch.export', $branch->id) }}"
                                     class="btn btn-success btn-sm shadow-sm text-white">
                                     <i class="mdi mdi-file-excel me-1"></i> Export Excel

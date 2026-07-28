@@ -332,14 +332,14 @@
         {{-- =================================== --}}
         {{-- MENU UMUM (EXCEPT ADMIN GAJI) --}}
         {{-- =================================== --}}
+        <li class="nav-item nav-category">Menu Umum</li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('inventory.index') }}">
+                <i class="menu-icon mdi mdi-package-variant"></i>
+                <span class="menu-title">Inventaris</span>
+            </a>
+        </li>
         @if (auth()->user()->role != 'admin_gaji')
-            <li class="nav-item nav-category">Menu Umum</li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('inventory.index') }}">
-                    <i class="menu-icon mdi mdi-package-variant"></i>
-                    <span class="menu-title">Inventaris</span>
-                </a>
-            </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('job-targets.index') }}">
                     <i class="menu-icon mdi mdi-clipboard-list"></i>
@@ -664,12 +664,14 @@
                         @endif
                     </a>
                 </li>
+            @if (in_array(auth()->user()->role, ['admin', 'admin_gaji']))
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('inventory-returns.index') }}">
                         <i class="menu-icon mdi mdi-package-variant-minus"></i>
                         <span class="menu-title">History Pengembalian</span>
                     </a>
                 </li>
+            @endif
 
             @endif
         @endif
@@ -730,7 +732,7 @@
         {{-- =================================== --}}
         {{-- MONITORING (ADMIN, AUDIT, LEADER) --}}
         {{-- =================================== --}}
-        @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
+        @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'admin_gaji']))
             <li class="nav-item nav-category">Monitoring Wilayah</li>
 
             <li class="nav-item">

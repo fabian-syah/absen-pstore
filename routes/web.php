@@ -349,17 +349,17 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         Route::get('/available', [InventoryController::class, 'available'])
             ->name('available')
-            ->middleware('role:admin,audit,leader,security,user_biasa');
+            ->middleware('role:admin,audit,leader,security,user_biasa,admin_gaji');
 
         Route::get('/detail/{inventory}', [InventoryController::class, 'show'])->name('show');
 
-        Route::middleware(['role:admin,audit,leader,security,user_biasa'])->group(function () {
+        Route::middleware(['role:admin,audit,leader,security,user_biasa,admin_gaji'])->group(function () {
             Route::get('/create', [InventoryController::class, 'create'])->name('create');
             Route::post('/', [InventoryController::class, 'store'])->name('store');
             Route::post('/{id}/return', [InventoryReturnController::class, 'store'])->name('process-return');
         });
 
-        Route::middleware(['role:admin'])->group(function () {
+        Route::middleware(['role:admin,admin_gaji'])->group(function () {
             Route::get('/all-data', [InventoryController::class, 'adminIndex'])->name('admin.all');
             Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
             Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
@@ -368,7 +368,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // ================= RIWAYAT PENGEMBALIAN (Inventory Returns) =================
-    Route::middleware(['role:admin,audit'])->group(function () {
+    Route::middleware(['role:admin,audit,admin_gaji'])->group(function () {
         Route::get('/inventory-returns', [InventoryReturnController::class, 'index'])->name('inventory-returns.index');
         Route::post('/inventory-returns/{id}/approve', [InventoryReturnController::class, 'approve'])->name('inventory-returns.approve');
         Route::post('/inventory-returns/{id}/reject', [InventoryReturnController::class, 'reject'])->name('inventory-returns.reject');
@@ -608,7 +608,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/employee-evaluations/{user_id}/export-pdf', [EmployeeEvaluationController::class, 'exportPdf'])->name('employee-evaluations.export-pdf');
     Route::get('/employee-evaluations/{user_id}/form', [EmployeeEvaluationController::class, 'form'])->name('employee-evaluations.form');
 
-    Route::middleware(['role:admin,audit,leader'])->group(function () {
+    Route::middleware(['role:admin,audit,leader,admin_gaji'])->group(function () {
         // === RUTE RAPOR KARYAWAN ===
         Route::get('/employee-evaluations', [EmployeeEvaluationController::class, 'index'])->name('employee-evaluations.index');
         Route::get('/employee-evaluations/history', [EmployeeEvaluationController::class, 'history'])->name('employee-evaluations.history');
@@ -624,19 +624,19 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         Route::get('/inventaris-cabang/{id}/export', [InventoryController::class, 'exportBranchInventory'])
             ->name('inventory.branch.export')
-            ->middleware('role:admin');
+            ->middleware('role:admin,admin_gaji');
 
         Route::get('/inventory/export/active', [InventoryController::class, 'exportAllActive'])
             ->name('inventory.export.active')
-            ->middleware('role:admin');
+            ->middleware('role:admin,admin_gaji');
 
         Route::get('/inventory/export/pusat', [InventoryController::class, 'exportPusat'])
             ->name('inventory.export.pusat')
-            ->middleware('role:admin');
+            ->middleware('role:admin,admin_gaji');
 
         Route::get('/inventory/export/cabang', [InventoryController::class, 'exportCabang'])
             ->name('inventory.export.cabang')
-            ->middleware('role:admin');
+            ->middleware('role:admin,admin_gaji');
 
         Route::get('/top-absensi-cabang', [BranchLeaderboardController::class, 'index'])
             ->name('branch-leaderboard.index');
