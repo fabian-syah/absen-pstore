@@ -41,10 +41,17 @@ class ScanController extends Controller
         }
 
         // CEK KTP BLOCK
+        $ktpWarningMsg = null;
         if (is_null($user->ktp_photo_path) && !is_null($user->ktp_countdown_start_at)) {
             $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
             if ($daysPassed > 7 && is_null($user->ktp_unlock_at)) {
                 return response()->json(['status' => 'error', 'message' => 'AKSES DIBLOKIR: Waktu 7 hari habis, KTP belum diupload.'], 403);
+            }
+            $daysLeft = 7 - $daysPassed;
+            if ($daysLeft > 0) {
+                $ktpWarningMsg = "Wajib upload KTP, sisa waktu {$daysLeft} hari. Jika lewat, absensi diblokir!";
+            } else {
+                $ktpWarningMsg = "Peringatan Terakhir: Batas waktu upload KTP habis hari ini!";
             }
         }
 
@@ -104,6 +111,7 @@ class ScanController extends Controller
             'data' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'ktp_warning' => $ktpWarningMsg,
                 'rank_title' => $user->calculateRank()['name'],
                 'rank_image' => $user->calculateRank()['rank_image'] ? asset($user->calculateRank()['rank_image']) : null,
                 'rank_icon' => $user->calculateRank()['icon'],
