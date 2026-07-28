@@ -32,8 +32,8 @@ class CheckRole
             'allowed_roles' => $roles
         ]);
 
-        // Cek apakah role user termasuk dalam roles yang diizinkan
-        if (in_array($user->role, $roles)) {
+        // Cek apakah role user termasuk dalam roles yang diizinkan (Case Insensitive)
+        if (in_array(strtolower($user->role), array_map('strtolower', $roles))) {
             return $next($request);
         }
 

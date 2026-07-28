@@ -25,7 +25,7 @@ class InventoryController extends Controller
 
         // === 1. LOGIKA FILTER USER ID (SHORTCUT DARI PROFIL) ===
         // [UPDATE] Menambahkan 'leader' agar bisa melihat inventaris user lain saat klik dari profil
-        if ($request->has('user_id') && in_array($user->role, ['admin', 'audit', 'leader'])) {
+        if ($request->has('user_id') && in_array(strtolower($user->role), ['admin', 'admin_gaji', 'audit', 'leader'])) {
             $query->where('user_id', $request->user_id);
 
             // Ambil nama user target untuk judul halaman
@@ -35,7 +35,7 @@ class InventoryController extends Controller
 
         // === 2. LOGIKA DEFAULT (HAK AKSES) ===
         // Jika BUKAN Admin (Audit, Leader, Security, User Biasa) DAN TIDAK sedang memfilter user lain (di blok atas)
-        elseif ($user->role !== 'admin') {
+        elseif (!in_array(strtolower($user->role), ['admin', 'admin_gaji'])) {
             // Default: Hanya lihat milik sendiri
             $query->where('user_id', $user->id);
             $pageTitle = 'Inventaris Saya';
@@ -59,7 +59,7 @@ class InventoryController extends Controller
             });
         }
 
-        $inventories = $query->latest()->paginate(10)->withQueryString();
+        $inventories = $query->latest()->paginate(10)->appends($request->query());
 
         return view('inventory.index', compact('inventories', 'pageTitle'));
     }
@@ -70,7 +70,7 @@ class InventoryController extends Controller
     public function adminIndex(Request $request)
     {
         // 1. CEK HAK AKSES (Security Layer)
-        if (Auth::user()->role !== 'admin') {
+        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji'])) {
             abort(403, 'Akses ditolak. Halaman ini khusus Admin.');
         }
 
@@ -95,7 +95,7 @@ class InventoryController extends Controller
         }
 
         // 4. RETURN VIEW
-        $inventories = $query->latest()->paginate(10)->withQueryString();
+        $inventories = $query->latest()->paginate(10)->appends($request->query());
         $pageTitle = 'Master Data Inventaris (Admin View)';
 
         return view('inventory.index', compact('inventories', 'pageTitle'));
@@ -111,7 +111,7 @@ class InventoryController extends Controller
 
         // === FILTER HAK AKSES BARU ===
         // Jika BUKAN Admin: Filter barang yang ID-nya ada di histori pengembalian oleh user ini.
-        if ($user->role !== 'admin') {
+        if (!in_array(strtolower($user->role), ['admin', 'admin_gaji'])) {
             // Ambil semua inventory_id yang user ini pernah kembalikan (status approved)
             $returnedInventoryIds = InventoryReturn::where('user_id', $user->id)
                 ->where('status', 'approved')
@@ -135,7 +135,7 @@ class InventoryController extends Controller
             });
         }
 
-        $inventories = $query->latest()->paginate(10)->withQueryString();
+        $inventories = $query->latest()->paginate(10)->appends($request->query());
 
         return view('inventory.index', compact('inventories', 'pageTitle'));
     }
@@ -145,7 +145,7 @@ class InventoryController extends Controller
      */
     public function exportBranchInventory($branchId)
     {
-        if (Auth::user()->role !== 'admin') {
+        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji'])) {
             abort(403);
         }
 
@@ -160,7 +160,7 @@ class InventoryController extends Controller
      */
     public function exportAllActive()
     {
-        if (Auth::user()->role !== 'admin') {
+        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji'])) {
             abort(403);
         }
 
@@ -173,7 +173,7 @@ class InventoryController extends Controller
      */
     public function exportPusat()
     {
-        if (Auth::user()->role !== 'admin') {
+        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji'])) {
             abort(403);
         }
 
@@ -186,7 +186,7 @@ class InventoryController extends Controller
      */
     public function exportCabang()
     {
-        if (Auth::user()->role !== 'admin') {
+        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji'])) {
             abort(403);
         }
 
@@ -206,7 +206,7 @@ class InventoryController extends Controller
         $fixedUser = null; // Jika tidak null, maka form user terkunci ke orang ini
 
         // 1. JIKA ADMIN -> Bebas pilih siapa saja
-        if ($currentUser->role == 'admin') {
+        if (in_array(strtolower($currentUser->role), ['admin', 'admin_gaji'])) {
             if ($targetBranchId) {
                 $users = User::where('branch_id', $targetBranchId)->where('is_active', 1)->orderBy('name')->get();
             } else {
@@ -215,13 +215,13 @@ class InventoryController extends Controller
         }
 
         // 2. JIKA AUDIT / LEADER MEMBUKA DARI MENU CABANG
-        elseif (($currentUser->role == 'audit' || $currentUser->role == 'leader') && $targetBranchId) {
+        elseif ((strtolower($currentUser->role) == 'audit' || strtolower($currentUser->role) == 'leader') && $targetBranchId) {
 
             // Validasi: Apakah Audit/Leader berhak atas cabang ini?
             $canAccess = false;
-            if ($currentUser->role == 'leader' && $currentUser->branch_id == $targetBranchId)
+            if (strtolower($currentUser->role) == 'leader' && $currentUser->branch_id == $targetBranchId)
                 $canAccess = true;
-            if ($currentUser->role == 'audit' && in_array($targetBranchId, $currentUser->branches->pluck('id')->toArray()))
+            if (strtolower($currentUser->role) == 'audit' && in_array($targetBranchId, $currentUser->branches->pluck('id')->toArray()))
                 $canAccess = true;
 
             if ($canAccess) {
@@ -263,7 +263,7 @@ class InventoryController extends Controller
 
         // Validasi User ID
         // Jika Admin, atau (Audit/Leader dengan branch_id target) -> User ID Wajib dipilih
-        if ($user->role == 'admin' || ($request->has('target_branch_id') && in_array($user->role, ['audit', 'leader']))) {
+        if (in_array(strtolower($user->role), ['admin', 'admin_gaji']) || ($request->has('target_branch_id') && in_array(strtolower($user->role), ['audit', 'leader']))) {
             $rules['user_id'] = 'required|exists:users,id';
         }
 
@@ -273,11 +273,11 @@ class InventoryController extends Controller
             $data = $request->except(['item_photo', 'user_item_photo', 'document', 'target_branch_id']);
 
             // LOGIC USER ID
-            if ($user->role == 'admin') {
+            if (in_array(strtolower($user->role), ['admin', 'admin_gaji'])) {
                 $data['user_id'] = $request->user_id;
             }
             // LOGIC BARU: Audit/Leader Input untuk user lain di cabang
-            elseif ($request->has('target_branch_id') && in_array($user->role, ['audit', 'leader'])) {
+            elseif ($request->has('target_branch_id') && in_array(strtolower($user->role), ['audit', 'leader'])) {
                 // Pastikan user yang dipilih benar-benar ada di cabang target (Security Layer)
                 $targetUser = User::find($request->user_id);
                 if ($targetUser->branch_id != $request->target_branch_id) {
@@ -326,7 +326,7 @@ class InventoryController extends Controller
 
         // 1. Barang Gudang -> Cek hak akses untuk gudang
         if ($inventory->user_id === null) {
-            if ($user->role === 'admin') {
+            if (in_array(strtolower($user->role), ['admin', 'admin_gaji'])) {
                 return view('inventory.show', compact('inventory'));
             } else {
                 // Untuk user non-admin, cek apakah dia pernah mengembalikan barang ini
@@ -348,14 +348,14 @@ class InventoryController extends Controller
         }
 
         // 3. Admin -> Boleh Semua
-        if ($user->role == 'admin') {
+        if (in_array(strtolower($user->role), ['admin', 'admin_gaji'])) {
             return view('inventory.show', compact('inventory'));
         }
 
         // 4. Audit & Leader -> Cek Cabang
-        if (in_array($user->role, ['audit', 'leader'])) {
+        if (in_array(strtolower($user->role), ['audit', 'leader'])) {
             $allowedBranches = [];
-            if ($user->role == 'audit') {
+            if (strtolower($user->role) == 'audit') {
                 $allowedBranches = $user->branches->pluck('id')->toArray();
             } else { // Leader
                 $allowedBranches = [$user->branch_id];
@@ -374,7 +374,7 @@ class InventoryController extends Controller
      */
     public function edit($id)
     {
-        if (Auth::user()->role !== 'admin')
+        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji']))
             abort(403);
 
         $inventory = Inventory::findOrFail($id);
@@ -387,7 +387,7 @@ class InventoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (Auth::user()->role !== 'admin')
+        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji']))
             abort(403);
 
         $inventory = Inventory::findOrFail($id);
@@ -435,7 +435,7 @@ class InventoryController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        if (Auth::user()->role !== 'admin')
+        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji']))
             abort(403);
 
         $inventory = Inventory::findOrFail($id);
