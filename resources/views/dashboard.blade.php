@@ -1792,7 +1792,7 @@
                             @if (isset($leaderboard[0]))
                                 <div class="podium-step-container main-winner animate-enter" style="animation-delay: 0.5s">
                                     <div class="crown-floating">
-                                        <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Crown" width="50">
+                                        <i class="mdi mdi-crown text-warning" style="font-size: 55px; line-height: 1; text-shadow: 0 4px 15px rgba(255, 215, 0, 0.6); display: block;"></i>
                                     </div>
                                     <div class="podium-avatar-wrapper gold-glow">
                                         @if ($leaderboard[0]->user->profile_photo_path)
@@ -1918,8 +1918,9 @@
                             {{-- JUARA 1 --}}
                             @if (isset($topScanners[0]))
                                 <div class="podium-step-container main-winner">
-                                    <div class="crown-floating"><img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png"
-                                            alt="Crown" width="50"></div>
+                                    <div class="crown-floating">
+                                        <i class="mdi mdi-crown text-warning" style="font-size: 55px; line-height: 1; text-shadow: 0 4px 15px rgba(255, 215, 0, 0.6); display: block;"></i>
+                                    </div>
                                     <div class="podium-avatar-wrapper gold-glow">
                                         @if ($topScanners[0]->profile_photo_path)
                                             <img src="{{ asset('storage/' . $topScanners[0]->profile_photo_path) }}"
