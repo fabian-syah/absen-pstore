@@ -1745,8 +1745,7 @@
                                 <i class="mdi mdi-trophy text-warning me-2"></i>Top Rajin Absen
                             </h3>
                             <p class="text-muted small">
-                                {{ auth()->user()->role == 'admin' ? 'Global' : 'Cabang Anda' }} - Bulan
-                                {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                                {{ auth()->user()->role == 'admin' ? 'Global' : 'Cabang Anda' }} - Bulan {{ $currentMonthName }}
                             </p>
                         </div>
 
