@@ -1668,6 +1668,9 @@
                 document.getElementById('btn-start-record').style.display = 'inline-block';
                 document.getElementById('btn-start-record').innerHTML = '<i class="fas fa-redo me-1"></i> Rekam Ulang';
                 document.getElementById('btn-stop-record').style.display = 'none';
+
+                // Restart camera stream karena meminta izin audio seringkali membekukan video di beberapa browser (iOS/Safari)
+                setTimeout(startCameraStream, 500);
             }
         }
 
