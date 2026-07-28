@@ -11,14 +11,14 @@
 
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         {{-- TOMBOL TAMBAH BARANG --}}
-                        @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'security', 'user_biasa']))
+                        @if(in_array(strtolower(auth()->user()->role), ['admin', 'audit', 'leader', 'security', 'user_biasa', 'admin_gaji']))
                             <a href="{{ route('inventory.create') }}" class="btn btn-primary btn-sm">
                                 <i class="mdi mdi-plus"></i> Tambah Barang
                             </a>
                         @endif
 
                         {{-- TOMBOL EXPORT ADMIN ONLY --}}
-                        @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                        @if(in_array(strtolower(auth()->user()->role), ['admin', 'admin_gaji']))
                             <div class="dropdown">
                                 <button class="btn btn-success btn-sm text-white dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="mdi mdi-file-excel"></i> Export Excel
@@ -36,7 +36,7 @@
                             {{-- Tombol Utama: Text disesuaikan Role --}}
                             <a href="{{ route('inventory.index') }}"
                                 class="btn btn-sm {{ request()->routeIs('inventory.index') ? 'btn-info' : 'btn-outline-info' }}">
-                                @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                                @if(in_array(strtolower(auth()->user()->role), ['admin', 'admin_gaji']))
                                     <i class="mdi mdi-account-group"></i> Barang Aktif (Semua)
                                 @else
                                     <i class="mdi mdi-account-box"></i> Barang Saya
@@ -50,7 +50,7 @@
                             </a>
 
                             {{-- TOMBOL KHUSUS ADMIN: MASTER DATA --}}
-                            @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                            @if(in_array(strtolower(auth()->user()->role), ['admin', 'admin_gaji']))
                                 <a href="{{ route('inventory.admin.all') }}"
                                     class="btn btn-sm {{ request()->routeIs('inventory.admin.all') ? 'btn-danger' : 'btn-outline-danger' }}">
                                     <i class="mdi mdi-database"></i> Master Data (Semua)
@@ -145,7 +145,7 @@
                                             <div class="d-flex gap-1">
                                                 <a href="{{ route('inventory.show', $item->id) }}"
                                                     class="btn btn-inverse-info btn-icon btn-sm"><i class="mdi mdi-eye"></i></a>
-                                                @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                                                @if(in_array(strtolower(auth()->user()->role), ['admin', 'admin_gaji']))
                                                     <a href="{{ route('inventory.edit', $item->id) }}"
                                                         class="btn btn-inverse-warning btn-icon btn-sm"><i
                                                             class="mdi mdi-pencil"></i></a>
@@ -159,7 +159,7 @@
                                                 @php
                                                     $canReturn = false;
                                                     if ($item->user_id) {
-                                                        if (in_array(auth()->user()->role, ['admin', 'audit'])) {
+                                                        if (in_array(strtolower(auth()->user()->role), ['admin', 'audit', 'admin_gaji'])) {
                                                             $canReturn = true;
                                                         } elseif ($item->user_id == auth()->id()) {
                                                             $canReturn = true;
