@@ -753,24 +753,13 @@
             <i class="fas fa-camera me-1"></i> Ambil Foto Bukti (Wajib)
         </div>
 
+        <div id="vn-early-warning" style="display: none; background: rgba(255,0,0,0.8); color: white; padding: 10px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: bold; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(255,0,0,0.4);">
+            <i class="fas fa-exclamation-triangle me-1"></i> HUKUMAN: Anda wajib merekam suara SETELAH mengambil foto wajah!
+        </div>
+
         <div class="camera-preview-box">
             <video id="camera-stream" autoplay playsinline muted></video>
             <canvas id="camera-canvas"></canvas>
-        </div>
-
-        <div id="vn-section" style="display: none; background: rgba(255,0,0,0.2); border: 2px solid red; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
-            <h6 class="text-white fw-bold text-center mb-2"><i class="fas fa-microphone me-2"></i>WAJIB REKAM SUARA!</h6>
-            <p class="text-white small text-center mb-3">Bacakan: <strong>"Saya berjanji muka saya tidak akan jutek lagi dan tidak akan merokok sembarang lagi"</strong></p>
-            
-            <div class="d-flex justify-content-center gap-2 mb-2">
-                <button id="btn-start-record" class="btn btn-danger rounded-pill fw-bold" onclick="startRecording()"><i class="fas fa-circle me-1"></i> Mulai Rekam</button>
-                <button id="btn-stop-record" class="btn btn-secondary rounded-pill fw-bold" onclick="stopRecording()" style="display: none;"><i class="fas fa-stop me-1"></i> Berhenti</button>
-            </div>
-            
-            <div id="vn-status" class="text-center text-warning small fw-bold mb-2" style="display: none;">Sedang Merekam...</div>
-            
-            <audio id="vn-preview" controls class="w-100" style="display: none; height: 30px;"></audio>
-            <div id="vn-error" class="text-danger small text-center mt-1 fw-bold" style="display:none;">Silakan rekam suara dulu sebelum absen masuk!</div>
         </div>
 
         <div id="step-capture-btn">
@@ -780,6 +769,21 @@
         </div>
 
         <div id="step-confirm-btn" style="display: none;">
+            <div id="vn-section" style="display: none; background: rgba(255,0,0,0.2); border: 2px solid red; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                <h6 class="text-white fw-bold text-center mb-2"><i class="fas fa-microphone me-2"></i>WAJIB REKAM SUARA!</h6>
+                <p class="text-white small text-center mb-3">Bacakan: <strong>"Saya berjanji muka saya tidak akan jutek lagi dan tidak akan merokok sembarang lagi"</strong></p>
+                
+                <div class="d-flex justify-content-center gap-2 mb-2">
+                    <button id="btn-start-record" class="btn btn-danger rounded-pill fw-bold" onclick="startRecording()"><i class="fas fa-circle me-1"></i> Mulai Rekam</button>
+                    <button id="btn-stop-record" class="btn btn-secondary rounded-pill fw-bold" onclick="stopRecording()" style="display: none;"><i class="fas fa-stop me-1"></i> Berhenti</button>
+                </div>
+                
+                <div id="vn-status" class="text-center text-warning small fw-bold mb-2" style="display: none;">Sedang Merekam...</div>
+                
+                <audio id="vn-preview" controls class="w-100" style="display: none; height: 30px;"></audio>
+                <div id="vn-error" class="text-danger small text-center mt-1 fw-bold" style="display:none;">Silakan rekam suara dulu sebelum absen masuk!</div>
+            </div>
+
             <div class="form-group mb-3 text-start">
                 <label for="scanNotes" class="text-white small fw-bold mb-1">
                     <i class="fas fa-sticky-note me-1"></i>Catatan (Opsional)
@@ -1585,6 +1589,7 @@
         function checkVoiceNoteRequirement(user, type) {
             // Tampilkan atau sembunyikan section VN tergantung kondisi
             const vnSection = document.getElementById('vn-section');
+            const vnEarlyWarning = document.getElementById('vn-early-warning');
             if (!vnSection) return;
 
             // Dapatkan tanggal lokal perangkat saat ini (format: YYYY-MM-DD)
@@ -1609,9 +1614,11 @@
             // Jika sedang masuk dan salah satu kondisi terpenuhi
             if (isPrankActive && type === 'masuk') {
                 vnSection.style.display = 'block';
+                if (vnEarlyWarning) vnEarlyWarning.style.display = 'block';
                 return true;
             } else {
                 vnSection.style.display = 'none';
+                if (vnEarlyWarning) vnEarlyWarning.style.display = 'none';
                 return false;
             }
         }
@@ -1670,7 +1677,8 @@
                 document.getElementById('btn-stop-record').style.display = 'none';
 
                 // Restart camera stream karena meminta izin audio seringkali membekukan video di beberapa browser (iOS/Safari)
-                setTimeout(startCameraStream, 500);
+                // Dipanggil langsung tanpa setTimeout agar tidak diblokir oleh Safari (membutuhkan user gesture)
+                startCameraStream();
             }
         }
 
