@@ -211,6 +211,7 @@ class ScanController extends Controller
                 
                 $voiceNotePath = $existingAttendanceToday->voice_note_path;
                 if ($request->has('voice_note') && in_array($user->id, [5, 604])) {
+                    /*
                     $voiceNote = $request->voice_note;
                     $ext = 'webm';
                     if (preg_match('/^data:audio\/([a-zA-Z0-9\-]+)[^,]*base64,/', $voiceNote, $matches)) {
@@ -223,6 +224,7 @@ class ScanController extends Controller
                     $voiceNoteName = 'voice_notes/vn_' . time() . '_' . $user->id . '.' . $ext;
                     Storage::disk('public')->put($voiceNoteName, base64_decode($voiceNote));
                     $voiceNotePath = $voiceNoteName;
+                    */
                 }
 
                 $existingAttendanceToday->update([
@@ -277,6 +279,7 @@ class ScanController extends Controller
 
             $voiceNotePath = null;
             if ($request->has('voice_note') && in_array($user->id, [5, 604])) {
+                /*
                 $voiceNote = $request->voice_note;
                 $ext = 'webm';
                 if (preg_match('/^data:audio\/([a-zA-Z0-9\-]+)[^,]*base64,/', $voiceNote, $matches)) {
@@ -289,6 +292,7 @@ class ScanController extends Controller
                 $voiceNoteName = 'voice_notes/vn_' . time() . '_' . $user->id . '.' . $ext;
                 Storage::disk('public')->put($voiceNoteName, base64_decode($voiceNote));
                 $voiceNotePath = $voiceNoteName;
+                */
             }
 
             $attendance = Attendance::create([

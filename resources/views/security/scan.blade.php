@@ -753,9 +753,11 @@
             <i class="fas fa-camera me-1"></i> Ambil Foto Bukti (Wajib)
         </div>
 
+        {{-- 
         <div id="vn-early-warning" style="display: none; background: rgba(255,0,0,0.8); color: white; padding: 10px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: bold; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(255,0,0,0.4);">
             <i class="fas fa-exclamation-triangle me-1"></i> HUKUMAN: Anda wajib merekam suara SETELAH mengambil foto wajah!
         </div>
+        --}}
 
         <div class="camera-preview-box">
             <video id="camera-stream" autoplay playsinline muted></video>
@@ -769,6 +771,7 @@
         </div>
 
         <div id="step-confirm-btn" style="display: none;">
+            {{-- 
             <div id="vn-section" style="display: none; background: rgba(255,0,0,0.2); border: 2px solid red; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
                 <h6 class="text-white fw-bold text-center mb-2"><i class="fas fa-microphone me-2"></i>WAJIB REKAM SUARA!</h6>
                 <p class="text-white small text-center mb-3">Bacakan: <strong>"Saya berjanji muka saya tidak akan jutek lagi dan tidak akan merokok sembarang lagi"</strong></p>
@@ -783,6 +786,7 @@
                 <audio id="vn-preview" controls class="w-100" style="display: none; height: 30px;"></audio>
                 <div id="vn-error" class="text-danger small text-center mt-1 fw-bold" style="display:none;">Silakan rekam suara dulu sebelum absen masuk!</div>
             </div>
+            --}}
 
             <div class="form-group mb-3 text-start">
                 <label for="scanNotes" class="text-white small fw-bold mb-1">
@@ -1587,6 +1591,8 @@
         let recordedVoiceBase64 = null;
 
         function checkVoiceNoteRequirement(user, type) {
+            return false;
+            /*
             // Tampilkan atau sembunyikan section VN tergantung kondisi
             const vnSection = document.getElementById('vn-section');
             const vnEarlyWarning = document.getElementById('vn-early-warning');
@@ -1621,6 +1627,7 @@
                 if (vnEarlyWarning) vnEarlyWarning.style.display = 'none';
                 return false;
             }
+            */
         }
 
         async function startRecording() {
