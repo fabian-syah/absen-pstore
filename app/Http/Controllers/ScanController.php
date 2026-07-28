@@ -40,6 +40,14 @@ class ScanController extends Controller
             return response()->json(['status' => 'error', 'message' => 'QR Code tidak ditemukan.'], 404);
         }
 
+        // CEK KTP BLOCK
+        if (is_null($user->ktp_photo_path) && !is_null($user->ktp_countdown_start_at)) {
+            $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
+            if ($daysPassed > 7 && is_null($user->ktp_unlock_at)) {
+                return response()->json(['status' => 'error', 'message' => 'AKSES DIBLOKIR: Waktu 7 hari habis, KTP belum diupload.'], 403);
+            }
+        }
+
         // [TIMEZONE]
         $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
         $localNow = Carbon::now($branchTimezone);
@@ -134,6 +142,15 @@ class ScanController extends Controller
         ]);
 
         $user = User::with(['division', 'branch'])->find($request->user_id);
+        
+        // CEK KTP BLOCK
+        if (is_null($user->ktp_photo_path) && !is_null($user->ktp_countdown_start_at)) {
+            $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
+            if ($daysPassed > 7 && is_null($user->ktp_unlock_at)) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal: Akses diblokir karena belum upload KTP.'], 403);
+            }
+        }
+
         $securityUser = Auth::user();
         $workSchedule = WorkSchedule::getScheduleForUser($user->id);
         $currentTime = now(); // WIB Server

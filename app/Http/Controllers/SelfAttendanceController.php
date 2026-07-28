@@ -46,6 +46,14 @@ class SelfAttendanceController extends Controller
             return redirect()->route('dashboard')->with('error', 'AKSES DITOLAK: Akun Anda diatur hanya boleh absen melalui Scan Security (QR Code).');
         }
 
+        // 1.5 CEK KTP BLOCK (MANDIRI)
+        if (is_null($user->ktp_photo_path) && !is_null($user->ktp_countdown_start_at)) {
+            $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
+            if ($daysPassed > 7 && is_null($user->ktp_unlock_at)) {
+                return redirect()->route('dashboard')->with('error', 'AKSES DIBLOKIR: Waktu 7 hari habis, KTP belum diupload. Hubungi Admin/Audit cabang Anda untuk membuka akses.');
+            }
+        }
+
         // 2. CEK SESI AKTIF (Termasuk Lembur Lintas Hari)
         // Cari sesi yang belum checkout dan check_in dalam batas wajar (24 jam terakhir)
         $activeSession = Attendance::where('user_id', $user->id)
@@ -130,6 +138,15 @@ class SelfAttendanceController extends Controller
         // Security Check Layer 2
         if (Auth::user()->only_security_scan) {
             return redirect()->route('dashboard')->with('error', 'AKSES DITOLAK: Anda hanya boleh absen melalui Scan Security.');
+        }
+
+        // CEK KTP BLOCK (MANDIRI) - LAYER 2
+        $user = Auth::user();
+        if (is_null($user->ktp_photo_path) && !is_null($user->ktp_countdown_start_at)) {
+            $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
+            if ($daysPassed > 7 && is_null($user->ktp_unlock_at)) {
+                return redirect()->route('dashboard')->with('error', 'AKSES DIBLOKIR: Waktu 7 hari habis, KTP belum diupload. Hubungi Admin/Audit cabang Anda untuk membuka akses.');
+            }
         }
 
         $request->validate([
@@ -376,7 +393,7 @@ class SelfAttendanceController extends Controller
                 $notifier = new class { use \App\Traits\SendWebPushNotification; };
                 $notifier->sendWebPushToBranchRoles(['audit', 'admin'], $user->branch_id, $notifTitle, $notifBody, url('/verifikasi/absensi'));
             } catch (\Exception $e) {
-                \Log::error("Web Push Error: " . $e->getMessage());
+                Log::error("Web Push Error: " . $e->getMessage());
             }
         }
 

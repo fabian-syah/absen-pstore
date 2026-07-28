@@ -655,7 +655,12 @@ class UserController extends Controller
             return back()->with('error', 'Tidak ada file pengajuan KTP baru.');
         if ($user->ktp_photo_path) if (Storage::disk('public')->exists($user->ktp_photo_path))
             Storage::disk('public')->delete($user->ktp_photo_path);
-        $user->update(['ktp_photo_path' => $user->ktp_photo_temp_path, 'ktp_photo_temp_path' => null, 'ktp_request_status' => 'none']);
+        $user->update([
+            'ktp_photo_path' => $user->ktp_photo_temp_path, 
+            'ktp_photo_temp_path' => null, 
+            'ktp_request_status' => 'none',
+            'ktp_congrats_until' => now()->addDay(),
+        ]);
         return back()->with('success', 'Permintaan ganti KTP disetujui & file lama dihapus.');
     }
 
@@ -860,5 +865,13 @@ class UserController extends Controller
         }
 
         return back()->with('error', 'Tidak ada file yang dipilih.');
+    }
+
+    public function unlockKtpAbsensi(User $user)
+    {
+        $user->update([
+            'ktp_unlock_at' => now(),
+        ]);
+        return back()->with('success', 'Akses absensi untuk user ini telah dibuka kembali.');
     }
 }

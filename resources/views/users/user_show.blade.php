@@ -226,6 +226,21 @@
                                 <button type="button" class="btn btn-info btn-sm text-white w-100 mt-1" data-bs-toggle="modal" data-bs-target="#ktpPhotoModal"><i class="mdi mdi-card-account-details-outline"></i> Lihat Foto KTP</button>
                             @else
                                 <button type="button" class="btn btn-secondary btn-sm w-100 mt-1" disabled><i class="mdi mdi-close-circle-outline"></i> KTP Belum Diupload</button>
+                                
+                                {{-- UNLOCK KTP (ADMIN / AUDIT ONLY) --}}
+                                @if (in_array(auth()->user()->role, ['admin', 'audit']) && !is_null($user->ktp_countdown_start_at) && is_null($user->ktp_unlock_at))
+                                    @php
+                                        $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
+                                    @endphp
+                                    @if($daysPassed > 7)
+                                        <form action="{{ route('users.unlock-ktp', $user->id) }}" method="POST" class="mt-1">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold" onclick="return confirm('Buka blokir absensi untuk user ini?')">
+                                                <i class="mdi mdi-lock-open-variant text-dark"></i> Buka Blokir KTP
+                                            </button>
+                                        </form>
+                                    @endif
+                                @endif
                             @endif
                         </div>
                     @endif

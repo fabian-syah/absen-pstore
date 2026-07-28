@@ -581,8 +581,46 @@
                 </div>
             </div>
         </div>
+        </div>
     @endif
 
+    {{-- ======================================================================= --}}
+    {{-- [NEW] KTP RESTRICTION WARNING / CONGRATS BANNER --}}
+    {{-- ======================================================================= --}}
+    @if(Auth::user()->ktp_congrats_until && Auth::user()->ktp_congrats_until > now())
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-success border-0 shadow-sm d-flex align-items-center mb-0" style="border-radius: 14px;">
+                    <i class="mdi mdi-check-decagram fs-2 me-3 text-success"></i>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-success">Selamat, Anda berhasil upload KTP!</h5>
+                        <p class="mb-0 small">Terima kasih telah melengkapi data identitas Anda.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @elseif(!Auth::user()->ktp_photo_path && Auth::user()->ktp_countdown_start_at)
+        @php
+            $daysPassed = now()->diffInDays(\Carbon\Carbon::parse(Auth::user()->ktp_countdown_start_at));
+            $daysLeft = 7 - $daysPassed;
+        @endphp
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert {{ $daysLeft <= 0 ? 'alert-danger' : 'alert-warning' }} border-0 shadow-sm d-flex align-items-center mb-0" style="border-radius: 14px;">
+                    <i class="mdi {{ $daysLeft <= 0 ? 'mdi-close-octagon' : 'mdi-alert' }} fs-2 me-3"></i>
+                    <div>
+                        @if($daysLeft <= 0)
+                            <h5 class="fw-bold mb-1 text-danger">Akses Absensi Diblokir!</h5>
+                            <p class="mb-0 small">Batas waktu 7 hari upload KTP telah habis. Silakan upload KTP sekarang, lalu hubungi Admin/Audit untuk membuka blokir absensi Anda.</p>
+                        @else
+                            <h5 class="fw-bold mb-1 text-warning">Peringatan Keras: Wajib Upload KTP</h5>
+                            <p class="mb-0 small">Batas waktu upload KTP tersisa <strong>{{ $daysLeft }} Hari</strong> lagi. Jika melewati batas, absensi Anda (Mandiri & Scan) akan <strong>DIBLOKIR otomatis</strong>!</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     {{-- ======================================================================= --}}
     {{-- [NEW] BANNER KLAIM HADIAH SCANNER (Top 1 Only) --}}

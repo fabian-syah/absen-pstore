@@ -469,6 +469,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
         Route::patch('/users/{user}/verify', [UserController::class, 'verifyUser'])->name('users.verify');
+        Route::patch('/users/{user}/unlock-ktp', [UserController::class, 'unlockKtpAbsensi'])->name('users.unlock-ktp');
 
         // VERIFIKASI ABSENSI
         Route::prefix('verifikasi')->name('audit.')->group(function () {

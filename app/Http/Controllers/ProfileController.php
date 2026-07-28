@@ -186,7 +186,10 @@ class ProfileController extends Controller
         }
 
         $path = $request->file('ktp_photo')->store('ktp_photos', 'public');
-        $user->update(['ktp_photo_path' => $path]);
+        $user->update([
+            'ktp_photo_path' => $path,
+            'ktp_congrats_until' => now()->addDay(), // Kasih selamat 1 hari
+        ]);
 
         return back()->with('success', 'KTP berhasil diupload.');
     }
