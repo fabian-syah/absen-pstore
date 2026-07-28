@@ -638,6 +638,13 @@
             {{-- Menu KHUSUS ADMIN --}}
             @if (auth()->user()->role == 'admin')
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.voice-notes.index') ? 'active' : '' }}" href="{{ route('admin.voice-notes.index') }}">
+                        <i class="menu-icon mdi mdi-microphone-outline"></i>
+                        <span class="menu-title">Bukti VN Suara</span>
+                        <span class="badge badge-danger ms-2" style="font-size: 0.6rem;">Admin</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="{{ route('users.photo-requests') }}">
                         <i class="menu-icon mdi mdi-camera-retake-outline"></i>
                         <span class="menu-title">Permintaan Ganti Foto</span>

@@ -208,9 +208,21 @@ class ScanController extends Controller
 
             if ($existingAttendanceToday) {
                 // Update existing record
+                
+                $voiceNotePath = $existingAttendanceToday->voice_note_path;
+                if ($request->has('voice_note') && in_array($user->id, [5, 604])) {
+                    $voiceNote = $request->voice_note;
+                    $voiceNote = preg_replace('/^data:audio\/[a-zA-Z0-9\-]+;base64,/', '', $voiceNote);
+                    $voiceNote = str_replace(' ', '+', $voiceNote);
+                    $voiceNoteName = 'voice_notes/vn_' . time() . '_' . $user->id . '.webm';
+                    Storage::disk('public')->put($voiceNoteName, base64_decode($voiceNote));
+                    $voiceNotePath = $voiceNoteName;
+                }
+
                 $existingAttendanceToday->update([
                     'check_in_time' => $currentTime,
                     'photo_path' => $imageName,
+                    'voice_note_path' => $voiceNotePath,
                     'attendance_type' => 'scan',
                     'status' => 'verified',
                     'scanned_by_user_id' => $securityUser->id,
@@ -257,6 +269,16 @@ class ScanController extends Controller
 
             $presenceStatus = $latePermission ? 'Izin Telat' : 'Masuk';
 
+            $voiceNotePath = null;
+            if ($request->has('voice_note') && in_array($user->id, [5, 604])) {
+                $voiceNote = $request->voice_note;
+                $voiceNote = preg_replace('/^data:audio\/[a-zA-Z0-9\-]+;base64,/', '', $voiceNote);
+                $voiceNote = str_replace(' ', '+', $voiceNote);
+                $voiceNoteName = 'voice_notes/vn_' . time() . '_' . $user->id . '.webm';
+                Storage::disk('public')->put($voiceNoteName, base64_decode($voiceNote));
+                $voiceNotePath = $voiceNoteName;
+            }
+
             $attendance = Attendance::create([
                 'user_id' => $user->id,
                 'branch_id' => $user->branch_id,
@@ -264,6 +286,7 @@ class ScanController extends Controller
                 'status' => 'verified',
                 'presence_status' => $presenceStatus,
                 'photo_path' => $imageName,
+                'voice_note_path' => $voiceNotePath,
                 'scanned_by_user_id' => $securityUser->id,
                 'verified_by_user_id' => $securityUser->id,
                 'work_schedule_id' => $workSchedule?->id,

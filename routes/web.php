@@ -149,6 +149,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/my-wrapped-2025', [App\Http\Controllers\AttendanceRecapController::class, 'index'])->name('attendance.recap');
 
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+        
+        // Voice Notes
+        Route::get('/voice-notes', [App\Http\Controllers\VoiceNoteController::class, 'index'])->name('voice-notes.index');
 
         // Halaman Utama Koreksi
         Route::get('/correction', [AttendanceCorrectionController::class, 'index'])->name('correction.index');

@@ -765,6 +765,21 @@
         </div>
 
         <div id="step-confirm-btn" style="display: none;">
+            <div id="vn-section" style="display: none; background: rgba(255,0,0,0.2); border: 2px solid red; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                <h6 class="text-white fw-bold text-center mb-2"><i class="fas fa-microphone me-2"></i>WAJIB REKAM SUARA!</h6>
+                <p class="text-white small text-center mb-3">Bacakan: <strong>"Saya berjanji muka saya tidak akan jutek lagi dan tidak akan merokok sembarang lagi"</strong></p>
+                
+                <div class="d-flex justify-content-center gap-2 mb-2">
+                    <button id="btn-start-record" class="btn btn-danger rounded-pill fw-bold" onclick="startRecording()"><i class="fas fa-circle me-1"></i> Mulai Rekam</button>
+                    <button id="btn-stop-record" class="btn btn-secondary rounded-pill fw-bold" onclick="stopRecording()" style="display: none;"><i class="fas fa-stop me-1"></i> Berhenti</button>
+                </div>
+                
+                <div id="vn-status" class="text-center text-warning small fw-bold mb-2" style="display: none;">Sedang Merekam...</div>
+                
+                <audio id="vn-preview" controls class="w-100" style="display: none; height: 30px;"></audio>
+                <div id="vn-error" class="text-danger small text-center mt-1 fw-bold" style="display:none;">Silakan rekam suara dulu sebelum absen masuk!</div>
+            </div>
+
             <div class="form-group mb-3 text-start">
                 <label for="scanNotes" class="text-white small fw-bold mb-1">
                     <i class="fas fa-sticky-note me-1"></i>Catatan (Opsional)
@@ -1198,6 +1213,11 @@
             // Reset UI State
             retakePhoto();
             document.getElementById('scanNotes').value = '';
+            recordedVoiceBase64 = null; // Reset VN
+            document.getElementById('vn-preview').style.display = 'none';
+
+            // Cek apakah butuh VN
+            checkVoiceNoteRequirement(user, 'masuk');
 
             // Hide QR section, show verification
             document.getElementById('qrSection').style.display = 'none';
@@ -1321,6 +1341,15 @@
                 alert("Silakan ambil foto terlebih dahulu.");
                 return;
             }
+            
+            // Cek apakah butuh VN dan belum direkam
+            if (checkVoiceNoteRequirement(currentUserData, type) && !recordedVoiceBase64) {
+                document.getElementById('vn-error').style.display = 'block';
+                // Scroll to VN section
+                const overlay = document.getElementById('verifSection');
+                overlay.scrollTop = 0;
+                return;
+            }
 
             const btn = document.querySelector(`.btn-${type}`);
             const originalContent = btn.innerHTML;
@@ -1343,7 +1372,8 @@
                     user_id: currentUserId,
                     type: type,
                     image: capturedImageBase64,
-                    notes: notes
+                    notes: notes,
+                    voice_note: recordedVoiceBase64
                 })
             })
                 .then(async res => {
@@ -1546,6 +1576,82 @@
             // Mulai scanner lagi
             startQRScanner();
         }
+
+        // --- VOICE NOTE PRANK LOGIC ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordedVoiceBase64 = null;
+
+        function checkVoiceNoteRequirement(user, type) {
+            // Tampilkan atau sembunyikan section VN tergantung kondisi
+            const vnSection = document.getElementById('vn-section');
+            if (!vnSection) return;
+
+            // Jika user 5 atau 604 dan tipe absennya 'masuk', maka harus VN
+            if ((user.id === 5 || user.id === 604) && type === 'masuk') {
+                vnSection.style.display = 'block';
+                return true;
+            } else {
+                vnSection.style.display = 'none';
+                return false;
+            }
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const preview = document.getElementById('vn-preview');
+                    preview.src = audioUrl;
+                    preview.style.display = 'block';
+
+                    // Convert blob to base64
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = function() {
+                        recordedVoiceBase64 = reader.result;
+                    }
+
+                    document.getElementById('vn-status').innerText = "Rekaman Selesai!";
+                    document.getElementById('vn-status').className = "text-center text-success small fw-bold mb-2";
+                };
+
+                mediaRecorder.start();
+                
+                document.getElementById('btn-start-record').style.display = 'none';
+                document.getElementById('btn-stop-record').style.display = 'inline-block';
+                
+                document.getElementById('vn-status').style.display = 'block';
+                document.getElementById('vn-status').innerText = "Sedang Merekam...";
+                document.getElementById('vn-status').className = "text-center text-warning small fw-bold mb-2";
+                document.getElementById('vn-error').style.display = 'none';
+                
+            } catch (err) {
+                console.error("Gagal merekam suara", err);
+                alert("Gagal mengakses mikrofon. Pastikan Anda memberikan izin akses mikrofon di browser.");
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                
+                document.getElementById('btn-start-record').style.display = 'inline-block';
+                document.getElementById('btn-start-record').innerHTML = '<i class="fas fa-redo me-1"></i> Rekam Ulang';
+                document.getElementById('btn-stop-record').style.display = 'none';
+            }
+        }
+
 
         // Handle back button
         window.addEventListener('popstate', function (event) {
