@@ -239,7 +239,13 @@ class DashboardController extends Controller
         // =========================================================================
 
         // Define Leaderboard Date Range (26th of previous month to 25th of current month)
-        $dateObjMonth = Carbon::createFromDate($nowInBranch->year, $nowInBranch->month, 1, $userTimezone);
+        // [FIX] Jika hari ini sudah lewat dari tanggal 25, maka hitungan masuk ke bulan berikutnya
+        $targetDate = $nowInBranch->copy();
+        if ($targetDate->day > 25) {
+            $targetDate->addMonth();
+        }
+        
+        $dateObjMonth = Carbon::createFromDate($targetDate->year, $targetDate->month, 1, $userTimezone);
         $startDateMonth = $dateObjMonth->copy()->subMonth()->day(26)->startOfDay();
         $endDateMonth = $dateObjMonth->copy()->day(25)->endOfDay();
 
@@ -356,7 +362,7 @@ class DashboardController extends Controller
             $data['attendanceGallery'] = collect(); // Empty collection
         }
 
-        $data['currentMonthName'] = $nowInBranch->translatedFormat('F Y');
+        $data['currentMonthName'] = $targetDate->translatedFormat('F Y');
 
         // =========================================================================
         // 6. DASHBOARD WIDGETS LOGIC
@@ -454,7 +460,7 @@ class DashboardController extends Controller
         // =========================================================================
         // [FIXED] LOGIKA HALL OF FAME: HITUNG LIVE PER CABANG
         // =========================================================================
-        $lastMonth = $nowInBranch->copy()->subMonth();
+        $lastMonth = $targetDate->copy()->subMonth();
         $data['lastMonthName'] = $lastMonth->translatedFormat('F Y');
 
         $dateObjLastMonth = Carbon::createFromDate($lastMonth->year, $lastMonth->month, 1, $userTimezone);

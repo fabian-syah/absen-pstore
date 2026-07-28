@@ -76,6 +76,11 @@ class BranchLeaderboardController extends Controller
 
     private function getLeaderboardData($branchId)
     {
+        $targetDate = Carbon::now();
+        if ($targetDate->day > 25) {
+            $targetDate->addMonth();
+        }
+
         return Attendance::select(
             'user_id',
             DB::raw('count(DISTINCT DATE(check_in_time)) as total_attendance'),
@@ -83,8 +88,8 @@ class BranchLeaderboardController extends Controller
             DB::raw('SUM(COALESCE(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time), 0)) as total_work_seconds')
         )
             ->whereBetween('check_in_time', [
-                Carbon::now()->startOfMonth()->subMonth()->day(26)->startOfDay()->timezone(config('app.timezone'))->format('Y-m-d H:i:s'),
-                Carbon::now()->startOfMonth()->day(25)->endOfDay()->timezone(config('app.timezone'))->format('Y-m-d H:i:s')
+                $targetDate->copy()->startOfMonth()->subMonth()->day(26)->startOfDay()->timezone(config('app.timezone'))->format('Y-m-d H:i:s'),
+                $targetDate->copy()->startOfMonth()->day(25)->endOfDay()->timezone(config('app.timezone'))->format('Y-m-d H:i:s')
             ])
             ->where('status', 'verified')
             // [SYNC] Samakan daftar status dengan DashboardController
