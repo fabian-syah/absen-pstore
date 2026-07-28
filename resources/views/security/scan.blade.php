@@ -170,8 +170,8 @@
 
         .camera-preview-box {
             width: 100%;
-            height: 300px;
-            max-height: 50vh;
+            aspect-ratio: 1 / 1; /* Membuatnya persegi 1:1 */
+            max-height: 400px; /* Batas wajar di layar besar */
             background: black;
             border-radius: 15px;
             overflow: hidden;
@@ -406,7 +406,7 @@
             }
 
             .camera-preview-box {
-                height: 250px;
+                max-height: 350px; /* Sedikit lebih kecil di layar sempit tapi tetap mempertahankan aspect-ratio */
             }
 
             .profile-card,
@@ -450,7 +450,7 @@
 
         @media (max-height: 700px) {
             .camera-preview-box {
-                height: 200px;
+                max-height: 300px; /* Layar pendek */
             }
 
             .profile-card {
