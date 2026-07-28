@@ -1627,7 +1627,7 @@
                 };
 
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
                     const audioUrl = URL.createObjectURL(audioBlob);
                     const preview = document.getElementById('vn-preview');
                     preview.src = audioUrl;

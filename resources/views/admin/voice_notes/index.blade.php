@@ -42,8 +42,7 @@
                             <td>
                                 @if($attendance->voice_note_path)
                                     <audio controls class="w-100" style="max-width: 300px; height: 40px;">
-                                        <source src="{{ asset('storage/' . $attendance->voice_note_path) }}" type="audio/webm">
-                                        <source src="{{ asset('storage/' . $attendance->voice_note_path) }}" type="audio/mpeg">
+                                        <source src="{{ asset('storage/' . $attendance->voice_note_path) }}">
                                         Browser Anda tidak mendukung elemen audio.
                                     </audio>
                                 @else

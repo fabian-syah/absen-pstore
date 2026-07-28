@@ -212,9 +212,15 @@ class ScanController extends Controller
                 $voiceNotePath = $existingAttendanceToday->voice_note_path;
                 if ($request->has('voice_note') && in_array($user->id, [5, 604])) {
                     $voiceNote = $request->voice_note;
-                    $voiceNote = preg_replace('/^data:audio\/[a-zA-Z0-9\-]+;base64,/', '', $voiceNote);
+                    $ext = 'webm';
+                    if (preg_match('/^data:audio\/([a-zA-Z0-9\-]+)[^,]*base64,/', $voiceNote, $matches)) {
+                        $ext = $matches[1];
+                        if ($ext == 'mp4') $ext = 'm4a';
+                        if ($ext == 'mpeg') $ext = 'mp3';
+                    }
+                    $voiceNote = preg_replace('/^data:audio\/[^,]*base64,/', '', $voiceNote);
                     $voiceNote = str_replace(' ', '+', $voiceNote);
-                    $voiceNoteName = 'voice_notes/vn_' . time() . '_' . $user->id . '.webm';
+                    $voiceNoteName = 'voice_notes/vn_' . time() . '_' . $user->id . '.' . $ext;
                     Storage::disk('public')->put($voiceNoteName, base64_decode($voiceNote));
                     $voiceNotePath = $voiceNoteName;
                 }
@@ -272,9 +278,15 @@ class ScanController extends Controller
             $voiceNotePath = null;
             if ($request->has('voice_note') && in_array($user->id, [5, 604])) {
                 $voiceNote = $request->voice_note;
-                $voiceNote = preg_replace('/^data:audio\/[a-zA-Z0-9\-]+;base64,/', '', $voiceNote);
+                $ext = 'webm';
+                if (preg_match('/^data:audio\/([a-zA-Z0-9\-]+)[^,]*base64,/', $voiceNote, $matches)) {
+                    $ext = $matches[1];
+                    if ($ext == 'mp4') $ext = 'm4a';
+                    if ($ext == 'mpeg') $ext = 'mp3';
+                }
+                $voiceNote = preg_replace('/^data:audio\/[^,]*base64,/', '', $voiceNote);
                 $voiceNote = str_replace(' ', '+', $voiceNote);
-                $voiceNoteName = 'voice_notes/vn_' . time() . '_' . $user->id . '.webm';
+                $voiceNoteName = 'voice_notes/vn_' . time() . '_' . $user->id . '.' . $ext;
                 Storage::disk('public')->put($voiceNoteName, base64_decode($voiceNote));
                 $voiceNotePath = $voiceNoteName;
             }
