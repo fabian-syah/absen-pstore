@@ -533,55 +533,7 @@
         }
     </script>
 
-    {{-- POPUP WARNING: UPLOAD KTP & FOTO PROFIL --}}
-    {{-- ======================================================================= --}}
-    @if ((!Auth::user()->ktp_photo_path || !Auth::user()->profile_photo_path) && Auth::user()->role != 'admin_gaji' && Auth::user()->role != 'admin')
-        <div id="documentWarningModal" class="document-warning-overlay">
-            <div class="document-warning-modal">
-                {{-- Close Button --}}
-                <button type="button" class="document-warning-close" onclick="closeDocumentWarning()">
-                    <i class="mdi mdi-close"></i>
-                </button>
 
-                {{-- Icon --}}
-                <div class="document-warning-icon">
-                    <i class="mdi mdi-alert-circle-outline"></i>
-                </div>
-
-                {{-- Content --}}
-                <h4 class="document-warning-title">Perhatian!</h4>
-                <div class="document-warning-content">
-                    <p class="mb-3">
-                        Akun Anda <strong>belum melengkapi dokumen penting</strong> berikut:
-                    </p>
-
-                    <ul class="document-warning-list">
-                        @if (!Auth::user()->profile_photo_path)
-                            <li><i class="mdi mdi-camera text-danger me-2"></i> <strong>Foto Profil</strong> belum di-upload</li>
-                        @endif
-                        @if (!Auth::user()->ktp_photo_path)
-                            <li><i class="mdi mdi-card-account-details text-danger me-2"></i> <strong>Foto KTP</strong> belum
-                                di-upload</li>
-                        @endif
-                    </ul>
-
-                    <div class="document-warning-alert">
-                        <i class="mdi mdi-alert-octagon me-2"></i>
-                        <span>
-                            <strong>PERINGATAN:</strong> Jika Anda tidak meng-upload <strong>Foto Profil</strong> dan
-                            <strong>Foto KTP</strong>
-                            dalam waktu <strong class="text-danger">7 hari</strong>, akun Anda akan <strong
-                                class="text-danger">di-banned otomatis</strong> oleh sistem.
-                        </span>
-                    </div>
-
-                    <a href="{{ route('profile.edit') }}" class="btn btn-danger btn-lg w-100 mt-3 shadow-lg">
-                        <i class="mdi mdi-upload me-2"></i> Upload Sekarang
-                    </a>
-                </div>
-            </div>
-        </div>
-    @endif
 
     {{-- ======================================================================= --}}
     {{-- [NEW] KTP RESTRICTION WARNING / CONGRATS BANNER --}}
