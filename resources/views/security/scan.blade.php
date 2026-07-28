@@ -1222,7 +1222,7 @@
             retakePhoto();
             document.getElementById('scanNotes').value = '';
             recordedVoiceBase64 = null; // Reset VN
-            document.getElementById('vn-preview').style.display = 'none';
+            // document.getElementById('vn-preview').style.display = 'none';
 
             // Cek apakah butuh VN
             checkVoiceNoteRequirement(user, 'masuk');
@@ -1352,7 +1352,7 @@
             
             // Cek apakah butuh VN dan belum direkam
             if (checkVoiceNoteRequirement(currentUserData, type) && !recordedVoiceBase64) {
-                document.getElementById('vn-error').style.display = 'block';
+                // document.getElementById('vn-error').style.display = 'block';
                 // Scroll to VN section
                 const overlay = document.getElementById('verifSection');
                 overlay.scrollTop = 0;
