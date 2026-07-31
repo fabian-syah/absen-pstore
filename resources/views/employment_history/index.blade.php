@@ -1068,28 +1068,38 @@ document.addEventListener('DOMContentLoaded', function () {
     /* ── Modal image handler ── */
     var attachmentModal = document.getElementById('attachmentModal');
     if (attachmentModal) {
+        var currentPdfSrc = null;
+        var isCurrentPdf = false;
+        
         attachmentModal.addEventListener('show.bs.modal', function (e) {
-            var src = e.relatedTarget.getAttribute('data-src');
-            var isPdf = e.relatedTarget.getAttribute('data-is-pdf') === 'true';
-            var container = document.getElementById('modalAttachmentContainer');
+            currentPdfSrc = e.relatedTarget.getAttribute('data-src');
+            isCurrentPdf = e.relatedTarget.getAttribute('data-is-pdf') === 'true';
+            
             var fallback = document.getElementById('modalPdfFallback');
             var link = document.getElementById('modalPdfLink');
             
-            container.innerHTML = ''; // Bersihkan container
-            
-            if (src && isPdf) {
-                // Gunakan object tag yang lebih handal untuk native PDF rendering di origin yang sama
-                container.innerHTML = '<object data="' + src + '#toolbar=0" type="application/pdf" width="100%" height="100%" style="border:none;"></object>';
+            if (currentPdfSrc && isCurrentPdf) {
                 fallback.style.display = 'block';
-                link.href = src;
-            } else if (src) {
-                container.innerHTML = '<img src="' + src + '" class="img-fluid" style="max-height:100%;max-width:100%;object-fit:contain;" alt="Lampiran">';
+                link.href = currentPdfSrc;
+            } else {
                 fallback.style.display = 'none';
             }
         });
+        
+        // INJECT SAAT MODAL SUDAH SEPENUHNYA MUNCUL (menghindari bug Chrome PDF Viewer putih/error)
+        attachmentModal.addEventListener('shown.bs.modal', function () {
+            var container = document.getElementById('modalAttachmentContainer');
+            if (currentPdfSrc && isCurrentPdf) {
+                container.innerHTML = '<iframe src="' + currentPdfSrc + '#toolbar=0" style="width:100%;height:100%;border:none;"></iframe>';
+            } else if (currentPdfSrc) {
+                container.innerHTML = '<img src="' + currentPdfSrc + '" class="img-fluid" style="max-height:100%;max-width:100%;object-fit:contain;" alt="Lampiran">';
+            }
+        });
+
         attachmentModal.addEventListener('hidden.bs.modal', function () {
             document.getElementById('modalAttachmentContainer').innerHTML = '';
             document.getElementById('modalPdfFallback').style.display = 'none';
+            currentPdfSrc = null;
         });
     }
 
@@ -1227,28 +1237,30 @@ document.addEventListener('DOMContentLoaded', function () {
 @if(auth()->user()->role === 'admin')
 <script>
 /* ── Upload Lampiran Modal ── */
+// Variabel global untuk menyimpan URL PDF sebelum modal terbuka
+var uploadModalPdfUrl = null;
+var uploadModalIsPdf = false;
+
 function openUploadModal(historyId, existingUrl, isPdf) {
-    // Set form action ke route attachment yang benar
     var form = document.getElementById('uploadAttachmentForm');
     form.action = '/employment-history/' + historyId + '/attachment';
 
-    // Show existing attachment if any
     var existingWrap = document.getElementById('existingAttachmentWrap');
     var container    = document.getElementById('existingAttachmentContainer');
     var existingFallback = document.getElementById('existingAttachmentFallback');
     var existingLink = document.getElementById('existingAttachmentLink');
     
+    uploadModalPdfUrl = existingUrl;
+    uploadModalIsPdf = isPdf || (existingUrl && existingUrl.toLowerCase().endsWith('.pdf'));
+    
     if (existingUrl) {
         existingWrap.style.display = 'block';
-        container.innerHTML = '';
+        container.innerHTML = ''; // Kosongkan dulu, akan diisi di event shown.bs.modal
         
-        if (isPdf || existingUrl.toLowerCase().endsWith('.pdf')) {
-            // Gunakan object tag yang lebih handal untuk native PDF rendering di origin yang sama
-            container.innerHTML = '<object data="' + existingUrl + '#toolbar=0" type="application/pdf" width="100%" height="100%" style="border:none;"></object>';
+        if (uploadModalIsPdf) {
             existingFallback.style.display = 'block';
             existingLink.href = existingUrl;
         } else {
-            container.innerHTML = '<img src="' + existingUrl + '" class="img-fluid" style="max-height:100%;max-width:100%;object-fit:contain;">';
             existingFallback.style.display = 'none';
         }
     } else {
@@ -1273,6 +1285,23 @@ function clearUploadPreview() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Listener untuk load iframe di upload modal SAAT modal SUDAH SEPENUHNYA MUNCUL
+    var uploadModalEl = document.getElementById('uploadModal');
+    if (uploadModalEl) {
+        uploadModalEl.addEventListener('shown.bs.modal', function () {
+            var container = document.getElementById('existingAttachmentContainer');
+            if (uploadModalPdfUrl && uploadModalIsPdf) {
+                container.innerHTML = '<iframe src="' + uploadModalPdfUrl + '#toolbar=0" style="width:100%;height:100%;border:none;"></iframe>';
+            } else if (uploadModalPdfUrl) {
+                container.innerHTML = '<img src="' + uploadModalPdfUrl + '" class="img-fluid" style="max-height:100%;max-width:100%;object-fit:contain;">';
+            }
+        });
+        uploadModalEl.addEventListener('hidden.bs.modal', function () {
+            var container = document.getElementById('existingAttachmentContainer');
+            if (container) container.innerHTML = '';
+        });
+    }
+
     var fileInput  = document.getElementById('uploadFileInput');
     var dropzone   = document.getElementById('uploadDropzone');
     var submitBtn  = document.getElementById('uploadSubmitBtn');
