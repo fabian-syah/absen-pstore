@@ -399,6 +399,71 @@
         color: #fff;
         box-shadow: 0 4px 10px rgba(239,68,68,.35);
     }
+    .action-btn-upload {
+        background: rgba(99,102,241,.1);
+        color: #6366f1;
+    }
+    .action-btn-upload:hover {
+        background: #6366f1;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(99,102,241,.35);
+    }
+
+    /* Upload Modal */
+    .upload-dropzone {
+        border: 2px dashed rgba(99,102,241,.35);
+        border-radius: 14px;
+        padding: 2rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all .25s;
+        background: rgba(99,102,241,.03);
+        position: relative;
+    }
+    .upload-dropzone:hover, .upload-dropzone.dragover {
+        border-color: #6366f1;
+        background: rgba(99,102,241,.08);
+    }
+    .upload-dropzone input[type=file] {
+        position: absolute; inset: 0;
+        opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-preview {
+        display: none;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 1rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,.1);
+        position: relative;
+    }
+    .upload-preview img {
+        width: 100%; max-height: 200px; object-fit: contain;
+        background: #f8f9fa;
+    }
+    .upload-preview-pdf {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        display: none;
+        align-items: center;
+        gap: 1rem;
+    }
+    .file-info-chips {
+        display: flex; flex-wrap: wrap; gap: .5rem;
+        margin-top: 1rem;
+    }
+    .file-info-chip {
+        display: inline-flex; align-items: center; gap: 4px;
+        background: #f1f5f9;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: .75rem;
+        color: #64748b;
+        font-weight: 600;
+    }
+    .file-info-chip.chip-ok { background: rgba(16,185,129,.1); color: #059669; }
+    .file-info-chip.chip-warn { background: rgba(245,158,11,.1); color: #d97706; }
 
     /* Empty State */
     .empty-state {
@@ -582,9 +647,18 @@
 
     {{-- Selected Employee Strip --}}
     <div class="selected-employee-strip" id="selectedEmployeeStrip">
-        <div class="selected-avatar-lg" id="selectedAvatar">
-            {{ strtoupper(substr($targetUser->name, 0, 2)) }}
-        </div>
+        {{-- Avatar: foto profil atau inisial --}}
+        @if($targetUser->profile_photo_path)
+            <img src="{{ asset('storage/' . $targetUser->profile_photo_path) }}"
+                 class="selected-avatar-lg"
+                 style="object-fit:cover;padding:0;"
+                 alt="{{ $targetUser->name }}"
+                 onerror="this.outerHTML='<div class=&quot;selected-avatar-lg&quot; id=&quot;selectedAvatar&quot;>{{ strtoupper(substr($targetUser->name, 0, 2)) }}</div>'">
+        @else
+            <div class="selected-avatar-lg" id="selectedAvatar">
+                {{ strtoupper(substr($targetUser->name, 0, 2)) }}
+            </div>
+        @endif
         <div style="flex:1; min-width:0;">
             <div class="selected-employee-name" id="selectedName">{{ $targetUser->name }}</div>
             <div class="selected-employee-meta">
@@ -595,7 +669,21 @@
                 &nbsp;{{ $targetUser->branch->name ?? 'Pusat / Non-Cabang' }}
             </div>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-2">
+            {{-- Tombol Mode Edit: hanya admin --}}
+            @if(auth()->user()->role === 'admin')
+                @if(request()->get('mode') == 'edit')
+                    <a href="{{ route('employment-history.index', ['user_id' => $targetUser->id]) }}"
+                       class="action-btn" style="background:rgba(16,185,129,.12);color:#10b981;" title="Keluar Mode Edit">
+                        <i class="mdi mdi-pencil-off-outline"></i>
+                    </a>
+                @else
+                    <a href="{{ route('employment-history.index', ['user_id' => $targetUser->id, 'mode' => 'edit']) }}"
+                       class="action-btn action-btn-edit" title="Aktifkan Mode Edit Riwayat">
+                        <i class="mdi mdi-pencil-outline"></i>
+                    </a>
+                @endif
+            @endif
             <i class="mdi mdi-check-circle text-success" style="font-size:1.4rem;opacity:.7;"></i>
         </div>
     </div>
@@ -666,9 +754,19 @@
                                 </div>
                                 {{-- Actions --}}
                                 <div class="d-flex gap-1 flex-shrink-0">
+                                    {{-- Tombol Upload Lampiran: khusus admin --}}
+                                    @if(auth()->user()->role === 'admin')
+                                        <button type="button"
+                                                class="action-btn action-btn-upload"
+                                                title="Upload / Ganti Lampiran"
+                                                onclick="openUploadModal({{ $history->id }}, '{{ $history->attachment ? asset('storage/' . $history->attachment) : '' }}')"
+                                        >
+                                            <i class="mdi mdi-image-edit-outline"></i>
+                                        </button>
+                                    @endif
                                     @if($canEdit)
                                         <a href="{{ route('employment-history.edit', $history->id) }}"
-                                           class="action-btn action-btn-edit" title="Edit">
+                                           class="action-btn action-btn-edit" title="Edit Data">
                                             <i class="mdi mdi-pencil-outline"></i>
                                         </a>
                                     @endif
@@ -847,6 +945,94 @@
     </div>
 </div>
 
+{{-- ========================================================
+     MODAL — UPLOAD LAMPIRAN (Admin Only)
+     ======================================================== --}}
+@if(auth()->user()->role === 'admin')
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:500px;">
+        <div class="modal-content" style="border-radius:20px;border:none;overflow:hidden;">
+            <div class="modal-header border-0" style="background:linear-gradient(135deg,#6366f1,#4f46e5);padding:1.25rem 1.5rem;">
+                <div>
+                    <h5 class="modal-title text-white fw-bold mb-0">
+                        <i class="mdi mdi-image-edit-outline me-2"></i>Upload Lampiran
+                    </h5>
+                    <p class="text-white mb-0" style="font-size:.78rem;opacity:.8;">Foto atau dokumen pendukung riwayat ini</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+
+                {{-- File info chips --}}
+                <div class="file-info-chips mb-3">
+                    <span class="file-info-chip chip-ok"><i class="mdi mdi-image-outline"></i> JPG, PNG, WebP</span>
+                    <span class="file-info-chip chip-ok"><i class="mdi mdi-file-pdf-box"></i> PDF</span>
+                    <span class="file-info-chip chip-warn"><i class="mdi mdi-weight"></i> Maks 5 MB</span>
+                </div>
+
+                {{-- Existing attachment preview --}}
+                <div id="existingAttachmentWrap" style="display:none;margin-bottom:1rem;">
+                    <p style="font-size:.78rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem;">
+                        Lampiran Saat Ini
+                    </p>
+                    <div style="border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;">
+                        <img id="existingAttachmentImg" src="" class="img-fluid" style="max-height:120px;width:100%;object-fit:contain;background:#f8f9fa;">
+                    </div>
+                </div>
+
+                {{-- Upload form — action diset oleh JS via openUploadModal() --}}
+                <form id="uploadAttachmentForm"
+                      action="#"
+                      method="POST"
+                      enctype="multipart/form-data">
+                    @csrf
+
+                    {{-- Drop zone --}}
+                    <div class="upload-dropzone" id="uploadDropzone">
+                        <input type="file" name="attachment" id="uploadFileInput"
+                               accept=".jpg,.jpeg,.png,.webp,.pdf">
+                        <i class="mdi mdi-cloud-upload-outline" style="font-size:2.5rem;color:#a5b4fc;display:block;margin-bottom:.5rem;"></i>
+                        <p style="font-weight:700;color:#6366f1;margin:.25rem 0 0;font-size:.9rem;">Klik atau drag & drop file di sini</p>
+                        <p style="font-size:.78rem;color:#9ca3af;margin:.3rem 0 0;">JPG · PNG · WebP · PDF — maks 5 MB</p>
+                    </div>
+
+                    {{-- Image preview --}}
+                    <div class="upload-preview" id="uploadImgPreview">
+                        <img id="uploadPreviewImg" src="" alt="Preview">
+                        <div style="position:absolute;top:8px;right:8px;">
+                            <button type="button" onclick="clearUploadPreview()"
+                                    style="width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                                <i class="mdi mdi-close" style="font-size:.85rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- PDF preview --}}
+                    <div class="upload-preview-pdf" id="uploadPdfPreview">
+                        <i class="mdi mdi-file-pdf-box" style="font-size:2.5rem;color:#ef4444;flex-shrink:0;"></i>
+                        <div>
+                            <p id="uploadPdfName" style="font-weight:700;color:#1b2620;margin:0 0 2px;font-size:.9rem;"></p>
+                            <p id="uploadPdfSize" style="font-size:.78rem;color:#9ca3af;margin:0;"></p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="button" class="btn btn-light flex-1" data-bs-dismiss="modal"
+                                style="flex:1;border-radius:10px;font-weight:600;font-size:.875rem;">
+                            Batal
+                        </button>
+                        <button type="submit" id="uploadSubmitBtn" class="btn" disabled
+                                style="flex:2;border-radius:10px;font-weight:700;font-size:.875rem;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;box-shadow:0 4px 14px rgba(99,102,241,.35);">
+                            <i class="mdi mdi-upload me-1"></i> Upload Sekarang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 @endsection
 
 @push('scripts')
@@ -994,4 +1180,110 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+
+@if(auth()->user()->role === 'admin')
+<script>
+/* ── Upload Lampiran Modal ── */
+function openUploadModal(historyId, existingUrl) {
+    document.getElementById('uploadHistoryId').value = historyId;
+
+    // Set form action to the correct update route
+    var form = document.getElementById('uploadAttachmentForm');
+    form.action = '/employment-history/' + historyId + '/attachment';
+
+    // Show existing attachment if any
+    var existingWrap = document.getElementById('existingAttachmentWrap');
+    var existingImg  = document.getElementById('existingAttachmentImg');
+    if (existingUrl) {
+        existingImg.src = existingUrl;
+        existingWrap.style.display = 'block';
+    } else {
+        existingWrap.style.display = 'none';
+    }
+
+    // Reset upload state
+    clearUploadPreview();
+
+    var modal = new bootstrap.Modal(document.getElementById('uploadModal'));
+    modal.show();
+}
+
+function clearUploadPreview() {
+    document.getElementById('uploadFileInput').value = '';
+    document.getElementById('uploadImgPreview').style.display = 'none';
+    document.getElementById('uploadPreviewImg').src = '';
+    document.getElementById('uploadPdfPreview').style.display = 'none';
+    document.getElementById('uploadSubmitBtn').disabled = true;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var fileInput  = document.getElementById('uploadFileInput');
+    var dropzone   = document.getElementById('uploadDropzone');
+    var submitBtn  = document.getElementById('uploadSubmitBtn');
+
+    if (!fileInput) return;
+
+    function handleFile(file) {
+        if (!file) return;
+
+        // Validate size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File terlalu besar! Maksimal 5 MB.');
+            clearUploadPreview();
+            return;
+        }
+
+        // Validate type
+        var allowed = ['image/jpeg','image/png','image/webp','application/pdf'];
+        if (!allowed.includes(file.type)) {
+            alert('Format tidak didukung. Gunakan JPG, PNG, WebP, atau PDF.');
+            clearUploadPreview();
+            return;
+        }
+
+        if (file.type === 'application/pdf') {
+            document.getElementById('uploadImgPreview').style.display = 'none';
+            var pdfPreview = document.getElementById('uploadPdfPreview');
+            pdfPreview.style.display = 'flex';
+            document.getElementById('uploadPdfName').textContent = file.name;
+            document.getElementById('uploadPdfSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+        } else {
+            document.getElementById('uploadPdfPreview').style.display = 'none';
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('uploadPreviewImg').src = e.target.result;
+                document.getElementById('uploadImgPreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+        submitBtn.disabled = false;
+    }
+
+    fileInput.addEventListener('change', function () {
+        handleFile(this.files[0]);
+    });
+
+    // Drag & Drop
+    dropzone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', function () {
+        this.classList.remove('dragover');
+    });
+    dropzone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        var file = e.dataTransfer.files[0];
+        if (file) {
+            // Set to input
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+            handleFile(file);
+        }
+    });
+});
+</script>
+@endif
 @endpush

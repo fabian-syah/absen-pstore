@@ -183,6 +183,11 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::resource('employment-history', EmploymentHistoryController::class)
         ->except(['show']);
 
+    // Upload lampiran per item riwayat (Admin Only)
+    Route::post('/employment-history/{id}/attachment', [EmploymentHistoryController::class, 'updateAttachment'])
+        ->name('employment-history.attachment')
+        ->middleware('role:admin');
+
     // === RUTE RIWAYAT ABSENSI ===
     Route::get('/riwayat-absensi', [AttendanceHistoryController::class, 'index'])->name('attendance.history');
 

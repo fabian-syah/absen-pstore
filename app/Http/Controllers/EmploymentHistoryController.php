@@ -21,18 +21,16 @@ class EmploymentHistoryController extends Controller
         if ($currentUser->role === 'admin') {
             // Admin bisa lihat semua
             $selectableUsers = User::with('branch')->orderBy('name')->get();
-
         } elseif (in_array($currentUser->role, ['audit', 'leader'])) {
             // [UPDATE] Audit & Leader sekarang logic-nya SAMA (Multi Cabang)
             // Mengambil ID cabang dari relasi many-to-many (table pivot)
             $branchIds = $currentUser->branches->pluck('id')->toArray();
-            
+
             $selectableUsers = User::with('branch')
                 ->whereIn('branch_id', $branchIds) // Cek user yang ada di cabang-cabang tersebut
                 ->orWhere('id', $currentUser->id)  // Selalu sertakan diri sendiri
                 ->orderBy('name')
                 ->get();
-
         } else {
             // User biasa / Security hanya melihat diri sendiri
             $selectableUsers = User::with('branch')->where('id', $currentUser->id)->get();
@@ -49,7 +47,7 @@ class EmploymentHistoryController extends Controller
 
             // Jika melihat orang lain (bukan diri sendiri)
             if ($targetUser->id !== $currentUser->id) {
-                
+
                 // Cek Role Management
                 if (!in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
                     abort(403, 'Anda hanya boleh melihat data diri sendiri.');
@@ -58,7 +56,7 @@ class EmploymentHistoryController extends Controller
                 // [UPDATE] Validasi Multi Cabang untuk Audit & Leader
                 if (in_array($currentUser->role, ['audit', 'leader'])) {
                     $allowedBranches = $currentUser->branches->pluck('id')->toArray();
-                    
+
                     if (!in_array($targetUser->branch_id, $allowedBranches)) {
                         abort(403, 'User ini berada di luar wilayah cabang akses Anda.');
                     }
@@ -73,7 +71,7 @@ class EmploymentHistoryController extends Controller
         $isOwner = ($targetUser->id == $currentUser->id);
         $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
         $isRegular = in_array($currentUser->role, ['user_biasa', 'security']);
-        
+
         $isModeEdit = ($request->get('mode') === 'edit');
 
         $canCreate = ($isRegular && $isOwner) || $isManagement;
@@ -86,18 +84,22 @@ class EmploymentHistoryController extends Controller
 
         if ($targetUser) {
             $allHistories = EmploymentHistory::where('user_id', $targetUser->id)
-                ->with(['branch', 'division', 'previousBranch', 'creator', 'editor']) 
+                ->with(['branch', 'division', 'previousBranch', 'creator', 'editor'])
                 ->orderBy('event_date', 'desc')
                 ->get();
-            
+
             $internalHistories = $allHistories->filter(fn($item) => $item->type !== 'external');
             $externalHistories = $allHistories->filter(fn($item) => $item->type === 'external');
         }
 
         return view('employment_history.index', compact(
-            'internalHistories', 'externalHistories', 
-            'selectableUsers', 'targetUser', 
-            'canEdit', 'canCreate', 'canDelete'
+            'internalHistories',
+            'externalHistories',
+            'selectableUsers',
+            'targetUser',
+            'canEdit',
+            'canCreate',
+            'canDelete'
         ));
     }
 
@@ -109,7 +111,7 @@ class EmploymentHistoryController extends Controller
 
         // Validasi Akses Halaman Create
         if (!in_array($currentUser->role, ['admin', 'audit', 'leader']) && $targetId != $currentUser->id) {
-             abort(403, 'Akses ditolak.');
+            abort(403, 'Akses ditolak.');
         }
 
         // Validasi Branch Multi-Cabang
@@ -135,7 +137,7 @@ class EmploymentHistoryController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'type' => 'required',
-            'event_date' => 'required_unless:type,external|date|nullable', 
+            'event_date' => 'required_unless:type,external|date|nullable',
             'attachment' => 'nullable|image|max:2048',
             'description' => 'nullable|string',
             'title' => 'nullable|string|required_if:type,external',
@@ -150,7 +152,7 @@ class EmploymentHistoryController extends Controller
             $targetUserCheck = User::find($request->user_id);
             $allowedBranches = $currentUser->branches->pluck('id')->toArray();
             if (!in_array($targetUserCheck->branch_id, $allowedBranches)) {
-                 abort(403, 'Manipulasi data terdeteksi: User di luar jangkauan cabang.');
+                abort(403, 'Manipulasi data terdeteksi: User di luar jangkauan cabang.');
             }
         }
 
@@ -158,19 +160,19 @@ class EmploymentHistoryController extends Controller
         $data['created_by'] = $currentUser->id;
 
         if ($request->type == 'external' && empty($data['event_date'])) {
-            $data['event_date'] = now(); 
+            $data['event_date'] = now();
         }
 
         if ($request->type == 'transfer_branch' || $request->type == 'external') {
             $data['division_id'] = null;
         }
-        
+
         if ($request->type == 'external') {
-            $data['branch_id'] = null; 
+            $data['branch_id'] = null;
         }
 
         $targetUser = User::find($request->user_id);
-        $data['previous_branch_id'] = $targetUser->branch_id; 
+        $data['previous_branch_id'] = $targetUser->branch_id;
 
         if ($request->hasFile('attachment')) {
             $data['attachment'] = $request->file('attachment')->store('employment_attachments', 'public');
@@ -216,7 +218,7 @@ class EmploymentHistoryController extends Controller
 
         $isOwner = ($history->user_id == $currentUser->id);
         $isManagement = in_array($currentUser->role, ['admin', 'audit', 'leader']);
-        
+
         if (!$isOwner && !$isManagement) abort(403);
 
         $request->validate([
@@ -265,10 +267,10 @@ class EmploymentHistoryController extends Controller
 
         // Validasi Wilayah Multi-Cabang saat Delete
         if ($isManagement && !$isOwner) {
-             if (in_array($currentUser->role, ['audit', 'leader'])) {
+            if (in_array($currentUser->role, ['audit', 'leader'])) {
                 $allowedBranches = $currentUser->branches->pluck('id')->toArray();
                 if (!in_array($targetUser->branch_id, $allowedBranches)) abort(403);
-             }
+            }
         }
 
         if ($history->attachment) {
@@ -280,5 +282,40 @@ class EmploymentHistoryController extends Controller
 
         return redirect()->route('employment-history.index', ['user_id' => $userId])
             ->with('success', 'Riwayat berhasil dihapus.');
+    }
+
+    /**
+     * Upload / ganti lampiran riwayat karir (Admin Only)
+     */
+    public function updateAttachment(Request $request, $id)
+    {
+        $currentUser = auth()->user();
+        if ($currentUser->role !== 'admin') abort(403, 'Hanya Admin yang dapat mengupload lampiran.');
+
+        $history = EmploymentHistory::findOrFail($id);
+
+        $request->validate([
+            'attachment' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:5120', // 5MB
+        ], [
+            'attachment.required' => 'File wajib dipilih.',
+            'attachment.mimes'    => 'Format file harus JPG, PNG, WebP, atau PDF.',
+            'attachment.max'      => 'Ukuran file maksimal 5 MB.',
+        ]);
+
+        // Hapus lampiran lama jika ada
+        if ($history->attachment) {
+            Storage::disk('public')->delete($history->attachment);
+        }
+
+        // Simpan lampiran baru
+        $path = $request->file('attachment')->store('employment_attachments', 'public');
+        $history->update([
+            'attachment'  => $path,
+            'updated_by'  => $currentUser->id,
+        ]);
+
+        return redirect()
+            ->route('employment-history.index', ['user_id' => $history->user_id])
+            ->with('success', 'Lampiran berhasil diupload.');
     }
 }
