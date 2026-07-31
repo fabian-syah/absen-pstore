@@ -1078,9 +1078,8 @@ document.addEventListener('DOMContentLoaded', function () {
             container.innerHTML = ''; // Bersihkan container
             
             if (src && isPdf) {
-                // Gunakan Google Docs Viewer untuk menghindari error X-Frame-Options (refused to connect)
-                var viewerUrl = 'https://docs.google.com/gview?url=' + encodeURIComponent(src) + '&embedded=true';
-                container.innerHTML = '<iframe src="' + viewerUrl + '" style="width:100%;height:100%;border:none;"></iframe>';
+                // Gunakan object tag yang lebih handal untuk native PDF rendering di origin yang sama
+                container.innerHTML = '<object data="' + src + '#toolbar=0" type="application/pdf" width="100%" height="100%" style="border:none;"></object>';
                 fallback.style.display = 'block';
                 link.href = src;
             } else if (src) {
@@ -1244,9 +1243,8 @@ function openUploadModal(historyId, existingUrl, isPdf) {
         container.innerHTML = '';
         
         if (isPdf || existingUrl.toLowerCase().endsWith('.pdf')) {
-            // Gunakan Google Docs Viewer untuk menghindari error X-Frame-Options (refused to connect)
-            var viewerUrl = 'https://docs.google.com/gview?url=' + encodeURIComponent(existingUrl) + '&embedded=true';
-            container.innerHTML = '<iframe src="' + viewerUrl + '" style="width:100%;height:100%;border:none;"></iframe>';
+            // Gunakan object tag yang lebih handal untuk native PDF rendering di origin yang sama
+            container.innerHTML = '<object data="' + existingUrl + '#toolbar=0" type="application/pdf" width="100%" height="100%" style="border:none;"></object>';
             existingFallback.style.display = 'block';
             existingLink.href = existingUrl;
         } else {
