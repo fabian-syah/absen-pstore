@@ -977,6 +977,7 @@
                     </p>
                     <div style="border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;">
                         <img id="existingAttachmentImg" src="" class="img-fluid" style="max-height:120px;width:100%;object-fit:contain;background:#f8f9fa;">
+                        <iframe id="existingAttachmentPdf" src="" style="width:100%;height:150px;border:none;display:none;background:#f8f9fa;"></iframe>
                     </div>
                 </div>
 
@@ -1008,12 +1009,19 @@
                     </div>
 
                     {{-- PDF preview --}}
-                    <div class="upload-preview-pdf" id="uploadPdfPreview">
-                        <i class="mdi mdi-file-pdf-box" style="font-size:2.5rem;color:#ef4444;flex-shrink:0;"></i>
-                        <div>
-                            <p id="uploadPdfName" style="font-weight:700;color:#1b2620;margin:0 0 2px;font-size:.9rem;"></p>
-                            <p id="uploadPdfSize" style="font-size:.78rem;color:#9ca3af;margin:0;"></p>
+                    <div class="upload-preview-pdf" id="uploadPdfPreview" style="display:none;flex-direction:column;gap:.5rem;">
+                        <div style="display:flex;align-items:center;gap:1rem;">
+                            <i class="mdi mdi-file-pdf-box" style="font-size:2.5rem;color:#ef4444;flex-shrink:0;"></i>
+                            <div style="flex:1;">
+                                <p id="uploadPdfName" style="font-weight:700;color:#1b2620;margin:0 0 2px;font-size:.9rem;"></p>
+                                <p id="uploadPdfSize" style="font-size:.78rem;color:#9ca3af;margin:0;"></p>
+                            </div>
+                            <button type="button" onclick="clearUploadPreview()"
+                                    style="width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.1);border:none;color:#4b5563;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                                <i class="mdi mdi-close" style="font-size:.85rem;"></i>
+                            </button>
                         </div>
+                        <iframe id="uploadPdfIframe" src="" style="width:100%;height:200px;border:none;border-radius:8px;background:#fff;border:1px solid #e2e8f0;"></iframe>
                     </div>
 
                     <div class="d-flex gap-2 mt-3">
@@ -1192,11 +1200,22 @@ function openUploadModal(historyId, existingUrl) {
     // Show existing attachment if any
     var existingWrap = document.getElementById('existingAttachmentWrap');
     var existingImg  = document.getElementById('existingAttachmentImg');
+    var existingPdf  = document.getElementById('existingAttachmentPdf');
     if (existingUrl) {
-        existingImg.src = existingUrl;
         existingWrap.style.display = 'block';
+        if (existingUrl.toLowerCase().endsWith('.pdf')) {
+            existingImg.style.display = 'none';
+            existingPdf.src = existingUrl;
+            existingPdf.style.display = 'block';
+        } else {
+            existingPdf.style.display = 'none';
+            existingImg.src = existingUrl;
+            existingImg.style.display = 'block';
+        }
     } else {
         existingWrap.style.display = 'none';
+        existingImg.src = '';
+        existingPdf.src = '';
     }
 
     // Reset upload state
@@ -1211,6 +1230,7 @@ function clearUploadPreview() {
     document.getElementById('uploadImgPreview').style.display = 'none';
     document.getElementById('uploadPreviewImg').src = '';
     document.getElementById('uploadPdfPreview').style.display = 'none';
+    document.getElementById('uploadPdfIframe').src = '';
     document.getElementById('uploadSubmitBtn').disabled = true;
 }
 
@@ -1245,8 +1265,11 @@ document.addEventListener('DOMContentLoaded', function () {
             pdfPreview.style.display = 'flex';
             document.getElementById('uploadPdfName').textContent = file.name;
             document.getElementById('uploadPdfSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+            // Preview PDF via Object URL
+            document.getElementById('uploadPdfIframe').src = URL.createObjectURL(file);
         } else {
             document.getElementById('uploadPdfPreview').style.display = 'none';
+            document.getElementById('uploadPdfIframe').src = '';
             var reader = new FileReader();
             reader.onload = function (e) {
                 document.getElementById('uploadPreviewImg').src = e.target.result;
