@@ -68,6 +68,19 @@
         color: #fff;
     }
 
+    /* Global reset inside search area — prevent letter-spacing inheritance from master CSS */
+    .employee-search-card *,
+    .employee-dropdown *,
+    .selected-employee-strip * {
+        letter-spacing: normal !important;
+        text-transform: none !important;
+    }
+    /* Re-apply uppercase only where intended */
+    .employee-search-card .search-label {
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+    }
+
     /* Employee Search / Select Panel */
     .employee-search-card {
         background: #fff;
@@ -201,11 +214,15 @@
         font-size: 1rem;
         color: #1b2620;
         line-height: 1.2;
+        letter-spacing: normal;
+        text-transform: none;
     }
     .selected-employee-meta {
         font-size: .78rem;
         color: #6c757d;
         margin-top: 2px;
+        letter-spacing: normal;
+        text-transform: none;
     }
     .role-pill {
         display: inline-flex; align-items: center; gap: 4px;
