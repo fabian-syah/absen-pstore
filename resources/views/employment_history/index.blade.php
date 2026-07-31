@@ -1185,9 +1185,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 /* ── Upload Lampiran Modal ── */
 function openUploadModal(historyId, existingUrl) {
-    document.getElementById('uploadHistoryId').value = historyId;
-
-    // Set form action to the correct update route
+    // Set form action ke route attachment yang benar
     var form = document.getElementById('uploadAttachmentForm');
     form.action = '/employment-history/' + historyId + '/attachment';
 
