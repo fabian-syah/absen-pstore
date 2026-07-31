@@ -2,250 +2,949 @@
 
 @section('title', 'Riwayat Karir')
 
-@section('content')
-<div class="row">
-    
-    {{-- FILTER USER (Hanya muncul jika Management) --}}
-    @if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
-    <div class="col-12 mb-4">
-        <div class="card">
-            <div class="card-body py-3 d-flex align-items-center justify-content-between">
-                <div>
-                    <h4 class="card-title mb-1">Daftar Riwayat Karir</h4>
-                    <p class="text-muted mb-0 small">
-                        @if($canEdit)
-                            {{-- Indikator Mode Edit --}}
-                            <span class="text-success fw-bold"><i class="mdi mdi-pencil"></i> MODE EDIT AKTIF</span> - 
-                        @endif
-                        Pilih pegawai untuk melihat timeline.
-                    </p>
-                </div>
-                
-                {{-- Form Ganti User --}}
-                <form action="{{ route('employment-history.index') }}" method="GET" class="d-flex align-items-center w-50 justify-content-end">
-                    {{-- Kita pertahankan input hidden ini, jadi kalau user sedang di mode edit dan ganti orang, mode editnya tetap nyala. 
-                         TAPI kalau dari Controller (store/update), input ini gak akan kepanggil. --}}
-                    @if(request()->get('mode') == 'edit')
-                        <input type="hidden" name="mode" value="edit">
-                    @endif
+@push('styles')
+<style>
+    /* ============================================================
+       RIWAYAT KARIR — MODERN REDESIGN
+    ============================================================ */
 
-                    <select name="user_id" class="form-control w-75" onchange="this.form.submit()" style="border-radius: 8px;">
-                        <option value="{{ auth()->user()->id }}" {{ isset($targetUser) && $targetUser->id == auth()->id() ? 'selected' : '' }}>
-                            -- Saya Sendiri ({{ auth()->user()->branch->name ?? 'Pusat/Non-Cabang' }}) --
-                        </option>
-                        @foreach($selectableUsers as $u)
-                            @if($u->id != auth()->id())
-                                <option value="{{ $u->id }}" {{ isset($targetUser) && $targetUser->id == $u->id ? 'selected' : '' }}>
-                                    {{ $u->name }} ({{ $u->branch->name ?? 'Non-Cabang' }})
-                                </option>
-                            @endif
-                        @endforeach
-                    </select>
-                </form>
+    /* Hero Header */
+    .career-hero {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 60%, #084298 100%);
+        border-radius: 20px;
+        padding: 2rem 2.5rem;
+        margin-bottom: 1.75rem;
+        position: relative;
+        overflow: hidden;
+        color: #fff;
+        box-shadow: 0 8px 32px rgba(13, 110, 253, 0.35);
+    }
+    .career-hero::before {
+        content: '';
+        position: absolute;
+        top: -60px; right: -60px;
+        width: 220px; height: 220px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.08);
+    }
+    .career-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -80px; left: -30px;
+        width: 280px; height: 280px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+    }
+    .career-hero-title {
+        font-size: 1.65rem;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+        margin: 0 0 .25rem;
+    }
+    .career-hero-sub {
+        font-size: 0.88rem;
+        opacity: 0.82;
+        margin: 0;
+    }
+    .career-hero-icon {
+        width: 56px; height: 56px;
+        background: rgba(255,255,255,0.18);
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.6rem;
+        backdrop-filter: blur(8px);
+        flex-shrink: 0;
+    }
+    .mode-edit-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(255,255,255,0.22);
+        border: 1px solid rgba(255,255,255,0.35);
+        border-radius: 999px;
+        padding: 4px 14px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        backdrop-filter: blur(6px);
+        color: #fff;
+    }
+
+    /* Employee Search / Select Panel */
+    .employee-search-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+        padding: 1.5rem 1.75rem;
+        margin-bottom: 1.75rem;
+        border: 1px solid rgba(13,110,253,0.08);
+        transition: box-shadow .3s;
+    }
+    .employee-search-card:hover {
+        box-shadow: 0 8px 28px rgba(13,110,253,0.12);
+    }
+    .search-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6c757d;
+        margin-bottom: .6rem;
+    }
+    .custom-select-wrap {
+        position: relative;
+    }
+    .custom-select-wrap .search-input {
+        width: 100%;
+        padding: .65rem 1rem .65rem 2.6rem;
+        border: 1.5px solid #dee2e6;
+        border-radius: 12px;
+        font-size: .9rem;
+        transition: border-color .25s, box-shadow .25s;
+        background: #f8f9fa;
+        outline: none;
+    }
+    .custom-select-wrap .search-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13,110,253,.15);
+        background: #fff;
+    }
+    .custom-select-wrap .search-icon {
+        position: absolute; left: .85rem; top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 1.05rem;
+        pointer-events: none;
+    }
+    .employee-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0; right: 0;
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06);
+        border: 1px solid rgba(0,0,0,0.07);
+        max-height: 320px;
+        overflow-y: auto;
+        z-index: 1050;
+        display: none;
+        animation: dropIn .2s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes dropIn {
+        from { opacity: 0; transform: translateY(-8px) scale(.98); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .employee-dropdown.show { display: block; }
+    .employee-dropdown-item {
+        display: flex; align-items: center; gap: .75rem;
+        padding: .7rem 1.1rem;
+        cursor: pointer;
+        transition: background .15s;
+        border-radius: 0;
+        font-size: .875rem;
+    }
+    .employee-dropdown-item:first-child { border-radius: 14px 14px 0 0; }
+    .employee-dropdown-item:last-child  { border-radius: 0 0 14px 14px; }
+    .employee-dropdown-item:hover, .employee-dropdown-item.highlighted {
+        background: rgba(13,110,253,.06);
+    }
+    .employee-dropdown-item.active-item {
+        background: rgba(13,110,253,.1);
+        color: #0d6efd;
+        font-weight: 700;
+    }
+    .employee-avatar {
+        width: 34px; height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .75rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .employee-avatar.self-avatar {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+    .employee-name { font-weight: 600; line-height: 1.2; }
+    .employee-branch { font-size: .75rem; color: #9ca3af; margin-top: 1px; }
+    .no-results-msg {
+        padding: 1.5rem;
+        text-align: center;
+        color: #9ca3af;
+        font-size: .875rem;
+    }
+
+    /* Selected Employee Profile Strip */
+    .selected-employee-strip {
+        display: flex; align-items: center; gap: 1rem;
+        background: linear-gradient(135deg, rgba(13,110,253,.06) 0%, rgba(10,88,202,.04) 100%);
+        border: 1px solid rgba(13,110,253,.15);
+        border-radius: 14px;
+        padding: .9rem 1.2rem;
+        margin-top: .75rem;
+        transition: all .3s;
+    }
+    .selected-avatar-lg {
+        width: 46px; height: 46px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(13,110,253,.3);
+    }
+    .selected-employee-name {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #1b2620;
+        line-height: 1.2;
+    }
+    .selected-employee-meta {
+        font-size: .78rem;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+    .role-pill {
+        display: inline-flex; align-items: center; gap: 4px;
+        background: rgba(13,110,253,.1);
+        color: #0d6efd;
+        border-radius: 999px;
+        padding: 3px 10px;
+        font-size: .72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+
+    /* Timeline Section */
+    .section-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1.5px solid rgba(0,0,0,0.06);
+    }
+    .section-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #1b2620;
+        letter-spacing: -0.2px;
+        margin: 0;
+    }
+    .section-subtitle {
+        font-size: .8rem;
+        color: #9ca3af;
+        margin: 2px 0 0;
+    }
+
+    /* Timeline Items */
+    .timeline-wrap {
+        position: relative;
+        padding-left: 2rem;
+    }
+    .timeline-wrap::before {
+        content: '';
+        position: absolute;
+        left: 10px; top: 8px; bottom: 8px;
+        width: 2px;
+        background: linear-gradient(to bottom, #0d6efd, rgba(13,110,253,.1));
+        border-radius: 999px;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+        animation: fadeSlideIn .4s ease both;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    @keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateX(-12px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+    .timeline-dot {
+        position: absolute;
+        left: -2rem;
+        top: .9rem;
+        width: 20px; height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13,110,253,.12);
+        display: flex; align-items: center; justify-content: center;
+        font-size: .55rem;
+        color: #0d6efd;
+        transition: transform .25s;
+    }
+    .timeline-item:hover .timeline-dot { transform: scale(1.2); }
+    .timeline-dot.dot-success  { border-color: #10b981; color: #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,.12); }
+    .timeline-dot.dot-danger   { border-color: #ef4444; color: #ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,.12); }
+    .timeline-dot.dot-warning  { border-color: #f59e0b; color: #f59e0b; box-shadow: 0 0 0 4px rgba(245,158,11,.12); }
+    .timeline-dot.dot-info     { border-color: #06b6d4; color: #06b6d4; box-shadow: 0 0 0 4px rgba(6,182,212,.12); }
+    .timeline-dot.dot-secondary{ border-color: #6c757d; color: #6c757d; box-shadow: 0 0 0 4px rgba(108,117,125,.12); }
+
+    .timeline-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 1.1rem 1.4rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,.06);
+        border: 1px solid rgba(0,0,0,.06);
+        transition: box-shadow .25s, transform .25s;
+    }
+    .timeline-card:hover {
+        box-shadow: 0 6px 24px rgba(13,110,253,.12);
+        transform: translateY(-2px);
+    }
+    .timeline-event-type {
+        font-size: .9rem;
+        font-weight: 800;
+        margin: 0 0 .3rem;
+    }
+    .timeline-event-type.text-primary   { color: #0d6efd !important; }
+    .timeline-event-type.text-success   { color: #10b981 !important; }
+    .timeline-event-type.text-danger    { color: #ef4444 !important; }
+    .timeline-event-type.text-warning   { color: #f59e0b !important; }
+    .timeline-event-type.text-info      { color: #06b6d4 !important; }
+    .timeline-event-type.text-secondary { color: #6c757d !important; }
+    .timeline-date-chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: .75rem; color: #9ca3af;
+        background: #f8f9fa;
+        border-radius: 999px;
+        padding: 3px 10px;
+        margin-top: 2px;
+    }
+    .timeline-detail-box {
+        margin-top: .85rem;
+        padding: .85rem 1rem;
+        border-radius: 10px;
+        background: #f8f9ff;
+        border-left: 3px solid #0d6efd;
+        font-size: .86rem;
+    }
+    .timeline-detail-box.border-success { border-left-color: #10b981 !important; }
+    .timeline-detail-box.border-danger  { border-left-color: #ef4444 !important; }
+    .timeline-detail-box.border-warning { border-left-color: #f59e0b !important; }
+    .timeline-detail-box.border-info    { border-left-color: #06b6d4 !important; }
+    .timeline-detail-box.border-secondary { border-left-color: #6c757d !important; }
+    .timeline-detail-row {
+        display: flex; align-items: baseline; gap: .5rem;
+        margin-bottom: .35rem;
+        color: #4b5563;
+    }
+    .timeline-detail-row:last-child { margin-bottom: 0; }
+    .timeline-detail-row i { color: #9ca3af; font-size: .9rem; flex-shrink: 0; }
+    .timeline-desc {
+        font-style: italic;
+        color: #6c757d;
+        font-size: .82rem;
+        border-top: 1px dashed #e5e7eb;
+        padding-top: .55rem;
+        margin-top: .55rem;
+        line-height: 1.5;
+    }
+    .timeline-attachment {
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        max-width: 120px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.1);
+        transition: transform .2s;
+        flex-shrink: 0;
+    }
+    .timeline-attachment:hover { transform: scale(1.04); }
+    .timeline-attachment img { width: 100%; height: 80px; object-fit: cover; display: block; }
+    .action-btn {
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: .9rem;
+        border: none;
+        cursor: pointer;
+        transition: all .2s;
+        text-decoration: none;
+    }
+    .action-btn-edit {
+        background: rgba(245,158,11,.1);
+        color: #f59e0b;
+    }
+    .action-btn-edit:hover {
+        background: #f59e0b;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(245,158,11,.35);
+    }
+    .action-btn-delete {
+        background: rgba(239,68,68,.1);
+        color: #ef4444;
+    }
+    .action-btn-delete:hover {
+        background: #ef4444;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(239,68,68,.35);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3.5rem 1rem;
+    }
+    .empty-state-icon {
+        width: 72px; height: 72px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, rgba(13,110,253,.08), rgba(13,110,253,.04));
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1.25rem;
+        font-size: 2rem;
+        color: #cbd5e1;
+    }
+    .empty-state h5 { font-weight: 700; color: #9ca3af; font-size: .95rem; margin: 0 0 .35rem; }
+    .empty-state p  { font-size: .82rem; color: #c4cbd4; margin: 0; }
+
+    /* External Experience Table */
+    .ext-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .ext-table thead th {
+        background: linear-gradient(135deg, rgba(13,110,253,.05), rgba(13,110,253,.02)) !important;
+        color: #6c757d !important;
+        font-size: .75rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+        padding: .75rem 1rem !important;
+        border-bottom: 1.5px solid rgba(0,0,0,.06) !important;
+        border-top: none !important;
+    }
+    .ext-table tbody tr {
+        transition: background .15s;
+    }
+    .ext-table tbody tr:hover td {
+        background: rgba(13,110,253,.03) !important;
+    }
+    .ext-table tbody td {
+        padding: .85rem 1rem !important;
+        border-bottom: 1px solid rgba(0,0,0,.04) !important;
+        font-size: .875rem;
+        vertical-align: middle;
+    }
+    .ext-table tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    .ext-title-cell { font-weight: 700; color: #0d6efd; }
+
+    /* Add button */
+    .btn-add-history {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+        color: #fff !important;
+        border: none;
+        border-radius: 10px;
+        padding: .5rem 1.1rem;
+        font-size: .85rem;
+        font-weight: 700;
+        box-shadow: 0 4px 14px rgba(13,110,253,.3);
+        transition: all .25s;
+        text-decoration: none;
+    }
+    .btn-add-history:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(13,110,253,.4);
+        color: #fff;
+    }
+
+    /* Responsive */
+    @media (max-width: 576px) {
+        .career-hero { padding: 1.4rem 1.25rem; }
+        .career-hero-title { font-size: 1.3rem; }
+        .employee-search-card { padding: 1.1rem 1rem; }
+        .timeline-card { padding: .9rem 1rem; }
+    }
+
+    /* Hidden select (for form submission) */
+    #hiddenUserSelect { display: none; }
+</style>
+@endpush
+
+@section('content')
+
+{{-- ========================================================
+     HERO HEADER
+     ======================================================== --}}
+<div class="career-hero mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
+        <div class="d-flex align-items-center gap-3">
+            <div class="career-hero-icon">
+                <i class="mdi mdi-timeline-clock-outline"></i>
+            </div>
+            <div>
+                <h1 class="career-hero-title">Riwayat Karir</h1>
+                <p class="career-hero-sub">
+                    @if($canEdit)
+                        <span class="mode-edit-badge">
+                            <i class="mdi mdi-pencil" style="font-size:.85rem;"></i> Mode Edit Aktif
+                        </span>
+                    @else
+                        Timeline perjalanan karir karyawan Pstore
+                    @endif
+                </p>
             </div>
         </div>
+        @if($canCreate)
+            <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn-add-history">
+                <i class="mdi mdi-plus-circle-outline"></i> Tambah Riwayat
+            </a>
+        @endif
     </div>
-    @endif
+</div>
 
-    {{-- KONTEN TIMELINE INTERNAL PSTORE --}}
-    <div class="col-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                    <div>
-                        <h4 class="card-title mb-1">Timeline Internal Pstore: {{ $targetUser->name }}</h4>
-                        <span class="badge badge-outline-primary">{{ strtoupper($targetUser->role) }} - {{ $targetUser->branch->name ?? 'PUSAT' }}</span>
-                    </div>
-                    
-                    @if($canCreate)
-                        <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn btn-primary btn-icon-text">
-                            <i class="mdi mdi-plus-circle-outline btn-icon-prepend"></i> Tambah Riwayat
-                        </a>
-                    @endif
+{{-- ========================================================
+     EMPLOYEE SEARCH — Only for Admin / Audit / Leader
+     ======================================================== --}}
+@if(in_array(auth()->user()->role, ['admin', 'audit', 'leader']))
+<div class="employee-search-card">
+    <p class="search-label"><i class="mdi mdi-account-search me-1"></i> Pilih Karyawan</p>
+
+    {{-- Hidden real form that will be submitted --}}
+    <form id="switchUserForm" action="{{ route('employment-history.index') }}" method="GET">
+        @if(request()->get('mode') == 'edit')
+            <input type="hidden" name="mode" value="edit">
+        @endif
+        <select name="user_id" id="hiddenUserSelect">
+            <option value="{{ auth()->user()->id }}" {{ isset($targetUser) && $targetUser->id == auth()->id() ? 'selected' : '' }}>
+                Saya Sendiri
+            </option>
+            @foreach($selectableUsers as $u)
+                @if($u->id != auth()->id())
+                    <option value="{{ $u->id }}" {{ isset($targetUser) && $targetUser->id == $u->id ? 'selected' : '' }}>
+                        {{ $u->name }}
+                    </option>
+                @endif
+            @endforeach
+        </select>
+    </form>
+
+    {{-- Custom search UI --}}
+    <div class="custom-select-wrap" id="employeeSearchWrap">
+        <i class="mdi mdi-magnify search-icon"></i>
+        <input
+            type="text"
+            class="search-input"
+            id="employeeSearchInput"
+            placeholder="Cari nama karyawan..."
+            autocomplete="off"
+        >
+        <div class="employee-dropdown" id="employeeDropdown">
+            {{-- Injected by JS --}}
+        </div>
+    </div>
+
+    {{-- Selected Employee Strip --}}
+    <div class="selected-employee-strip" id="selectedEmployeeStrip">
+        <div class="selected-avatar-lg" id="selectedAvatar">
+            {{ strtoupper(substr($targetUser->name, 0, 2)) }}
+        </div>
+        <div style="flex:1; min-width:0;">
+            <div class="selected-employee-name" id="selectedName">{{ $targetUser->name }}</div>
+            <div class="selected-employee-meta">
+                <span class="role-pill">
+                    <i class="mdi mdi-badge-account-outline" style="font-size:.8rem;"></i>
+                    {{ strtoupper($targetUser->role) }}
+                </span>
+                &nbsp;{{ $targetUser->branch->name ?? 'Pusat / Non-Cabang' }}
+            </div>
+        </div>
+        <div>
+            <i class="mdi mdi-check-circle text-success" style="font-size:1.4rem;opacity:.7;"></i>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- ========================================================
+     TIMELINE — INTERNAL PSTORE
+     ======================================================== --}}
+<div class="card mb-4" style="border-radius:20px!important;">
+    <div class="card-body" style="padding:1.75rem!important;">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">
+                    <i class="mdi mdi-office-building-outline me-2 text-primary" style="font-size:1.1rem;"></i>
+                    Timeline Internal Pstore
+                </h2>
+                <p class="section-subtitle">{{ $targetUser->name }} &bull; {{ strtoupper($targetUser->role) }} — {{ $targetUser->branch->name ?? 'PUSAT' }}</p>
+            </div>
+            <span class="badge" style="background:rgba(13,110,253,.1);color:#0d6efd;font-size:.75rem;padding:.4rem .9rem;border-radius:999px;">
+                {{ $internalHistories->count() }} entri
+            </span>
+        </div>
+
+        @if($internalHistories->isEmpty())
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="mdi mdi-timeline-text-outline"></i>
                 </div>
-
-                @if($internalHistories->isEmpty())
-                    <div class="text-center py-5">
-                        <div class="mb-3">
-                            <i class="mdi mdi-timeline-text-outline text-muted" style="font-size: 4rem;"></i>
+                <h5>Belum ada riwayat</h5>
+                <p>Riwayat karir internal Pstore akan muncul di sini.</p>
+            </div>
+        @else
+            <div class="timeline-wrap">
+                @foreach($internalHistories as $i => $history)
+                    @php
+                        $dotClass = match($history->type_color) {
+                            'success'   => 'dot-success',
+                            'danger'    => 'dot-danger',
+                            'warning'   => 'dot-warning',
+                            'info'      => 'dot-info',
+                            'secondary' => 'dot-secondary',
+                            default     => '',
+                        };
+                        $borderClass = match($history->type_color) {
+                            'success'   => 'border-success',
+                            'danger'    => 'border-danger',
+                            'warning'   => 'border-warning',
+                            'info'      => 'border-info',
+                            'secondary' => 'border-secondary',
+                            default     => '',
+                        };
+                    @endphp
+                    <div class="timeline-item" style="animation-delay: {{ $i * 0.06 }}s;">
+                        <div class="timeline-dot {{ $dotClass }}">
+                            <i class="mdi mdi-circle" style="font-size:.45rem;"></i>
                         </div>
-                        <h5 class="text-muted">Belum ada riwayat internal Pstore.</h5>
-                    </div>
-                @else
-                    <ul class="bullet-line-list">
-                        @foreach($internalHistories as $history)
-                            <li class="mb-4">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    {{-- HEADER --}}
-                                    <div>
-                                        <h6 class="text-{{ $history->type_color }} font-weight-bold mb-1" style="font-size: 1.1rem;">
-                                            {{ $history->type_label }}
-                                        </h6>
-                                        <p class="text-muted small mb-0">
-                                            <i class="mdi mdi-calendar"></i> 
-                                            {{ \Carbon\Carbon::parse($history->event_date)->translatedFormat('d F Y') }}
-                                        </p>
-                                    </div>
-                                    
-                                    {{-- AKSI --}}
-                                    <div class="d-flex gap-2">
-                                        {{-- TOMBOL EDIT HANYA MUNCUL JIKA $canEdit TRUE (Mode Edit Aktif) --}}
-                                        @if($canEdit)
-                                            <a href="{{ route('employment-history.edit', $history->id) }}" class="btn btn-inverse-warning btn-sm p-2" title="Edit">
-                                                <i class="mdi mdi-pencil"></i>
-                                            </a>
-                                        @endif
-                                        
-                                        {{-- TOMBOL HAPUS TETAP MUNCUL JIKA ADMIN/MANAGEMENT ($canDelete) --}}
-                                        @if($canDelete)
-                                            <form action="{{ route('employment-history.destroy', $history->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat ini?');">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-inverse-danger btn-sm p-2" title="Hapus">
-                                                    <i class="mdi mdi-trash-can"></i>
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
+                        <div class="timeline-card">
+                            <div class="d-flex align-items-start justify-content-between gap-2">
+                                <div style="min-width:0;">
+                                    <p class="timeline-event-type text-{{ $history->type_color }}">
+                                        {{ $history->type_label }}
+                                    </p>
+                                    <span class="timeline-date-chip">
+                                        <i class="mdi mdi-calendar-month-outline"></i>
+                                        {{ \Carbon\Carbon::parse($history->event_date)->translatedFormat('d F Y') }}
+                                    </span>
                                 </div>
-                                
-                                {{-- DETAIL CONTENT --}}
-                                <div class="p-3 bg-light rounded mt-2 border-start border-{{ $history->type_color }}" style="border-left: 4px solid;">
-                                    <div class="row">
-                                        {{-- FOTO --}}
+                                {{-- Actions --}}
+                                <div class="d-flex gap-1 flex-shrink-0">
+                                    @if($canEdit)
+                                        <a href="{{ route('employment-history.edit', $history->id) }}"
+                                           class="action-btn action-btn-edit" title="Edit">
+                                            <i class="mdi mdi-pencil-outline"></i>
+                                        </a>
+                                    @endif
+                                    @if($canDelete)
+                                        <form action="{{ route('employment-history.destroy', $history->id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Hapus riwayat ini? Tindakan tidak bisa dibatalkan.');">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="action-btn action-btn-delete" title="Hapus">
+                                                <i class="mdi mdi-trash-can-outline"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Detail box --}}
+                            @php $hasDetail = $history->type == 'transfer_branch' || ($history->type != 'resign' && ($history->branch || $history->division)) || $history->attachment || $history->description; @endphp
+                            @if($hasDetail)
+                                <div class="timeline-detail-box {{ $borderClass }}">
+                                    <div class="d-flex gap-3 align-items-start">
+                                        {{-- Attachment thumbnail --}}
                                         @if($history->attachment)
-                                            <div class="col-md-3 mb-3 mb-md-0">
-                                                <div class="position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#attachmentModal" data-src="{{ asset('storage/' . $history->attachment) }}">
-                                                    <img src="{{ asset('storage/' . $history->attachment) }}" 
-                                                         class="img-fluid rounded shadow-sm w-100" 
-                                                         style="object-fit: cover; height: 100px;" alt="Lampiran">
-                                                </div>
+                                            <div class="timeline-attachment"
+                                                 data-bs-toggle="modal"
+                                                 data-bs-target="#attachmentModal"
+                                                 data-src="{{ asset('storage/' . $history->attachment) }}"
+                                                 title="Lihat lampiran">
+                                                <img src="{{ asset('storage/' . $history->attachment) }}" alt="Lampiran">
                                             </div>
                                         @endif
-
-                                        {{-- INFORMASI --}}
-                                        <div class="{{ $history->attachment ? 'col-md-9' : 'col-12' }}">
+                                        <div style="flex:1;min-width:0;">
                                             @if($history->type == 'transfer_branch')
-                                                <p class="mb-1">
-                                                    <i class="mdi mdi-arrow-right-bold-circle text-success me-1"></i>
-                                                    Pindah ke Cabang: <strong>{{ $history->branch->name ?? '-' }}</strong>
-                                                </p>
+                                                <div class="timeline-detail-row">
+                                                    <i class="mdi mdi-arrow-right-bold-circle text-success"></i>
+                                                    <span>Pindah ke: <strong>{{ $history->branch->name ?? '-' }}</strong></span>
+                                                </div>
                                             @elseif($history->type != 'resign')
                                                 @if($history->branch)
-                                                    <p class="mb-1"><i class="mdi mdi-map-marker me-1"></i> Cabang: <strong>{{ $history->branch->name }}</strong></p>
+                                                    <div class="timeline-detail-row">
+                                                        <i class="mdi mdi-map-marker-outline"></i>
+                                                        <span>Cabang: <strong>{{ $history->branch->name }}</strong></span>
+                                                    </div>
                                                 @endif
                                                 @if($history->division)
-                                                    <p class="mb-1"><i class="mdi mdi-briefcase me-1"></i> Divisi: <strong>{{ $history->division->name }}</strong></p>
+                                                    <div class="timeline-detail-row">
+                                                        <i class="mdi mdi-briefcase-outline"></i>
+                                                        <span>Divisi: <strong>{{ $history->division->name }}</strong></span>
+                                                    </div>
                                                 @endif
                                             @endif
-
                                             @if($history->description)
-                                                <div class="mt-2 pt-2 border-top">
-                                                    <p class="mb-0 small text-muted font-italic">"{{ $history->description }}"</p>
+                                                <div class="timeline-desc">
+                                                    <i class="mdi mdi-comment-quote-outline me-1"></i>
+                                                    "{{ $history->description }}"
                                                 </div>
                                             @endif
                                         </div>
                                     </div>
                                 </div>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    {{-- KONTEN PENGALAMAN LUAR PSTORE (PALING BAWAH) --}}
-    <div class="col-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title mb-3">Pengalaman di Luar Pstore</h4>
-                
-                @if($externalHistories->isEmpty())
-                    <p class="text-muted">Tidak ada data pengalaman luar.</p>
-                @else
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Judul / Perusahaan</th>
-                                    <th>Keterangan</th>
-                                    <th>Lampiran</th>
-                                    <th class="text-end">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($externalHistories as $ext)
-                                    <tr>
-                                        <td class="fw-bold text-primary">{{ $ext->title }}</td>
-                                        <td>{{ $ext->description ?? '-' }}</td>
-                                        <td>
-                                            @if($ext->attachment)
-                                                <a href="#" data-bs-toggle="modal" data-bs-target="#attachmentModal" data-src="{{ asset('storage/' . $ext->attachment) }}">
-                                                    <i class="mdi mdi-image text-info"></i> Lihat
-                                                </a>
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                        <td class="text-end">
-                                            <div class="d-flex justify-content-end gap-1">
-                                                {{-- EDIT HANYA JIKA MODE EDIT NYALA --}}
-                                                @if($canEdit)
-                                                    <a href="{{ route('employment-history.edit', $ext->id) }}" class="btn btn-sm btn-inverse-warning p-1">
-                                                        <i class="mdi mdi-pencil"></i>
-                                                    </a>
-                                                @endif
-                                                {{-- HAPUS TETAP NYALA --}}
-                                                @if($canDelete)
-                                                    <form action="{{ route('employment-history.destroy', $ext->id) }}" method="POST" onsubmit="return confirm('Hapus?');">
-                                                        @csrf @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-inverse-danger p-1">
-                                                            <i class="mdi mdi-trash-can"></i>
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                            @endif
+                        </div>
                     </div>
-                @endif
+                @endforeach
             </div>
-        </div>
+        @endif
     </div>
-
 </div>
 
-{{-- MODAL IMAGE --}}
+{{-- ========================================================
+     PENGALAMAN DI LUAR PSTORE
+     ======================================================== --}}
+<div class="card" style="border-radius:20px!important;">
+    <div class="card-body" style="padding:1.75rem!important;">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">
+                    <i class="mdi mdi-earth me-2 text-success" style="font-size:1.1rem;"></i>
+                    Pengalaman di Luar Pstore
+                </h2>
+                <p class="section-subtitle">Riwayat kerja / pengalaman sebelum bergabung</p>
+            </div>
+            <span class="badge" style="background:rgba(16,185,129,.1);color:#10b981;font-size:.75rem;padding:.4rem .9rem;border-radius:999px;">
+                {{ $externalHistories->count() }} entri
+            </span>
+        </div>
+
+        @if($externalHistories->isEmpty())
+            <div class="empty-state">
+                <div class="empty-state-icon" style="background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.03));">
+                    <i class="mdi mdi-domain" style="color:#a7f3d0;"></i>
+                </div>
+                <h5>Tidak ada data</h5>
+                <p>Pengalaman kerja di luar Pstore akan muncul di sini.</p>
+            </div>
+        @else
+            <div class="table-responsive">
+                <table class="ext-table">
+                    <thead>
+                        <tr>
+                            <th>Judul / Perusahaan</th>
+                            <th>Keterangan</th>
+                            <th>Lampiran</th>
+                            @if($canEdit || $canDelete)
+                                <th class="text-end">Aksi</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($externalHistories as $ext)
+                            <tr>
+                                <td><span class="ext-title-cell">{{ $ext->title }}</span></td>
+                                <td class="text-muted" style="max-width:300px;">{{ $ext->description ?? '-' }}</td>
+                                <td>
+                                    @if($ext->attachment)
+                                        <a href="#"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#attachmentModal"
+                                           data-src="{{ asset('storage/' . $ext->attachment) }}"
+                                           style="display:inline-flex;align-items:center;gap:5px;color:#0d6efd;font-size:.82rem;font-weight:600;text-decoration:none;">
+                                            <i class="mdi mdi-image-outline" style="font-size:1rem;"></i> Lihat
+                                        </a>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                @if($canEdit || $canDelete)
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-1">
+                                            @if($canEdit)
+                                                <a href="{{ route('employment-history.edit', $ext->id) }}"
+                                                   class="action-btn action-btn-edit" title="Edit">
+                                                    <i class="mdi mdi-pencil-outline"></i>
+                                                </a>
+                                            @endif
+                                            @if($canDelete)
+                                                <form action="{{ route('employment-history.destroy', $ext->id) }}"
+                                                      method="POST"
+                                                      onsubmit="return confirm('Hapus pengalaman ini?');">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="action-btn action-btn-delete" title="Hapus">
+                                                        <i class="mdi mdi-trash-can-outline"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </td>
+                                @endif
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+</div>
+
+{{-- ========================================================
+     MODAL — ATTACHMENT VIEWER
+     ======================================================== --}}
 <div class="modal fade" id="attachmentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title">Lampiran</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content" style="border-radius:20px;border:none;overflow:hidden;">
+            <div class="modal-header border-0" style="background:linear-gradient(135deg,#0d6efd,#0a58ca);padding:1.25rem 1.5rem;">
+                <h5 class="modal-title text-white fw-bold">
+                    <i class="mdi mdi-image-outline me-2"></i>Lampiran
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-center bg-light p-4 rounded m-3">
-                <img id="modalImageSrc" src="" class="img-fluid rounded shadow-sm" style="max-height: 80vh;">
+            <div class="modal-body p-4" style="background:#f8f9fa;">
+                <div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.12);">
+                    <img id="modalImageSrc" src="" class="img-fluid" style="max-height:75vh;width:100%;object-fit:contain;" alt="Lampiran">
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 @endsection
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var attachmentModal = document.getElementById('attachmentModal');
-        attachmentModal.addEventListener('show.bs.modal', function(event) {
-            var el = event.relatedTarget; 
-            var src = el.getAttribute('data-src');
-            document.getElementById('modalImageSrc').src = src;
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* ── Modal image handler ── */
+    var attachmentModal = document.getElementById('attachmentModal');
+    if (attachmentModal) {
+        attachmentModal.addEventListener('show.bs.modal', function (e) {
+            document.getElementById('modalImageSrc').src = e.relatedTarget.getAttribute('data-src');
         });
-        attachmentModal.addEventListener('hidden.bs.modal', function() {
+        attachmentModal.addEventListener('hidden.bs.modal', function () {
             document.getElementById('modalImageSrc').src = '';
         });
+    }
+
+    /* ── Employee Search UI ── */
+    var searchInput   = document.getElementById('employeeSearchInput');
+    var dropdown      = document.getElementById('employeeDropdown');
+    var hiddenSelect  = document.getElementById('hiddenUserSelect');
+    var switchForm    = document.getElementById('switchUserForm');
+    var selectedName  = document.getElementById('selectedName');
+    var selectedAvatar= document.getElementById('selectedAvatar');
+
+    if (!searchInput) return; // not admin/leader, skip
+
+    // Build employees list from hidden select
+    var employees = [];
+    Array.from(hiddenSelect.options).forEach(function (opt) {
+        employees.push({
+            id      : opt.value,
+            name    : opt.text.trim(),
+            selected: opt.selected,
+        });
     });
+
+    // Determine current selected label (from hidden select)
+    var currentSelected = employees.find(e => e.selected) || employees[0];
+
+    function getInitials(name) {
+        var parts = name.trim().split(' ');
+        if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
+    function renderDropdown(query) {
+        var q = query.toLowerCase().trim();
+        var filtered = employees.filter(function (e) {
+            return e.name.toLowerCase().includes(q);
+        });
+
+        dropdown.innerHTML = '';
+        if (filtered.length === 0) {
+            dropdown.innerHTML = '<div class="no-results-msg"><i class="mdi mdi-account-search" style="font-size:1.5rem;display:block;margin-bottom:6px;"></i>Tidak ditemukan "' + query + '"</div>';
+            dropdown.classList.add('show');
+            return;
+        }
+
+        filtered.forEach(function (emp) {
+            var item = document.createElement('div');
+            item.className = 'employee-dropdown-item' + (emp.selected ? ' active-item' : '');
+
+            var isFirst = (emp.id === employees[0].id); // "Saya Sendiri"
+            var avatarClass = isFirst ? 'employee-avatar self-avatar' : 'employee-avatar';
+            var displayName = isFirst ? 'Saya Sendiri' : emp.name;
+
+            // Highlight matched text
+            var re = new RegExp('(' + q.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ')', 'gi');
+            var highlighted = displayName.replace(re, '<mark style="background:rgba(13,110,253,.15);color:#0d6efd;border-radius:3px;padding:0 2px;">$1</mark>');
+
+            item.innerHTML =
+                '<div class="' + avatarClass + '">' + getInitials(isFirst ? 'Saya Sendiri' : emp.name) + '</div>' +
+                '<div>' +
+                    '<div class="employee-name">' + highlighted + '</div>' +
+                '</div>';
+
+            item.addEventListener('click', function () {
+                selectEmployee(emp);
+            });
+            dropdown.appendChild(item);
+        });
+        dropdown.classList.add('show');
+    }
+
+    function selectEmployee(emp) {
+        currentSelected = emp;
+        hiddenSelect.value = emp.id;
+
+        var isFirst = (emp.id === employees[0].id);
+        var displayName = isFirst ? 'Saya Sendiri' : emp.name;
+
+        searchInput.value = '';
+        dropdown.classList.remove('show');
+
+        if (selectedName)  selectedName.textContent = displayName;
+        if (selectedAvatar) selectedAvatar.textContent = getInitials(displayName);
+
+        // Submit form to switch user
+        switchForm.submit();
+    }
+
+    searchInput.addEventListener('focus', function () {
+        renderDropdown(this.value);
+    });
+
+    searchInput.addEventListener('input', function () {
+        renderDropdown(this.value);
+    });
+
+    // Close on outside click
+    document.addEventListener('click', function (e) {
+        if (!document.getElementById('employeeSearchWrap').contains(e.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', function (e) {
+        var items = dropdown.querySelectorAll('.employee-dropdown-item');
+        var highlighted = dropdown.querySelector('.highlighted');
+        var idx = Array.from(items).indexOf(highlighted);
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (highlighted) highlighted.classList.remove('highlighted');
+            var next = items[idx + 1] || items[0];
+            if (next) next.classList.add('highlighted');
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (highlighted) highlighted.classList.remove('highlighted');
+            var prev = items[idx - 1] || items[items.length - 1];
+            if (prev) prev.classList.add('highlighted');
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlighted) highlighted.click();
+        } else if (e.key === 'Escape') {
+            dropdown.classList.remove('show');
+        }
+    });
+});
 </script>
 @endpush
