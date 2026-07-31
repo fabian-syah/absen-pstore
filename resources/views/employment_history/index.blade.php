@@ -791,12 +791,14 @@
                                     <div class="d-flex gap-3 align-items-start">
                                         {{-- Attachment thumbnail --}}
                                         @if($history->attachment)
+                                            @php $isTimelinePdf = str_ends_with(strtolower($history->attachment), '.pdf'); @endphp
                                             <div class="timeline-attachment"
                                                  data-bs-toggle="modal"
                                                  data-bs-target="#attachmentModal"
                                                  data-src="{{ asset('storage/' . $history->attachment) }}"
+                                                 data-is-pdf="{{ $isTimelinePdf ? 'true' : 'false' }}"
                                                  title="Lihat lampiran">
-                                                @if(str_ends_with(strtolower($history->attachment), '.pdf'))
+                                                @if($isTimelinePdf)
                                                     <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#fee2e2;">
                                                         <i class="mdi mdi-file-pdf-box" style="font-size:2rem;color:#ef4444;"></i>
                                                     </div>
@@ -894,6 +896,7 @@
                                            data-bs-toggle="modal"
                                            data-bs-target="#attachmentModal"
                                            data-src="{{ asset('storage/' . $ext->attachment) }}"
+                                           data-is-pdf="{{ $isExtPdf ? 'true' : 'false' }}"
                                            style="display:inline-flex;align-items:center;gap:5px;color:{{ $isExtPdf ? '#ef4444' : '#0d6efd' }};font-size:.82rem;font-weight:600;text-decoration:none;">
                                             <i class="mdi {{ $isExtPdf ? 'mdi-file-pdf-box' : 'mdi-image-outline' }}" style="font-size:1rem;"></i> Lihat
                                         </a>
