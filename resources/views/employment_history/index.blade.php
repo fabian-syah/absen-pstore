@@ -1065,6 +1065,25 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
+    // Fungsi helper untuk mem-bypass X-Frame-Options dengan Fetch -> Blob URL
+    function loadPdfIntoIframe(pdfUrl, container) {
+        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;color:#64748b;"><div class="spinner-border text-primary mb-2" role="status"></div><span>Memuat Dokumen...</span></div>';
+        
+        fetch(pdfUrl)
+            .then(function(response) {
+                if (!response.ok) throw new Error('Gagal mengambil PDF');
+                return response.blob();
+            })
+            .then(function(blob) {
+                var blobUrl = URL.createObjectURL(blob);
+                container.innerHTML = '<iframe src="' + blobUrl + '#toolbar=0" style="width:100%;height:100%;border:none;"></iframe>';
+            })
+            .catch(function(error) {
+                console.error('[PDF Fetch Error]:', error);
+                container.innerHTML = '<div style="color:#ef4444;text-align:center;padding:2rem;"><i class="mdi mdi-alert-circle-outline" style="font-size:3rem;"></i><br>Gagal memuat PDF secara langsung.<br>Silakan klik tombol <b>Buka PDF di Tab Baru</b> di bawah.</div>';
+            });
+    }
+
     /* ── Modal image handler ── */
     var attachmentModal = document.getElementById('attachmentModal');
     if (attachmentModal) {
@@ -1096,14 +1115,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // INJECT SAAT MODAL SUDAH SEPENUHNYA MUNCUL (menghindari bug Chrome PDF Viewer putih/error)
+        // INJECT SAAT MODAL SUDAH SEPENUHNYA MUNCUL
         attachmentModal.addEventListener('shown.bs.modal', function () {
-            console.log("[AttachmentModal] shown.bs.modal triggered. Injecting iframe/img...");
+            console.log("[AttachmentModal] shown.bs.modal triggered.");
             var container = document.getElementById('modalAttachmentContainer');
             if (currentPdfSrc && isCurrentPdf) {
-                var finalUrl = currentPdfSrc + '#toolbar=0';
-                console.log("[AttachmentModal] Injecting iframe with URL:", finalUrl);
-                container.innerHTML = '<iframe src="' + finalUrl + '" style="width:100%;height:100%;border:none;"></iframe>';
+                console.log("[AttachmentModal] Fetching PDF to bypass X-Frame-Options:", currentPdfSrc);
+                loadPdfIntoIframe(currentPdfSrc, container);
             } else if (currentPdfSrc) {
                 container.innerHTML = '<img src="' + currentPdfSrc + '" class="img-fluid" style="max-height:100%;max-width:100%;object-fit:contain;" alt="Lampiran">';
             }
@@ -1313,12 +1331,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var uploadModalEl = document.getElementById('uploadModal');
     if (uploadModalEl) {
         uploadModalEl.addEventListener('shown.bs.modal', function () {
-            console.log("[UploadModal] shown.bs.modal triggered. Injecting iframe/img...");
+            console.log("[UploadModal] shown.bs.modal triggered.");
             var container = document.getElementById('existingAttachmentContainer');
             if (uploadModalPdfUrl && uploadModalIsPdf) {
-                var finalUrl = uploadModalPdfUrl + '#toolbar=0';
-                console.log("[UploadModal] Injecting iframe with URL:", finalUrl);
-                container.innerHTML = '<iframe src="' + finalUrl + '" style="width:100%;height:100%;border:none;"></iframe>';
+                console.log("[UploadModal] Fetching PDF to bypass X-Frame-Options:", uploadModalPdfUrl);
+                loadPdfIntoIframe(uploadModalPdfUrl, container);
             } else if (uploadModalPdfUrl) {
                 container.innerHTML = '<img src="' + uploadModalPdfUrl + '" class="img-fluid" style="max-height:100%;max-width:100%;object-fit:contain;">';
             }
