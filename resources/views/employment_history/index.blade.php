@@ -140,6 +140,8 @@
         transition: background .15s;
         border-radius: 0;
         font-size: .875rem;
+        letter-spacing: normal;
+        text-transform: none;
     }
     .employee-dropdown-item:first-child { border-radius: 14px 14px 0 0; }
     .employee-dropdown-item:last-child  { border-radius: 0 0 14px 14px; }
@@ -164,8 +166,8 @@
     .employee-avatar.self-avatar {
         background: linear-gradient(135deg, #10b981, #059669);
     }
-    .employee-name { font-weight: 600; line-height: 1.2; }
-    .employee-branch { font-size: .75rem; color: #9ca3af; margin-top: 1px; }
+    .employee-name { font-weight: 600; line-height: 1.2; letter-spacing: normal; text-transform: none; }
+    .employee-branch { font-size: .75rem; color: #9ca3af; margin-top: 1px; letter-spacing: normal; }
     .no-results-msg {
         padding: 1.5rem;
         text-align: center;
