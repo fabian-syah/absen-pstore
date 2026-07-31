@@ -948,9 +948,8 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4" style="background:#f8f9fa;">
-                <div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.12);">
-                    <img id="modalImageSrc" src="" class="img-fluid" style="max-height:75vh;width:100%;object-fit:contain;display:none;" alt="Lampiran">
-                    <iframe id="modalPdfSrc" src="" style="width:100%;height:75vh;border:none;display:none;background:#fff;"></iframe>
+                <div id="modalAttachmentContainer" style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.12);width:100%;height:75vh;display:flex;align-items:center;justify-content:center;background:#fff;">
+                    {{-- Diisi secara dinamis oleh JS --}}
                 </div>
                 <div id="modalPdfFallback" style="display:none;text-align:center;margin-top:1rem;">
                     <a id="modalPdfLink" href="#" target="_blank" class="btn btn-outline-primary" style="border-radius:10px;font-weight:600;">
@@ -992,9 +991,8 @@
                     <p style="font-size:.78rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem;">
                         Lampiran Saat Ini
                     </p>
-                    <div style="border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;">
-                        <img id="existingAttachmentImg" src="" class="img-fluid" style="max-height:120px;width:100%;object-fit:contain;background:#f8f9fa;">
-                        <iframe id="existingAttachmentPdf" src="" style="width:100%;height:150px;border:none;display:none;background:#f8f9fa;"></iframe>
+                    <div id="existingAttachmentContainer" style="border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;width:100%;height:150px;display:flex;align-items:center;justify-content:center;background:#f8f9fa;">
+                        {{-- Diisi secara dinamis oleh JS --}}
                     </div>
                     <div id="existingAttachmentFallback" style="display:none;text-align:center;margin-top:6px;">
                         <a id="existingAttachmentLink" href="#" target="_blank" style="font-size:0.85rem;font-weight:600;text-decoration:none;"><i class="mdi mdi-open-in-new"></i> Buka File Asli</a>
@@ -1073,29 +1071,23 @@ document.addEventListener('DOMContentLoaded', function () {
         attachmentModal.addEventListener('show.bs.modal', function (e) {
             var src = e.relatedTarget.getAttribute('data-src');
             var isPdf = e.relatedTarget.getAttribute('data-is-pdf') === 'true';
-            var img = document.getElementById('modalImageSrc');
-            var pdf = document.getElementById('modalPdfSrc');
+            var container = document.getElementById('modalAttachmentContainer');
             var fallback = document.getElementById('modalPdfFallback');
             var link = document.getElementById('modalPdfLink');
             
+            container.innerHTML = ''; // Bersihkan container
+            
             if (src && isPdf) {
-                img.style.display = 'none';
-                pdf.src = src;
-                pdf.style.display = 'block';
+                container.innerHTML = '<iframe src="' + src + '" style="width:100%;height:100%;border:none;"></iframe>';
                 fallback.style.display = 'block';
                 link.href = src;
-            } else {
-                pdf.style.display = 'none';
+            } else if (src) {
+                container.innerHTML = '<img src="' + src + '" class="img-fluid" style="max-height:100%;max-width:100%;object-fit:contain;" alt="Lampiran">';
                 fallback.style.display = 'none';
-                img.src = src;
-                img.style.display = 'block';
             }
         });
         attachmentModal.addEventListener('hidden.bs.modal', function () {
-            document.getElementById('modalImageSrc').src = '';
-            document.getElementById('modalPdfSrc').src = '';
-            document.getElementById('modalImageSrc').style.display = 'none';
-            document.getElementById('modalPdfSrc').style.display = 'none';
+            document.getElementById('modalAttachmentContainer').innerHTML = '';
             document.getElementById('modalPdfFallback').style.display = 'none';
         });
     }
@@ -1241,28 +1233,25 @@ function openUploadModal(historyId, existingUrl, isPdf) {
 
     // Show existing attachment if any
     var existingWrap = document.getElementById('existingAttachmentWrap');
-    var existingImg  = document.getElementById('existingAttachmentImg');
-    var existingPdf  = document.getElementById('existingAttachmentPdf');
+    var container    = document.getElementById('existingAttachmentContainer');
     var existingFallback = document.getElementById('existingAttachmentFallback');
     var existingLink = document.getElementById('existingAttachmentLink');
+    
     if (existingUrl) {
         existingWrap.style.display = 'block';
+        container.innerHTML = '';
+        
         if (isPdf || existingUrl.toLowerCase().endsWith('.pdf')) {
-            existingImg.style.display = 'none';
-            existingPdf.src = existingUrl;
-            existingPdf.style.display = 'block';
+            container.innerHTML = '<iframe src="' + existingUrl + '" style="width:100%;height:100%;border:none;"></iframe>';
             existingFallback.style.display = 'block';
             existingLink.href = existingUrl;
         } else {
-            existingPdf.style.display = 'none';
+            container.innerHTML = '<img src="' + existingUrl + '" class="img-fluid" style="max-height:100%;max-width:100%;object-fit:contain;">';
             existingFallback.style.display = 'none';
-            existingImg.src = existingUrl;
-            existingImg.style.display = 'block';
         }
     } else {
         existingWrap.style.display = 'none';
-        existingImg.src = '';
-        existingPdf.src = '';
+        container.innerHTML = '';
     }
 
     // Reset upload state
