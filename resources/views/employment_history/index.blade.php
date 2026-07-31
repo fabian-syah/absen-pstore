@@ -1075,6 +1075,16 @@ document.addEventListener('DOMContentLoaded', function () {
             currentPdfSrc = e.relatedTarget.getAttribute('data-src');
             isCurrentPdf = e.relatedTarget.getAttribute('data-is-pdf') === 'true';
             
+            // --- DEBUG LOGS ---
+            console.log("[AttachmentModal] Parent URL:", window.location.href);
+            console.log("[AttachmentModal] Original data-src:", currentPdfSrc);
+            
+            // Paksa gunakan HTTPS untuk menghindari error X-Frame-Options SAMEORIGIN karena beda protokol
+            if (currentPdfSrc && currentPdfSrc.startsWith('http://')) {
+                currentPdfSrc = currentPdfSrc.replace('http://', 'https://');
+                console.log("[AttachmentModal] Forced HTTPS src:", currentPdfSrc);
+            }
+            
             var fallback = document.getElementById('modalPdfFallback');
             var link = document.getElementById('modalPdfLink');
             
@@ -1088,9 +1098,12 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // INJECT SAAT MODAL SUDAH SEPENUHNYA MUNCUL (menghindari bug Chrome PDF Viewer putih/error)
         attachmentModal.addEventListener('shown.bs.modal', function () {
+            console.log("[AttachmentModal] shown.bs.modal triggered. Injecting iframe/img...");
             var container = document.getElementById('modalAttachmentContainer');
             if (currentPdfSrc && isCurrentPdf) {
-                container.innerHTML = '<iframe src="' + currentPdfSrc + '#toolbar=0" style="width:100%;height:100%;border:none;"></iframe>';
+                var finalUrl = currentPdfSrc + '#toolbar=0';
+                console.log("[AttachmentModal] Injecting iframe with URL:", finalUrl);
+                container.innerHTML = '<iframe src="' + finalUrl + '" style="width:100%;height:100%;border:none;"></iframe>';
             } else if (currentPdfSrc) {
                 container.innerHTML = '<img src="' + currentPdfSrc + '" class="img-fluid" style="max-height:100%;max-width:100%;object-fit:contain;" alt="Lampiran">';
             }
@@ -1250,8 +1263,19 @@ function openUploadModal(historyId, existingUrl, isPdf) {
     var existingFallback = document.getElementById('existingAttachmentFallback');
     var existingLink = document.getElementById('existingAttachmentLink');
     
-    uploadModalPdfUrl = existingUrl;
     uploadModalIsPdf = isPdf || (existingUrl && existingUrl.toLowerCase().endsWith('.pdf'));
+    
+    // --- DEBUG LOGS ---
+    console.log("[UploadModal] Parent URL:", window.location.href);
+    console.log("[UploadModal] Original existingUrl:", existingUrl);
+    
+    // Paksa HTTPS
+    if (existingUrl && existingUrl.startsWith('http://')) {
+        existingUrl = existingUrl.replace('http://', 'https://');
+        console.log("[UploadModal] Forced HTTPS URL:", existingUrl);
+    }
+    
+    uploadModalPdfUrl = existingUrl;
     
     if (existingUrl) {
         existingWrap.style.display = 'block';
@@ -1289,9 +1313,12 @@ document.addEventListener('DOMContentLoaded', function () {
     var uploadModalEl = document.getElementById('uploadModal');
     if (uploadModalEl) {
         uploadModalEl.addEventListener('shown.bs.modal', function () {
+            console.log("[UploadModal] shown.bs.modal triggered. Injecting iframe/img...");
             var container = document.getElementById('existingAttachmentContainer');
             if (uploadModalPdfUrl && uploadModalIsPdf) {
-                container.innerHTML = '<iframe src="' + uploadModalPdfUrl + '#toolbar=0" style="width:100%;height:100%;border:none;"></iframe>';
+                var finalUrl = uploadModalPdfUrl + '#toolbar=0';
+                console.log("[UploadModal] Injecting iframe with URL:", finalUrl);
+                container.innerHTML = '<iframe src="' + finalUrl + '" style="width:100%;height:100%;border:none;"></iframe>';
             } else if (uploadModalPdfUrl) {
                 container.innerHTML = '<img src="' + uploadModalPdfUrl + '" class="img-fluid" style="max-height:100%;max-width:100%;object-fit:contain;">';
             }
