@@ -914,9 +914,14 @@ document.addEventListener('DOMContentLoaded', function () {
             var avatarClass = isFirst ? 'employee-avatar self-avatar' : 'employee-avatar';
             var displayName = isFirst ? 'Saya Sendiri' : emp.name;
 
-            // Highlight matched text
-            var re = new RegExp('(' + q.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ')', 'gi');
-            var highlighted = displayName.replace(re, '<mark style="background:rgba(13,110,253,.15);color:#0d6efd;border-radius:3px;padding:0 2px;">$1</mark>');
+            // Highlight matched text — only when query is not empty
+            var highlighted;
+            if (q.length > 0) {
+                var re = new RegExp('(' + q.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ')', 'gi');
+                highlighted = displayName.replace(re, '<mark style="background:rgba(13,110,253,.15);color:#0d6efd;border-radius:3px;padding:0 2px;">$1</mark>');
+            } else {
+                highlighted = displayName;
+            }
 
             item.innerHTML =
                 '<div class="' + avatarClass + '">' + getInitials(isFirst ? 'Saya Sendiri' : emp.name) + '</div>' +
