@@ -795,7 +795,13 @@
                                                  data-bs-target="#attachmentModal"
                                                  data-src="{{ asset('storage/' . $history->attachment) }}"
                                                  title="Lihat lampiran">
-                                                <img src="{{ asset('storage/' . $history->attachment) }}" alt="Lampiran">
+                                                @if(str_ends_with(strtolower($history->attachment), '.pdf'))
+                                                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#fee2e2;">
+                                                        <i class="mdi mdi-file-pdf-box" style="font-size:2rem;color:#ef4444;"></i>
+                                                    </div>
+                                                @else
+                                                    <img src="{{ asset('storage/' . $history->attachment) }}" alt="Lampiran">
+                                                @endif
                                             </div>
                                         @endif
                                         <div style="flex:1;min-width:0;">
@@ -882,12 +888,13 @@
                                 <td class="text-muted" style="max-width:300px;">{{ $ext->description ?? '-' }}</td>
                                 <td>
                                     @if($ext->attachment)
+                                        @php $isExtPdf = str_ends_with(strtolower($ext->attachment), '.pdf'); @endphp
                                         <a href="#"
                                            data-bs-toggle="modal"
                                            data-bs-target="#attachmentModal"
                                            data-src="{{ asset('storage/' . $ext->attachment) }}"
-                                           style="display:inline-flex;align-items:center;gap:5px;color:#0d6efd;font-size:.82rem;font-weight:600;text-decoration:none;">
-                                            <i class="mdi mdi-image-outline" style="font-size:1rem;"></i> Lihat
+                                           style="display:inline-flex;align-items:center;gap:5px;color:{{ $isExtPdf ? '#ef4444' : '#0d6efd' }};font-size:.82rem;font-weight:600;text-decoration:none;">
+                                            <i class="mdi {{ $isExtPdf ? 'mdi-file-pdf-box' : 'mdi-image-outline' }}" style="font-size:1rem;"></i> Lihat
                                         </a>
                                     @else
                                         <span class="text-muted">—</span>
@@ -938,7 +945,8 @@
             </div>
             <div class="modal-body p-4" style="background:#f8f9fa;">
                 <div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.12);">
-                    <img id="modalImageSrc" src="" class="img-fluid" style="max-height:75vh;width:100%;object-fit:contain;" alt="Lampiran">
+                    <img id="modalImageSrc" src="" class="img-fluid" style="max-height:75vh;width:100%;object-fit:contain;display:none;" alt="Lampiran">
+                    <iframe id="modalPdfSrc" src="" style="width:100%;height:75vh;border:none;display:none;background:#fff;"></iframe>
                 </div>
             </div>
         </div>
@@ -1051,10 +1059,25 @@ document.addEventListener('DOMContentLoaded', function () {
     var attachmentModal = document.getElementById('attachmentModal');
     if (attachmentModal) {
         attachmentModal.addEventListener('show.bs.modal', function (e) {
-            document.getElementById('modalImageSrc').src = e.relatedTarget.getAttribute('data-src');
+            var src = e.relatedTarget.getAttribute('data-src');
+            var img = document.getElementById('modalImageSrc');
+            var pdf = document.getElementById('modalPdfSrc');
+            
+            if (src && src.toLowerCase().endsWith('.pdf')) {
+                img.style.display = 'none';
+                pdf.src = src;
+                pdf.style.display = 'block';
+            } else {
+                pdf.style.display = 'none';
+                img.src = src;
+                img.style.display = 'block';
+            }
         });
         attachmentModal.addEventListener('hidden.bs.modal', function () {
             document.getElementById('modalImageSrc').src = '';
+            document.getElementById('modalPdfSrc').src = '';
+            document.getElementById('modalImageSrc').style.display = 'none';
+            document.getElementById('modalPdfSrc').style.display = 'none';
         });
     }
 
