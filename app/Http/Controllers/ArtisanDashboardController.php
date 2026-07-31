@@ -195,31 +195,9 @@ class ArtisanDashboardController extends Controller
                 'command' => $commandString
             ]);
 
-            // Eksekusi perintah artisan
-            // Pisahkan command name dengan arguments jika diinput
-            $parts = explode(' ', $commandString);
-            $command = $parts[0];
-            
-            // Parsing argumen & opsi sederhana
-            $parameters = [];
-            for ($i = 1; $i < count($parts); $i++) {
-                $part = $parts[$i];
-                if (str_starts_with($part, '--')) {
-                    $optParts = explode('=', substr($part, 2));
-                    $optName = $optParts[0];
-                    $optVal = isset($optParts[1]) ? $optParts[1] : true;
-                    $parameters['--' . $optName] = $optVal;
-                } elseif (str_starts_with($part, '-')) {
-                    $optName = substr($part, 1);
-                    $parameters['-' . $optName] = true;
-                } else {
-                    // Positional argument
-                    $parameters[] = $part;
-                }
-            }
-
-            // Jalankan command
-            $exitCode = Artisan::call($command, $parameters);
+            // Eksekusi perintah artisan menggunakan built-in StringInput parser dari Laravel
+            // Ini memungkinkan parsing argumen kompleks (berisi spasi dan tanda kutip) dengan sempurna
+            $exitCode = Artisan::call($commandString);
             $output = Artisan::output();
 
             return response()->json([
@@ -261,7 +239,7 @@ class ArtisanDashboardController extends Controller
 
         // Daftar kata yang dilarang keras untuk mencegah exploitasi, infinite loop, atau penghapusan data masal
         $blacklist = [
-            'tinker', 'wipe', 'fresh', 'work', 'listen', 'serve', 'interactive', 'completion', 
+            'wipe', 'fresh', 'work', 'listen', 'serve', 'interactive', 'completion', 
             'key:generate', 'down', 'up', 'vendor:publish', 'storage:link', 'make:'
         ];
 
@@ -273,7 +251,7 @@ class ArtisanDashboardController extends Controller
 
         // Daftar awalan perintah yang diizinkan (Whitelisted)
         $whitelistedPrefixes = [
-            'config:', 'cache:', 'route:', 'view:', 'optimize', 'migrate', 'db:seed', 'schedule:run', 'auth:clear-resets'
+            'config:', 'cache:', 'route:', 'view:', 'optimize', 'migrate', 'db:seed', 'schedule:run', 'auth:clear-resets', 'tinker'
         ];
 
         foreach ($whitelistedPrefixes as $prefix) {
