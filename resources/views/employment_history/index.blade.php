@@ -486,6 +486,29 @@
 
 @section('content')
 
+{{-- HARD RESET: override any global letter-spacing / word-spacing injected by vendor/master CSS --}}
+<style>
+    .employee-search-card *,
+    .employee-dropdown *,
+    .selected-employee-strip *,
+    .employee-dropdown-item,
+    .employee-name,
+    .selected-employee-name {
+        letter-spacing: 0 !important;
+        word-spacing: 0 !important;
+        word-spacing: normal !important;
+        text-transform: none !important;
+        font-variant: normal !important;
+        font-variant-caps: normal !important;
+        font-variant-ligatures: normal !important;
+        font-feature-settings: normal !important;
+    }
+    .employee-search-card .search-label {
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+    }
+</style>
+
 {{-- ========================================================
      HERO HEADER
      ======================================================== --}}
