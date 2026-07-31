@@ -759,7 +759,8 @@
                                         <button type="button"
                                                 class="action-btn action-btn-upload"
                                                 title="Upload / Ganti Lampiran"
-                                                onclick="openUploadModal({{ $history->id }}, '{{ $history->attachment ? asset('storage/' . $history->attachment) : '' }}')"
+                                                @php $isPdf = str_ends_with(strtolower($history->attachment ?? ''), '.pdf'); @endphp
+                                                onclick="openUploadModal({{ $history->id }}, '{{ $history->attachment ? asset('storage/' . $history->attachment) : '' }}', {{ $isPdf ? 'true' : 'false' }})"
                                         >
                                             <i class="mdi mdi-image-edit-outline"></i>
                                         </button>
@@ -948,6 +949,11 @@
                     <img id="modalImageSrc" src="" class="img-fluid" style="max-height:75vh;width:100%;object-fit:contain;display:none;" alt="Lampiran">
                     <iframe id="modalPdfSrc" src="" style="width:100%;height:75vh;border:none;display:none;background:#fff;"></iframe>
                 </div>
+                <div id="modalPdfFallback" style="display:none;text-align:center;margin-top:1rem;">
+                    <a id="modalPdfLink" href="#" target="_blank" class="btn btn-outline-primary" style="border-radius:10px;font-weight:600;">
+                        <i class="mdi mdi-open-in-new me-1"></i> Buka PDF di Tab Baru
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -986,6 +992,9 @@
                     <div style="border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;">
                         <img id="existingAttachmentImg" src="" class="img-fluid" style="max-height:120px;width:100%;object-fit:contain;background:#f8f9fa;">
                         <iframe id="existingAttachmentPdf" src="" style="width:100%;height:150px;border:none;display:none;background:#f8f9fa;"></iframe>
+                    </div>
+                    <div id="existingAttachmentFallback" style="display:none;text-align:center;margin-top:6px;">
+                        <a id="existingAttachmentLink" href="#" target="_blank" style="font-size:0.85rem;font-weight:600;text-decoration:none;"><i class="mdi mdi-open-in-new"></i> Buka File Asli</a>
                     </div>
                 </div>
 
@@ -1060,15 +1069,21 @@ document.addEventListener('DOMContentLoaded', function () {
     if (attachmentModal) {
         attachmentModal.addEventListener('show.bs.modal', function (e) {
             var src = e.relatedTarget.getAttribute('data-src');
+            var isPdf = e.relatedTarget.getAttribute('data-is-pdf') === 'true';
             var img = document.getElementById('modalImageSrc');
             var pdf = document.getElementById('modalPdfSrc');
+            var fallback = document.getElementById('modalPdfFallback');
+            var link = document.getElementById('modalPdfLink');
             
-            if (src && src.toLowerCase().endsWith('.pdf')) {
+            if (src && isPdf) {
                 img.style.display = 'none';
                 pdf.src = src;
                 pdf.style.display = 'block';
+                fallback.style.display = 'block';
+                link.href = src;
             } else {
                 pdf.style.display = 'none';
+                fallback.style.display = 'none';
                 img.src = src;
                 img.style.display = 'block';
             }
@@ -1078,6 +1093,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('modalPdfSrc').src = '';
             document.getElementById('modalImageSrc').style.display = 'none';
             document.getElementById('modalPdfSrc').style.display = 'none';
+            document.getElementById('modalPdfFallback').style.display = 'none';
         });
     }
 
@@ -1215,7 +1231,7 @@ document.addEventListener('DOMContentLoaded', function () {
 @if(auth()->user()->role === 'admin')
 <script>
 /* ── Upload Lampiran Modal ── */
-function openUploadModal(historyId, existingUrl) {
+function openUploadModal(historyId, existingUrl, isPdf) {
     // Set form action ke route attachment yang benar
     var form = document.getElementById('uploadAttachmentForm');
     form.action = '/employment-history/' + historyId + '/attachment';
@@ -1224,14 +1240,19 @@ function openUploadModal(historyId, existingUrl) {
     var existingWrap = document.getElementById('existingAttachmentWrap');
     var existingImg  = document.getElementById('existingAttachmentImg');
     var existingPdf  = document.getElementById('existingAttachmentPdf');
+    var existingFallback = document.getElementById('existingAttachmentFallback');
+    var existingLink = document.getElementById('existingAttachmentLink');
     if (existingUrl) {
         existingWrap.style.display = 'block';
-        if (existingUrl.toLowerCase().endsWith('.pdf')) {
+        if (isPdf || existingUrl.toLowerCase().endsWith('.pdf')) {
             existingImg.style.display = 'none';
             existingPdf.src = existingUrl;
             existingPdf.style.display = 'block';
+            existingFallback.style.display = 'block';
+            existingLink.href = existingUrl;
         } else {
             existingPdf.style.display = 'none';
+            existingFallback.style.display = 'none';
             existingImg.src = existingUrl;
             existingImg.style.display = 'block';
         }
