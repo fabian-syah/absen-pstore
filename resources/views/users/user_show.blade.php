@@ -401,7 +401,7 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="fw-bold text-muted small">Tanggal Lahir</label>
-                                <p class="h6"><i class="mdi mdi-cake-variant text-warning me-1"></i> {{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->translatedFormat('d F Y') : '-' }}</p>
+                                <p class="h6"><i class="mdi mdi-cake-variant text-warning me-1"></i> {{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->translatedFormat('d F Y') . ' (' . \Carbon\Carbon::parse($user->birth_date)->age . ' Tahun)' : '-' }}</p>
                             </div>
                         @endif
                     </div>
