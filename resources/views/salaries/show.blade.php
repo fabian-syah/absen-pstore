@@ -16,13 +16,13 @@
                 <div class="card-body p-5">
 
                     {{-- HEADER PERUSAHAAN --}}
-                    <div class="border-bottom pb-4 mb-4 d-flex justify-content-between align-items-start">
-                        <div>
+                    <div class="border-bottom pb-4 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start">
+                        <div class="mb-3 mb-md-0">
                             <h2 class="fw-bold text-dark mb-1">PSTORE</h2>
                             <p class="text-muted mb-0">Divisi {{ $salary->user->division->name ?? 'Finance & HRD' }}</p>
                             <small class="text-muted">{{ $salary->user->branch->address ?? 'Jl. Raya Condet No.13A, RT.10/RW.3, Batu Ampar, Kec. Kramat jati, Kota Jakarta Timur, Daerah Khusus Ibukota Jakarta 13530' }}</small>
                         </div>
-                        <div class="text-end">
+                        <div class="text-start text-md-end">
                             <h4 class="text-uppercase fw-bold text-primary mb-1">SLIP GAJI</h4>
                             <p class="mb-0 fw-bold text-dark">
                                 Periode:
@@ -43,7 +43,7 @@
 
                     {{-- INFO KARYAWAN --}}
                     <div class="row mb-4">
-                        <div class="col-6">
+                        <div class="col-12 col-md-6 mb-3 mb-md-0">
                             <table class="table table-borderless table-sm">
                                 <tr>
                                     <td class="text-muted ps-0" width="100">Nama</td>
@@ -63,8 +63,8 @@
                                 </tr>
                             </table>
                         </div>
-                        <div class="col-6 text-end">
-                            <div class="p-3 bg-light rounded d-inline-block text-start mb-2" style="min-width: 200px;">
+                        <div class="col-12 col-md-6 text-start text-md-end">
+                            <div class="p-3 bg-light rounded d-inline-block text-start mb-2 w-100" style="max-width: 300px; min-width: 200px;">
                                 <small class="text-muted d-block">Status Pembayaran</small>
                                 @php
                                     $isPaid = $salary->status == 'paid';
@@ -93,7 +93,7 @@
                                 @endif
                             </div>
 
-                            <div class="p-3 bg-white border rounded d-inline-block text-start" style="min-width: 200px;">
+                            <div class="p-3 bg-white border rounded d-inline-block text-start w-100" style="max-width: 300px; min-width: 200px;">
                                 <small class="text-muted d-block">Metode Pembayaran</small>
                                 <div class="fw-bold text-dark">
                                     @if($salary->payment_method == 'transfer')
@@ -195,7 +195,7 @@
                                         <td class="ps-4">
                                             Potongan Alpha ({{ $salary->alpha_days }} Hari)
                                             @if(!empty($alphaDates))
-                                                <br><small class="text-muted fst-italic no-print" style="word-break: break-word; white-space: normal;">Tgl: {{ implode(', ', array_unique($alphaDates)) }}</small>
+                                                <br><small class="text-muted fst-italic" style="word-break: break-word; white-space: normal;">Tgl: {{ implode(', ', array_unique($alphaDates)) }}</small>
                                             @endif
                                         </td>
                                         <td class="text-end pe-4 text-danger">(Rp
@@ -209,7 +209,7 @@
                                         <td class="ps-4">
                                             Potongan Telat ({{ $salary->late_days }} Kali)
                                             @if(!empty($lateDates))
-                                                <br><small class="text-muted fst-italic no-print" style="word-break: break-word; white-space: normal;">Tgl: {{ implode(', ', array_unique($lateDates)) }}</small>
+                                                <br><small class="text-muted fst-italic" style="word-break: break-word; white-space: normal;">Tgl: {{ implode(', ', array_unique($lateDates)) }}</small>
                                             @endif
                                         </td>
                                         <td class="text-end pe-4 text-danger">(Rp
@@ -253,10 +253,10 @@
 
                     {{-- TOTAL AKHIR --}}
                     <div class="row justify-content-end mb-5">
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <div class="bg-primary text-white p-4 rounded shadow-sm text-center">
                                 <h6 class="text-white-50 text-uppercase mb-2">TAKE HOME PAY (DITERIMA BERSIH)</h6>
-                                <h2 class="fw-bold mb-0 display-5">Rp
+                                <h2 class="fw-bold mb-0 display-5" style="word-break: break-word;">Rp
                                     {{ number_format($salary->total_amount, 0, ',', '.') }}
                                 </h2>
                             </div>
