@@ -49,15 +49,13 @@ class SelfAttendanceController extends Controller
         // 1.5 CEK KTP BLOCK (MANDIRI)
         $ktpWarningMsg = null;
         if (is_null($user->ktp_photo_path) && !is_null($user->ktp_countdown_start_at)) {
-            $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
-            if ($daysPassed > 7 && is_null($user->ktp_unlock_at)) {
-                return redirect()->route('dashboard')->with('error', 'AKSES DIBLOKIR: Waktu 7 hari habis, KTP belum diupload. Hubungi Admin/Audit cabang Anda untuk membuka akses.');
+            $deadline = \Carbon\Carbon::parse('2026-08-11 23:59:59');
+            if (now()->greaterThan($deadline) && is_null($user->ktp_unlock_at)) {
+                return redirect()->route('dashboard')->with('error', 'AKSES DIBLOKIR: Batas waktu 11 Agustus 2026 habis, KTP belum diupload. Hubungi Admin/Audit cabang Anda untuk membuka akses.');
             }
-            $daysLeft = 7 - $daysPassed;
-            if ($daysLeft > 0) {
-                $ktpWarningMsg = "Wajib upload KTP, sisa waktu {$daysLeft} hari. Jika lewat, absensi diblokir!";
-            } else {
-                $ktpWarningMsg = "Peringatan Terakhir: Batas waktu upload KTP habis hari ini!";
+            if (now()->lessThanOrEqualTo($deadline)) {
+                $daysLeft = (int) now()->diffInDays($deadline) + 1;
+                $ktpWarningMsg = "Wajib upload KTP sebelum 11 Agustus 2026. Sisa waktu {$daysLeft} hari. Jika lewat, absensi diblokir!";
             }
         }
 
@@ -150,9 +148,9 @@ class SelfAttendanceController extends Controller
         // CEK KTP BLOCK (MANDIRI) - LAYER 2
         $user = Auth::user();
         if (is_null($user->ktp_photo_path) && !is_null($user->ktp_countdown_start_at)) {
-            $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
-            if ($daysPassed > 7 && is_null($user->ktp_unlock_at)) {
-                return redirect()->route('dashboard')->with('error', 'AKSES DIBLOKIR: Waktu 7 hari habis, KTP belum diupload. Hubungi Admin/Audit cabang Anda untuk membuka akses.');
+            $deadline = \Carbon\Carbon::parse('2026-08-11 23:59:59');
+            if (now()->greaterThan($deadline) && is_null($user->ktp_unlock_at)) {
+                return redirect()->route('dashboard')->with('error', 'AKSES DIBLOKIR: Batas waktu 11 Agustus 2026 habis, KTP belum diupload. Hubungi Admin/Audit cabang Anda untuk membuka akses.');
             }
         }
 

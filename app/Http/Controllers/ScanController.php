@@ -43,15 +43,13 @@ class ScanController extends Controller
         // CEK KTP BLOCK
         $ktpWarningMsg = null;
         if (is_null($user->ktp_photo_path) && !is_null($user->ktp_countdown_start_at)) {
-            $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
-            if ($daysPassed > 7 && is_null($user->ktp_unlock_at)) {
-                return response()->json(['status' => 'error', 'message' => 'AKSES DIBLOKIR: Waktu 7 hari habis, KTP belum diupload.'], 403);
+            $deadline = \Carbon\Carbon::parse('2026-08-11 23:59:59');
+            if (now()->greaterThan($deadline) && is_null($user->ktp_unlock_at)) {
+                return response()->json(['status' => 'error', 'message' => 'AKSES DIBLOKIR: Batas waktu 11 Agustus 2026 habis, KTP belum diupload.'], 403);
             }
-            $daysLeft = 7 - $daysPassed;
-            if ($daysLeft > 0) {
-                $ktpWarningMsg = "Wajib upload KTP, sisa waktu {$daysLeft} hari. Jika lewat, absensi diblokir!";
-            } else {
-                $ktpWarningMsg = "Peringatan Terakhir: Batas waktu upload KTP habis hari ini!";
+            if (now()->lessThanOrEqualTo($deadline)) {
+                $daysLeft = (int) now()->diffInDays($deadline) + 1;
+                $ktpWarningMsg = "Wajib upload KTP sebelum 11 Agustus 2026. Sisa waktu {$daysLeft} hari. Jika lewat, absensi diblokir!";
             }
         }
 
@@ -153,9 +151,9 @@ class ScanController extends Controller
         
         // CEK KTP BLOCK
         if (is_null($user->ktp_photo_path) && !is_null($user->ktp_countdown_start_at)) {
-            $daysPassed = now()->diffInDays(\Carbon\Carbon::parse($user->ktp_countdown_start_at));
-            if ($daysPassed > 7 && is_null($user->ktp_unlock_at)) {
-                return response()->json(['status' => 'error', 'message' => 'Gagal: Akses diblokir karena belum upload KTP.'], 403);
+            $deadline = \Carbon\Carbon::parse('2026-08-11 23:59:59');
+            if (now()->greaterThan($deadline) && is_null($user->ktp_unlock_at)) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal: Akses diblokir karena batas waktu 11 Agustus 2026 telah habis dan belum upload KTP.'], 403);
             }
         }
 
