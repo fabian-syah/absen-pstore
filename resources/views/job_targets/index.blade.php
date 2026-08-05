@@ -21,7 +21,7 @@
 </div>
 
 {{-- SECTION 1: CABANG / TIM --}}
-<div class="card card-rounded shadow-sm border-0 mb-4">
+<div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white border-bottom py-3">
         <div class="d-flex align-items-center">
             <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
@@ -45,10 +45,10 @@
 </div>
 
 {{-- SECTION 2: PRIBADI --}}
-<div class="card card-rounded shadow-sm border-0 mb-5">
-    <div class="card-header bg-gradient-info text-white border-bottom py-3">
+<div class="card shadow-sm border-0 mb-5">
+    <div class="card-header bg-primary text-white border-bottom py-3">
         <div class="d-flex align-items-center">
-            <div class="bg-white bg-opacity-25 p-2 rounded-circle me-3">
+            <div class="bg-white bg-opacity-25 p-2 rounded me-3">
                 <i class="mdi mdi-account-star text-white mdi-24px"></i>
             </div>
             <div>
@@ -72,15 +72,11 @@
 @include('job_targets.partials.modal_update')
 
 <style>
-    .card-rounded { border-radius: 16px; overflow: hidden; }
-    .bg-gradient-info { background: linear-gradient(45deg, #198ae3, #4b49ac); }
     .star-badge-3 { background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); color: #000; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); border: 1px solid #d4af37; }
     .star-badge-2 { background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%); color: #333; border: 1px solid #b0b0b0; }
     .star-badge-1 { background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
     .star-animation { animation: glow 2s infinite; }
     @keyframes glow { 0% { box-shadow: 0 0 5px #FFD700; } 50% { box-shadow: 0 0 15px #FFD700; } 100% { box-shadow: 0 0 5px #FFD700; } }
-    .nav-pills-custom .nav-link { background: #f8f9fa; color: #6c757d; border: 1px solid #e9ecef; margin-right: 5px; margin-bottom: 5px; transition: all 0.3s; }
-    .nav-pills-custom .nav-link.active { background: #4b49ac; color: #fff; border-color: #4b49ac; box-shadow: 0 4px 6px rgba(75, 73, 172, 0.2); }
 </style>
 
 <script>
