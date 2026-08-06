@@ -631,7 +631,7 @@
 
                     <div class="mt-4 d-flex justify-content-between">
                         <a href="{{ route('users.index') }}" class="btn btn-light">Kembali</a>
-                        @if(auth()->user()->role == 'admin')
+                        @if(in_array(auth()->user()->role, ['admin', 'audit', 'admin_gaji']))
                             <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning text-white">Edit Data</a>
                         @endif
                     </div>
