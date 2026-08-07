@@ -664,15 +664,15 @@
                         @endif
                     </a>
                 </li>
-            @if (in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+            @endif
+
+            @if (in_array(auth()->user()->role, ['admin', 'admin_gaji', 'audit']))
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('inventory-returns.index') }}">
                         <i class="menu-icon mdi mdi-package-variant-minus"></i>
                         <span class="menu-title">History Pengembalian</span>
                     </a>
                 </li>
-            @endif
-
             @endif
         @endif
 
