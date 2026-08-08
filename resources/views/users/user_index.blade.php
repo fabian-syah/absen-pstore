@@ -103,7 +103,7 @@
                                                             @if ($user->profile_photo_path)
                                                                 <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="profile" class="img-sm rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: {{ $user->is_verified ? '2px solid #0d6efd' : 'none' }};">
                                                             @else
-                                                                <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random" alt="profile" class="img-sm rounded-circle">
+                                                                <img src="https://api.dicebear.com/9.x/fun-emoji/svg?seed={{ urlencode($user->name) }}" alt="profile" class="img-sm rounded-circle">
                                                             @endif
                                                             @if ($user->is_verified)
                                                                 <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center" style="bottom: -2px; right: -2px; width: 16px; height: 16px;">
@@ -253,7 +253,7 @@
                                                                 @if ($user->profile_photo_path)
                                                                     <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="profile" class="img-sm rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                                                                 @else
-                                                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=f8d7da&color=721c24" alt="profile" class="img-sm rounded-circle">
+                                                                    <img src="https://api.dicebear.com/9.x/fun-emoji/svg?seed={{ urlencode($user->name) }}" alt="profile" class="img-sm rounded-circle">
                                                                 @endif
                                                             </div>
                                                             <div>
