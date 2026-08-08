@@ -86,6 +86,9 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <div class="mt-3 d-flex justify-content-center">
+                                {{ $activeInventories->links('pagination::bootstrap-5') }}
+                            </div>
                         </div>
 
                         {{-- TAB 2: PENDING ACC --}}
@@ -129,6 +132,9 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <div class="mt-3 d-flex justify-content-center">
+                                {{ $pendingReturns->links('pagination::bootstrap-5') }}
+                            </div>
                         </div>
 
                         {{-- TAB 3: SELESAI --}}
@@ -171,6 +177,9 @@
                                         @endforelse
                                     </tbody>
                                 </table>
+                            </div>
+                            <div class="mt-3 d-flex justify-content-center">
+                                {{ $approvedReturns->links('pagination::bootstrap-5') }}
                             </div>
                         </div>
 

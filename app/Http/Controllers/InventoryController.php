@@ -102,9 +102,9 @@ class InventoryController extends Controller
             $pageTitle = 'Riwayat Inventaris Saya';
         }
 
-        $activeInventories = $activeQuery->latest()->get();
-        $pendingReturns = $pendingQuery->latest()->get();
-        $approvedReturns = $approvedQuery->latest()->get();
+        $activeInventories = $activeQuery->latest()->paginate(10, ['*'], 'active_page')->appends($request->except('active_page'));
+        $pendingReturns = $pendingQuery->latest()->paginate(10, ['*'], 'pending_page')->appends($request->except('pending_page'));
+        $approvedReturns = $approvedQuery->latest()->paginate(10, ['*'], 'approved_page')->appends($request->except('approved_page'));
 
         return view('inventory.history', compact('activeInventories', 'pendingReturns', 'approvedReturns', 'pageTitle'));
     }
