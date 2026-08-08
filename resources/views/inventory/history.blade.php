@@ -21,19 +21,19 @@
                         <li class="nav-item flex-sm-fill text-sm-center" role="presentation">
                             <button class="nav-link w-100 active rounded-top" id="dipakai-tab" data-bs-toggle="tab" data-bs-target="#dipakai" type="button" role="tab" aria-controls="dipakai" aria-selected="true" style="font-weight: bold; color: #17a2b8;">
                                 <i class="mdi mdi-package-variant"></i> Sedang Dipakai
-                                <span class="badge bg-info ms-2">{{ $activeInventories->count() }}</span>
+                                <span class="badge bg-info ms-2">{{ $activeInventories->total() }}</span>
                             </button>
                         </li>
                         <li class="nav-item flex-sm-fill text-sm-center" role="presentation">
                             <button class="nav-link w-100 rounded-top" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="false" style="font-weight: bold; color: #ffc107;">
                                 <i class="mdi mdi-clock-outline"></i> Menunggu ACC
-                                <span class="badge bg-warning text-dark ms-2">{{ $pendingReturns->count() }}</span>
+                                <span class="badge bg-warning text-dark ms-2">{{ $pendingReturns->total() }}</span>
                             </button>
                         </li>
                         <li class="nav-item flex-sm-fill text-sm-center" role="presentation">
                             <button class="nav-link w-100 rounded-top" id="selesai-tab" data-bs-toggle="tab" data-bs-target="#selesai" type="button" role="tab" aria-controls="selesai" aria-selected="false" style="font-weight: bold; color: #28a745;">
                                 <i class="mdi mdi-check-circle-outline"></i> Sudah Dikembalikan
-                                <span class="badge bg-success ms-2">{{ $approvedReturns->count() }}</span>
+                                <span class="badge bg-success ms-2">{{ $approvedReturns->total() }}</span>
                             </button>
                         </li>
                     </ul>
