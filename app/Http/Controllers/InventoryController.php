@@ -65,6 +65,35 @@ class InventoryController extends Controller
     }
 
     /**
+     * Tampilkan Riwayat Inventaris Saya (Sedang dipakai, Pending, Selesai)
+     */
+    public function history(Request $request)
+    {
+        $user = Auth::user();
+
+        // 1. Barang yang masih dipegang
+        $activeInventories = Inventory::where('user_id', $user->id)->latest()->get();
+
+        // 2. Menunggu ACC (Pending)
+        $pendingReturns = InventoryReturn::with(['inventory', 'admin'])
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        // 3. Sudah Dikembalikan (Approved)
+        $approvedReturns = InventoryReturn::with(['inventory', 'admin'])
+            ->where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->latest()
+            ->get();
+
+        $pageTitle = 'Riwayat Inventaris Saya';
+
+        return view('inventory.history', compact('activeInventories', 'pendingReturns', 'approvedReturns', 'pageTitle'));
+    }
+
+    /**
      * Tampilkan SEMUA DATA (KHUSUS ADMIN)
      */
     public function adminIndex(Request $request)

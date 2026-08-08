@@ -351,6 +351,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     Route::prefix('inventory')->name('inventory.')->group(function () {
         Route::get('/', [InventoryController::class, 'index'])->name('index');
+        Route::get('/history', [InventoryController::class, 'history'])->name('history');
 
         Route::get('/available', [InventoryController::class, 'available'])
             ->name('available')

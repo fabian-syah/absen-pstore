@@ -339,6 +339,19 @@
                 <span class="menu-title">Inventaris</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('inventory.history') ? 'active' : '' }}" href="{{ route('inventory.history') }}">
+                <i class="menu-icon mdi mdi-history"></i>
+                <span class="menu-title">Riwayat Inventaris</span>
+                @php
+                    $invTotal = \App\Models\Inventory::where('user_id', auth()->id())->count() + 
+                                \App\Models\InventoryReturn::where('user_id', auth()->id())->count();
+                @endphp
+                @if($invTotal > 0)
+                    <span class="badge badge-info rounded-pill ms-auto">{{ $invTotal }}</span>
+                @endif
+            </a>
+        </li>
         @if (auth()->user()->role != 'admin_gaji')
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('job-targets.index') }}">
