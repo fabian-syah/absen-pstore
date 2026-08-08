@@ -103,7 +103,11 @@
                                                             @if ($user->profile_photo_path)
                                                                 <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="profile" class="img-sm rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: {{ $user->is_verified ? '2px solid #0d6efd' : 'none' }};">
                                                             @else
-                                                                <img src="https://api.dicebear.com/9.x/fun-emoji/svg?seed={{ urlencode($user->name) }}" alt="profile" class="img-sm rounded-circle">
+                                                                @php
+                                                                    $bgColors = ['%23FFB6C1', '%23FFDAB9', '%23E6E6FA', '%23B0E0E6', '%2398FB98', '%23F0E68C'];
+                                                                    $bgColor = $bgColors[strlen($user->name) % count($bgColors)];
+                                                                @endphp
+                                                                <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='50' fill='{{ $bgColor }}'/><circle cx='30' cy='40' r='7' fill='%23333'/><circle cx='70' cy='40' r='7' fill='%23333'/><path d='M 35 60 Q 50 75 65 60' stroke='%23333' stroke-width='5' stroke-linecap='round' fill='none'/><circle cx='20' cy='50' r='6' fill='%23FF69B4' opacity='0.6'/><circle cx='80' cy='50' r='6' fill='%23FF69B4' opacity='0.6'/></svg>" alt="profile" class="img-sm rounded-circle">
                                                             @endif
                                                             @if ($user->is_verified)
                                                                 <span class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center" style="bottom: -2px; right: -2px; width: 16px; height: 16px;">
@@ -253,7 +257,11 @@
                                                                 @if ($user->profile_photo_path)
                                                                     <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="profile" class="img-sm rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                                                                 @else
-                                                                    <img src="https://api.dicebear.com/9.x/fun-emoji/svg?seed={{ urlencode($user->name) }}" alt="profile" class="img-sm rounded-circle">
+                                                                    @php
+                                                                        $bgColors = ['%23FFB6C1', '%23FFDAB9', '%23E6E6FA', '%23B0E0E6', '%2398FB98', '%23F0E68C'];
+                                                                        $bgColor = $bgColors[strlen($user->name) % count($bgColors)];
+                                                                    @endphp
+                                                                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='50' fill='{{ $bgColor }}'/><circle cx='30' cy='40' r='7' fill='%23333'/><circle cx='70' cy='40' r='7' fill='%23333'/><path d='M 35 60 Q 50 75 65 60' stroke='%23333' stroke-width='5' stroke-linecap='round' fill='none'/><circle cx='20' cy='50' r='6' fill='%23FF69B4' opacity='0.6'/><circle cx='80' cy='50' r='6' fill='%23FF69B4' opacity='0.6'/></svg>" alt="profile" class="img-sm rounded-circle">
                                                                 @endif
                                                             </div>
                                                             <div>
