@@ -17,21 +17,21 @@
                     </div>
 
                     {{-- NAV TABS --}}
-                    <ul class="nav nav-tabs border-bottom-0" id="inventoryHistoryTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active rounded-top" id="dipakai-tab" data-bs-toggle="tab" data-bs-target="#dipakai" type="button" role="tab" aria-controls="dipakai" aria-selected="true" style="font-weight: bold; color: #17a2b8;">
+                    <ul class="nav nav-tabs border-bottom-0 flex-column flex-sm-row" id="inventoryHistoryTab" role="tablist">
+                        <li class="nav-item flex-sm-fill text-sm-center" role="presentation">
+                            <button class="nav-link w-100 active rounded-top" id="dipakai-tab" data-bs-toggle="tab" data-bs-target="#dipakai" type="button" role="tab" aria-controls="dipakai" aria-selected="true" style="font-weight: bold; color: #17a2b8;">
                                 <i class="mdi mdi-package-variant"></i> Sedang Dipakai
                                 <span class="badge bg-info ms-2">{{ $activeInventories->count() }}</span>
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-top" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="false" style="font-weight: bold; color: #ffc107;">
+                        <li class="nav-item flex-sm-fill text-sm-center" role="presentation">
+                            <button class="nav-link w-100 rounded-top" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="false" style="font-weight: bold; color: #ffc107;">
                                 <i class="mdi mdi-clock-outline"></i> Menunggu ACC
                                 <span class="badge bg-warning text-dark ms-2">{{ $pendingReturns->count() }}</span>
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-top" id="selesai-tab" data-bs-toggle="tab" data-bs-target="#selesai" type="button" role="tab" aria-controls="selesai" aria-selected="false" style="font-weight: bold; color: #28a745;">
+                        <li class="nav-item flex-sm-fill text-sm-center" role="presentation">
+                            <button class="nav-link w-100 rounded-top" id="selesai-tab" data-bs-toggle="tab" data-bs-target="#selesai" type="button" role="tab" aria-controls="selesai" aria-selected="false" style="font-weight: bold; color: #28a745;">
                                 <i class="mdi mdi-check-circle-outline"></i> Sudah Dikembalikan
                                 <span class="badge bg-success ms-2">{{ $approvedReturns->count() }}</span>
                             </button>
@@ -43,7 +43,7 @@
                         {{-- TAB 1: SEDANG DIPAKAI --}}
                         <div class="tab-pane fade show active" id="dipakai" role="tabpanel" aria-labelledby="dipakai-tab">
                             <div class="table-responsive mt-3">
-                                <table class="table table-hover align-middle">
+                                <table class="table table-hover align-middle text-nowrap">
                                     <thead>
                                         <tr>
                                             <th>Nama Barang</th>
@@ -91,7 +91,7 @@
                         {{-- TAB 2: PENDING ACC --}}
                         <div class="tab-pane fade" id="pending" role="tabpanel" aria-labelledby="pending-tab">
                             <div class="table-responsive mt-3">
-                                <table class="table table-hover align-middle">
+                                <table class="table table-hover align-middle text-nowrap">
                                     <thead>
                                         <tr>
                                             <th>Barang</th>
@@ -134,7 +134,7 @@
                         {{-- TAB 3: SELESAI --}}
                         <div class="tab-pane fade" id="selesai" role="tabpanel" aria-labelledby="selesai-tab">
                             <div class="table-responsive mt-3">
-                                <table class="table table-hover align-middle">
+                                <table class="table table-hover align-middle text-nowrap">
                                     <thead>
                                         <tr>
                                             <th>Barang</th>
