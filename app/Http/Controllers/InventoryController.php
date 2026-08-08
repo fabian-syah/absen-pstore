@@ -70,25 +70,41 @@ class InventoryController extends Controller
     public function history(Request $request)
     {
         $user = Auth::user();
+        $role = strtolower($user->role);
 
-        // 1. Barang yang masih dipegang
-        $activeInventories = Inventory::where('user_id', $user->id)->latest()->get();
+        $activeQuery = Inventory::with('user');
+        $pendingQuery = InventoryReturn::with(['inventory', 'admin', 'user'])->where('status', 'pending');
+        $approvedQuery = InventoryReturn::with(['inventory', 'admin', 'user'])->where('status', 'approved');
 
-        // 2. Menunggu ACC (Pending)
-        $pendingReturns = InventoryReturn::with(['inventory', 'admin'])
-            ->where('user_id', $user->id)
-            ->where('status', 'pending')
-            ->latest()
-            ->get();
+        if (in_array($role, ['admin', 'admin_gaji'])) {
+            $activeQuery->whereNotNull('user_id');
+            $pageTitle = 'Riwayat Inventaris (Semua Data)';
+        } elseif (in_array($role, ['audit', 'leader'])) {
+            $allowedBranches = $role == 'audit' ? $user->branches->pluck('id')->toArray() : [$user->branch_id];
+            
+            $activeQuery->whereHas('user', function($q) use ($allowedBranches) {
+                $q->whereIn('branch_id', $allowedBranches);
+            })->whereNotNull('user_id');
 
-        // 3. Sudah Dikembalikan (Approved)
-        $approvedReturns = InventoryReturn::with(['inventory', 'admin'])
-            ->where('user_id', $user->id)
-            ->where('status', 'approved')
-            ->latest()
-            ->get();
+            $pendingQuery->whereHas('user', function($q) use ($allowedBranches) {
+                $q->whereIn('branch_id', $allowedBranches);
+            });
 
-        $pageTitle = 'Riwayat Inventaris Saya';
+            $approvedQuery->whereHas('user', function($q) use ($allowedBranches) {
+                $q->whereIn('branch_id', $allowedBranches);
+            });
+
+            $pageTitle = 'Riwayat Inventaris (Cabang)';
+        } else {
+            $activeQuery->where('user_id', $user->id);
+            $pendingQuery->where('user_id', $user->id);
+            $approvedQuery->where('user_id', $user->id);
+            $pageTitle = 'Riwayat Inventaris Saya';
+        }
+
+        $activeInventories = $activeQuery->latest()->get();
+        $pendingReturns = $pendingQuery->latest()->get();
+        $approvedReturns = $approvedQuery->latest()->get();
 
         return view('inventory.history', compact('activeInventories', 'pendingReturns', 'approvedReturns', 'pageTitle'));
     }

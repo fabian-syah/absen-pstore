@@ -50,6 +50,9 @@
                                             <th>Kategori</th>
                                             <th>SN</th>
                                             <th>Kondisi</th>
+                                            @if(in_array(strtolower(auth()->user()->role), ['admin', 'admin_gaji', 'audit', 'leader']))
+                                                <th>Pemilik</th>
+                                            @endif
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
@@ -60,11 +63,17 @@
                                                 <td>{{ ucfirst($item->category) }}</td>
                                                 <td>{{ $item->serial_number ?: '-' }}</td>
                                                 <td><label class="badge badge-secondary">{{ $item->condition }}</label></td>
+                                                @if(in_array(strtolower(auth()->user()->role), ['admin', 'admin_gaji', 'audit', 'leader']))
+                                                    <td>
+                                                        <span class="fw-bold">{{ $item->user->name ?? '-' }}</span><br>
+                                                        <small class="text-muted">{{ $item->user->branch->name ?? '-' }}</small>
+                                                    </td>
+                                                @endif
                                                 <td>
                                                     <a href="{{ route('inventory.show', $item->id) }}" class="btn btn-inverse-info btn-icon btn-sm" title="Lihat Detail">
                                                         <i class="mdi mdi-eye"></i>
                                                     </a>
-                                                    <button type="button" class="btn btn-inverse-primary btn-icon btn-sm" title="Kembalikan" data-bs-toggle="modal" data-bs-target="#returnModal" data-id="{{ $item->id }}" data-name="{{ $item->item_name }}" data-user="{{ auth()->user()->name }}">
+                                                    <button type="button" class="btn btn-inverse-primary btn-icon btn-sm" title="Kembalikan" data-bs-toggle="modal" data-bs-target="#returnModal" data-id="{{ $item->id }}" data-name="{{ $item->item_name }}" data-user="{{ $item->user->name ?? auth()->user()->name }}">
                                                         <i class="mdi mdi-keyboard-return"></i>
                                                     </button>
                                                 </td>
@@ -86,6 +95,9 @@
                                     <thead>
                                         <tr>
                                             <th>Barang</th>
+                                            @if(in_array(strtolower(auth()->user()->role), ['admin', 'admin_gaji', 'audit', 'leader']))
+                                                <th>Pemilik</th>
+                                            @endif
                                             <th>Tgl Pengajuan</th>
                                             <th>Penerima (Fisik)</th>
                                             <th>Catatan</th>
@@ -98,6 +110,12 @@
                                                 <td>
                                                     <div class="fw-bold">{{ $return->inventory->item_name ?? 'Barang Dihapus' }}</div>
                                                 </td>
+                                                @if(in_array(strtolower(auth()->user()->role), ['admin', 'admin_gaji', 'audit', 'leader']))
+                                                    <td>
+                                                        <span class="fw-bold">{{ $return->user->name ?? '-' }}</span><br>
+                                                        <small class="text-muted">{{ $return->user->branch->name ?? '-' }}</small>
+                                                    </td>
+                                                @endif
                                                 <td>{{ \Carbon\Carbon::parse($return->return_date)->format('d M Y') }}</td>
                                                 <td>{{ $return->receiver_name }}</td>
                                                 <td>{{ $return->note ?: '-' }}</td>
@@ -120,6 +138,9 @@
                                     <thead>
                                         <tr>
                                             <th>Barang</th>
+                                            @if(in_array(strtolower(auth()->user()->role), ['admin', 'admin_gaji', 'audit', 'leader']))
+                                                <th>Pemilik</th>
+                                            @endif
                                             <th>Tgl Pengajuan</th>
                                             <th>Penerima (Fisik)</th>
                                             <th>Di-ACC Oleh</th>
@@ -132,6 +153,12 @@
                                                 <td>
                                                     <div class="fw-bold">{{ $return->inventory->item_name ?? 'Barang Dihapus' }}</div>
                                                 </td>
+                                                @if(in_array(strtolower(auth()->user()->role), ['admin', 'admin_gaji', 'audit', 'leader']))
+                                                    <td>
+                                                        <span class="fw-bold">{{ $return->user->name ?? '-' }}</span><br>
+                                                        <small class="text-muted">{{ $return->user->branch->name ?? '-' }}</small>
+                                                    </td>
+                                                @endif
                                                 <td>{{ \Carbon\Carbon::parse($return->return_date)->format('d M Y') }}</td>
                                                 <td>{{ $return->receiver_name }}</td>
                                                 <td>{{ $return->admin->name ?? '-' }}</td>
