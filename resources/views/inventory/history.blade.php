@@ -105,6 +105,9 @@
                                             <th>Penerima (Fisik)</th>
                                             <th>Catatan</th>
                                             <th>Status</th>
+                                            @if(auth()->check() && auth()->user()->isInventoryAdmin())
+                                                <th>Aksi</th>
+                                            @endif
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -123,6 +126,44 @@
                                                 <td>{{ $return->receiver_name }}</td>
                                                 <td>{{ $return->note ?: '-' }}</td>
                                                 <td><label class="badge badge-warning">Pending ACC</label></td>
+                                                @if(auth()->check() && auth()->user()->isInventoryAdmin())
+                                                    <td>
+                                                        <form action="{{ route('inventory-returns.approve', $return->id) }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            <button type="submit" class="btn btn-sm btn-success text-white mb-1" onclick="return confirm('Yakin ingin ACC pengembalian ini?')">
+                                                                <i class="mdi mdi-check"></i> Terima
+                                                            </button>
+                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-danger text-white mb-1" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $return->id }}">
+                                                            <i class="mdi mdi-close"></i> Tolak
+                                                        </button>
+
+                                                        {{-- MODAL TOLAK --}}
+                                                        <div class="modal fade" id="rejectModal{{ $return->id }}" tabindex="-1" aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content text-start">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title">Tolak Pengembalian</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <form action="{{ route('inventory-returns.reject', $return->id) }}" method="POST">
+                                                                        @csrf
+                                                                        <div class="modal-body">
+                                                                            <div class="form-group mb-3 text-wrap text-break">
+                                                                                <label>Alasan Penolakan <span class="text-danger">*</span></label>
+                                                                                <input type="text" name="rejection_note" class="form-control" required placeholder="Contoh: Barang kurang lengkap">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="modal-footer">
+                                                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                                                                            <button type="submit" class="btn btn-danger text-white">Tolak</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                @endif
                                             </tr>
                                         @empty
                                             <tr>
