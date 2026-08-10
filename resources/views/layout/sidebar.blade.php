@@ -611,7 +611,7 @@
         {{-- =================================== --}}
         {{-- VERIFIKASI (ADMIN & AUDIT) --}}
         {{-- =================================== --}}
-        @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji')
+        @if (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji' || auth()->user()->isInventoryAdmin())
             <li class="nav-item nav-category">Verifikasi</li>
 
             <li class="nav-item">
@@ -679,7 +679,7 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, ['admin', 'admin_gaji', 'audit']))
+            @if (auth()->user()->isInventoryAdmin() || auth()->user()->role == 'audit')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('inventory-returns.index') }}">
                         <i class="menu-icon mdi mdi-package-variant-minus"></i>

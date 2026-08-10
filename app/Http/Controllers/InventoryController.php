@@ -25,7 +25,7 @@ class InventoryController extends Controller
 
         // === 1. LOGIKA FILTER USER ID (SHORTCUT DARI PROFIL) ===
         // [UPDATE] Menambahkan 'leader' agar bisa melihat inventaris user lain saat klik dari profil
-        if ($request->has('user_id') && in_array(strtolower($user->role), ['admin', 'admin_gaji', 'audit', 'leader'])) {
+        if ($request->has('user_id') && ($user->isInventoryAdmin() || in_array(strtolower($user->role), ['audit', 'leader']))) {
             $query->where('user_id', $request->user_id);
 
             // Ambil nama user target untuk judul halaman
@@ -35,7 +35,7 @@ class InventoryController extends Controller
 
         // === 2. LOGIKA DEFAULT (HAK AKSES) ===
         // Jika BUKAN Admin (Audit, Leader, Security, User Biasa) DAN TIDAK sedang memfilter user lain (di blok atas)
-        elseif (!in_array(strtolower($user->role), ['admin', 'admin_gaji'])) {
+        elseif (!$user->isInventoryAdmin()) {
             // Default: Hanya lihat milik sendiri
             $query->where('user_id', $user->id);
             $pageTitle = 'Inventaris Saya';
@@ -76,7 +76,7 @@ class InventoryController extends Controller
         $pendingQuery = InventoryReturn::with(['inventory', 'admin', 'user'])->where('status', 'pending');
         $approvedQuery = InventoryReturn::with(['inventory', 'admin', 'user'])->where('status', 'approved');
 
-        if (in_array($role, ['admin', 'admin_gaji'])) {
+        if ($user->isInventoryAdmin()) {
             $activeQuery->whereNotNull('user_id');
             $pageTitle = 'Riwayat Inventaris (Semua Data)';
         } elseif (in_array($role, ['audit', 'leader'])) {
@@ -115,7 +115,7 @@ class InventoryController extends Controller
     public function adminIndex(Request $request)
     {
         // 1. CEK HAK AKSES (Security Layer)
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji'])) {
+        if (!Auth::user()->isInventoryAdmin()) {
             abort(403, 'Akses ditolak. Halaman ini khusus Admin.');
         }
 
@@ -156,7 +156,7 @@ class InventoryController extends Controller
 
         // === FILTER HAK AKSES BARU ===
         // Jika BUKAN Admin: Filter barang yang ID-nya ada di histori pengembalian oleh user ini.
-        if (!in_array(strtolower($user->role), ['admin', 'admin_gaji'])) {
+        if (!$user->isInventoryAdmin()) {
             // Ambil semua inventory_id yang user ini pernah kembalikan (status approved)
             $returnedInventoryIds = InventoryReturn::where('user_id', $user->id)
                 ->where('status', 'approved')
@@ -190,7 +190,7 @@ class InventoryController extends Controller
      */
     public function exportBranchInventory($branchId)
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji'])) {
+        if (!Auth::user()->isInventoryAdmin()) {
             abort(403);
         }
 
@@ -205,7 +205,7 @@ class InventoryController extends Controller
      */
     public function exportAllActive()
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji'])) {
+        if (!Auth::user()->isInventoryAdmin()) {
             abort(403);
         }
 
@@ -218,7 +218,7 @@ class InventoryController extends Controller
      */
     public function exportPusat()
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji'])) {
+        if (!Auth::user()->isInventoryAdmin()) {
             abort(403);
         }
 
@@ -231,7 +231,7 @@ class InventoryController extends Controller
      */
     public function exportCabang()
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji'])) {
+        if (!Auth::user()->isInventoryAdmin()) {
             abort(403);
         }
 
@@ -251,7 +251,7 @@ class InventoryController extends Controller
         $fixedUser = null; // Jika tidak null, maka form user terkunci ke orang ini
 
         // 1. JIKA ADMIN -> Bebas pilih siapa saja
-        if (in_array(strtolower($currentUser->role), ['admin', 'admin_gaji'])) {
+        if ($currentUser->isInventoryAdmin()) {
             if ($targetBranchId) {
                 $users = User::where('branch_id', $targetBranchId)->where('is_active', 1)->orderBy('name')->get();
             } else {
@@ -308,7 +308,7 @@ class InventoryController extends Controller
 
         // Validasi User ID
         // Jika Admin, atau (Audit/Leader dengan branch_id target) -> User ID Wajib dipilih
-        if (in_array(strtolower($user->role), ['admin', 'admin_gaji']) || ($request->has('target_branch_id') && in_array(strtolower($user->role), ['audit', 'leader']))) {
+        if ($user->isInventoryAdmin() || ($request->has('target_branch_id') && in_array(strtolower($user->role), ['audit', 'leader']))) {
             $rules['user_id'] = 'required|exists:users,id';
         }
 
@@ -318,7 +318,7 @@ class InventoryController extends Controller
             $data = $request->except(['item_photo', 'user_item_photo', 'document', 'target_branch_id']);
 
             // LOGIC USER ID
-            if (in_array(strtolower($user->role), ['admin', 'admin_gaji'])) {
+            if ($user->isInventoryAdmin()) {
                 $data['user_id'] = $request->user_id;
             }
             // LOGIC BARU: Audit/Leader Input untuk user lain di cabang
@@ -371,7 +371,7 @@ class InventoryController extends Controller
 
         // 1. Barang Gudang -> Cek hak akses untuk gudang
         if ($inventory->user_id === null) {
-            if (in_array(strtolower($user->role), ['admin', 'admin_gaji'])) {
+            if ($user->isInventoryAdmin()) {
                 return view('inventory.show', compact('inventory'));
             } else {
                 // Untuk user non-admin, cek apakah dia pernah mengembalikan barang ini
@@ -393,7 +393,7 @@ class InventoryController extends Controller
         }
 
         // 3. Admin -> Boleh Semua
-        if (in_array(strtolower($user->role), ['admin', 'admin_gaji'])) {
+        if ($user->isInventoryAdmin()) {
             return view('inventory.show', compact('inventory'));
         }
 
@@ -419,7 +419,7 @@ class InventoryController extends Controller
      */
     public function edit($id)
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji']))
+        if (!Auth::user()->isInventoryAdmin())
             abort(403);
 
         $inventory = Inventory::findOrFail($id);
@@ -432,7 +432,7 @@ class InventoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji']))
+        if (!Auth::user()->isInventoryAdmin())
             abort(403);
 
         $inventory = Inventory::findOrFail($id);
@@ -480,7 +480,7 @@ class InventoryController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'admin_gaji']))
+        if (!Auth::user()->isInventoryAdmin())
             abort(403);
 
         $inventory = Inventory::findOrFail($id);

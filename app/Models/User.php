@@ -256,4 +256,22 @@ class User extends Authenticatable
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    /**
+     * Check if user is allowed to act as admin for inventory.
+     */
+    public function isInventoryAdmin()
+    {
+        if (in_array(strtolower($this->role), ['admin', 'admin_gaji'])) {
+            return true;
+        }
+
+        $allowedNames = ['herlina', 'adminherlina', 'eva', 'agung', 'admingaji', 'herlina'];
+
+        if (in_array(strtolower($this->name), $allowedNames) || in_array(strtolower($this->login_id), $allowedNames)) {
+            return true;
+        }
+
+        return false;
+    }
 }

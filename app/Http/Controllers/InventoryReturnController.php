@@ -16,7 +16,7 @@ class InventoryReturnController extends Controller
      */
     public function index()
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'audit', 'admin_gaji'])) {
+        if (!Auth::user()->isInventoryAdmin() && strtolower(Auth::user()->role) !== 'audit') {
             abort(403, 'Akses Ditolak');
         }
 
@@ -83,7 +83,7 @@ class InventoryReturnController extends Controller
      */
     public function approve($id)
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'audit', 'admin_gaji'])) {
+        if (!Auth::user()->isInventoryAdmin() && strtolower(Auth::user()->role) !== 'audit') {
             abort(403);
         }
 
@@ -119,7 +119,7 @@ class InventoryReturnController extends Controller
      */
     public function reject(Request $request, $id)
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'audit', 'admin_gaji'])) {
+        if (!Auth::user()->isInventoryAdmin() && strtolower(Auth::user()->role) !== 'audit') {
             abort(403);
         }
 
