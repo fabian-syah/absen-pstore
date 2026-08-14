@@ -6,7 +6,7 @@
 
             {{-- TOMBOL AKSI (Hanya muncul di layar, tidak saat print) --}}
             <div class="d-flex justify-content-between mb-3 no-print">
-                <a href="{{ route('my-salary.index') }}" class="btn btn-light shadow-sm"><i class="mdi mdi-arrow-left"></i>
+                <a href="{{ url()->previous() }}" class="btn btn-light shadow-sm"><i class="mdi mdi-arrow-left"></i>
                     Kembali</a>
                 <button onclick="window.print()" class="btn btn-primary shadow-sm"><i class="mdi mdi-printer"></i> Cetak
                     / PDF</button>

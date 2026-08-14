@@ -53,7 +53,7 @@
                                     <th>Divisi</th>
                                     <th>Status Gaji ({{ \Carbon\Carbon::createFromFormat('m', $month)->locale('id')->isoFormat('MMMM') }} {{ $year }})</th>
                                     <th>Metode Bayar</th>
-                                    <th>Gaji Terakhir</th>
+                                    <th>Gaji Bulan Ini</th>
                                     <th>Bonus & THR</th>
                                     <th>Status Payroll</th>
                                     <th class="text-center">Aksi</th>
@@ -63,7 +63,6 @@
                                 @forelse($users as $user)
                                     @php
                                         $salaryThisMonth = $user->salaries->where('month', $month)->where('year', $year)->first();
-                                        $latestSalary = $user->salaries->first(); // Sudah diurutkan desc di controller
                                         $bonusThisMonth = $user->bonuses->first(); // Sudah di-filter month & year
                                     @endphp
                                     <tr>
@@ -85,17 +84,14 @@
                                         <td class="align-middle">
                                             @if($salaryThisMonth)
                                                 <span class="badge badge-success mb-1">Sudah Digaji</span>
-                                                <small class="d-block text-muted">
-                                                    Rp {{ number_format($salaryThisMonth->total_amount, 0, ',', '.') }}
-                                                </small>
                                             @else
                                                 <span class="badge badge-warning mb-1">Belum Digaji</span>
                                             @endif
                                         </td>
 
                                         <td>
-                                            @if($latestSalary)
-                                                @if($latestSalary->payment_method == 'transfer')
+                                            @if($salaryThisMonth)
+                                                @if($salaryThisMonth->payment_method == 'transfer')
                                                     <span class="badge badge-opacity-primary"><i class="mdi mdi-bank"></i>
                                                         Transfer</span>
                                                 @else
@@ -106,14 +102,12 @@
                                             @endif
                                         </td>
 
-                                        {{-- Gaji Terakhir --}}
+                                        {{-- Gaji Bulan Ini --}}
                                         <td>
-                                            @if($latestSalary)
+                                            @if($salaryThisMonth)
                                                 <div class="fw-bold text-dark">Rp
-                                                    {{ number_format($latestSalary->total_amount, 0, ',', '.') }}
+                                                    {{ number_format($salaryThisMonth->total_amount, 0, ',', '.') }}
                                                 </div>
-                                                <small
-                                                    class="text-muted">{{ $latestSalary->month }}/{{ $latestSalary->year }}</small>
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
@@ -139,10 +133,10 @@
                                             @endif
                                         </td>
 
-                                        {{-- Status Payroll Terakhir --}}
+                                        {{-- Status Payroll Bulan Ini --}}
                                         <td>
-                                            @if($latestSalary)
-                                                @if($latestSalary->status == 'paid')
+                                            @if($salaryThisMonth)
+                                                @if($salaryThisMonth->status == 'paid')
                                                     <span class="badge badge-outline-success"><i class="mdi mdi-check"></i> Paid</span>
                                                 @else
                                                     <span class="badge badge-outline-warning"><i class="mdi mdi-clock"></i>
@@ -162,8 +156,8 @@
                                                     </a>
                                                 @endif
 
-                                                @if($latestSalary)
-                                                    <a href="{{ route('salaries.show', $latestSalary->id) }}"
+                                                @if($salaryThisMonth)
+                                                    <a href="{{ route('salaries.show', $salaryThisMonth->id) }}"
                                                         class="btn btn-sm btn-primary text-white px-3">
                                                         <i class="mdi mdi-file-document-outline border-0"></i> Struk
                                                     </a>
