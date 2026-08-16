@@ -26,6 +26,26 @@
                 </div>
             </div>
 
+            @if(isset($pendingLeaves) && $pendingLeaves->count() > 0)
+                <div class="alert alert-warning mb-4" role="alert" style="border-left: 4px solid #ffc107;">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="mdi mdi-alert-circle-outline fs-4 me-2 text-warning"></i>
+                        <h6 class="alert-heading fw-bold mb-0 text-dark">Menunggu Verifikasi Audit</h6>
+                    </div>
+                    <p class="mb-2 text-dark" style="font-size: 13px;">
+                        Anda memiliki <strong>{{ $pendingLeaves->count() }} pengajuan</strong> yang belum diverifikasi oleh audit:
+                    </p>
+                    <ul class="mb-0 text-dark" style="font-size: 13px; padding-left: 1.5rem;">
+                        @foreach($pendingLeaves as $pending)
+                            <li>
+                                <strong>{{ ucfirst($pending->type) }}</strong> 
+                                <span class="text-muted">- {{ \Carbon\Carbon::parse($pending->start_date)->format('d M Y') }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="card shadow-sm rounded-4 border-0">
                 <div class="card-body p-4">
                     @if ($errors->any())

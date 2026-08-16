@@ -99,7 +99,10 @@ class LeaveRequestController extends Controller
      */
     public function create()
     {
-        return view('leave_requests.create');
+        $pendingLeaves = LeaveRequest::where('user_id', Auth::id())
+                                     ->where('status', 'pending')
+                                     ->get();
+        return view('leave_requests.create', compact('pendingLeaves'));
     }
 
     /**
@@ -108,7 +111,10 @@ class LeaveRequestController extends Controller
     public function createCuti()
     {
         $user = Auth::user();
-        return view('leave_requests.create_cuti', compact('user'));
+        $pendingLeaves = LeaveRequest::where('user_id', $user->id)
+                                     ->where('status', 'pending')
+                                     ->get();
+        return view('leave_requests.create_cuti', compact('user', 'pendingLeaves'));
     }
 
     /**
