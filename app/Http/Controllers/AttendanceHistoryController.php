@@ -335,8 +335,8 @@ class AttendanceHistoryController extends Controller
                 ]);
             }
         } else {
-            // Jika status diubah dari Cuti ke status lain, hapus record cuti di tanggal tersebut
-            LeaveRequest::where('user_id', $userId)
+            // Jika status diubah dari Cuti ke status lain, kembalikan saldo cuti untuk 1 hari ini
+            $leave = LeaveRequest::where('user_id', $userId)
                 ->where('type', 'cuti')
                 ->where(function ($q) use ($date) {
                     $q->whereDate('start_date', $date)
@@ -345,7 +345,23 @@ class AttendanceHistoryController extends Controller
                                 ->whereDate('end_date', '>=', $date);
                         });
                 })
-                ->delete();
+                ->first();
+
+            if ($leave) {
+                $refundTag = "[Refunded:{$date}]";
+                // Cek agar tidak refund dobel untuk tanggal yang sama
+                if (!str_contains($leave->reason ?? '', $refundTag)) {
+                    $u = \App\Models\User::find($userId);
+                    if ($u) {
+                        $u->increment('leave_balance', 1);
+                        $u->decrement('leave_taken', 1);
+                        
+                        $leave->update([
+                            'reason' => ($leave->reason ? $leave->reason . ' ' : '') . $refundTag
+                        ]);
+                    }
+                }
+            }
         }
     }
 }

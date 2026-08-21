@@ -110,8 +110,8 @@ class AttendanceCorrectionController extends Controller
         $date = \Carbon\Carbon::parse($attendance->check_in_time)->format('Y-m-d');
         $userId = $attendance->user_id;
 
-        // Karena ini fungsi delete/destroy, kita asumsikan tujuannya adalah membatalkan cuti jika ada
-        \App\Models\LeaveRequest::where('user_id', $userId)
+        // Kembalikan saldo cuti untuk 1 hari ini
+        $leave = \App\Models\LeaveRequest::where('user_id', $userId)
             ->where('type', 'cuti')
             ->where(function ($q) use ($date) {
                 $q->whereDate('start_date', $date)
@@ -120,6 +120,22 @@ class AttendanceCorrectionController extends Controller
                             ->whereDate('end_date', '>=', $date);
                     });
             })
-            ->delete();
+            ->first();
+
+        if ($leave) {
+            $refundTag = "[Refunded:{$date}]";
+            // Cek agar tidak refund dobel untuk tanggal yang sama
+            if (!str_contains($leave->reason ?? '', $refundTag)) {
+                $u = \App\Models\User::find($userId);
+                if ($u) {
+                    $u->increment('leave_balance', 1);
+                    $u->decrement('leave_taken', 1);
+                    
+                    $leave->update([
+                        'reason' => ($leave->reason ? $leave->reason . ' ' : '') . $refundTag
+                    ]);
+                }
+            }
+        }
     }
 }

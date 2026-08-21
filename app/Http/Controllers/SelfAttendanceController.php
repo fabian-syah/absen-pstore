@@ -358,11 +358,10 @@ class SelfAttendanceController extends Controller
                     'check_in_time' => $currentTime, // Ambil jam asli selfie
                     'photo_path' => $path,           // Simpan foto selfie
                     'latitude' => $request->latitude,
-                    'longitude' => $request->longitude,
                     'attendance_type' => 'self',      // Ubah tipe jadi self
                     'status' => 'pending_verification',
-                    // Preserve presence_status if it was already set (e.g. Izin Telat)
-                    'presence_status' => $existingAttendanceToday->presence_status ?: 'Masuk',
+                    // Preserve presence_status ONLY if it was Izin Telat. Otherwise, auto-override to Masuk.
+                    'presence_status' => ($existingAttendanceToday->presence_status == 'Izin Telat' || str_contains(strtolower($existingAttendanceToday->presence_status), 'telat')) ? $existingAttendanceToday->presence_status : 'Masuk',
                     'notes' => ($existingAttendanceToday->notes ? $existingAttendanceToday->notes . " | " : "") . "[Selfie: " . ($request->notes ?? 'Tanpa catatan') . "]",
                 ]);
             } else {
