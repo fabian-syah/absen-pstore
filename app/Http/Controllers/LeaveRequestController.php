@@ -654,8 +654,6 @@ class LeaveRequestController extends Controller
 
         $query = LeaveRequest::with(['user.branch', 'user.division', 'approver'])
             ->where('status', 'approved')
-            ->where('type', 'cuti')
-            ->where('start_date', '<=', $today)
             ->where('end_date', '>=', $today);
 
         // Filter Audit (Branch Scope)

@@ -4,8 +4,8 @@
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="fw-bold text-dark mb-1">User Aktif Cuti</h2>
-                <p class="text-muted mb-0">Daftar karyawan yang sedang menjalankan cuti hari ini ({{ now()->format('d M Y') }}).</p>
+                <h2 class="fw-bold text-dark mb-1">Izin & Cuti (Aktif & Mendatang)</h2>
+                <p class="text-muted mb-0">Daftar karyawan dengan izin/cuti berjalan atau akan datang.</p>
             </div>
             
             <div class="d-flex gap-2">
@@ -137,7 +137,7 @@
                                             @if($elapsed > 0 && $elapsed < $total)
                                                 <button type="button" class="btn btn-soft-warning btn-icon rounded-circle shadow-sm" 
                                                         onclick="confirmFinishEarly('{{ $leave->id }}', '{{ $leave->user->name }}', '{{ $elapsed }}')"
-                                                        title="Akhiri Cuti (Masuk Hari Ini)">
+                                                        title="Akhiri Izin (Masuk Hari Ini)">
                                                     <i class="mdi mdi-calendar-check"></i>
                                                 </button>
                                                 <form id="finish-early-form-{{ $leave->id }}" action="{{ route('leave-requests.finish-early-admin', $leave->id) }}" method="POST" class="d-none">
@@ -165,8 +165,8 @@
                                             <div class="bg-light rounded-circle p-4 mb-3">
                                                 <i class="mdi mdi-calendar-blank fs-1 text-muted"></i>
                                             </div>
-                                            <h6 class="fw-bold">Tidak Ada User Aktif Cuti</h6>
-                                            <p class="small">Hari ini tidak ada karyawan yang tercatat sedang cuti.</p>
+                                            <h6 class="fw-bold">Tidak Ada Data Izin/Cuti</h6>
+                                            <p class="small">Tidak ada karyawan yang tercatat sedang izin/cuti hari ini atau mendatang.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -191,8 +191,8 @@
     <script>
         function confirmDelete(id, name) {
             Swal.fire({
-                title: 'Hapus & Restore Penuh?',
-                text: `Data cuti ${name} akan DIHAPUS PERMANEN. Seluruh saldo (${name}) hari akan dikembalikan ke user.`,
+                title: 'Batalkan Izin/Cuti?',
+                text: `Data izin/cuti ${name} akan DIBATALKAN. Jika ini cuti, saldo akan dikembalikan. Absensi yang tercatat juga akan dihapus.`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -210,8 +210,8 @@
 
         function confirmFinishEarly(id, name, elapsed) {
             Swal.fire({
-                title: 'Akhiri Cuti Lebih Awal?',
-                text: `${name} masuk hari ini? Masa cuti akan diubah menjadi ${parseInt(elapsed) - 1} hari (selesai kemarin). Sisa saldo hari yang belum terpakai akan dikembalikan.`,
+                title: 'Akhiri Izin Lebih Awal?',
+                text: `${name} masuk kerja hari ini? Masa izin akan diubah menjadi ${parseInt(elapsed) - 1} hari (selesai kemarin). Sisa saldo (jika cuti) akan dikembalikan.`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#ffc107',

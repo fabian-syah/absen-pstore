@@ -142,7 +142,7 @@
                                             @endif
                                         </td>
 
-                                        {{-- KOLOM STATUS --}}
+                                        {{-- KOLOM STATUS & AKSI --}}
                                         <td>
                                             @if ($req->status == 'approved')
                                                 <div class="d-flex align-items-center text-success fw-bold">
@@ -151,6 +151,19 @@
                                                 <small class="text-muted d-block mt-1">
                                                     Oleh: {{ $req->approver->name ?? 'System' }}
                                                 </small>
+                                                
+                                                {{-- Tombol Batal jika belum lewat end_date --}}
+                                                @if(\Carbon\Carbon::parse($req->end_date)->endOfDay()->isFuture())
+                                                    <form action="{{ route('leave-requests.cancel', $req->id) }}" method="POST"
+                                                        class="mt-2"
+                                                        onsubmit="return confirm('Yakin ingin membatalkan pengajuan ini? Saldo cuti (jika ada) akan dikembalikan dan data absensi akan dihapus/direset.')">
+                                                        @csrf @method('PATCH')
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill" title="Batalkan Izin/Cuti">
+                                                            <i class="mdi mdi-close-circle me-1"></i> Batalkan
+                                                        </button>
+                                                    </form>
+                                                @endif
+
                                             @elseif($req->status == 'rejected')
                                                 <div class="d-flex align-items-center text-danger fw-bold">
                                                     <i class="mdi mdi-close-circle fs-5 me-2"></i> Ditolak
