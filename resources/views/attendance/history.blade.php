@@ -572,11 +572,29 @@
                                                         <button type="button" class="btn btn-info text-white" data-bs-toggle="modal"
                                                             data-bs-target="#editAuditModal{{ $att->id }}"><i
                                                                 class="mdi mdi-pencil"></i></button>
+                                                        <form action="{{ route('audit.delete_day') }}" method="POST" class="d-inline" onsubmit="return confirm('HAPUS BERSIH: Yakin ingin menghapus semua data (Absen dan Izin/Libur beserta fotonya) untuk tanggal ini? Halaman ini akan menjadi seperti belum pernah absen sama sekali.')">
+                                                            @csrf
+                                                            <input type="hidden" name="user_id" value="{{ $employee->id }}">
+                                                            <input type="hidden" name="date" value="{{ $displayDate->format('Y-m-d') }}">
+                                                            <button type="submit" class="btn btn-danger text-white rounded-end" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" title="Hapus Bersih Hari Ini">
+                                                                <i class="mdi mdi-delete"></i>
+                                                            </button>
+                                                        </form>
                                                     </div>
                                                 @else
-                                                    <button type="button" class="btn btn-info btn-sm text-white shadow-sm px-3"
-                                                        data-bs-toggle="modal" data-bs-target="#createAuditModal{{ $loop->index }}"><i
-                                                            class="mdi mdi-pencil"></i> Edit</button>
+                                                    <div class="btn-group btn-group-sm shadow-sm">
+                                                        <button type="button" class="btn btn-info text-white"
+                                                            data-bs-toggle="modal" data-bs-target="#createAuditModal{{ $loop->index }}"><i
+                                                                class="mdi mdi-pencil"></i> Edit</button>
+                                                        <form action="{{ route('audit.delete_day') }}" method="POST" class="d-inline" onsubmit="return confirm('HAPUS BERSIH: Yakin ingin membatalkan Izin/Libur khusus untuk tanggal ini? Data akan bersih dan kembali kosong.')">
+                                                            @csrf
+                                                            <input type="hidden" name="user_id" value="{{ $employee->id }}">
+                                                            <input type="hidden" name="date" value="{{ $displayDate->format('Y-m-d') }}">
+                                                            <button type="submit" class="btn btn-danger text-white rounded-end" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" title="Hapus Bersih Hari Ini">
+                                                                <i class="mdi mdi-delete"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 @endif
                                             </td>
                                         @endif

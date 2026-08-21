@@ -1116,4 +1116,64 @@ class AuditController extends Controller
             }
         }
     }
-} // <--- Ini penutup class AuditController
+    /**
+     * Menghapus seluruh data absensi (dan membatalkan cuti/libur/izin) khusus untuk 1 tanggal terpilih.
+     */
+    public function deleteAttendanceDay(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'date' => 'required|date'
+        ]);
+
+        $userId = $request->user_id;
+        $date = $request->date;
+
+        // 1. Hapus record Attendance jika ada
+        $attendances = Attendance::where('user_id', $userId)
+            ->whereDate('check_in_time', $date)
+            ->get();
+
+        foreach ($attendances as $att) {
+            // Hapus foto jika ada
+            if ($att->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($att->photo_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($att->photo_path);
+            }
+            if ($att->photo_out_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($att->photo_out_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($att->photo_out_path);
+            }
+            if ($att->audit_photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($att->audit_photo_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($att->audit_photo_path);
+            }
+            $att->delete();
+        }
+
+        // 2. Hapus atau refund LeaveRequest khusus untuk hari tersebut
+        $leaves = LeaveRequest::where('user_id', $userId)
+            ->where(function ($q) use ($date) {
+                $q->whereDate('start_date', $date)
+                    ->orWhere(function ($q2) use ($date) {
+                        $q2->whereDate('start_date', '<=', $date)
+                            ->whereDate('end_date', '>=', $date);
+                    });
+            })->get();
+
+        foreach ($leaves as $leave) {
+            $refundTag = "[Refunded:{$date}]";
+            if (!str_contains($leave->reason ?? '', $refundTag)) {
+                if ($leave->type == 'cuti') {
+                    $u = \App\Models\User::find($userId);
+                    if ($u) {
+                        $u->increment('leave_balance', 1);
+                        $u->decrement('leave_taken', 1);
+                    }
+                }
+                $leave->update([
+                    'reason' => ($leave->reason ? $leave->reason . ' ' : '') . $refundTag
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Data absensi dan izin untuk tanggal tersebut telah dihapus bersih.');
+    }
+}
