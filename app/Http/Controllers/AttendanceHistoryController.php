@@ -139,6 +139,10 @@ class AttendanceHistoryController extends Controller
                 if ($l->type === 'telat' && !$att) {
                     return false;
                 }
+                // Cek apakah hari ini sudah di-refund/hapus oleh Admin
+                if (str_contains($l->reason ?? '', '[Refunded:' . $date->format('Y-m-d') . ']')) {
+                    return false;
+                }
                 $lStart = Carbon::parse($l->start_date, $branchTimezone)->startOfDay();
                 $lEnd = Carbon::parse($l->end_date ?? $l->start_date, $branchTimezone)->endOfDay();
                 return $date->between($lStart, $lEnd);
