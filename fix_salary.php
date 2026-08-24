@@ -4,7 +4,7 @@ $app = require_once __DIR__ . '/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-$user = App\Models\User::where('username', 'pikawidaa')->orWhere('id', 563)->first();
+$user = App\Models\User::find(563);
 if (!$user) {
     echo "User not found\n";
     exit;
