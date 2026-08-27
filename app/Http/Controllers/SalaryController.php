@@ -228,17 +228,18 @@ class SalaryController extends Controller
         }
 
         // [BARU] Hitung Cuti Lebih (kelebihan dari jatah tahunan)
-        // Dihitung DINAMIS dari approved cuti di TAHUN INI
+        // Dihitung HANYA untuk cuti yang diambil PADA PERIODE INI
         $cutiLebih = 0;
-        if ($selectedUser) {
+        if ($selectedUser && isset($monthStartDate) && isset($monthEndDate)) {
             $yearlyLimit = $selectedUser->yearly_leave_limit ?? 12;
             $currentYear = now()->year;
 
-            // Hitung total hari cuti yang sudah disetujui TAHUN INI
-            $totalApprovedCutiDays = LeaveRequest::where('user_id', $selectedUserId)
+            // 1. Hitung total cuti SEBELUM periode gaji ini (tahun yang sama)
+            $cutiSebelumnya = LeaveRequest::where('user_id', $selectedUserId)
                 ->where('type', 'cuti')
                 ->where('status', 'approved')
                 ->whereYear('start_date', $currentYear)
+                ->where('start_date', '<', $monthStartDate->format('Y-m-d'))
                 ->get()
                 ->sum(function ($req) {
                     $start = Carbon::parse($req->start_date);
@@ -246,8 +247,28 @@ class SalaryController extends Controller
                     return $start->diffInDays($end) + 1;
                 });
 
-            if ($totalApprovedCutiDays > $yearlyLimit) {
-                $cutiLebih = $totalApprovedCutiDays - $yearlyLimit;
+            // 2. Hitung total cuti DALAM periode gaji ini
+            $cutiPeriodeIni = LeaveRequest::where('user_id', $selectedUserId)
+                ->where('type', 'cuti')
+                ->where('status', 'approved')
+                ->whereBetween('start_date', [$monthStartDate->format('Y-m-d'), $monthEndDate->format('Y-m-d')])
+                ->get()
+                ->sum(function ($req) {
+                    $start = Carbon::parse($req->start_date);
+                    $end = $req->end_date ? Carbon::parse($req->end_date) : $start;
+                    return $start->diffInDays($end) + 1;
+                });
+
+            $totalCuti = $cutiSebelumnya + $cutiPeriodeIni;
+
+            if ($totalCuti > $yearlyLimit) {
+                if ($cutiSebelumnya >= $yearlyLimit) {
+                    // Jika sebelumnya sudah melebihi limit, maka semua cuti di periode ini dipotong
+                    $cutiLebih = $cutiPeriodeIni;
+                } else {
+                    // Jika baru melebihi limit di periode ini, potong selisih kelebihannya saja
+                    $cutiLebih = $totalCuti - $yearlyLimit;
+                }
             }
         }
 
