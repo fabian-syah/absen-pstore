@@ -240,14 +240,14 @@ class DashboardController extends Controller
         // 5. DATA UNTUK WIDGET & LEADERBOARD (FIXED LOGIC)
         // =========================================================================
 
-        // Define Leaderboard Date Range (26th of previous month to 25th of current month)
         // [FIX] Jika hari ini sudah lewat dari tanggal 25, maka hitungan masuk ke bulan berikutnya
-        $targetDate = $nowInBranch->copy();
-        if ($targetDate->day > 25) {
+        // Gunakan startOfMonth() agar terhindar dari bug lompat bulan (overflow) di tanggal 31
+        $targetDate = $nowInBranch->copy()->startOfMonth();
+        if ($nowInBranch->day > 25) {
             $targetDate->addMonth();
         }
         
-        $dateObjMonth = Carbon::createFromDate($targetDate->year, $targetDate->month, 1, $userTimezone);
+        $dateObjMonth = $targetDate->copy();
         $startDateMonth = $dateObjMonth->copy()->subMonth()->day(26)->startOfDay();
         $endDateMonth = $dateObjMonth->copy()->day(25)->endOfDay();
 

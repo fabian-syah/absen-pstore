@@ -411,10 +411,10 @@ class TeamController extends Controller
         // Default bulan sesuai periode 26-25
         $branchTz = $employee->branch?->timezone ?? 'Asia/Jakarta';
         $now = Carbon::now($branchTz);
+        
+        $defaultPeriod = $now->copy()->startOfMonth();
         if ($now->day >= 26) {
-            $defaultPeriod = $now->copy()->addMonth();
-        } else {
-            $defaultPeriod = $now->copy();
+            $defaultPeriod->addMonth();
         }
         $selectedMonth = $request->get('month', $defaultPeriod->month);
         $selectedYear = $request->get('year', $defaultPeriod->year);

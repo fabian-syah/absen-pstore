@@ -33,10 +33,11 @@ class AttendanceHistoryController extends Controller
         // Default bulan sesuai periode 26-25 (tanggal >= 26 berarti sudah masuk periode bulan berikutnya)
         $branchTz = $targetUser->branch?->timezone ?? 'Asia/Jakarta';
         $now = Carbon::now($branchTz);
+        
+        // Gunakan startOfMonth() sebelum addMonth() untuk menghindari bug overflow di akhir bulan (tanggal 31)
+        $defaultPeriod = $now->copy()->startOfMonth();
         if ($now->day >= 26) {
-            $defaultPeriod = $now->copy()->addMonth();
-        } else {
-            $defaultPeriod = $now->copy();
+            $defaultPeriod->addMonth();
         }
         $selectedMonth = $request->get('month', $defaultPeriod->month);
         $selectedYear = $request->get('year', $defaultPeriod->year);

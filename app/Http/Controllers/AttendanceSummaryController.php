@@ -18,10 +18,10 @@ class AttendanceSummaryController extends Controller
         
         // Default bulan sesuai periode 26-25
         $now = Carbon::now($currentUser->branch?->timezone ?? 'Asia/Jakarta');
+        
+        $defaultPeriod = $now->copy()->startOfMonth();
         if ($now->day >= 26) {
-            $defaultPeriod = $now->copy()->addMonth();
-        } else {
-            $defaultPeriod = $now->copy();
+            $defaultPeriod->addMonth();
         }
         $selectedYear = $request->get('year', $defaultPeriod->year);
         $selectedMonth = $request->get('month', $defaultPeriod->month);

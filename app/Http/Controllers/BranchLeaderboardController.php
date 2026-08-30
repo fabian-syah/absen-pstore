@@ -76,8 +76,9 @@ class BranchLeaderboardController extends Controller
 
     private function getLeaderboardData($branchId)
     {
-        $targetDate = Carbon::now();
-        if ($targetDate->day > 25) {
+        $now = Carbon::now();
+        $targetDate = $now->copy()->startOfMonth();
+        if ($now->day > 25) {
             $targetDate->addMonth();
         }
 
