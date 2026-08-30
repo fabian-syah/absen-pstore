@@ -26,10 +26,12 @@ class DashboardController extends Controller
 
         // 1. Debug Target Audience
         $roles = ['admin', 'audit']; // Broadcast ke semua
-        $branchId = null; // Force Global (Ignore Branch)
+        
+        // Ambil dari request jika ada, atau biarkan null (Force Global)
+        $branchId = request()->query('branch_id'); 
 
         $targetQuery = User::whereIn('role', $roles)->whereNotNull('fcm_token');
-        if ($branchId) {
+        if (!empty($branchId)) {
             $targetQuery->where('branch_id', $branchId);
         }
         $candidates = $targetQuery->get();
@@ -634,7 +636,7 @@ class DashboardController extends Controller
      */
     private function calculateAttendancePercentageForPeriod($user_id, $startDate, $limitDate, $userTimezone)
     {
-        if ($limitDate->lt($startDate)) return 100;
+        if ($limitDate->lt($startDate)) return ['percentage' => 100, 'alpha_dates' => []];
 
         $period = \Carbon\CarbonPeriod::create($startDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
         $totalDays = $period->count();
