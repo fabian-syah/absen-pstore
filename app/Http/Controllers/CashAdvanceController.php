@@ -212,7 +212,7 @@ class CashAdvanceController extends Controller
                     CashAdvancePlan::create([
                         'cash_advance_id' => $kasbon->id,
                         'installment_order' => $i,
-                        'due_date' => Carbon::now()->addMonths($i)->startOfMonth()->format('Y-m-d'),
+                        'due_date' => Carbon::now()->startOfMonth()->addMonths($i)->format('Y-m-d'),
                         'amount' => $deductionAmount,
                         'is_paid' => false,
                     ]);
@@ -422,7 +422,7 @@ class CashAdvanceController extends Controller
 
                 if ($deduction > 0) {
                     // Ada potongan nyata — generate jadwal berdasarkan data asli
-                    $startDate = Carbon::now()->addMonth()->startOfMonth();
+                    $startDate = Carbon::now()->startOfMonth()->addMonth();
                     $tempRemaining = $remaining;
                     $order = 1;
 

@@ -91,9 +91,9 @@ class ViolationController extends Controller
         if ($request->category == 'berat') {
             $data['expires_at'] = $createdAt->copy()->addYear(); // 1 Tahun
         } elseif ($request->category == 'sedang') {
-            $data['expires_at'] = $createdAt->copy()->addMonths(6); // 6 Bulan
+            $data['expires_at'] = $createdAt->copy()->addMonthsNoOverflow(6); // 6 Bulan
         } else {
-            $data['expires_at'] = $createdAt->copy()->addMonth(); // 1 Bulan
+            $data['expires_at'] = $createdAt->copy()->addMonthNoOverflow(); // 1 Bulan
         }
 
         if ($request->hasFile('photo')) {

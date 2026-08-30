@@ -51,6 +51,7 @@ class InventoryExport extends DefaultValueBinder implements FromCollection, With
             'Security Jakarta',
             'Team Audit',
             'Team Creative',
+            'Tim Elite',
             'Tiktok',
             'Operator',
         ];
