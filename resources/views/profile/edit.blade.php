@@ -200,7 +200,7 @@
 
                             <div class="col-md-6 mb-4">
                                 <label class="fw-bold text-muted small text-uppercase">Nama Lengkap (Sesuai KTP)</label>
-                                <input type="text" class="form-control bg-light" value="{{ $user->name }}" readonly>
+                                <input type="text" class="form-control bg-light" name="name" value="{{ $user->name }}" readonly>
                             </div>
                             <div class="col-md-6 mb-4">
                                 <label class="fw-bold text-muted small text-uppercase">Tanggal Lahir</label>
