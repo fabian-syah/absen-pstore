@@ -183,7 +183,7 @@
                                             @if (auth()->id() == $req->user_id)
                                                 <form action="{{ route('leave-requests.cancel', $req->id) }}" method="POST"
                                                     class="d-inline"
-                                                    onsubmit="return confirm('Yakin ingin membatalkan pengajuan?')">
+                                                    onsubmit="confirmSubmit(event, this, 'Yakin ingin membatalkan pengajuan?')">
                                                     @csrf @method('PATCH')
                                                     <button type="submit" class="btn btn-light btn-sm text-danger" title="Batalkan">
                                                         <i class="mdi mdi-close-circle"></i> Batal
@@ -194,7 +194,7 @@
                                             {{-- ADMIN/AUDIT: APPROVE & REJECT --}}
                                             @if (in_array(auth()->user()->role, ['admin', 'audit']))
                                                 <form action="{{ route('late.approve', $req->id) }}" method="POST" class="d-inline"
-                                                    onsubmit="return confirm('Setujui pengajuan ini?')">
+                                                    onsubmit="confirmSubmit(event, this, 'Setujui pengajuan ini?')">
                                                     @csrf
                                                     <button class="btn btn-success btn-sm p-2" title="Setujui">
                                                         <i class="mdi mdi-check"></i>
@@ -298,6 +298,26 @@
                 confirmButtonText: 'Mengerti'
             });
         @endif
+
+        // FUNGSI UNTUK KONFIRMASI SUBMIT DENGAN SWEETALERT
+        window.confirmSubmit = function(event, form, message) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Konfirmasi',
+                text: message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        };
 
         // FUNGSI UNTUK MODAL REJECT (SOLUSI IPHONE)
         window.openRejectModal = function (reqId, actionUrl) {
