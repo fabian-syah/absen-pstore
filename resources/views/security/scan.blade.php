@@ -887,6 +887,8 @@
         let capturedImageBase64 = null;
         let currentUserData = null;
         let lastScanTime = 0;
+        let lastScannedCode = null;
+        let ignoreSameCodeUntil = 0;
         let recentScans = JSON.parse(localStorage.getItem('recent_scans') || '[]');
         let offlineQueue = JSON.parse(localStorage.getItem('offline_attendance_queue') || '[]');
 
@@ -1072,13 +1074,20 @@
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // Proximity Check (Fitur 26)
             const now = Date.now();
+
+            // Mencegah scanner langsung auto-scan QR yang sama setelah user menekan tombol Batal
+            if (decodedText === lastScannedCode && now < ignoreSameCodeUntil) {
+                return; 
+            }
+
+            // Proximity Check (Fitur 26)
             if (now - lastScanTime < 3000) {
                 console.warn("Scan terlalu cepat!");
                 return; // Abaikan jika kurang dari 3 detik
             }
             lastScanTime = now;
+            lastScannedCode = decodedText;
 
             // Hentikan scanner terlebih dahulu
             html5QrCode.stop().then(() => {
@@ -1563,6 +1572,8 @@
         }
 
         function resetScan() {
+            ignoreSameCodeUntil = Date.now() + 5000; // Abaikan QR code yang sama selama 5 detik setelah batal
+
             // Stop semua stream
             if (streamRef) {
                 streamRef.getTracks().forEach(track => track.stop());
