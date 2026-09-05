@@ -1304,15 +1304,32 @@
                 return;
             }
 
-            // Set canvas size sesuai video
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            // --- PERBAIKAN: Resize gambar agar tidak terlalu besar (Mencegah Payload Too Large / 413) ---
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = video.videoWidth;
+            let height = video.videoHeight;
 
-            // Draw image ke canvas
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
 
-            // Convert ke base64 dengan kualitas 0.8
-            capturedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw image ke canvas dengan ukuran yang sudah di-resize
+            context.drawImage(video, 0, 0, width, height);
+
+            // Convert ke base64 dengan kualitas 0.7 (dikompres)
+            capturedImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
 
             // Ubah tampilan: sembunyikan video, tampilkan canvas
             video.style.display = 'none';
