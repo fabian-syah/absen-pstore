@@ -1108,6 +1108,7 @@
             fetch("{{ route('security.check-user') }}", {
                 method: "POST",
                 headers: {
+                    "Accept": "application/json",
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": csrfToken
                 },
@@ -1373,6 +1374,7 @@
             fetch("{{ route('security.store-attendance') }}", {
                 method: "POST",
                 headers: {
+                    "Accept": "application/json",
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": csrfToken
                 },
