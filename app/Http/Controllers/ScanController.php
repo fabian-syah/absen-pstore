@@ -61,6 +61,9 @@ class ScanController extends Controller
         $attendanceSession = Attendance::where('user_id', $user->id)
             ->whereNull('check_out_time')
             ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 24 jam
+            ->where('check_in_time', '<=', now())
+            ->where('status', '!=', 'alpha')
+            ->where('status', '!=', 'rejected')
             ->where('attendance_type', '!=', 'leave')
             ->latest('check_in_time')
             ->first();
@@ -293,6 +296,20 @@ class ScanController extends Controller
                 */
             }
 
+            // Guard: Cek sesi aktif sebelum create (mencegah double-insert dari rapid scan)
+            $existingActive = Attendance::where('user_id', $user->id)
+                ->whereNull('check_out_time')
+                ->where('check_in_time', '>=', now()->subHours(24))
+                ->where('check_in_time', '<=', now())
+                ->where('status', '!=', 'alpha')
+                ->where('status', '!=', 'rejected')
+                ->where('attendance_type', '!=', 'leave')
+                ->exists();
+
+            if ($existingActive) {
+                return response()->json(['status' => 'error', 'message' => 'Karyawan ini masih memiliki sesi aktif. Pulangkan terlebih dahulu.'], 409);
+            }
+
             $attendance = Attendance::create([
                 'user_id' => $user->id,
                 'branch_id' => $user->branch_id,
@@ -317,6 +334,8 @@ class ScanController extends Controller
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', now()->subHours(24)) // Konsisten 24 jam
+                ->where('status', '!=', 'alpha')
+                ->where('status', '!=', 'rejected')
                 ->where('attendance_type', '!=', 'leave')
                 ->latest('check_in_time')
                 ->first();

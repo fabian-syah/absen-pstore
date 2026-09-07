@@ -120,7 +120,7 @@ class SelfAttendanceController extends Controller
             // 5. Cek Laporan Telat (LateNotification)
             $activeLateStatus = LateNotification::where('user_id', $user->id)
                 ->where('is_active', true)
-                ->whereDate('created_at', today())
+                ->whereDate('created_at', $todayLocal->format('Y-m-d'))
                 ->first();
 
             if ($activeLateStatus) {
@@ -178,14 +178,18 @@ class SelfAttendanceController extends Controller
             $attendanceToUpdate = Attendance::find($request->attendance_id);
         }
 
-        // Fallback jika ID tidak dikirim tapi mode pulang
+        // Fallback jika ID tidak dikirim tapi mungkin ada sesi aktif
+        if (!$attendanceToUpdate) {
             $attendanceToUpdate = Attendance::where('user_id', $user->id)
                 ->whereNull('check_out_time')
                 ->where('check_in_time', '>=', now()->subHours(24))
-                ->where('status', '!=', 'rejected') // <--- FIX: Jangan ambil yang sudah ditolak
+                ->where('check_in_time', '<=', now())
+                ->where('status', '!=', 'alpha')
+                ->where('status', '!=', 'rejected')
                 ->where('attendance_type', '!=', 'leave')
                 ->latest('check_in_time')
                 ->first();
+        }
 
         // --- PROSES KOMPRESI GAMBAR ---
         $path = null;
@@ -455,9 +459,13 @@ class SelfAttendanceController extends Controller
 
     public function deleteLateStatus()
     {
-        $notification = LateNotification::where('user_id', Auth::id())
+        $user = Auth::user();
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
+        $todayLocal = Carbon::now($branchTimezone)->startOfDay();
+
+        $notification = LateNotification::where('user_id', $user->id)
             ->where('is_active', true)
-            ->whereDate('created_at', today())
+            ->whereDate('created_at', $todayLocal->format('Y-m-d'))
             ->first();
 
         if ($notification) {
