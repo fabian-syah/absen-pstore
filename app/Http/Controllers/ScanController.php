@@ -238,7 +238,28 @@ class ScanController extends Controller
                     // Preserve presence_status if it was already set (e.g. Izin Telat)
                     'presence_status' => $existingAttendanceToday->presence_status ?: 'Masuk',
                 ]);
-                return response()->json(['status' => 'success', 'message' => 'Absen Masuk tercatat (Update Record).']);
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Absen Masuk tercatat (Update Record).',
+                    'data' => [
+                        'name' => $user->name,
+                        'rank_title' => $user->calculateRank()['name'],
+                        'rank_image' => $user->calculateRank()['rank_image'] ? asset($user->calculateRank()['rank_image']) : null,
+                        'rank_icon' => $user->calculateRank()['icon'],
+                        'rank_color' => $user->calculateRank()['color'],
+                        'rank_effect' => $user->calculateRank()['effect_class'],
+                        'role' => $user->role,
+                        'division' => $user->division->name ?? '-',
+                        'branch' => $user->branch?->name ?? '-',
+                        'profile_photo' => $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
+                        'photo' => asset('storage/' . $imageName),
+                        'notes' => $manualNotes,
+                        'time' => $localTime->format('H:i'),
+                        'date' => $localTime->format('d M Y'),
+                        'is_late' => false,
+                        'is_early_checkout' => false,
+                    ]
+                ]);
             }
 
             // Cek sudah absen hari ini (Lokal)
