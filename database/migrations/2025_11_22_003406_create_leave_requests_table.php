@@ -13,7 +13,7 @@ return new class extends Migration
         Schema::create('leave_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['sakit', 'izin', 'telat']);
+            $table->string('type', 50); // sakit, izin, telat, cuti, wfh, libur, dinas
             $table->date('start_date');
             $table->date('end_date')->nullable();
             $table->time('start_time')->nullable();

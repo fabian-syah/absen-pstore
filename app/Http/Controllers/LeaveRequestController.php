@@ -127,7 +127,7 @@ class LeaveRequestController extends Controller
             'reason' => 'required|string|max:255',
             'file_proof' => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:10240',
             'start_date' => 'required|date',
-            'end_date' => 'required_unless:type,telat|nullable|date|after_or_equal:start_date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'start_time' => 'required_if:type,telat|nullable|date_format:H:i',
         ], [
             'file_proof.required' => 'Bukti foto/dokumen wajib diupload.',
@@ -148,7 +148,7 @@ class LeaveRequestController extends Controller
             $data['start_time'] = $request->start_time;
             $data['end_date'] = null;
         } else {
-            $data['end_date'] = $request->end_date;
+            $data['end_date'] = $request->end_date ?: $request->start_date;
             $data['start_time'] = null;
         }
 
