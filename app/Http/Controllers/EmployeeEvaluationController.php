@@ -528,6 +528,8 @@ class EmployeeEvaluationController extends Controller
 
     /**
      * Generate kesimpulan dan motivasi penilaian via Sekai Gateway AI
+     * Menggunakan bansos/glm-5.3 sebagai prioritas (kuota gratis harian),
+     * dan otomatis beralih (fallback) ke ds/deepseek-v4.1-flash jika kuota bansos habis/gagal.
      */
     public function generateAi(Request $request)
     {
@@ -536,81 +538,25 @@ class EmployeeEvaluationController extends Controller
         ]);
 
         $apiKey = env('SEKAI_API_KEY', 'sk-b95891e58a833597-v0dn0b-d1696332');
-        $model = env('SEKAI_AI_MODEL', 'ds/deepseek-v4.1-flash');
-
-        $payload = [
-            'model' => $model,
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => 'Anda adalah asisten HR yang profesional dan pandai memberikan evaluasi kinerja yang memotivasi.'
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $request->input('prompt')
-                ]
-            ],
-            'temperature' => 0.7,
-            'max_tokens' => 800,
-        ];
+        $primaryModel = env('SEKAI_BANSOS_MODEL', 'bansos/glm-5.3');
+        $fallbackModel = env('SEKAI_AI_MODEL', 'ds/deepseek-v4.1-flash');
+        $prompt = $request->input('prompt');
 
         try {
-            $rawBody = null;
+            $usedModel = $primaryModel;
+            $data = $this->requestSekaiCompletion($apiKey, $primaryModel, $prompt);
 
-            // Percobaan 1: Gunakan cURL bawaan PHP jika fungsi tersedia
-            if (function_exists('curl_init')) {
-                $ch = curl_init('https://api.sekaigateway.xyz/v1/chat/completions');
-                curl_setopt_array($ch, [
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_POST => true,
-                    CURLOPT_POSTFIELDS => json_encode($payload),
-                    CURLOPT_HTTPHEADER => [
-                        'Authorization: Bearer ' . $apiKey,
-                        'Content-Type: application/json',
-                    ],
-                    CURLOPT_SSL_VERIFYPEER => false,
-                    CURLOPT_SSL_VERIFYHOST => false,
-                    CURLOPT_TIMEOUT => 60,
-                ]);
-                $exec = curl_exec($ch);
-                $err = curl_error($ch);
-                curl_close($ch);
+            // Cek apakah model bansos berhasil memberikan hasil yang valid
+            $isSuccess = isset($data['choices'][0]['message']) && (
+                !empty($data['choices'][0]['message']['content']) || 
+                !empty($data['choices'][0]['message']['reasoning_content'])
+            );
 
-                if (!$err && $exec) {
-                    $rawBody = $exec;
-                }
-            }
-
-            // Percobaan 2: Gunakan stream context (file_get_contents) jika cURL gagal atau tidak tersedia
-            if (!$rawBody) {
-                $opts = [
-                    'http' => [
-                        'method'  => 'POST',
-                        'header'  => "Authorization: Bearer {$apiKey}\r\nContent-Type: application/json\r\n",
-                        'content' => json_encode($payload),
-                        'timeout' => 60,
-                        'ignore_errors' => true,
-                    ],
-                    'ssl' => [
-                        'verify_peer' => false,
-                        'verify_peer_name' => false,
-                    ]
-                ];
-                $rawBody = @file_get_contents('https://api.sekaigateway.xyz/v1/chat/completions', false, stream_context_create($opts));
-            }
-
-            if (!$rawBody) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Gagal terhubung ke API Sekai Gateway dari server.',
-                ], 500);
-            }
-
-            // Tangani trailing token "data: [DONE]" jika ada
-            if (preg_match('/\{[\s\S]*\}/', $rawBody, $matches)) {
-                $data = json_decode($matches[0], true);
-            } else {
-                $data = json_decode($rawBody, true);
+            // Jika kuota bansos habis, rate limited, atau error, otomatis beralih ke DeepSeek V4.1 Flash
+            if (!$isSuccess) {
+                \Illuminate\Support\Facades\Log::warning("Bansos model {$primaryModel} tidak tersedia atau kuota habis. Otomatis beralih ke {$fallbackModel}. Respon bansos: " . json_encode($data));
+                $usedModel = $fallbackModel;
+                $data = $this->requestSekaiCompletion($apiKey, $fallbackModel, $prompt);
             }
 
             if (isset($data['choices'][0]['message'])) {
@@ -622,6 +568,7 @@ class EmployeeEvaluationController extends Controller
                 return response()->json([
                     'status' => 'success',
                     'remark' => $content,
+                    'model'  => $usedModel,
                 ]);
             }
 
@@ -635,7 +582,6 @@ class EmployeeEvaluationController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Respon AI tidak sesuai format.',
-                'raw' => substr((string)$rawBody, 0, 200),
             ], 500);
 
         } catch (\Throwable $e) {
@@ -645,5 +591,82 @@ class EmployeeEvaluationController extends Controller
                 'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Helper request completions ke Sekai Gateway
+     */
+    private function requestSekaiCompletion(string $apiKey, string $model, string $prompt): ?array
+    {
+        $payload = [
+            'model' => $model,
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'Anda adalah asisten HR yang profesional dan pandai memberikan evaluasi kinerja yang memotivasi.'
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ],
+            'temperature' => 0.7,
+            'max_tokens' => 800,
+        ];
+
+        $rawBody = null;
+
+        // Percobaan 1: Gunakan cURL bawaan PHP jika fungsi tersedia
+        if (function_exists('curl_init')) {
+            $ch = curl_init('https://api.sekaigateway.xyz/v1/chat/completions');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Bearer ' . $apiKey,
+                    'Content-Type: application/json',
+                ],
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+                CURLOPT_TIMEOUT => 45,
+            ]);
+            $exec = curl_exec($ch);
+            $err = curl_error($ch);
+            curl_close($ch);
+
+            if (!$err && $exec) {
+                $rawBody = $exec;
+            }
+        }
+
+        // Percobaan 2: Gunakan stream context (file_get_contents) jika cURL gagal atau tidak tersedia
+        if (!$rawBody) {
+            $opts = [
+                'http' => [
+                    'method'  => 'POST',
+                    'header'  => "Authorization: Bearer {$apiKey}\r\nContent-Type: application/json\r\n",
+                    'content' => json_encode($payload),
+                    'timeout' => 45,
+                    'ignore_errors' => true,
+                ],
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                ]
+            ];
+            $rawBody = @file_get_contents('https://api.sekaigateway.xyz/v1/chat/completions', false, stream_context_create($opts));
+        }
+
+        if (!$rawBody) {
+            return null;
+        }
+
+        // Tangani trailing token "data: [DONE]" jika ada
+        if (preg_match('/\{[\s\S]*\}/', $rawBody, $matches)) {
+            return json_decode($matches[0], true);
+        }
+
+        return json_decode($rawBody, true);
     }
 }

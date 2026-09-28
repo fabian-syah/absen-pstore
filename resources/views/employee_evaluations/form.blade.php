@@ -262,7 +262,7 @@
                         </div>
                         
                         <div class="d-flex flex-wrap justify-content-between align-items-center mt-2 gap-2 text-muted" style="font-size: 0.78rem;">
-                            <span><i class="mdi mdi-check-decagram text-success me-1"></i> Teks bisa Anda edit atau tambahkan manual</span>
+                            <span id="ai_status_info"><i class="mdi mdi-gift-outline text-success me-1"></i> Prioritas Bansos GLM-5.3 (Gratis)</span>
                             <span class="d-none d-md-inline"><i class="mdi mdi-drag-vertical text-secondary me-1"></i> Tarik sudut kanan bawah untuk memperbesar area teks</span>
                         </div>
                     </div>
@@ -358,6 +358,15 @@
                     inputFinalRemark.value = '"' + data.remark.trim() + '"';
                     isRemarkManuallyEdited = true; // Tandai diedit agar tidak tertimpa kalkulasi standar
                     adjustRemarkHeight();
+
+                    const infoSpan = document.getElementById('ai_status_info');
+                    if (infoSpan) {
+                        if (data.model && data.model.includes('bansos')) {
+                            infoSpan.innerHTML = '<i class="mdi mdi-gift-outline text-success me-1"></i> Berhasil dibuat via Bansos GLM-5.3 (Gratis)';
+                        } else {
+                            infoSpan.innerHTML = '<i class="mdi mdi-lightning-bolt text-warning me-1"></i> Berhasil dibuat via DeepSeek V4.1 Flash (Fallback)';
+                        }
+                    }
                 } else {
                     inputFinalRemark.value = data.message || 'Gagal menghasilkan kesimpulan AI. Silakan coba lagi.';
                     adjustRemarkHeight();
