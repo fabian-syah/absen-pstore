@@ -2,7 +2,7 @@
 @section('title', 'Buat Baru')
 
 @section('content')
-<div class="row justify-content-center">
+<div class="row justify-content-center target-create-wrapper">
     <div class="col-12 col-lg-8">
         <a href="{{ url()->previous() }}" class="btn btn-light bg-white shadow-sm mb-3 border-0 rounded-3 text-dark fw-bold">
             <i class="mdi mdi-arrow-left me-1"></i> Kembali
@@ -33,14 +33,14 @@
                     <div class="mb-4">
                         <label class="fw-bold mb-2 text-dark small text-uppercase ls-1">Jenis Target</label>
                         <select name="type" id="typeSelect" class="form-select fw-bold border-secondary text-dark" onchange="toggleAssignmentType()">
-                            <option value="personal_target" selected>🎯 Target Pekerjaan (Job Desk)</option>
-                            <option value="personal_achievement">🏅 Pencapaian / Prestasi (Individu)</option>
+                            <option value="personal_target" selected>Target Pekerjaan (Job Desk)</option>
+                            <option value="personal_achievement">Pencapaian / Prestasi (Individu)</option>
                             
                             {{-- Opsi TARGET CABANG/TIM --}}
                             {{-- LOGIKA: Muncul jika Leader, ATAU jika Admin/Audit sedang akses via Menu Cabang (ada request branch_id) --}}
                             @if(auth()->user()->role == 'leader' || (in_array(auth()->user()->role, ['admin', 'audit']) && request('branch_id')))
-                                <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>🏢 Target Global Cabang (Tim)</option>
-                                <option value="team_achievement">🏆 Pencapaian Tim (Cabang)</option>
+                                <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>Target Global Cabang (Tim)</option>
+                                <option value="team_achievement">Pencapaian Tim (Cabang)</option>
                             @endif
                         </select>
                     </div>
@@ -56,7 +56,7 @@
                                 <i class="mdi mdi-account-arrow-right me-1"></i> Tugaskan Kepada (Penerima)
                             </label>
                             <select name="assign_user_id" class="form-select form-select-lg fw-bold border-primary shadow-none text-dark">
-                                <option value="{{ auth()->user()->id }}">👤 Saya Sendiri (Pribadi)</option>
+                                <option value="{{ auth()->user()->id }}">Saya Sendiri (Pribadi)</option>
                                 
                                 {{-- Loop Members --}}
                                 @foreach($branchMembers as $member)
@@ -149,6 +149,18 @@
 </div>
 
 <style>
+    @media (max-width: 991px) {
+        .target-create-wrapper {
+            margin-top: 25px;
+            padding-top: 8px;
+        }
+    }
+    @media (max-width: 576px) {
+        .target-create-wrapper {
+            margin-top: 36px;
+            padding-top: 8px;
+        }
+    }
     .ls-1 { letter-spacing: 1px; }
     .star-option { border-width: 2px; transition: all 0.2s; }
     .level-3-label { border-color: #FFD700; color: #bfa800; }

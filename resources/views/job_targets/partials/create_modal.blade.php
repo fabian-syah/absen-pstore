@@ -36,7 +36,7 @@
                                 <i class="mdi mdi-account-arrow-right me-1"></i> Tugaskan Kepada (Penerima)
                             </label>
                             <select name="assign_user_id" class="form-select form-select-lg fw-bold border-primary shadow-none text-dark">
-                                <option value="{{ auth()->user()->id }}">👤 Saya Sendiri (Pribadi)</option>
+                                <option value="{{ auth()->user()->id }}">Saya Sendiri (Pribadi)</option>
                                 <optgroup label="Anggota Tim">
                                     @foreach($branchMembers as $member)
                                         @if($member->id != auth()->user()->id)
@@ -55,12 +55,12 @@
                     <div class="mb-4">
                         <label class="fw-bold mb-2 text-dark small text-uppercase ls-1">Jenis Target</label>
                         <select name="type" id="typeSelect" class="form-select fw-bold border-secondary text-dark" onchange="toggleFormElements()">
-                            <option value="personal_target" selected>🎯 Target Pekerjaan (Job Desk)</option>
-                            <option value="personal_achievement">🏅 Pencapaian / Prestasi</option>
+                            <option value="personal_target" selected>Target Pekerjaan (Job Desk)</option>
+                            <option value="personal_achievement">Pencapaian / Prestasi</option>
                             
                             {{-- Target Global hanya muncul jika Admin/Leader dan BUKAN assignment ke orang lain spesifik --}}
                             @if((auth()->user()->role == 'leader' || auth()->user()->role == 'admin') && !request('assign_user_id'))
-                                <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>🏢 Target Global Cabang (Tim)</option>
+                                <option value="team_target" {{ request('type_preselect') == 'team' ? 'selected' : '' }}>Target Global Cabang (Tim)</option>
                             @endif
                         </select>
                     </div>

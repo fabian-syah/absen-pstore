@@ -2,7 +2,7 @@
 @section('title', 'Edit Data')
 
 @section('content')
-<div class="row justify-content-center">
+<div class="row justify-content-center target-edit-wrapper">
     <div class="col-12 col-lg-8">
         <a href="{{ url()->previous() }}" class="btn btn-light bg-white shadow-sm mb-3 border-0 rounded-3 text-dark fw-bold">
             <i class="mdi mdi-arrow-left me-1"></i> Batal Edit
@@ -10,7 +10,7 @@
 
         <div class="card shadow-lg border-0 rounded-4">
             <div class="card-body p-4 p-md-5">
-                <h4 class="fw-bold mb-4 text-dark border-bottom pb-3">✏️ Edit Target / Pencapaian</h4>
+                <h4 class="fw-bold mb-4 text-dark border-bottom pb-3">Edit Target &amp; Pencapaian</h4>
                 
                 <form action="{{ route('job-targets.update', $jobTarget->id) }}" method="POST">
                     @csrf
@@ -85,6 +85,18 @@
 </div>
 
 <style>
+    @media (max-width: 991px) {
+        .target-edit-wrapper {
+            margin-top: 25px;
+            padding-top: 8px;
+        }
+    }
+    @media (max-width: 576px) {
+        .target-edit-wrapper {
+            margin-top: 36px;
+            padding-top: 8px;
+        }
+    }
     .star-option { border-width: 2px; transition: all 0.2s; }
     .level-3-label { border-color: #FFD700; color: #bfa800; }
     #star3:checked + .level-3-label {

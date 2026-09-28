@@ -122,6 +122,23 @@
 @include('job_targets.partials.modal_update')
 
 <style>
+    /* Header Responsive Clearance (Mencegah terpotong fixed-top navbar di mobile) */
+    .target-page-header {
+        position: relative;
+    }
+    @media (max-width: 991px) {
+        .target-page-header {
+            margin-top: 25px;
+            padding-top: 8px;
+        }
+    }
+    @media (max-width: 576px) {
+        .target-page-header {
+            margin-top: 36px;
+            padding-top: 8px;
+        }
+    }
+
     /* Header Responsive Typography */
     .page-main-title {
         font-size: 1.15rem;
