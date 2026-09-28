@@ -10,14 +10,23 @@
     @endphp
 
     <style>
+        /* Base typography enforcement for modal */
+        #modalBulkActionSuperadmin,
+        #modalBulkActionSuperadmin * {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            letter-spacing: normal !important;
+            word-spacing: normal !important;
+        }
+
         .type-select-card {
             cursor: pointer;
             border: 1.5px solid #cbd5e1;
             border-radius: 10px;
-            background: #fff;
+            background: #ffffff;
             transition: all 0.15s ease-in-out;
             user-select: none;
             color: #0f172a;
+            padding: 9px 12px;
         }
         .type-select-card:hover {
             border-color: #0d6efd;
@@ -30,13 +39,15 @@
         .type-select-card .fw-semibold {
             color: #0f172a !important;
         }
+
         .date-mode-card {
             cursor: pointer;
             border: 1.5px solid #cbd5e1;
             border-radius: 10px;
-            background: #fff;
+            background: #ffffff;
             transition: all 0.15s ease-in-out;
             user-select: none;
+            padding: 10px 14px;
         }
         .date-mode-card:hover {
             border-color: #0d6efd;
@@ -49,14 +60,20 @@
         .date-mode-card .mode-title {
             color: #0f172a !important;
             font-weight: 600 !important;
+            font-size: 13px !important;
+            line-height: 1.4 !important;
+            margin-bottom: 2px !important;
         }
         .date-mode-card .mode-desc {
             color: #475569 !important;
-            font-weight: 500 !important;
+            font-weight: 400 !important;
+            font-size: 11px !important;
+            line-height: 1.3 !important;
         }
+
         .quick-date-btn {
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 11.5px;
             font-weight: 600;
             border: 1px solid #cbd5e1;
             color: #1e293b;
@@ -69,13 +86,15 @@
             border-color: #0d6efd;
         }
 
-        /* HIGH-CONTRAST TYPOGRAPHY & FORM CONTROLS FOR MODAL */
+        /* HIGH-CONTRAST FORM CONTROLS (EXCLUDING CHECKBOX & RADIO) */
         #modalBulkActionSuperadmin select.form-select,
         #modalBulkActionSuperadmin .form-select,
         #modalBulkActionSuperadmin .form-control,
         #modalBulkActionSuperadmin select,
+        #modalBulkActionSuperadmin textarea,
         #modalBulkActionSuperadmin input[type="date"],
-        #modalBulkActionSuperadmin input {
+        #modalBulkActionSuperadmin input[type="text"],
+        #modalBulkActionSuperadmin input[type="number"] {
             color: #0f172a !important;
             -webkit-text-fill-color: #0f172a !important;
             font-weight: 600 !important;
@@ -95,10 +114,71 @@
             border-color: #cbd5e1 !important;
             font-weight: 600;
         }
+
+        /* CHECKBOX & RADIO STYLING DENGAN CENTANG JELAS */
+        #modalBulkActionSuperadmin input[type="checkbox"].form-check-input,
+        #modalBulkActionSuperadmin input[type="radio"].form-check-input,
+        .form-check-input.row-checkbox,
+        #checkAllRows {
+            width: 19px !important;
+            height: 19px !important;
+            min-width: 19px !important;
+            min-height: 19px !important;
+            border: 1.8px solid #64748b !important;
+            background-color: #ffffff !important;
+            cursor: pointer !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            transition: all 0.15s ease-in-out !important;
+            box-shadow: none !important;
+        }
+
+        #modalBulkActionSuperadmin input[type="checkbox"].form-check-input,
+        .form-check-input.row-checkbox,
+        #checkAllRows {
+            border-radius: 4.5px !important;
+        }
+
+        #modalBulkActionSuperadmin input[type="radio"].form-check-input {
+            border-radius: 50% !important;
+        }
+
+        #modalBulkActionSuperadmin input[type="checkbox"].form-check-input:hover,
+        #modalBulkActionSuperadmin input[type="radio"].form-check-input:hover,
+        .form-check-input.row-checkbox:hover,
+        #checkAllRows:hover {
+            border-color: #0d6efd !important;
+        }
+
+        #modalBulkActionSuperadmin input[type="checkbox"].form-check-input:checked,
+        .form-check-input.row-checkbox:checked,
+        #checkAllRows:checked {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m4 10 4.5 4.5 8-9'/%3e%3c/svg%3e") !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-size: 13px !important;
+        }
+
+        #modalBulkActionSuperadmin input[type="radio"].form-check-input:checked {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2.5' fill='%23ffffff'/%3e%3c/svg%3e") !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-size: 8px !important;
+        }
+
+        /* TABLE PREVIEW DI MODAL */
         #modalBulkActionSuperadmin .table thead th {
             color: #0f172a !important;
             font-weight: 700 !important;
-            font-size: 11px !important;
+            font-size: 11.5px !important;
             letter-spacing: 0.5px;
             text-transform: uppercase;
             background-color: #e2e8f0 !important;
@@ -106,10 +186,12 @@
             padding-top: 10px !important;
             padding-bottom: 10px !important;
             white-space: nowrap;
+            font-style: normal !important;
         }
         #modalBulkActionSuperadmin .table tbody td {
             color: #0f172a !important;
             vertical-align: middle;
+            font-style: normal !important;
         }
         #modalBulkActionSuperadmin .text-muted {
             color: #475569 !important;
@@ -441,7 +523,7 @@
     {{-- MODAL AKSI MASSAL SUPERADMIN (FILTER RENTANG TANGGAL & MULTI-TYPE) --}}
     @if ($isSuperAdmin)
         <div class="modal fade" id="modalBulkActionSuperadmin" tabindex="-1" aria-labelledby="modalBulkActionLabel" aria-hidden="true" style="z-index: 2000;">
-            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
                     {{-- MODAL HEADER --}}
                     <div class="modal-header bg-white border-bottom px-4 py-3 align-items-center">
@@ -471,10 +553,10 @@
                                         <span class="text-danger ms-1">*</span>
                                     </label>
                                     <div class="d-flex flex-wrap gap-1">
-                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-2" onclick="setQuickDate('today')">Hari Ini</button>
-                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-2" onclick="setQuickDate('yesterday')">Kemarin</button>
-                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-2" onclick="setQuickDate('last7')">7 Hari</button>
-                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-2" onclick="setQuickDate('thisMonth')">Bulan Ini</button>
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-3" onclick="setQuickDate('today')">Hari Ini</button>
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-3" onclick="setQuickDate('yesterday')">Kemarin</button>
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-3" onclick="setQuickDate('last7')">7 Hari</button>
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-3" onclick="setQuickDate('thisMonth')">Bulan Ini</button>
                                     </div>
                                 </div>
                                 <div class="row g-2">
@@ -500,32 +582,32 @@
 
                                 {{-- Metode Pencocokan --}}
                                 <div class="mt-3">
-                                    <label class="small text-dark d-block mb-1 fw-bold">Metode Pencocokan Tanggal:</label>
+                                    <label class="small text-dark d-block mb-2 fw-bold">Metode Pencocokan Tanggal:</label>
                                     <div class="row g-2">
-                                        <div class="col-12 col-sm-4">
-                                            <label class="date-mode-card d-flex align-items-center p-2 rounded-3 border w-100 mb-0 active" for="date_mode_within">
-                                                <input class="form-check-input me-2 mt-0" type="radio" name="date_mode" id="date_mode_within" value="within" checked>
+                                        <div class="col-12 col-md-4">
+                                            <label class="date-mode-card d-flex align-items-center p-3 rounded-3 border w-100 mb-0 active" for="date_mode_within">
+                                                <input class="form-check-input me-3 mt-0" type="radio" name="date_mode" id="date_mode_within" value="within" checked>
                                                 <div>
-                                                    <span class="d-block mode-title" style="font-size: 12.5px;">Di Dalam Rentang</span>
-                                                    <small class="mode-desc d-block" style="font-size: 11px; line-height: 1.2;">Mulai & selesai di rentang ini</small>
+                                                    <span class="d-block mode-title">Di Dalam Rentang</span>
+                                                    <small class="mode-desc d-block">Mulai &amp; selesai di rentang ini</small>
                                                 </div>
                                             </label>
                                         </div>
-                                        <div class="col-12 col-sm-4">
-                                            <label class="date-mode-card d-flex align-items-center p-2 rounded-3 border w-100 mb-0" for="date_mode_overlap">
-                                                <input class="form-check-input me-2 mt-0" type="radio" name="date_mode" id="date_mode_overlap" value="overlap">
+                                        <div class="col-12 col-md-4">
+                                            <label class="date-mode-card d-flex align-items-center p-3 rounded-3 border w-100 mb-0" for="date_mode_overlap">
+                                                <input class="form-check-input me-3 mt-0" type="radio" name="date_mode" id="date_mode_overlap" value="overlap">
                                                 <div>
-                                                    <span class="d-block mode-title" style="font-size: 12.5px;">Bersinggungan</span>
-                                                    <small class="mode-desc d-block" style="font-size: 11px; line-height: 1.2;">Overlap tanggal yang dipilih</small>
+                                                    <span class="d-block mode-title">Bersinggungan</span>
+                                                    <small class="mode-desc d-block">Overlap tanggal yang dipilih</small>
                                                 </div>
                                             </label>
                                         </div>
-                                        <div class="col-12 col-sm-4">
-                                            <label class="date-mode-card d-flex align-items-center p-2 rounded-3 border w-100 mb-0" for="date_mode_start_only">
-                                                <input class="form-check-input me-2 mt-0" type="radio" name="date_mode" id="date_mode_start_only" value="start_only">
+                                        <div class="col-12 col-md-4">
+                                            <label class="date-mode-card d-flex align-items-center p-3 rounded-3 border w-100 mb-0" for="date_mode_start_only">
+                                                <input class="form-check-input me-3 mt-0" type="radio" name="date_mode" id="date_mode_start_only" value="start_only">
                                                 <div>
-                                                    <span class="d-block mode-title" style="font-size: 12.5px;">Tanggal Mulai Saja</span>
-                                                    <small class="mode-desc d-block" style="font-size: 11px; line-height: 1.2;">Berdasarkan tanggal awal</small>
+                                                    <span class="d-block mode-title">Tanggal Mulai Saja</span>
+                                                    <small class="mode-desc d-block">Berdasarkan tanggal awal</small>
                                                 </div>
                                             </label>
                                         </div>
@@ -541,10 +623,10 @@
                                         <span>Jenis Izin</span>
                                         <span class="text-danger ms-1">*</span>
                                     </label>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2" id="btnSelectAllTypes">Pilih Semua</button>
-                                        <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2" id="btnSelectWfhDinas">Hanya WFH &amp; Dinas</button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm py-1 px-2" id="btnResetTypes">Reset</button>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-3" id="btnSelectAllTypes">Pilih Semua</button>
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-3" id="btnSelectWfhDinas">Hanya WFH &amp; Dinas</button>
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-3" id="btnResetTypes">Reset</button>
                                     </div>
                                 </div>
 
@@ -657,17 +739,17 @@
                                     <span class="text-dark small fw-medium"><i class="mdi mdi-information-outline text-primary me-1"></i> Masukkan rentang tanggal dan pilih jenis izin untuk melihat data.</span>
                                 </div>
 
-                                <div id="previewDetailsContainer" class="d-none mt-2">
+                                <div id="previewDetailsContainer" class="d-none mt-3">
                                     <div class="d-flex flex-wrap gap-1 mb-2" id="previewBreakdownBadges"></div>
-                                    <div class="border rounded-3 overflow-hidden shadow-sm" style="max-height: 220px; overflow-y: auto;">
+                                    <div class="border rounded-3 overflow-hidden shadow-sm" style="max-height: 250px; overflow-y: auto;">
                                         <table class="table table-sm table-hover mb-0" style="font-size: 12px;">
                                             <thead class="sticky-top">
                                                 <tr>
                                                     <th class="ps-3 text-dark fw-bold" style="width: 45px;">#</th>
-                                                    <th class="text-dark fw-bold">Nama Karyawan</th>
-                                                    <th class="text-dark fw-bold">Cabang</th>
-                                                    <th class="text-dark fw-bold">Tipe</th>
-                                                    <th class="text-dark fw-bold">Tanggal</th>
+                                                    <th class="text-dark fw-bold" style="width: 170px;">Nama Karyawan</th>
+                                                    <th class="text-dark fw-bold" style="width: 120px;">Cabang</th>
+                                                    <th class="text-dark fw-bold" style="width: 100px;">Tipe</th>
+                                                    <th class="text-dark fw-bold" style="width: 130px;">Tanggal</th>
                                                     <th class="text-dark fw-bold">Alasan</th>
                                                 </tr>
                                             </thead>
@@ -884,7 +966,7 @@
 
         // Button type selectors
         $('#btnSelectAllTypes').on('click', function () {
-            $('.type-checkbox').prop('checked', true);
+            $('.type-checkbox').prop('checked', true).trigger('change');
             $('.type-select-card').addClass('active');
             triggerPreviewCheck();
         });
@@ -893,11 +975,12 @@
             $('.type-checkbox').prop('checked', false);
             $('.type-select-card').removeClass('active');
             $('#type_wfh, #type_dinas').prop('checked', true).closest('.type-select-card').addClass('active');
+            $('.type-checkbox').trigger('change');
             triggerPreviewCheck();
         });
 
         $('#btnResetTypes').on('click', function () {
-            $('.type-checkbox').prop('checked', false);
+            $('.type-checkbox').prop('checked', false).trigger('change');
             $('.type-select-card').removeClass('active');
             triggerPreviewCheck();
         });
@@ -983,14 +1066,14 @@
 
                     if (resp.total > 0) {
                         $('#previewStatusBox').html(`
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 text-start p-1">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 text-start p-2">
                                 <div>
-                                    <div class="fw-bold text-success" style="font-size: 14px;">
+                                    <div class="fw-bold text-success" style="font-size: 15px;">
                                         <i class="mdi mdi-check-circle me-1"></i> Ditemukan ${resp.total} Pengajuan Pending
                                     </div>
-                                    <small class="text-muted">Siap diproses untuk rentang tanggal yang dipilih</small>
+                                    <div class="text-muted small mt-0.5">Siap diproses untuk rentang tanggal yang dipilih</div>
                                 </div>
-                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-semibold">
+                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background: #198754; color: #ffffff !important; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                     ${resp.total} Data Cocok
                                 </span>
                             </div>
@@ -1000,7 +1083,7 @@
                         let breakdownHtml = '';
                         if (resp.breakdown && resp.breakdown.length > 0) {
                             resp.breakdown.forEach(function (b) {
-                                breakdownHtml += `<span class="badge rounded-pill border py-1 px-3 shadow-xs" style="background: #ffffff; color: #0f172a; border-color: #cbd5e1 !important; font-size: 12px; font-weight: 600;">${b.label}: <strong class="text-primary">${b.count}</strong></span> `;
+                                breakdownHtml += `<span class="badge rounded-pill border py-1.5 px-3 me-2 mb-2 shadow-xs" style="background: #ffffff; color: #0f172a; border-color: #cbd5e1 !important; font-size: 12px; font-weight: 600;">${b.label}: <strong class="text-primary">${b.count}</strong></span>`;
                             });
                         }
                         $('#previewBreakdownBadges').html(breakdownHtml);
@@ -1011,12 +1094,12 @@
                             resp.sample_items.forEach(function (item, idx) {
                                 rowsHtml += `
                                     <tr>
-                                        <td class="ps-3 text-dark fw-bold">${idx + 1}</td>
-                                        <td class="fw-bold text-dark">${item.user_name}</td>
-                                        <td><span class="badge" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px;">${item.branch_name}</span></td>
-                                        <td><span class="badge bg-primary text-white rounded-pill px-2 py-1 fw-semibold">${item.type_label}</span></td>
-                                        <td class="text-dark fw-semibold" style="font-size: 12px; white-space: nowrap;">${item.dates}</td>
-                                        <td class="text-dark fw-normal" style="max-width: 200px; word-break: break-word;" title="${item.reason}">${item.reason}</td>
+                                        <td class="ps-3 text-dark fw-bold align-middle">${idx + 1}</td>
+                                        <td class="fw-bold text-dark align-middle">${item.user_name}</td>
+                                        <td class="align-middle"><span class="badge" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px;">${item.branch_name}</span></td>
+                                        <td class="align-middle"><span class="badge bg-primary text-white rounded-pill px-2 py-1 fw-semibold">${item.type_label}</span></td>
+                                        <td class="text-dark fw-semibold align-middle" style="font-size: 12px; white-space: nowrap;">${item.dates}</td>
+                                        <td class="text-dark fw-normal align-middle" style="max-width: 250px; word-break: break-word; font-style: normal;" title="${item.reason}">${item.reason}</td>
                                     </tr>
                                 `;
                             });
