@@ -1600,7 +1600,7 @@
                         <form action="{{ route('dashboard') }}" method="GET" class="d-flex align-items-center gap-2 flex-wrap">
                             @if(!empty($teamCalendar['calBranchesList']) && count($teamCalendar['calBranchesList']) > 0)
                                 <select name="cal_branch_id" class="form-select form-select-sm border border-2 text-dark fw-bold rounded-pill shadow-sm bg-white" style="cursor: pointer; max-width: 180px; padding-left: 0.85rem; padding-right: 1.75rem; border-color: #cbd5e1;" onchange="this.form.submit()">
-                                    <option value="">🏢 Semua Cabang</option>
+                                    <option value="all" {{ ($teamCalendar['calBranchId'] ?? '') === 'all' ? 'selected' : '' }}>🏢 Semua Cabang</option>
                                     @foreach($teamCalendar['calBranchesList'] as $cb)
                                         <option value="{{ $cb->id }}" {{ ($teamCalendar['calBranchId'] ?? '') == $cb->id ? 'selected' : '' }}>
                                             {{ $cb->name }}
@@ -1631,10 +1631,7 @@
                                 <tr>
                                     <th class="user-col">Nama Karyawan</th>
                                     @foreach($teamCalendar['dates'] as $date)
-                                        @php 
-                                            $isWeekend = $date->isWeekend();
-                                        @endphp
-                                        <th class="{{ $isWeekend ? 'bg-danger-subtle text-danger' : '' }}" style="padding-top: 10px; padding-bottom: 10px;" title="{{ $date->translatedFormat('l, d M Y') }}">
+                                        <th class="{{ $date->isWeekend() ? 'bg-danger-subtle text-danger' : '' }}" style="padding-top: 10px; padding-bottom: 10px;" title="{{ $date->translatedFormat('l, d M Y') }}">
                                             <span class="d-block">{{ $date->format('d') }}</span>
                                             <span style="font-size: 8px; opacity: 0.6; text-transform: uppercase;">{{ $date->translatedFormat('D') }}</span>
                                         </th>
@@ -1643,18 +1640,12 @@
                             </thead>
                             <tbody>
                                 @php
-                                    $todayPerTz = $teamCalendar['todayPerTz'] ?? [];
                                     $formattedDates = $teamCalendar['formattedDates'] ?? [];
                                     $canKoreksi = in_array(Auth::user()->role, ['admin', 'audit', 'admin_gaji', 'leader']);
+                                    $calendarGrid = $teamCalendar['grid'] ?? [];
                                 @endphp
                                 @foreach($teamCalendar['members'] as $teamMember)
-                                    @php
-                                        $memberTz = $teamMember->branch->timezone ?? 'Asia/Jakarta';
-                                        $todayForMember = $todayPerTz[$memberTz] ?? ($todayPerTz['Asia/Jakarta'] ?? date('Y-m-d'));
-                                        $memberAtts = $teamCalendar['attendances'][$teamMember->id] ?? [];
-                                        $memberLeaves = $teamCalendar['leaves'][$teamMember->id] ?? [];
-                                    @endphp
-                                    <tr>
+                                    <tr data-user-id="{{ $teamMember->id }}" data-user-name="{{ e($teamMember->name) }}" data-branch-name="{{ e($teamMember->branch->name ?? '-') }}">
                                         <td class="user-col" title="{{ $teamMember->name }}">
                                             <div class="d-flex align-items-center">
                                                 <div class="me-2 rounded-circle flex-shrink-0" style="width: 8px; height: 8px; background: {{ $teamMember->branch->color ?? '#3b82f6' }}"></div>
@@ -1665,91 +1656,12 @@
                                         @foreach($teamCalendar['dates'] as $dateObj)
                                             @php
                                                 $dateStr = $dateObj->format('Y-m-d');
-                                                $isWeekend = $dateObj->isWeekend();
-                                                
-                                                $att = $memberAtts[$dateStr] ?? null;
-                                                $leave = $memberLeaves[$dateStr] ?? null;
-                                                
-                                                $statusClass = 'empty';
-                                                $statusValue = '';
-                                                $statusTitle = 'Belum Absen / Alpha';
-                                                
-                                                $isFuture = $dateObj->isFuture();
-                                                $isToday = ($dateStr === $todayForMember);
-
-                                                if($att) {
-                                                    $ps = strtolower($att['presence_status'] ?? '');
-                                                    if (in_array($ps, ['sakit', 'izin', 'cuti', 'wfh', 'libur', 'off'])) {
-                                                        if($ps == 'sakit') { $statusClass = 'sick'; $statusValue = 'S'; $statusTitle = 'Sakit'; }
-                                                        elseif($ps == 'izin') { $statusClass = 'permit'; $statusValue = 'I'; $statusTitle = 'Izin'; }
-                                                        elseif($ps == 'cuti') { $statusClass = 'leave'; $statusValue = 'C'; $statusTitle = 'Cuti'; }
-                                                        elseif($ps == 'wfh') { $statusClass = 'wfh'; $statusValue = 'W'; $statusTitle = 'WFH'; }
-                                                        else { $statusClass = 'off'; $statusValue = 'L'; $statusTitle = 'Libur/Off'; }
-                                                    } else {
-                                                        if($att['check_out']) {
-                                                            $statusClass = 'out'; 
-                                                            $statusValue = 'P'; 
-                                                            $statusTitle = 'Masuk: ' . $att['check_in'] . ' | Pulang: ' . $att['check_out'];
-                                                        } else {
-                                                            $statusClass = 'present'; $statusValue = 'M'; 
-                                                            $statusTitle = 'Absen Masuk: ' . $att['check_in'];
-                                                        }
-                                                        if($att['is_late_checkin']) { 
-                                                            $statusClass .= ' telat'; $statusValue = 'T'; 
-                                                            $statusTitle .= ' (Terlambat)'; 
-                                                        }
-                                                    }
-                                                } elseif($leave) {
-                                                    $lt = strtolower($leave['type']);
-                                                    if($lt == 'sakit') { $statusClass = 'sick'; $statusValue = 'S'; $statusTitle = 'Izin Sakit: ' . $leave['reason']; }
-                                                    elseif($lt == 'izin') { $statusClass = 'permit'; $statusValue = 'I'; $statusTitle = 'Izin: ' . $leave['reason']; }
-                                                    elseif($lt == 'cuti') { $statusClass = 'leave'; $statusValue = 'C'; $statusTitle = 'Cuti: ' . $leave['reason']; }
-                                                    elseif($lt == 'wfh') { $statusClass = 'wfh'; $statusValue = 'W'; $statusTitle = 'WFH: ' . $leave['reason']; }
-                                                    elseif($lt == 'libur') { $statusClass = 'off'; $statusValue = 'L'; $statusTitle = 'Libur / Off'; }
-                                                } elseif (!$isFuture && !$isToday) {
-                                                    $statusClass = 'alpha'; 
-                                                    $statusValue = 'A'; 
-                                                    $statusTitle = 'Alpha (Tanpa Keterangan)';
-                                                }
-
-                                                $cellStatusForModal = 'Masuk';
-                                                if ($att) {
-                                                    $cellStatusForModal = $att['presence_status'] ?? 'Masuk';
-                                                } elseif ($leave) {
-                                                    $lt = strtolower($leave['type'] ?? '');
-                                                    if ($lt == 'sakit') $cellStatusForModal = 'Sakit';
-                                                    elseif ($lt == 'izin') $cellStatusForModal = 'Izin';
-                                                    elseif ($lt == 'cuti') $cellStatusForModal = 'Cuti';
-                                                    elseif ($lt == 'wfh') $cellStatusForModal = 'WFH';
-                                                    elseif ($lt == 'libur') $cellStatusForModal = 'Libur';
-                                                    else $cellStatusForModal = ucfirst($leave['type'] ?? 'Masuk');
-                                                } elseif ($statusClass == 'alpha') {
-                                                    $cellStatusForModal = 'Alpha';
-                                                }
+                                                $cell = $calendarGrid[$teamMember->id][$dateStr] ?? null;
                                             @endphp
-                                            <td class="{{ $isWeekend ? 'weekend-day' : '' }}">
-                                                <div class="status-cell {{ $statusClass }} {{ $canKoreksi ? 'js-koreksi-cell' : '' }}" 
-                                                    title="{{ $statusTitle }}"
-                                                    data-status-label="{{ $statusTitle }}"
-                                                    data-can-koreksi="{{ $canKoreksi ? '1' : '0' }}"
-                                                    @if($canKoreksi)
-                                                        data-user-id="{{ $teamMember->id }}"
-                                                        data-user-name="{{ e($teamMember->name) }}"
-                                                        data-branch-name="{{ e($teamMember->branch->name ?? '-') }}"
-                                                        data-date="{{ $dateStr }}"
-                                                        data-date-formatted="{{ $formattedDates[$dateStr] ?? $dateStr }}"
-                                                        data-att-id="{{ $att ? $att['id'] : '' }}"
-                                                        data-check-in="{{ $att ? $att['check_in'] : '' }}"
-                                                        data-check-out="{{ $att ? $att['check_out'] : '' }}"
-                                                        data-presence-status="{{ $cellStatusForModal }}"
-                                                        data-audit-note="{{ $att ? e($att['audit_note'] ?? '') : ($leave ? e($leave['reason'] ?? '') : '') }}"
-                                                        data-lat="{{ $att ? ($att['latitude'] ?? '') : '' }}"
-                                                        data-lng="{{ $att ? ($att['longitude'] ?? '') : '' }}"
-                                                        data-has-record="{{ ($att || $leave) ? '1' : '0' }}"
-                                                    @endif
-                                                >
-                                                    {{ $statusValue }}
-                                                </div>
+                                            <td class="{{ $dateObj->isWeekend() ? 'weekend-day' : '' }}">
+                                                @if($cell)
+                                                    <div class="status-cell {{ $cell['class'] }} {{ $canKoreksi ? 'js-koreksi-cell' : '' }}" title="{{ $cell['title'] }}" data-status-label="{{ $cell['title'] }}" data-date="{{ $dateStr }}" data-date-formatted="{{ $formattedDates[$dateStr] ?? $dateStr }}" data-att-id="{{ $cell['att_id'] }}" data-check-in="{{ $cell['check_in'] }}" data-check-out="{{ $cell['check_out'] }}" data-presence-status="{{ $cell['modal_status'] }}" data-audit-note="{{ e($cell['audit_note']) }}" data-lat="{{ $cell['lat'] }}" data-lng="{{ $cell['lng'] }}" data-has-record="{{ $cell['has_rec'] }}" data-can-koreksi="{{ $canKoreksi ? '1' : '0' }}">{{ $cell['val'] }}</div>
+                                                @endif
                                             </td>
                                         @endforeach
                                     </tr>
@@ -5403,11 +5315,12 @@
                     document.body.appendChild(targetModal);
                 }
 
+                const tr = cell.closest('tr');
                 const d = cell.dataset;
                 currentCellData = {
-                    userId: d.userId,
-                    userName: d.userName,
-                    branchName: d.branchName,
+                    userId: d.userId || tr?.dataset?.userId || '',
+                    userName: d.userName || tr?.dataset?.userName || '',
+                    branchName: d.branchName || tr?.dataset?.branchName || '',
                     date: d.date,
                     dateFormatted: d.dateFormatted,
                     attId: d.attId,

@@ -554,7 +554,25 @@ class DashboardController extends Controller
         if (in_array($user->role, ['admin', 'audit', 'leader', 'admin_gaji'])) {
             $month = request('month', $nowInBranch->month);
             $year = request('year', $nowInBranch->year);
-            $calBranchId = request()->has('cal_branch_id') ? request('cal_branch_id') : ($user->branch_id ?? '');
+
+            // List cabang untuk filter kalender jika user admin/admin_gaji (Cache 1 jam)
+            $calBranchesList = [];
+            if ($user->role === 'admin' || $user->role === 'admin_gaji') {
+                $calBranchesList = Cache::remember('dash_cal_branches_list', 3600, function () {
+                    return Branch::where('name', '!=', 'Cabang User Non Karyawan')
+                        ->orderBy('name')
+                        ->select('id', 'name')
+                        ->get();
+                });
+            }
+
+            // Tentukan cabang aktif: default ke cabang user, atau cabang pertama (bukan load semua cabang sekaligus)
+            if (request()->has('cal_branch_id')) {
+                $calBranchId = request('cal_branch_id');
+            } else {
+                $calBranchId = $user->branch_id ?: ($calBranchesList->first()?->id ?? 'all');
+            }
+
             $baseDate = Carbon::create($year, $month, 1, 0, 0, 0, $userTimezone);
             $startDate = $baseDate->copy()->subMonth()->day(26)->startOfDay();
             $endDate = $baseDate->copy()->day(25)->endOfDay();
@@ -566,7 +584,7 @@ class DashboardController extends Controller
                 });
             if ($user->role !== 'admin' && $user->role !== 'admin_gaji') {
                 $teamQuery->whereIn('branch_id', $allBranchIds);
-            } elseif ($calBranchId) {
+            } elseif ($calBranchId && $calBranchId !== 'all') {
                 $teamQuery->where('branch_id', $calBranchId);
             }
             $teamMembers = $teamQuery->with([
@@ -657,15 +675,73 @@ class DashboardController extends Controller
                 'Asia/Jayapura' => Carbon::now('Asia/Jayapura')->format('Y-m-d'),
             ];
 
-            // List cabang untuk filter kalender jika user admin/admin_gaji (Cache 1 jam)
-            $calBranchesList = [];
-            if ($user->role === 'admin' || $user->role === 'admin_gaji') {
-                $calBranchesList = Cache::remember('dash_cal_branches_list', 3600, function () {
-                    return Branch::where('name', '!=', 'Cabang User Non Karyawan')
-                        ->orderBy('name')
-                        ->select('id', 'name')
-                        ->get();
-                });
+            // Pre-compute cell statuses per member per date in Controller
+            $grid = [];
+            foreach ($teamMembers as $teamMember) {
+                $memberTz = $tzMap[$teamMember->id] ?? 'Asia/Jakarta';
+                $todayForMember = $todayPerTz[$memberTz] ?? ($todayPerTz['Asia/Jakarta'] ?? date('Y-m-d'));
+                $memberAtts = $calendarAttMap[$teamMember->id] ?? [];
+                $memberLeaves = $calendarLeavesMap[$teamMember->id] ?? [];
+
+                foreach ($calendarDates as $dateObj) {
+                    $dateStr = $dateObj->format('Y-m-d');
+                    $att = $memberAtts[$dateStr] ?? null;
+                    $leave = $memberLeaves[$dateStr] ?? null;
+                    $isFuture = $dateObj->isFuture();
+                    $isToday = ($dateStr === $todayForMember);
+
+                    $statusClass = 'empty';
+                    $statusValue = '';
+                    $statusTitle = 'Belum Absen / Alpha';
+                    $modalStatus = 'Masuk';
+
+                    if ($att) {
+                        $ps = strtolower($att['presence_status'] ?? '');
+                        if (in_array($ps, ['sakit', 'izin', 'cuti', 'wfh', 'libur', 'off'])) {
+                            if ($ps == 'sakit') { $statusClass = 'sick'; $statusValue = 'S'; $statusTitle = 'Sakit'; $modalStatus = 'Sakit'; }
+                            elseif ($ps == 'izin') { $statusClass = 'permit'; $statusValue = 'I'; $statusTitle = 'Izin'; $modalStatus = 'Izin'; }
+                            elseif ($ps == 'cuti') { $statusClass = 'leave'; $statusValue = 'C'; $statusTitle = 'Cuti'; $modalStatus = 'Cuti'; }
+                            elseif ($ps == 'wfh') { $statusClass = 'wfh'; $statusValue = 'W'; $statusTitle = 'WFH'; $modalStatus = 'WFH'; }
+                            else { $statusClass = 'off'; $statusValue = 'L'; $statusTitle = 'Libur/Off'; $modalStatus = 'Libur'; }
+                        } else {
+                            if ($att['check_out']) {
+                                $statusClass = 'out'; $statusValue = 'P';
+                                $statusTitle = 'Masuk: ' . $att['check_in'] . ' | Pulang: ' . $att['check_out'];
+                            } else {
+                                $statusClass = 'present'; $statusValue = 'M';
+                                $statusTitle = 'Absen Masuk: ' . $att['check_in'];
+                            }
+                            if ($att['is_late_checkin']) {
+                                $statusClass .= ' telat'; $statusValue = 'T';
+                                $statusTitle .= ' (Terlambat)';
+                            }
+                            $modalStatus = $att['presence_status'] ?? 'Masuk';
+                        }
+                    } elseif ($leave) {
+                        $lt = strtolower($leave['type']);
+                        if ($lt == 'sakit') { $statusClass = 'sick'; $statusValue = 'S'; $statusTitle = 'Izin Sakit: ' . $leave['reason']; $modalStatus = 'Sakit'; }
+                        elseif ($lt == 'izin') { $statusClass = 'permit'; $statusValue = 'I'; $statusTitle = 'Izin: ' . $leave['reason']; $modalStatus = 'Izin'; }
+                        elseif ($lt == 'cuti') { $statusClass = 'leave'; $statusValue = 'C'; $statusTitle = 'Cuti: ' . $leave['reason']; $modalStatus = 'Cuti'; }
+                        elseif ($lt == 'wfh') { $statusClass = 'wfh'; $statusValue = 'W'; $statusTitle = 'WFH: ' . $leave['reason']; $modalStatus = 'WFH'; }
+                        elseif ($lt == 'libur') { $statusClass = 'off'; $statusValue = 'L'; $statusTitle = 'Libur / Off'; $modalStatus = 'Libur'; }
+                    } elseif (!$isFuture && !$isToday) {
+                        $statusClass = 'alpha'; $statusValue = 'A'; $statusTitle = 'Alpha (Tanpa Keterangan)'; $modalStatus = 'Alpha';
+                    }
+
+                    $grid[$teamMember->id][$dateStr] = [
+                        'class' => $statusClass,
+                        'val' => $statusValue,
+                        'title' => $statusTitle,
+                        'modal_status' => $modalStatus,
+                        'att_id' => $att['id'] ?? '',
+                        'check_in' => $att['check_in'] ?? '',
+                        'check_out' => $att['check_out'] ?? '',
+                        'audit_note' => $att['audit_note'] ?? ($leave['reason'] ?? ''),
+                        'lat' => $att['latitude'] ?? '',
+                        'lng' => $att['longitude'] ?? '',
+                        'has_rec' => ($att || $leave) ? '1' : '0',
+                    ];
+                }
             }
 
             $data['teamCalendar'] = [
@@ -681,6 +757,7 @@ class DashboardController extends Controller
                 'currentYear' => $year,
                 'calBranchId' => $calBranchId,
                 'calBranchesList' => $calBranchesList,
+                'grid' => $grid,
             ];
         }
 
