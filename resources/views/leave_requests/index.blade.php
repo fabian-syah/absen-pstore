@@ -9,33 +9,85 @@
         $isSuperAdmin = strtolower(trim(auth()->user()->login_id ?? '')) === 'superadmin';
     @endphp
 
+    <style>
+        .type-select-card {
+            cursor: pointer;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            background: #fff;
+            transition: all 0.15s ease-in-out;
+            user-select: none;
+        }
+        .type-select-card:hover {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+        .type-select-card.active {
+            border-color: #0d6efd !important;
+            background: #f0f7ff !important;
+        }
+        .date-mode-card {
+            cursor: pointer;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            background: #fff;
+            transition: all 0.15s ease-in-out;
+            user-select: none;
+        }
+        .date-mode-card:hover {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+        .date-mode-card.active {
+            border-color: #0d6efd !important;
+            background: #f0f7ff !important;
+        }
+        .quick-date-btn {
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            background: #fff;
+            transition: all 0.15s;
+        }
+        .quick-date-btn:hover {
+            background: #f1f5f9;
+            color: #0d6efd;
+            border-color: #cbd5e1;
+        }
+    </style>
+
     <div class="row">
         <div class="col-lg-12 grid-margin stretch-card">
-            <div class="card">
+            <div class="card border-0 shadow-sm" style="border-radius: 14px;">
                 <div class="card-body">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
-                        <h4 class="card-title mb-3 mb-md-0">Verifikasi Izin & Keterlambatan</h4>
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                        <div>
+                            <h4 class="card-title mb-1 text-dark fw-bold">Verifikasi Izin & Keterlambatan</h4>
+                            <p class="text-muted small mb-0">Daftar permohonan izin karyawan yang menunggu persetujuan</p>
+                        </div>
                         <div class="d-flex flex-wrap gap-2">
-                            {{-- FITUR KHUSUS SUPERADMIN: AKSI MASSAL (BULK ACC & BULK REJECT) --}}
+                            {{-- FITUR KHUSUS SUPERADMIN: AKSI MASSAL --}}
                             @if ($isSuperAdmin)
-                                <button type="button" class="btn btn-warning btn-sm text-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalBulkActionSuperadmin">
-                                    <i class="mdi mdi-flash me-1"></i> Aksi Massal Superadmin
+                                <button type="button" class="btn btn-outline-primary btn-sm fw-semibold rounded-3 shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#modalBulkActionSuperadmin">
+                                    <i class="mdi mdi-layers-triple-outline"></i> Aksi Massal
                                 </button>
                             @endif
 
                             {{-- Tombol History --}}
                             @if (in_array(auth()->user()->role, ['admin', 'audit']))
-                                <a href="{{ route('audit.late.history') }}" class="btn btn-inverse-info btn-sm">
+                                <a href="{{ route('audit.late.history') }}" class="btn btn-inverse-info btn-sm rounded-3">
                                     <i class="mdi mdi-history"></i> Riwayat Selesai
                                 </a>
-                                <a href="{{ route('audit.late.rejected.history') }}" class="btn btn-inverse-danger btn-sm">
+                                <a href="{{ route('audit.late.rejected.history') }}" class="btn btn-inverse-danger btn-sm rounded-3">
                                     <i class="mdi mdi-close-circle-multiple-outline"></i> Riwayat Ditolak
                                 </a>
                             @endif
 
                             {{-- Tombol Ajukan Baru (untuk user biasa) --}}
                             @if (in_array(auth()->user()->role, ['user_biasa', 'leader']))
-                                <a href="{{ route('leave-requests.create') }}" class="btn btn-primary btn-sm">
+                                <a href="{{ route('leave-requests.create') }}" class="btn btn-primary btn-sm rounded-3">
                                     <i class="mdi mdi-plus"></i> Ajukan Baru
                                 </a>
                             @endif
@@ -44,59 +96,66 @@
 
                     {{-- Banner Khusus Superadmin --}}
                     @if ($isSuperAdmin)
-                        <div class="alert alert-warning border border-warning d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 shadow-sm">
-                            <div class="d-flex align-items-center">
-                                <i class="mdi mdi-shield-crown text-warning me-3" style="font-size: 32px;"></i>
-                                <div>
-                                    <strong class="text-dark">Fitur Khusus Superadmin Aktif:</strong>
-                                    <span class="text-muted d-block" style="font-size: 13px;">
-                                        Anda dapat menyetujui (ACC) atau menolak izin secara massal berdasarkan rentang tanggal & jenis izin (misal: 22-27 September WFH & Dinas Luar), atau memilih baris langsung pada tabel.
-                                    </span>
+                        <div class="card border-0 mb-4" style="background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%); border-left: 4px solid #0d6efd !important; border-radius: 12px;">
+                            <div class="card-body p-3 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 44px; height: 44px; background: rgba(13, 110, 253, 0.1); color: #0d6efd;">
+                                        <i class="mdi mdi-shield-account-outline" style="font-size: 24px;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark" style="font-size: 14px;">Aksi Massal Superadmin Aktif</div>
+                                        <div class="text-muted small">Persetujuan atau penolakan izin sekaligus berdasarkan rentang tanggal &amp; tipe izin (misal: 22-27 September WFH &amp; Dinas Luar).</div>
+                                    </div>
                                 </div>
+                                <button type="button" class="btn btn-primary btn-sm px-3 py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalBulkActionSuperadmin">
+                                    <i class="mdi mdi-layers-triple-outline"></i>
+                                    <span>Buka Aksi Massal</span>
+                                </button>
                             </div>
-                            <button type="button" class="btn btn-warning btn-sm fw-bold text-dark px-3" data-bs-toggle="modal" data-bs-target="#modalBulkActionSuperadmin">
-                                <i class="mdi mdi-flash me-1"></i> Buka Menu Aksi Massal
-                            </button>
                         </div>
                     @endif
 
                     {{-- Informasi Halaman --}}
-                    <div class="alert alert-info mb-3">
-                        <strong>Informasi:</strong><br>
-                        • Total data pending: <strong>{{ $requests->total() }}</strong><br>
-                        • Klik tombol mata (<i class="mdi mdi-eye"></i>) untuk melihat bukti foto.<br>
-                        • Data diurutkan dari yang <strong>paling lama</strong> diajukan (Prioritas Lama).
+                    <div class="alert alert-info mb-3 rounded-3 border-0" style="background: rgba(13, 110, 253, 0.08); color: #084298;">
+                        <div class="d-flex align-items-center">
+                            <i class="mdi mdi-information-outline me-2" style="font-size: 18px;"></i>
+                            <div style="font-size: 13px;">
+                                Total data pending: <strong>{{ $requests->total() }}</strong> |
+                                Klik tombol mata (<i class="mdi mdi-eye"></i>) untuk melihat bukti |
+                                Diurutkan dari yang <strong>paling lama</strong> diajukan.
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Notifikasi Sukses/Error --}}
                     @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show">
+                        <div class="alert alert-success alert-dismissible fade show rounded-3">
                             {{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
 
                     @if (session('warning'))
-                        <div class="alert alert-warning alert-dismissible fade show">
+                        <div class="alert alert-warning alert-dismissible fade show rounded-3">
                             {{ session('warning') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
 
                     @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show">
+                        <div class="alert alert-danger alert-dismissible fade show rounded-3">
                             {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
 
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
                                     @if ($isSuperAdmin)
                                         <th style="width: 40px;" class="text-center">
-                                            <input type="checkbox" id="checkAllRows" class="form-check-input" title="Pilih Semua di Halaman Ini" style="cursor: pointer; width: 18px; height: 18px;">
+                                            <input type="checkbox" id="checkAllRows" class="form-check-input" title="Pilih Semua di Halaman Ini" style="cursor: pointer; width: 17px; height: 17px;">
                                         </th>
                                     @endif
                                     <th>User</th>
@@ -115,7 +174,7 @@
                                         {{-- 0. CHECKBOX SUPERADMIN --}}
                                         @if ($isSuperAdmin)
                                             <td class="text-center align-middle">
-                                                <input type="checkbox" class="form-check-input row-checkbox" value="{{ $req->id }}" style="cursor: pointer; width: 18px; height: 18px;">
+                                                <input type="checkbox" class="form-check-input row-checkbox" value="{{ $req->id }}" style="cursor: pointer; width: 17px; height: 17px;">
                                             </td>
                                         @endif
 
@@ -123,11 +182,11 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-primary rounded-circle d-flex justify-content-center align-items-center text-white me-2"
-                                                    style="width: 35px; height: 35px; font-weight:bold;">
+                                                    style="width: 35px; height: 35px; font-weight:bold; font-size: 13px;">
                                                     {{ substr($req->user->name ?? 'U', 0, 1) }}
                                                 </div>
                                                 <div>
-                                                    <span class="fw-bold d-block text-dark">{{ $req->user->name ?? 'User #' . $req->user_id }}</span>
+                                                    <span class="fw-bold d-block text-dark" style="font-size: 13px;">{{ $req->user->name ?? 'User #' . $req->user_id }}</span>
                                                     <small class="text-muted" style="font-size:11px;">
                                                         {{ $req->user->division->name ?? '-' }} |
                                                         <span class="text-primary fw-bold">{{ $req->user->branch->name ?? 'Pusat' }}</span>
@@ -139,19 +198,19 @@
                                         {{-- 2. TIPE IZIN --}}
                                         <td>
                                             @if ($req->type == 'sakit')
-                                                <span class="badge bg-danger text-white">Sakit</span>
+                                                <span class="badge bg-danger text-white rounded-pill px-2 py-1">Sakit</span>
                                             @elseif($req->type == 'izin')
-                                                <span class="badge bg-info text-white">Izin</span>
+                                                <span class="badge bg-info text-white rounded-pill px-2 py-1">Izin</span>
                                             @elseif($req->type == 'libur')
-                                                <span class="badge bg-secondary text-white">Libur</span>
+                                                <span class="badge bg-secondary text-white rounded-pill px-2 py-1">Libur</span>
                                             @elseif($req->type == 'wfh')
-                                                <span class="badge bg-primary text-white">WFH / Dinas</span>
+                                                <span class="badge bg-primary text-white rounded-pill px-2 py-1">WFH</span>
                                             @elseif($req->type == 'dinas')
-                                                <span class="badge bg-primary text-white">Dinas Luar</span>
+                                                <span class="badge bg-info text-white rounded-pill px-2 py-1">Dinas Luar</span>
                                             @elseif($req->type == 'cuti')
-                                                <span class="badge bg-success text-white">Cuti</span>
+                                                <span class="badge bg-success text-white rounded-pill px-2 py-1">Cuti</span>
                                             @else
-                                                <span class="badge bg-warning text-dark">Telat</span>
+                                                <span class="badge bg-warning text-dark rounded-pill px-2 py-1">Telat</span>
                                             @endif
                                         </td>
 
@@ -175,7 +234,7 @@
                                         </td>
 
                                         {{-- 4. ALASAN --}}
-                                        <td class="text-wrap" style="max-width: 200px;">{{ $req->reason }}</td>
+                                        <td class="text-wrap" style="max-width: 200px; font-size: 13px;">{{ $req->reason }}</td>
 
                                         {{-- 5. RIWAYAT --}}
                                         <td>
@@ -199,7 +258,7 @@
                                                     @elseif($h->type == 'wfh')
                                                         <span class="badge badge-outline-primary p-1" style="font-size: 10px;">WFH</span>
                                                     @elseif($h->type == 'dinas')
-                                                        <span class="badge badge-outline-primary p-1" style="font-size: 10px;">Dinas</span>
+                                                        <span class="badge badge-outline-info p-1" style="font-size: 10px;">Dinas</span>
                                                     @elseif($h->type == 'cuti')
                                                         <span class="badge badge-outline-success p-1" style="font-size: 10px;">Cuti</span>
                                                     @else
@@ -217,17 +276,17 @@
                                             @if ($req->file_proof)
                                                 <a href="javascript:void(0)"
                                                     onclick="window.showImageModal('{{ asset('storage/' . $req->file_proof) }}')"
-                                                    class="btn btn-inverse-secondary btn-icon btn-sm" title="Lihat Bukti">
+                                                    class="btn btn-inverse-secondary btn-icon btn-sm rounded-circle" title="Lihat Bukti">
                                                     <i class="mdi mdi-eye"></i>
                                                 </a>
                                             @else
-                                                -
+                                                <span class="text-muted">-</span>
                                             @endif
                                         </td>
 
                                         {{-- 7. STATUS --}}
                                         <td>
-                                            <span class="badge badge-opacity-warning">Menunggu</span>
+                                            <span class="badge badge-opacity-warning rounded-pill">Menunggu</span>
                                         </td>
 
                                         {{-- 8. AKSI --}}
@@ -238,7 +297,7 @@
                                                     class="d-inline"
                                                     onsubmit="confirmSubmit(event, this, 'Yakin ingin membatalkan pengajuan?')">
                                                     @csrf @method('PATCH')
-                                                    <button type="submit" class="btn btn-light btn-sm text-danger" title="Batalkan">
+                                                    <button type="submit" class="btn btn-light btn-sm text-danger rounded-3" title="Batalkan">
                                                         <i class="mdi mdi-close-circle"></i> Batal
                                                     </button>
                                                 </form>
@@ -249,13 +308,13 @@
                                                 <form action="{{ route('late.approve', $req->id) }}" method="POST" class="d-inline"
                                                     onsubmit="confirmSubmit(event, this, 'Setujui pengajuan ini?')">
                                                     @csrf
-                                                    <button class="btn btn-success btn-sm p-2" title="Setujui">
+                                                    <button class="btn btn-success btn-sm p-2 rounded-3" title="Setujui">
                                                         <i class="mdi mdi-check"></i>
                                                     </button>
                                                 </form>
 
                                                 {{-- Tombol Reject dengan data dinamis untuk iPhone --}}
-                                                <button type="button" class="btn btn-danger btn-sm p-2"
+                                                <button type="button" class="btn btn-danger btn-sm p-2 rounded-3"
                                                     onclick="window.openRejectModal('{{ $req->id }}', '{{ route('late.reject', $req->id) }}')">
                                                     <i class="mdi mdi-close"></i>
                                                 </button>
@@ -291,20 +350,20 @@
 
     {{-- FLOATING ACTION BAR FOR SELECTED ROWS (SUPERADMIN) --}}
     @if ($isSuperAdmin)
-        <div id="selectedActionBar" class="card shadow-lg border border-primary position-fixed bottom-0 start-50 translate-middle-x mb-4 d-none" style="z-index: 1050; min-width: 340px; max-width: 90%;">
-            <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-3 bg-white rounded">
-                <div>
-                    <i class="mdi mdi-checkbox-marked-circle-outline text-primary me-1"></i>
-                    <strong id="selectedCountText">0</strong> pengajuan dipilih di halaman ini
+        <div id="selectedActionBar" class="card shadow-lg border-0 position-fixed bottom-0 start-50 translate-middle-x mb-4 d-none" style="z-index: 1050; min-width: 320px; max-width: 90%; border-radius: 14px; background: #1e293b; color: #fff;">
+            <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center text-white">
+                    <i class="mdi mdi-checkbox-marked-circle-outline text-success me-2" style="font-size: 20px;"></i>
+                    <span style="font-size: 13px;"><strong id="selectedCountText" class="text-warning">0</strong> izin terpilih</span>
                 </div>
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-success btn-sm fw-bold px-3" onclick="window.approveSelectedRows()">
-                        <i class="mdi mdi-check me-1"></i> Setujui Terpilih
+                    <button type="button" class="btn btn-success btn-sm fw-semibold px-3 rounded-pill" onclick="window.approveSelectedRows()">
+                        <i class="mdi mdi-check me-1"></i> Setujui
                     </button>
-                    <button type="button" class="btn btn-danger btn-sm fw-bold px-3" onclick="window.rejectSelectedRows()">
-                        <i class="mdi mdi-close me-1"></i> Tolak Terpilih
+                    <button type="button" class="btn btn-danger btn-sm fw-semibold px-3 rounded-pill" onclick="window.rejectSelectedRows()">
+                        <i class="mdi mdi-close me-1"></i> Tolak
                     </button>
-                    <button type="button" class="btn btn-light btn-sm text-secondary" onclick="window.clearSelectedRows()">
+                    <button type="button" class="btn btn-outline-light btn-sm px-3 rounded-pill" onclick="window.clearSelectedRows()">
                         Batal
                     </button>
                 </div>
@@ -315,58 +374,92 @@
     {{-- MODAL AKSI MASSAL SUPERADMIN (FILTER RENTANG TANGGAL & MULTI-TYPE) --}}
     @if ($isSuperAdmin)
         <div class="modal fade" id="modalBulkActionSuperadmin" tabindex="-1" aria-labelledby="modalBulkActionLabel" aria-hidden="true" style="z-index: 9998;">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header bg-warning bg-opacity-25 py-3">
-                        <h5 class="modal-title fw-bold text-dark" id="modalBulkActionLabel">
-                            <i class="mdi mdi-shield-crown text-warning me-2"></i>Aksi Massal Pengajuan Izin (Khusus Superadmin)
-                        </h5>
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                    {{-- MODAL HEADER --}}
+                    <div class="modal-header bg-white border-bottom px-4 py-3 align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 42px; height: 42px; background: rgba(13, 110, 253, 0.08); color: #0d6efd;">
+                                <i class="mdi mdi-layers-triple-outline" style="font-size: 22px;"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark mb-0" id="modalBulkActionLabel" style="font-size: 16px;">
+                                    Aksi Massal Pengajuan Izin
+                                </h5>
+                                <p class="text-muted small mb-0">Setujui (ACC) atau tolak pengajuan pending secara serentak</p>
+                            </div>
+                        </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body p-4">
+
+                    {{-- MODAL BODY --}}
+                    <div class="modal-body p-4" style="background: #ffffff;">
                         <form id="formBulkAction">
                             {{-- 1. PILIH RENTANG TANGGAL --}}
                             <div class="mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label fw-bold text-dark mb-0">
-                                        <i class="mdi mdi-calendar-range text-primary me-1"></i>1. Rentang Tanggal Izin <span class="text-danger">*</span>
+                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                    <label class="form-label fw-bold text-dark mb-0 d-flex align-items-center">
+                                        <span class="badge rounded-circle bg-primary text-white me-2 d-inline-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 11px;">1</span>
+                                        <span>Rentang Tanggal</span>
+                                        <span class="text-danger ms-1">*</span>
                                     </label>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="setQuickDate('today')">Hari Ini</button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="setQuickDate('yesterday')">Kemarin</button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="setQuickDate('last7')">7 Hari</button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="setQuickDate('thisMonth')">Bulan Ini</button>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-2" onclick="setQuickDate('today')">Hari Ini</button>
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-2" onclick="setQuickDate('yesterday')">Kemarin</button>
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-2" onclick="setQuickDate('last7')">7 Hari</button>
+                                        <button type="button" class="quick-date-btn btn btn-sm py-1 px-2" onclick="setQuickDate('thisMonth')">Bulan Ini</button>
                                     </div>
                                 </div>
                                 <div class="row g-2">
-                                    <div class="col-md-6">
-                                        <label class="small text-muted mb-1">Tanggal Mulai</label>
-                                        <input type="date" class="form-control" id="bulk_start_date" name="start_date" required>
+                                    <div class="col-12 col-sm-6">
+                                        <div class="form-group mb-0">
+                                            <label class="small text-muted mb-1 fw-semibold">Tanggal Mulai</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="mdi mdi-calendar"></i></span>
+                                                <input type="date" class="form-control border-start-0" id="bulk_start_date" name="start_date" required>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="small text-muted mb-1">Tanggal Selesai</label>
-                                        <input type="date" class="form-control" id="bulk_end_date" name="end_date" required>
+                                    <div class="col-12 col-sm-6">
+                                        <div class="form-group mb-0">
+                                            <label class="small text-muted mb-1 fw-semibold">Tanggal Selesai</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="mdi mdi-calendar"></i></span>
+                                                <input type="date" class="form-control border-start-0" id="bulk_end_date" name="end_date" required>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="mt-2">
-                                    <label class="small text-muted d-block mb-1">Metode Pencocokan Tanggal:</label>
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="date_mode" id="date_mode_within" value="within" checked>
-                                            <label class="form-check-label small" for="date_mode_within" title="Pengajuan yang tanggal mulai dan selesai berada di antara tanggal yang dipilih">
-                                                Di dalam rentang (Rekomendasi)
+
+                                {{-- Metode Pencocokan --}}
+                                <div class="mt-3">
+                                    <label class="small text-muted d-block mb-1 fw-semibold">Metode Pencocokan Tanggal:</label>
+                                    <div class="row g-2">
+                                        <div class="col-12 col-sm-4">
+                                            <label class="date-mode-card d-flex align-items-center p-2 rounded-3 border w-100 mb-0 active" for="date_mode_within">
+                                                <input class="form-check-input me-2 mt-0" type="radio" name="date_mode" id="date_mode_within" value="within" checked>
+                                                <div>
+                                                    <span class="d-block fw-semibold text-dark" style="font-size: 12px;">Di Dalam Rentang</span>
+                                                    <small class="text-muted d-block" style="font-size: 10px; line-height: 1.2;">Mulai & selesai di rentang ini</small>
+                                                </div>
                                             </label>
                                         </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="date_mode" id="date_mode_overlap" value="overlap">
-                                            <label class="form-check-label small" for="date_mode_overlap" title="Pengajuan yang bersinggungan dengan rentang tanggal yang dipilih">
-                                                Bersinggungan (Overlap)
+                                        <div class="col-12 col-sm-4">
+                                            <label class="date-mode-card d-flex align-items-center p-2 rounded-3 border w-100 mb-0" for="date_mode_overlap">
+                                                <input class="form-check-input me-2 mt-0" type="radio" name="date_mode" id="date_mode_overlap" value="overlap">
+                                                <div>
+                                                    <span class="d-block fw-semibold text-dark" style="font-size: 12px;">Bersinggungan</span>
+                                                    <small class="text-muted d-block" style="font-size: 10px; line-height: 1.2;">Overlap tanggal yang dipilih</small>
+                                                </div>
                                             </label>
                                         </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="date_mode" id="date_mode_start_only" value="start_only">
-                                            <label class="form-check-label small" for="date_mode_start_only">
-                                                Tanggal Mulai Saja
+                                        <div class="col-12 col-sm-4">
+                                            <label class="date-mode-card d-flex align-items-center p-2 rounded-3 border w-100 mb-0" for="date_mode_start_only">
+                                                <input class="form-check-input me-2 mt-0" type="radio" name="date_mode" id="date_mode_start_only" value="start_only">
+                                                <div>
+                                                    <span class="d-block fw-semibold text-dark" style="font-size: 12px;">Tanggal Mulai Saja</span>
+                                                    <small class="text-muted d-block" style="font-size: 10px; line-height: 1.2;">Berdasarkan tanggal awal</small>
+                                                </div>
                                             </label>
                                         </div>
                                     </div>
@@ -375,118 +468,136 @@
 
                             {{-- 2. PILIH JENIS IZIN (MULTI-SELECT) --}}
                             <div class="mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label fw-bold text-dark mb-0">
-                                        <i class="mdi mdi-checkbox-multiple-marked text-primary me-1"></i>2. Jenis Izin (Bisa pilih lebih dari 1) <span class="text-danger">*</span>
+                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                    <label class="form-label fw-bold text-dark mb-0 d-flex align-items-center">
+                                        <span class="badge rounded-circle bg-primary text-white me-2 d-inline-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 11px;">2</span>
+                                        <span>Jenis Izin</span>
+                                        <span class="text-danger ms-1">*</span>
                                     </label>
                                     <div class="btn-group btn-group-sm">
                                         <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2" id="btnSelectAllTypes">Pilih Semua</button>
-                                        <button type="button" class="btn btn-outline-info btn-sm py-1 px-2" id="btnSelectWfhDinas">Hanya WFH & Dinas</button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2" id="btnSelectWfhDinas">Hanya WFH &amp; Dinas</button>
                                         <button type="button" class="btn btn-outline-secondary btn-sm py-1 px-2" id="btnResetTypes">Reset</button>
                                     </div>
                                 </div>
-                                <div class="p-3 bg-light rounded border">
-                                    <div class="row g-2">
-                                        <div class="col-sm-6 col-md-4">
-                                            <div class="form-check">
-                                                <input class="form-check-input type-checkbox" type="checkbox" name="types[]" value="wfh" id="type_wfh" checked>
-                                                <label class="form-check-label fw-semibold" for="type_wfh">
-                                                    <span class="badge bg-primary text-white me-1">WFH</span> Work From Home
-                                                </label>
+
+                                <div class="row g-2">
+                                    <div class="col-6 col-sm-4 col-md-3">
+                                        <label class="type-select-card d-flex align-items-center justify-content-between p-2 rounded-3 border w-100 mb-0 active" for="type_wfh">
+                                            <div class="d-flex align-items-center">
+                                                <input class="form-check-input type-checkbox me-2 mt-0" type="checkbox" name="types[]" value="wfh" id="type_wfh" checked>
+                                                <span class="fw-semibold text-dark" style="font-size: 13px;">WFH</span>
                                             </div>
-                                        </div>
-                                        <div class="col-sm-6 col-md-4">
-                                            <div class="form-check">
-                                                <input class="form-check-input type-checkbox" type="checkbox" name="types[]" value="dinas" id="type_dinas" checked>
-                                                <label class="form-check-label fw-semibold" for="type_dinas">
-                                                    <span class="badge bg-primary text-white me-1">Dinas</span> Dinas Luar
-                                                </label>
+                                            <span class="badge rounded-pill" style="background: rgba(13, 110, 253, 0.12); color: #0d6efd; font-size: 10px;">Remote</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="col-6 col-sm-4 col-md-3">
+                                        <label class="type-select-card d-flex align-items-center justify-content-between p-2 rounded-3 border w-100 mb-0 active" for="type_dinas">
+                                            <div class="d-flex align-items-center">
+                                                <input class="form-check-input type-checkbox me-2 mt-0" type="checkbox" name="types[]" value="dinas" id="type_dinas" checked>
+                                                <span class="fw-semibold text-dark" style="font-size: 13px;">Dinas Luar</span>
                                             </div>
-                                        </div>
-                                        <div class="col-sm-6 col-md-4">
-                                            <div class="form-check">
-                                                <input class="form-check-input type-checkbox" type="checkbox" name="types[]" value="izin" id="type_izin">
-                                                <label class="form-check-label" for="type_izin">
-                                                    <span class="badge bg-info text-white me-1">Izin</span> Izin Pribadi
-                                                </label>
+                                            <span class="badge rounded-pill" style="background: rgba(13, 202, 240, 0.15); color: #0aa2c0; font-size: 10px;">Dinas</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="col-6 col-sm-4 col-md-3">
+                                        <label class="type-select-card d-flex align-items-center justify-content-between p-2 rounded-3 border w-100 mb-0" for="type_izin">
+                                            <div class="d-flex align-items-center">
+                                                <input class="form-check-input type-checkbox me-2 mt-0" type="checkbox" name="types[]" value="izin" id="type_izin">
+                                                <span class="fw-semibold text-dark" style="font-size: 13px;">Izin Pribadi</span>
                                             </div>
-                                        </div>
-                                        <div class="col-sm-6 col-md-4">
-                                            <div class="form-check">
-                                                <input class="form-check-input type-checkbox" type="checkbox" name="types[]" value="sakit" id="type_sakit">
-                                                <label class="form-check-label" for="type_sakit">
-                                                    <span class="badge bg-danger text-white me-1">Sakit</span> Sakit
-                                                </label>
+                                            <span class="badge rounded-pill" style="background: rgba(108, 117, 125, 0.12); color: #495057; font-size: 10px;">Izin</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="col-6 col-sm-4 col-md-3">
+                                        <label class="type-select-card d-flex align-items-center justify-content-between p-2 rounded-3 border w-100 mb-0" for="type_sakit">
+                                            <div class="d-flex align-items-center">
+                                                <input class="form-check-input type-checkbox me-2 mt-0" type="checkbox" name="types[]" value="sakit" id="type_sakit">
+                                                <span class="fw-semibold text-dark" style="font-size: 13px;">Sakit</span>
                                             </div>
-                                        </div>
-                                        <div class="col-sm-6 col-md-4">
-                                            <div class="form-check">
-                                                <input class="form-check-input type-checkbox" type="checkbox" name="types[]" value="libur" id="type_libur">
-                                                <label class="form-check-label" for="type_libur">
-                                                    <span class="badge bg-secondary text-white me-1">Libur</span> Libur / Off Day
-                                                </label>
+                                            <span class="badge rounded-pill" style="background: rgba(220, 53, 69, 0.12); color: #dc3545; font-size: 10px;">Sakit</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="col-6 col-sm-4 col-md-3">
+                                        <label class="type-select-card d-flex align-items-center justify-content-between p-2 rounded-3 border w-100 mb-0" for="type_libur">
+                                            <div class="d-flex align-items-center">
+                                                <input class="form-check-input type-checkbox me-2 mt-0" type="checkbox" name="types[]" value="libur" id="type_libur">
+                                                <span class="fw-semibold text-dark" style="font-size: 13px;">Libur / Off</span>
                                             </div>
-                                        </div>
-                                        <div class="col-sm-6 col-md-4">
-                                            <div class="form-check">
-                                                <input class="form-check-input type-checkbox" type="checkbox" name="types[]" value="cuti" id="type_cuti">
-                                                <label class="form-check-label" for="type_cuti">
-                                                    <span class="badge bg-success text-white me-1">Cuti</span> Cuti
-                                                </label>
+                                            <span class="badge rounded-pill" style="background: rgba(108, 117, 125, 0.12); color: #6c757d; font-size: 10px;">Off</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="col-6 col-sm-4 col-md-3">
+                                        <label class="type-select-card d-flex align-items-center justify-content-between p-2 rounded-3 border w-100 mb-0" for="type_cuti">
+                                            <div class="d-flex align-items-center">
+                                                <input class="form-check-input type-checkbox me-2 mt-0" type="checkbox" name="types[]" value="cuti" id="type_cuti">
+                                                <span class="fw-semibold text-dark" style="font-size: 13px;">Cuti</span>
                                             </div>
-                                        </div>
-                                        <div class="col-sm-6 col-md-4">
-                                            <div class="form-check">
-                                                <input class="form-check-input type-checkbox" type="checkbox" name="types[]" value="telat" id="type_telat">
-                                                <label class="form-check-label" for="type_telat">
-                                                    <span class="badge bg-warning text-dark me-1">Telat</span> Izin Terlambat
-                                                </label>
+                                            <span class="badge rounded-pill" style="background: rgba(25, 135, 84, 0.12); color: #198754; font-size: 10px;">Cuti</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="col-6 col-sm-4 col-md-3">
+                                        <label class="type-select-card d-flex align-items-center justify-content-between p-2 rounded-3 border w-100 mb-0" for="type_telat">
+                                            <div class="d-flex align-items-center">
+                                                <input class="form-check-input type-checkbox me-2 mt-0" type="checkbox" name="types[]" value="telat" id="type_telat">
+                                                <span class="fw-semibold text-dark" style="font-size: 13px;">Telat</span>
                                             </div>
-                                        </div>
+                                            <span class="badge rounded-pill" style="background: rgba(255, 193, 7, 0.2); color: #997404; font-size: 10px;">Telat</span>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
 
                             {{-- 3. FILTER CABANG (OPSIONAL) --}}
                             <div class="mb-4">
-                                <label class="form-label fw-bold text-dark">
-                                    <i class="mdi mdi-store text-primary me-1"></i>3. Filter Cabang (Opsional)
+                                <label class="form-label fw-bold text-dark mb-1 d-flex align-items-center">
+                                    <span class="badge rounded-circle bg-secondary text-white me-2 d-inline-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 11px;">3</span>
+                                    <span>Filter Cabang (Opsional)</span>
                                 </label>
-                                <select class="form-select" id="bulk_branch_id" name="branch_id">
-                                    <option value="all">Semua Cabang (Global)</option>
-                                    @isset($branches)
-                                        @foreach($branches as $b)
-                                            <option value="{{ $b->id }}">{{ $b->name }}</option>
-                                        @endforeach
-                                    @endisset
-                                </select>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="mdi mdi-store-outline"></i></span>
+                                    <select class="form-select border-start-0" id="bulk_branch_id" name="branch_id">
+                                        <option value="all">Semua Cabang (Global)</option>
+                                        @isset($branches)
+                                            @foreach($branches as $b)
+                                                <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                            @endforeach
+                                        @endisset
+                                    </select>
+                                </div>
                             </div>
 
-                            {{-- TOMBOL CEK PREVIEW & HASIL PREVIEW --}}
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label fw-bold text-dark mb-0">
-                                        <i class="mdi mdi-clipboard-text-search text-primary me-1"></i>Pratinjau Data Pending
+                            {{-- 4. PREVIEW & STATUS DATA --}}
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                    <label class="form-label fw-bold text-dark mb-0 d-flex align-items-center">
+                                        <span class="badge rounded-circle bg-info text-white me-2 d-inline-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 11px;">4</span>
+                                        <span>Hasil Pencocokan Data</span>
                                     </label>
-                                    <button type="button" class="btn btn-outline-dark btn-sm py-1 px-3" id="btnCheckPreview">
-                                        <i class="mdi mdi-refresh me-1"></i> Cek / Hitung Data
+                                    <button type="button" class="btn btn-outline-secondary btn-sm py-1 px-3 rounded-pill" id="btnCheckPreview">
+                                        <i class="mdi mdi-refresh me-1"></i> Cek Data
                                     </button>
                                 </div>
 
-                                {{-- Area Loading & Status --}}
-                                <div id="previewStatusBox" class="alert alert-secondary py-3 text-center mb-2">
-                                    <span class="text-muted"><i class="mdi mdi-information-outline"></i> Tentukan rentang tanggal dan jenis izin, lalu klik <strong>"Cek / Hitung Data"</strong>.</span>
+                                {{-- Preview Box --}}
+                                <div id="previewStatusBox" class="p-3 rounded-3 text-center border" style="background: #f8fafc;">
+                                    <span class="text-muted small"><i class="mdi mdi-information-outline me-1"></i> Masukkan rentang tanggal dan pilih jenis izin untuk melihat data.</span>
                                 </div>
 
-                                {{-- Area Table Preview --}}
-                                <div id="previewDetailsContainer" class="d-none">
+                                <div id="previewDetailsContainer" class="d-none mt-2">
                                     <div class="d-flex flex-wrap gap-1 mb-2" id="previewBreakdownBadges"></div>
-                                    <div class="border rounded" style="max-height: 220px; overflow-y: auto;">
+                                    <div class="border rounded-3 overflow-hidden shadow-sm" style="max-height: 220px; overflow-y: auto;">
                                         <table class="table table-sm table-hover mb-0" style="font-size: 12px;">
-                                            <thead class="table-light sticky-top">
+                                            <thead class="bg-light sticky-top text-muted">
                                                 <tr>
-                                                    <th>#</th>
-                                                    <th>User</th>
+                                                    <th class="ps-3">#</th>
+                                                    <th>Nama Karyawan</th>
                                                     <th>Cabang</th>
                                                     <th>Tipe</th>
                                                     <th>Tanggal</th>
@@ -501,16 +612,18 @@
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer bg-light d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+
+                    {{-- MODAL FOOTER --}}
+                    <div class="modal-footer bg-light px-4 py-3 d-flex justify-content-between flex-wrap gap-2 border-top">
+                        <button type="button" class="btn btn-light border text-muted px-4 py-2 rounded-3" data-bs-dismiss="modal">
+                            Batal
+                        </button>
                         <div class="d-flex gap-2">
-                            {{-- TOMBOL REJECT ALL --}}
-                            <button type="button" class="btn btn-danger fw-bold px-3" id="btnBulkRejectAction" disabled>
-                                <i class="mdi mdi-close-octagon me-1"></i> Tolak Semua (<span class="bulk-match-count">0</span>)
+                            <button type="button" class="btn btn-danger px-4 py-2 rounded-3 shadow-sm fw-semibold" id="btnBulkRejectAction" disabled>
+                                <i class="mdi mdi-close-circle-outline me-1"></i> Tolak Semua (<span class="bulk-match-count">0</span>)
                             </button>
-                            {{-- TOMBOL APPROVE ALL --}}
-                            <button type="button" class="btn btn-success fw-bold px-3" id="btnBulkApproveAction" disabled>
-                                <i class="mdi mdi-check-all me-1"></i> Setujui Semua (<span class="bulk-match-count">0</span>)
+                            <button type="button" class="btn btn-success px-4 py-2 rounded-3 shadow-sm fw-semibold" id="btnBulkApproveAction" disabled>
+                                <i class="mdi mdi-check-circle-outline me-1"></i> Setujui Semua (<span class="bulk-match-count">0</span>)
                             </button>
                         </div>
                     </div>
@@ -522,24 +635,23 @@
     {{-- MODAL REJECT DINAMIS (Paling Stabil untuk iPhone/iOS) --}}
     <div class="modal fade" id="rejectModalDynamic" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Tolak Pengajuan</h5>
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 14px;">
+                <div class="modal-header border-bottom px-4 py-3">
+                    <h5 class="modal-title fw-bold text-dark" style="font-size: 16px;">Tolak Pengajuan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="formRejectDynamic" action="" method="POST">
                     @csrf
-                    <div class="modal-body">
+                    <div class="modal-body p-4">
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold">Alasan Penolakan <span
-                                    class="text-danger">*</span></label>
-                            <textarea name="rejection_reason" class="form-control text-dark" rows="3" required
+                            <label class="form-label fw-bold text-dark">Alasan Penolakan <span class="text-danger">*</span></label>
+                            <textarea name="rejection_reason" class="form-control text-dark rounded-3" rows="3" required
                                 placeholder="Tulis alasan penolakan..."></textarea>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-danger">Tolak Sekarang</button>
+                    <div class="modal-footer bg-light px-4 py-3">
+                        <button type="button" class="btn btn-light border text-muted rounded-3" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger rounded-3 fw-semibold">Tolak Sekarang</button>
                     </div>
                 </form>
             </div>
@@ -549,19 +661,17 @@
     {{-- MODAL PREVIEW GAMBAR --}}
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true" style="z-index: 10000;">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Bukti Lampiran</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal"
-                        aria-label="Close"></button>
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 14px; overflow: hidden;">
+                <div class="modal-header bg-white border-bottom px-4 py-3">
+                    <h5 class="modal-title fw-bold text-dark" style="font-size: 16px;">Bukti Lampiran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center bg-light">
-                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded shadow-sm"
+                <div class="modal-body text-center p-4" style="background: #f8fafc;">
+                    <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded-3 shadow-sm"
                         style="max-height: 70vh; width: auto;">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                        data-dismiss="modal">Tutup</button>
+                <div class="modal-footer bg-light px-4 py-2">
+                    <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal" data-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -650,6 +760,22 @@
         // ==========================================================
         let matchedPendingCount = 0;
 
+        // Sync card active states
+        $(document).on('change', '.type-checkbox', function () {
+            if ($(this).is(':checked')) {
+                $(this).closest('.type-select-card').addClass('active');
+            } else {
+                $(this).closest('.type-select-card').removeClass('active');
+            }
+            triggerPreviewCheck();
+        });
+
+        $(document).on('change', 'input[name="date_mode"]', function () {
+            $('.date-mode-card').removeClass('active');
+            $(this).closest('.date-mode-card').addClass('active');
+            triggerPreviewCheck();
+        });
+
         // Quick date setter
         window.setQuickDate = function(period) {
             const today = new Date();
@@ -685,25 +811,25 @@
         // Button type selectors
         $('#btnSelectAllTypes').on('click', function () {
             $('.type-checkbox').prop('checked', true);
+            $('.type-select-card').addClass('active');
             triggerPreviewCheck();
         });
 
         $('#btnSelectWfhDinas').on('click', function () {
             $('.type-checkbox').prop('checked', false);
-            $('#type_wfh, #type_dinas').prop('checked', true);
+            $('.type-select-card').removeClass('active');
+            $('#type_wfh, #type_dinas').prop('checked', true).closest('.type-select-card').addClass('active');
             triggerPreviewCheck();
         });
 
         $('#btnResetTypes').on('click', function () {
             $('.type-checkbox').prop('checked', false);
+            $('.type-select-card').removeClass('active');
             triggerPreviewCheck();
         });
 
         // Trigger preview saat input berubah
-        $('#bulk_start_date, #bulk_end_date, #bulk_branch_id, input[name="date_mode"]').on('change', function () {
-            triggerPreviewCheck();
-        });
-        $('.type-checkbox').on('change', function () {
+        $('#bulk_start_date, #bulk_end_date, #bulk_branch_id').on('change', function () {
             triggerPreviewCheck();
         });
 
@@ -716,7 +842,7 @@
             clearTimeout(previewDebounceTimer);
             previewDebounceTimer = setTimeout(function () {
                 runBulkPreview(false);
-            }, 500);
+            }, 400);
         }
 
         function getSelectedTypes() {
@@ -736,19 +862,34 @@
 
             if (!startDate || !endDate) {
                 if (isManualClick) {
-                    Swal.fire('Perhatian', 'Silakan pilih rentang tanggal mulai dan tanggal selesai terlebih dahulu.', 'warning');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Pemberitahuan',
+                        text: 'Silakan pilih rentang tanggal mulai dan tanggal selesai terlebih dahulu.',
+                        confirmButtonColor: '#0d6efd'
+                    });
                 }
                 return;
             }
 
             if (types.length === 0) {
                 if (isManualClick) {
-                    Swal.fire('Perhatian', 'Silakan centang minimal 1 jenis izin yang ingin diproses.', 'warning');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Pemberitahuan',
+                        text: 'Silakan centang minimal 1 jenis izin yang ingin diproses.',
+                        confirmButtonColor: '#0d6efd'
+                    });
                 }
                 return;
             }
 
-            $('#previewStatusBox').html('<div class="spinner-border spinner-border-sm text-primary me-2"></div> Menghitung pengajuan pending yang cocok...');
+            $('#previewStatusBox').html(`
+                <div class="d-flex align-items-center justify-content-center py-2 text-primary">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    <span class="small fw-semibold">Menghitung pengajuan pending yang cocok...</span>
+                </div>
+            `);
             $('#btnBulkApproveAction, #btnBulkRejectAction').prop('disabled', true);
 
             $.ajax({
@@ -768,12 +909,16 @@
 
                     if (resp.total > 0) {
                         $('#previewStatusBox').html(`
-                            <div class="alert alert-success py-2 mb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 text-start p-1">
                                 <div>
-                                    <i class="mdi mdi-check-circle text-success me-1"></i>
-                                    <strong>Ditemukan ${resp.total} Pengajuan Pending</strong> yang sesuai filter.
+                                    <div class="fw-bold text-success" style="font-size: 14px;">
+                                        <i class="mdi mdi-check-circle me-1"></i> Ditemukan ${resp.total} Pengajuan Pending
+                                    </div>
+                                    <small class="text-muted">Siap diproses untuk rentang tanggal yang dipilih</small>
                                 </div>
-                                <div class="text-muted small">Siap disetujui / ditolak massal</div>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-semibold">
+                                    ${resp.total} Data Cocok
+                                </span>
                             </div>
                         `);
 
@@ -781,7 +926,7 @@
                         let breakdownHtml = '';
                         if (resp.breakdown && resp.breakdown.length > 0) {
                             resp.breakdown.forEach(function (b) {
-                                breakdownHtml += `<span class="badge bg-primary text-white py-1 px-2">${b.label}: <strong>${b.count}</strong></span> `;
+                                breakdownHtml += `<span class="badge rounded-pill border py-1 px-2" style="background: #ffffff; color: #334155; font-size: 11px;">${b.label}: <strong class="text-primary">${b.count}</strong></span> `;
                             });
                         }
                         $('#previewBreakdownBadges').html(breakdownHtml);
@@ -792,10 +937,10 @@
                             resp.sample_items.forEach(function (item, idx) {
                                 rowsHtml += `
                                     <tr>
-                                        <td>${idx + 1}</td>
-                                        <td class="fw-bold">${item.user_name}</td>
+                                        <td class="ps-3 text-muted">${idx + 1}</td>
+                                        <td class="fw-bold text-dark">${item.user_name}</td>
                                         <td><span class="badge bg-light text-dark border">${item.branch_name}</span></td>
-                                        <td><span class="badge bg-info text-white">${item.type_label}</span></td>
+                                        <td><span class="badge bg-primary text-white rounded-pill px-2">${item.type_label}</span></td>
                                         <td>${item.dates}</td>
                                         <td class="text-truncate" style="max-width: 180px;" title="${item.reason}">${item.reason}</td>
                                     </tr>
@@ -814,9 +959,9 @@
                         $('#btnBulkApproveAction, #btnBulkRejectAction').prop('disabled', false);
                     } else {
                         $('#previewStatusBox').html(`
-                            <div class="alert alert-warning py-2 mb-0">
-                                <i class="mdi mdi-alert-circle-outline me-1"></i>
-                                <strong>Tidak ditemukan</strong> pengajuan izin pending dengan kriteria rentang tanggal dan jenis izin tersebut.
+                            <div class="py-2 text-muted small">
+                                <i class="mdi mdi-alert-circle-outline text-warning me-1"></i>
+                                <span>Tidak ditemukan pengajuan pending dengan kriteria rentang tanggal dan jenis izin tersebut.</span>
                             </div>
                         `);
                         $('#previewDetailsContainer').addClass('d-none');
@@ -825,7 +970,7 @@
                 },
                 error: function (xhr) {
                     const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Gagal memeriksa preview data.';
-                    $('#previewStatusBox').html(`<div class="alert alert-danger py-2 mb-0">${msg}</div>`);
+                    $('#previewStatusBox').html(`<div class="text-danger small py-2">${msg}</div>`);
                     $('#btnBulkApproveAction, #btnBulkRejectAction').prop('disabled', true);
                 }
             });
@@ -844,23 +989,23 @@
             Swal.fire({
                 title: 'Konfirmasi Persetujuan Massal',
                 html: `Apakah Anda yakin ingin <strong>MENYETUJUI SEMUA (${matchedPendingCount})</strong> pengajuan izin pending terpilih?<br><br>
-                       <div class="text-start bg-light p-3 rounded small border">
+                       <div class="text-start p-3 rounded-3 small border" style="background: #f8fafc;">
                        • Rentang Tanggal: <strong>${startDate} s/d ${endDate}</strong><br>
                        • Jenis Izin: <strong>${types.join(', ').toUpperCase()}</strong><br>
-                       • Total Data: <strong>${matchedPendingCount} Pengajuan</strong>
+                       • Total Pengajuan: <strong>${matchedPendingCount} Data</strong>
                        </div>`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '<i class="mdi mdi-check-all"></i> Ya, Setujui Semua',
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Setujui Semua',
                 cancelButtonText: 'Batal',
                 reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({
-                        title: 'Memproses Persetujuan Massal...',
-                        html: `Sedang memproses <strong>${matchedPendingCount}</strong> pengajuan izin dan mencatat kehadiran. Mohon tunggu sebentar.`,
+                        title: 'Memproses Persetujuan...',
+                        html: `Sedang memproses <strong>${matchedPendingCount}</strong> pengajuan izin dan mencatat kehadiran.<br>Mohon tunggu sebentar.`,
                         allowOutsideClick: false,
                         didOpen: () => {
                             Swal.showLoading();
@@ -881,8 +1026,9 @@
                         success: function (resp) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Berhasil Disetujui!',
+                                title: 'Berhasil Disetujui',
                                 text: resp.message,
+                                confirmButtonColor: '#198754',
                                 confirmButtonText: 'Selesai'
                             }).then(() => {
                                 window.location.reload();
@@ -910,13 +1056,13 @@
             Swal.fire({
                 title: 'Konfirmasi Penolakan Massal',
                 html: `Anda akan <strong>MENOLAK SEMUA (${matchedPendingCount})</strong> pengajuan izin pending terpilih.<br><br>
-                       <label class="form-label fw-bold text-dark d-block text-start">Alasan Penolakan <span class="text-danger">*</span>:</label>
-                       <textarea id="swalBulkRejectReason" class="form-control text-dark" rows="3" placeholder="Tulis alasan penolakan untuk seluruh pengajuan ini..."></textarea>`,
+                       <label class="form-label fw-bold text-dark d-block text-start small">Alasan Penolakan <span class="text-danger">*</span>:</label>
+                       <textarea id="swalBulkRejectReason" class="form-control text-dark rounded-3" rows="3" placeholder="Tulis alasan penolakan..."></textarea>`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '<i class="mdi mdi-close-octagon"></i> Ya, Tolak Semua',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Tolak Semua',
                 cancelButtonText: 'Batal',
                 reverseButtons: true,
                 preConfirm: () => {
@@ -932,7 +1078,7 @@
                     const rejectionReason = result.value;
 
                     Swal.fire({
-                        title: 'Memproses Penolakan Massal...',
+                        title: 'Memproses Penolakan...',
                         html: `Sedang memproses penolakan <strong>${matchedPendingCount}</strong> pengajuan izin. Mohon tunggu.`,
                         allowOutsideClick: false,
                         didOpen: () => {
@@ -955,8 +1101,9 @@
                         success: function (resp) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Berhasil Ditolak!',
+                                title: 'Berhasil Ditolak',
                                 text: resp.message,
+                                confirmButtonColor: '#dc3545',
                                 confirmButtonText: 'Selesai'
                             }).then(() => {
                                 window.location.reload();
@@ -1018,8 +1165,8 @@
                 text: `Setujui ${ids.length} pengajuan izin yang dipilih di halaman ini?`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#6c757d',
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#64748b',
                 confirmButtonText: 'Ya, Setujui',
                 cancelButtonText: 'Batal',
                 reverseButtons: true
@@ -1039,7 +1186,12 @@
                             selected_ids: ids
                         },
                         success: function (resp) {
-                            Swal.fire('Berhasil!', resp.message, 'success').then(() => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil Disetujui',
+                                text: resp.message,
+                                confirmButtonColor: '#198754'
+                            }).then(() => {
                                 window.location.reload();
                             });
                         },
@@ -1059,12 +1211,12 @@
             Swal.fire({
                 title: 'Tolak Pengajuan Terpilih',
                 html: `Anda akan menolak <strong>${ids.length}</strong> pengajuan izin.<br><br>
-                       <label class="form-label fw-bold text-dark d-block text-start">Alasan Penolakan <span class="text-danger">*</span>:</label>
-                       <textarea id="swalSelectedRejectReason" class="form-control" rows="3" placeholder="Tulis alasan penolakan..."></textarea>`,
+                       <label class="form-label fw-bold text-dark d-block text-start small">Alasan Penolakan <span class="text-danger">*</span>:</label>
+                       <textarea id="swalSelectedRejectReason" class="form-control rounded-3" rows="3" placeholder="Tulis alasan penolakan..."></textarea>`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
+                cancelButtonColor: '#64748b',
                 confirmButtonText: 'Ya, Tolak',
                 cancelButtonText: 'Batal',
                 reverseButtons: true,
@@ -1095,7 +1247,12 @@
                             rejection_reason: rejectionReason
                         },
                         success: function (resp) {
-                            Swal.fire('Berhasil!', resp.message, 'success').then(() => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil Ditolak',
+                                text: resp.message,
+                                confirmButtonColor: '#dc3545'
+                            }).then(() => {
                                 window.location.reload();
                             });
                         },
