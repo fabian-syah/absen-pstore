@@ -53,6 +53,35 @@
         align-items: center;
         gap: 10px;
     }
+    #input_final_remark {
+        font-family: inherit;
+        font-style: italic;
+        font-size: 1.02rem;
+        line-height: 1.7 !important;
+        color: #1e293b;
+        min-height: 95px;
+        width: 100%;
+        box-sizing: border-box;
+        overflow-y: auto;
+    }
+    @media (max-width: 767.98px) {
+        .criteria-row {
+            padding: 1rem 0;
+        }
+        .score-input {
+            width: 100% !important;
+            max-width: 140px;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+        }
+        #input_final_remark {
+            font-size: 0.95rem;
+            line-height: 1.6 !important;
+            min-height: 85px;
+        }
+    }
 </style>
 @endpush
 
@@ -206,17 +235,35 @@
                     </div>
 
                     {{-- Catatan Akhir / Motivasi --}}
-                    <div class="mt-4" style="border-left: 4px solid #3b82f6; background-color: #f8fafc; border-radius: 0 12px 12px 0; padding: 20px; position: relative;">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold text-primary mb-0">Kesimpulan & Motivasi</h6>
-                            <button type="button" id="btn_generate_ai" class="btn btn-sm btn-outline-primary rounded-pill d-flex align-items-center" style="font-size: 0.85rem;">
-                                <i class="mdi mdi-auto-fix me-1"></i> Generate AI
+                    <div class="mt-4 p-3 p-md-4 rounded-4 shadow-sm" style="border: 1px solid #dbeafe; background: linear-gradient(145deg, #f0fdf4 0%, #f8fafc 40%, #eff6ff 100%); border-left: 5px solid #3b82f6 !important;">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;">
+                                    <i class="mdi mdi-format-quote-close fs-6"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">Kesimpulan & Motivasi</h6>
+                                    <small class="text-muted d-none d-sm-block">Catatan evaluasi kerja otomatis atau saran dari AI</small>
+                                </div>
+                            </div>
+                            <button type="button" id="btn_generate_ai" class="btn btn-sm btn-primary rounded-pill px-3 py-1 d-flex align-items-center gap-1 shadow-sm">
+                                <i class="mdi mdi-auto-fix"></i>
+                                <span class="fw-semibold">Generate AI</span>
                             </button>
                         </div>
-                        <textarea name="final_remark" id="input_final_remark" class="form-control border-0 bg-transparent shadow-none p-0 mt-3 mb-2" rows="5" spellcheck="false" style="font-style: italic; font-size: 1.05rem; line-height: 1.6; color: #334155; resize: none; overflow-y: hidden;" placeholder="Catatan kesimpulan akan diisi otomatis berdasarkan Grade..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">{{ old('final_remark', $evaluation ? $evaluation->final_remark : '') }}</textarea>
+
+                        <div class="bg-white rounded-3 p-2 border" style="border-color: #cbd5e1 !important;">
+                            <textarea name="final_remark" id="input_final_remark" 
+                                class="form-control border-0 shadow-none" 
+                                rows="3" 
+                                spellcheck="false" 
+                                placeholder="Catatan kesimpulan akan diisi otomatis berdasarkan Grade atau klik 'Generate AI'..." 
+                                style="background-color: transparent; resize: vertical;">{{ old('final_remark', $evaluation ? $evaluation->final_remark : '') }}</textarea>
+                        </div>
                         
-                        <div class="text-muted text-end w-100" style="font-size: 0.75rem;">
-                            <i class="mdi mdi-pencil-outline me-1"></i> Teks di atas bisa Anda edit atau tambahkan manual sesuai kebutuhan.
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mt-2 gap-2 text-muted" style="font-size: 0.78rem;">
+                            <span><i class="mdi mdi-check-decagram text-success me-1"></i> Teks bisa Anda edit atau tambahkan manual</span>
+                            <span class="d-none d-md-inline"><i class="mdi mdi-drag-vertical text-secondary me-1"></i> Tarik sudut kanan bawah untuk memperbesar area teks</span>
                         </div>
                     </div>
 
@@ -248,10 +295,21 @@
         let isRemarkManuallyEdited = false;
         const btnGenerateAi = document.getElementById('btn_generate_ai');
 
+        // Fungsi penyesuaian tinggi textarea otomatis agar tidak ada teks terpotong
+        function adjustRemarkHeight() {
+            if (!inputFinalRemark) return;
+            inputFinalRemark.style.height = 'auto';
+            const targetHeight = Math.max(95, inputFinalRemark.scrollHeight + 14);
+            inputFinalRemark.style.height = targetHeight + 'px';
+        }
+
         // Jika user mengetik manual di input hasil akhir, jangan dioverride otomatis lagi
         inputAverage.addEventListener('input', () => isManuallyEdited = true);
         inputGrade.addEventListener('input', () => isManuallyEdited = true);
-        inputFinalRemark.addEventListener('input', () => isRemarkManuallyEdited = true);
+        inputFinalRemark.addEventListener('input', () => {
+            isRemarkManuallyEdited = true;
+            adjustRemarkHeight();
+        });
 
         // Fitur Generate AI
         btnGenerateAi.addEventListener('click', async function() {
@@ -264,6 +322,7 @@
             btnGenerateAi.innerHTML = '<i class="mdi mdi-loading mdi-spin me-1"></i> Generating...';
             btnGenerateAi.disabled = true;
             inputFinalRemark.value = 'Menganalisa nilai dan membuat kesimpulan dengan AI...';
+            adjustRemarkHeight();
 
             // Kumpulkan data kriteria untuk AI
             let promptText = `Buatkan kesimpulan dan kalimat motivasi (1 paragraf singkat 2-3 kalimat) untuk rapor karyawan bernama {{ $employee->name }}.\n`;
@@ -298,15 +357,15 @@
                 if (response.ok && data.status === 'success' && data.remark) {
                     inputFinalRemark.value = '"' + data.remark.trim() + '"';
                     isRemarkManuallyEdited = true; // Tandai diedit agar tidak tertimpa kalkulasi standar
-                    // Auto resize textarea
-                    inputFinalRemark.style.height = '';
-                    inputFinalRemark.style.height = inputFinalRemark.scrollHeight + 'px';
+                    adjustRemarkHeight();
                 } else {
                     inputFinalRemark.value = data.message || 'Gagal menghasilkan kesimpulan AI. Silakan coba lagi.';
+                    adjustRemarkHeight();
                 }
             } catch (error) {
                 console.error(error);
                 inputFinalRemark.value = 'Terjadi kesalahan saat menghubungi API.';
+                adjustRemarkHeight();
             } finally {
                 btnGenerateAi.innerHTML = originalText;
                 btnGenerateAi.disabled = false;
@@ -362,6 +421,7 @@
                             remark = '"Ayo semangat! Evaluasi ini bisa jadi pelajaran agar kamu bisa memberikan performa yang jauh lebih baik."';
                         }
                         inputFinalRemark.value = remark;
+                        adjustRemarkHeight();
                     }
                 }
             } else {
@@ -372,6 +432,7 @@
                 }
                 if (!inputFinalRemark.defaultValue && !isRemarkManuallyEdited) {
                     inputFinalRemark.value = '';
+                    adjustRemarkHeight();
                 }
             }
         }
@@ -383,13 +444,11 @@
         // Hitung otomatis saat halaman dimuat jika belum ada isian
         if (!inputAverage.value) {
             calculateGrade();
-        } else {
-            // Sesuaikan tinggi otomatis jika form dimuat dengan isian (mode edit/saved)
-            setTimeout(() => {
-                inputFinalRemark.style.height = '';
-                inputFinalRemark.style.height = inputFinalRemark.scrollHeight + 'px';
-            }, 50);
         }
+
+        // Sesuaikan tinggi awal setelah DOM siap
+        setTimeout(adjustRemarkHeight, 60);
+        window.addEventListener('resize', adjustRemarkHeight);
     });
 </script>
 @endpush
