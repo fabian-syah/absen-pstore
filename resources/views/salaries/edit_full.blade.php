@@ -22,7 +22,7 @@
                     </div>
 
                     <div class="row justify-content-center">
-                        <div class="col-md-8">
+                        <div class="col-12 col-md-10 col-lg-8">
                             
                             {{-- CARD INFO GAJI (READONLY) --}}
                             <div class="card bg-light border mb-4">
@@ -31,7 +31,7 @@
                                     
                                     <div class="mb-3">
                                         <label class="small text-muted fw-bold">Total Take Home Pay</label>
-                                        <h2 class="display-5 fw-bold text-primary mb-0">Rp {{ number_format($salary->total_amount, 0, ',', '.') }}</h2>
+                                        <h2 class="fw-bold text-primary mb-0" style="font-size: clamp(1.75rem, 4vw, 2.5rem); word-break: break-word;">Rp {{ number_format($salary->total_amount, 0, ',', '.') }}</h2>
                                         <p class="text-muted small mt-1 mb-0">
                                             Karyawan: <strong>{{ $salary->user->name }}</strong> | Periode: {{ $salary->month }}/{{ $salary->year }}
                                         </p>
@@ -41,19 +41,19 @@
 
                                     {{-- FIELD YANG DISABLED / READONLY --}}
                                     <div class="row g-3">
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-sm-6">
                                             <label class="small text-muted">Gaji Pokok / Insentif</label>
                                             <input type="text" class="form-control fw-bold bg-white" value="Rp {{ number_format($salary->employee_basic_salary, 0, ',', '.') }}" disabled>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-sm-6">
                                             <label class="small text-muted">Tunjangan Jabatan</label>
                                             <input type="text" class="form-control fw-bold bg-white" value="Rp {{ number_format($salary->employee_position_allowance, 0, ',', '.') }}" disabled>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-sm-6">
                                             <label class="small text-muted">Privilege Owner</label>
                                             <input type="text" class="form-control fw-bold bg-white" value="Rp {{ number_format($salary->employee_owner_privilege, 0, ',', '.') }}" disabled>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-sm-6">
                                             <label class="small text-muted">Bonus / Tambahan</label>
                                             <input type="text" class="form-control fw-bold bg-white" value="Rp {{ number_format($salary->promotor_bonus, 0, ',', '.') }}" disabled>
                                         </div>
@@ -63,7 +63,7 @@
 
                             {{-- CARD FORM EDIT (YANG BISA DIEDIT) --}}
                             <div class="card bg-white border mb-4">
-                                <div class="card-body p-4">
+                                <div class="card-body p-3 p-md-4">
                                     <h5 class="fw-bold mb-4 border-bottom pb-2 text-dark">Update Pengaturan</h5>
                                     
                                     {{-- 1. Metode Pembayaran --}}

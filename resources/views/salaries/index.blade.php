@@ -5,8 +5,8 @@
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="card-title">Manajemen Gaji</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                        <h4 class="card-title mb-0">Manajemen Gaji</h4>
 
                         {{-- TOMBOL CREATE: HANYA MUNCUL JIKA ROLE ADMIN_GAJI --}}
                         @if(auth()->user()->role == 'admin_gaji')
@@ -17,9 +17,9 @@
                     </div>
 
                     {{-- Filter --}}
-                    <form method="GET" action="{{ route('salaries.index') }}" class="row mb-4">
-                        <div class="col-md-3">
-                            <select name="month" class="form-control">
+                    <form method="GET" action="{{ route('salaries.index') }}" class="row g-2 mb-4">
+                        <div class="col-6 col-md-3">
+                            <select name="month" class="form-select">
                                 @for ($i = 1; $i <= 12; $i++)
                                     <option value="{{ sprintf('%02d', $i) }}" {{ $month == sprintf('%02d', $i) ? 'selected' : '' }}>
                                         {{ DateTime::createFromFormat('!m', $i)->format('F') }}
@@ -27,14 +27,14 @@
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <select name="year" class="form-control">
+                        <div class="col-6 col-md-3">
+                            <select name="year" class="form-select">
                                 @for ($y = 2024; $y <= date('Y') + 1; $y++)
                                     <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-12 col-md-2">
                             <button type="submit" class="btn btn-dark w-100">Filter</button>
                         </div>
                     </form>

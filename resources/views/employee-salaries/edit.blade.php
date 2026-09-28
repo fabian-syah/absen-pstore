@@ -16,6 +16,11 @@
     .card-header-clean { background: transparent; padding: 25px 30px 10px; border: none; }
     .card-body-clean { padding: 10px 30px 30px; }
     
+    @media (max-width: 576px) {
+        .card-header-clean { padding: 20px 15px 10px; }
+        .card-body-clean { padding: 10px 15px 25px; }
+    }
+    
     /* Custom Switch Modern (iOS Style) */
     .switch { position: relative; display: inline-block; width: 50px; height: 26px; vertical-align: middle; margin-right: 10px; }
     .switch input { opacity: 0; width: 0; height: 0; }
@@ -72,12 +77,12 @@
         <div class="card shadow-sm border-0 rounded-4">
             
             {{-- Header --}}
-            <div class="card-header-clean d-flex justify-content-between align-items-start">
+            <div class="card-header-clean d-flex justify-content-between align-items-start flex-column flex-sm-row gap-3">
                 <div>
                     <h3 class="fw-bold text-dark mb-1">Setting Master Gaji</h3>
                     <p class="text-muted mb-0">Atur komponen gaji untuk karyawan ini.</p>
                 </div>
-                <div class="text-end">
+                <div class="text-start text-sm-end">
                     <h5 class="fw-bold text-primary mb-0">{{ $user->name }}</h5>
                     <span class="badge bg-light text-dark border mt-1">ID: {{ $user->login_id ?? '-' }}</span>
                 </div>
@@ -254,14 +259,14 @@
 
                     <hr class="my-5 opacity-25">
 
-                    <div class="d-flex justify-content-end gap-3">
+                    <div class="d-flex justify-content-end gap-3 flex-column-reverse flex-sm-row">
                         {{-- Tombol Batal (Update: Menjaga Page) --}}
                         <a href="{{ route('employee-salaries.index', [
                             'page' => request('page', 1),
                             'search' => request('search'), 
                             'branch_id' => request('branch_id'), 
                             'category' => request('category')
-                        ]) }}" class="btn btn-light btn-lg px-4 fw-bold border" style="border-radius: 10px;">Batal</a>
+                        ]) }}" class="btn btn-light btn-lg px-4 fw-bold border text-center" style="border-radius: 10px;">Batal</a>
                         
                         <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm text-white" style="border-radius: 10px;">
                             <i class="mdi mdi-content-save-check me-2"></i> Simpan Data

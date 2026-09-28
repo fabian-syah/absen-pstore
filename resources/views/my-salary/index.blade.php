@@ -16,7 +16,7 @@
                     {{-- Filter Section --}}
                     <form action="{{ route('my-salary.index') }}" method="GET" class="mb-4">
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-2">
+                            <div class="col-6 col-md-2">
                                 <label class="form-label small fw-bold">Bulan</label>
                                 <select name="month" class="form-select form-select-sm">
                                     <option value="">Semua Bulan</option>
@@ -28,7 +28,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-6 col-md-2">
                                 <label class="form-label small fw-bold">Tahun</label>
                                 <select name="year" class="form-select form-select-sm">
                                     <option value="">Semua Tahun</option>
@@ -41,7 +41,7 @@
                             </div>
 
                             @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
-                                <div class="col-md-3">
+                                <div class="col-12 col-sm-6 col-md-3">
                                     <label class="form-label small fw-bold">Cabang</label>
                                     <select name="branch_id" class="form-select form-select-sm">
                                         <option value="">Semua Cabang</option>
@@ -52,27 +52,27 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-12 col-sm-6 col-md-3">
                                     <label class="form-label small fw-bold">Cari Karyawan</label>
                                     <input type="text" name="search" class="form-control form-control-sm"
                                         placeholder="Nama Karyawan..." value="{{ request('search') }}">
                                 </div>
                             @endif
 
-                           <div class="col-md-2 d-flex gap-1">
-    {{-- Tombol Filter bisa dilihat semua orang --}}
-    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
-        <i class="mdi mdi-filter"></i> Filter
-    </button>
+                            <div class="col-12 col-md-2 d-flex gap-1">
+                                {{-- Tombol Filter bisa dilihat semua orang --}}
+                                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                                    <i class="mdi mdi-filter"></i> Filter
+                                </button>
 
-    {{-- Tombol Export Excel dibungkus pengecekan Role --}}
-    @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
-        <a href="{{ route('my-salary.export', request()->all()) }}" class="btn btn-success btn-sm"
-            title="Export Excel">
-            <i class="mdi mdi-file-excel"></i>
-        </a>
-    @endif
-</div>
+                                {{-- Tombol Export Excel dibungkus pengecekan Role --}}
+                                @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                                    <a href="{{ route('my-salary.export', request()->all()) }}" class="btn btn-success btn-sm"
+                                        title="Export Excel">
+                                        <i class="mdi mdi-file-excel"></i>
+                                    </a>
+                                @endif
+                            </div>
                         </div>
                     </form>
 
@@ -169,7 +169,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="{{ in_array(auth()->user()->role, ['admin', 'admin_gaji']) ? 7 : 5 }}"
+                                        <td colspan="{{ in_array(auth()->user()->role, ['admin', 'admin_gaji']) ? 8 : 6 }}"
                                             class="text-center py-5">
                                             <div class="d-flex flex-column align-items-center">
                                                 <div class="bg-light rounded-circle p-3 mb-2">

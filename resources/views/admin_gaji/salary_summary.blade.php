@@ -8,7 +8,7 @@
             {{-- HEADER --}}
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                 <div>
-                    <h3 class="fw-bold mb-1">🏦 Ringkasan Pengeluaran Master Gaji</h3>
+                    <h3 class="fw-bold mb-1"><i class="mdi mdi-cash-multiple text-primary me-2"></i>Ringkasan Pengeluaran Master Gaji</h3>
                     <p class="text-muted mb-0">Tampilan total gaji kotor (sebelum potongan) per masing-masing cabang.</p>
                 </div>
             </div>
@@ -35,9 +35,9 @@
 
             {{-- TABLE CARD --}}
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">📋 Daftar Pengeluaran Per Cabang</h5>
-                    <div class="search-box position-relative">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-sm-row gap-3">
+                    <h5 class="fw-bold mb-0"><i class="mdi mdi-domain text-primary me-2"></i>Daftar Pengeluaran Per Cabang</h5>
+                    <div class="search-box position-relative w-100 w-sm-auto">
                         <i class="mdi mdi-magnify position-absolute" style="top: 10px; left: 12px; color: #6c757d;"></i>
                         <input type="text" id="branchSearch" class="form-control form-control-sm ps-5 border-light" placeholder="Cari Nama Cabang..." style="border-radius: 20px;">
                     </div>
@@ -88,7 +88,7 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                <div class="card-footer bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-sm-row gap-2 text-center text-sm-start">
                     <span class="fw-bold text-dark">TOTAL KESELURUHAN ({{ $summary->count() }} Cabang)</span>
                     <span class="fw-bold text-primary fs-5">Rp {{ number_format($grandTotalSalary, 0, ',', '.') }}</span>
                 </div>

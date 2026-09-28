@@ -55,8 +55,8 @@
                                         <label class="form-label fw-bold text-dark mb-2">Pilih Kategori</label>
                                         <select name="category" id="category_dropdown"
                                             class="form-select form-select-lg bg-light border-0 shadow-none text-dark focus-ring-primary">
-                                            <option value="bonus" selected>🎁 Bonus Karyawan</option>
-                                            <option value="thr">🕌 Tunjangan Hari Raya (THR)</option>
+                                            <option value="bonus" selected>Bonus Karyawan</option>
+                                            <option value="thr">Tunjangan Hari Raya (THR)</option>
                                         </select>
                                     </div>
                                 </div>

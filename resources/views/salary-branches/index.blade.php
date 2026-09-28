@@ -5,7 +5,7 @@
     
     {{-- STATS DASHBOARD --}}
     <div class="row mb-4">
-        <div class="col-md-4 grid-margin stretch-card">
+        <div class="col-12 col-sm-6 col-lg-4 grid-margin stretch-card">
             <div class="card bg-primary text-white card-stats shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -20,7 +20,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 grid-margin stretch-card">
+        <div class="col-12 col-sm-6 col-lg-4 grid-margin stretch-card">
             <div class="card bg-info text-white card-stats shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -35,7 +35,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 grid-margin stretch-card">
+        <div class="col-12 col-sm-6 col-lg-4 grid-margin stretch-card">
             <div class="card bg-success text-white card-stats shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -68,7 +68,7 @@
     {{-- GRID CABANG --}}
     <div class="row">
         @forelse($branches as $branch)
-            <div class="col-md-4 grid-margin stretch-card">
+            <div class="col-12 col-sm-6 col-lg-4 grid-margin stretch-card">
                 <div class="card border-0 shadow-sm card-branch h-100">
                     <div class="card-body d-flex flex-column">
                         <div class="d-flex align-items-start mb-3">

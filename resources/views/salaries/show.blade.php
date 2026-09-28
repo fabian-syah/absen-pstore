@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-12 col-md-10 col-lg-8">
 
             {{-- TOMBOL AKSI (Hanya muncul di layar, tidak saat print) --}}
             <div class="d-flex justify-content-between mb-3 no-print">
@@ -13,7 +13,7 @@
             </div>
 
             <div class="card shadow-lg border-0" id="payslip">
-                <div class="card-body p-5">
+                <div class="card-body p-3 p-md-5">
 
                     {{-- HEADER PERUSAHAAN --}}
                     <div class="border-bottom pb-4 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start">

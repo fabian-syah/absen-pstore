@@ -121,6 +121,10 @@
         border-bottom: 2px solid var(--border-color); 
         background-color: var(--light-bg);
         border-radius: 16px 16px 0 0;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
     }
 
     .nav-tabs-custom .nav-link { 
@@ -344,7 +348,7 @@
             {{-- HEADER --}}
             <div class="header-section d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h3 class="mb-2">📊 Master Data Gaji Non Karyawan</h3>
+                    <h3 class="mb-2" style="font-size: clamp(1.25rem, 3vw, 2rem);"><i class="mdi mdi-cash-multiple me-2"></i>Master Data Gaji Non Karyawan</h3>
                     <p class="mb-0">Kelola komponen gaji khusus untuk Cabang Non Karyawan.</p>
                 </div>
                 <div class="d-flex gap-2">
@@ -376,15 +380,15 @@
                     <form action="{{ route('admin-gaji.employee-salaries.index') }}" method="GET" class="filter-form">
                         <input type="hidden" name="category" value="{{ request('category') }}">
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-9">
-                                <label class="fw-bold text-dark small mb-2">🔍 Pencarian</label>
+                            <div class="col-12 col-md-9">
+                                <label class="fw-bold text-dark small mb-2"><i class="mdi mdi-magnify me-1"></i>Pencarian</label>
                                 <div class="search-wrapper">
                                     <i class="mdi mdi-magnify position-absolute text-secondary" style="top: 50%; left: 15px; transform: translateY(-50%); font-size: 1.1rem;"></i>
                                     <input type="text" name="search" class="form-control form-control-clean ps-5" 
                                            placeholder="Cari Nama / ID User..." value="{{ request('search') }}">
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-12 col-md-3">
                                 <button type="submit" class="btn btn-dark w-100 fw-bold py-2 d-flex align-items-center justify-content-center gap-2">
                                     <i class="mdi mdi-check"></i> Terapkan
                                 </button>

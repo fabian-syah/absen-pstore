@@ -41,13 +41,10 @@
         }
 
         .header-ramadan::after {
-            content: '☪';
-            font-size: 80px;
-            color: rgba(255,255,255,0.1);
+            content: '';
             position: absolute;
             right: 20px;
             top: -10px;
-            transform: rotate(15deg);
         }
 
         /* Input & Select Styling */
@@ -151,8 +148,8 @@
                 <div class="card ramadan-card shadow-lg">
                     {{-- Header --}}
                     <div class="header-ramadan" style="padding: 20px 20px;">
-                        <h3 class="mb-1 fw-bold" style="font-size: clamp(1.1rem, 3vw, 1.75rem);">🌙 Form Pengajuan Kasbon</h3>
-                        <p class="mb-0 opacity-75 small">Berkah Ramadan, Permudah Urusan.</p>
+                        <h3 class="mb-1 fw-bold" style="font-size: clamp(1.1rem, 3vw, 1.75rem);"><i class="mdi mdi-cash-plus text-warning me-2"></i>Form Pengajuan Kasbon</h3>
+                        <p class="mb-0 opacity-75 small">Formulir permohonan pinjaman / kasbon karyawan.</p>
                     </div>
 
                     <div class="card-body p-3 p-md-5 bg-ramadan-pattern">

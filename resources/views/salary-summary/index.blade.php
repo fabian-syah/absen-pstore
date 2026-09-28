@@ -17,9 +17,9 @@
                     </div>
 
                     {{-- FILTER TAHUN & USER (Hanya muncul u/ Admin/Audit/Leader) --}}
-                    <div class="bg-light p-4 rounded-3 mb-5 border border-light-subtle shadow-sm">
+                    <div class="bg-light p-3 p-md-4 rounded-3 mb-4 border border-light-subtle shadow-sm">
                         <form method="GET" action="{{ route('salary-summary.index') }}" class="row g-3">
-                            <div class="col-md-2">
+                            <div class="col-12 col-sm-6 col-md-2">
                                 <label class="form-label fw-bold text-dark"><i class="mdi mdi-calendar"></i> Pilih Tahun</label>
                                 <select name="year" class="form-select bg-white text-dark shadow-sm">
                                     @for ($y = 2024; $y <= date('Y') + 1; $y++)
@@ -30,7 +30,7 @@
 
                             {{-- Admin/Audit/Leader bisa pilih cabang --}}
                             @if(in_array(auth()->user()->role, ['admin', 'admin_gaji', 'owner', 'audit', 'leader']))
-                                <div class="col-md-3">
+                                <div class="col-12 col-sm-6 col-md-3">
                                     <label class="form-label fw-bold text-dark"><i class="mdi mdi-store"></i> Pilih Cabang</label>
                                     <select name="branch_id" class="form-select select2 bg-white text-dark shadow-sm" onchange="this.form.submit()">
                                         <option value="">-- Semua Cabang {{ !in_array(auth()->user()->role, ['admin', 'admin_gaji', 'owner']) ? '(Kelolaan)' : '' }} --</option>
@@ -40,7 +40,7 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-12 col-md-4">
                                     <label class="form-label fw-bold text-dark"><i class="mdi mdi-account-search"></i> Pilih Karyawan</label>
                                     <select name="user_id" class="form-select select2 text-dark shadow-sm w-100">
                                         <option value="">-- Semua Karyawan (Kumulatif) --</option>
@@ -53,7 +53,7 @@
                                 </div>
                             @endif
 
-                            <div class="col-md-3 d-flex align-items-end gap-2">
+                            <div class="col-12 col-md-3 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary flex-grow-1 fw-bold shadow-sm">
                                     <i class="mdi mdi-filter-variant me-1"></i> Tampilkan
                                 </button>

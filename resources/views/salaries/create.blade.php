@@ -17,8 +17,8 @@
                     @csrf
                     
                     {{-- HEADER --}}
-                    <div class="row mb-4 bg-light p-3 rounded border">
-                        <div class="col-md-4">
+                    <div class="row g-3 mb-4 bg-light p-3 rounded border">
+                        <div class="col-12 col-md-4">
                             <label class="fw-bold mb-1">Pilih Karyawan</label>
                             @if($selectedUser)
                                 <input type="hidden" name="user_id" value="{{ $selectedUser->id }}">
@@ -45,7 +45,7 @@
                         </div>
 
                         {{-- PERIODE BULAN (UNTUK EMPLOYEE/PROMOTOR) --}}
-                        <div class="col-md-3">
+                        <div class="col-12 col-sm-6 col-md-3">
                             <label class="fw-bold mb-1">Periode Gaji (Bulanan)</label>
                             <div class="d-flex gap-2">
                                 <select name="month" class="form-select text-center fw-bold text-dark border-secondary" 
@@ -65,7 +65,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-12 col-sm-6 col-md-2">
                             <label class="fw-bold mb-1">Kategori</label>
                             @php $currentCat = $masterSalary->category ?? 'employee'; @endphp
                             
@@ -85,7 +85,7 @@
                         </div>
                         
                         {{-- RANGE TANGGAL (KHUSUS FREELANCE) --}}
-                        <div class="col-md-3" id="freelance_date_range" style="display: {{ $currentCat == 'freelance' ? 'block' : 'none' }};">
+                        <div class="col-12 col-md-3" id="freelance_date_range" style="display: {{ $currentCat == 'freelance' ? 'block' : 'none' }};">
                             <label class="fw-bold mb-1 text-warning"><i class="mdi mdi-calendar-range"></i> Periode Kerja</label>
                             <div class="input-group input-group-sm">
                                 <input type="date" id="start_date" name="start_date" class="form-control" value="{{ $startDate->format('Y-m-d') }}">
@@ -97,7 +97,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 border-end">
+                        <div class="col-12 col-md-6 border-end-md mb-4 mb-md-0">
                             <h5 class="text-success mb-3 fw-bold border-bottom pb-2">
                                 <i class="mdi mdi-arrow-up-circle"></i> PENDAPATAN
                             </h5>
@@ -215,7 +215,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <h5 class="text-danger mb-3 fw-bold border-bottom pb-2"><i class="mdi mdi-arrow-down-circle"></i> POTONGAN</h5>
 
                             {{-- ALPHA --}}
@@ -419,7 +419,7 @@
 
                             <div class="text-center">
                                 <h5 class="text-muted mb-2 text-uppercase ls-1">Take Home Pay (Gaji Bersih)</h5>
-                                <h1 class="display-3 fw-bold text-primary mb-4" id="take_home_pay">Rp 0</h1>
+                                <h1 class="fw-bold text-primary mb-4" id="take_home_pay" style="font-size: clamp(2rem, 5vw, 3.5rem); word-break: break-word;">Rp 0</h1>
                                 <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-lg p-3 rounded-pill">
                                     PROSES PAYROLL
                                 </button>

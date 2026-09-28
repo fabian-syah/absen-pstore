@@ -121,6 +121,10 @@
         border-bottom: 2px solid var(--border-color); 
         background-color: var(--light-bg);
         border-radius: 16px 16px 0 0;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
     }
 
     .nav-tabs-custom .nav-link { 
@@ -344,10 +348,10 @@
             {{-- HEADER --}}
             <div class="header-section d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h3 class="mb-2">📊 Master Data Gaji</h3>
+                    <h3 class="mb-2" style="font-size: clamp(1.25rem, 3vw, 2rem);"><i class="mdi mdi-cash-multiple me-2"></i>Master Data Gaji</h3>
                     <p class="mb-0">Kelola komponen gaji pokok, tunjangan, dan kategori karyawan dengan mudah dan efisien.</p>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     {{-- TOMBOL EXPORT EXCEL --}}
                     {{-- Menggunakan request()->query() untuk menyertakan filter saat ini (search, branch, dll) --}}
                     <a href="{{ route('employee-salaries.export', request()->query()) }}" class="btn btn-header d-flex align-items-center gap-2 bg-success border-success text-white">
@@ -383,16 +387,16 @@
                     <form action="{{ route('employee-salaries.index') }}" method="GET" class="filter-form">
                         <input type="hidden" name="category" value="{{ request('category') }}">
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-4">
-                                <label class="fw-bold text-dark small mb-2">🔍 Pencarian</label>
+                            <div class="col-12 col-md-4">
+                                <label class="fw-bold text-dark small mb-2"><i class="mdi mdi-magnify me-1"></i>Pencarian</label>
                                 <div class="search-wrapper">
                                     <i class="mdi mdi-magnify position-absolute text-secondary" style="top: 50%; left: 15px; transform: translateY(-50%); font-size: 1.1rem;"></i>
                                     <input type="text" name="search" class="form-control form-control-clean ps-5" 
                                            placeholder="Cari Nama / ID Karyawan..." value="{{ request('search') }}">
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <label class="fw-bold text-dark small mb-2">🏢 Filter Cabang</label>
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label class="fw-bold text-dark small mb-2"><i class="mdi mdi-store-outline me-1"></i>Filter Cabang</label>
                                 <select name="branch_id" class="form-select form-control-clean">
                                     <option value="">Semua Cabang</option>
                                     @foreach($branches as $branch)
@@ -400,8 +404,8 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <label class="fw-bold text-dark small mb-2">👥 Filter Divisi</label>
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label class="fw-bold text-dark small mb-2"><i class="mdi mdi-account-multiple-outline me-1"></i>Filter Divisi</label>
                                 <select name="division_id" class="form-select form-control-clean">
                                     <option value="">Semua Divisi</option>
                                     @foreach($divisions as $division)
@@ -409,7 +413,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-12 col-md-2">
                                 <button type="submit" class="btn btn-dark w-100 fw-bold py-2 d-flex align-items-center justify-content-center gap-2">
                                     <i class="mdi mdi-check"></i> Terapkan
                                 </button>

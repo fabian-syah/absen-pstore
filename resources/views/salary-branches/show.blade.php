@@ -5,7 +5,7 @@
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3 flex-column flex-sm-row gap-3 align-items-start align-items-sm-center">
                         <div>
                             <h4 class="card-title mb-1">Daftar Karyawan: {{ $branch->name }}</h4>
                             <p class="text-muted mb-0">{{ $branch->address }}</p>
@@ -16,8 +16,8 @@
                     </div>
 
                     <form action="{{ route('branch-salary.show', $branch->id) }}" method="GET" class="mb-4">
-                        <div class="row gx-2">
-                            <div class="col-md-3">
+                        <div class="row g-2">
+                            <div class="col-6 col-sm-6 col-md-3">
                                 <select name="month" class="form-select">
                                     @for($m = 1; $m <= 12; $m++)
                                         @php $mPad = str_pad($m, 2, '0', STR_PAD_LEFT); @endphp
@@ -27,7 +27,7 @@
                                     @endfor
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-6 col-sm-6 col-md-3">
                                 <select name="year" class="form-select">
                                     @for($y = date('Y') - 1; $y <= date('Y') + 1; $y++)
                                         <option value="{{ $y }}" {{ (isset($year) ? $year : date('Y')) == $y ? 'selected' : '' }}>
@@ -35,7 +35,7 @@
                                     @endfor
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-6">
                                 <div class="input-group">
                                     <input type="text" name="search" class="form-control" placeholder="Cari karyawan..."
                                         value="{{ $search }}">
@@ -172,7 +172,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center py-4">Tidak ada karyawan.</td>
+                                        <td colspan="8" class="text-center py-4 text-muted">Tidak ada data karyawan ditemukan.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

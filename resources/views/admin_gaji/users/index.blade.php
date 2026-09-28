@@ -14,7 +14,7 @@
             </div>
         @endif
 
-        <div class="d-flex justify-content-between align-items-center mb-0">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-0">
             <!-- <h5 class="fw-bold mb-0">Daftar Admin Gaji User</h5> -->
             <button type="button" class="btn btn-primary shadow-sm fw-bold px-3 py-2 rounded-pill" data-bs-toggle="modal"
                 data-bs-target="#addUserModal">
@@ -24,7 +24,7 @@
 
         {{-- NAV TABS SEPERTI DI MASTER GAJI --}}
         <div class="mt-4 mb-4">
-            <ul class="nav nav-tabs border-bottom-0">
+            <ul class="nav nav-tabs border-bottom-0 flex-nowrap overflow-auto" style="scrollbar-width: thin;">
                 <li class="nav-item">
                     <a class="nav-link active fw-bold text-primary border-bottom border-primary border-3" href="{{ route('admin-gaji.users.index') }}">
                         <i class="mdi mdi-account-group-outline me-1"></i> User Non Karyawan
