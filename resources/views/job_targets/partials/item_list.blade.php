@@ -1,55 +1,89 @@
-<div class="table-responsive">
-    <table class="table align-middle table-hover mb-0">
-        <tbody>
-            @foreach($items as $item)
-                <tr class="filterable-item" 
-                    data-date="{{ $item->deadline->format('Y-m-d') }}" 
-                    data-month="{{ $item->deadline->format('Y-m') }}" 
-                    data-year="{{ $item->deadline->format('Y') }}">
-                    <td style="width: 60px; min-width: 60px;" class="text-center">
+<div class="target-items-wrapper">
+    @foreach($items as $item)
+        <div class="target-item-card filterable-item" 
+             data-date="{{ $item->deadline->format('Y-m-d') }}" 
+             data-month="{{ $item->deadline->format('Y-m') }}" 
+             data-year="{{ $item->deadline->format('Y') }}">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div class="d-flex align-items-start gap-3 flex-grow-1">
+                    {{-- Priority / Level Badge --}}
+                    <div class="flex-shrink-0 mt-1">
                         @if(Str::contains($item->type, 'achievement'))
-                            <div class="bg-warning bg-opacity-25 text-warning rounded-circle p-2 mx-auto" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;"><i class="mdi mdi-trophy mdi-18px"></i></div>
+                            <span class="priority-badge-achievement">Prestasi</span>
+                        @elseif($item->star_level == 3)
+                            <span class="priority-badge-3">Prioritas Tinggi</span>
+                        @elseif($item->star_level == 2)
+                            <span class="priority-badge-2">Prioritas Sedang</span>
                         @else
-                            @if($item->star_level == 3) <div class="badge rounded-pill star-badge-3 star-animation p-2 w-100">Lvl 3</div>
-                            @elseif($item->star_level == 2) <div class="badge rounded-pill star-badge-2 p-2 w-100 text-dark">Lvl 2</div>
-                            @else <div class="badge rounded-pill star-badge-1 p-2 w-100">Lvl 1</div> @endif
+                            <span class="priority-badge-1">Prioritas Normal</span>
                         @endif
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center mb-1 flex-wrap gap-2">
-                            <span class="fw-bold text-dark">{{ $item->title }}</span>
-                            @if(Str::contains($item->type, 'achievement')) <span class="badge bg-warning text-dark" style="font-size: 9px;">PRESTASI</span> @endif
+                    </div>
+
+                    {{-- Target Details --}}
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <h6 class="fw-bold text-dark mb-0">{{ $item->title }}</h6>
                         </div>
-                        <div class="small text-muted text-wrap mb-2" style="max-width: 500px; line-height: 1.3;">{{ Str::limit($item->description, 90) }}</div>
-                        <div class="d-flex align-items-center gap-2 flex-wrap" style="font-size: 0.75rem;">
-                            @if($item->user) <div class="d-flex align-items-center text-secondary bg-light px-2 py-1 rounded-pill border"><i class="mdi mdi-account-circle me-1"></i> {{ $item->user->name }}</div> @endif
-                            <div class="text-secondary bg-light px-2 py-1 rounded-pill border"><i class="mdi mdi-calendar-clock me-1"></i> {{ $item->deadline->format('d M Y') }}</div>
-                        </div>
-                    </td>
-                    <td class="text-end" style="min-width: 140px;">
-                        @if($item->status == 'completed' || Str::contains($item->type, 'achievement'))
-                            @php
-                                $c = 'bg-secondary';
-                                if($item->outcome == 'Melampaui Ekspektasi') $c = 'bg-primary'; 
-                                if($item->outcome == 'Tercapai Sempurna') $c = 'bg-success';
-                                if($item->outcome == 'Tercapai Sebagian') $c = 'bg-warning text-dark';
-                                if($item->outcome == 'Gagal Tercapai') $c = 'bg-danger';
-                            @endphp
-                            <span class="badge {{ $c }} rounded-pill px-3 py-2 fw-bold shadow-sm d-inline-block">{{ $item->outcome ?? 'Selesai' }}</span>
-                        @else
-                            <div class="d-flex justify-content-end gap-1">
-                                @if(isset($allow_edit_detail) && $allow_edit_detail)
-                                    <a href="{{ route('job-targets.edit', $item->id) }}" class="btn btn-light btn-sm border" title="Edit Data"><i class="mdi mdi-pencil text-muted"></i></a>
-                                @endif
-                                @if(isset($allow_update_status) && $allow_update_status)
-                                    <button class="btn btn-warning btn-sm fw-bold text-white shadow-sm px-3 rounded-3" onclick="openActionModal({{ $item->id }}, '{{ addslashes($item->title) }}')">Update Hasil</button>
-                                @endif
-                            </div>
+                        @if($item->description)
+                            <p class="text-muted small mb-2 text-break" style="line-height: 1.45;">
+                                {{ Str::limit($item->description, 160) }}
+                            </p>
                         @endif
-                    </td>
-                </tr>
-            @endforeach
-            <tr class="no-data-message d-none"><td colspan="3" class="text-center py-4 text-muted small"><i class="mdi mdi-magnify-remove mdi-24px d-block mb-1"></i>Tidak ada data pada tanggal tersebut.</td></tr>
-        </tbody>
-    </table>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            @if($item->user)
+                                <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 small fw-normal d-inline-flex align-items-center gap-1">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    <span>{{ $item->user->name }}</span>
+                                </span>
+                            @endif
+                            <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 small fw-normal d-inline-flex align-items-center gap-1">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                <span>Tenggat: {{ $item->deadline->format('d M Y') }}</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Action Buttons / Outcome Status --}}
+                <div class="d-flex align-items-center justify-content-end gap-2 w-100 w-md-auto flex-shrink-0 pt-2 pt-md-0 border-top border-md-0">
+                    @if($item->status == 'completed' || Str::contains($item->type, 'achievement'))
+                        @php
+                            $badgeClass = 'bg-secondary text-white';
+                            if($item->outcome == 'Melampaui Ekspektasi') $badgeClass = 'bg-primary text-white'; 
+                            if($item->outcome == 'Tercapai Sempurna') $badgeClass = 'bg-success text-white';
+                            if($item->outcome == 'Tercapai Sebagian') $badgeClass = 'bg-warning text-dark';
+                            if($item->outcome == 'Gagal Tercapai') $badgeClass = 'bg-danger text-white';
+                        @endphp
+                        <span class="badge {{ $badgeClass }} px-3 py-2 rounded-pill fw-semibold small shadow-none">
+                            {{ $item->outcome ?? 'Selesai' }}
+                        </span>
+                    @else
+                        <div class="d-flex align-items-center gap-2 w-100 w-md-auto justify-content-end">
+                            @if(isset($allow_edit_detail) && $allow_edit_detail)
+                                <a href="{{ route('job-targets.edit', $item->id) }}" class="btn btn-light btn-sm border text-muted px-2 py-1 rounded-2" title="Edit Data">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </a>
+                            @endif
+                            @if(isset($allow_update_status) && $allow_update_status)
+                                <button class="btn btn-warning btn-sm text-dark fw-bold px-3 py-1 rounded-2 flex-fill flex-md-grow-0" onclick="openActionModal({{ $item->id }}, '{{ addslashes($item->title) }}')">
+                                    Update Hasil
+                                </button>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endforeach
 </div>

@@ -1,49 +1,61 @@
 <div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-0 bg-light rounded-top-4">
-                <h5 class="modal-title fw-bold text-dark">Update Hasil Pekerjaan</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-bottom bg-light py-3 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-2 d-flex align-items-center justify-content-center">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                    </div>
+                    <h5 class="modal-title fw-bold text-dark mb-0">Update Hasil Pekerjaan</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
+            
             <form id="actionForm" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PATCH')
                 <div class="modal-body p-4">
-                    <div class="alert alert-info border-0 d-flex align-items-center mb-4">
-                        <i class="mdi mdi-information-outline me-2 fs-4"></i>
-                        <div>
-                            <small class="text-uppercase fw-bold text-info" style="font-size: 10px;">Target</small>
-                            <div class="fw-bold text-dark" id="actionTargetTitle">...</div>
-                        </div>
+                    <div class="p-3 bg-light rounded-3 border mb-3">
+                        <small class="text-uppercase fw-bold text-muted d-block mb-1" style="font-size: 11px; letter-spacing: 0.05em;">Target yang Dinilai</small>
+                        <div class="fw-bold text-dark" id="actionTargetTitle">Memuat...</div>
                     </div>
-                    <div class="form-floating mb-3">
-                        <select name="outcome" class="form-select fw-bold border-secondary text-dark" required>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark mb-1">Status Pencapaian</label>
+                        <select name="outcome" class="form-select border text-dark fw-semibold" required>
                             <option value="">-- Pilih Hasil Akhir --</option>
-                            <option value="Melampaui Ekspektasi">🚀 Melampaui Ekspektasi (Luar Biasa)</option>
-                            <option value="Tercapai Sempurna">✅ Tercapai Sempurna (Sesuai)</option>
-                            <option value="Tercapai Sebagian">⚠️ Tercapai Sebagian (Kurang)</option>
-                            <option value="Gagal Tercapai">❌ Gagal Tercapai / Batal</option>
-                            <option value="Target Diubah">🔄 Target Diubah / Revisi</option>
+                            <option value="Melampaui Ekspektasi">Melampaui Ekspektasi (Luar Biasa)</option>
+                            <option value="Tercapai Sempurna">Tercapai Sempurna (Sesuai Target)</option>
+                            <option value="Tercapai Sebagian">Tercapai Sebagian (Belum Maksimal)</option>
+                            <option value="Gagal Tercapai">Gagal Tercapai / Dibatalkan</option>
+                            <option value="Target Diubah">Target Diubah / Revisi</option>
                         </select>
-                        <label>Status Pencapaian</label>
                     </div>
-                    <div class="form-floating mb-3">
-                        <textarea name="completion_description" class="form-control border-secondary" style="height: 100px" required placeholder="Ket"></textarea>
-                        <label>Evaluasi / Keterangan</label>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark mb-1">Evaluasi / Keterangan Pencapaian</label>
+                        <textarea name="completion_description" class="form-control border" style="height: 100px; resize: vertical;" required placeholder="Tuliskan catatan hasil pekerjaan atau kendala yang dihadapi..."></textarea>
                     </div>
+
                     <div>
-                        <label class="small fw-bold text-muted mb-1">Bukti Foto (Opsional)</label>
-                        <input type="file" name="evidence_photo" class="form-control border-secondary">
+                        <label class="form-label small fw-bold text-muted mb-1">Bukti Foto Hasil (Opsional)</label>
+                        <input type="file" name="evidence_photo" class="form-control border" accept="image/*">
+                        <small class="text-muted d-block mt-1" style="font-size: 11px;">Format JPG/PNG, maksimal ukuran 2MB.</small>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0 pb-4 pe-4 bg-transparent">
-                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary px-4 fw-bold rounded-3 shadow-sm">Simpan Hasil</button>
+
+                <div class="modal-footer border-top bg-light py-3 px-4">
+                    <button type="button" class="btn btn-light border rounded-3 px-3" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold rounded-3 shadow-sm">Simpan Hasil</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
 <script>
     function openActionModal(id, title) {
         document.getElementById('actionTargetTitle').innerText = title;
