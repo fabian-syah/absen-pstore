@@ -944,15 +944,34 @@
         }
         .bento-grid {
             display: grid;
-            gap: 1.5rem;
+            gap: 1.25rem;
             grid-template-columns: 1fr;
         }
         .bento-grid > * {
             min-width: 0;
+            width: 100%;
         }
-        @media (min-width: 992px) {
+        .rapor-profile-card {
+            height: 240px;
+            overflow: hidden;
+        }
+        @media (min-width: 768px) and (max-width: 1199px) {
             .bento-grid {
-                grid-template-columns: 320px 1fr 380px;
+                grid-template-columns: 1fr 1fr;
+            }
+            .bento-grid > :nth-child(3) {
+                grid-column: 1 / -1;
+            }
+            .rapor-profile-card {
+                height: 280px;
+            }
+        }
+        @media (min-width: 1200px) {
+            .bento-grid {
+                grid-template-columns: minmax(260px, 300px) 1fr minmax(280px, 360px);
+            }
+            .rapor-profile-card {
+                height: 320px;
             }
         }
     </style>
@@ -967,41 +986,41 @@
                     <div class="position-absolute" style="top: -20%; right: 5%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%;"></div>
                     <div class="position-absolute" style="bottom: -50%; right: 25%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%;"></div>
                     
-                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between position-relative z-index-1">
-                        <div class="d-flex align-items-center gap-3 gap-md-4 mb-3 mb-md-0">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between position-relative z-index-1 flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3 gap-md-4 mb-2 mb-md-0">
                             <div class="d-flex align-items-center justify-content-center shadow-lg flex-shrink-0" style="width: 56px; height: 56px; background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);">
                                 <i class="mdi mdi-chart-donut" style="font-size: 28px; color: #38bdf8 !important; text-shadow: 0 0 20px rgba(56,189,248,0.5);"></i>
                             </div>
                             <div style="min-width: 0;">
-                                <h3 class="mb-1 fw-bolder text-truncate" style="font-size: clamp(1.1rem, 4vw, 1.75rem); color: #ffffff !important; text-shadow: 0 2px 10px rgba(0,0,0,0.2); white-space: normal;">RAPOR STATISTIK KARYAWAN</h3>
-                                <p class="mb-0 text-truncate" style="color: #cbd5e1 !important; font-size: clamp(0.75rem, 2vw, 0.9rem); font-weight: 500; letter-spacing: 0.5px; white-space: normal;">EVALUASI PERFORMA BULANAN</p>
+                                <h3 class="mb-1 fw-bolder" style="font-size: clamp(1.1rem, 3.5vw, 1.75rem); color: #ffffff !important; text-shadow: 0 2px 10px rgba(0,0,0,0.2); white-space: normal;">RAPOR STATISTIK KARYAWAN</h3>
+                                <p class="mb-0" style="color: #cbd5e1 !important; font-size: clamp(0.75rem, 2vw, 0.9rem); font-weight: 500; letter-spacing: 0.5px; white-space: normal;">EVALUASI PERFORMA BULANAN</p>
                             </div>
                         </div>
                         
                         {{-- Evaluasi Badge & User Info --}}
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="text-end d-none d-md-block">
-                                <h5 class="fw-bold mb-1" style="font-size: 1.1rem; color: #ffffff !important; text-transform: none;">
+                        <div class="d-flex align-items-center gap-2 gap-md-3 flex-wrap">
+                            <div class="text-end d-none d-lg-block">
+                                <h5 class="fw-bold mb-1" style="font-size: 1.05rem; color: #ffffff !important; text-transform: none;">
                                     {{ Auth::user()->name }}
                                     <i class="mdi mdi-check-decagram" style="color: #38bdf8 !important; font-size: 1.15rem; vertical-align: middle;" title="Terverifikasi"></i>
                                 </h5>
                                 <p class="mb-0" style="color: #cbd5e1 !important; font-size: 0.8rem;">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</p>
                             </div>
-                            <div class="px-4 py-2 shadow-lg d-flex align-items-center gap-2" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);">
+                            <div class="px-3 px-md-4 py-2 shadow-lg d-flex align-items-center gap-2" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);">
                                 <div style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981;"></div>
-                                <span class="fw-bold" style="color: #ffffff !important; letter-spacing: 1px; font-size: 0.85rem;">EVALUASI AKTIF</span>
+                                <span class="fw-bold" style="color: #ffffff !important; letter-spacing: 1px; font-size: 0.85rem; white-space: nowrap;">EVALUASI AKTIF</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-3 mt-1">
+                <div class="p-2 p-md-3 mt-1">
                     <div class="bento-grid">
                         
                         {{-- Left Column: Profile & History Bento --}}
                         <div class="d-flex flex-column gap-3">
                             {{-- Profile Image Card --}}
-                            <div class="rapor-glass-card p-2 position-relative d-flex justify-content-center align-items-center" style="height: 320px; overflow: hidden;">
+                            <div class="rapor-glass-card rapor-profile-card p-2 position-relative d-flex justify-content-center align-items-center">
                                 @if (Auth::user()->profile_photo_path)
                                     <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Foto" class="img-fluid w-100 h-100" style="object-fit: cover; border-radius: 18px;">
                                 @else
@@ -1063,13 +1082,26 @@
                             <div class="rapor-glass-card p-4 d-flex flex-column flex-grow-1">
                                 <div class="w-100 d-flex justify-content-between align-items-center mb-4">
                                     <h6 class="fw-bold mb-0" style="color: #0f172a; font-size: 0.95rem;">Analisis Kompetensi</h6>
-                                    <div id="overall-grade-badge" class="px-3 py-1 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.3);">
-                                        {{-- Injected via JS --}}
-                                        Grade A <span style="opacity: 0.7;">|</span> 88.5
+                                    <div id="overall-grade-badge" class="px-3 py-1 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2" style="{{ isset($latestEval) ? 'background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff;' : 'background: #f1f5f9; color: #64748b;' }} font-size: 0.85rem; border: 1px solid rgba(0,0,0,0.05);">
+                                        @if(isset($latestEval))
+                                            Grade {{ $latestEval->grade ?? '-' }} <span style="opacity: 0.7;">|</span> {{ number_format($latestEval->average_score ?? 0, 1) }}
+                                        @else
+                                            <span>Belum Dinilai</span>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="w-100 position-relative d-flex justify-content-center align-items-center mt-auto mb-auto" style="min-height: 280px;">
-                                    <canvas id="radarChartRapor"></canvas>
+                                    @if(isset($latestEval))
+                                        <canvas id="radarChartRapor"></canvas>
+                                    @else
+                                        <div class="text-center py-4 my-auto">
+                                            <div class="mb-3 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 64px; height: 64px; background: #f1f5f9;">
+                                                <i class="mdi mdi-chart-donut-variant text-muted" style="font-size: 32px;"></i>
+                                            </div>
+                                            <p class="text-dark fw-bold mb-1" style="font-size: 0.9rem;">Belum Ada Penilaian</p>
+                                            <span class="text-muted small" style="font-size: 0.78rem;">Grafik kompetensi akan tampil setelah dievaluasi oleh Leader / Audit</span>
+                                        </div>
+                                    @endif
                                 </div>
                                 
                                 @if(isset($latestEval))
@@ -1089,7 +1121,15 @@
                                 <span class="badge bg-light text-dark border">Bulan Ini</span>
                             </div>
                             <div class="d-flex flex-column gap-1 overflow-auto pe-2" id="detail-list-container" style="max-height: 550px;">
-                                {{-- Inject JS here --}}
+                                @if(!isset($latestEval))
+                                    <div class="text-center py-4 my-auto">
+                                        <div class="mb-3 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 56px; height: 56px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                                            <i class="mdi mdi-clipboard-text-outline text-muted" style="font-size: 26px;"></i>
+                                        </div>
+                                        <p class="text-dark fw-bold mb-1" style="font-size: 0.9rem;">Rincian Belum Tersedia</p>
+                                        <span class="text-muted small" style="font-size: 0.78rem;">Belum ada kriteria penilaian yang diinput untuk periode ini</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
@@ -1099,179 +1139,192 @@
         </div>
     </div>
 
+    @if(isset($latestEval))
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Data Evaluasi Dinamis dari Backend
-            const kriteriaPenilaian = [
-                { nama: "Kecerdasan", nilai: {!! isset($latestEval) ? ($latestEval->kecerdasan_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->kecerdasan_note ?? '-') : '-' !!}", icon: "mdi-brain" },
-                { nama: "Amanah", nilai: {!! isset($latestEval) ? ($latestEval->amanah_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->amanah_note ?? '-') : '-' !!}", icon: "mdi-shield-check" },
-                { nama: "Sosial media", nilai: {!! isset($latestEval) ? ($latestEval->sosial_media_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->sosial_media_note ?? '-') : '-' !!}", icon: "mdi-youtube" },
-                { nama: "Kepemimpinan", nilai: {!! isset($latestEval) ? ($latestEval->kepemimpinan_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->kepemimpinan_note ?? '-') : '-' !!}", icon: "mdi-account-tie" },
-                { nama: "Data & ketelitian", nilai: {!! isset($latestEval) ? ($latestEval->data_ketelitian_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->data_ketelitian_note ?? '-') : '-' !!}", icon: "mdi-clipboard-text" },
-                { nama: "Komunikasi", nilai: {!! isset($latestEval) ? ($latestEval->komunikasi_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->komunikasi_note ?? '-') : '-' !!}", icon: "mdi-forum" },
-                { nama: "Kedisiplinan", nilai: {!! isset($latestEval) ? ($latestEval->kedisiplinan_score ?? 'null') : 'null' !!}, catatan: "{!! isset($latestEval) ? addslashes($latestEval->kedisiplinan_note ?? '-') : '-' !!}", icon: "mdi-calendar-clock" }
-                @if(isset($latestEval) && $latestEval->custom_score !== null)
-                , { nama: "{!! addslashes($latestEval->custom_title ?? 'Kriteria Tambahan') !!}", nilai: {!! $latestEval->custom_score !!}, catatan: "{!! addslashes($latestEval->custom_note ?? '-') !!}", icon: "mdi-star-circle" }
-                @endif
-            ];
+        (function() {
+            function initEvaluationChart() {
+                if (typeof Chart === 'undefined') {
+                    setTimeout(initEvaluationChart, 50);
+                    return;
+                }
+                try {
+                    // Data Evaluasi Dinamis dari Backend
+                    const kriteriaPenilaian = [
+                        { nama: "Kecerdasan", nilai: {!! $latestEval->kecerdasan_score ?? 'null' !!}, catatan: "{!! addslashes($latestEval->kecerdasan_note ?? '-') !!}", icon: "mdi-brain" },
+                        { nama: "Amanah", nilai: {!! $latestEval->amanah_score ?? 'null' !!}, catatan: "{!! addslashes($latestEval->amanah_note ?? '-') !!}", icon: "mdi-shield-check" },
+                        { nama: "Sosial media", nilai: {!! $latestEval->sosial_media_score ?? 'null' !!}, catatan: "{!! addslashes($latestEval->sosial_media_note ?? '-') !!}", icon: "mdi-youtube" },
+                        { nama: "Kepemimpinan", nilai: {!! $latestEval->kepemimpinan_score ?? 'null' !!}, catatan: "{!! addslashes($latestEval->kepemimpinan_note ?? '-') !!}", icon: "mdi-account-tie" },
+                        { nama: "Data & ketelitian", nilai: {!! $latestEval->data_ketelitian_score ?? 'null' !!}, catatan: "{!! addslashes($latestEval->data_ketelitian_note ?? '-') !!}", icon: "mdi-clipboard-text" },
+                        { nama: "Komunikasi", nilai: {!! $latestEval->komunikasi_score ?? 'null' !!}, catatan: "{!! addslashes($latestEval->komunikasi_note ?? '-') !!}", icon: "mdi-forum" },
+                        { nama: "Kedisiplinan", nilai: {!! $latestEval->kedisiplinan_score ?? 'null' !!}, catatan: "{!! addslashes($latestEval->kedisiplinan_note ?? '-') !!}", icon: "mdi-calendar-clock" }
+                        @if($latestEval->custom_score !== null)
+                        , { nama: "{!! addslashes($latestEval->custom_title ?? 'Kriteria Tambahan') !!}", nilai: {!! $latestEval->custom_score !!}, catatan: "{!! addslashes($latestEval->custom_note ?? '-') !!}", icon: "mdi-star-circle" }
+                        @endif
+                    ];
 
-            const validKriteria = kriteriaPenilaian.filter(k => k.nilai !== null && k.nilai !== undefined);
-            
-            const labels = validKriteria.map(k => k.nama);
-            const dataValues = validKriteria.map(k => k.nilai);
+                    const validKriteria = kriteriaPenilaian.filter(k => k.nilai !== null && k.nilai !== undefined);
+                    if (validKriteria.length === 0) return;
 
-            // Setup Radar Chart
-            const ctxRapor = document.getElementById('radarChartRapor');
-            if (ctxRapor) {
-                // Konfigurasi Chart Aesthetic
-                Chart.defaults.font.family = "'Inter', sans-serif";
-                Chart.defaults.color = '#6c757d';
+                    const labels = validKriteria.map(k => k.nama);
+                    const dataValues = validKriteria.map(k => k.nilai);
 
-                new Chart(ctxRapor.getContext('2d'), {
-                    type: 'radar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Nilai Kompetensi',
-                            data: dataValues,
-                            backgroundColor: 'rgba(13, 110, 253, 0.15)',
-                            borderColor: 'rgba(13, 110, 253, 0.8)',
-                            pointBackgroundColor: '#ffffff',
-                            pointBorderColor: 'rgba(13, 110, 253, 1)',
-                            pointHoverBackgroundColor: 'rgba(13, 110, 253, 1)',
-                            pointHoverBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            borderWidth: 2,
-                            tension: 0.3
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            r: {
-                                angleLines: { 
-                                    color: 'rgba(0, 0, 0, 0.05)',
-                                    lineWidth: 1
+                    // Setup Radar Chart
+                    const ctxRapor = document.getElementById('radarChartRapor');
+                    if (ctxRapor) {
+                        Chart.defaults.font.family = "'Inter', sans-serif";
+                        Chart.defaults.color = '#6c757d';
+
+                        new Chart(ctxRapor.getContext('2d'), {
+                            type: 'radar',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Nilai Kompetensi',
+                                    data: dataValues,
+                                    backgroundColor: 'rgba(13, 110, 253, 0.15)',
+                                    borderColor: 'rgba(13, 110, 253, 0.8)',
+                                    pointBackgroundColor: '#ffffff',
+                                    pointBorderColor: 'rgba(13, 110, 253, 1)',
+                                    pointHoverBackgroundColor: 'rgba(13, 110, 253, 1)',
+                                    pointHoverBorderColor: '#ffffff',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6,
+                                    borderWidth: 2,
+                                    tension: 0.3
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    r: {
+                                        angleLines: { 
+                                            color: 'rgba(0, 0, 0, 0.05)',
+                                            lineWidth: 1
+                                        },
+                                        grid: { 
+                                            color: 'rgba(0, 0, 0, 0.05)',
+                                            circular: true
+                                        },
+                                        pointLabels: {
+                                            color: '#495057',
+                                            font: { 
+                                                size: 10, 
+                                                weight: '600',
+                                            },
+                                            padding: 12
+                                        },
+                                        ticks: {
+                                            display: false,
+                                            min: 0,
+                                            max: 100,
+                                            stepSize: 20
+                                        }
+                                    }
                                 },
-                                grid: { 
-                                    color: 'rgba(0, 0, 0, 0.05)',
-                                    circular: true
-                                },
-                                pointLabels: {
-                                    color: '#495057',
-                                    font: { 
-                                        size: 10, 
-                                        weight: '600',
-                                    },
-                                    padding: 15
-                                },
-                                ticks: {
-                                    display: false,
-                                    min: 0,
-                                    max: 100,
-                                    stepSize: 20
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                backgroundColor: 'rgba(10, 46, 92, 0.9)',
-                                titleFont: { size: 13 },
-                                bodyFont: { size: 14, weight: 'bold' },
-                                padding: 12,
-                                cornerRadius: 8,
-                                displayColors: false,
-                                callbacks: {
-                                    label: function(context) {
-                                        return context.raw + ' / 100';
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(10, 46, 92, 0.9)',
+                                        titleFont: { size: 13 },
+                                        bodyFont: { size: 14, weight: 'bold' },
+                                        padding: 12,
+                                        cornerRadius: 8,
+                                        displayColors: false,
+                                        callbacks: {
+                                            label: function(context) {
+                                                return context.raw + ' / 100';
+                                            }
+                                        }
                                     }
                                 }
                             }
+                        });
+                    }
+
+                    // Helper function to get Grade Letter
+                    function getGradeLetter(score) {
+                        if (score >= 95) return 'A+';
+                        if (score >= 90) return 'A';
+                        if (score >= 85) return 'B+';
+                        if (score >= 80) return 'B';
+                        if (score >= 70) return 'C';
+                        return 'D';
+                    }
+
+                    // Populate Right List
+                    const detailContainer = document.getElementById('detail-list-container');
+                    if(detailContainer) {
+                        detailContainer.innerHTML = '';
+                        let totalScore = 0;
+                        
+                        validKriteria.forEach(k => {
+                            totalScore += k.nilai;
+                            const row = document.createElement('div');
+                            row.className = 'd-flex align-items-center justify-content-between p-3 mb-2 aesthetic-list-item position-relative';
+                            row.style.background = 'transparent';
+                            
+                            let badgeColor = '#3b82f6';
+                            let badgeBg = '#eff6ff';
+                            
+                            if(k.nilai >= 90) {
+                                badgeColor = '#10b981';
+                                badgeBg = '#ecfdf5';
+                            } else if (k.nilai < 80) {
+                                badgeColor = '#f59e0b';
+                                badgeBg = '#fffbeb';
+                            }
+                            
+                            const grade = getGradeLetter(k.nilai);
+
+                            row.innerHTML = `
+                                <div class="d-flex align-items-center flex-grow-1 position-relative z-index-1 pe-2">
+                                    <div class="me-2 me-md-3 text-center icon-circle-bg shadow-sm flex-shrink-0" style="background: ${badgeBg}; border: 1px solid rgba(255,255,255,0.5);">
+                                        <i class="mdi ${k.icon} fs-5" style="color: ${badgeColor};"></i>
+                                    </div>
+                                    <div class="d-flex flex-column text-start">
+                                        <span class="fw-bold text-uppercase" style="letter-spacing: 0.5px; color: #1e293b; font-size: 0.85rem; line-height: 1.2; padding-bottom: 2px;">${k.nama}</span>
+                                        <span style="color: #64748b; font-size: 0.75rem; line-height: 1.3;">${k.catatan || '-'}</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-1 gap-md-2 position-relative z-index-1 flex-shrink-0">
+                                    <span class="fw-bolder" style="color: ${badgeColor}; font-size: 0.85rem;">${grade}</span>
+                                    <div class="fw-bolder px-2 py-1 rounded-pill text-center d-flex align-items-center justify-content-center shadow-sm" style="background-color: ${badgeBg}; color: ${badgeColor}; font-size: 0.95rem; min-width: 40px; border: 1px solid rgba(255,255,255,0.8);">
+                                        ${k.nilai}
+                                    </div>
+                                </div>
+                            `;
+                            detailContainer.appendChild(row);
+                        });
+                        
+                        // Update Overall Grade Badge
+                        const avgScore = (totalScore / validKriteria.length).toFixed(1);
+                        const avgGrade = getGradeLetter(avgScore);
+                        const badgeEl = document.getElementById('overall-grade-badge');
+                        if (badgeEl) {
+                            let bgGrad = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+                            if (avgScore >= 90) bgGrad = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                            else if (avgScore < 80) bgGrad = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                            
+                            badgeEl.style.background = bgGrad;
+                            badgeEl.style.color = '#ffffff';
+                            badgeEl.innerHTML = `Grade ${avgGrade} <span style="opacity: 0.7;">|</span> ${avgScore}`;
                         }
                     }
-                });
-            }
-
-            // Helper function to get Grade Letter
-            function getGradeLetter(score) {
-                if (score >= 95) return 'A+';
-                if (score >= 90) return 'A';
-                if (score >= 85) return 'B+';
-                if (score >= 80) return 'B';
-                if (score >= 70) return 'C';
-                return 'D';
-            }
-
-            // Populate Right List
-            const detailContainer = document.getElementById('detail-list-container');
-            if(detailContainer) {
-                let totalScore = 0;
-                
-                validKriteria.forEach(k => {
-                    totalScore += k.nilai;
-                    const row = document.createElement('div');
-                    row.className = 'd-flex align-items-center justify-content-between p-3 mb-2 aesthetic-list-item position-relative';
-                    row.style.background = 'transparent';
-                    
-                    // Logic warna untuk nilai
-                    let badgeColor = '#3b82f6';
-                    let badgeBg = '#eff6ff';
-                    let iconColor = '#60a5fa';
-                    
-                    if(k.nilai >= 90) {
-                        badgeColor = '#10b981';
-                        badgeBg = '#ecfdf5';
-                        iconColor = '#34d399';
-                    } else if (k.nilai < 80) {
-                        badgeColor = '#f59e0b';
-                        badgeBg = '#fffbeb';
-                        iconColor = '#fbbf24';
-                    }
-                    
-                    const grade = getGradeLetter(k.nilai);
-
-                    row.innerHTML = `
-                        <div class="d-flex align-items-center flex-grow-1 position-relative z-index-1 pe-2">
-                            <div class="me-2 me-md-3 text-center icon-circle-bg shadow-sm flex-shrink-0" style="background: ${badgeBg}; border: 1px solid rgba(255,255,255,0.5);">
-                                <i class="mdi ${k.icon} fs-5" style="color: ${badgeColor};"></i>
-                            </div>
-                            <div class="d-flex flex-column text-start">
-                                <span class="fw-bold text-uppercase" style="letter-spacing: 0.5px; color: #1e293b; font-size: 0.85rem; line-height: 1.2; padding-bottom: 2px;">${k.nama}</span>
-                                <span style="color: #64748b; font-size: 0.75rem; line-height: 1.3;">${k.catatan || '-'}</span>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-1 gap-md-2 position-relative z-index-1 flex-shrink-0">
-                            <span class="fw-bolder" style="color: ${badgeColor}; font-size: 0.85rem;">${grade}</span>
-                            <div class="fw-bolder px-2 py-1 rounded-pill text-center d-flex align-items-center justify-content-center shadow-sm" style="background-color: ${badgeBg}; color: ${badgeColor}; font-size: 0.95rem; min-width: 40px; border: 1px solid rgba(255,255,255,0.8);">
-                                ${k.nilai}
-                            </div>
-                        </div>
-                        <div class="position-absolute w-100 h-100 top-0 left-0 bg-white opacity-50 rounded-3 z-index-0" style="display: none;"></div>
-                    `;
-                    detailContainer.appendChild(row);
-                });
-                
-                // Update Overall Grade Badge
-                if (validKriteria.length > 0) {
-                    const avgScore = (totalScore / validKriteria.length).toFixed(1);
-                    const avgGrade = getGradeLetter(avgScore);
-                    const badgeEl = document.getElementById('overall-grade-badge');
-                    if (badgeEl) {
-                        let bgGrad = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
-                        if (avgScore >= 90) bgGrad = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-                        else if (avgScore < 80) bgGrad = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-                        
-                        badgeEl.style.background = bgGrad;
-                        badgeEl.innerHTML = `Grade ${avgGrade} <span style="opacity: 0.7;">|</span> ${avgScore}`;
-                    }
+                } catch(e) {
+                    console.error('Radar chart init error:', e);
                 }
             }
-        });
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initEvaluationChart);
+            } else {
+                initEvaluationChart();
+            }
+        })();
     </script>
+    @endif
 
     {{-- ======================================================================= --}}
     {{-- POPUP PEMBERITAHUAN: MENU CUTI BARU --}}
