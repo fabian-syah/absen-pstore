@@ -164,7 +164,7 @@
             margin-top: 6px;
         }
 
-        .shift-schedule-box {
+        .guidelines-box {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-default);
             border-radius: 10px;
@@ -172,38 +172,38 @@
             margin-bottom: 24px;
         }
 
-        .shift-title {
-            font-size: 12px;
+        .guideline-title {
+            font-size: 11px;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.06em;
         }
 
-        .shift-item {
+        .guideline-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 0;
+            padding: 7px 0;
             font-size: 12px;
             border-bottom: 1px solid #f1f5f9;
         }
 
-        .shift-item:last-child {
+        .guideline-item:last-child {
             border-bottom: none;
             padding-bottom: 0;
         }
 
-        .shift-name {
+        .guideline-name {
             color: var(--text-secondary);
-            font-weight: 500;
+            font-weight: 600;
         }
 
-        .shift-time {
-            font-family: 'JetBrains Mono', monospace;
+        .guideline-desc {
             color: var(--text-primary);
-            font-weight: 600;
+            font-weight: 500;
+            text-align: right;
         }
 
         .dock-left-note {
@@ -438,7 +438,7 @@
                 display: none;
             }
 
-            .shift-schedule-box {
+            .guidelines-box {
                 margin-bottom: 0;
             }
 
@@ -483,31 +483,31 @@
             <!-- Left: Operational Attendance Reference -->
             <section class="dock-left">
                 <div>
-                    <div class="section-label">Waktu Operasional</div>
+                    <div class="section-label">Waktu & Kehadiran</div>
                     <div class="clock-display-block">
                         <div class="live-clock" id="liveClockDisplay">--:--:--</div>
                         <div class="live-date" id="liveDateDisplay">Memuat tanggal...</div>
                     </div>
 
-                    <div class="shift-schedule-box">
-                        <div class="shift-title">Jadwal Shift Kerja</div>
-                        <div class="shift-item">
-                            <span class="shift-name">Shift Pagi</span>
-                            <span class="shift-time">08:00 - 16:00</span>
+                    <div class="guidelines-box">
+                        <div class="guideline-title">Ketentuan Presensi</div>
+                        <div class="guideline-item">
+                            <span class="guideline-name">Presensi Masuk</span>
+                            <span class="guideline-desc">Scan saat tiba di cabang</span>
                         </div>
-                        <div class="shift-item">
-                            <span class="shift-name">Shift Siang</span>
-                            <span class="shift-time">12:00 - 20:00</span>
+                        <div class="guideline-item">
+                            <span class="guideline-name">Presensi Pulang</span>
+                            <span class="guideline-desc">Scan sebelum pulang</span>
                         </div>
-                        <div class="shift-item">
-                            <span class="shift-name">Shift Malam</span>
-                            <span class="shift-time">19:00 - 03:00</span>
+                        <div class="guideline-item">
+                            <span class="guideline-name">Izin &amp; Cuti</span>
+                            <span class="guideline-desc">Ajukan via portal</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="dock-left-note">
-                    Presensi wajib diverifikasi melalui scanner cabang sesuai jam shift yang berlaku.
+                    Pastikan scan kehadiran masuk &amp; pulang selalu terekam untuk validasi kehadiran kerja.
                 </div>
             </section>
 
