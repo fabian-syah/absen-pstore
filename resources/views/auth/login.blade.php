@@ -7,13 +7,14 @@
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --bg-page: #f4f6f8;
             --bg-surface: #ffffff;
             --bg-subtle: #f8fafc;
+            --bg-section: #fafbfc;
             --border-default: #e2e8f0;
             --border-focus: #0f172a;
             --text-primary: #0f172a;
@@ -107,128 +108,98 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px;
+            padding: 36px 20px;
             width: 100%;
         }
 
-        /* Unified Terminal / Dock Card */
-        .dock-card {
+        /* Unified Vertical Card */
+        .auth-container-card {
             width: 100%;
-            max-width: 860px;
+            max-width: 520px;
             background-color: var(--bg-surface);
             border: 1px solid var(--border-default);
             border-radius: 14px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 10px 20px -3px rgba(0, 0, 0, 0.04);
-            display: flex;
             overflow: hidden;
-        }
-
-        /* Left Side: Operational Info & Live Clock */
-        .dock-left {
-            width: 340px;
-            background-color: var(--bg-subtle);
-            border-right: 1px solid var(--border-default);
-            padding: 36px 30px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            flex-shrink: 0;
         }
 
-        .section-label {
+        /* 1. Waktu Operasional Sesuai Kota (WIB, WITA, WIT) */
+        .clock-header-section {
+            background-color: var(--bg-subtle);
+            border-bottom: 1px solid var(--border-default);
+            padding: 22px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .clock-meta-label {
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
             color: var(--text-muted);
-            margin-bottom: 12px;
+            margin-bottom: 6px;
         }
 
-        .clock-display-block {
-            margin-bottom: 28px;
-        }
-
-        .live-clock {
+        .live-clock-time {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 30px;
+            font-size: 26px;
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.02em;
             line-height: 1.1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .live-date {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-top: 6px;
-        }
-
-        .guidelines-box {
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-default);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 24px;
-        }
-
-        .guideline-title {
-            font-size: 11px;
+        .tz-tag {
+            font-size: 12px;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
+            background-color: #e2e8f0;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: 0.04em;
         }
 
-        .guideline-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 7px 0;
+        .live-date-desc {
             font-size: 12px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .guideline-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .guideline-name {
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        .guideline-desc {
-            color: var(--text-primary);
             font-weight: 500;
-            text-align: right;
+            color: var(--text-secondary);
+            margin-top: 4px;
         }
 
-        .dock-left-note {
-            font-size: 12px;
-            color: var(--text-muted);
-            line-height: 1.5;
-            padding-top: 16px;
-            border-top: 1px solid var(--border-default);
-        }
-
-        /* Right Side: Auth Form */
-        .dock-right {
-            flex: 1;
-            padding: 40px 38px;
+        .clock-status-pill {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background-color: #ffffff;
+            border: 1px solid var(--border-default);
+            padding: 5px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        /* 2. Form Area */
+        .form-body-section {
+            padding: 30px 28px 24px;
         }
 
         .auth-heading {
-            margin-bottom: 24px;
+            margin-bottom: 22px;
         }
 
         .auth-title {
-            font-size: 22px;
+            font-size: 21px;
             font-weight: 800;
             color: var(--text-primary);
             letter-spacing: -0.02em;
@@ -241,7 +212,7 @@
             line-height: 1.5;
         }
 
-        /* Alert Box */
+        /* Alert Error */
         .alert-error {
             background-color: var(--danger-bg);
             border: 1px solid var(--danger-border);
@@ -336,19 +307,15 @@
             height: 18px;
         }
 
-        /* Checkbox */
-        .option-row {
-            display: flex;
-            align-items: center;
+        /* Checkbox & 1-Week Session Note */
+        .remember-section {
             margin: 20px 0 24px 0;
         }
 
         .checkbox-container {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--text-secondary);
+            align-items: flex-start;
+            gap: 10px;
             cursor: pointer;
             user-select: none;
         }
@@ -356,8 +323,27 @@
         .checkbox-container input {
             width: 16px;
             height: 16px;
+            margin-top: 2px;
             accent-color: var(--btn-solid);
             cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .remember-text-block {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .remember-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .remember-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
         }
 
         /* Submit Button */
@@ -398,9 +384,69 @@
             100% { transform: rotate(360deg); }
         }
 
-        .help-caption {
-            margin-top: 20px;
+        /* 3. Ketentuan Presensi DIBAWAH FORM */
+        .guidelines-section {
+            background-color: var(--bg-section);
+            border-top: 1px solid var(--border-default);
+            padding: 24px 28px;
+        }
+
+        .guideline-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        .guideline-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .guideline-card-item {
+            background-color: #ffffff;
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .guideline-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .guideline-badge-name {
             font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .guideline-badge-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background-color: var(--bg-subtle);
+            padding: 1px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-default);
+        }
+
+        .guideline-instruction {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        .help-caption {
+            margin-top: 16px;
+            font-size: 11px;
             color: var(--text-subtle);
             text-align: center;
             line-height: 1.4;
@@ -421,37 +467,41 @@
         }
 
         /* Responsive Breakpoints */
-        @media (max-width: 820px) {
-            .dock-card {
+        @media (max-width: 580px) {
+            .page-container {
+                padding: 16px 12px;
+            }
+
+            .auth-container-card {
+                max-width: 100%;
+                border-radius: 12px;
+            }
+
+            .clock-header-section {
+                padding: 18px 20px;
                 flex-direction: column;
-                max-width: 440px;
+                align-items: flex-start;
+                gap: 10px;
             }
 
-            .dock-left {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid var(--border-default);
-                padding: 24px;
+            .clock-status-pill {
+                align-self: flex-start;
             }
 
-            .dock-left-note {
-                display: none;
+            .form-body-section {
+                padding: 24px 20px 20px;
             }
 
-            .guidelines-box {
-                margin-bottom: 0;
-            }
-
-            .dock-right {
-                padding: 30px 24px;
+            .guidelines-section {
+                padding: 20px;
             }
 
             .site-header {
-                padding: 0 20px;
+                padding: 0 16px;
             }
 
             .site-footer {
-                padding: 0 20px;
+                padding: 0 16px;
                 flex-direction: column;
                 justify-content: center;
                 gap: 4px;
@@ -479,40 +529,26 @@
 
     <!-- Main Workspace -->
     <main class="page-container">
-        <div class="dock-card">
-            <!-- Left: Operational Attendance Reference -->
-            <section class="dock-left">
+        <div class="auth-container-card">
+
+            <!-- 1. WAKTU OPERASIONAL (Dinamis Sesuai Kota: WIB, WITA, WIT) -->
+            <section class="clock-header-section">
                 <div>
-                    <div class="section-label">Waktu & Kehadiran</div>
-                    <div class="clock-display-block">
-                        <div class="live-clock" id="liveClockDisplay">--:--:--</div>
-                        <div class="live-date" id="liveDateDisplay">Memuat tanggal...</div>
+                    <div class="clock-meta-label">Waktu Presensi Lokal</div>
+                    <div class="live-clock-time">
+                        <span id="liveClockText">--:--:--</span>
+                        <span class="tz-tag" id="liveClockTz">WIB</span>
                     </div>
-
-                    <div class="guidelines-box">
-                        <div class="guideline-title">Ketentuan Presensi</div>
-                        <div class="guideline-item">
-                            <span class="guideline-name">Presensi Masuk</span>
-                            <span class="guideline-desc">Scan saat tiba di cabang</span>
-                        </div>
-                        <div class="guideline-item">
-                            <span class="guideline-name">Presensi Pulang</span>
-                            <span class="guideline-desc">Scan sebelum pulang</span>
-                        </div>
-                        <div class="guideline-item">
-                            <span class="guideline-name">Izin &amp; Cuti</span>
-                            <span class="guideline-desc">Ajukan via portal</span>
-                        </div>
-                    </div>
+                    <div class="live-date-desc" id="liveDateText">Memuat tanggal & zona waktu...</div>
                 </div>
-
-                <div class="dock-left-note">
-                    Pastikan scan kehadiran masuk &amp; pulang selalu terekam untuk validasi kehadiran kerja.
+                <div class="clock-status-pill">
+                    <span class="status-dot"></span>
+                    <span>Sinkron Server</span>
                 </div>
             </section>
 
-            <!-- Right: Authentication Form -->
-            <section class="dock-right">
+            <!-- 2. FORM MASUK KE SISTEM -->
+            <section class="form-body-section">
                 <div class="auth-heading">
                     <h1 class="auth-title">Masuk ke Sistem</h1>
                     <p class="auth-desc">Gunakan ID Pegawai dan kata sandi Anda untuk mengakses portal.</p>
@@ -577,10 +613,13 @@
                         </div>
                     </div>
 
-                    <div class="option-row">
+                    <div class="remember-section">
                         <label class="checkbox-container">
                             <input type="checkbox" name="remember" id="remember" value="1">
-                            <span>Ingat sesi di perangkat ini</span>
+                            <div class="remember-text-block">
+                                <span class="remember-title">Ingat sesi di perangkat ini (1 Minggu)</span>
+                                <span class="remember-hint">Sesi tetap aktif 7 hari ke depan sebelum harus masuk kembali.</span>
+                            </div>
                         </label>
                     </div>
 
@@ -592,11 +631,42 @@
                         </svg>
                     </button>
                 </form>
+            </section>
+
+            <!-- 3. KETENTUAN PRESENSI (DIBAWAH FORM) -->
+            <section class="guidelines-section">
+                <div class="guideline-section-title">Ketentuan Presensi Karyawan</div>
+                <div class="guideline-list">
+                    <div class="guideline-card-item">
+                        <div class="guideline-item-header">
+                            <span class="guideline-badge-name">Presensi Masuk</span>
+                            <span class="guideline-badge-tag">Kedatangan</span>
+                        </div>
+                        <p class="guideline-instruction">Scan saat tiba di cabang via security atau lakukan presensi mandiri sesuai ketentuan.</p>
+                    </div>
+
+                    <div class="guideline-card-item">
+                        <div class="guideline-item-header">
+                            <span class="guideline-badge-name">Presensi Pulang</span>
+                            <span class="guideline-badge-tag">Kepulangan</span>
+                        </div>
+                        <p class="guideline-instruction">Scan sebelum pulang via security atau lakukan presensi mandiri sebelum meninggalkan cabang.</p>
+                    </div>
+
+                    <div class="guideline-card-item">
+                        <div class="guideline-item-header">
+                            <span class="guideline-badge-name">Perizinan &amp; Cuti</span>
+                            <span class="guideline-badge-tag">Portal Izin</span>
+                        </div>
+                        <p class="guideline-instruction">Ajukan permohonan izin, sakit, atau cuti kerja langsung melalui menu perizinan di portal.</p>
+                    </div>
+                </div>
 
                 <div class="help-caption">
                     Kendala akses akun? Hubungi HRD atau IT Support cabang Anda.
                 </div>
             </section>
+
         </div>
     </main>
 
@@ -611,10 +681,11 @@
     </footer>
 
     <script>
-        // Real-Time Clock & Date in Indonesian Locale
+        // Real-Time Clock & Date with Local Timezone Detection (WIB, WITA, WIT)
         function updateLiveDateTime() {
-            const clockEl = document.getElementById('liveClockDisplay');
-            const dateEl = document.getElementById('liveDateDisplay');
+            const clockEl = document.getElementById('liveClockText');
+            const tzEl = document.getElementById('liveClockTz');
+            const dateEl = document.getElementById('liveDateText');
             if (!clockEl || !dateEl) return;
 
             const now = new Date();
@@ -622,7 +693,40 @@
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
-            clockEl.textContent = `${hours}:${minutes}:${seconds} WIB`;
+
+            clockEl.textContent = `${hours}:${minutes}:${seconds}`;
+
+            // Deteksi zona waktu perangkat (WIB, WITA, WIT)
+            const offsetMinutes = -now.getTimezoneOffset(); // Selisih menit dari UTC
+            let tzCode = 'WIB';
+            let tzDesc = 'Waktu Indonesia Barat';
+
+            if (offsetMinutes >= 450 && offsetMinutes < 510) { // UTC+8
+                tzCode = 'WITA';
+                tzDesc = 'Waktu Indonesia Tengah';
+            } else if (offsetMinutes >= 510 && offsetMinutes < 570) { // UTC+9
+                tzCode = 'WIT';
+                tzDesc = 'Waktu Indonesia Timur';
+            } else if (offsetMinutes >= 390 && offsetMinutes < 450) { // UTC+7
+                tzCode = 'WIB';
+                tzDesc = 'Waktu Indonesia Barat';
+            } else {
+                const tzStr = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+                if (tzStr.includes('Makassar') || tzStr.includes('Ujung_Pandang') || tzStr.includes('Bali') || tzStr.includes('Pontianak') === false && offsetMinutes === 480) {
+                    tzCode = 'WITA';
+                    tzDesc = 'Waktu Indonesia Tengah';
+                } else if (tzStr.includes('Jayapura') || offsetMinutes === 540) {
+                    tzCode = 'WIT';
+                    tzDesc = 'Waktu Indonesia Timur';
+                } else {
+                    const hoursOffset = offsetMinutes / 60;
+                    const sign = hoursOffset >= 0 ? '+' : '';
+                    tzCode = `UTC${sign}${hoursOffset}`;
+                    tzDesc = tzStr || 'Waktu Lokal';
+                }
+            }
+
+            if (tzEl) tzEl.textContent = tzCode;
 
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -632,7 +736,7 @@
             const monthName = months[now.getMonth()];
             const yearNum = now.getFullYear();
 
-            dateEl.textContent = `${dayName}, ${dateNum} ${monthName} ${yearNum}`;
+            dateEl.textContent = `${dayName}, ${dateNum} ${monthName} ${yearNum} • ${tzDesc}`;
         }
         updateLiveDateTime();
         setInterval(updateLiveDateTime, 1000);

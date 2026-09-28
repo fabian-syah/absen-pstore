@@ -72,8 +72,22 @@ class LoginController extends Controller
         ]);
         // --------------------------------------
 
-        Auth::login($user, $request->remember);
+        $remember = $request->boolean('remember');
+
+        // Jika 'Ingat sesi di perangkat ini' dicentang, sesi berlaku selama 1 minggu (7 hari = 10.080 menit)
+        if ($remember) {
+            Auth::guard('web')->setRememberDuration(10080);
+        }
+
+        Auth::login($user, $remember);
         $request->session()->regenerate();
+
+        if ($remember) {
+            session(['remember_login_expires_at' => now()->addDays(7)->timestamp]);
+        } else {
+            session()->forget('remember_login_expires_at');
+        }
+
         return redirect()->route('dashboard');
     }
 
