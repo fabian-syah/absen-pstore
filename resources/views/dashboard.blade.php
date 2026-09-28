@@ -638,12 +638,7 @@
     {{-- BANNER SERTIFIKAT PENGHARGAAN (Jika User masuk Top 3) --}}
     {{-- ======================================================================= --}}
     @php
-        $myCertificates = \App\Models\LeaderboardHistory::where('user_id', Auth::id())
-            ->where('rank', '<=', 3)
-            ->orderByDesc('year')
-            ->orderByDesc('month')
-            ->take(3)
-            ->get();
+        $myCertificates = $myCertificates ?? collect();
     @endphp
 
     @if($myCertificates->isNotEmpty())
@@ -1031,10 +1026,8 @@
                             {{-- History Card --}}
                             <div class="rapor-glass-card p-4 flex-grow-1 d-flex flex-column">
                                 @php
-                                    $latestEval = \App\Models\EmployeeEvaluation::where('user_id', Auth::id())
-                                        ->orderBy('evaluation_date', 'desc')
-                                        ->orderBy('created_at', 'desc')
-                                        ->first();
+                                    $latestEval = $latestEval ?? null;
+                                    $historyEvals = $historyEvals ?? collect();
                                 @endphp
 
                                 <div class="d-flex align-items-center justify-content-between mb-4">
@@ -1042,15 +1035,6 @@
                                     <i class="mdi mdi-trending-up text-primary fs-5"></i>
                                 </div>
                                 <div class="d-flex justify-content-between text-center mb-4 gap-1 gap-md-2">
-                                    @php
-                                        // Ambil 3 bulan terakhir evaluasi
-                                        $historyEvals = \App\Models\EmployeeEvaluation::where('user_id', Auth::id())
-                                            ->orderBy('evaluation_date', 'desc')
-                                            ->orderBy('created_at', 'desc')
-                                            ->take(3)
-                                            ->get()
-                                            ->reverse();
-                                    @endphp
                                     
                                     @forelse($historyEvals as $index => $eval)
                                         @php

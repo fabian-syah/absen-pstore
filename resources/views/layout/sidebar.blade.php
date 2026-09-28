@@ -344,8 +344,10 @@
                 <i class="menu-icon mdi mdi-history"></i>
                 <span class="menu-title">Riwayat Inventaris</span>
                 @php
-                    $invTotal = \App\Models\Inventory::where('user_id', auth()->id())->count() + 
-                                \App\Models\InventoryReturn::where('user_id', auth()->id())->count();
+                    $invTotal = \Illuminate\Support\Facades\Cache::remember('sb_inv_' . auth()->id(), 60, function() {
+                        return \App\Models\Inventory::where('user_id', auth()->id())->count() + 
+                               \App\Models\InventoryReturn::where('user_id', auth()->id())->count();
+                    });
                 @endphp
                 @if($invTotal > 0)
                     <span class="badge badge-info rounded-pill ms-auto">{{ $invTotal }}</span>
@@ -423,8 +425,10 @@
         {{-- 2. Menu Verifikasi Pembayaran (HANYA ADMIN GAJI) --}}
         @if(auth()->user()->role === 'admin_gaji')
             @php
-                // Hitung jumlah cicilan yang statusnya 'pending'
-                $pendingCount = \App\Models\CashAdvanceInstallment::where('status', 'pending')->count();
+                // Hitung jumlah cicilan yang statusnya 'pending' (Cache 60 detik)
+                $pendingCount = \Illuminate\Support\Facades\Cache::remember('sb_cash_adv_pending', 60, function() {
+                    return \App\Models\CashAdvanceInstallment::where('status', 'pending')->count();
+                });
             @endphp
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('kasbon.verification') }}">
@@ -574,12 +578,14 @@
                     <i class="menu-icon mdi mdi-file-document-check-outline"></i>
                     <span class="menu-title">Monitor Upload Dokumen</span>
                     @php
-                        $incompleteCount = \App\Models\User::where('is_active', true)
-                            ->where('role', '!=', 'admin')
-                            ->where(function ($q) {
-                                $q->whereNull('profile_photo_path')
-                                    ->orWhereNull('ktp_photo_path');
-                            })->count();
+                        $incompleteCount = \Illuminate\Support\Facades\Cache::remember('sb_incomplete_docs', 120, function() {
+                            return \App\Models\User::where('is_active', true)
+                                ->where('role', '!=', 'admin')
+                                ->where(function ($q) {
+                                    $q->whereNull('profile_photo_path')
+                                        ->orWhereNull('ktp_photo_path');
+                                })->count();
+                        });
                     @endphp
                     @if ($incompleteCount > 0)
                         <span class="badge badge-danger ms-2">{{ $incompleteCount }}</span>
@@ -670,7 +676,9 @@
                         <i class="menu-icon mdi mdi-card-account-details-outline"></i>
                         <span class="menu-title">Req. Ganti KTP</span>
                         @php
-                            $ktpPendingCount = \App\Models\User::where('ktp_request_status', 'pending')->count();
+                            $ktpPendingCount = \Illuminate\Support\Facades\Cache::remember('sb_ktp_pending', 60, function() {
+                                return \App\Models\User::where('ktp_request_status', 'pending')->count();
+                            });
                         @endphp
                         @if ($ktpPendingCount > 0)
                             <span class="badge badge-danger ms-2">{{ $ktpPendingCount }}</span>

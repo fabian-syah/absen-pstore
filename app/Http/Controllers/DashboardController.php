@@ -10,6 +10,7 @@ use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use PDF;
 use App\Traits\SendFcmNotification; // Import Trait
@@ -257,90 +258,91 @@ class DashboardController extends Controller
 
         // --- LEADERBOARD ABSENSI (SINKRON DENGAN BRANCH LEADERBOARD) ---
         if ($user->role != 'security') {
-            $data['leaderboard'] = Attendance::select(
-                'user_id',
-                DB::raw('count(DISTINCT DATE(check_in_time)) as total_attendance'),
-                DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
-                DB::raw('SUM(COALESCE(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time), 0)) as total_work_seconds')
-            )
-                ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
-                ->where('status', 'verified')
-                // Filter status yang hanya dianggap sebagai "Hadir"
-                ->whereIn('presence_status', [
-                    'Masuk',
-                    'Hadir',
-                    'Tepat Waktu',
-                    'WFH',
-                    'Work From Home',
-                    'WFH / Dinas Luar',
-                    'Dinas Luar',
-                    'Kunjungan Rutin',
-                    'Lembur',
-                    'Telat',
-                    'Izin Telat'
-                ])
-                /** * PERBAIKAN: 
-                 * 1. Hapus whereTime '!=', '00:00:00' agar WFH Fabian (jam 00:00) terhitung.
-                 * 2. Filter branch_id dipindah ke dalam whereHas user agar akurat dengan posisi karyawan sekarang.
-                 */
-                // SESUDAH (Samakan dengan BranchLeaderboardController)
-                ->whereHas('user', function ($q) use ($user, $allBranchIds) {
-                    $q->where('is_active', true)
-                        ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji', 'security']) // Admin & Security dilarang masuk ranking umum
-                        ->whereHas('branch', function ($qb) {
-                            $qb->where('name', '!=', 'Cabang User Non Karyawan');
-                        });
+            $cacheKeyLeaderboard = 'dash_lb_' . ($user->role === 'admin' ? 'admin' : implode('_', $allBranchIds)) . '_' . $dateObjMonth->format('Y_m');
+            $data['leaderboard'] = Cache::remember($cacheKeyLeaderboard, 300, function () use ($startQueryMonth, $endQueryMonth, $user, $allBranchIds) {
+                return Attendance::select(
+                    'user_id',
+                    DB::raw('count(DISTINCT DATE(check_in_time)) as total_attendance'),
+                    DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(TIME(check_in_time)))) as avg_arrival_time'),
+                    DB::raw('SUM(COALESCE(TIMESTAMPDIFF(SECOND, check_in_time, check_out_time), 0)) as total_work_seconds')
+                )
+                    ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
+                    ->where('status', 'verified')
+                    // Filter status yang hanya dianggap sebagai "Hadir"
+                    ->whereIn('presence_status', [
+                        'Masuk',
+                        'Hadir',
+                        'Tepat Waktu',
+                        'WFH',
+                        'Work From Home',
+                        'WFH / Dinas Luar',
+                        'Dinas Luar',
+                        'Kunjungan Rutin',
+                        'Lembur',
+                        'Telat',
+                        'Izin Telat'
+                    ])
+                    ->whereHas('user', function ($q) use ($user, $allBranchIds) {
+                        $q->where('is_active', true)
+                            ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji', 'security']) // Admin & Security dilarang masuk ranking umum
+                            ->whereHas('branch', function ($qb) {
+                                $qb->where('name', '!=', 'Cabang User Non Karyawan');
+                            });
 
-                    // Jika bukan admin, hanya tampilkan leaderboard dari cabang yang diakses user
-                    if ($user->role !== 'admin') {
-                        $q->whereIn('branch_id', $allBranchIds);
-                    }
-                })
-                ->groupBy('user_id')
-                ->orderBy('total_attendance', 'desc')
-                ->orderBy('total_work_seconds', 'desc')
-                ->orderBy('avg_arrival_time', 'asc')
-                ->take(3)
-                ->with(['user', 'user.division', 'user.branch'])
-                ->get()
-                ->map(function ($item) {
-                    $item->avg_arrival_display = Carbon::parse($item->avg_arrival_time)->format('H:i');
-                    return $item;
-                });
+                        // Jika bukan admin, hanya tampilkan leaderboard dari cabang yang diakses user
+                        if ($user->role !== 'admin') {
+                            $q->whereIn('branch_id', $allBranchIds);
+                        }
+                    })
+                    ->groupBy('user_id')
+                    ->orderBy('total_attendance', 'desc')
+                    ->orderBy('total_work_seconds', 'desc')
+                    ->orderBy('avg_arrival_time', 'asc')
+                    ->take(3)
+                    ->with(['user', 'user.division', 'user.branch'])
+                    ->get()
+                    ->map(function ($item) {
+                        $item->avg_arrival_display = Carbon::parse($item->avg_arrival_time)->format('H:i');
+                        return $item;
+                    });
+            });
         }
 
         // --- LEADERBOARD SCANNER (SECURITY & ADMIN) ---
         if ($user->role == 'admin' || $user->role == 'security') {
-            $securityUsersQuery = User::where('is_active', true)->whereIn('role', ['security', 'admin']);
+            $cacheKeyScanners = 'dash_scanners_' . ($user->role === 'admin' ? ($branch_id ?? 'all') : implode('_', $allBranchIds)) . '_' . $dateObjMonth->format('Y_m');
+            $data['topScanners'] = Cache::remember($cacheKeyScanners, 300, function () use ($user, $allBranchIds, $branch_id, $startQueryMonth, $endQueryMonth) {
+                $securityUsersQuery = User::where('is_active', true)->whereIn('role', ['security', 'admin']);
 
-            if ($user->role != 'admin') {
-                $securityUsersQuery->whereIn('branch_id', $allBranchIds);
-            } elseif ($user->role == 'admin' && $branch_id != null) {
-                $securityUsersQuery->where('branch_id', $branch_id);
-            }
+                if ($user->role != 'admin') {
+                    $securityUsersQuery->whereIn('branch_id', $allBranchIds);
+                } elseif ($user->role == 'admin' && $branch_id != null) {
+                    $securityUsersQuery->where('branch_id', $branch_id);
+                }
 
-            $securityUserIds = $securityUsersQuery->pluck('id');
+                $securityUserIds = $securityUsersQuery->pluck('id');
 
-            // Aggregate scan counts in 2 queries instead of 2*N
-            $scanInCounts = Attendance::whereIn('scanned_by_user_id', $securityUserIds)
-                ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
-                ->groupBy('scanned_by_user_id')
-                ->selectRaw('scanned_by_user_id, count(*) as cnt')
-                ->pluck('cnt', 'scanned_by_user_id');
+                // Aggregate scan counts in 2 queries instead of 2*N
+                $scanInCounts = Attendance::whereIn('scanned_by_user_id', $securityUserIds)
+                    ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
+                    ->groupBy('scanned_by_user_id')
+                    ->selectRaw('scanned_by_user_id, count(*) as cnt')
+                    ->pluck('cnt', 'scanned_by_user_id');
 
-            $scanOutCounts = Attendance::whereIn('scanned_out_by_user_id', $securityUserIds)
-                ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
-                ->groupBy('scanned_out_by_user_id')
-                ->selectRaw('scanned_out_by_user_id, count(*) as cnt')
-                ->pluck('cnt', 'scanned_out_by_user_id');
+                $scanOutCounts = Attendance::whereIn('scanned_out_by_user_id', $securityUserIds)
+                    ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
+                    ->groupBy('scanned_out_by_user_id')
+                    ->selectRaw('scanned_out_by_user_id, count(*) as cnt')
+                    ->pluck('cnt', 'scanned_out_by_user_id');
 
-            $securityUsers = User::whereIn('id', $securityUserIds)->get();
-            $scanners = $securityUsers->map(function ($sec) use ($scanInCounts, $scanOutCounts) {
-                $sec->total_scans = ($scanInCounts[$sec->id] ?? 0) + ($scanOutCounts[$sec->id] ?? 0);
-                return $sec;
+                $securityUsers = User::whereIn('id', $securityUserIds)->get();
+                $scanners = $securityUsers->map(function ($sec) use ($scanInCounts, $scanOutCounts) {
+                    $sec->total_scans = ($scanInCounts[$sec->id] ?? 0) + ($scanOutCounts[$sec->id] ?? 0);
+                    return $sec;
+                });
+
+                return $scanners->sortByDesc('total_scans')->take(3)->values();
             });
-
-            $data['topScanners'] = $scanners->sortByDesc('total_scans')->take(3)->values();
         }
 
         // =========================================================================
@@ -390,7 +392,7 @@ class DashboardController extends Controller
                 })
                 ->where('is_active', true)
                 ->count();
-            $data['totalBranches'] = $branch_id ? 1 : Branch::count();
+            $data['totalBranches'] = $branch_id ? 1 : Cache::remember('dash_total_branches', 3600, fn() => Branch::count());
             $data['attendancesToday'] = (clone $attendanceQuery)->whereDate('check_in_time', $todayInBranch)->count();
             $data['pendingVerifications'] = (clone $attendanceQuery)->where('status', 'pending_verification')->count();
 
@@ -477,62 +479,68 @@ class DashboardController extends Controller
         $startQueryLastMonth = $startDateLastMonth->copy()->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
         $endQueryLastMonth = $endDateLastMonth->copy()->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
 
-        // Kita hitung langsung dari tabel Attendance agar angka sinkron dengan Riwayat Absensi
-        $data['lastMonthWinners'] = Attendance::select(
-            'user_id',
-            DB::raw('count(DISTINCT DATE(check_in_time)) as total_attendance')
-        )
-            ->whereBetween('check_in_time', [$startQueryLastMonth, $endQueryLastMonth])
-            // FILTER PER CABANG: Hanya ambil karyawan yang satu cabang dengan user yang login
-            ->where('branch_id', $user->branch_id)
-            ->where('status', 'verified')
-            // Filter status yang dianggap "Masuk" (Sama dengan logic Riwayat Absensi)
-            ->whereIn('presence_status', [
-                'Masuk',
-                'Hadir',
-                'Tepat Waktu',
-                'WFH',
-                'Work From Home',
-                'WFH / Dinas Luar',
-                'Dinas Luar',
-                'Kunjungan Rutin',
-                'Lembur',
-                'Telat',
-                'Izin Telat'
-            ])
-            ->whereHas('user', function ($q) {
-                $q->where('is_active', true)
-                    ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji', 'security']) // Admin & Security tidak masuk Hall of Fame
-                    ->whereHas('branch', function ($qb) {
-                        $qb->where('name', '!=', 'Cabang User Non Karyawan');
-                    });
-            })
-            ->groupBy('user_id')
-            ->orderByDesc('total_attendance') // Urutkan dari yang masuk paling banyak
-            ->limit(3) // Ambil Top 3
-            ->with(['user', 'user.division'])
-            ->get()
-            ->map(function ($winner, $key) {
-                // Tambahkan property rank secara manual agar Blade tidak error
-                $winner->rank = $key + 1;
-                return $winner;
-            });
+        // Kita hitung langsung dari tabel Attendance agar angka sinkron dengan Riwayat Absensi (Cache 1 jam)
+        $cacheKeyHof = 'dash_hof_' . ($user->branch_id ?? 'global') . '_' . $lastMonth->format('Y_m');
+        $data['lastMonthWinners'] = Cache::remember($cacheKeyHof, 3600, function () use ($startQueryLastMonth, $endQueryLastMonth, $user) {
+            return Attendance::select(
+                'user_id',
+                DB::raw('count(DISTINCT DATE(check_in_time)) as total_attendance')
+            )
+                ->whereBetween('check_in_time', [$startQueryLastMonth, $endQueryLastMonth])
+                // FILTER PER CABANG: Hanya ambil karyawan yang satu cabang dengan user yang login
+                ->where('branch_id', $user->branch_id)
+                ->where('status', 'verified')
+                // Filter status yang dianggap "Masuk" (Sama dengan logic Riwayat Absensi)
+                ->whereIn('presence_status', [
+                    'Masuk',
+                    'Hadir',
+                    'Tepat Waktu',
+                    'WFH',
+                    'Work From Home',
+                    'WFH / Dinas Luar',
+                    'Dinas Luar',
+                    'Kunjungan Rutin',
+                    'Lembur',
+                    'Telat',
+                    'Izin Telat'
+                ])
+                ->whereHas('user', function ($q) {
+                    $q->where('is_active', true)
+                        ->whereNotIn('role', ['admin', 'super_admin', 'admin_gaji', 'security']) // Admin & Security tidak masuk Hall of Fame
+                        ->whereHas('branch', function ($qb) {
+                            $qb->where('name', '!=', 'Cabang User Non Karyawan');
+                        });
+                })
+                ->groupBy('user_id')
+                ->orderByDesc('total_attendance') // Urutkan dari yang masuk paling banyak
+                ->limit(3) // Ambil Top 3
+                ->with(['user', 'user.division'])
+                ->get()
+                ->map(function ($winner, $key) {
+                    // Tambahkan property rank secara manual agar Blade tidak error
+                    $winner->rank = $key + 1;
+                    return $winner;
+                });
+        });
 
         // ... Logika Birthday yang sudah ada ...
 
 
 
-        // [NEW] Logic Scanner Winner Prize
+        // [NEW] Logic Scanner Winner Prize (Cache 1 jam)
         $data['isScannerWinner'] = false;
         $data['prizeClaimed'] = (bool) ($user->metadata['prize_claimed_at'] ?? false);
 
         if ($user->role == 'security' || $user->role == 'admin') {
-            $topScanner = Attendance::select('scanned_by_user_id', DB::raw('count(*) as total_scans'))
-                ->whereBetween('check_in_time', [$startQueryLastMonth, $endQueryLastMonth])
-                ->whereNotNull('scanned_by_user_id')
-                ->groupBy('scanned_by_user_id')
-                ->orderByDesc('total_scans')
-                ->first();
+            $cacheKeyTopScanner = 'dash_top_scanner_winner_' . $lastMonth->format('Y_m');
+            $topScanner = Cache::remember($cacheKeyTopScanner, 3600, function () use ($startQueryLastMonth, $endQueryLastMonth) {
+                return Attendance::select('scanned_by_user_id', DB::raw('count(*) as total_scans'))
+                    ->whereBetween('check_in_time', [$startQueryLastMonth, $endQueryLastMonth])
+                    ->whereNotNull('scanned_by_user_id')
+                    ->groupBy('scanned_by_user_id')
+                    ->orderByDesc('total_scans')
+                    ->first();
+            });
 
             if ($topScanner && $topScanner->scanned_by_user_id == $user->id) {
                 $data['isScannerWinner'] = true;
@@ -546,7 +554,7 @@ class DashboardController extends Controller
         if (in_array($user->role, ['admin', 'audit', 'leader', 'admin_gaji'])) {
             $month = request('month', $nowInBranch->month);
             $year = request('year', $nowInBranch->year);
-            $calBranchId = request('cal_branch_id');
+            $calBranchId = request()->has('cal_branch_id') ? request('cal_branch_id') : ($user->branch_id ?? '');
             $baseDate = Carbon::create($year, $month, 1, 0, 0, 0, $userTimezone);
             $startDate = $baseDate->copy()->subMonth()->day(26)->startOfDay();
             $endDate = $baseDate->copy()->day(25)->endOfDay();
@@ -649,13 +657,15 @@ class DashboardController extends Controller
                 'Asia/Jayapura' => Carbon::now('Asia/Jayapura')->format('Y-m-d'),
             ];
 
-            // List cabang untuk filter kalender jika user admin/admin_gaji
+            // List cabang untuk filter kalender jika user admin/admin_gaji (Cache 1 jam)
             $calBranchesList = [];
             if ($user->role === 'admin' || $user->role === 'admin_gaji') {
-                $calBranchesList = Branch::where('name', '!=', 'Cabang User Non Karyawan')
-                    ->orderBy('name')
-                    ->select('id', 'name')
-                    ->get();
+                $calBranchesList = Cache::remember('dash_cal_branches_list', 3600, function () {
+                    return Branch::where('name', '!=', 'Cabang User Non Karyawan')
+                        ->orderBy('name')
+                        ->select('id', 'name')
+                        ->get();
+                });
             }
 
             $data['teamCalendar'] = [
@@ -674,15 +684,22 @@ class DashboardController extends Controller
             ];
         }
 
-        // [NEW] Hitung Persentase Kehadiran Bulan Ini (26 ke 25) dan Tahun Ini
+        // [NEW] Hitung Persentase Kehadiran Bulan Ini (26 ke 25) dan Tahun Ini (Cached)
         // Variables $dateObjMonth, $startDateMonth, $endDateMonth are already defined at line 242
         $limitDateMonth = ($endDateMonth->gt($todayInBranch)) ? Carbon::parse($todayInBranch, $userTimezone)->startOfDay() : $endDateMonth->copy()->startOfDay();
 
         $startDateYear = Carbon::createFromDate($nowInBranch->year, 1, 1, $userTimezone)->startOfDay();
         $limitDateYear = Carbon::parse($todayInBranch, $userTimezone)->startOfDay();
 
-        $monthStats = $this->calculateAttendancePercentageForPeriod($user->id, $startDateMonth, $limitDateMonth, $userTimezone);
-        $yearStats = $this->calculateAttendancePercentageForPeriod($user->id, $startDateYear, $limitDateYear, $userTimezone);
+        $cacheKeyMonthPct = 'dash_att_pct_m_' . $user->id . '_' . $todayInBranch;
+        $monthStats = Cache::remember($cacheKeyMonthPct, 300, function () use ($user, $startDateMonth, $limitDateMonth, $userTimezone) {
+            return $this->calculateAttendancePercentageForPeriod($user->id, $startDateMonth, $limitDateMonth, $userTimezone);
+        });
+
+        $cacheKeyYearPct = 'dash_att_pct_y_' . $user->id . '_' . $todayInBranch;
+        $yearStats = Cache::remember($cacheKeyYearPct, 600, function () use ($user, $startDateYear, $limitDateYear, $userTimezone) {
+            return $this->calculateAttendancePercentageForPeriod($user->id, $startDateYear, $limitDateYear, $userTimezone);
+        });
 
         $data['attendancePercentageMonth'] = $monthStats['percentage'];
         $data['alphaDatesMonth'] = $monthStats['alpha_dates'];
@@ -691,6 +708,30 @@ class DashboardController extends Controller
         $data['alphaDatesYear'] = $yearStats['alpha_dates'];
 
         $data['attendancePeriodMonthLabel'] = $startDateMonth->translatedFormat('d M Y') . ' - ' . $endDateMonth->translatedFormat('d M Y');
+
+        // Pre-fetch Certificates and Evaluations (Cached 5 menit per user untuk hindari query berulang di Blade)
+        $data['myCertificates'] = Cache::remember('dash_cert_' . $user->id, 300, function () use ($user) {
+            return \App\Models\LeaderboardHistory::where('user_id', $user->id)
+                ->where('rank', '<=', 3)
+                ->orderByDesc('year')
+                ->orderByDesc('month')
+                ->take(3)
+                ->get();
+        });
+
+        $evals = Cache::remember('dash_evals_' . $user->id, 300, function () use ($user) {
+            $list = \App\Models\EmployeeEvaluation::where('user_id', $user->id)
+                ->orderBy('evaluation_date', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->take(3)
+                ->get();
+            return [
+                'latest' => $list->first(),
+                'history' => $list->reverse(),
+            ];
+        });
+        $data['latestEval'] = $evals['latest'];
+        $data['historyEvals'] = $evals['history'];
 
         return view('dashboard', $data);
     }
