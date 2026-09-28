@@ -246,10 +246,7 @@
         const inputFinalRemark = document.getElementById('input_final_remark');
         let isManuallyEdited = false;
         let isRemarkManuallyEdited = false;
-
         const btnGenerateAi = document.getElementById('btn_generate_ai');
-        const sekaiApiKey = 'sk-b95891e58a833597-v0dn0b-d1696332';
-        const sekaiModel = 'ds/deepseek-v4.1-flash';
 
         // Jika user mengetik manual di input hasil akhir, jangan dioverride otomatis lagi
         inputAverage.addEventListener('input', () => isManuallyEdited = true);
@@ -284,40 +281,28 @@
             promptText += `PENTING: TIDAK BOLEH menggunakan format markdown (seperti bintang ganda untuk bold, atau italic). Hasil HARUS berupa teks biasa (plain text) murni.`;
 
             try {
-                const response = await fetch('https://api.sekaigateway.xyz/v1/chat/completions', {
+                const response = await fetch('{{ route('employee-evaluations.generate-ai') }}', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${sekaiApiKey}`,
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
-                        model: sekaiModel,
-                        messages: [
-                            { role: 'system', content: 'Anda adalah asisten HR yang profesional dan pandai memberikan evaluasi kinerja yang memotivasi.' },
-                            { role: 'user', content: promptText }
-                        ],
-                        temperature: 0.7,
-                        max_tokens: 800
+                        prompt: promptText
                     })
                 });
 
-                const rawText = await response.text();
-                const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-                const data = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
+                const data = await response.json();
 
-                if (data.choices && data.choices.length > 0) {
-                    let content = data.choices[0].message.content || data.choices[0].message.reasoning_content || '';
-                    let aiText = content.replace(/^["']|["']$/g, '');
-                    aiText = aiText.replace(/\*+/g, ''); // Hapus semua karakter markdown asteriks (bintang)
-                    inputFinalRemark.value = '"' + aiText.trim() + '"';
+                if (response.ok && data.status === 'success' && data.remark) {
+                    inputFinalRemark.value = '"' + data.remark.trim() + '"';
                     isRemarkManuallyEdited = true; // Tandai diedit agar tidak tertimpa kalkulasi standar
                     // Auto resize textarea
                     inputFinalRemark.style.height = '';
                     inputFinalRemark.style.height = inputFinalRemark.scrollHeight + 'px';
-                } else if (data.error && data.error.message) {
-                    inputFinalRemark.value = 'Gagal AI: ' + data.error.message;
                 } else {
-                    inputFinalRemark.value = 'Gagal menghasilkan kesimpulan AI. Silakan coba lagi.';
+                    inputFinalRemark.value = data.message || 'Gagal menghasilkan kesimpulan AI. Silakan coba lagi.';
                 }
             } catch (error) {
                 console.error(error);

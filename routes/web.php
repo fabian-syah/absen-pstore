@@ -618,6 +618,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/employee-evaluations/my-history', [EmployeeEvaluationController::class, 'myHistory'])->name('employee-evaluations.my-history');
     Route::get('/employee-evaluations/{user_id}/export-pdf', [EmployeeEvaluationController::class, 'exportPdf'])->name('employee-evaluations.export-pdf');
     Route::get('/employee-evaluations/{user_id}/form', [EmployeeEvaluationController::class, 'form'])->name('employee-evaluations.form');
+    Route::post('/employee-evaluations/generate-ai', [EmployeeEvaluationController::class, 'generateAi'])->name('employee-evaluations.generate-ai');
 
     Route::middleware(['role:admin,audit,leader,admin_gaji'])->group(function () {
         // === RUTE RAPOR KARYAWAN ===
