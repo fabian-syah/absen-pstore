@@ -363,15 +363,22 @@ class AuditController extends Controller
         return view('audit.rejected_verification_list', compact('rejectedAttendances'));
     }
 
-    public function showLatePermissionsHistory()
+    public function showLatePermissionsHistory(Request $request)
     {
         $user = Auth::user();
 
         // Ambil semua kecuali pending
-        $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
+        $query = LeaveRequest::with([
+            'user.division',
+            'user.branch',
+            'approver',
+            'user.leaveRequests' => function ($q) {
+                $q->where('status', 'approved')->latest('start_date')->limit(10);
+            }
+        ])
             ->whereIn('status', ['approved', 'rejected', 'cancelled']);
 
-        $isUniversalAccess = in_array($user->role, ['admin']);
+        $isUniversalAccess = in_array($user->role, ['admin']) || (strtolower(trim($user->login_id ?? '')) === 'superadmin');
 
         if (!$isUniversalAccess) {
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
@@ -391,24 +398,69 @@ class AuditController extends Controller
             }
         }
 
-        $requests = $query->latest()->paginate(10);
+        // Filter Pencarian (Nama User / Alasan)
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('reason', 'like', "%{$search}%")
+                  ->orWhere('rejection_reason', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($qu) use ($search) {
+                      $qu->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter Tipe Izin
+        if ($request->filled('type') && $request->type !== 'all') {
+            $query->where('type', $request->type);
+        }
+
+        // Filter Status
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter Cabang
+        if ($request->filled('branch_id') && $request->branch_id !== 'all') {
+            $query->whereHas('user', function ($qu) use ($request) {
+                $qu->where('branch_id', $request->branch_id);
+            });
+        }
+
+        // Filter Tanggal
+        if ($request->filled('start_date')) {
+            $query->whereDate('start_date', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('start_date', '<=', $request->end_date);
+        }
+
+        $requests = $query->latest('updated_at')->paginate(20)->withQueryString();
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
         $page_title = 'Riwayat Pengajuan (Selesai)';
 
-        return view('leave_requests.history', compact('requests', 'page_title'));
+        return view('leave_requests.history', compact('requests', 'branches', 'page_title'));
     }
 
     /**
      * HALAMAN RIWAYAT (HANYA DITOLAK)
      */
-    public function showRejectedLatePermissionsHistory()
+    public function showRejectedLatePermissionsHistory(Request $request)
     {
         $user = Auth::user();
 
         // Ambil khusus rejected
-        $query = LeaveRequest::with(['user.division', 'user.branch', 'approver'])
+        $query = LeaveRequest::with([
+            'user.division',
+            'user.branch',
+            'approver',
+            'user.leaveRequests' => function ($q) {
+                $q->where('status', 'approved')->latest('start_date')->limit(10);
+            }
+        ])
             ->where('status', 'rejected');
 
-        $isUniversalAccess = in_array($user->role, ['admin']);
+        $isUniversalAccess = in_array($user->role, ['admin']) || (strtolower(trim($user->login_id ?? '')) === 'superadmin');
 
         if (!$isUniversalAccess) {
             $pivotBranchIds = $user->branches->pluck('id')->toArray();
@@ -428,10 +480,43 @@ class AuditController extends Controller
             }
         }
 
-        $requests = $query->latest()->paginate(10);
+        // Filter Pencarian (Nama User / Alasan)
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('reason', 'like', "%{$search}%")
+                  ->orWhere('rejection_reason', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($qu) use ($search) {
+                      $qu->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter Tipe Izin
+        if ($request->filled('type') && $request->type !== 'all') {
+            $query->where('type', $request->type);
+        }
+
+        // Filter Cabang
+        if ($request->filled('branch_id') && $request->branch_id !== 'all') {
+            $query->whereHas('user', function ($qu) use ($request) {
+                $qu->where('branch_id', $request->branch_id);
+            });
+        }
+
+        // Filter Tanggal
+        if ($request->filled('start_date')) {
+            $query->whereDate('start_date', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('start_date', '<=', $request->end_date);
+        }
+
+        $requests = $query->latest('updated_at')->paginate(20)->withQueryString();
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
         $page_title = 'Riwayat Ditolak';
 
-        return view('leave_requests.history', compact('requests', 'page_title'));
+        return view('leave_requests.history', compact('requests', 'branches', 'page_title'));
     }
 
     /**

@@ -258,7 +258,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('leave-requests.personal-history') ? 'active' : '' }}" href="{{ route('leave-requests.personal-history') }}">
+                <a class="nav-link {{ request()->routeIs('leave-requests.personal-history', 'audit.late.history', 'audit.late.rejected.history') ? 'active' : '' }}" href="{{ in_array(auth()->user()->role, ['admin', 'audit']) || strtolower(trim(auth()->user()->login_id ?? '')) === 'superadmin' ? route('audit.late.history') : route('leave-requests.personal-history') }}">
                     <i class="menu-icon mdi mdi-hospital-box-outline"></i>
                     <span class="menu-title">Riwayat Izin/Sakit</span>
                 </a>
@@ -635,7 +635,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('leave-requests.index') ? 'active' : '' }}" href="{{ route('leave-requests.index') }}">
+                <a class="nav-link {{ request()->routeIs('leave-requests.index', 'audit.late.history', 'audit.late.rejected.history') ? 'active' : '' }}" href="{{ route('leave-requests.index') }}">
                     <i class="menu-icon mdi mdi-clock-alert-outline"></i>
                     <span class="menu-title">Daftar Izin / Telat</span>
                 </a>
