@@ -510,8 +510,11 @@
             });
         }
 
-        loadBroadcastNotifications();
-        setInterval(loadBroadcastNotifications, 30000);
+        // Defer initial notification load to allow main dashboard to render first
+        setTimeout(function() {
+            loadBroadcastNotifications();
+            setInterval(loadBroadcastNotifications, 60000);
+        }, 1500);
         if (broadcastDropdown) {
             broadcastDropdown.addEventListener('click', function () {
                 loadBroadcastNotifications();
@@ -843,12 +846,14 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
-        // --- 5. AUTO LOAD BADGE ON PAGE LOAD ---
-        // Panggil sekali saat load halaman agar badge merah di navbar muncul
-        fetch('{{ route('chat.branches') }}')
-            .then(res => res.json())
-            .then(data => updateMainBadge(data.total_unread))
-            .catch(e => { });
+        // --- 5. AUTO LOAD BADGE ON PAGE LOAD (DEFERRED) ---
+        // Panggil setelah halaman selesai dimuat agar tidak menghambat rendering utama
+        setTimeout(function() {
+            fetch('{{ route('chat.branches') }}')
+                .then(res => res.json())
+                .then(data => updateMainBadge(data.total_unread))
+                .catch(e => { });
+        }, 2000);
     });
 
     // Fullscreen Toggle

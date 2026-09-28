@@ -78,6 +78,9 @@ class BroadcastController extends Controller
     // Method untuk mendapatkan notifikasi broadcast
     public function getNotifications()
     {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         try {
             $broadcasts = Broadcast::published()
                 ->recent(7)

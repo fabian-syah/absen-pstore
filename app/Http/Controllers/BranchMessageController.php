@@ -17,7 +17,14 @@ class BranchMessageController extends Controller
      */
     public function getBranchList()
     {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
         $user = Auth::user();
+        if (!$user) {
+            return response()->json(['branches' => [], 'total_unread' => 0]);
+        }
 
         $branches = collect();
 
@@ -34,39 +41,62 @@ class BranchMessageController extends Controller
             $myBranchIds = array_filter(array_unique($myBranchIds));
 
             if (empty($myBranchIds)) {
-                return response()->json(['branches' => []]);
+                return response()->json(['branches' => [], 'total_unread' => 0]);
             }
 
             $branches = Branch::whereIn('id', $myBranchIds)
                 ->orderBy('name', 'asc')
                 ->get();
         }
-        // -------------------------------
 
-        // Map data cabang untuk frontend (hitung unread, preview pesan)
-        $mappedBranches = $branches->map(function ($branch) use ($user) {
-            // Ambil waktu terakhir user baca chat di cabang ini
-            $lastRead = ChatRead::where('user_id', $user->id)
-                ->where('branch_id', $branch->id)
-                ->value('last_read_at');
+        $branchIds = $branches->pluck('id')->toArray();
+        if (empty($branchIds)) {
+            return response()->json(['branches' => [], 'total_unread' => 0]);
+        }
 
-            // Hitung pesan yang dibuat SETELAH terakhir baca
-            $unreadQuery = BranchMessage::where('branch_id', $branch->id);
+        // Ambil semua waktu terakhir user baca chat sekaligus (1 Query)
+        $lastReads = ChatRead::where('user_id', $user->id)
+            ->whereIn('branch_id', $branchIds)
+            ->pluck('last_read_at', 'branch_id');
 
+        // Ambil pesan terakhir untuk tiap cabang dengan eager loading user (1 Query)
+        $latestMessages = BranchMessage::whereIn('branch_id', $branchIds)
+            ->with(['user' => function ($q) {
+                $q->select('id', 'name');
+            }])
+            ->orderBy('id', 'desc')
+            ->get()
+            ->unique('branch_id')
+            ->keyBy('branch_id');
+
+        // Hitung unread secara efisien
+        $unreadCounts = [];
+        foreach ($branchIds as $bId) {
+            $lastMsg = $latestMessages[$bId] ?? null;
+            if (!$lastMsg) {
+                $unreadCounts[$bId] = 0;
+                continue;
+            }
+            $lastRead = $lastReads[$bId] ?? null;
+            if ($lastRead && $lastMsg->created_at <= $lastRead) {
+                $unreadCounts[$bId] = 0;
+                continue;
+            }
+            $unreadQuery = BranchMessage::where('branch_id', $bId)->where('user_id', '!=', $user->id);
             if ($lastRead) {
                 $unreadQuery->where('created_at', '>', $lastRead);
             }
+            $unreadCounts[$bId] = $unreadQuery->count();
+        }
 
-            // Jangan hitung pesan saya sendiri sebagai unread
-            $unreadCount = $unreadQuery->where('user_id', '!=', $user->id)->count();
-
-            // Ambil pesan terakhir untuk preview
-            $lastMsg = BranchMessage::where('branch_id', $branch->id)->latest()->first();
+        // Map data cabang untuk frontend
+        $mappedBranches = $branches->map(function ($branch) use ($user, $latestMessages, $unreadCounts) {
+            $unreadCount = $unreadCounts[$branch->id] ?? 0;
+            $lastMsg = $latestMessages[$branch->id] ?? null;
             $preview = 'Belum ada pesan';
 
             if ($lastMsg) {
-                $sender = $lastMsg->user_id == $user->id ? 'Anda' : explode(' ', $lastMsg->user->name)[0];
-                // Jika pesan teks kosong (cuma gambar), tulis "Foto"
+                $sender = $lastMsg->user_id == $user->id ? 'Anda' : explode(' ', $lastMsg->user->name ?? 'User')[0];
                 $msgContent = $lastMsg->message ? \Illuminate\Support\Str::limit($lastMsg->message, 20) : '📷 Foto';
                 $preview = "$sender: $msgContent";
             }

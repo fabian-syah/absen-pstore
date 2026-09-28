@@ -1042,24 +1042,6 @@
                     .catch(err => console.log("Gagal menyimpan token.", err));
             }
 
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js?v=' + Date.now())
-                    .then(function (registration) {
-                        Notification.requestPermission().then((permission) => {
-                            if (permission === 'granted') {
-                                // Firebase FCM Token
-                                messaging.getToken({
-                                    vapidKey: "{{ config('services.firebase.vapid_key') }}",
-                                    serviceWorkerRegistration: registration
-                                })
-                                    .then((currentToken) => {
-                                        if (currentToken) sendTokenToServer(currentToken);
-                                    }).catch(err => console.log("FCM Token error suppressed."));
-
-                            }
-                        });
-                    }).catch(err => console.log("Service Worker registration suppressed."));
-            }
 
             messaging.onMessage((payload) => {
                 console.log("🔥 Foreground Message Received:", payload); // DEBUG LOG
@@ -1116,7 +1098,7 @@
         (function() {
             if (!('serviceWorker' in navigator)) return;
 
-            navigator.serviceWorker.register('/sw.js?v=' + Date.now()).then(function(registration) {
+            navigator.serviceWorker.register('/sw.js?v=2.1').then(function(registration) {
                 console.log('SW Registered:', registration.scope);
 
                 // --- AUTO RESET JIKA VAPID KEY BERUBAH ---

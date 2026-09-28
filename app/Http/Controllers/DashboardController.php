@@ -546,6 +546,7 @@ class DashboardController extends Controller
         if (in_array($user->role, ['admin', 'audit', 'leader', 'admin_gaji'])) {
             $month = request('month', $nowInBranch->month);
             $year = request('year', $nowInBranch->year);
+            $calBranchId = request('cal_branch_id');
             $baseDate = Carbon::create($year, $month, 1, 0, 0, 0, $userTimezone);
             $startDate = $baseDate->copy()->subMonth()->day(26)->startOfDay();
             $endDate = $baseDate->copy()->day(25)->endOfDay();
@@ -557,14 +558,24 @@ class DashboardController extends Controller
                 });
             if ($user->role !== 'admin' && $user->role !== 'admin_gaji') {
                 $teamQuery->whereIn('branch_id', $allBranchIds);
+            } elseif ($calBranchId) {
+                $teamQuery->where('branch_id', $calBranchId);
             }
-            $teamMembers = $teamQuery->with('branch', 'division')->orderBy('name')->get();
+            $teamMembers = $teamQuery->with([
+                'branch' => function ($q) { $q->select('id', 'name', 'timezone'); },
+                'division' => function ($q) { $q->select('id', 'name'); }
+            ])
+            ->select(['id', 'name', 'branch_id', 'division_id', 'role'])
+            ->orderBy('name')
+            ->get();
 
+            $memberIds = $teamMembers->pluck('id');
             $tzMap = $teamMembers->pluck('branch.timezone', 'id')->map(function ($tz) {
                 return $tz ?: 'Asia/Jakarta';
             });
 
-            $calendarAttendances = Attendance::whereIn('user_id', $teamMembers->pluck('id'))
+            // 1 Query untuk absensi kalender
+            $calendarAttendancesRaw = Attendance::whereIn('user_id', $memberIds)
                 ->whereBetween('check_in_time', [$startDate, $endDate])
                 ->where('presence_status', '!=', 'Alpha')
                 ->select([
@@ -572,16 +583,29 @@ class DashboardController extends Controller
                     'presence_status', 'is_late_checkin', 'audit_note',
                     'latitude', 'longitude'
                 ])
-                ->get()
-                ->groupBy([
-                    'user_id',
-                    function ($item) use ($tzMap) {
-                        $tz = $tzMap[$item->user_id] ?? 'Asia/Jakarta';
-                        return Carbon::parse($item->check_in_time)->timezone($tz)->format('Y-m-d');
-                    }
-                ]);
+                ->get();
 
-            $calendarLeaves = LeaveRequest::whereIn('user_id', $teamMembers->pluck('id'))
+            $calendarAttMap = [];
+            foreach ($calendarAttendancesRaw as $item) {
+                $tz = $tzMap[$item->user_id] ?? 'Asia/Jakarta';
+                $cIn = Carbon::parse($item->check_in_time)->timezone($tz);
+                $dateKey = $cIn->format('Y-m-d');
+                $cOut = $item->check_out_time ? Carbon::parse($item->check_out_time)->timezone($tz) : null;
+
+                $calendarAttMap[$item->user_id][$dateKey] = [
+                    'id' => $item->id,
+                    'check_in' => $cIn->format('H:i'),
+                    'check_out' => $cOut ? $cOut->format('H:i') : null,
+                    'presence_status' => $item->presence_status,
+                    'is_late_checkin' => (bool) $item->is_late_checkin,
+                    'audit_note' => $item->audit_note,
+                    'latitude' => $item->latitude,
+                    'longitude' => $item->longitude,
+                ];
+            }
+
+            // 1 Query untuk leaves kalender
+            $calendarLeavesRaw = LeaveRequest::whereIn('user_id', $memberIds)
                 ->where('status', 'approved')
                 ->where(function ($q) use ($startDate, $endDate) {
                     $q->whereBetween('start_date', [$startDate, $endDate])
@@ -592,34 +616,61 @@ class DashboardController extends Controller
                         });
                 })
                 ->select(['id', 'user_id', 'type', 'status', 'start_date', 'end_date', 'reason'])
-                ->get()
-                ->map(function ($leave) {
-                    // Create date range for easier lookup
-                    $start = Carbon::parse($leave->start_date);
-                    $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start;
-                    $leave->range = collect();
-                    for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
-                        $leave->range->push($d->format('Y-m-d'));
+                ->get();
+
+            $calendarLeavesMap = [];
+            foreach ($calendarLeavesRaw as $leave) {
+                $start = Carbon::parse($leave->start_date);
+                $end = $leave->end_date ? Carbon::parse($leave->end_date) : $start;
+                for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+                    $ds = $d->format('Y-m-d');
+                    if (!isset($calendarLeavesMap[$leave->user_id][$ds])) {
+                        $calendarLeavesMap[$leave->user_id][$ds] = [
+                            'id' => $leave->id,
+                            'type' => $leave->type,
+                            'reason' => $leave->reason,
+                        ];
                     }
-                    return $leave;
-                })
-                ->groupBy('user_id');
+                }
+            }
 
             $period = \Carbon\CarbonPeriod::create($startDate, $endDate);
             $calendarDates = [];
+            $formattedDates = [];
             foreach ($period as $date) {
                 $calendarDates[] = $date->copy();
+                $formattedDates[$date->format('Y-m-d')] = $date->translatedFormat('d F Y');
+            }
+
+            // Pre-calculate tanggal hari ini per timezone
+            $todayPerTz = [
+                'Asia/Jakarta' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
+                'Asia/Makassar' => Carbon::now('Asia/Makassar')->format('Y-m-d'),
+                'Asia/Jayapura' => Carbon::now('Asia/Jayapura')->format('Y-m-d'),
+            ];
+
+            // List cabang untuk filter kalender jika user admin/admin_gaji
+            $calBranchesList = [];
+            if ($user->role === 'admin' || $user->role === 'admin_gaji') {
+                $calBranchesList = Branch::where('name', '!=', 'Cabang User Non Karyawan')
+                    ->orderBy('name')
+                    ->select('id', 'name')
+                    ->get();
             }
 
             $data['teamCalendar'] = [
                 'members' => $teamMembers,
-                'attendances' => $calendarAttendances,
-                'leaves' => $calendarLeaves,
+                'attendances' => $calendarAttMap,
+                'leaves' => $calendarLeavesMap,
                 'dates' => $calendarDates,
+                'formattedDates' => $formattedDates,
+                'todayPerTz' => $todayPerTz,
                 'startDate' => $startDate,
                 'endDate' => $endDate,
                 'currentMonth' => $month,
-                'currentYear' => $year
+                'currentYear' => $year,
+                'calBranchId' => $calBranchId,
+                'calBranchesList' => $calBranchesList,
             ];
         }
 
@@ -670,26 +721,41 @@ class DashboardController extends Controller
                     });
             })->get();
 
+        // Index attendances by date string for O(1) instant lookup
+        $attendancesByDate = [];
+        foreach ($attendances as $a) {
+            if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') continue;
+            if ($a->status === 'rejected') continue;
+            $d = Carbon::parse($a->check_in_time)->timezone($userTimezone)->format('Y-m-d');
+            if (!isset($attendancesByDate[$d]) || strtolower($a->presence_status) === 'masuk') {
+                $attendancesByDate[$d] = $a;
+            }
+        }
+
+        // Index leaves by date string for O(1) instant lookup
+        $leavesByDate = [];
+        foreach ($leaves as $l) {
+            $lStart = Carbon::parse($l->start_date, $userTimezone)->startOfDay();
+            $lEnd = Carbon::parse($l->end_date ?? $l->start_date, $userTimezone)->endOfDay();
+            for ($cur = $lStart->copy(); $cur->lte($lEnd); $cur->addDay()) {
+                $d = $cur->format('Y-m-d');
+                if (!isset($leavesByDate[$d])) {
+                    $leavesByDate[$d] = $l;
+                }
+            }
+        }
+
         $hadir = 0;
         $hariLiburAtauIzin = 0;
         $alphaDates = [];
 
         foreach ($period as $date) {
             $currentDateStr = $date->format('Y-m-d');
-            $att = $attendances->filter(function ($a) use ($currentDateStr, $userTimezone) {
-                if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
-                if ($a->status === 'rejected') return false;
-                return Carbon::parse($a->check_in_time)->timezone($userTimezone)->format('Y-m-d') === $currentDateStr;
-            })->sortBy(function ($a) {
-                return strtolower($a->presence_status) === 'masuk' ? 0 : 1;
-            })->first();
-
-            $leave = $leaves->filter(function ($l) use ($date, $userTimezone, $att) {
-                if ($l->type === 'telat' && !$att) return false;
-                $lStart = Carbon::parse($l->start_date, $userTimezone)->startOfDay();
-                $lEnd = Carbon::parse($l->end_date ?? $l->start_date, $userTimezone)->endOfDay();
-                return $date->between($lStart, $lEnd);
-            })->first();
+            $att = $attendancesByDate[$currentDateStr] ?? null;
+            $leave = $leavesByDate[$currentDateStr] ?? null;
+            if ($leave && $leave->type === 'telat' && !$att) {
+                $leave = null;
+            }
 
             if ($att) {
                 $status = strtolower(trim($att->presence_status));
