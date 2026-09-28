@@ -334,40 +334,38 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* Tooltip styling enhancements - Modern Glassmorphism */
-        .status-cell[title]:hover::after {
-            content: attr(title);
-            position: absolute;
-            bottom: 110%;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 8px 14px;
-            background: rgba(15, 23, 42, 0.9);
-            backdrop-filter: blur(4px);
-            color: white;
+        /* Modal Stacking & Backdrop Fix */
+        #modalKoreksiDashboard {
+            z-index: 1065 !important;
+        }
+        #modalKoreksiDashboard .modal-dialog {
+            z-index: 1066 !important;
+            max-width: 500px;
+        }
+        body.modal-open .modal-backdrop {
+            z-index: 1055 !important;
+        }
+
+        /* Responsive Floating Tooltip for Status Cells */
+        #calFloatingTooltip {
+            position: fixed;
+            display: none;
+            padding: 7px 14px;
+            background: rgba(15, 23, 42, 0.95);
+            color: #ffffff;
             border-radius: 8px;
             font-size: 12px;
             font-weight: 500;
-            white-space: nowrap;
-            z-index: 30;
-            margin-bottom: 8px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+            z-index: 99999;
             pointer-events: none;
-            letter-spacing: 0.3px;
-        }
-        
-        /* Tooltip Arrow */
-        .status-cell[title]:hover::before {
-            content: '';
-            position: absolute;
-            bottom: 110%;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 6px;
-            border-style: solid;
-            border-color: rgba(15, 23, 42, 0.9) transparent transparent transparent;
-            z-index: 30;
-            margin-bottom: -4px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            max-width: 250px;
+            text-align: center;
+            line-height: 1.35;
+            transition: opacity 0.12s ease-out;
+            opacity: 0;
+            border: 1px solid rgba(255,255,255,0.1);
         }
     </style>
 @endpush
@@ -1543,26 +1541,35 @@
         <div class="row mb-5 animate-enter" style="animation-delay: 0.25s">
             <div class="col-12">
                 <div class="calendar-container card border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
-                    <div class="calendar-header d-flex justify-content-between align-items-center flex-wrap gap-3 p-4 bg-white border-bottom">
+                    <div class="calendar-header d-flex justify-content-between align-items-md-center flex-column flex-md-row gap-3 p-3 p-md-4 bg-white border-bottom">
                         <div>
-                            <h4 class="fw-bold mb-1 text-dark">
-                                <i class="mdi mdi-calendar-multiselect text-primary me-2"></i>Kalender Kehadiran Tim
-                            </h4>
-                            @if($canKoreksi)
-                                <p class="text-muted small mb-0"><i class="mdi mdi-cursor-default-click text-primary me-1"></i>Klik pada kotak status (A, P, M, S, dll) untuk melihat & mengoreksi absensi langsung.</p>
-                            @else
-                                <p class="text-muted small mb-0">Klik pada kotak status untuk detail harian.</p>
-                            @endif
+                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                <h4 class="fw-bold mb-0 text-dark">
+                                    <i class="mdi mdi-calendar-multiselect text-primary me-2"></i>Kalender Kehadiran Tim
+                                </h4>
+                                @if($canKoreksi)
+                                    <span class="badge bg-info text-white rounded-pill px-2 py-1 small fw-normal" style="font-size: 11px;">
+                                        <i class="mdi mdi-cursor-default-click me-1"></i>Bisa Diklik & Koreksi
+                                    </span>
+                                @endif
+                            </div>
+                            <p class="text-muted small mb-0">
+                                @if($canKoreksi)
+                                    Klik kotak status (A, P, M, S, dll) untuk melihat & mengoreksi absensi langsung.
+                                @else
+                                    Klik pada kotak status untuk detail harian.
+                                @endif
+                            </p>
                         </div>
-                        <form action="{{ route('dashboard') }}" method="GET" class="d-flex align-items-center gap-2">
-                            <select name="month" class="form-select form-select-sm border border-2 text-dark fw-bold rounded-pill shadow-sm bg-white" style="cursor: pointer; min-width: 140px; padding-left: 1rem; padding-right: 2rem; border-color: #cbd5e1;" onchange="this.form.submit()">
+                        <form action="{{ route('dashboard') }}" method="GET" class="d-flex align-items-center gap-2 flex-wrap">
+                            <select name="month" class="form-select form-select-sm border border-2 text-dark fw-bold rounded-pill shadow-sm bg-white" style="cursor: pointer; min-width: 130px; padding-left: 0.85rem; padding-right: 1.75rem; border-color: #cbd5e1;" onchange="this.form.submit()">
                                 @for($m=1; $m<=12; $m++)
                                     <option value="{{ $m }}" {{ $teamCalendar['currentMonth'] == $m ? 'selected' : '' }} class="fw-bold">
                                         {{ \Carbon\Carbon::create(2024, $m, 1)->translatedFormat('F') }}
                                     </option>
                                 @endfor
                             </select>
-                            <select name="year" class="form-select form-select-sm border border-2 text-dark fw-bold rounded-pill shadow-sm bg-white" style="cursor: pointer; padding-left: 1rem; padding-right: 2rem; border-color: #cbd5e1;" onchange="this.form.submit()">
+                            <select name="year" class="form-select form-select-sm border border-2 text-dark fw-bold rounded-pill shadow-sm bg-white" style="cursor: pointer; padding-left: 0.85rem; padding-right: 1.75rem; border-color: #cbd5e1;" onchange="this.form.submit()">
                                 @for($y=date('Y')-1; $y<=date('Y')+1; $y++)
                                     <option value="{{ $y }}" {{ $teamCalendar['currentYear'] == $y ? 'selected' : '' }} class="fw-bold">
                                         {{ $y }}
@@ -1674,7 +1681,9 @@
                                             @endphp
                                             <td class="{{ $isWeekend ? 'weekend-day' : '' }}">
                                                 <div class="status-cell {{ $statusClass }} {{ $canKoreksi ? 'js-koreksi-cell' : '' }}" 
-                                                    title="{{ $statusTitle }}{{ $canKoreksi ? ' • Klik untuk Koreksi Data' : '' }}"
+                                                    title="{{ $statusTitle }}"
+                                                    data-status-label="{{ $statusTitle }}"
+                                                    data-can-koreksi="{{ $canKoreksi ? '1' : '0' }}"
                                                     @if($canKoreksi)
                                                         data-user-id="{{ $teamMember->id }}"
                                                         data-user-name="{{ e($teamMember->name) }}"
@@ -1689,7 +1698,6 @@
                                                         data-lat="{{ $att ? ($att->latitude ?? '') : '' }}"
                                                         data-lng="{{ $att ? ($att->longitude ?? '') : '' }}"
                                                         data-has-record="{{ ($att || $leave) ? '1' : '0' }}"
-                                                        data-status-label="{{ $statusTitle }}"
                                                     @endif
                                                 >
                                                     {{ $statusValue }}
@@ -3159,9 +3167,9 @@
 
     @if(in_array(Auth::user()->role, ['admin', 'audit', 'admin_gaji', 'leader']))
         {{-- [BARU] MODAL KOREKSI DATA DASHBOARD (QUICK EDIT ABSENSI) --}}
-        <div class="modal fade" id="modalKoreksiDashboard" tabindex="-1" aria-labelledby="modalKoreksiDashboardLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+        <div class="modal fade" id="modalKoreksiDashboard" tabindex="-1" aria-labelledby="modalKoreksiDashboardLabel" aria-hidden="true" style="z-index: 1065;">
+            <div class="modal-dialog modal-dialog-centered" style="z-index: 1066; max-width: 500px; width: 95%;">
+                <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden bg-white">
                     <div class="modal-header bg-info text-white p-3">
                         <div class="d-flex align-items-center gap-2">
                             <i class="mdi mdi-calendar-edit fs-4"></i>
@@ -5222,8 +5230,74 @@
         // QUICK KOREKSI ABSENSI DARI DASHBOARD
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
-            const koreksiCells = document.querySelectorAll('.js-koreksi-cell');
             const modalEl = document.getElementById('modalKoreksiDashboard');
+            const delForm = document.getElementById('formDeleteAttendanceDay');
+
+            // 1. PINDAHKAN MODAL & FORM KE <body>
+            // Ini WAJIB untuk mengatasi isu backdrop modal menutupi (niban) modal dan membuatnya abu-abu
+            if (modalEl && modalEl.parentElement !== document.body) {
+                document.body.appendChild(modalEl);
+            }
+            if (delForm && delForm.parentElement !== document.body) {
+                document.body.appendChild(delForm);
+            }
+
+            // 2. RESPONSIVE FLOATING TOOLTIP UNTUK STATUS CELLS
+            // Mengatasi tooltip terpotong (clipped) oleh overflow atau sticky column di tabel kalender
+            let calTooltip = document.getElementById('calFloatingTooltip');
+            if (!calTooltip) {
+                calTooltip = document.createElement('div');
+                calTooltip.id = 'calFloatingTooltip';
+                document.body.appendChild(calTooltip);
+            }
+
+            const allCells = document.querySelectorAll('.status-cell');
+            allCells.forEach(cell => {
+                const label = cell.getAttribute('data-status-label') || cell.getAttribute('title');
+                if (label) {
+                    cell.setAttribute('data-cal-tip', label);
+                    cell.removeAttribute('title'); // Hapus attribute title bawaan browser agar tidak double
+                }
+
+                cell.addEventListener('mouseenter', function() {
+                    const tip = this.getAttribute('data-cal-tip');
+                    if (!tip) return;
+
+                    const canKoreksi = this.getAttribute('data-can-koreksi') === '1';
+                    calTooltip.innerHTML = `<div class="fw-bold">${tip}</div>${canKoreksi ? '<div style="font-size: 10px; color: #38bdf8; margin-top: 3px;"><i class="mdi mdi-cursor-default-click"></i> Klik untuk koreksi data</div>' : ''}`;
+                    calTooltip.style.display = 'block';
+
+                    const rect = this.getBoundingClientRect();
+                    const tipRect = calTooltip.getBoundingClientRect();
+
+                    // Hitung posisi vertikal (jika terlalu dekat ke atas layar, munculkan di bawah cell)
+                    let top = rect.top - tipRect.height - 8;
+                    if (top < 10) {
+                        top = rect.bottom + 8;
+                    }
+
+                    // Hitung posisi horizontal (pastikan tidak keluar dari layar kiri/kanan)
+                    let left = rect.left + (rect.width / 2) - (tipRect.width / 2);
+                    if (left < 10) left = 10;
+                    if (left + tipRect.width > window.innerWidth - 10) {
+                        left = window.innerWidth - tipRect.width - 10;
+                    }
+
+                    calTooltip.style.top = top + 'px';
+                    calTooltip.style.left = left + 'px';
+                    calTooltip.style.opacity = '1';
+                });
+
+                cell.addEventListener('mouseleave', function() {
+                    if (calTooltip) {
+                        calTooltip.style.opacity = '0';
+                        calTooltip.style.display = 'none';
+                    }
+                });
+            });
+
+            // 3. EVENT HANDLER KLIK CELL UNTUK KOREKSI DATA
+            const koreksiCells = document.querySelectorAll('.js-koreksi-cell');
             if (!koreksiCells.length || !modalEl) return;
 
             const form = document.getElementById('formKoreksiDashboard');
@@ -5248,6 +5322,18 @@
             koreksiCells.forEach(cell => {
                 cell.addEventListener('click', function(e) {
                     e.preventDefault();
+
+                    // Sembunyikan floating tooltip saat diklik
+                    if (calTooltip) {
+                        calTooltip.style.opacity = '0';
+                        calTooltip.style.display = 'none';
+                    }
+
+                    // Pastikan modal berada langsung di body
+                    if (modalEl.parentElement !== document.body) {
+                        document.body.appendChild(modalEl);
+                    }
+
                     const d = this.dataset;
                     currentCellData = {
                         userId: d.userId,
@@ -5333,7 +5419,7 @@
                         }
                     }
 
-                    // Show Modal
+                    // Tampilkan modal secara clean
                     if (window.bootstrap && bootstrap.Modal) {
                         bootstrap.Modal.getOrCreateInstance(modalEl).show();
                     } else if (window.$) {
@@ -5350,11 +5436,11 @@
                     if (confirm(confirmMsg)) {
                         const delUser = document.getElementById('deleteDayUserId');
                         const delDate = document.getElementById('deleteDayDate');
-                        const delForm = document.getElementById('formDeleteAttendanceDay');
-                        if (delUser && delDate && delForm) {
+                        const delFormEl = document.getElementById('formDeleteAttendanceDay');
+                        if (delUser && delDate && delFormEl) {
                             delUser.value = currentCellData.userId;
                             delDate.value = currentCellData.date;
-                            delForm.submit();
+                            delFormEl.submit();
                         }
                     }
                 });
