@@ -3,27 +3,26 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
-    <title>Masuk • Absensi PStore</title>
+    <title>Portal Masuk • PSTORE Absensi</title>
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg-page: #f8fafc;
-            --bg-card: #ffffff;
-            --bg-panel: #f1f5f9;
-            --border-light: #e2e8f0;
-            --border-input: #cbd5e1;
-            --border-focus: #2563eb;
-            --text-heading: #0f172a;
-            --text-body: #334155;
+            --bg-page: #f4f6f8;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f8fafc;
+            --border-default: #e2e8f0;
+            --border-focus: #0f172a;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
             --text-muted: #64748b;
             --text-subtle: #94a3b8;
-            --btn-primary: #2563eb;
-            --btn-primary-hover: #1d4ed8;
-            --btn-primary-active: #1e40af;
+            --btn-solid: #0f172a;
+            --btn-solid-hover: #1e293b;
+            --btn-solid-active: #020617;
             --danger-bg: #fef2f2;
             --danger-border: #fecaca;
             --danger-text: #991b1b;
@@ -40,7 +39,7 @@
         html, body {
             min-height: 100%;
             background-color: var(--bg-page);
-            color: var(--text-body);
+            color: var(--text-primary);
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -49,14 +48,15 @@
         body {
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
             min-height: 100vh;
         }
 
-        /* Top Navigation Header */
-        .top-navbar {
-            height: 64px;
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--border-light);
+        /* Top Header */
+        .site-header {
+            height: 60px;
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-default);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -64,196 +64,180 @@
             flex-shrink: 0;
         }
 
-        .brand-text-block {
+        .header-brand {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            align-items: baseline;
+            gap: 10px;
         }
 
-        .brand-title {
+        .brand-name {
             font-size: 16px;
             font-weight: 800;
-            letter-spacing: 0.08em;
-            color: var(--text-heading);
-            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-primary);
         }
 
-        .brand-divider {
-            width: 1px;
-            height: 18px;
-            background-color: var(--border-input);
-        }
-
-        .brand-subtitle {
-            font-size: 12px;
+        .brand-system {
+            font-size: 11px;
             font-weight: 600;
             color: var(--text-muted);
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
         }
 
-        .navbar-meta {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .clock-widget {
+        .header-status {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
-            color: var(--text-muted);
-            background-color: var(--bg-panel);
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border-light);
+            font-weight: 500;
+            color: var(--text-secondary);
         }
 
-        .live-dot {
+        .status-dot {
             width: 7px;
             height: 7px;
             border-radius: 50%;
             background-color: var(--status-green);
         }
 
-        /* Main Workspace Split Layout */
-        .main-wrapper {
+        /* Main Workspace Container */
+        .page-container {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 24px;
+            padding: 40px 20px;
             width: 100%;
-            max-width: 1240px;
-            margin: 0 auto;
         }
 
-        .split-grid {
-            display: grid;
-            grid-template-columns: 1fr 440px;
-            gap: 60px;
+        /* Unified Terminal / Dock Card */
+        .dock-card {
             width: 100%;
-            align-items: center;
+            max-width: 860px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: 14px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 10px 20px -3px rgba(0, 0, 0, 0.04);
+            display: flex;
+            overflow: hidden;
         }
 
-        /* Left Editorial Column */
-        .showcase-column {
-            padding-right: 20px;
+        /* Left Side: Operational Info & Live Clock */
+        .dock-left {
+            width: 340px;
+            background-color: var(--bg-subtle);
+            border-right: 1px solid var(--border-default);
+            padding: 36px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-shrink: 0;
         }
 
-        .tag-lead {
-            display: inline-block;
-            font-size: 12px;
+        .section-label {
+            font-size: 11px;
             font-weight: 700;
-            color: var(--btn-primary);
             letter-spacing: 0.08em;
             text-transform: uppercase;
+            color: var(--text-muted);
             margin-bottom: 12px;
         }
 
-        .headline-main {
-            font-size: 34px;
-            font-weight: 800;
-            color: var(--text-heading);
-            letter-spacing: -0.03em;
-            line-height: 1.25;
-            margin-bottom: 16px;
+        .clock-display-block {
+            margin-bottom: 28px;
         }
 
-        .desc-main {
-            font-size: 15px;
-            color: var(--text-muted);
-            line-height: 1.6;
-            margin-bottom: 32px;
-            max-width: 540px;
-        }
-
-        /* Feature Pillars List */
-        .feature-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            background-color: #ffffff;
-            border: 1px solid var(--border-light);
-            border-radius: 10px;
-            padding: 16px 20px;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .feature-item:hover {
-            border-color: var(--border-input);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        }
-
-        .feature-icon-box {
-            width: 38px;
-            height: 38px;
-            background-color: var(--bg-panel);
-            border: 1px solid var(--border-light);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--btn-primary);
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        .feature-icon-box svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        .feature-text-block h3 {
-            font-size: 14px;
+        .live-clock {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 30px;
             font-weight: 700;
-            color: var(--text-heading);
-            margin-bottom: 4px;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
         }
 
-        .feature-text-block p {
+        .live-date {
             font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.5;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-top: 6px;
         }
 
-        /* Right Form Card */
-        .form-column {
-            width: 100%;
-        }
-
-        .auth-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-light);
-            border-radius: 14px;
-            padding: 36px 32px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 10px 15px -3px rgba(0, 0, 0, 0.03);
-        }
-
-        .card-header-block {
+        .shift-schedule-box {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: 10px;
+            padding: 16px;
             margin-bottom: 24px;
         }
 
-        .card-title {
-            font-size: 22px;
+        .shift-title {
+            font-size: 12px;
             font-weight: 700;
-            color: var(--text-heading);
-            letter-spacing: -0.02em;
-            line-height: 1.3;
-            margin-bottom: 6px;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
-        .card-subtitle {
-            font-size: 14px;
+        .shift-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .shift-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .shift-name {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .shift-time {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .dock-left-note {
+            font-size: 12px;
             color: var(--text-muted);
+            line-height: 1.5;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-default);
+        }
+
+        /* Right Side: Auth Form */
+        .dock-right {
+            flex: 1;
+            padding: 40px 38px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-heading {
+            margin-bottom: 24px;
+        }
+
+        .auth-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .auth-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
             line-height: 1.5;
         }
 
@@ -271,128 +255,116 @@
 
         /* Form Controls */
         .field-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
-        .label-row {
+        .field-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            margin-bottom: 8px;
+            align-items: center;
+            margin-bottom: 6px;
         }
 
         .field-label {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            color: var(--text-heading);
+            color: var(--text-primary);
+            letter-spacing: 0.01em;
         }
 
-        .caps-warning {
+        .caps-alert {
             font-size: 11px;
             font-weight: 600;
             color: #b45309;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .input-container {
+        .input-wrapper {
             position: relative;
             display: flex;
             align-items: center;
         }
 
-        .input-icon-left {
-            position: absolute;
-            left: 14px;
-            color: var(--text-subtle);
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-icon-left svg {
-            width: 17px;
-            height: 17px;
-        }
-
-        .form-input {
+        .text-input {
             width: 100%;
             height: 44px;
-            padding: 0 14px 0 40px;
-            background-color: #ffffff;
-            border: 1px solid var(--border-input);
+            padding: 0 14px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-default);
             border-radius: 8px;
-            color: var(--text-heading);
             font-size: 14px;
             font-family: inherit;
+            color: var(--text-primary);
             outline: none;
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .form-input::placeholder {
+        .text-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+        }
+
+        .text-input::placeholder {
             color: var(--text-subtle);
         }
 
-        .form-input:focus {
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        }
-
-        .form-input-pass {
+        .input-with-eye {
             padding-right: 44px;
         }
 
-        .btn-toggle-eye {
+        .btn-eye-toggle {
             position: absolute;
-            right: 8px;
-            width: 32px;
-            height: 32px;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: transparent;
-            border: none;
-            border-radius: 6px;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: color 0.15s ease;
         }
 
-        .btn-toggle-eye:hover {
-            color: var(--text-heading);
+        .btn-eye-toggle:hover {
+            color: var(--text-primary);
         }
 
-        .btn-toggle-eye svg {
+        .btn-eye-toggle svg {
             width: 18px;
             height: 18px;
         }
 
-        /* Remember Checkbox */
-        .remember-group {
-            margin-bottom: 24px;
+        /* Checkbox */
+        .option-row {
+            display: flex;
+            align-items: center;
+            margin: 20px 0 24px 0;
         }
 
-        .remember-label {
-            display: inline-flex;
+        .checkbox-container {
+            display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
             cursor: pointer;
             user-select: none;
-            font-size: 13px;
-            color: var(--text-body);
         }
 
-        .remember-label input {
+        .checkbox-container input {
             width: 16px;
             height: 16px;
-            accent-color: var(--btn-primary);
+            accent-color: var(--btn-solid);
             cursor: pointer;
         }
 
-        /* Action Button */
+        /* Submit Button */
         .btn-submit {
             width: 100%;
             height: 44px;
-            background-color: var(--btn-primary);
+            background-color: var(--btn-solid);
             color: #ffffff;
             border: none;
             border-radius: 8px;
@@ -404,26 +376,15 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: background-color 0.15s ease, transform 0.05s ease;
+            transition: background-color 0.15s ease;
         }
 
         .btn-submit:hover {
-            background-color: var(--btn-primary-hover);
+            background-color: var(--btn-solid-hover);
         }
 
         .btn-submit:active {
-            background-color: var(--btn-primary-active);
-            transform: scale(0.99);
-        }
-
-        .btn-submit svg.arrow-icon {
-            width: 16px;
-            height: 16px;
-            transition: transform 0.15s ease;
-        }
-
-        .btn-submit:hover svg.arrow-icon {
-            transform: translateX(2px);
+            background-color: var(--btn-solid-active);
         }
 
         .btn-spinner {
@@ -437,31 +398,19 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Form Security Note */
-        .security-badge {
+        .help-caption {
             margin-top: 20px;
-            padding-top: 18px;
-            border-top: 1px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            gap: 8px;
             font-size: 12px;
-            color: var(--text-muted);
+            color: var(--text-subtle);
+            text-align: center;
             line-height: 1.4;
         }
 
-        .security-badge svg {
-            width: 16px;
-            height: 16px;
-            color: var(--text-muted);
-            flex-shrink: 0;
-        }
-
-        /* Page Footer */
+        /* Site Footer */
         .site-footer {
-            height: 56px;
-            border-top: 1px solid var(--border-light);
-            background-color: #ffffff;
+            height: 52px;
+            border-top: 1px solid var(--border-default);
+            background-color: var(--bg-surface);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -471,32 +420,33 @@
             flex-shrink: 0;
         }
 
-        .footer-note {
-            color: var(--text-muted);
-        }
-
         /* Responsive Breakpoints */
-        @media (max-width: 992px) {
-            .split-grid {
-                grid-template-columns: 1fr;
-                gap: 40px;
-                max-width: 480px;
+        @media (max-width: 820px) {
+            .dock-card {
+                flex-direction: column;
+                max-width: 440px;
             }
 
-            .showcase-column {
-                padding-right: 0;
-                text-align: center;
+            .dock-left {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-default);
+                padding: 24px;
             }
 
-            .desc-main {
-                margin: 0 auto 24px;
+            .dock-left-note {
+                display: none;
             }
 
-            .feature-list {
-                display: none; /* Hide feature cards on smaller screens to keep focus sharp */
+            .shift-schedule-box {
+                margin-bottom: 0;
             }
 
-            .top-navbar {
+            .dock-right {
+                padding: 30px 24px;
+            }
+
+            .site-header {
                 padding: 0 20px;
             }
 
@@ -504,246 +454,188 @@
                 padding: 0 20px;
                 flex-direction: column;
                 justify-content: center;
-                gap: 6px;
+                gap: 4px;
                 height: auto;
-                padding-top: 16px;
-                padding-bottom: 16px;
+                padding-top: 14px;
+                padding-bottom: 14px;
                 text-align: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .top-navbar {
-                padding: 0 16px;
-                height: 56px;
-            }
-
-            .brand-subtitle, .brand-divider {
-                display: none;
-            }
-
-            .clock-widget {
-                padding: 4px 8px;
-                font-size: 11px;
-            }
-
-            .main-wrapper {
-                padding: 24px 16px;
-            }
-
-            .auth-card {
-                padding: 26px 20px;
-            }
-
-            .headline-main {
-                font-size: 26px;
-            }
-
-            .card-title {
-                font-size: 20px;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- Top Navigation Header -->
-    <header class="top-navbar">
-        <div class="brand-text-block">
-            <span class="brand-title">PSTORE</span>
-            <span class="brand-divider"></span>
-            <span class="brand-subtitle">Sistem Absensi Digital</span>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-brand">
+            <span class="brand-name">PSTORE</span>
+            <span class="brand-system">Sistem Presensi Karyawan</span>
         </div>
-        <div class="navbar-meta">
-            <div class="clock-widget" id="liveClockWidget">
-                <span class="live-dot"></span>
-                <span id="liveClockText">WIB: --:--:--</span>
-            </div>
+        <div class="header-status">
+            <span class="status-dot"></span>
+            <span>Server Online</span>
         </div>
     </header>
 
-    <!-- Main Workspace Split Layout -->
-    <main class="main-wrapper">
-        <div class="split-grid">
-            <!-- Left Showcase Column -->
-            <section class="showcase-column">
-                <span class="tag-lead">Portal Presensi & Kepegawaian</span>
-                <h1 class="headline-main">Akses Terpadu Kehadiran Kerja Seluruh Cabang.</h1>
-                <p class="desc-main">Pencatatan kehadiran digital, verifikasi shift, dan manajemen perizinan karyawan secara cepat, transparan, dan terintegrasi.</p>
-
-                <div class="feature-list">
-                    <div class="feature-item">
-                        <div class="feature-icon-box">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path d="M3 4h4v4H3V4zm10 0h4v4h-4V4zM3 12h4v4H3v-4zm7 0h3v4h-3v-4zm4 0h3v4h-3v-4zM9 4h2v6H9V4z"/>
-                            </svg>
-                        </div>
-                        <div class="feature-text-block">
-                            <h3>Presensi Real-Time & Valid</h3>
-                            <p>Verifikasi absensi harian dengan akurasi jadwal dan lokasi kerja di setiap cabang.</p>
-                        </div>
+    <!-- Main Workspace -->
+    <main class="page-container">
+        <div class="dock-card">
+            <!-- Left: Operational Attendance Reference -->
+            <section class="dock-left">
+                <div>
+                    <div class="section-label">Waktu Operasional</div>
+                    <div class="clock-display-block">
+                        <div class="live-clock" id="liveClockDisplay">--:--:--</div>
+                        <div class="live-date" id="liveDateDisplay">Memuat tanggal...</div>
                     </div>
 
-                    <div class="feature-item">
-                        <div class="feature-icon-box">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <circle cx="10" cy="10" r="7"/>
-                                <path d="M10 6v4l2.5 2.5"/>
-                            </svg>
+                    <div class="shift-schedule-box">
+                        <div class="shift-title">Jadwal Shift Kerja</div>
+                        <div class="shift-item">
+                            <span class="shift-name">Shift Pagi</span>
+                            <span class="shift-time">08:00 - 16:00</span>
                         </div>
-                        <div class="feature-text-block">
-                            <h3>Rekapitulasi Transparan</h3>
-                            <p>Pantau jam kedatangan, kepulangan, riwayat cuti, dan akumulasi lembur harian.</p>
+                        <div class="shift-item">
+                            <span class="shift-name">Shift Siang</span>
+                            <span class="shift-time">12:00 - 20:00</span>
                         </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="feature-icon-box">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path d="M3 17h14M4 17V5a1 1 0 011-1h5a1 1 0 011 1v12m-7-9h3m-3 4h3m4 5V9a1 1 0 011-1h4a1 1 0 011 1v8m-6-5h2m-2 4h2"/>
-                            </svg>
-                        </div>
-                        <div class="feature-text-block">
-                            <h3>Seluruh Cabang Terhubung</h3>
-                            <p>Sinkronisasi data langsung dengan seluruh operasional store di Indonesia.</p>
+                        <div class="shift-item">
+                            <span class="shift-name">Shift Malam</span>
+                            <span class="shift-time">19:00 - 03:00</span>
                         </div>
                     </div>
                 </div>
+
+                <div class="dock-left-note">
+                    Presensi wajib diverifikasi melalui scanner cabang sesuai jam shift yang berlaku.
+                </div>
             </section>
 
-            <!-- Right Form Column -->
-            <section class="form-column">
-                <div class="auth-card">
-                    <div class="card-header-block">
-                        <h2 class="card-title">Masuk ke Akun</h2>
-                        <p class="card-subtitle">Masukkan ID Pegawai dan kata sandi Anda untuk mengakses dashboard.</p>
+            <!-- Right: Authentication Form -->
+            <section class="dock-right">
+                <div class="auth-heading">
+                    <h1 class="auth-title">Masuk ke Sistem</h1>
+                    <p class="auth-desc">Gunakan ID Pegawai dan kata sandi Anda untuk mengakses portal.</p>
+                </div>
+
+                @if ($errors->any())
+                    <div class="alert-error" role="alert">
+                        @foreach ($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
+
+                <form action="{{ route('login.submit') }}" method="POST" id="loginForm" autocomplete="on">
+                    @csrf
+
+                    <div class="field-group">
+                        <div class="field-header">
+                            <label for="login_id" class="field-label">ID Pegawai</label>
+                        </div>
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="login_id" 
+                                name="login_id" 
+                                class="text-input" 
+                                placeholder="Masukkan ID Login Anda" 
+                                value="{{ old('login_id') }}" 
+                                required 
+                                autofocus
+                                autocapitalize="none"
+                                autocorrect="off"
+                                spellcheck="false"
+                            >
+                        </div>
                     </div>
 
-                    @if ($errors->any())
-                        <div class="alert-error" role="alert">
-                            @foreach ($errors->all() as $error)
-                                <p>{{ $error }}</p>
-                            @endforeach
+                    <div class="field-group">
+                        <div class="field-header">
+                            <label for="password" class="field-label">Kata Sandi</label>
+                            <span id="capsNotice" class="caps-alert" style="display: none;">CAPS LOCK AKTIF</span>
                         </div>
-                    @endif
-
-                    <form action="{{ route('login.submit') }}" method="POST" id="loginForm" autocomplete="on">
-                        @csrf
-
-                        <div class="field-group">
-                            <div class="label-row">
-                                <label for="login_id" class="field-label">ID Pegawai</label>
-                            </div>
-                            <div class="input-container">
-                                <span class="input-icon-left">
-                                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                        <path d="M16 17v-1.5A3.5 3.5 0 0012.5 12h-5A3.5 3.5 0 004 15.5V17" stroke-linecap="round"/>
-                                        <circle cx="10" cy="6" r="3.5"/>
-                                    </svg>
-                                </span>
-                                <input 
-                                    type="text" 
-                                    id="login_id" 
-                                    name="login_id" 
-                                    class="form-input" 
-                                    placeholder="Masukkan ID Login Anda" 
-                                    value="{{ old('login_id') }}" 
-                                    required 
-                                    autofocus
-                                    autocapitalize="none"
-                                    autocorrect="off"
-                                    spellcheck="false"
-                                >
-                            </div>
+                        <div class="input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="text-input input-with-eye" 
+                                placeholder="Masukkan kata sandi" 
+                                required
+                            >
+                            <button type="button" class="btn-eye-toggle" id="togglePassBtn" aria-label="Tampilkan kata sandi">
+                                <svg id="eyeShow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M2 10s3.5-6 8-6 8 6 8 6-3.5 6-8 6-8-6-8-6z"/>
+                                    <circle cx="10" cy="10" r="2.5"/>
+                                </svg>
+                                <svg id="eyeHide" style="display: none;" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M3 3l14 14M10 4.5c4.5 0 8 5.5 8 5.5s-1.5 2.5-3.5 4M6 6.5C3.5 8 2 10 2 10s3.5 5.5 8 5.5c1.5 0 3-.5 4-1.2"/>
+                                    <path d="M9 9a2 2 0 002.8 2.8"/>
+                                </svg>
+                            </button>
                         </div>
+                    </div>
 
-                        <div class="field-group">
-                            <div class="label-row">
-                                <label for="password" class="field-label">Kata Sandi</label>
-                                <span id="capsNotice" class="caps-warning" style="display: none;">CAPS LOCK AKTIF</span>
-                            </div>
-                            <div class="input-container">
-                                <span class="input-icon-left">
-                                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                        <rect x="4" y="9" width="12" height="8.5" rx="2"/>
-                                        <path d="M7 9V6a3 3 0 016 0v3"/>
-                                    </svg>
-                                </span>
-                                <input 
-                                    type="password" 
-                                    id="password" 
-                                    name="password" 
-                                    class="form-input form-input-pass" 
-                                    placeholder="Masukkan kata sandi" 
-                                    required
-                                >
-                                <button type="button" class="btn-toggle-eye" id="togglePassBtn" aria-label="Tampilkan kata sandi">
-                                    <svg id="eyeShow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                        <path d="M2 10s3.5-6 8-6 8 6 8 6-3.5 6-8 6-8-6-8-6z"/>
-                                        <circle cx="10" cy="10" r="2.5"/>
-                                    </svg>
-                                    <svg id="eyeHide" style="display: none;" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                        <path d="M3 3l14 14M10 4.5c4.5 0 8 5.5 8 5.5s-1.5 2.5-3.5 4M6 6.5C3.5 8 2 10 2 10s3.5 5.5 8 5.5c1.5 0 3-.5 4-1.2"/>
-                                        <path d="M9 9a2 2 0 002.8 2.8"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
+                    <div class="option-row">
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="remember" id="remember" value="1">
+                            <span>Ingat sesi di perangkat ini</span>
+                        </label>
+                    </div>
 
-                        <div class="remember-group">
-                            <label class="remember-label">
-                                <input type="checkbox" name="remember" id="remember" value="1">
-                                <span>Ingat sesi di perangkat ini</span>
-                            </label>
-                        </div>
-
-                        <button type="submit" class="btn-submit" id="btnSubmit">
-                            <span id="btnText">Masuk ke Sistem</span>
-                            <svg class="arrow-icon" id="btnArrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M4 10h12M11 5l5 5-5 5"/>
-                            </svg>
-                            <svg class="btn-spinner" id="btnSpinner" viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" opacity="0.25"></circle>
-                                <path d="M12 3a9 9 0 019 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></path>
-                            </svg>
-                        </button>
-                    </form>
-
-                    <div class="security-badge">
-                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path d="M10 2l6 3v5c0 4.5-3 8-6 9-3-1-6-4.5-6-9V5l6-3z"/>
-                            <path d="M8 10l1.5 1.5 3-3"/>
+                    <button type="submit" class="btn-submit" id="btnSubmit">
+                        <span id="btnText">Masuk ke Portal</span>
+                        <svg class="btn-spinner" id="btnSpinner" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" opacity="0.25"></circle>
+                            <path d="M12 3a9 9 0 019 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></path>
                         </svg>
-                        <span>Koneksi aman dengan enkripsi tingkat server TLS 1.3</span>
-                    </div>
+                    </button>
+                </form>
+
+                <div class="help-caption">
+                    Kendala akses akun? Hubungi HRD atau IT Support cabang Anda.
                 </div>
             </section>
         </div>
     </main>
 
-    <!-- Site Footer -->
+    <!-- Footer -->
     <footer class="site-footer">
         <div>
             &copy; {{ date('Y') }} PT Putra Siregar Merakyat. Hak Cipta Dilindungi.
         </div>
-        <div class="footer-note">
-            Portal Kepegawaian &bull; Akses Terbatas Karyawan
+        <div>
+            Sistem Absensi Terpadu PSTORE
         </div>
     </footer>
 
     <script>
-        // Live Real-Time Clock
-        function updateLiveClock() {
-            const clockEl = document.getElementById('liveClockText');
-            if (!clockEl) return;
+        // Real-Time Clock & Date in Indonesian Locale
+        function updateLiveDateTime() {
+            const clockEl = document.getElementById('liveClockDisplay');
+            const dateEl = document.getElementById('liveDateDisplay');
+            if (!clockEl || !dateEl) return;
+
             const now = new Date();
+
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
-            clockEl.textContent = `WIB: ${hours}:${minutes}:${seconds}`;
+            clockEl.textContent = `${hours}:${minutes}:${seconds} WIB`;
+
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+            const dayName = days[now.getDay()];
+            const dateNum = now.getDate();
+            const monthName = months[now.getMonth()];
+            const yearNum = now.getFullYear();
+
+            dateEl.textContent = `${dayName}, ${dateNum} ${monthName} ${yearNum}`;
         }
-        updateLiveClock();
-        setInterval(updateLiveClock, 1000);
+        updateLiveDateTime();
+        setInterval(updateLiveDateTime, 1000);
 
         // Password Visibility Toggle
         const passwordInput = document.getElementById('password');
@@ -753,27 +645,24 @@
 
         if (togglePassBtn && passwordInput) {
             togglePassBtn.addEventListener('click', function() {
-                const isPass = passwordInput.type === 'password';
-                passwordInput.type = isPass ? 'text' : 'password';
+                const isPass = passwordInput.getAttribute('type') === 'password';
+                passwordInput.setAttribute('type', isPass ? 'text' : 'password');
                 eyeShow.style.display = isPass ? 'none' : 'block';
                 eyeHide.style.display = isPass ? 'block' : 'none';
-                passwordInput.focus();
             });
         }
 
-        // Caps Lock Detection
+        // Caps Lock Warning
         const capsNotice = document.getElementById('capsNotice');
         if (passwordInput && capsNotice) {
-            const checkCaps = (e) => {
+            passwordInput.addEventListener('keyup', function(e) {
                 if (e.getModifierState && e.getModifierState('CapsLock')) {
-                    capsNotice.style.display = 'block';
+                    capsNotice.style.display = 'inline-block';
                 } else {
                     capsNotice.style.display = 'none';
                 }
-            };
-            passwordInput.addEventListener('keydown', checkCaps);
-            passwordInput.addEventListener('keyup', checkCaps);
-            passwordInput.addEventListener('blur', () => {
+            });
+            passwordInput.addEventListener('blur', function() {
                 capsNotice.style.display = 'none';
             });
         }
@@ -782,13 +671,11 @@
         const loginForm = document.getElementById('loginForm');
         const btnSubmit = document.getElementById('btnSubmit');
         const btnText = document.getElementById('btnText');
-        const btnArrow = document.getElementById('btnArrow');
         const btnSpinner = document.getElementById('btnSpinner');
 
         if (loginForm && btnSubmit) {
             loginForm.addEventListener('submit', function() {
                 btnText.textContent = 'Memverifikasi...';
-                if (btnArrow) btnArrow.style.display = 'none';
                 if (btnSpinner) btnSpinner.style.display = 'block';
                 btnSubmit.style.pointerEvents = 'none';
                 btnSubmit.style.opacity = '0.85';
