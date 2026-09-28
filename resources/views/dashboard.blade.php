@@ -3230,7 +3230,7 @@
                                 <small class="text-white-50" id="koreksiSubTitle" style="font-size: 11px;">-</small>
                             </div>
                         </div>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form id="formKoreksiDashboard" method="POST" enctype="multipart/form-data">
                         @csrf
@@ -3298,7 +3298,7 @@
                                 </button>
                             </div>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal" data-dismiss="modal">Batal</button>
                                 <button type="submit" class="btn btn-info text-white rounded-pill px-4 fw-bold shadow-sm">
                                     <i class="mdi mdi-content-save me-1"></i> Simpan
                                 </button>
@@ -5325,152 +5325,152 @@
                 }
             });
 
-            // Event Delegation: satu listener untuk semua tooltip (bukan per-cell)
-            const calendarWrapper = document.querySelector('.table-responsive') || document.querySelector('.card-body');
-            if (calendarWrapper) {
-                calendarWrapper.addEventListener('mouseover', function(e) {
-                    const cell = e.target.closest('.status-cell[data-cal-tip]');
-                    if (!cell) return;
+            // Event Delegation pada document: satu listener untuk semua tooltip
+            document.addEventListener('mouseover', function(e) {
+                const cell = e.target.closest('.status-cell[data-cal-tip]');
+                if (!cell) return;
 
-                    const tip = cell.getAttribute('data-cal-tip');
-                    if (!tip) return;
+                const tip = cell.getAttribute('data-cal-tip');
+                if (!tip) return;
 
-                    const canKoreksi = cell.getAttribute('data-can-koreksi') === '1';
-                    calTooltip.innerHTML = `<div class="fw-bold">${tip}</div>${canKoreksi ? '<div style="font-size: 10px; color: #38bdf8; margin-top: 3px;"><i class="mdi mdi-cursor-default-click"></i> Klik untuk koreksi data</div>' : ''}`;
-                    calTooltip.style.display = 'block';
+                const canKoreksi = cell.getAttribute('data-can-koreksi') === '1';
+                calTooltip.innerHTML = `<div class="fw-bold">${tip}</div>${canKoreksi ? '<div style="font-size: 10px; color: #38bdf8; margin-top: 3px;"><i class="mdi mdi-cursor-default-click"></i> Klik untuk koreksi data</div>' : ''}`;
+                calTooltip.style.display = 'block';
 
-                    const rect = cell.getBoundingClientRect();
-                    const tipRect = calTooltip.getBoundingClientRect();
+                const rect = cell.getBoundingClientRect();
+                const tipRect = calTooltip.getBoundingClientRect();
 
-                    let top = rect.top - tipRect.height - 8;
-                    if (top < 10) top = rect.bottom + 8;
+                let top = rect.top - tipRect.height - 8;
+                if (top < 10) top = rect.bottom + 8;
 
-                    let left = rect.left + (rect.width / 2) - (tipRect.width / 2);
-                    if (left < 10) left = 10;
-                    if (left + tipRect.width > window.innerWidth - 10) {
-                        left = window.innerWidth - tipRect.width - 10;
-                    }
+                let left = rect.left + (rect.width / 2) - (tipRect.width / 2);
+                if (left < 10) left = 10;
+                if (left + tipRect.width > window.innerWidth - 10) {
+                    left = window.innerWidth - tipRect.width - 10;
+                }
 
-                    calTooltip.style.top = top + 'px';
-                    calTooltip.style.left = left + 'px';
-                    calTooltip.style.opacity = '1';
-                });
+                calTooltip.style.top = top + 'px';
+                calTooltip.style.left = left + 'px';
+                calTooltip.style.opacity = '1';
+            });
 
-                calendarWrapper.addEventListener('mouseout', function(e) {
-                    const cell = e.target.closest('.status-cell[data-cal-tip]');
-                    if (!cell) return;
-                    // Cek apakah relatedTarget masih di dalam cell yang sama
-                    if (cell.contains(e.relatedTarget)) return;
-                    if (calTooltip) {
-                        calTooltip.style.opacity = '0';
-                        calTooltip.style.display = 'none';
-                    }
-                });
-            }
+            document.addEventListener('mouseout', function(e) {
+                const cell = e.target.closest('.status-cell[data-cal-tip]');
+                if (!cell) return;
+                // Cek apakah relatedTarget masih di dalam cell yang sama
+                if (cell.contains(e.relatedTarget)) return;
+                if (calTooltip) {
+                    calTooltip.style.opacity = '0';
+                    calTooltip.style.display = 'none';
+                }
+            });
 
-            // 3. EVENT HANDLER KLIK CELL UNTUK KOREKSI DATA (Event Delegation)
-            if (!modalEl) return;
-
-            const form = document.getElementById('formKoreksiDashboard');
-            const methodInput = document.getElementById('koreksiMethodInput');
-            const subTitle = document.getElementById('koreksiSubTitle');
-            const userNameEl = document.getElementById('koreksiUserName');
-            const branchDateEl = document.getElementById('koreksiBranchDate');
-            const badgeStatus = document.getElementById('koreksiBadgeStatus');
-            const userIdInput = document.getElementById('koreksiUserId');
-            const dateInput = document.getElementById('koreksiDate');
-            const checkInInput = document.getElementById('koreksiCheckInTime');
-            const checkOutInput = document.getElementById('koreksiCheckOutTime');
-            const statusSelect = document.getElementById('koreksiPresenceStatus');
-            const auditNoteTextarea = document.getElementById('koreksiAuditNote');
-            const auditPhotoInput = document.getElementById('koreksiAuditPhoto');
-            const mapContainer = document.getElementById('koreksiMapContainer');
-            const mapLink = document.getElementById('koreksiMapLink');
-            const btnDeleteDay = document.getElementById('btnDeleteDay');
-
+            // 3. EVENT HANDLER KLIK CELL UNTUK KOREKSI DATA (Document Event Delegation)
             let currentCellData = {};
 
-            // Event delegation: satu click listener di wrapper, bukan per-cell
-            const clickWrapper = calendarWrapper || document;
-            clickWrapper.addEventListener('click', function(e) {
-                const cell = e.target.closest('.js-koreksi-cell');
+            // Delegation pada document: pasti menangkap klik pada setiap .js-koreksi-cell atau area td di sekitarnya
+            document.addEventListener('click', function(e) {
+                // Jangan proses jika yang diklik adalah tombol/link lain di luar kalender
+                const cell = e.target.closest('.js-koreksi-cell') || 
+                             (e.target.closest('td') ? e.target.closest('td').querySelector('.js-koreksi-cell') : null);
                 if (!cell) return;
                 e.preventDefault();
 
-                    // Sembunyikan floating tooltip saat diklik
-                    if (calTooltip) {
-                        calTooltip.style.opacity = '0';
-                        calTooltip.style.display = 'none';
-                    }
+                const targetModal = document.getElementById('modalKoreksiDashboard');
+                if (!targetModal) return;
 
-                    // Pastikan modal berada langsung di body
-                    if (modalEl.parentElement !== document.body) {
-                        document.body.appendChild(modalEl);
-                    }
+                const form = document.getElementById('formKoreksiDashboard');
+                const methodInput = document.getElementById('koreksiMethodInput');
+                const subTitle = document.getElementById('koreksiSubTitle');
+                const userNameEl = document.getElementById('koreksiUserName');
+                const branchDateEl = document.getElementById('koreksiBranchDate');
+                const badgeStatus = document.getElementById('koreksiBadgeStatus');
+                const userIdInput = document.getElementById('koreksiUserId');
+                const dateInput = document.getElementById('koreksiDate');
+                const checkInInput = document.getElementById('koreksiCheckInTime');
+                const checkOutInput = document.getElementById('koreksiCheckOutTime');
+                const statusSelect = document.getElementById('koreksiPresenceStatus');
+                const auditNoteTextarea = document.getElementById('koreksiAuditNote');
+                const auditPhotoInput = document.getElementById('koreksiAuditPhoto');
+                const mapContainer = document.getElementById('koreksiMapContainer');
+                const mapLink = document.getElementById('koreksiMapLink');
+                const btnDeleteDay = document.getElementById('btnDeleteDay');
 
-                    const d = cell.dataset;
-                    currentCellData = {
-                        userId: d.userId,
-                        userName: d.userName,
-                        branchName: d.branchName,
-                        date: d.date,
-                        dateFormatted: d.dateFormatted,
-                        attId: d.attId,
-                        checkIn: d.checkIn,
-                        checkOut: d.checkOut,
-                        presenceStatus: d.presenceStatus || 'Masuk',
-                        auditNote: d.auditNote || '',
-                        lat: d.lat,
-                        lng: d.lng,
-                        hasRecord: d.hasRecord === '1',
-                        statusLabel: d.statusLabel || ''
-                    };
+                // Sembunyikan floating tooltip saat diklik
+                if (calTooltip) {
+                    calTooltip.style.opacity = '0';
+                    calTooltip.style.display = 'none';
+                }
 
-                    // Header & Info Banner
-                    if (subTitle) subTitle.textContent = `${currentCellData.userName} • ${currentCellData.dateFormatted}`;
-                    if (userNameEl) userNameEl.textContent = currentCellData.userName;
-                    if (branchDateEl) branchDateEl.textContent = `${currentCellData.branchName} • ${currentCellData.dateFormatted}`;
-                    if (badgeStatus) badgeStatus.textContent = currentCellData.statusLabel || currentCellData.presenceStatus;
+                // Pastikan modal berada langsung di body agar backdrop tidak menutupi modal
+                if (targetModal.parentElement !== document.body) {
+                    document.body.appendChild(targetModal);
+                }
 
-                    // Hidden inputs
-                    if (userIdInput) userIdInput.value = currentCellData.userId;
-                    if (dateInput) dateInput.value = currentCellData.date;
+                const d = cell.dataset;
+                currentCellData = {
+                    userId: d.userId,
+                    userName: d.userName,
+                    branchName: d.branchName,
+                    date: d.date,
+                    dateFormatted: d.dateFormatted,
+                    attId: d.attId,
+                    checkIn: d.checkIn,
+                    checkOut: d.checkOut,
+                    presenceStatus: d.presenceStatus || 'Masuk',
+                    auditNote: d.auditNote || '',
+                    lat: d.lat,
+                    lng: d.lng,
+                    hasRecord: d.hasRecord === '1',
+                    statusLabel: d.statusLabel || ''
+                };
 
-                    // Times
-                    if (checkInInput) checkInInput.value = currentCellData.checkIn || '';
-                    if (checkOutInput) checkOutInput.value = currentCellData.checkOut || '';
+                // Header & Info Banner
+                if (subTitle) subTitle.textContent = `${currentCellData.userName} • ${currentCellData.dateFormatted}`;
+                if (userNameEl) userNameEl.textContent = currentCellData.userName;
+                if (branchDateEl) branchDateEl.textContent = `${currentCellData.branchName} • ${currentCellData.dateFormatted}`;
+                if (badgeStatus) badgeStatus.textContent = currentCellData.statusLabel || currentCellData.presenceStatus;
 
-                    // Select Status (case-insensitive match)
-                    if (statusSelect) {
-                        const targetStatus = (currentCellData.presenceStatus || '').trim().toLowerCase();
-                        let matched = false;
-                        for (let i = 0; i < statusSelect.options.length; i++) {
-                            if (statusSelect.options[i].value.toLowerCase() === targetStatus) {
-                                statusSelect.selectedIndex = i;
-                                matched = true;
-                                break;
-                            }
+                // Hidden inputs
+                if (userIdInput) userIdInput.value = currentCellData.userId;
+                if (dateInput) dateInput.value = currentCellData.date;
+
+                // Times
+                if (checkInInput) checkInInput.value = currentCellData.checkIn || '';
+                if (checkOutInput) checkOutInput.value = currentCellData.checkOut || '';
+
+                // Select Status (case-insensitive match)
+                if (statusSelect) {
+                    const targetStatus = (currentCellData.presenceStatus || '').trim().toLowerCase();
+                    let matched = false;
+                    for (let i = 0; i < statusSelect.options.length; i++) {
+                        if (statusSelect.options[i].value.toLowerCase() === targetStatus) {
+                            statusSelect.selectedIndex = i;
+                            matched = true;
+                            break;
                         }
-                        if (!matched) {
-                            statusSelect.value = 'Masuk';
-                        }
                     }
-
-                    // Reset photo & note
-                    if (auditPhotoInput) auditPhotoInput.value = '';
-                    if (auditNoteTextarea) auditNoteTextarea.value = currentCellData.auditNote;
-
-                    // Maps link
-                    if (mapContainer && mapLink) {
-                        if (currentCellData.lat && currentCellData.lng) {
-                            mapLink.href = `https://maps.google.com/?q=${currentCellData.lat},${currentCellData.lng}`;
-                            mapContainer.classList.remove('d-none');
-                        } else {
-                            mapContainer.classList.add('d-none');
-                        }
+                    if (!matched) {
+                        statusSelect.value = 'Masuk';
                     }
+                }
 
-                    // Action & Method
+                // Reset photo & note
+                if (auditPhotoInput) auditPhotoInput.value = '';
+                if (auditNoteTextarea) auditNoteTextarea.value = currentCellData.auditNote;
+
+                // Maps link
+                if (mapContainer && mapLink) {
+                    if (currentCellData.lat && currentCellData.lng) {
+                        mapLink.href = `https://maps.google.com/?q=${currentCellData.lat},${currentCellData.lng}`;
+                        mapContainer.classList.remove('d-none');
+                    } else {
+                        mapContainer.classList.add('d-none');
+                    }
+                }
+
+                // Action & Method
+                if (form) {
                     if (currentCellData.attId) {
                         form.action = `/attendance/${currentCellData.attId}/audit-update`;
                         if (methodInput) {
@@ -5483,23 +5483,44 @@
                             methodInput.disabled = true;
                         }
                     }
+                }
 
-                    // Delete button visibility
-                    if (btnDeleteDay) {
-                        if (currentCellData.hasRecord) {
-                            btnDeleteDay.style.display = 'inline-block';
+                // Delete button visibility
+                if (btnDeleteDay) {
+                    if (currentCellData.hasRecord) {
+                        btnDeleteDay.style.display = 'inline-block';
+                    } else {
+                        btnDeleteDay.style.display = 'none';
+                    }
+                }
+
+                // Tampilkan modal secara clean
+                try {
+                    let modalShown = false;
+                    if (window.bootstrap && bootstrap.Modal) {
+                        let modalInstance = null;
+                        if (typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+                            modalInstance = bootstrap.Modal.getOrCreateInstance(targetModal);
+                        } else if (typeof bootstrap.Modal.getInstance === 'function') {
+                            modalInstance = bootstrap.Modal.getInstance(targetModal) || new bootstrap.Modal(targetModal);
                         } else {
-                            btnDeleteDay.style.display = 'none';
+                            modalInstance = new bootstrap.Modal(targetModal);
+                        }
+                        if (modalInstance) {
+                            modalInstance.show();
+                            modalShown = true;
                         }
                     }
-
-                    // Tampilkan modal secara clean
-                    if (window.bootstrap && bootstrap.Modal) {
-                        bootstrap.Modal.getOrCreateInstance(modalEl).show();
-                    } else if (window.$) {
+                    if (!modalShown && window.$ && typeof $('#modalKoreksiDashboard').modal === 'function') {
                         $('#modalKoreksiDashboard').modal('show');
                     }
-                });
+                } catch(err) {
+                    console.error('Modal show error:', err);
+                    if (window.$ && typeof $('#modalKoreksiDashboard').modal === 'function') {
+                        $('#modalKoreksiDashboard').modal('show');
+                    }
+                }
+            });
 
 
             // Handle Delete Attendance Day
