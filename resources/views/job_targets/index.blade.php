@@ -77,7 +77,7 @@
                 <h5 class="mb-1 fw-bold text-dark">Target &amp; Pencapaian Cabang</h5>
                 <small class="text-muted">Sasaran prioritas tim operasional dan keberhasilan cabang</small>
             </div>
-            <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill small fw-semibold">
+            <span class="badge-header-pill">
                 Cabang {{ auth()->user()->branch->name ?? 'Pusat' }}
             </span>
         </div>
@@ -100,7 +100,7 @@
                 <h5 class="mb-1 fw-bold text-dark">Target &amp; Pencapaian Pribadi</h5>
                 <small class="text-muted">Sasaran kerja individual dan portofolio pencapaian Anda</small>
             </div>
-            <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill small fw-semibold">
+            <span class="badge-header-pill">
                 Personal &bull; {{ auth()->user()->name }}
             </span>
         </div>
@@ -250,6 +250,65 @@
         font-weight: 700;
         padding: 4px 8px;
         border-radius: 6px;
+    }
+
+    /* Badges Status & Counter Anti-Nyaru (High Contrast) */
+    .badge-count-active {
+        background-color: #fef3c7 !important;
+        color: #92400e !important;
+        border: 1px solid #fcd34d !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        padding: 3px 10px !important;
+        border-radius: 20px !important;
+        display: inline-block;
+        letter-spacing: 0.02em;
+    }
+    .badge-count-completed {
+        background-color: #d1fae5 !important;
+        color: #065f46 !important;
+        border: 1px solid #a7f3d0 !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        padding: 3px 10px !important;
+        border-radius: 20px !important;
+        display: inline-block;
+        letter-spacing: 0.02em;
+    }
+    .badge-header-pill {
+        background-color: #f8fafc !important;
+        color: #1e293b !important;
+        border: 1px solid #cbd5e1 !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        padding: 5px 12px !important;
+        border-radius: 20px !important;
+        display: inline-block;
+    }
+    .empty-state-box {
+        background-color: #f8fafc !important;
+        border: 1px dashed #cbd5e1 !important;
+        border-radius: 10px !important;
+        padding: 24px 16px !important;
+        text-align: center;
+    }
+    .empty-state-box p {
+        color: #64748b !important;
+        font-size: 13px !important;
+        margin: 0 !important;
+        font-weight: 500 !important;
+    }
+    .meta-chip {
+        background-color: #f1f5f9 !important;
+        color: #334155 !important;
+        border: 1px solid #cbd5e1 !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        padding: 3px 10px !important;
+        border-radius: 20px !important;
+        display: inline-flex !important;
+        align-items: center;
+        gap: 5px;
     }
 
     @media (max-width: 768px) {

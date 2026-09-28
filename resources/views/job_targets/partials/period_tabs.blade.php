@@ -105,7 +105,7 @@
                             <span class="status-indicator-dot bg-warning"></span>
                             <span class="fw-bold text-dark text-uppercase small" style="letter-spacing: 0.04em;">Target Berjalan</span>
                         </div>
-                        <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 px-2 py-1 rounded-pill small">
+                        <span class="badge-count-active">
                             {{ $ongoing->count() }} Aktif
                         </span>
                     </div>
@@ -113,8 +113,8 @@
                     @if ($ongoing->count() > 0)
                         @include('job_targets.partials.item_list', ['items' => $ongoing, 'allow_edit_detail' => $canEdit, 'allow_update_status' => $canUpdate])
                     @else
-                        <div class="p-4 text-center border rounded-3 bg-light bg-opacity-50">
-                            <p class="text-muted small mb-0">Belum ada target aktif pada periode ini.</p>
+                        <div class="empty-state-box">
+                            <p>Belum ada target aktif pada periode ini.</p>
                         </div>
                     @endif
                     <div class="no-data-message alert alert-light border text-muted small py-3 text-center d-none mt-2">
@@ -129,7 +129,7 @@
                             <span class="status-indicator-dot bg-success"></span>
                             <span class="fw-bold text-dark text-uppercase small" style="letter-spacing: 0.04em;">Selesai &amp; Pencapaian</span>
                         </div>
-                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill small">
+                        <span class="badge-count-completed">
                             {{ $history->count() }} Selesai
                         </span>
                     </div>
@@ -137,8 +137,8 @@
                     @if ($history->count() > 0)
                         @include('job_targets.partials.item_list', ['items' => $history, 'allow_edit_detail' => false, 'allow_update_status' => false])
                     @else
-                        <div class="p-4 text-center border rounded-3 bg-light bg-opacity-50">
-                            <p class="text-muted small mb-0">Belum ada riwayat target selesai atau pencapaian pada periode ini.</p>
+                        <div class="empty-state-box">
+                            <p>Belum ada riwayat target selesai atau pencapaian pada periode ini.</p>
                         </div>
                     @endif
                     <div class="no-data-message alert alert-light border text-muted small py-3 text-center d-none mt-2">

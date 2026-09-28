@@ -31,7 +31,7 @@
                         @endif
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             @if($item->user)
-                                <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 small fw-normal d-inline-flex align-items-center gap-1">
+                                <span class="meta-chip">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                                         <circle cx="12" cy="7" r="4"/>
@@ -39,7 +39,7 @@
                                     <span>{{ $item->user->name }}</span>
                                 </span>
                             @endif
-                            <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 small fw-normal d-inline-flex align-items-center gap-1">
+                            <span class="meta-chip">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                                     <line x1="16" y1="2" x2="16" y2="6"/>
@@ -56,13 +56,13 @@
                 <div class="d-flex align-items-center justify-content-end gap-2 w-100 w-md-auto flex-shrink-0 pt-2 pt-md-0 border-top border-md-0">
                     @if($item->status == 'completed' || Str::contains($item->type, 'achievement'))
                         @php
-                            $badgeClass = 'bg-secondary text-white';
-                            if($item->outcome == 'Melampaui Ekspektasi') $badgeClass = 'bg-primary text-white'; 
-                            if($item->outcome == 'Tercapai Sempurna') $badgeClass = 'bg-success text-white';
-                            if($item->outcome == 'Tercapai Sebagian') $badgeClass = 'bg-warning text-dark';
-                            if($item->outcome == 'Gagal Tercapai') $badgeClass = 'bg-danger text-white';
+                            $badgeStyle = 'background-color: #64748b; color: #ffffff;';
+                            if($item->outcome == 'Melampaui Ekspektasi') $badgeStyle = 'background-color: #2563eb; color: #ffffff;'; 
+                            if($item->outcome == 'Tercapai Sempurna') $badgeStyle = 'background-color: #16a34a; color: #ffffff;';
+                            if($item->outcome == 'Tercapai Sebagian') $badgeStyle = 'background-color: #d97706; color: #ffffff;';
+                            if($item->outcome == 'Gagal Tercapai') $badgeStyle = 'background-color: #dc2626; color: #ffffff;';
                         @endphp
-                        <span class="badge {{ $badgeClass }} px-3 py-2 rounded-pill fw-semibold small shadow-none">
+                        <span class="px-3 py-1 rounded-pill fw-bold small text-white" style="{{ $badgeStyle }}">
                             {{ $item->outcome ?? 'Selesai' }}
                         </span>
                     @else
