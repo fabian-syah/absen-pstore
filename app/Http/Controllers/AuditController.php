@@ -6,10 +6,12 @@ use App\Models\LeaveRequest;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Models\LateNotification;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Traits\SendFcmNotification;
 use App\Traits\SendWebPushNotification;
 use Carbon\Carbon;
@@ -64,12 +66,13 @@ class AuditController extends Controller
         }
 
         $requests = $query->oldest()->paginate(10);
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
 
         Log::info('Data pending ditemukan di showLatePermissions', [
             'total' => $requests->total()
         ]);
 
-        return view('leave_requests.index', compact('requests'));
+        return view('leave_requests.index', compact('requests', 'branches'));
     }
 
     /**
@@ -432,6 +435,446 @@ class AuditController extends Controller
     }
 
     /**
+     * Helper untuk memproses approval satu LeaveRequest
+     */
+    private function processSingleLeaveApproval(LeaveRequest $leaveRequest, User $approver): void
+    {
+        $leaveRequest->update([
+            'status' => 'approved',
+            'approved_by' => $approver->id,
+            'is_active' => true,
+        ]);
+
+        // === POTONG SALDO CUTI SAAT APPROVE ===
+        if ($leaveRequest->type === 'cuti') {
+            $startDate = Carbon::parse($leaveRequest->start_date);
+            $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
+            $daysCount = $startDate->diffInDays($endDate) + 1;
+
+            if ($leaveRequest->user) {
+                $leaveRequest->user->decrement('leave_balance', $daysCount);
+                $leaveRequest->user->increment('leave_taken', $daysCount);
+            }
+
+            Log::info("Cuti APPROVED (AuditController): User {$leaveRequest->user_id} dipotong {$daysCount} hari");
+        }
+
+        // AUTO-CREATE/UPDATE ATTENDANCE FOR ALL LEAVE TYPES (MULTI-DAY AWARE)
+        $startDate = Carbon::parse($leaveRequest->start_date);
+        $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
+
+        // Mapping status dari tipe izin ke status kehadiran
+        $presenceStatusMap = [
+            'telat' => 'Masuk',
+            'wfh' => 'WFH',
+            'dinas' => 'Dinas Luar',
+            'izin' => 'Izin',
+            'sakit' => 'Sakit',
+            'cuti' => 'Cuti',
+            'libur' => 'Libur',
+        ];
+
+        $presenceStatus = $presenceStatusMap[$leaveRequest->type] ?? ucfirst($leaveRequest->type);
+
+        // Loop through each date in the range
+        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            $currentDate = $date->format('Y-m-d');
+
+            // Branch-specific timezone for correct date matching
+            $branchTimezone = $leaveRequest->user?->branch?->timezone ?? 'Asia/Jakarta';
+            $branchOffset = Carbon::now($branchTimezone)->format('P');
+            $storageOffset = Carbon::now(config('app.timezone'))->format('P');
+
+            // Cek apakah sudah ada attendance di tanggal tersebut (Timezone Aware)
+            $existingAttendance = Attendance::where('user_id', $leaveRequest->user_id)
+                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate])
+                ->first();
+
+            if ($existingAttendance) {
+                // SUDAH ADA ATTENDANCE: Update presence_status jika masih Alpha atau jika ini Izin Telat
+                if (
+                    !$existingAttendance->presence_status ||
+                    strtolower($existingAttendance->presence_status) === 'alpha' ||
+                    $leaveRequest->type === 'telat'
+                ) {
+                    $updateData = [
+                        'presence_status' => $presenceStatus,
+                        'status' => 'verified',
+                        'attendance_type' => 'leave',
+                        'verified_by_user_id' => $approver->id,
+                        'audit_note' => "Disetujui dari Pengajuan: " . $leaveRequest->reason,
+                        'audit_photo_path' => $leaveRequest->file_proof,
+                        'notes' => ucfirst($leaveRequest->type) . ': ' . $leaveRequest->reason,
+                    ];
+
+                    // Khusus untuk telat: update jam masuk dan flag is_late_checkin
+                    if ($leaveRequest->type === 'telat' && $leaveRequest->start_time) {
+                        $updateData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leaveRequest->start_time);
+                        $updateData['is_late_checkin'] = true;
+                        $updateData['presence_status'] = 'Masuk';
+                    }
+
+                    $existingAttendance->update($updateData);
+                }
+            } else {
+                // BELUM ADA ATTENDANCE: Create baru
+                $attendanceData = [
+                    'user_id' => $leaveRequest->user_id,
+                    'branch_id' => $leaveRequest->user?->branch_id,
+                    'presence_status' => $presenceStatus,
+                    'status' => 'verified',
+                    'attendance_type' => 'leave',
+                    'verified_by_user_id' => $approver->id,
+                    'audit_note' => "Disetujui dari Pengajuan: " . $leaveRequest->reason,
+                    'audit_photo_path' => $leaveRequest->file_proof,
+                    'notes' => ucfirst($leaveRequest->type) . ': ' . $leaveRequest->reason,
+                ];
+
+                // Khusus untuk telat: set jam masuk sesuai izin
+                if ($leaveRequest->type === 'telat' && $leaveRequest->start_time) {
+                    $attendanceData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leaveRequest->start_time);
+                    $attendanceData['is_late_checkin'] = true;
+                    $attendanceData['presence_status'] = 'Masuk';
+                } else {
+                    // Untuk tipe lain: set jam masuk 00:00
+                    $attendanceData['check_in_time'] = Carbon::parse($currentDate)->startOfDay();
+                }
+
+                Attendance::create($attendanceData);
+            }
+        }
+    }
+
+    /**
+     * Helper untuk memproses rejection satu LeaveRequest
+     */
+    private function processSingleLeaveRejection(LeaveRequest $leaveRequest, User $approver, string $reason): void
+    {
+        $leaveRequest->update([
+            'status' => 'rejected',
+            'approved_by' => $approver->id,
+            'is_active' => false,
+            'rejection_reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Memeriksa apakah user saat ini berhak menggunakan fitur khusus Superadmin (berdasarkan login_id)
+     */
+    private function isSuperAdminUser(): bool
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return false;
+        }
+        return strtolower(trim($user->login_id ?? '')) === 'superadmin';
+    }
+
+    /**
+     * Helper query untuk filter massal pengajuan izin
+     */
+    private function getBulkLeaveRequestsQuery(Request $request)
+    {
+        $query = LeaveRequest::with(['user.division', 'user.branch'])
+            ->where('status', 'pending');
+
+        // Jika berbasis list ID yang dipilih dari checkbox baris tabel
+        if ($request->filled('selected_ids') && is_array($request->selected_ids)) {
+            return $query->whereIn('id', $request->selected_ids);
+        }
+
+        // Filter Tipe Izin
+        $types = $request->input('types', []);
+        if (is_string($types)) {
+            $types = explode(',', $types);
+        }
+        $types = array_filter(array_map('trim', (array) $types));
+
+        if (!empty($types)) {
+            $query->whereIn('type', $types);
+        }
+
+        // Filter Tanggal
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date') ?: $startDate;
+        $dateMode = $request->input('date_mode', 'within'); // within | overlap | start_only
+
+        if ($startDate && $endDate) {
+            if ($dateMode === 'within') {
+                // Di dalam rentang: start_date >= startDate DAN end_date <= endDate
+                $query->whereDate('start_date', '>=', $startDate)
+                      ->whereDate(\DB::raw('COALESCE(end_date, start_date)'), '<=', $endDate);
+            } elseif ($dateMode === 'start_only') {
+                // Berdasarkan tanggal mulai saja
+                $query->whereBetween('start_date', [$startDate, $endDate]);
+            } else {
+                // Overlap: req.start_date <= endDate DAN COALESCE(req.end_date, req.start_date) >= startDate
+                $query->whereDate('start_date', '<=', $endDate)
+                      ->whereDate(\DB::raw('COALESCE(end_date, start_date)'), '>=', $startDate);
+            }
+        }
+
+        // Filter Cabang (Opsional)
+        $branchId = $request->input('branch_id');
+        if (!empty($branchId) && $branchId !== 'all') {
+            $query->whereHas('user', function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * Preview / hitung jumlah data pengajuan untuk aksi massal (Superadmin)
+     */
+    public function bulkPreviewLeaveRequests(Request $request)
+    {
+        if (!$this->isSuperAdminUser()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Akses ditolak: Fitur ini khusus ID Login superadmin.'
+            ], 403);
+        }
+
+        $query = $this->getBulkLeaveRequestsQuery($request);
+        $total = (clone $query)->count();
+
+        // Breakdown per tipe
+        $breakdownRaw = (clone $query)
+            ->select('type', \DB::raw('count(*) as count'))
+            ->groupBy('type')
+            ->pluck('count', 'type')
+            ->toArray();
+
+        $typeLabels = [
+            'wfh' => 'WFH (Work From Home)',
+            'dinas' => 'Dinas Luar',
+            'izin' => 'Izin Pribadi',
+            'sakit' => 'Sakit',
+            'cuti' => 'Cuti',
+            'libur' => 'Libur',
+            'telat' => 'Izin Terlambat',
+        ];
+
+        $breakdown = [];
+        foreach ($breakdownRaw as $type => $cnt) {
+            $label = $typeLabels[$type] ?? ucfirst($type);
+            $breakdown[] = [
+                'type' => $type,
+                'label' => $label,
+                'count' => $cnt
+            ];
+        }
+
+        // Sample data maksimal 50 item
+        $sampleItems = $query->oldest('start_date')->limit(50)->get()->map(function ($req) use ($typeLabels) {
+            $dates = $req->start_date ? $req->start_date->format('d M Y') : '-';
+            if ($req->end_date && $req->end_date->format('Y-m-d') !== ($req->start_date ? $req->start_date->format('Y-m-d') : '')) {
+                $dates .= ' s/d ' . $req->end_date->format('d M Y');
+            }
+            if ($req->type === 'telat' && $req->start_time) {
+                $dates .= ' (' . Carbon::parse($req->start_time)->format('H:i') . ')';
+            }
+
+            return [
+                'id' => $req->id,
+                'user_name' => $req->user->name ?? 'Unknown',
+                'branch_name' => $req->user->branch->name ?? 'Pusat',
+                'division_name' => $req->user->division->name ?? '-',
+                'type' => $req->type,
+                'type_label' => $typeLabels[$req->type] ?? ucfirst($req->type),
+                'dates' => $dates,
+                'reason' => $req->reason ?? '-',
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'total' => $total,
+            'breakdown' => $breakdown,
+            'sample_items' => $sampleItems,
+        ]);
+    }
+
+    /**
+     * Menyetujui (ACC) pengajuan izin secara massal (Superadmin)
+     */
+    public function bulkApproveLeaveRequests(Request $request)
+    {
+        if (!$this->isSuperAdminUser()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Akses ditolak: Fitur ini khusus ID Login superadmin.'], 403);
+            }
+            return redirect()->back()->with('error', 'Akses ditolak: Fitur ini khusus ID Login superadmin.');
+        }
+
+        set_time_limit(300);
+        $approver = Auth::user();
+
+        $query = $this->getBulkLeaveRequestsQuery($request);
+        $leaveRequests = $query->get();
+
+        if ($leaveRequests->isEmpty()) {
+            $msg = 'Tidak ada pengajuan pending yang memenuhi kriteria untuk disetujui.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => $msg], 400);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
+        $successCount = 0;
+        $failCount = 0;
+        $errors = [];
+
+        foreach ($leaveRequests as $lr) {
+            try {
+                \DB::beginTransaction();
+
+                if ($lr->status !== 'pending') {
+                    \DB::rollBack();
+                    continue;
+                }
+
+                $this->processSingleLeaveApproval($lr, $approver);
+
+                \DB::commit();
+                $successCount++;
+
+                try {
+                    $startDate = Carbon::parse($lr->start_date);
+                    $title = "Izin Disetujui";
+                    $body = "Pengajuan izin Anda pada " . $startDate->format('d/m/Y') . " telah disetujui oleh " . $approver->name . ".";
+                    $this->sendNotificationToUser($lr->user, $title, $body);
+                } catch (\Exception $ne) {
+                }
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                $failCount++;
+                $userName = $lr->user->name ?? 'User #' . $lr->user_id;
+                $errors[] = "Izin #{$lr->id} ({$userName}): " . $e->getMessage();
+                Log::error("Bulk Approve Fail on ID {$lr->id}: " . $e->getMessage());
+            }
+        }
+
+        Log::info("Bulk Approve Selesai oleh Superadmin", [
+            'approver' => $approver->name,
+            'success_count' => $successCount,
+            'fail_count' => $failCount,
+        ]);
+
+        $message = "Berhasil menyetujui {$successCount} pengajuan izin.";
+        if ($failCount > 0) {
+            $message .= " Namun {$failCount} data gagal diproses.";
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => $message,
+                'success_count' => $successCount,
+                'fail_count' => $failCount,
+                'errors' => $errors,
+            ]);
+        }
+
+        return redirect()->back()->with($failCount > 0 ? 'warning' : 'success', $message);
+    }
+
+    /**
+     * Menolak pengajuan izin secara massal (Superadmin)
+     */
+    public function bulkRejectLeaveRequests(Request $request)
+    {
+        if (!$this->isSuperAdminUser()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Akses ditolak: Fitur ini khusus ID Login superadmin.'], 403);
+            }
+            return redirect()->back()->with('error', 'Akses ditolak: Fitur ini khusus ID Login superadmin.');
+        }
+
+        $request->validate([
+            'rejection_reason' => 'required|string|max:255',
+        ], [
+            'rejection_reason.required' => 'Alasan penolakan wajib diisi.',
+        ]);
+
+        set_time_limit(300);
+        $approver = Auth::user();
+        $rejectionReason = $request->rejection_reason;
+
+        $query = $this->getBulkLeaveRequestsQuery($request);
+        $leaveRequests = $query->get();
+
+        if ($leaveRequests->isEmpty()) {
+            $msg = 'Tidak ada pengajuan pending yang memenuhi kriteria untuk ditolak.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => $msg], 400);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
+        $successCount = 0;
+        $failCount = 0;
+        $errors = [];
+
+        foreach ($leaveRequests as $lr) {
+            try {
+                \DB::beginTransaction();
+
+                if ($lr->status !== 'pending') {
+                    \DB::rollBack();
+                    continue;
+                }
+
+                $this->processSingleLeaveRejection($lr, $approver, $rejectionReason);
+
+                \DB::commit();
+                $successCount++;
+
+                try {
+                    $title = "Izin Ditolak";
+                    $body = "Pengajuan izin Anda pada " . $lr->start_date->format('d/m/Y') . " telah ditolak oleh " . $approver->name . ". Alasan: " . $rejectionReason;
+                    $this->sendNotificationToUser($lr->user, $title, $body);
+                } catch (\Exception $ne) {
+                }
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                $failCount++;
+                $userName = $lr->user->name ?? 'User #' . $lr->user_id;
+                $errors[] = "Izin #{$lr->id} ({$userName}): " . $e->getMessage();
+                Log::error("Bulk Reject Fail on ID {$lr->id}: " . $e->getMessage());
+            }
+        }
+
+        Log::info("Bulk Reject Selesai oleh Superadmin", [
+            'approver' => $approver->name,
+            'success_count' => $successCount,
+            'fail_count' => $failCount,
+            'reason' => $rejectionReason
+        ]);
+
+        $message = "Berhasil menolak {$successCount} pengajuan izin.";
+        if ($failCount > 0) {
+            $message .= " Namun {$failCount} data gagal diproses.";
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => $message,
+                'success_count' => $successCount,
+                'fail_count' => $failCount,
+                'errors' => $errors,
+            ]);
+        }
+
+        return redirect()->back()->with($failCount > 0 ? 'warning' : 'success', $message);
+    }
+
+    /**
      * Approve izin telat
      */
     public function approveLatePermission($id)
@@ -451,7 +894,7 @@ class AuditController extends Controller
             $targetBranchId = $leaveRequest->user->branch_id;
             $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
 
-            $isSuperUser = in_array($approver->role, ['admin', 'super_admin']);
+            $isSuperUser = in_array($approver->role, ['admin', 'super_admin']) || strtolower($approver->login_id ?? '') === 'superadmin';
             $isWhitelisted = in_array(strtolower($approver->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $approver->branches()->where('branches.id', $targetBranchId)->exists();
 
@@ -478,120 +921,13 @@ class AuditController extends Controller
 
         \DB::beginTransaction();
         try {
-            $leaveRequest->update([
-                'status' => 'approved',
-                'approved_by' => $approver->id,
-                'is_active' => true,
-            ]);
-
-            Log::info('Izin berhasil diapprove', [
-                'leave_request_id' => $id,
-                'new_status' => 'approved',
-                'approved_by' => $approver->id
-            ]);
-
-            // === POTONG SALDO CUTI SAAT APPROVE ===
-            if ($leaveRequest->type === 'cuti') {
-                $startDate = Carbon::parse($leaveRequest->start_date);
-                $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
-                $daysCount = $startDate->diffInDays($endDate) + 1;
-
-                $leaveRequest->user->decrement('leave_balance', $daysCount);
-                $leaveRequest->user->increment('leave_taken', $daysCount);
-
-                Log::info("Cuti APPROVED (AuditController): User {$leaveRequest->user_id} dipotong {$daysCount} hari");
-            }
-
-            // AUTO-CREATE/UPDATE ATTENDANCE FOR ALL LEAVE TYPES (MULTI-DAY AWARE)
-            $startDate = Carbon::parse($leaveRequest->start_date);
-            $endDate = $leaveRequest->end_date ? Carbon::parse($leaveRequest->end_date) : $startDate;
-
-            // Mapping status dari tipe izin ke status kehadiran
-            $presenceStatusMap = [
-                'telat' => 'Masuk',
-                'wfh' => 'WFH',
-                'dinas' => 'Dinas Luar',
-                'izin' => 'Izin',
-                'sakit' => 'Sakit',
-                'cuti' => 'Cuti',
-                'libur' => 'Libur',
-            ];
-
-            $presenceStatus = $presenceStatusMap[$leaveRequest->type] ?? ucfirst($leaveRequest->type);
-
-            // Loop through each date in the range
-            for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-                $currentDate = $date->format('Y-m-d');
-
-                // Branch-specific timezone for correct date matching
-                $branchTimezone = $leaveRequest->user->branch?->timezone ?? 'Asia/Jakarta';
-                $branchOffset = Carbon::now($branchTimezone)->format('P');
-                $storageOffset = Carbon::now(config('app.timezone'))->format('P');
-
-                // Cek apakah sudah ada attendance di tanggal tersebut (Timezone Aware)
-                $existingAttendance = Attendance::where('user_id', $leaveRequest->user_id)
-                    ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $currentDate])
-                    ->first();
-
-                if ($existingAttendance) {
-                    // SUDAH ADA ATTENDANCE: Update presence_status jika masih Alpha atau jika ini Izin Telat
-                    if (
-                        !$existingAttendance->presence_status ||
-                        strtolower($existingAttendance->presence_status) === 'alpha' ||
-                        $leaveRequest->type === 'telat'
-                    ) {
-
-                        $updateData = [
-                            'presence_status' => $presenceStatus,
-                            'status' => 'verified',
-                            'attendance_type' => 'leave',
-                            'verified_by_user_id' => $approver->id,
-                            'audit_note' => "Disetujui dari Pengajuan: " . $leaveRequest->reason,
-                            'audit_photo_path' => $leaveRequest->file_proof,
-                            'notes' => ucfirst($leaveRequest->type) . ': ' . $leaveRequest->reason,
-                        ];
-
-                        // Khusus untuk telat: update jam masuk dan flag is_late_checkin
-                        if ($leaveRequest->type === 'telat' && $leaveRequest->start_time) {
-                            $updateData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leaveRequest->start_time);
-                            $updateData['is_late_checkin'] = true;
-                            $updateData['presence_status'] = 'Masuk';
-                        }
-
-                        $existingAttendance->update($updateData);
-                    }
-                } else {
-                    // BELUM ADA ATTENDANCE: Create baru
-                    $attendanceData = [
-                        'user_id' => $leaveRequest->user_id,
-                        'branch_id' => $leaveRequest->user->branch_id,
-                        'presence_status' => $presenceStatus,
-                        'status' => 'verified',
-                        'attendance_type' => 'leave',
-                        'verified_by_user_id' => $approver->id,
-                        'audit_note' => "Disetujui dari Pengajuan: " . $leaveRequest->reason,
-                        'audit_photo_path' => $leaveRequest->file_proof,
-                        'notes' => ucfirst($leaveRequest->type) . ': ' . $leaveRequest->reason,
-                    ];
-
-                    // Khusus untuk telat: set jam masuk sesuai izin
-                    if ($leaveRequest->type === 'telat' && $leaveRequest->start_time) {
-                        $attendanceData['check_in_time'] = Carbon::parse($currentDate . ' ' . $leaveRequest->start_time);
-                        $attendanceData['is_late_checkin'] = true;
-                        $attendanceData['presence_status'] = 'Masuk';
-                    } else {
-                        // Untuk tipe lain: set jam masuk 00:00
-                        $attendanceData['check_in_time'] = Carbon::parse($currentDate)->startOfDay();
-                    }
-
-                    Attendance::create($attendanceData);
-                }
-            }
+            $this->processSingleLeaveApproval($leaveRequest, $approver);
 
             \DB::commit();
 
             // Kirim notifikasi
             try {
+                $startDate = Carbon::parse($leaveRequest->start_date);
                 $title = "Izin Disetujui";
                 $body = "Pengajuan izin Anda pada " . $startDate->format('d/m/Y') . " telah disetujui oleh " . $approver->name . ".";
                 $this->sendNotificationToUser($leaveRequest->user, $title, $body);
@@ -632,7 +968,7 @@ class AuditController extends Controller
             $targetBranchId = $leaveRequest->user->branch_id;
             $allowedLogins = ['Herlina', 'eva', 'agung', 'adminherlina'];
 
-            $isSuperUser = in_array($approver->role, ['admin', 'super_admin']);
+            $isSuperUser = in_array($approver->role, ['admin', 'super_admin']) || strtolower($approver->login_id ?? '') === 'superadmin';
             $isWhitelisted = in_array(strtolower($approver->login_id), array_map('strtolower', $allowedLogins));
             $hasExplicitRegion = $approver->branches()->where('branches.id', $targetBranchId)->exists();
 
@@ -657,26 +993,30 @@ class AuditController extends Controller
             return back()->with('error', 'Izin ini sudah diproses sebelumnya (Status: ' . $leaveRequest->status . ').');
         }
 
-        $leaveRequest->update([
-            'status' => 'rejected',
-            'approved_by' => $approver->id,
-            'is_active' => false,
-            'rejection_reason' => $request->rejection_reason,
-        ]);
+        \DB::beginTransaction();
+        try {
+            $this->processSingleLeaveRejection($leaveRequest, $approver, $request->rejection_reason);
 
-        Log::info('Izin berhasil direject', [
-            'leave_request_id' => $id,
-            'new_status' => 'rejected',
-            'approved_by' => $approver->id
-        ]);
+            \DB::commit();
 
-        // Kirim notifikasi
-        $title = "Izin Ditolak";
-        $body = "Pengajuan izin Anda pada " . $leaveRequest->start_date->format('d/m/Y') . " telah ditolak oleh " . $approver->name . ". Alasan: " . $request->rejection_reason;
-        $this->sendNotificationToUser($leaveRequest->user, $title, $body);
+            Log::info('Izin berhasil direject', [
+                'leave_request_id' => $id,
+                'new_status' => 'rejected',
+                'approved_by' => $approver->id
+            ]);
 
-        return redirect()->back()
-            ->with('success', 'Izin telah ditolak dan dipindahkan ke riwayat.');
+            // Kirim notifikasi
+            $title = "Izin Ditolak";
+            $body = "Pengajuan izin Anda pada " . $leaveRequest->start_date->format('d/m/Y') . " telah ditolak oleh " . $approver->name . ". Alasan: " . $request->rejection_reason;
+            $this->sendNotificationToUser($leaveRequest->user, $title, $body);
+
+            return redirect()->back()
+                ->with('success', 'Izin telah ditolak dan dipindahkan ke riwayat.');
+        } catch (\Exception $e) {
+            \DB::rollback();
+            Log::error("Gagal memproses penolakan izin: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal memproses data: ' . $e->getMessage());
+        }
     }
 
     /**

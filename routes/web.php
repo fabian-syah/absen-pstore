@@ -497,6 +497,11 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/izin-telat/{id}/approve', [AuditController::class, 'approveLatePermission'])->name('late.approve');
         Route::post('/izin-telat/{id}/reject', [AuditController::class, 'rejectLatePermission'])->name('late.reject');
 
+        // FITUR KHUSUS SUPERADMIN: AKSI MASSAL IZIN (BULK ACC & BULK REJECT)
+        Route::post('/leave-requests/bulk-preview', [AuditController::class, 'bulkPreviewLeaveRequests'])->name('late.bulk-preview');
+        Route::post('/leave-requests/bulk-approve', [AuditController::class, 'bulkApproveLeaveRequests'])->name('late.bulk-approve');
+        Route::post('/leave-requests/bulk-reject', [AuditController::class, 'bulkRejectLeaveRequests'])->name('late.bulk-reject');
+
         Route::get('/audit/missed-checkouts', [AuditController::class, 'showMissedCheckouts'])->name('audit.missed-checkout.list');
         Route::put('/audit/missed-checkouts/{id}', [AuditController::class, 'updateMissedCheckout'])->name('audit.missed-checkout.update');
     });
